@@ -854,3 +854,23 @@ if ( ! function_exists( 'rtbcb_is_configured' ) ) {
         return ! empty( get_option( 'rtbcb_openai_api_key' ) );
     }
 }
+
+// AJAX action: my_action.
+add_action( 'wp_ajax_my_action', 'rtbcb_my_action_callback' );
+add_action( 'wp_ajax_nopriv_my_action', 'rtbcb_my_action_callback' );
+
+/**
+ * Handle the my_action AJAX request.
+ *
+ * @return void
+ */
+function rtbcb_my_action_callback() {
+    check_ajax_referer( 'my_action_nonce', 'nonce' );
+
+    // Execute desired logic.
+    $data = [
+        'message' => __( 'Action completed successfully.', 'rtbcb' ),
+    ];
+
+    wp_send_json_success( $data );
+}
