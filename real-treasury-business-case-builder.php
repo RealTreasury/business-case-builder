@@ -92,6 +92,10 @@ class Real_Treasury_BCB {
 
         // Plugin action links
         add_filter( 'plugin_action_links_' . plugin_basename( RTBCB_FILE ), [ $this, 'plugin_action_links' ] );
+
+        // AJAX handlers
+        add_action( 'wp_ajax_rtbcb_generate_case', [ $this, 'ajax_generate_case' ] );
+        add_action( 'wp_ajax_nopriv_rtbcb_generate_case', [ $this, 'ajax_generate_case' ] );
     }
 
     /**
@@ -524,6 +528,105 @@ class Real_Treasury_BCB {
             if ( $deleted > 0 ) {
                 error_log( "RTBCB: Cleaned up {$deleted} old lead records" );
             }
+        }
+    }
+
+    /**
+     * Handle AJAX request for business case generation.
+     *
+     * @return void
+     */
+    public function ajax_generate_case() {
+        // Verify nonce
+        if ( ! wp_verify_nonce( $_POST['rtbcb_nonce'] ?? '', 'rtbcb_generate' ) ) {
+            wp_die( __( 'Security check failed.', 'rtbcb' ), 'Security Error', [ 'response' => 403 ] );
+        }
+
+        try {
+            // Collect form data
+            $user_inputs = [
+                'email'                  => sanitize_email( $_POST['email'] ?? '' ),
+                'company_size'           => sanitize_text_field( $_POST['company_size'] ?? '' ),
+                'industry'               => sanitize_text_field( $_POST['industry'] ?? '' ),
+                'hours_reconciliation'   => floatval( $_POST['hours_reconciliation'] ?? 0 ),
+                'hours_cash_positioning' => floatval( $_POST['hours_cash_positioning'] ?? 0 ),
+                'num_banks'              => intval( $_POST['num_banks'] ?? 0 ),
+                'ftes'                   => floatval( $_POST['ftes'] ?? 0 ),
+                'pain_points'            => array_map( 'sanitize_text_field', $_POST['pain_points'] ?? [] ),
+            ];
+
+            // Validate required fields
+            if ( empty( $user_inputs['email'] ) || empty( $user_inputs['company_size'] ) ) {
+                wp_send_json_error( __( 'Please fill in all required fields.', 'rtbcb' ) );
+            }
+
+            // Calculate ROI scenarios
+            $scenarios = RTBCB_Calculator::calculate_roi( $user_inputs );
+
+            // Get category recommendation
+            $recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
+
+            // Generate narrative if LLM is available
+            $narrative = [ 'narrative' => __( 'Business case analysis completed.', 'rtbcb' ) ];
+            if ( class_exists( 'RTBCB_LLM' ) && ! empty( get_option( 'rtbcb_openai_api_key' ) ) ) {
+                try {
+                    $llm            = new RTBCB_LLM();
+                    $context_chunks = [];
+                    if ( class_exists( 'RTBCB_RAG' ) ) {
+                        $rag            = new RTBCB_RAG();
+                        $context_chunks = $rag->search_similar( implode( ' ', $user_inputs['pain_points'] ) . ' ' . $user_inputs['company_size'], 3 );
+                    }
+                    $narrative = $llm->generate_business_case( $user_inputs, $scenarios, $context_chunks );
+                } catch ( Exception $e ) {
+                    error_log( 'RTBCB LLM Error: ' . $e->getMessage() );
+                }
+            }
+
+            // Save lead data
+            $lead_data = array_merge( $user_inputs, [
+                'recommended_category' => $recommendation['recommended'] ?? '',
+                'roi_low'              => $scenarios['conservative']['total_annual_benefit'] ?? 0,
+                'roi_base'             => $scenarios['base']['total_annual_benefit'] ?? 0,
+                'roi_high'             => $scenarios['optimistic']['total_annual_benefit'] ?? 0,
+            ] );
+
+            $lead_id = RTBCB_Leads::save_lead( $lead_data );
+
+            // Generate PDF if enabled
+            $download_url = null;
+            if ( get_option( 'rtbcb_pdf_enabled', true ) && class_exists( 'RTBCB_PDF' ) ) {
+                try {
+                    $pdf_data = [
+                        'user_inputs'    => $user_inputs,
+                        'scenarios'      => $scenarios,
+                        'recommendation' => $recommendation,
+                        'narrative'      => $narrative,
+                    ];
+                    $pdf      = new RTBCB_PDF( $pdf_data );
+                    $pdf_path = $pdf->generate_business_case();
+                    $download_url = RTBCB_PDF::get_download_url( $pdf_path );
+
+                    if ( $lead_id ) {
+                        RTBCB_Leads::update_pdf_status( $lead_id, $pdf_path );
+                    }
+                } catch ( Exception $e ) {
+                    error_log( 'RTBCB PDF Error: ' . $e->getMessage() );
+                }
+            }
+
+            // Return success response
+            wp_send_json_success(
+                [
+                    'scenarios'      => $scenarios,
+                    'recommendation' => $recommendation,
+                    'narrative'      => $narrative,
+                    'download_url'   => $download_url,
+                    'lead_id'        => $lead_id,
+                ]
+            );
+        } catch ( Exception $e ) {
+            error_log( 'RTBCB Error: ' . $e->getMessage() );
+            wp_send_json_error( __( 'An error occurred while generating your business case. Please try again.', 'rtbcb' ) );
         }
     }
 

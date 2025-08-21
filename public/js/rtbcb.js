@@ -53,8 +53,12 @@ class BusinessCaseBuilder {
             return;
         }
 
+        // Set total steps based on actual step count
+        this.totalSteps = this.steps.length;
+
         this.updateStepDisplay();
         this.updateNavigationState();
+        this.updateProgress();
     }
 
     bindEvents() {
