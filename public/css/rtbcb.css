@@ -1037,7 +1037,6 @@
     border-radius: 6px;
     font-size: 14px;
     background: white;
-    color: #374151;
     transition: all 0.2s ease;
     box-sizing: border-box;
     position: relative;
@@ -1045,7 +1044,12 @@
     line-height: 1.5;
 }
 
+.rtbcb-field input {
+    color: #374151;
+}
+
 .rtbcb-field select {
+    color: var(--rtbcb-text-color, #000);
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
