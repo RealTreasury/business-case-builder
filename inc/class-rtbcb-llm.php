@@ -158,6 +158,16 @@ class RTBCB_LLM {
             return new WP_Error( 'rtbcb_no_api_key', __( 'Missing OpenAI API key.', 'rtbcb' ) );
         }
 
+        $allowed_models = [
+            'gpt-4o',
+            'gpt-4o-mini',
+        ];
+
+        if ( ! is_string( $model ) || '' === trim( $model ) || ! in_array( $model, $allowed_models, true ) ) {
+            error_log( 'RTBCB: Invalid model specified. Falling back to gpt-4o.' );
+            $model = 'gpt-4o';
+        }
+
         $endpoint = 'https://api.openai.com/v1/chat/completions';
         $args     = [
             'headers' => [
