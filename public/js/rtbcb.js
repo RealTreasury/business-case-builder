@@ -78,6 +78,32 @@ class BusinessCaseBuilder {
         this.updateProgress();
     }
 
+    /**
+     * Initialize basic form validation and manage submit button state.
+     */
+    initFormValidation() {
+        console.log('Form validation is now running.');
+
+        if (!this.form) {
+            console.error('Form element not found.');
+            return;
+        }
+
+        const submitButton = this.form.querySelector('#rtbcb-submit-button') || this.form.querySelector('.rtbcb-nav-submit');
+
+        if (!submitButton) {
+            console.error('Submit button not found.');
+            return;
+        }
+
+        // Disable submit until the form satisfies built-in validation
+        submitButton.disabled = !this.form.checkValidity();
+
+        this.form.addEventListener('input', () => {
+            submitButton.disabled = !this.form.checkValidity();
+        });
+    }
+
     bindEvents() {
         // Remove any existing event listeners first
         this.unbindEvents();
