@@ -60,7 +60,13 @@ class Real_Treasury_BCB {
         require_once RTBCB_DIR . 'inc/class-rtbcb-portal-integration.php';
         require_once RTBCB_DIR . 'inc/class-rtbcb-leads.php';
         require_once RTBCB_DIR . 'admin/class-rtbcb-admin.php';
-        new RTBCB_Admin();
+        require_once RTBCB_DIR . 'inc/class-rtbcb-router.php';
+        require_once RTBCB_DIR . 'inc/class-rtbcb-llm.php';
+        require_once RTBCB_DIR . 'inc/class-rtbcb-rag.php';
+
+        if ( is_admin() ) {
+            new RTBCB_Admin();
+        }
         // TODO: Add remaining includes as classes are created.
     }
 
