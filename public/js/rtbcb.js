@@ -473,6 +473,10 @@ class BusinessCaseBuilder {
             if (data.success) {
                 this.completeProgress();
                 this.displayResults(data.data);
+                this.showSuccess(data.data.download_url);
+                if (this.form) {
+                    this.form.style.display = 'none';
+                }
                 this.trackAnalytics('business_case_generated', {
                     category: data.data.recommendation?.recommended,
                     roi_base: data.data.scenarios?.base?.total_annual_benefit
@@ -572,6 +576,22 @@ class BusinessCaseBuilder {
         this.prevBtn.disabled = false;
         this.submitBtn.disabled = false;
         this.submitBtn.classList.remove('loading');
+    }
+
+    showSuccess(downloadUrl) {
+        const container = document.getElementById('rtbcbSuccessMessage');
+        if (!container) {
+            return;
+        }
+
+        let message = 'Your business case is ready!';
+        if (downloadUrl) {
+            const url = this.escapeHtml(downloadUrl);
+            message += ` <a href="${url}" target="_blank" rel="noopener noreferrer">Download your report</a>`;
+        }
+
+        container.innerHTML = message;
+        container.style.display = 'block';
     }
 
     showError(message) {
