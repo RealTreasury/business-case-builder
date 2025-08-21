@@ -830,8 +830,9 @@
     background: white;
     border-radius: 16px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    width: 100%;
-    max-width: 520px;
+    width: 90%;
+    max-width: 600px;
+    margin: 0 auto;
     max-height: 80vh;
     overflow: visible;
     transform: scale(0.9) translateY(20px);
