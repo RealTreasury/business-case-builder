@@ -78,10 +78,10 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                         </label>
                         <select name="company_size" id="company_size" required>
                             <option value=""><?php esc_html_e( 'Select your company size...', 'rtbcb' ); ?></option>
-                            <option value="<$50M"><?php esc_html_e( 'Small Business (<$50M)', 'rtbcb' ); ?></option>
-                            <option value="$50M-$500M"><?php esc_html_e( 'Mid-Market ($50M-$500M)', 'rtbcb' ); ?></option>
-                            <option value="$500M-$2B"><?php esc_html_e( 'Large Enterprise ($500M-$2B)', 'rtbcb' ); ?></option>
-                            <option value=">$2B"><?php esc_html_e( 'Fortune 500 (>$2B)', 'rtbcb' ); ?></option>
+                              <option value="&lt;$50M"><?php esc_html_e( 'Small Business (&lt;$50M)', 'rtbcb' ); ?></option>
+                              <option value="$50M-$500M"><?php esc_html_e( 'Mid-Market ($50M-$500M)', 'rtbcb' ); ?></option>
+                              <option value="$500M-$2B"><?php esc_html_e( 'Large Enterprise ($500M-$2B)', 'rtbcb' ); ?></option>
+                              <option value="&gt;$2B"><?php esc_html_e( 'Fortune 500 (&gt;$2B)', 'rtbcb' ); ?></option>
                         </select>
                     </div>
 
@@ -110,7 +110,7 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
             <div class="rtbcb-wizard-step" data-step="2">
                 <div class="rtbcb-step-header">
                     <h3><?php esc_html_e( 'Your current treasury operations', 'rtbcb' ); ?></h3>
-                    <p><?php esc_html_e( 'Help us understand your current workload and banking relationships.', 'rtbcb' ); ?></p>
+                      <p><?php esc_html_e( 'Help us understand your current workload and banking relationships.', 'rtbcb' ); ?></p>
                 </div>
                 
                 <div class="rtbcb-step-content">
