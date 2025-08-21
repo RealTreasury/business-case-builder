@@ -878,7 +878,7 @@
 /* Modal Body - Scrollable content */
 .rtbcb-modal-body {
     max-height: calc(80vh - 100px);
-    overflow: visible;
+    overflow-y: auto;
 }
 
 .rtbcb-form-container {
@@ -965,8 +965,8 @@
 /* Steps Container - Fixed height and overflow */
 .rtbcb-wizard-steps {
     position: relative;
-    min-height: 300px;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
 .rtbcb-wizard-step {
