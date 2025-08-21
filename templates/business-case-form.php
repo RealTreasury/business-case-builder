@@ -854,3 +854,45 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
     to { transform: rotate(360deg); }
 }
 </style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Ensure global functions are available
+    window.openBusinessCaseModal = function() {
+        const overlay = document.getElementById('rtbcbModalOverlay');
+        if (overlay) {
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+
+            // Initialize builder if not already done
+            if (!window.businessCaseBuilder || !window.businessCaseBuilder.isInitialized) {
+                window.businessCaseBuilder = new BusinessCaseBuilder();
+            }
+        }
+    };
+
+    window.closeBusinessCaseModal = function() {
+        const overlay = document.getElementById('rtbcbModalOverlay');
+        if (overlay) {
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    };
+
+    // Close modal on overlay click
+    const overlay = document.getElementById('rtbcbModalOverlay');
+    if (overlay) {
+        overlay.addEventListener('click', function(e) {
+            if (e.target === overlay) {
+                window.closeBusinessCaseModal();
+            }
+        });
+    }
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            window.closeBusinessCaseModal();
+        }
+    });
+});
+</script>
