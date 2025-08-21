@@ -21,6 +21,8 @@ class RTBCB_Admin {
         add_action( 'admin_init', [ $this, 'register_settings' ] );
         add_action( 'wp_ajax_rtbcb_test_connection', [ $this, 'test_api_connection' ] );
         add_action( 'wp_ajax_rtbcb_rebuild_index', [ $this, 'rebuild_rag_index' ] );
+        add_action( 'wp_ajax_rtbcb_generate_case', [ $this, 'handle_generate_case' ] );
+        add_action( 'wp_ajax_nopriv_rtbcb_generate_case', [ $this, 'handle_generate_case' ] );
     }
 
     /**
@@ -220,6 +222,67 @@ class RTBCB_Admin {
         wp_send_json_success(
             [ 'message' => __( 'RAG index rebuilt.', 'rtbcb' ) ]
         );
+    }
+
+    /**
+     * Handle AJAX request to generate a business case.
+     *
+     * @return void
+     */
+    public function handle_generate_case() {
+        try {
+            check_ajax_referer( 'rtbcb_nonce', 'rtbcb_nonce' );
+
+            $company_size           = isset( $_POST['company_size'] ) ? sanitize_text_field( wp_unslash( $_POST['company_size'] ) ) : '';
+            $pain_points            = isset( $_POST['pain_points'] ) ? array_map( 'sanitize_text_field', (array) wp_unslash( $_POST['pain_points'] ) ) : [];
+            $hours_reconciliation   = isset( $_POST['hours_reconciliation'] ) ? floatval( wp_unslash( $_POST['hours_reconciliation'] ) ) : 0;
+            $hours_cash_positioning = isset( $_POST['hours_cash_positioning'] ) ? floatval( wp_unslash( $_POST['hours_cash_positioning'] ) ) : 0;
+            $num_banks              = isset( $_POST['num_banks'] ) ? intval( wp_unslash( $_POST['num_banks'] ) ) : 0;
+            $ftes                   = isset( $_POST['ftes'] ) ? intval( wp_unslash( $_POST['ftes'] ) ) : 0;
+            $email                  = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
+
+            $user_inputs = [
+                'company_size'           => $company_size,
+                'pain_points'            => $pain_points,
+                'hours_reconciliation'   => $hours_reconciliation,
+                'hours_cash_positioning' => $hours_cash_positioning,
+                'num_banks'              => $num_banks,
+                'ftes'                   => $ftes,
+                'email'                  => $email,
+            ];
+            error_log( 'RTBCB: Inputs sanitized' );
+
+            $scenarios = RTBCB_Calculator::calculate_roi( $user_inputs );
+            error_log( 'RTBCB: ROI calculated' );
+
+            $rag            = new RTBCB_RAG();
+            $context_chunks = [];
+            foreach ( $pain_points as $point ) {
+                $context_chunks = array_merge( $context_chunks, $rag->search_similar( $point ) );
+            }
+            error_log( 'RTBCB: RAG search complete' );
+
+            $llm       = new RTBCB_LLM();
+            $narrative = $llm->generate_business_case( $user_inputs, $scenarios, $context_chunks );
+            error_log( 'RTBCB: LLM generation complete' );
+
+            if ( isset( $narrative['error'] ) ) {
+                wp_send_json_error( $narrative['error'] );
+            }
+
+            $download_url = '';
+
+            wp_send_json_success(
+                [
+                    'scenarios'    => $scenarios,
+                    'narrative'    => $narrative,
+                    'download_url' => $download_url,
+                ]
+            );
+        } catch ( Exception $e ) {
+            error_log( 'RTBCB: Error generating case - ' . $e->getMessage() );
+            wp_send_json_error( __( 'Failed to generate business case.', 'rtbcb' ) );
+        }
     }
 
     /**

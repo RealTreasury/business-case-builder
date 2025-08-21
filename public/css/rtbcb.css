@@ -1,2 +1,81 @@
 /* Styles for Real Treasury Business Case Builder plugin */
 
+.rtbcb-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.rtbcb-section {
+    padding: 20px;
+    border: 1px solid #ddd;
+    margin-bottom: 20px;
+    background: #fff;
+}
+
+.rtbcb-field {
+    margin-bottom: 15px;
+}
+
+.rtbcb-field label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.rtbcb-field input,
+.rtbcb-field select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.rtbcb-submit-btn {
+    text-align: center;
+}
+
+.rtbcb-submit-btn button {
+    background-color: #0073aa;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.rtbcb-submit-btn button:disabled {
+    opacity: 0.7;
+}
+
+.rtbcb-results {
+    display: none;
+    margin-top: 20px;
+}
+
+.rtbcb-roi-summary {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.rtbcb-scenario {
+    flex: 1;
+    border: 1px solid #ddd;
+    padding: 15px;
+    text-align: center;
+}
+
+.rtbcb-scenario-primary {
+    background: #f0f6fc;
+}
+
+.rtbcb-error {
+    color: #a00;
+    margin-top: 20px;
+}
+
+.rtbcb-success {
+    color: #0a0;
+    margin-top: 20px;
+}
+
