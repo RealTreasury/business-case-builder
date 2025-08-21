@@ -1,5 +1,15 @@
 /* Enhanced JavaScript for Real Treasury Business Case Builder plugin */
 
+(() => {
+    const originalError = console.error;
+    console.error = function(...args) {
+        if (args.some(arg => typeof arg === 'string' && arg.includes('Unchecked runtime.lastError'))) {
+            return;
+        }
+        originalError.apply(console, args);
+    };
+})();
+
 class BusinessCaseBuilder {
     constructor() {
         this.form = null;
