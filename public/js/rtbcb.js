@@ -459,7 +459,7 @@ class BusinessCaseBuilder {
 
             const formData = new FormData(this.form);
             formData.append('action', 'rtbcb_generate_case');
-            formData.append('rtbcb_nonce', RTBCB.nonce);
+            formData.append('nonce', RTBCB.nonce);
 
             this.startProgressSimulation();
 

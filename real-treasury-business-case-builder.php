@@ -369,7 +369,7 @@ class Real_Treasury_BCB {
         // Localize script
         wp_localize_script( 'rtbcb-script', 'RTBCB', [
             'ajax_url'     => admin_url( 'admin-ajax.php' ),
-            'nonce'        => wp_create_nonce( 'rtbcb_nonce' ),
+            'nonce'        => wp_create_nonce( 'my_action_nonce' ),
             'strings'      => [
                 'error'           => __( 'An error occurred. Please try again.', 'rtbcb' ),
                 'generating'      => __( 'Generating your business case...', 'rtbcb' ),
@@ -537,10 +537,7 @@ class Real_Treasury_BCB {
      * @return void
      */
     public function ajax_generate_case() {
-        // Verify nonce
-        if ( ! wp_verify_nonce( $_POST['rtbcb_nonce'] ?? '', 'rtbcb_generate' ) ) {
-            wp_die( __( 'Security check failed.', 'rtbcb' ), 'Security Error', [ 'response' => 403 ] );
-        }
+        check_ajax_referer( 'my_action_nonce', 'nonce' );
 
         try {
             // Collect form data

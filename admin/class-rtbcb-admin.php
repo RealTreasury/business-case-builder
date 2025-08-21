@@ -228,10 +228,7 @@ class RTBCB_Admin {
      * Handle AJAX business case generation.
      */
     public function handle_business_case_generation() {
-        // Verify nonce
-        if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['rtbcb_nonce'] ?? '' ) ), 'rtbcb_generate' ) ) {
-            wp_die( 'Security check failed' );
-        }
+        check_ajax_referer( 'my_action_nonce', 'nonce' );
 
         try {
             // Sanitize inputs
