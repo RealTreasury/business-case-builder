@@ -1,0 +1,22 @@
+/* Global admin styles for Real Treasury Business Case Builder */
+.rtbcb-admin-page {
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.rtbcb-admin-page .button-primary {
+    background-color: #7216f4;
+    border-color: #7216f4;
+}
+
+.rtbcb-loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+@media (max-width: 782px) {
+    .rtbcb-admin-page .rtbcb-admin-header,
+    .rtbcb-admin-page .rtbcb-dashboard {
+        margin-left: 0;
+    }
+}
