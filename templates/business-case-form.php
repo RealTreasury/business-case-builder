@@ -327,7 +327,7 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                 <span class="rtbcb-nav-icon">→</span>
             </button>
 
-            <button type="submit" class="rtbcb-nav-btn rtbcb-nav-submit" style="display: none;">
+            <button type="submit" id="rtbcb-submit-button" class="rtbcb-nav-btn rtbcb-nav-submit">
                 <span class="rtbcb-nav-icon">🚀</span>
                 <?php esc_html_e( 'Generate Business Case', 'rtbcb' ); ?>
             </button>
