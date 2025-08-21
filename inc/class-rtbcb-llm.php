@@ -45,11 +45,26 @@ class RTBCB_LLM {
      * @return array Parsed LLM response.
      */
     public function generate_business_case( $user_inputs, $roi_data, $context_chunks = [] ) {
+        $category_data = [];
+        if ( class_exists( 'RTBCB_Category_Recommender' ) ) {
+            try {
+                $category_data = RTBCB_Category_Recommender::recommend_category( $user_inputs );
+            } catch ( Exception $e ) {
+                error_log( 'RTBCB: Category recommendation failed - ' . $e->getMessage() );
+            }
+        }
+
         $model    = $this->select_model( $user_inputs, $context_chunks );
-        $prompt   = $this->build_prompt( $user_inputs, $roi_data, $context_chunks );
+        $prompt   = $this->build_prompt( $user_inputs, $roi_data, $context_chunks, $category_data );
         $response = $this->call_openai( $model, $prompt );
 
-        return $this->parse_response( $response );
+        $parsed = $this->parse_response( $response, $category_data );
+
+        if ( isset( $parsed['error'] ) ) {
+            return $this->get_fallback_response( $category_data, $parsed['error'] );
+        }
+
+        return $parsed;
     }
 
     /**
@@ -75,11 +90,18 @@ class RTBCB_LLM {
      *
      * @return string Prompt text.
      */
-    private function build_prompt( $inputs, $roi_data, $chunks ) {
+    private function build_prompt( $inputs, $roi_data, $chunks, $category_data = [] ) {
         $context = $this->format_context_chunks( $chunks );
+
+        $recommended = '';
+        if ( ! empty( $category_data['recommended'] ) ) {
+            $recommended  = 'Recommended solution category: ' . $category_data['recommended'] . "\n";
+            $recommended .= 'Reasoning: ' . ( $category_data['reasoning'] ?? '' ) . "\n\n";
+        }
 
         $prompt  = "You are a CFO advisor creating a business case for treasury technology.\n\n";
         $prompt .= "CONTEXT from vendor research:\n{$context}\n\n";
+        $prompt .= $recommended;
         $prompt .= "USER SITUATION:\n";
         $prompt .= "- Company size: {$inputs['company_size']}\n";
         $prompt .= "- Current pain points: " . implode( ', ', $inputs['pain_points'] ) . "\n\n";
@@ -96,6 +118,7 @@ class RTBCB_LLM {
                 'citations'            => [ [ 'ref' => 'string', 'loc' => 'string' ] ],
                 'next_actions'         => [ 'string' ],
                 'confidence'           => 0.0,
+                'recommended_category' => 'string',
             ],
             JSON_PRETTY_PRINT
         );
@@ -156,7 +179,20 @@ class RTBCB_LLM {
             'timeout' => 60,
         ];
 
-        return wp_remote_post( $endpoint, $args );
+        $response = wp_remote_post( $endpoint, $args );
+        if ( is_wp_error( $response ) ) {
+            return $response;
+        }
+
+        $code = wp_remote_retrieve_response_code( $response );
+        if ( 200 !== $code ) {
+            return new WP_Error(
+                'rtbcb_api_error',
+                sprintf( __( 'API request failed (%d).', 'rtbcb' ), $code )
+            );
+        }
+
+        return $response;
     }
 
     /**
@@ -166,7 +202,7 @@ class RTBCB_LLM {
      *
      * @return array Parsed response or error details.
      */
-    private function parse_response( $response ) {
+    private function parse_response( $response, $category_data ) {
         if ( is_wp_error( $response ) ) {
             return [ 'error' => $response->get_error_message() ];
         }
@@ -185,7 +221,53 @@ class RTBCB_LLM {
             return [ 'error' => __( 'Failed to decode model response.', 'rtbcb' ) ];
         }
 
-        return $decoded;
+        return $this->ensure_output_structure( $decoded, $category_data );
+    }
+
+    /**
+     * Ensure the LLM output contains all required fields.
+     *
+     * @param array $data          Decoded response.
+     * @param array $category_data Recommended category data.
+     *
+     * @return array
+     */
+    private function ensure_output_structure( $data, $category_data ) {
+        $defaults = [
+            'narrative'            => '',
+            'risks'                => [],
+            'assumptions_explained'=> [],
+            'citations'            => [],
+            'next_actions'         => [],
+            'confidence'           => 0,
+            'recommended_category' => $category_data['recommended'] ?? '',
+        ];
+
+        return wp_parse_args( $data, $defaults );
+    }
+
+    /**
+     * Generate a fallback response when the API call fails.
+     *
+     * @param array  $category_data Category data for context.
+     * @param string $error_message Error message.
+     *
+     * @return array
+     */
+    private function get_fallback_response( $category_data, $error_message ) {
+        $category = $category_data['recommended'] ?? '';
+
+        return [
+            'narrative'            => __( 'Unable to generate narrative at this time.', 'rtbcb' ),
+        // Provide minimal structured output
+            'risks'                => [],
+            'assumptions_explained'=> [],
+            'citations'            => [],
+            'next_actions'         => [],
+            'confidence'           => 0,
+            'recommended_category' => $category,
+            'error'                => $error_message,
+        ];
     }
 }
 
