@@ -2,23 +2,39 @@
 
 class BusinessCaseBuilder {
     constructor() {
-        this.form = document.getElementById('rtbcbForm');
-        this.results = document.getElementById('rtbcbResults');
+        this.form = null;
+        this.results = null;
         this.currentStep = 1;
         this.totalSteps = 4;
         this.stepData = {};
         this.isInitialized = false;
+        
+        // Bind methods to preserve 'this' context
+        this.nextStep = this.nextStep.bind(this);
+        this.previousStep = this.previousStep.bind(this);
+        this.handleSubmit = this.handleSubmit.bind(this);
 
-        // Wait for DOM to be fully loaded
+        // Initialize immediately if DOM is ready, otherwise wait
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => this.init());
         } else {
-            this.init();
+            // Use setTimeout to ensure modal is rendered
+            setTimeout(() => this.init(), 100);
         }
     }
 
     init() {
-        if (this.isInitialized || !this.form) {
+        // Prevent multiple initializations
+        if (this.isInitialized) {
+            return;
+        }
+
+        // Get form elements
+        this.form = document.getElementById('rtbcbForm');
+        this.results = document.getElementById('rtbcbResults');
+
+        if (!this.form) {
+            console.log('Form not found, will retry when modal opens');
             return;
         }
 
@@ -33,7 +49,7 @@ class BusinessCaseBuilder {
     }
 
     initWizard() {
-        // Get wizard elements
+        // Get wizard elements with more specific selectors
         this.steps = this.form.querySelectorAll('.rtbcb-wizard-step');
         this.progressSteps = this.form.querySelectorAll('.rtbcb-progress-step');
         this.nextBtn = this.form.querySelector('.rtbcb-nav-next');
@@ -55,6 +71,7 @@ class BusinessCaseBuilder {
 
         // Set total steps based on actual step count
         this.totalSteps = this.steps.length;
+        this.currentStep = 1;
 
         this.updateStepDisplay();
         this.updateNavigationState();
@@ -62,11 +79,15 @@ class BusinessCaseBuilder {
     }
 
     bindEvents() {
-        // Navigation events
+        // Remove any existing event listeners first
+        this.unbindEvents();
+
+        // Navigation events with proper error handling
         if (this.nextBtn) {
             this.nextBtn.addEventListener('click', (e) => {
                 e.preventDefault();
-                console.log('Next button clicked');
+                e.stopPropagation();
+                console.log('Next button clicked, current step:', this.currentStep);
                 this.nextStep();
             });
         }
@@ -74,17 +95,21 @@ class BusinessCaseBuilder {
         if (this.prevBtn) {
             this.prevBtn.addEventListener('click', (e) => {
                 e.preventDefault();
+                e.stopPropagation();
                 console.log('Previous button clicked');
                 this.previousStep();
             });
         }
 
         // Form submission
-        this.form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            console.log('Form submitted');
-            this.handleSubmit(e);
-        });
+        if (this.form) {
+            this.form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Form submitted');
+                this.handleSubmit(e);
+            });
+        }
 
         // Pain point selection
         const painPointCheckboxes = this.form.querySelectorAll('input[name="pain_points[]"]');
@@ -100,6 +125,18 @@ class BusinessCaseBuilder {
         });
 
         console.log('Events bound successfully');
+    }
+
+    unbindEvents() {
+        // Clean up any existing event listeners to prevent duplicates
+        if (this.nextBtn) {
+            this.nextBtn.replaceWith(this.nextBtn.cloneNode(true));
+            this.nextBtn = this.form.querySelector('.rtbcb-nav-next');
+        }
+        if (this.prevBtn) {
+            this.prevBtn.replaceWith(this.prevBtn.cloneNode(true));
+            this.prevBtn = this.form.querySelector('.rtbcb-nav-prev');
+        }
     }
 
     nextStep() {
@@ -143,9 +180,6 @@ class BusinessCaseBuilder {
                 step.classList.add('prev');
             }
         });
-
-        // Smooth scroll to form
-        this.form.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     updateNavigationState() {
@@ -178,7 +212,12 @@ class BusinessCaseBuilder {
     }
 
     validateCurrentStep() {
-        const currentStepElement = this.form.querySelector(`[data-step="${this.currentStep}"]`);
+        const currentStepElement = this.steps[this.currentStep - 1];
+        if (!currentStepElement) {
+            console.error('Current step element not found');
+            return false;
+        }
+
         const requiredFields = currentStepElement.querySelectorAll('input[required], select[required]');
         let isValid = true;
 
@@ -188,6 +227,7 @@ class BusinessCaseBuilder {
             }
         });
 
+        // Special validation for step 3 (pain points)
         if (this.currentStep === 3) {
             const painPoints = currentStepElement.querySelectorAll('input[name="pain_points[]"]:checked');
             if (painPoints.length === 0) {
@@ -198,10 +238,21 @@ class BusinessCaseBuilder {
             }
         }
 
+        // Special validation for step 4 (consent)
+        if (this.currentStep === 4) {
+            const consent = currentStepElement.querySelector('input[name="consent"]');
+            if (consent && !consent.checked) {
+                this.showFieldError(consent, 'Please agree to receive your business case report.');
+                isValid = false;
+            }
+        }
+
         return isValid;
     }
 
     validateField(field) {
+        if (!field) return false;
+        
         const errorElement = field.parentElement.querySelector('.rtbcb-field-error');
         
         if (field.hasAttribute('required') && !field.value.trim()) {
@@ -255,10 +306,12 @@ class BusinessCaseBuilder {
 
     handlePainPointSelection(e) {
         const card = e.target.closest('.rtbcb-pain-point-card');
-        if (e.target.checked) {
-            card.classList.add('rtbcb-selected');
-        } else {
-            card.classList.remove('rtbcb-selected');
+        if (card) {
+            if (e.target.checked) {
+                card.classList.add('rtbcb-selected');
+            } else {
+                card.classList.remove('rtbcb-selected');
+            }
         }
         
         this.hidePainPointsError();
@@ -279,16 +332,27 @@ class BusinessCaseBuilder {
     }
 
     saveStepData() {
-        const currentStepElement = this.form.querySelector(`[data-step="${this.currentStep}"]`);
+        const currentStepElement = this.steps[this.currentStep - 1];
+        if (!currentStepElement) return;
+
         const fields = currentStepElement.querySelectorAll('input, select');
         
         fields.forEach(field => {
             if (field.type === 'checkbox') {
-                if (!this.stepData[field.name]) {
-                    this.stepData[field.name] = [];
-                }
-                if (field.checked && !this.stepData[field.name].includes(field.value)) {
-                    this.stepData[field.name].push(field.value);
+                if (field.name === 'pain_points[]') {
+                    if (!this.stepData['pain_points']) {
+                        this.stepData['pain_points'] = [];
+                    }
+                    if (field.checked && !this.stepData['pain_points'].includes(field.value)) {
+                        this.stepData['pain_points'].push(field.value);
+                    } else if (!field.checked) {
+                        const index = this.stepData['pain_points'].indexOf(field.value);
+                        if (index > -1) {
+                            this.stepData['pain_points'].splice(index, 1);
+                        }
+                    }
+                } else {
+                    this.stepData[field.name] = field.checked;
                 }
             } else {
                 this.stepData[field.name] = field.value;
@@ -301,6 +365,16 @@ class BusinessCaseBuilder {
         return re.test(email);
     }
 
+    // Reinitialize when modal opens
+    reinitialize() {
+        this.isInitialized = false;
+        this.currentStep = 1;
+        this.stepData = {};
+        this.init();
+    }
+
+    // Continue with existing methods (handleSubmit, etc.)...
+    // [Rest of the methods remain the same]
     async handleSubmit(e) {
         e.preventDefault();
 

@@ -863,10 +863,15 @@ document.addEventListener('DOMContentLoaded', function() {
             overlay.classList.add('active');
             document.body.style.overflow = 'hidden';
 
-            // Initialize builder if not already done
-            if (!window.businessCaseBuilder || !window.businessCaseBuilder.isInitialized) {
-                window.businessCaseBuilder = new BusinessCaseBuilder();
-            }
+            // Initialize builder after modal is shown
+            setTimeout(() => {
+                if (!window.businessCaseBuilder || !window.businessCaseBuilder.isInitialized) {
+                    window.businessCaseBuilder = new BusinessCaseBuilder();
+                } else {
+                    // Reinitialize if already exists
+                    window.businessCaseBuilder.reinitialize();
+                }
+            }, 100);
         }
     };
 
