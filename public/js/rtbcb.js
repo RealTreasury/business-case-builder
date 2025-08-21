@@ -629,6 +629,10 @@ class BusinessCaseBuilder {
         const scenarios = data.scenarios || {};
         const narrative = data.narrative || {};
 
+        if (narrative.error) {
+            this.showError(narrative.error);
+        }
+
         const html = `
             <div class="rtbcb-results-header">
                 <div class="rtbcb-results-badge">

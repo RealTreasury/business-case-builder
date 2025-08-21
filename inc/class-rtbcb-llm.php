@@ -184,12 +184,24 @@ class RTBCB_LLM {
             return $response;
         }
 
+        $body = wp_remote_retrieve_body( $response );
+        $data = json_decode( $body, true );
+
+        if ( isset( $data['error'] ) ) {
+            $message = sanitize_text_field( wp_strip_all_tags( $data['error']['message'] ?? '' ) );
+            if ( empty( $message ) ) {
+                $message = __( 'Unknown API error.', 'rtbcb' );
+            }
+            return new WP_Error( 'rtbcb_api_error', $message );
+        }
+
         $code = wp_remote_retrieve_response_code( $response );
         if ( 200 !== $code ) {
-            return new WP_Error(
-                'rtbcb_api_error',
-                sprintf( __( 'API request failed (%d).', 'rtbcb' ), $code )
-            );
+            $message = sanitize_text_field( wp_strip_all_tags( $data['error']['message'] ?? '' ) );
+            if ( empty( $message ) ) {
+                $message = sprintf( __( 'API request failed (%d).', 'rtbcb' ), $code );
+            }
+            return new WP_Error( 'rtbcb_api_error', $message );
         }
 
         return $response;
@@ -257,6 +269,12 @@ class RTBCB_LLM {
     private function get_fallback_response( $category_data, $error_message ) {
         $category = $category_data['recommended'] ?? '';
 
+        $excerpt = '';
+        if ( ! empty( $error_message ) ) {
+            $sanitized = sanitize_text_field( wp_strip_all_tags( $error_message ) );
+            $excerpt   = mb_substr( $sanitized, 0, 200 );
+        }
+
         return [
             'narrative'            => __( 'Unable to generate narrative at this time.', 'rtbcb' ),
         // Provide minimal structured output
@@ -266,7 +284,7 @@ class RTBCB_LLM {
             'next_actions'         => [],
             'confidence'           => 0,
             'recommended_category' => $category,
-            'error'                => $error_message,
+            'error'                => $excerpt,
         ];
     }
 }

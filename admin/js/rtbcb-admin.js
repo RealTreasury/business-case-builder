@@ -62,7 +62,7 @@
                     alert('RAG index rebuilt successfully');
                     location.reload();
                 } else {
-                    alert(rtbcbAdmin.strings.error);
+                    alert(data.data?.message || rtbcbAdmin.strings.error);
                 }
             } catch (err) {
                 alert(rtbcbAdmin.strings.error);
@@ -104,7 +104,7 @@
                     document.body.removeChild(a);
                     URL.revokeObjectURL(url);
                 } else {
-                    alert(rtbcbAdmin.strings.error);
+                    alert(data.data?.message || rtbcbAdmin.strings.error);
                 }
             } catch(err) {
                 alert(rtbcbAdmin.strings.error);
