@@ -361,7 +361,7 @@ class Real_Treasury_BCB {
             'ajaxObj',
             [
                 'ajax_url' => admin_url( 'admin-ajax.php' ),
-                'nonce'    => wp_create_nonce( 'my_action_nonce' ),
+                'rtbcb_nonce' => wp_create_nonce( 'rtbcb_generate' ),
                 'strings'  => [
                     'error'           => __( 'An error occurred. Please try again.', 'rtbcb' ),
                     'generating'      => __( 'Generating your business case...', 'rtbcb' ),
