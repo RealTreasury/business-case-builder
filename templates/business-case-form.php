@@ -18,372 +18,306 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
     <div class="rtbcb-header">
         <h2><?php echo esc_html( $title ); ?></h2>
         <p><?php echo esc_html( $subtitle ); ?></p>
-        <div class="rtbcb-progress-indicator">
-            <div class="rtbcb-progress-bar">
-                <div class="rtbcb-progress-fill" style="width: 0%"></div>
-            </div>
-            <div class="rtbcb-progress-text">
-                <?php esc_html_e( 'Complete the form to generate your business case', 'rtbcb' ); ?>
-            </div>
-        </div>
     </div>
-    
-    <form id="rtbcbForm" class="rtbcb-form" method="post" novalidate>
+
+    <form id="rtbcbForm" class="rtbcb-form rtbcb-wizard" method="post" novalidate>
         <?php wp_nonce_field( 'rtbcb_generate', 'rtbcb_nonce' ); ?>
         
-        <!-- Step 1: Company Profile -->
-        <div class="rtbcb-section rtbcb-step" data-step="1">
-            <div class="rtbcb-section-header">
-                <div class="rtbcb-step-number">1</div>
-                <div class="rtbcb-step-content">
-                    <h3><?php esc_html_e( 'Company Profile', 'rtbcb' ); ?></h3>
-                    <p class="rtbcb-step-description">
-                        <?php esc_html_e( 'Tell us about your organization to provide relevant recommendations.', 'rtbcb' ); ?>
-                    </p>
+        <!-- Progress Indicator -->
+        <div class="rtbcb-wizard-progress">
+            <div class="rtbcb-progress-steps">
+                <div class="rtbcb-progress-step active" data-step="1">
+                    <div class="rtbcb-progress-number">1</div>
+                    <div class="rtbcb-progress-label"><?php esc_html_e( 'Company', 'rtbcb' ); ?></div>
                 </div>
-            </div>
-
-            <div class="rtbcb-form-grid">
-                <div class="rtbcb-field rtbcb-field-required">
-                    <label for="company_size">
-                        <?php esc_html_e( 'Company Size (Annual Revenue)', 'rtbcb' ); ?>
-                        <span class="rtbcb-required">*</span>
-                    </label>
-                    <select name="company_size" id="company_size" required>
-                        <option value=""><?php esc_html_e( 'Select your company size...', 'rtbcb' ); ?></option>
-                        <option value="<$50M"><?php esc_html_e( 'Small Business (<$50M)', 'rtbcb' ); ?></option>
-                        <option value="$50M-$500M"><?php esc_html_e( 'Mid-Market ($50M-$500M)', 'rtbcb' ); ?></option>
-                        <option value="$500M-$2B"><?php esc_html_e( 'Large Enterprise ($500M-$2B)', 'rtbcb' ); ?></option>
-                        <option value=">$2B"><?php esc_html_e( 'Fortune 500 (>$2B)', 'rtbcb' ); ?></option>
-                    </select>
-                    <div class="rtbcb-field-help">
-                        <?php esc_html_e( 'Annual revenue helps us recommend the right category of treasury solution.', 'rtbcb' ); ?>
-                    </div>
+                <div class="rtbcb-progress-step" data-step="2">
+                    <div class="rtbcb-progress-number">2</div>
+                    <div class="rtbcb-progress-label"><?php esc_html_e( 'Operations', 'rtbcb' ); ?></div>
                 </div>
-
-                <div class="rtbcb-field">
-                    <label for="industry"><?php esc_html_e( 'Industry', 'rtbcb' ); ?></label>
-                    <select name="industry" id="industry">
-                        <option value=""><?php esc_html_e( 'Select your industry...', 'rtbcb' ); ?></option>
-                        <option value="manufacturing"><?php esc_html_e( 'Manufacturing', 'rtbcb' ); ?></option>
-                        <option value="retail"><?php esc_html_e( 'Retail & E-commerce', 'rtbcb' ); ?></option>
-                        <option value="healthcare"><?php esc_html_e( 'Healthcare', 'rtbcb' ); ?></option>
-                        <option value="technology"><?php esc_html_e( 'Technology', 'rtbcb' ); ?></option>
-                        <option value="financial_services"><?php esc_html_e( 'Financial Services', 'rtbcb' ); ?></option>
-                        <option value="energy"><?php esc_html_e( 'Energy & Utilities', 'rtbcb' ); ?></option>
-                        <option value="real_estate"><?php esc_html_e( 'Real Estate', 'rtbcb' ); ?></option>
-                        <option value="professional_services"><?php esc_html_e( 'Professional Services', 'rtbcb' ); ?></option>
-                        <option value="transportation"><?php esc_html_e( 'Transportation & Logistics', 'rtbcb' ); ?></option>
-                        <option value="education"><?php esc_html_e( 'Education', 'rtbcb' ); ?></option>
-                        <option value="government"><?php esc_html_e( 'Government', 'rtbcb' ); ?></option>
-                        <option value="other"><?php esc_html_e( 'Other', 'rtbcb' ); ?></option>
-                    </select>
+                <div class="rtbcb-progress-step" data-step="3">
+                    <div class="rtbcb-progress-number">3</div>
+                    <div class="rtbcb-progress-label"><?php esc_html_e( 'Challenges', 'rtbcb' ); ?></div>
+                </div>
+                <div class="rtbcb-progress-step" data-step="4">
+                    <div class="rtbcb-progress-number">4</div>
+                    <div class="rtbcb-progress-label"><?php esc_html_e( 'Contact', 'rtbcb' ); ?></div>
                 </div>
             </div>
         </div>
-        
-        <!-- Step 2: Treasury Operations -->
-        <div class="rtbcb-section rtbcb-step" data-step="2">
-            <div class="rtbcb-section-header">
-                <div class="rtbcb-step-number">2</div>
+
+        <!-- Steps Container -->
+        <div class="rtbcb-wizard-steps">
+            <!-- Step 1: Company Profile -->
+            <div class="rtbcb-wizard-step active" data-step="1">
+                <div class="rtbcb-step-header">
+                    <h3><?php esc_html_e( 'Tell us about your company', 'rtbcb' ); ?></h3>
+                    <p><?php esc_html_e( 'This helps us provide relevant recommendations for your organization.', 'rtbcb' ); ?></p>
+                </div>
+                
                 <div class="rtbcb-step-content">
-                    <h3><?php esc_html_e( 'Current Treasury Operations', 'rtbcb' ); ?></h3>
-                    <p class="rtbcb-step-description">
-                        <?php esc_html_e( 'Help us understand your current treasury workload and processes.', 'rtbcb' ); ?>
-                    </p>
-                </div>
-            </div>
-
-            <div class="rtbcb-form-grid">
-                <div class="rtbcb-field rtbcb-field-required">
-                    <label for="hours_reconciliation">
-                        <?php esc_html_e( 'Weekly Hours: Bank Reconciliation', 'rtbcb' ); ?>
-                        <span class="rtbcb-required">*</span>
-                    </label>
-                    <input 
-                        type="number" 
-                        name="hours_reconciliation" 
-                        id="hours_reconciliation" 
-                        min="0" 
-                        max="168" 
-                        step="0.5"
-                        placeholder="0"
-                        required 
-                    />
-                    <div class="rtbcb-field-help">
-                        <?php esc_html_e( 'Total weekly hours spent on bank reconciliation tasks', 'rtbcb' ); ?>
-                    </div>
-                </div>
-
-                <div class="rtbcb-field rtbcb-field-required">
-                    <label for="hours_cash_positioning">
-                        <?php esc_html_e( 'Weekly Hours: Cash Positioning', 'rtbcb' ); ?>
-                        <span class="rtbcb-required">*</span>
-                    </label>
-                    <input 
-                        type="number" 
-                        name="hours_cash_positioning" 
-                        id="hours_cash_positioning" 
-                        min="0" 
-                        max="168" 
-                        step="0.5"
-                        placeholder="0"
-                        required 
-                    />
-                    <div class="rtbcb-field-help">
-                        <?php esc_html_e( 'Time spent on cash visibility, forecasting, and positioning', 'rtbcb' ); ?>
-                    </div>
-                </div>
-
-                <div class="rtbcb-field rtbcb-field-required">
-                    <label for="num_banks">
-                        <?php esc_html_e( 'Number of Banking Relationships', 'rtbcb' ); ?>
-                        <span class="rtbcb-required">*</span>
-                    </label>
-                    <input 
-                        type="number" 
-                        name="num_banks" 
-                        id="num_banks" 
-                        min="1" 
-                        max="50" 
-                        placeholder="0"
-                        required 
-                    />
-                    <div class="rtbcb-field-help">
-                        <?php esc_html_e( 'Total number of banks where your company maintains accounts', 'rtbcb' ); ?>
-                    </div>
-                </div>
-
-                <div class="rtbcb-field rtbcb-field-required">
-                    <label for="ftes">
-                        <?php esc_html_e( 'Treasury Team Size (FTEs)', 'rtbcb' ); ?>
-                        <span class="rtbcb-required">*</span>
-                    </label>
-                    <input 
-                        type="number" 
-                        name="ftes" 
-                        id="ftes" 
-                        min="0.5" 
-                        max="100" 
-                        step="0.5" 
-                        placeholder="0"
-                        required 
-                    />
-                    <div class="rtbcb-field-help">
-                        <?php esc_html_e( 'Full-time equivalent employees dedicated to treasury functions', 'rtbcb' ); ?>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Step 3: Pain Points & Challenges -->
-        <div class="rtbcb-section rtbcb-step" data-step="3">
-            <div class="rtbcb-section-header">
-                <div class="rtbcb-step-number">3</div>
-                <div class="rtbcb-step-content">
-                    <h3><?php esc_html_e( 'Treasury Challenges', 'rtbcb' ); ?></h3>
-                    <p class="rtbcb-step-description">
-                        <?php esc_html_e( 'Select the pain points that best describe your current treasury challenges.', 'rtbcb' ); ?>
-                    </p>
-                </div>
-            </div>
-
-            <div class="rtbcb-pain-points-grid">
-                <div class="rtbcb-pain-point-card">
-                    <label class="rtbcb-pain-point-label">
-                        <input type="checkbox" name="pain_points[]" value="manual_processes" />
-                        <div class="rtbcb-pain-point-content">
-                            <div class="rtbcb-pain-point-icon">⚙️</div>
-                            <div class="rtbcb-pain-point-title"><?php esc_html_e( 'Manual Processes', 'rtbcb' ); ?></div>
-                            <div class="rtbcb-pain-point-description">
-                                <?php esc_html_e( 'Time-consuming manual data entry and reconciliation', 'rtbcb' ); ?>
-                            </div>
-                        </div>
-                    </label>
-                </div>
-
-                <div class="rtbcb-pain-point-card">
-                    <label class="rtbcb-pain-point-label">
-                        <input type="checkbox" name="pain_points[]" value="poor_visibility" />
-                        <div class="rtbcb-pain-point-content">
-                            <div class="rtbcb-pain-point-icon">👁️</div>
-                            <div class="rtbcb-pain-point-title"><?php esc_html_e( 'Poor Cash Visibility', 'rtbcb' ); ?></div>
-                            <div class="rtbcb-pain-point-description">
-                                <?php esc_html_e( 'Lack of real-time visibility into cash positions', 'rtbcb' ); ?>
-                            </div>
-                        </div>
-                    </label>
-                </div>
-
-                <div class="rtbcb-pain-point-card">
-                    <label class="rtbcb-pain-point-label">
-                        <input type="checkbox" name="pain_points[]" value="forecast_accuracy" />
-                        <div class="rtbcb-pain-point-content">
-                            <div class="rtbcb-pain-point-icon">📊</div>
-                            <div class="rtbcb-pain-point-title"><?php esc_html_e( 'Forecast Accuracy', 'rtbcb' ); ?></div>
-                            <div class="rtbcb-pain-point-description">
-                                <?php esc_html_e( 'Inaccurate cash forecasting and planning', 'rtbcb' ); ?>
-                            </div>
-                        </div>
-                    </label>
-                </div>
-
-                <div class="rtbcb-pain-point-card">
-                    <label class="rtbcb-pain-point-label">
-                        <input type="checkbox" name="pain_points[]" value="compliance_risk" />
-                        <div class="rtbcb-pain-point-content">
-                            <div class="rtbcb-pain-point-icon">🛡️</div>
-                            <div class="rtbcb-pain-point-title"><?php esc_html_e( 'Compliance & Risk', 'rtbcb' ); ?></div>
-                            <div class="rtbcb-pain-point-description">
-                                <?php esc_html_e( 'Regulatory compliance and risk management concerns', 'rtbcb' ); ?>
-                            </div>
-                        </div>
-                    </label>
-                </div>
-
-                <div class="rtbcb-pain-point-card">
-                    <label class="rtbcb-pain-point-label">
-                        <input type="checkbox" name="pain_points[]" value="bank_fees" />
-                        <div class="rtbcb-pain-point-content">
-                            <div class="rtbcb-pain-point-icon">💰</div>
-                            <div class="rtbcb-pain-point-title"><?php esc_html_e( 'High Bank Fees', 'rtbcb' ); ?></div>
-                            <div class="rtbcb-pain-point-description">
-                                <?php esc_html_e( 'Excessive banking fees and suboptimal cash positioning', 'rtbcb' ); ?>
-                            </div>
-                        </div>
-                    </label>
-                </div>
-
-                <div class="rtbcb-pain-point-card">
-                    <label class="rtbcb-pain-point-label">
-                        <input type="checkbox" name="pain_points[]" value="integration_issues" />
-                        <div class="rtbcb-pain-point-content">
-                            <div class="rtbcb-pain-point-icon">🔗</div>
-                            <div class="rtbcb-pain-point-title"><?php esc_html_e( 'System Integration', 'rtbcb' ); ?></div>
-                            <div class="rtbcb-pain-point-description">
-                                <?php esc_html_e( 'Disconnected systems and data silos', 'rtbcb' ); ?>
-                            </div>
-                        </div>
-                    </label>
-                </div>
-            </div>
-
-            <div class="rtbcb-pain-points-validation">
-                <div class="rtbcb-validation-message" style="display: none;">
-                    <?php esc_html_e( 'Please select at least one challenge that applies to your organization.', 'rtbcb' ); ?>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Step 4: Contact Information -->
-        <div class="rtbcb-section rtbcb-step" data-step="4">
-            <div class="rtbcb-section-header">
-                <div class="rtbcb-step-number">4</div>
-                <div class="rtbcb-step-content">
-                    <h3><?php esc_html_e( 'Get Your Results', 'rtbcb' ); ?></h3>
-                    <p class="rtbcb-step-description">
-                        <?php esc_html_e( 'Enter your email to receive your personalized business case report.', 'rtbcb' ); ?>
-                    </p>
-                </div>
-            </div>
-
-            <div class="rtbcb-form-grid">
-                <div class="rtbcb-field rtbcb-field-required rtbcb-field-full">
-                    <label for="email">
-                        <?php esc_html_e( 'Business Email Address', 'rtbcb' ); ?>
-                        <span class="rtbcb-required">*</span>
-                    </label>
-                    <input 
-                        type="email" 
-                        name="email" 
-                        id="email" 
-                        placeholder="yourname@company.com"
-                        required 
-                    />
-                    <div class="rtbcb-field-help">
-                        <?php esc_html_e( 'We\'ll send your business case report to this email address', 'rtbcb' ); ?>
-                    </div>
-                </div>
-
-                <div class="rtbcb-field rtbcb-field-full">
-                    <div class="rtbcb-consent-wrapper">
-                        <label class="rtbcb-consent-label">
-                            <input type="checkbox" name="consent" required />
-                            <span class="rtbcb-consent-text">
-                                <?php 
-                                printf(
-                                    wp_kses(
-                                        __( 'I agree to receive my business case report and occasional treasury insights from Real Treasury. You can unsubscribe at any time. View our <a href="%s" target="_blank">privacy policy</a>.', 'rtbcb' ),
-                                        [ 'a' => [ 'href' => [], 'target' => [] ] ]
-                                    ),
-                                    '#' // Replace with actual privacy policy URL
-                                );
-                                ?>
-                            </span>
+                    <div class="rtbcb-field rtbcb-field-required">
+                        <label for="company_size">
+                            <?php esc_html_e( 'Company Size (Annual Revenue)', 'rtbcb' ); ?>
+                            <span class="rtbcb-required">*</span>
                         </label>
+                        <select name="company_size" id="company_size" required>
+                            <option value=""><?php esc_html_e( 'Select your company size...', 'rtbcb' ); ?></option>
+                            <option value="<$50M"><?php esc_html_e( 'Small Business (<$50M)', 'rtbcb' ); ?></option>
+                            <option value="$50M-$500M"><?php esc_html_e( 'Mid-Market ($50M-$500M)', 'rtbcb' ); ?></option>
+                            <option value="$500M-$2B"><?php esc_html_e( 'Large Enterprise ($500M-$2B)', 'rtbcb' ); ?></option>
+                            <option value=">$2B"><?php esc_html_e( 'Fortune 500 (>$2B)', 'rtbcb' ); ?></option>
+                        </select>
+                    </div>
+
+                    <div class="rtbcb-field">
+                        <label for="industry"><?php esc_html_e( 'Industry', 'rtbcb' ); ?></label>
+                        <select name="industry" id="industry">
+                            <option value=""><?php esc_html_e( 'Select your industry...', 'rtbcb' ); ?></option>
+                            <option value="manufacturing"><?php esc_html_e( 'Manufacturing', 'rtbcb' ); ?></option>
+                            <option value="retail"><?php esc_html_e( 'Retail & E-commerce', 'rtbcb' ); ?></option>
+                            <option value="healthcare"><?php esc_html_e( 'Healthcare', 'rtbcb' ); ?></option>
+                            <option value="technology"><?php esc_html_e( 'Technology', 'rtbcb' ); ?></option>
+                            <option value="financial_services"><?php esc_html_e( 'Financial Services', 'rtbcb' ); ?></option>
+                            <option value="energy"><?php esc_html_e( 'Energy & Utilities', 'rtbcb' ); ?></option>
+                            <option value="real_estate"><?php esc_html_e( 'Real Estate', 'rtbcb' ); ?></option>
+                            <option value="professional_services"><?php esc_html_e( 'Professional Services', 'rtbcb' ); ?></option>
+                            <option value="transportation"><?php esc_html_e( 'Transportation & Logistics', 'rtbcb' ); ?></option>
+                            <option value="education"><?php esc_html_e( 'Education', 'rtbcb' ); ?></option>
+                            <option value="government"><?php esc_html_e( 'Government', 'rtbcb' ); ?></option>
+                            <option value="other"><?php esc_html_e( 'Other', 'rtbcb' ); ?></option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Treasury Operations -->
+            <div class="rtbcb-wizard-step" data-step="2">
+                <div class="rtbcb-step-header">
+                    <h3><?php esc_html_e( 'Your current treasury operations', 'rtbcb' ); ?></h3>
+                    <p><?php esc_html_e( 'Help us understand your current workload and banking relationships.', 'rtbcb' ); ?></p>
+                </div>
+                
+                <div class="rtbcb-step-content">
+                    <div class="rtbcb-field rtbcb-field-required">
+                        <label for="hours_reconciliation">
+                            <?php esc_html_e( 'Weekly Hours: Bank Reconciliation', 'rtbcb' ); ?>
+                            <span class="rtbcb-required">*</span>
+                        </label>
+                        <input type="number" name="hours_reconciliation" id="hours_reconciliation" 
+                               min="0" max="168" step="0.5" placeholder="0" required />
+                        <div class="rtbcb-field-help">
+                            <?php esc_html_e( 'Total weekly hours spent on bank reconciliation tasks', 'rtbcb' ); ?>
+                        </div>
+                    </div>
+
+                    <div class="rtbcb-field rtbcb-field-required">
+                        <label for="hours_cash_positioning">
+                            <?php esc_html_e( 'Weekly Hours: Cash Positioning', 'rtbcb' ); ?>
+                            <span class="rtbcb-required">*</span>
+                        </label>
+                        <input type="number" name="hours_cash_positioning" id="hours_cash_positioning" 
+                               min="0" max="168" step="0.5" placeholder="0" required />
+                        <div class="rtbcb-field-help">
+                            <?php esc_html_e( 'Time spent on cash visibility, forecasting, and positioning', 'rtbcb' ); ?>
+                        </div>
+                    </div>
+
+                    <div class="rtbcb-field rtbcb-field-required">
+                        <label for="num_banks">
+                            <?php esc_html_e( 'Number of Banking Relationships', 'rtbcb' ); ?>
+                            <span class="rtbcb-required">*</span>
+                        </label>
+                        <input type="number" name="num_banks" id="num_banks" 
+                               min="1" max="50" placeholder="0" required />
+                        <div class="rtbcb-field-help">
+                            <?php esc_html_e( 'Total number of banks where your company maintains accounts', 'rtbcb' ); ?>
+                        </div>
+                    </div>
+
+                    <div class="rtbcb-field rtbcb-field-required">
+                        <label for="ftes">
+                            <?php esc_html_e( 'Treasury Team Size (FTEs)', 'rtbcb' ); ?>
+                            <span class="rtbcb-required">*</span>
+                        </label>
+                        <input type="number" name="ftes" id="ftes" 
+                               min="0.5" max="100" step="0.5" placeholder="0" required />
+                        <div class="rtbcb-field-help">
+                            <?php esc_html_e( 'Full-time equivalent employees dedicated to treasury functions', 'rtbcb' ); ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Treasury Challenges -->
+            <div class="rtbcb-wizard-step" data-step="3">
+                <div class="rtbcb-step-header">
+                    <h3><?php esc_html_e( 'What are your biggest challenges?', 'rtbcb' ); ?></h3>
+                    <p><?php esc_html_e( 'Select the pain points that best describe your current treasury challenges.', 'rtbcb' ); ?></p>
+                </div>
+                
+                <div class="rtbcb-step-content">
+                    <div class="rtbcb-pain-points-grid">
+                        <div class="rtbcb-pain-point-card">
+                            <label class="rtbcb-pain-point-label">
+                                <input type="checkbox" name="pain_points[]" value="manual_processes" />
+                                <div class="rtbcb-pain-point-content">
+                                    <div class="rtbcb-pain-point-icon">⚙️</div>
+                                    <div class="rtbcb-pain-point-title"><?php esc_html_e( 'Manual Processes', 'rtbcb' ); ?></div>
+                                    <div class="rtbcb-pain-point-description">
+                                        <?php esc_html_e( 'Time-consuming manual data entry and reconciliation', 'rtbcb' ); ?>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="rtbcb-pain-point-card">
+                            <label class="rtbcb-pain-point-label">
+                                <input type="checkbox" name="pain_points[]" value="poor_visibility" />
+                                <div class="rtbcb-pain-point-content">
+                                    <div class="rtbcb-pain-point-icon">👁️</div>
+                                    <div class="rtbcb-pain-point-title"><?php esc_html_e( 'Poor Cash Visibility', 'rtbcb' ); ?></div>
+                                    <div class="rtbcb-pain-point-description">
+                                        <?php esc_html_e( 'Lack of real-time visibility into cash positions', 'rtbcb' ); ?>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="rtbcb-pain-point-card">
+                            <label class="rtbcb-pain-point-label">
+                                <input type="checkbox" name="pain_points[]" value="forecast_accuracy" />
+                                <div class="rtbcb-pain-point-content">
+                                    <div class="rtbcb-pain-point-icon">📊</div>
+                                    <div class="rtbcb-pain-point-title"><?php esc_html_e( 'Forecast Accuracy', 'rtbcb' ); ?></div>
+                                    <div class="rtbcb-pain-point-description">
+                                        <?php esc_html_e( 'Inaccurate cash forecasting and planning', 'rtbcb' ); ?>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="rtbcb-pain-point-card">
+                            <label class="rtbcb-pain-point-label">
+                                <input type="checkbox" name="pain_points[]" value="compliance_risk" />
+                                <div class="rtbcb-pain-point-content">
+                                    <div class="rtbcb-pain-point-icon">🛡️</div>
+                                    <div class="rtbcb-pain-point-title"><?php esc_html_e( 'Compliance & Risk', 'rtbcb' ); ?></div>
+                                    <div class="rtbcb-pain-point-description">
+                                        <?php esc_html_e( 'Regulatory compliance and risk management concerns', 'rtbcb' ); ?>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="rtbcb-pain-point-card">
+                            <label class="rtbcb-pain-point-label">
+                                <input type="checkbox" name="pain_points[]" value="bank_fees" />
+                                <div class="rtbcb-pain-point-content">
+                                    <div class="rtbcb-pain-point-icon">💰</div>
+                                    <div class="rtbcb-pain-point-title"><?php esc_html_e( 'High Bank Fees', 'rtbcb' ); ?></div>
+                                    <div class="rtbcb-pain-point-description">
+                                        <?php esc_html_e( 'Excessive banking fees and suboptimal cash positioning', 'rtbcb' ); ?>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="rtbcb-pain-point-card">
+                            <label class="rtbcb-pain-point-label">
+                                <input type="checkbox" name="pain_points[]" value="integration_issues" />
+                                <div class="rtbcb-pain-point-content">
+                                    <div class="rtbcb-pain-point-icon">🔗</div>
+                                    <div class="rtbcb-pain-point-title"><?php esc_html_e( 'System Integration', 'rtbcb' ); ?></div>
+                                    <div class="rtbcb-pain-point-description">
+                                        <?php esc_html_e( 'Disconnected systems and data silos', 'rtbcb' ); ?>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="rtbcb-pain-points-validation">
+                        <div class="rtbcb-validation-message" style="display: none;">
+                            <?php esc_html_e( 'Please select at least one challenge that applies to your organization.', 'rtbcb' ); ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: Contact Information -->
+            <div class="rtbcb-wizard-step" data-step="4">
+                <div class="rtbcb-step-header">
+                    <h3><?php esc_html_e( 'Get your business case', 'rtbcb' ); ?></h3>
+                    <p><?php esc_html_e( 'Enter your email to receive your personalized ROI analysis and recommendations.', 'rtbcb' ); ?></p>
+                </div>
+                
+                <div class="rtbcb-step-content">
+                    <div class="rtbcb-field rtbcb-field-required">
+                        <label for="email">
+                            <?php esc_html_e( 'Business Email Address', 'rtbcb' ); ?>
+                            <span class="rtbcb-required">*</span>
+                        </label>
+                        <input type="email" name="email" id="email" 
+                               placeholder="yourname@company.com" required />
+                        <div class="rtbcb-field-help">
+                            <?php esc_html_e( 'We\'ll send your business case report to this email address', 'rtbcb' ); ?>
+                        </div>
+                    </div>
+
+                    <div class="rtbcb-field">
+                        <div class="rtbcb-consent-wrapper">
+                            <label class="rtbcb-consent-label">
+                                <input type="checkbox" name="consent" required />
+                                <span class="rtbcb-consent-text">
+                                    <?php 
+                                    printf(
+                                        wp_kses(
+                                            __( 'I agree to receive my business case report and occasional treasury insights. You can unsubscribe at any time. View our <a href="%s" target="_blank">privacy policy</a>.', 'rtbcb' ),
+                                            [ 'a' => [ 'href' => [], 'target' => [] ] ]
+                                        ),
+                                        '#'
+                                    );
+                                    ?>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- What You'll Receive Preview -->
+                    <div class="rtbcb-results-preview">
+                        <h4><?php esc_html_e( 'What You\'ll Receive:', 'rtbcb' ); ?></h4>
+                        <ul class="rtbcb-preview-list">
+                            <li>📊 <?php esc_html_e( 'Detailed ROI projections (conservative, base case, optimistic)', 'rtbcb' ); ?></li>
+                            <li>🎯 <?php esc_html_e( 'Personalized solution category recommendation', 'rtbcb' ); ?></li>
+                            <li>📄 <?php esc_html_e( 'Professional PDF report ready for stakeholders', 'rtbcb' ); ?></li>
+                            <li>🗺️ <?php esc_html_e( 'Implementation roadmap and next steps', 'rtbcb' ); ?></li>
+                        </ul>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- What to Expect -->
-        <div class="rtbcb-expectation-section">
-            <h4><?php esc_html_e( 'What You\'ll Receive', 'rtbcb' ); ?></h4>
-            <div class="rtbcb-expectations-grid">
-                <div class="rtbcb-expectation-item">
-                    <div class="rtbcb-expectation-icon">📊</div>
-                    <div class="rtbcb-expectation-content">
-                        <div class="rtbcb-expectation-title"><?php esc_html_e( 'ROI Analysis', 'rtbcb' ); ?></div>
-                        <div class="rtbcb-expectation-description">
-                            <?php esc_html_e( 'Conservative, base case, and optimistic ROI projections', 'rtbcb' ); ?>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="rtbcb-expectation-item">
-                    <div class="rtbcb-expectation-icon">🎯</div>
-                    <div class="rtbcb-expectation-content">
-                        <div class="rtbcb-expectation-title"><?php esc_html_e( 'Solution Recommendation', 'rtbcb' ); ?></div>
-                        <div class="rtbcb-expectation-description">
-                            <?php esc_html_e( 'Personalized category recommendation based on your profile', 'rtbcb' ); ?>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="rtbcb-expectation-item">
-                    <div class="rtbcb-expectation-icon">📄</div>
-                    <div class="rtbcb-expectation-content">
-                        <div class="rtbcb-expectation-title"><?php esc_html_e( 'Professional Report', 'rtbcb' ); ?></div>
-                        <div class="rtbcb-expectation-description">
-                            <?php esc_html_e( 'Comprehensive PDF report ready for stakeholder presentation', 'rtbcb' ); ?>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="rtbcb-expectation-item">
-                    <div class="rtbcb-expectation-icon">🗺️</div>
-                    <div class="rtbcb-expectation-content">
-                        <div class="rtbcb-expectation-title"><?php esc_html_e( 'Next Steps Guide', 'rtbcb' ); ?></div>
-                        <div class="rtbcb-expectation-description">
-                            <?php esc_html_e( 'Clear action plan for your treasury technology journey', 'rtbcb' ); ?>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Submit Section -->
-        <div class="rtbcb-actions">
-            <button type="submit" class="rtbcb-submit-btn" disabled>
-                <span class="rtbcb-submit-text"><?php esc_html_e( 'Generate My Business Case', 'rtbcb' ); ?></span>
-                <span class="rtbcb-submit-icon">🚀</span>
+        <!-- Navigation Controls -->
+        <div class="rtbcb-wizard-navigation">
+            <button type="button" class="rtbcb-nav-btn rtbcb-nav-prev" style="display: none;">
+                <span class="rtbcb-nav-icon">←</span>
+                <?php esc_html_e( 'Previous', 'rtbcb' ); ?>
             </button>
-            <div class="rtbcb-submit-help">
-                <?php esc_html_e( 'Complete all required fields to generate your business case', 'rtbcb' ); ?>
-            </div>
+            
+            <div class="rtbcb-nav-spacer"></div>
+            
+            <button type="button" class="rtbcb-nav-btn rtbcb-nav-next">
+                <?php esc_html_e( 'Next', 'rtbcb' ); ?>
+                <span class="rtbcb-nav-icon">→</span>
+            </button>
+            
+            <button type="submit" class="rtbcb-nav-btn rtbcb-nav-submit" style="display: none;">
+                <span class="rtbcb-nav-icon">🚀</span>
+                <?php esc_html_e( 'Generate Business Case', 'rtbcb' ); ?>
+            </button>
         </div>
     </form>
-    
+
     <!-- Results Section -->
     <div id="rtbcbResults" class="rtbcb-results" style="display: none;">
         <!-- Results will be populated by JavaScript -->
@@ -392,7 +326,7 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
     <!-- Powered By -->
     <div class="rtbcb-powered-by">
         <p>
-            <?php 
+            <?php
             printf(
                 wp_kses(
                     __( 'Powered by <strong>Real Treasury</strong> - Empowering treasury teams with data-driven insights', 'rtbcb' ),
@@ -435,86 +369,187 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 </div>
 
 <style>
-/* Form-specific enhanced styles */
-.rtbcb-form-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
-    margin-top: 20px;
-}
-
-.rtbcb-field-full {
-    grid-column: 1 / -1;
-}
-
-.rtbcb-step {
-    opacity: 1;
-    transition: all 0.3s ease;
-}
-
-.rtbcb-step.rtbcb-step-disabled {
-    opacity: 0.6;
-    pointer-events: none;
-}
-
-.rtbcb-section-header {
+/* Wizard Base Styles */
+.rtbcb-container {
+    min-height: 100vh;
     display: flex;
-    align-items: flex-start;
-    gap: 16px;
-    margin-bottom: 24px;
+    flex-direction: column;
+    justify-content: center;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    box-sizing: border-box;
 }
 
-.rtbcb-step-number {
+.rtbcb-wizard {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-height: 70vh;
+}
+
+/* Progress Indicator */
+.rtbcb-wizard-progress {
+    margin-bottom: 40px;
+}
+
+.rtbcb-progress-steps {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.rtbcb-progress-steps::before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--border-light);
+    z-index: 1;
+}
+
+.rtbcb-progress-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+    background: white;
+    padding: 0 10px;
+}
+
+.rtbcb-progress-number {
     width: 40px;
     height: 40px;
-    background: var(--primary-purple);
-    color: white;
     border-radius: 50%;
+    background: var(--border-light);
+    color: var(--gray-text);
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 600;
-    font-size: 18px;
-    flex-shrink: 0;
+    margin-bottom: 8px;
+    transition: all 0.3s ease;
 }
 
-.rtbcb-step-content h3 {
-    margin: 0 0 8px 0;
+.rtbcb-progress-step.active .rtbcb-progress-number,
+.rtbcb-progress-step.completed .rtbcb-progress-number {
+    background: var(--primary-purple);
+    color: white;
+}
+
+.rtbcb-progress-step.completed .rtbcb-progress-number::after {
+    content: '✓';
+    font-size: 16px;
+}
+
+.rtbcb-progress-label {
+    font-size: 12px;
+    color: var(--gray-text);
+    font-weight: 500;
+    text-align: center;
+}
+
+.rtbcb-progress-step.active .rtbcb-progress-label {
+    color: var(--primary-purple);
+    font-weight: 600;
+}
+
+/* Steps Container */
+.rtbcb-wizard-steps {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    min-height: 400px;
+}
+
+.rtbcb-wizard-step {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    opacity: 0;
+    transform: translateX(100px);
+    transition: all 0.4s ease;
+    pointer-events: none;
+    padding: 20px 0;
+}
+
+.rtbcb-wizard-step.active {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: all;
+}
+
+.rtbcb-wizard-step.prev {
+    transform: translateX(-100px);
+}
+
+.rtbcb-step-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.rtbcb-step-header h3 {
+    margin: 0 0 10px 0;
     color: var(--dark-text);
-    font-size: 20px;
+    font-size: 24px;
+    font-weight: 600;
 }
 
-.rtbcb-step-description {
+.rtbcb-step-header p {
     margin: 0;
     color: var(--gray-text);
-    font-size: 14px;
+    font-size: 16px;
     line-height: 1.5;
 }
 
-.rtbcb-progress-indicator {
-    margin-top: 20px;
+.rtbcb-step-content {
+    max-width: 500px;
+    margin: 0 auto;
 }
 
-.rtbcb-progress-bar {
-    width: 100%;
-    height: 4px;
-    background: rgba(114,22,244,0.1);
-    border-radius: 2px;
-    overflow: hidden;
+/* Form Fields */
+.rtbcb-field {
+    margin-bottom: 24px;
+}
+
+.rtbcb-field label {
+    display: block;
     margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--dark-text);
+    font-size: 15px;
 }
 
-.rtbcb-progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--primary-purple), var(--secondary-purple));
-    border-radius: 2px;
-    transition: width 0.3s ease;
+.rtbcb-field input,
+.rtbcb-field select {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid var(--border-light);
+    border-radius: 8px;
+    font-size: 16px;
+    background: white;
+    color: var(--dark-text);
+    transition: all 0.2s ease;
+    box-sizing: border-box;
 }
 
-.rtbcb-progress-text {
-    font-size: 12px;
+.rtbcb-field input:focus,
+.rtbcb-field select:focus {
+    border-color: var(--primary-purple);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(114,22,244,0.1);
+}
+
+.rtbcb-field-help {
+    font-size: 13px;
     color: var(--gray-text);
-    text-align: center;
+    margin-top: 6px;
+    line-height: 1.4;
 }
 
 .rtbcb-required {
@@ -522,17 +557,10 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
     font-weight: 600;
 }
 
-.rtbcb-field-help {
-    font-size: 12px;
-    color: var(--gray-text);
-    margin-top: 4px;
-    line-height: 1.4;
-}
-
-/* Pain Points Grid */
+/* Pain Points Grid (Step 3) */
 .rtbcb-pain-points-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 16px;
     margin-top: 20px;
 }
@@ -574,74 +602,31 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 }
 
 .rtbcb-pain-point-icon {
-    font-size: 32px;
-    margin-bottom: 12px;
+    font-size: 28px;
+    margin-bottom: 10px;
     display: block;
 }
 
 .rtbcb-pain-point-title {
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 600;
     color: var(--dark-text);
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .rtbcb-pain-point-description {
-    font-size: 13px;
-    color: var(--gray-text);
-    line-height: 1.4;
-}
-
-/* Expectations */
-.rtbcb-expectation-section {
-    background: #f8f9ff;
-    border: 1px solid rgba(114,22,244,0.1);
-    border-radius: 12px;
-    padding: 24px;
-    margin: 24px 0;
-}
-
-.rtbcb-expectation-section h4 {
-    margin: 0 0 20px 0;
-    color: var(--dark-text);
-    text-align: center;
-    font-size: 18px;
-}
-
-.rtbcb-expectations-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
-}
-
-.rtbcb-expectation-item {
-    text-align: center;
-}
-
-.rtbcb-expectation-icon {
-    font-size: 24px;
-    margin-bottom: 8px;
-}
-
-.rtbcb-expectation-title {
-    font-weight: 600;
-    color: var(--dark-text);
-    margin-bottom: 4px;
-    font-size: 14px;
-}
-
-.rtbcb-expectation-description {
     font-size: 12px;
     color: var(--gray-text);
     line-height: 1.4;
 }
 
-/* Consent */
+/* Consent (Step 4) */
 .rtbcb-consent-wrapper {
     background: #f9fafb;
     border: 1px solid var(--border-light);
     border-radius: 8px;
     padding: 16px;
+    margin-bottom: 24px;
 }
 
 .rtbcb-consent-label {
@@ -664,41 +649,109 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
     line-height: 1.5;
 }
 
-/* Enhanced Submit Button */
-.rtbcb-submit-btn {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 8px !important;
+/* Results Preview (Step 4) */
+.rtbcb-results-preview {
+    background: #f8f9ff;
+    border: 1px solid rgba(114,22,244,0.2);
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
 }
 
-.rtbcb-submit-btn:disabled {
-    background: #d1d5db !important;
-    color: #9ca3af !important;
-    cursor: not-allowed !important;
-    transform: none !important;
-    box-shadow: none !important;
+.rtbcb-results-preview h4 {
+    margin: 0 0 12px 0;
+    color: var(--primary-purple);
+    font-size: 16px;
 }
 
-.rtbcb-submit-help {
-    text-align: center;
-    font-size: 12px;
-    color: var(--gray-text);
-    margin-top: 8px;
+.rtbcb-preview-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
 }
 
-.rtbcb-powered-by {
-    text-align: center;
+.rtbcb-preview-list li {
+    padding: 6px 0;
+    font-size: 14px;
+    color: var(--dark-text);
+    line-height: 1.4;
+}
+
+/* Navigation */
+.rtbcb-wizard-navigation {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     margin-top: 40px;
     padding-top: 20px;
     border-top: 1px solid var(--border-light);
-    color: var(--gray-text);
-    font-size: 12px;
+}
+
+.rtbcb-nav-spacer {
+    flex: 1;
+}
+
+.rtbcb-nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: var(--primary-purple);
+    color: white;
+}
+
+.rtbcb-nav-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(114,22,244,0.3);
+}
+
+.rtbcb-nav-btn:disabled {
+    background: #d1d5db;
+    color: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.rtbcb-nav-prev {
+    background: white;
+    color: var(--primary-purple);
+    border: 2px solid var(--primary-purple);
+}
+
+.rtbcb-nav-prev:hover {
+    background: var(--primary-purple);
+    color: white;
+}
+
+.rtbcb-nav-submit {
+    background: linear-gradient(135deg, var(--secondary-purple), var(--primary-purple));
+    box-shadow: 0 4px 16px rgba(114,22,244,0.3);
+}
+
+.rtbcb-nav-icon {
+    font-size: 16px;
 }
 
 /* Validation */
-.rtbcb-pain-points-validation {
-    margin-top: 16px;
+.rtbcb-field-error {
+    color: var(--error-red);
+    font-size: 12px;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.rtbcb-field-invalid {
+    border-color: var(--error-red) !important;
+    box-shadow: 0 0 0 3px rgba(239,68,68,0.1) !important;
 }
 
 .rtbcb-validation-message {
@@ -708,138 +761,91 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
     border-radius: 6px;
     padding: 8px 12px;
     font-size: 13px;
+    margin-top: 16px;
 }
 
-/* Modal */
-.rtbcb-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.7);
-    z-index: 10000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-}
-
-.rtbcb-modal-content {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-    max-width: 600px;
-    width: 100%;
-    max-height: 80vh;
-    overflow: hidden;
-}
-
-.rtbcb-modal-header {
-    padding: 20px 24px;
-    border-bottom: 1px solid var(--border-light);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.rtbcb-modal-header h3 {
-    margin: 0;
-    color: var(--dark-text);
-}
-
-.rtbcb-modal-close {
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: var(--gray-text);
-    padding: 0;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 4px;
-}
-
-.rtbcb-modal-close:hover {
-    background: #f3f4f6;
-    color: var(--dark-text);
-}
-
-.rtbcb-modal-body {
-    padding: 24px;
-    overflow-y: auto;
-    max-height: calc(80vh - 100px);
-}
-
-.rtbcb-category-info {
-    margin-bottom: 24px;
-    padding-bottom: 24px;
-    border-bottom: 1px solid var(--border-light);
-}
-
-.rtbcb-category-info:last-child {
-    margin-bottom: 0;
-    padding-bottom: 0;
-    border-bottom: none;
-}
-
-.rtbcb-category-info h4 {
-    margin: 0 0 8px 0;
-    color: var(--primary-purple);
-}
-
-.rtbcb-category-features,
-.rtbcb-category-ideal {
-    margin-top: 12px;
-    font-size: 14px;
-}
-
-.rtbcb-category-features ul {
-    margin: 4px 0 0 16px;
-    padding: 0;
-}
-
-.rtbcb-category-features li {
-    margin-bottom: 4px;
-}
-
+/* Responsive Design */
 @media (max-width: 768px) {
-    .rtbcb-form-grid {
-        grid-template-columns: 1fr;
+    .rtbcb-container {
+        padding: 15px;
+        min-height: 100vh;
+    }
+    
+    .rtbcb-progress-steps {
+        margin-bottom: 30px;
+    }
+    
+    .rtbcb-progress-label {
+        font-size: 11px;
+    }
+    
+    .rtbcb-step-header h3 {
+        font-size: 20px;
+    }
+    
+    .rtbcb-step-header p {
+        font-size: 14px;
     }
     
     .rtbcb-pain-points-grid {
         grid-template-columns: 1fr;
     }
     
-    .rtbcb-expectations-grid {
-        grid-template-columns: repeat(2, 1fr);
+    .rtbcb-wizard-navigation {
+        margin-top: 30px;
     }
     
-    .rtbcb-section-header {
-        flex-direction: column;
-        text-align: center;
-    }
-    
-    .rtbcb-step-number {
-        align-self: center;
+    .rtbcb-nav-btn {
+        padding: 10px 20px;
+        font-size: 14px;
     }
 }
 
 @media (max-width: 480px) {
-    .rtbcb-expectations-grid {
-        grid-template-columns: 1fr;
+    .rtbcb-progress-steps::before {
+        display: none;
     }
     
-    .rtbcb-pain-point-card {
-        min-height: auto;
+    .rtbcb-progress-step {
+        padding: 0 5px;
+    }
+    
+    .rtbcb-progress-number {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
+    }
+    
+    .rtbcb-step-content {
+        padding: 0 10px;
     }
     
     .rtbcb-pain-point-label {
-        padding: 16px;
+        padding: 15px;
     }
 }
-</style> 
+
+/* Loading States */
+.rtbcb-nav-btn.loading {
+    position: relative;
+    pointer-events: none;
+}
+
+.rtbcb-nav-btn.loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    margin: -8px 0 0 -8px;
+    border: 2px solid rgba(255,255,255,0.6);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: rtbcb-spin 1s linear infinite;
+}
+
+@keyframes rtbcb-spin {
+    to { transform: rotate(360deg); }
+}
+</style>

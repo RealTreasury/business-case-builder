@@ -4,36 +4,135 @@ class BusinessCaseBuilder {
     constructor() {
         this.form = document.getElementById('rtbcbForm');
         this.results = document.getElementById('rtbcbResults');
-        this.submitBtn = this.form?.querySelector('.rtbcb-submit-btn');
-        this.progressSteps = [];
+        this.currentStep = 1;
+        this.totalSteps = 4;
+        this.stepData = {};
+        
         this.init();
     }
 
     init() {
         if (this.form) {
-            this.form.addEventListener('submit', this.handleSubmit.bind(this));
+            this.initWizard();
             this.initFormValidation();
-            this.initProgressTracking();
+            this.bindEvents();
         }
     }
 
-    initFormValidation() {
-        const inputs = this.form.querySelectorAll('input[required], select[required]');
-        inputs.forEach(input => {
-            input.addEventListener('blur', this.validateField.bind(this, input));
-            input.addEventListener('input', this.clearFieldError.bind(this, input));
+    initWizard() {
+        this.steps = this.form.querySelectorAll('.rtbcb-wizard-step');
+        this.progressSteps = this.form.querySelectorAll('.rtbcb-progress-step');
+        this.nextBtn = this.form.querySelector('.rtbcb-nav-next');
+        this.prevBtn = this.form.querySelector('.rtbcb-nav-prev');
+        this.submitBtn = this.form.querySelector('.rtbcb-nav-submit');
+        
+        this.updateStepDisplay();
+        this.updateNavigationState();
+    }
+
+    bindEvents() {
+        this.nextBtn?.addEventListener('click', () => this.nextStep());
+        this.prevBtn?.addEventListener('click', () => this.previousStep());
+        this.form.addEventListener('submit', this.handleSubmit.bind(this));
+        
+        this.form.querySelectorAll('input[name="pain_points[]"]').forEach(checkbox => {
+            checkbox.addEventListener('change', this.handlePainPointSelection.bind(this));
+        });
+        
+        this.form.querySelectorAll('input, select').forEach(field => {
+            field.addEventListener('blur', () => this.validateField(field));
+            field.addEventListener('input', () => this.clearFieldError(field));
         });
     }
 
-    initProgressTracking() {
-        this.progressSteps = [
-            'Calculating ROI scenarios...',
-            'Analyzing your requirements...',
-            'Determining best solution category...',
-            'Researching vendor data...',
-            'Generating business narrative...',
-            'Creating your custom report...'
-        ];
+    nextStep() {
+        if (this.validateCurrentStep()) {
+            this.saveStepData();
+            
+            if (this.currentStep < this.totalSteps) {
+                this.currentStep++;
+                this.updateStepDisplay();
+                this.updateNavigationState();
+                this.updateProgress();
+            }
+        }
+    }
+
+    previousStep() {
+        if (this.currentStep > 1) {
+            this.currentStep--;
+            this.updateStepDisplay();
+            this.updateNavigationState();
+            this.updateProgress();
+        }
+    }
+
+    updateStepDisplay() {
+        this.steps.forEach((step, index) => {
+            const stepNumber = index + 1;
+            step.classList.remove('active', 'prev');
+            
+            if (stepNumber === this.currentStep) {
+                step.classList.add('active');
+            } else if (stepNumber < this.currentStep) {
+                step.classList.add('prev');
+            }
+        });
+
+        this.form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    updateNavigationState() {
+        if (this.currentStep === 1) {
+            this.prevBtn.style.display = 'none';
+        } else {
+            this.prevBtn.style.display = 'flex';
+        }
+
+        if (this.currentStep === this.totalSteps) {
+            this.nextBtn.style.display = 'none';
+            this.submitBtn.style.display = 'flex';
+        } else {
+            this.nextBtn.style.display = 'flex';
+            this.submitBtn.style.display = 'none';
+        }
+    }
+
+    updateProgress() {
+        this.progressSteps.forEach((step, index) => {
+            const stepNumber = index + 1;
+            step.classList.remove('active', 'completed');
+            
+            if (stepNumber === this.currentStep) {
+                step.classList.add('active');
+            } else if (stepNumber < this.currentStep) {
+                step.classList.add('completed');
+            }
+        });
+    }
+
+    validateCurrentStep() {
+        const currentStepElement = this.form.querySelector(`[data-step="${this.currentStep}"]`);
+        const requiredFields = currentStepElement.querySelectorAll('input[required], select[required]');
+        let isValid = true;
+
+        requiredFields.forEach(field => {
+            if (!this.validateField(field)) {
+                isValid = false;
+            }
+        });
+
+        if (this.currentStep === 3) {
+            const painPoints = currentStepElement.querySelectorAll('input[name="pain_points[]"]:checked');
+            if (painPoints.length === 0) {
+                this.showPainPointsError();
+                isValid = false;
+            } else {
+                this.hidePainPointsError();
+            }
+        }
+
+        return isValid;
     }
 
     validateField(field) {
@@ -88,50 +187,71 @@ class BusinessCaseBuilder {
         field.classList.remove('rtbcb-field-invalid');
     }
 
+    handlePainPointSelection(e) {
+        const card = e.target.closest('.rtbcb-pain-point-card');
+        if (e.target.checked) {
+            card.classList.add('rtbcb-selected');
+        } else {
+            card.classList.remove('rtbcb-selected');
+        }
+        
+        this.hidePainPointsError();
+    }
+
+    showPainPointsError() {
+        const validationMessage = this.form.querySelector('.rtbcb-validation-message');
+        if (validationMessage) {
+            validationMessage.style.display = 'block';
+        }
+    }
+
+    hidePainPointsError() {
+        const validationMessage = this.form.querySelector('.rtbcb-validation-message');
+        if (validationMessage) {
+            validationMessage.style.display = 'none';
+        }
+    }
+
+    saveStepData() {
+        const currentStepElement = this.form.querySelector(`[data-step="${this.currentStep}"]`);
+        const fields = currentStepElement.querySelectorAll('input, select');
+        
+        fields.forEach(field => {
+            if (field.type === 'checkbox') {
+                if (!this.stepData[field.name]) {
+                    this.stepData[field.name] = [];
+                }
+                if (field.checked && !this.stepData[field.name].includes(field.value)) {
+                    this.stepData[field.name].push(field.value);
+                }
+            } else {
+                this.stepData[field.name] = field.value;
+            }
+        });
+    }
+
     isValidEmail(email) {
         const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return re.test(email);
     }
 
-    validateForm() {
-        const inputs = this.form.querySelectorAll('input[required], select[required]');
-        let isValid = true;
-
-        inputs.forEach(input => {
-            if (!this.validateField(input)) {
-                isValid = false;
-            }
-        });
-
-        // Validate at least one pain point is selected
-        const painPoints = this.form.querySelectorAll('input[name="pain_points[]"]:checked');
-        if (painPoints.length === 0) {
-            this.showError('Please select at least one pain point.');
-            isValid = false;
-        }
-
-        return isValid;
-    }
-
     async handleSubmit(e) {
         e.preventDefault();
 
-        if (!this.validateForm()) {
-            this.scrollToFirstError();
+        if (!this.validateCurrentStep()) {
             return;
         }
 
-        const originalText = this.submitBtn.textContent;
+        this.saveStepData();
 
         try {
             this.showProgressIndicator();
-            this.disableForm();
+            this.disableNavigation();
 
             const formData = new FormData(this.form);
             formData.append('action', 'rtbcb_generate_case');
             formData.append('rtbcb_nonce', RTBCB.nonce);
 
-            // Simulate progress steps
             this.startProgressSimulation();
 
             const response = await fetch(RTBCB.ajax_url, {
@@ -157,8 +277,7 @@ class BusinessCaseBuilder {
             console.error('Submission Error:', error);
         } finally {
             this.hideProgressIndicator();
-            this.enableForm();
-            this.submitBtn.textContent = originalText;
+            this.enableNavigation();
         }
     }
 
@@ -175,31 +294,33 @@ class BusinessCaseBuilder {
             </div>
         `;
 
-        this.form.insertAdjacentHTML('afterend', progressHtml);
+        document.body.insertAdjacentHTML('beforeend', progressHtml);
         this.progressOverlay = document.querySelector('.rtbcb-progress-overlay');
     }
 
     startProgressSimulation() {
-        let currentStep = 0;
-        const stepDuration = 2000; // 2 seconds per step
+        const steps = [
+            'Calculating ROI scenarios...',
+            'Analyzing your requirements...',
+            'Determining best solution category...',
+            'Researching vendor data...',
+            'Generating business narrative...',
+            'Creating your custom report...'
+        ];
 
+        let currentStep = 0;
         this.progressInterval = setInterval(() => {
-            if (currentStep < this.progressSteps.length) {
-                this.updateProgressStep(this.progressSteps[currentStep]);
+            if (currentStep < steps.length) {
+                this.updateProgressStep(steps[currentStep]);
                 currentStep++;
             }
-        }, stepDuration);
+        }, 2000);
     }
 
     updateProgressStep(stepText) {
-        const stepElement = document.querySelector('.rtbcb-progress-step');
+        const stepElement = document.querySelector('.rtbcb-progress-overlay .rtbcb-progress-step');
         if (stepElement) {
             stepElement.textContent = stepText;
-            stepElement.classList.add('rtbcb-progress-step-animation');
-            
-            setTimeout(() => {
-                stepElement.classList.remove('rtbcb-progress-step-animation');
-            }, 500);
         }
     }
 
@@ -208,13 +329,11 @@ class BusinessCaseBuilder {
             clearInterval(this.progressInterval);
         }
 
-        const stepElement = document.querySelector('.rtbcb-progress-step');
+        const stepElement = document.querySelector('.rtbcb-progress-overlay .rtbcb-progress-step');
         if (stepElement) {
             stepElement.textContent = 'Analysis complete!';
-            stepElement.classList.add('rtbcb-progress-complete');
         }
 
-        // Auto-hide after a moment
         setTimeout(() => {
             this.hideProgressIndicator();
         }, 1000);
@@ -232,20 +351,30 @@ class BusinessCaseBuilder {
         }
     }
 
-    disableForm() {
-        const formElements = this.form.querySelectorAll('input, select, button');
-        formElements.forEach(element => {
-            element.disabled = true;
-        });
+    disableNavigation() {
+        this.nextBtn.disabled = true;
+        this.prevBtn.disabled = true;
+        this.submitBtn.disabled = true;
         this.submitBtn.classList.add('loading');
     }
 
-    enableForm() {
-        const formElements = this.form.querySelectorAll('input, select, button');
-        formElements.forEach(element => {
-            element.disabled = false;
-        });
+    enableNavigation() {
+        this.nextBtn.disabled = false;
+        this.prevBtn.disabled = false;
+        this.submitBtn.disabled = false;
         this.submitBtn.classList.remove('loading');
+    }
+
+    showError(message) {
+        const errorHtml = `<div class="rtbcb-error">${this.escapeHtml(message)}</div>`;
+        this.form.insertAdjacentHTML('afterend', errorHtml);
+
+        setTimeout(() => {
+            const errorElement = document.querySelector('.rtbcb-error');
+            if (errorElement) {
+                errorElement.remove();
+            }
+        }, 5000);
     }
 
     displayResults(data) {
@@ -371,13 +500,11 @@ class BusinessCaseBuilder {
 
         this.results.innerHTML = html;
         this.results.style.display = 'block';
-        
-        // Create the benefit breakdown chart
+
         this.createBenefitChart(scenarios.base);
-        
-        // Smooth scroll to results
+
         setTimeout(() => {
-            this.results.scrollIntoView({ 
+            this.results.scrollIntoView({
                 behavior: 'smooth',
                 block: 'start'
             });
@@ -390,7 +517,7 @@ class BusinessCaseBuilder {
         }
 
         let html = '<div class="rtbcb-alternatives-section"><h4>Alternative Considerations</h4><div class="rtbcb-alternatives-grid">';
-        
+
         alternatives.forEach(alt => {
             const info = alt.info || {};
             html += `
@@ -401,17 +528,19 @@ class BusinessCaseBuilder {
                 </div>
             `;
         });
-        
+
         html += '</div></div>';
         return html;
     }
 
     createBenefitChart(baseScenario) {
-        const ctx = document.getElementById('rtbcbBenefitChart');
-        if (!ctx || !baseScenario) return;
+        if (!baseScenario) {
+            return;
+        }
 
+        const ctx = document.getElementById('rtbcbBenefitChart').getContext('2d');
         const data = {
-            labels: ['Labor Savings', 'Fee Reduction', 'Error Prevention'],
+            labels: ['Labor Savings', 'Bank Fee Reduction', 'Error Reduction'],
             datasets: [{
                 data: [
                     baseScenario.labor_savings || 0,
@@ -459,7 +588,7 @@ class BusinessCaseBuilder {
     shareResults() {
         const baseROI = this.getBaseROI();
         const category = this.getRecommendedCategory();
-        
+
         const subject = encodeURIComponent('Treasury Technology Business Case Results');
         const body = encodeURIComponent(
             `I've completed a treasury technology ROI analysis with these results:\n\n` +
@@ -469,7 +598,7 @@ class BusinessCaseBuilder {
             `I'd like to discuss this opportunity further.\n\n` +
             `Generated by Real Treasury Business Case Builder`
         );
-        
+
         window.location.href = `mailto:?subject=${subject}&body=${body}`;
     }
 
@@ -496,116 +625,17 @@ class BusinessCaseBuilder {
         return div.innerHTML;
     }
 
-    showError(message) {
-        const existingError = this.form.querySelector('.rtbcb-error');
-        if (existingError) {
-            existingError.remove();
-        }
-
-        const errorHtml = `<div class="rtbcb-error">${this.escapeHtml(message)}</div>`;
-        this.form.insertAdjacentHTML('afterend', errorHtml);
-
-        setTimeout(() => {
-            const errorElement = this.form.querySelector('.rtbcb-error');
-            if (errorElement) {
-                errorElement.remove();
-            }
-        }, 5000);
-    }
-
-    scrollToFirstError() {
-        const firstError = this.form.querySelector('.rtbcb-field-invalid, .rtbcb-error');
-        if (firstError) {
-            firstError.scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'center' 
-            });
-        }
-    }
-
     trackAnalytics(event, data) {
-        // Google Analytics 4 tracking
         if (typeof gtag !== 'undefined') {
             gtag('event', event, {
                 ...data,
                 event_category: 'business_case_builder'
             });
         }
-
-        // Custom tracking endpoint (if needed)
-        // fetch('/wp-admin/admin-ajax.php', {
-        //     method: 'POST',
-        //     body: new URLSearchParams({
-        //         action: 'rtbcb_track_event',
-        //         event: event,
-        //         data: JSON.stringify(data),
-        //         nonce: RTBCB.nonce
-        //     })
-        // });
     }
 }
 
-// Global instance
-let businessCaseBuilder;
-
-document.addEventListener('DOMContentLoaded', () => {
-    businessCaseBuilder = new BusinessCaseBuilder();
-    
-    // Add some progressive enhancement
-    enhanceFormExperience();
+// Initialize
+ document.addEventListener('DOMContentLoaded', () => {
+    window.businessCaseBuilder = new BusinessCaseBuilder();
 });
-
-function enhanceFormExperience() {
-    // Add smooth scrolling for anchor links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth'
-                });
-            }
-        });
-    });
-
-    // Add form section auto-expansion
-    const sections = document.querySelectorAll('.rtbcb-section');
-    sections.forEach((section, index) => {
-        if (index > 0) {
-            section.style.opacity = '0.6';
-            section.style.pointerEvents = 'none';
-        }
-    });
-
-    // Enable sections progressively as user completes them
-    const requiredFields = document.querySelectorAll('input[required], select[required]');
-    requiredFields.forEach(field => {
-        field.addEventListener('change', checkSectionCompletion);
-    });
-}
-
-function checkSectionCompletion() {
-    const sections = document.querySelectorAll('.rtbcb-section');
-    
-    sections.forEach((section, index) => {
-        const sectionFields = section.querySelectorAll('input[required], select[required]');
-        const completedFields = Array.from(sectionFields).filter(field => {
-            if (field.type === 'checkbox') {
-                const checkboxGroup = section.querySelectorAll(`input[name="${field.name}"]`);
-                return Array.from(checkboxGroup).some(cb => cb.checked);
-            }
-            return field.value.trim() !== '';
-        });
-
-        if (completedFields.length === sectionFields.length) {
-            // Enable next section
-            const nextSection = sections[index + 1];
-            if (nextSection) {
-                nextSection.style.opacity = '1';
-                nextSection.style.pointerEvents = 'auto';
-                nextSection.style.transition = 'opacity 0.3s ease';
-            }
-        }
-    });
-}
