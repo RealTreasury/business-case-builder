@@ -72,9 +72,32 @@ class Real_Treasury_BCB {
     private function init_hooks() {
         add_action( 'init', [ $this, 'init' ] );
         add_shortcode( 'rt_business_case_builder', [ $this, 'shortcode_handler' ] );
+        add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_assets' ] );
 
         // Portal integration hooks.
         add_action( 'rt_portal_data_changed', [ $this, 'handle_portal_data_change' ] );
+    }
+
+    /**
+     * Enqueue frontend assets.
+     *
+     * @return void
+     */
+    public function enqueue_assets() {
+        if ( is_singular() && has_shortcode( get_post()->post_content, 'rt_business_case_builder' ) ) {
+            wp_enqueue_style( 'rtbcb-style', RTBCB_URL . 'public/css/rtbcb.css' );
+
+            wp_enqueue_script( 'rtbcb-script', RTBCB_URL . 'public/js/rtbcb.js', [ 'jquery' ], RTBCB_VERSION, true );
+
+            wp_localize_script(
+                'rtbcb-script',
+                'RTBCB',
+                [
+                    'ajax_url' => admin_url( 'admin-ajax.php' ),
+                    'nonce'    => wp_create_nonce( 'rtbcb_nonce' ),
+                ]
+            );
+        }
     }
 
     /**
@@ -84,18 +107,6 @@ class Real_Treasury_BCB {
      * @return string
      */
     public function shortcode_handler( $atts = [] ) {
-        wp_enqueue_style( 'rtbcb-style', RTBCB_URL . 'public/css/rtbcb.css' );
-        wp_enqueue_script( 'rtbcb-script', RTBCB_URL . 'public/js/rtbcb.js', [ 'jquery' ], RTBCB_VERSION, true );
-
-        wp_localize_script(
-            'rtbcb-script',
-            'RTBCB',
-            [
-                'ajax_url' => admin_url( 'admin-ajax.php' ),
-                'nonce'    => wp_create_nonce( 'rtbcb_nonce' ),
-            ]
-        );
-
         ob_start();
         include RTBCB_DIR . 'templates/business-case-form.php';
         return ob_get_clean();
