@@ -837,8 +837,9 @@
     width: 90%;
     max-width: 600px;
     margin: 0 auto;
-    max-height: 80vh;
-    overflow: visible;
+    height: auto;
+    max-height: 90vh;
+    overflow-y: auto;
     transform: scale(0.9) translateY(30px);
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
@@ -852,7 +853,7 @@
 .rtbcb-modal-header {
     background: linear-gradient(135deg, rgba(114, 22, 244, 0.1), rgba(143, 71, 246, 0.15));
     color: #281345;
-    padding: 32px 40px 20px 40px;
+    padding: 24px 32px 16px 32px;
     position: relative;
     text-align: center;
     border-bottom: 1px solid rgba(199, 125, 255, 0.2);
@@ -914,12 +915,12 @@
 
 /* Modal Body - Scrollable content */
 .rtbcb-modal-body {
-    max-height: calc(80vh - 100px);
+    max-height: calc(90vh - 80px);
     overflow-y: auto;
 }
 
 .rtbcb-form-container {
-    padding: 24px;
+    padding: 20px;
 }
 
 /* Progress Indicator - Compact */
@@ -1237,14 +1238,13 @@
     .rtbcb-modal-overlay {
         padding: 15px;
     }
-    
+
     .rtbcb-modal-container {
         max-width: 95vw;
-        max-height: 85vh;
     }
 
     .rtbcb-form-container {
-        padding: 20px;
+        padding: 16px;
     }
 
     .rtbcb-wizard-progress,
@@ -1267,10 +1267,6 @@
 @media (max-width: 480px) {
     .rtbcb-modal-overlay {
         padding: 10px;
-    }
-
-    .rtbcb-modal-container {
-        max-height: 90vh;
     }
 
     .rtbcb-progress-steps::before {
