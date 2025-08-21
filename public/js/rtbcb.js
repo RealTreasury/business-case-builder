@@ -8,6 +8,7 @@ class BusinessCaseBuilder {
         this.totalSteps = 4;
         this.stepData = {};
         this.isInitialized = false;
+        this.fallbackSubmit = null;
         
         // Bind methods to preserve 'this' context
         this.nextStep = this.nextStep.bind(this);
@@ -40,12 +41,21 @@ class BusinessCaseBuilder {
 
         console.log('Initializing Business Case Builder...');
 
-        this.initWizard();
-        this.initFormValidation();
-        this.bindEvents();
-        this.isInitialized = true;
+        try {
+            this.initWizard();
+            this.initFormValidation();
+            this.bindEvents();
+            this.isInitialized = true;
 
-        console.log('Business Case Builder initialized successfully');
+            if (this.fallbackSubmit) {
+                this.fallbackSubmit.style.display = 'none';
+            }
+
+            console.log('Business Case Builder initialized successfully');
+        } catch (error) {
+            console.error('Initialization error:', error);
+            this.showFallbackSubmit();
+        }
     }
 
     initWizard() {
@@ -55,6 +65,7 @@ class BusinessCaseBuilder {
         this.nextBtn = this.form.querySelector('.rtbcb-nav-next');
         this.prevBtn = this.form.querySelector('.rtbcb-nav-prev');
         this.submitBtn = this.form.querySelector('.rtbcb-nav-submit');
+        this.fallbackSubmit = this.form.querySelector('.rtbcb-fallback-submit');
 
         console.log('Wizard elements found:', {
             steps: this.steps.length,
@@ -66,7 +77,14 @@ class BusinessCaseBuilder {
 
         if (this.steps.length === 0) {
             console.error('No wizard steps found!');
-            return;
+            this.showFallbackSubmit();
+            throw new Error('Wizard steps missing');
+        }
+
+        if (!this.nextBtn || !this.submitBtn) {
+            console.error('Navigation buttons missing');
+            this.showFallbackSubmit();
+            throw new Error('Navigation buttons missing');
         }
 
         // Set total steps based on actual step count
@@ -114,7 +132,17 @@ class BusinessCaseBuilder {
                 e.preventDefault();
                 e.stopPropagation();
                 console.log('Next button clicked, current step:', this.currentStep);
-                this.nextStep();
+                const startingStep = this.currentStep;
+                try {
+                    this.nextStep();
+                    if (this.currentStep === startingStep) {
+                        console.warn('Step did not advance, showing fallback submit');
+                        this.showFallbackSubmit();
+                    }
+                } catch (error) {
+                    console.error('Next step failed:', error);
+                    this.showFallbackSubmit();
+                }
             });
         }
 
@@ -221,6 +249,21 @@ class BusinessCaseBuilder {
                 this.nextBtn.style.display = 'flex';
                 this.submitBtn.style.display = 'none';
             }
+        }
+    }
+
+    showFallbackSubmit() {
+        if (this.fallbackSubmit) {
+            this.fallbackSubmit.style.display = 'inline-flex';
+        }
+        if (this.nextBtn) {
+            this.nextBtn.style.display = 'none';
+        }
+        if (this.prevBtn) {
+            this.prevBtn.style.display = 'none';
+        }
+        if (this.submitBtn) {
+            this.submitBtn.style.display = 'none';
         }
     }
 
