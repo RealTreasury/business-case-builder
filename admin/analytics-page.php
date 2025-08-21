@@ -287,7 +287,29 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeAnalyticsCharts();
 });
 
-function initializeAnalyticsCharts() {
+async function initializeAnalyticsCharts() {
+    const fallbackMessage = '<?php echo esc_js( __( 'Chart unavailable', 'rtbcb' ) ); ?>';
+    const showFallback = (id) => {
+        const canvas = document.getElementById(id);
+        if (canvas) {
+            const div = document.createElement('div');
+            div.textContent = fallbackMessage;
+            canvas.replaceWith(div);
+        }
+    };
+
+    if (typeof Chart === 'undefined') {
+        try {
+            await import('https://cdn.jsdelivr.net/npm/chart.js');
+        } catch (error) {
+            console.error('Chart.js failed to load:', error);
+            showFallback('rtbcb-category-chart');
+            showFallback('rtbcb-size-chart');
+            showFallback('rtbcb-trends-chart');
+            return;
+        }
+    }
+
     // Category Distribution Chart
     const categoryData = <?php echo wp_json_encode( $category_stats ); ?>;
     const categoryLabels = categoryData.map(item => {
@@ -298,36 +320,43 @@ function initializeAnalyticsCharts() {
     const categoryColors = ['#7216f4', '#8f47f6', '#c77dff', '#e0aaff', '#f3c4fb'];
 
     if (categoryData.length > 0) {
-        new Chart(document.getElementById('rtbcb-category-chart'), {
-            type: 'doughnut',
-            data: {
-                labels: categoryLabels,
-                datasets: [{
-                    data: categoryValues,
-                    backgroundColor: categoryColors.slice(0, categoryData.length),
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const value = context.parsed;
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = ((value / total) * 100).toFixed(1);
-                                return `${context.label}: ${value} (${percentage}%)`;
+        try {
+            new Chart(document.getElementById('rtbcb-category-chart'), {
+                type: 'doughnut',
+                data: {
+                    labels: categoryLabels,
+                    datasets: [{
+                        data: categoryValues,
+                        backgroundColor: categoryColors.slice(0, categoryData.length),
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.parsed;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${context.label}: ${value} (${percentage}%)`;
+                                }
                             }
                         }
                     }
                 }
-            }
-        });
+            });
+        } catch (error) {
+            console.error('Error rendering category chart:', error);
+            showFallback('rtbcb-category-chart');
+        }
+    } else {
+        showFallback('rtbcb-category-chart');
     }
 
     // Company Size Chart
@@ -337,35 +366,42 @@ function initializeAnalyticsCharts() {
     const sizeColors = ['#dbeafe', '#dcfce7', '#fef3c7', '#fde2e8'];
 
     if (sizeData.length > 0) {
-        new Chart(document.getElementById('rtbcb-size-chart'), {
-            type: 'bar',
-            data: {
-                labels: sizeLabels,
-                datasets: [{
-                    data: sizeValues,
-                    backgroundColor: sizeColors.slice(0, sizeData.length),
-                    borderColor: ['#1e40af', '#166534', '#92400e', '#be185d'],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
+        try {
+            new Chart(document.getElementById('rtbcb-size-chart'), {
+                type: 'bar',
+                data: {
+                    labels: sizeLabels,
+                    datasets: [{
+                        data: sizeValues,
+                        backgroundColor: sizeColors.slice(0, sizeData.length),
+                        borderColor: ['#1e40af', '#166534', '#92400e', '#be185d'],
+                        borderWidth: 1
+                    }]
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
                         }
                     }
                 }
-            }
-        });
+            });
+        } catch (error) {
+            console.error('Error rendering size chart:', error);
+            showFallback('rtbcb-size-chart');
+        }
+    } else {
+        showFallback('rtbcb-size-chart');
     }
 
     // Trends Chart
@@ -378,66 +414,73 @@ function initializeAnalyticsCharts() {
     const avgROIs = trendsData.map(item => Math.round(parseFloat(item.avg_roi || 0) / 1000)); // Convert to thousands
 
     if (trendsData.length > 0) {
-        new Chart(document.getElementById('rtbcb-trends-chart'), {
-            type: 'line',
-            data: {
-                labels: trendLabels,
-                datasets: [
-                    {
-                        label: 'Leads',
-                        data: leadCounts,
-                        backgroundColor: 'rgba(114, 22, 244, 0.1)',
-                        borderColor: '#7216f4',
-                        borderWidth: 2,
-                        fill: true,
-                        yAxisID: 'y'
-                    },
-                    {
-                        label: 'Avg ROI (K)',
-                        data: avgROIs,
-                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                        borderColor: '#10b981',
-                        borderWidth: 2,
-                        fill: true,
-                        yAxisID: 'y1'
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'top'
-                    }
+        try {
+            new Chart(document.getElementById('rtbcb-trends-chart'), {
+                type: 'line',
+                data: {
+                    labels: trendLabels,
+                    datasets: [
+                        {
+                            label: 'Leads',
+                            data: leadCounts,
+                            backgroundColor: 'rgba(114, 22, 244, 0.1)',
+                            borderColor: '#7216f4',
+                            borderWidth: 2,
+                            fill: true,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Avg ROI (K)',
+                            data: avgROIs,
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderColor: '#10b981',
+                            borderWidth: 2,
+                            fill: true,
+                            yAxisID: 'y1'
+                        }
+                    ]
                 },
-                scales: {
-                    y: {
-                        type: 'linear',
-                        display: true,
-                        position: 'left',
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Number of Leads'
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top'
                         }
                     },
-                    y1: {
-                        type: 'linear',
-                        display: true,
-                        position: 'right',
-                        beginAtZero: true,
-                        title: {
+                    scales: {
+                        y: {
+                            type: 'linear',
                             display: true,
-                            text: 'Average ROI (Thousands)'
+                            position: 'left',
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Leads'
+                            }
                         },
-                        grid: {
-                            drawOnChartArea: false
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Average ROI (Thousands)'
+                            },
+                            grid: {
+                                drawOnChartArea: false
+                            }
                         }
                     }
                 }
-            }
-        });
+            });
+        } catch (error) {
+            console.error('Error rendering trends chart:', error);
+            showFallback('rtbcb-trends-chart');
+        }
+    } else {
+        showFallback('rtbcb-trends-chart');
     }
 }
 </script>

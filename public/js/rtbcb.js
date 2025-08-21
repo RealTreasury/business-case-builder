@@ -779,12 +779,17 @@ class BusinessCaseBuilder {
         return html;
     }
 
-    createBenefitChart(baseScenario) {
+    async createBenefitChart(baseScenario) {
         if (!baseScenario) {
             return;
         }
 
-        const ctx = document.getElementById('rtbcbBenefitChart').getContext('2d');
+        const canvas = document.getElementById('rtbcbBenefitChart');
+        if (!canvas) {
+            return;
+        }
+        const ctx = canvas.getContext('2d');
+
         const data = {
             labels: ['Labor Savings', 'Bank Fee Reduction', 'Error Reduction'],
             datasets: [{
@@ -802,33 +807,58 @@ class BusinessCaseBuilder {
             }]
         };
 
-        new Chart(ctx, {
-            type: 'doughnut',
-            data: data,
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 20,
-                            usePointStyle: true
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const value = context.parsed;
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = ((value / total) * 100).toFixed(1);
-                                return `${context.label}: $${value.toLocaleString()} (${percentage}%)`;
+        const renderChart = () => {
+            try {
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: data,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 20,
+                                    usePointStyle: true
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const value = context.parsed;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = ((value / total) * 100).toFixed(1);
+                                        return `${context.label}: $${value.toLocaleString()} (${percentage}%)`;
+                                    }
+                                }
                             }
                         }
                     }
-                }
+                });
+            } catch (error) {
+                console.error('Chart rendering error:', error);
+                const message = document.createElement('div');
+                message.textContent = 'Chart unavailable';
+                canvas.replaceWith(message);
             }
-        });
+        };
+
+        if (typeof Chart === 'undefined') {
+            try {
+                const module = await import('https://cdn.jsdelivr.net/npm/chart.js');
+                window.Chart = module.default;
+                renderChart();
+            } catch (error) {
+                console.error('Chart.js failed to load:', error);
+                const message = document.createElement('div');
+                message.textContent = 'Chart unavailable';
+                canvas.replaceWith(message);
+            }
+            return;
+        }
+
+        renderChart();
     }
 
     shareResults() {
