@@ -19,12 +19,17 @@ class RTBCB_Router {
      */
     public function route_model( $inputs, $chunks ) {
         $complexity = $this->calculate_complexity( $inputs, $chunks );
+        $category   = RTBCB_Category_Recommender::recommend_category( $inputs )['recommended'];
 
-        if ( $complexity > 0.7 ) {
-            return get_option( 'rtbcb_premium_model', 'gpt-4o' );
+        $model = get_option( 'rtbcb_mini_model', 'gpt-4o-mini' );
+
+        if ( $complexity > 0.6 || 'trms' === $category ) {
+            $model = get_option( 'rtbcb_premium_model', 'gpt-4o' );
+        } elseif ( 'tms_lite' === $category && $complexity > 0.4 ) {
+            $model = get_option( 'rtbcb_premium_model', 'gpt-4o' );
         }
 
-        return get_option( 'rtbcb_mini_model', 'gpt-4o-mini' );
+        return $model;
     }
 
     /**
