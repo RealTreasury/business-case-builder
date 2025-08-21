@@ -24,8 +24,6 @@ class RTBCB_Admin {
         // AJAX handlers
         add_action( 'wp_ajax_rtbcb_test_connection', [ $this, 'test_api_connection' ] );
         add_action( 'wp_ajax_rtbcb_rebuild_index', [ $this, 'rebuild_rag_index' ] );
-        add_action( 'wp_ajax_rtbcb_generate_case', [ $this, 'handle_business_case_generation' ] );
-        add_action( 'wp_ajax_nopriv_rtbcb_generate_case', [ $this, 'handle_business_case_generation' ] );
         add_action( 'wp_ajax_rtbcb_export_leads', [ $this, 'export_leads_csv' ] );
         add_action( 'wp_ajax_rtbcb_delete_lead', [ $this, 'delete_lead' ] );
         add_action( 'wp_ajax_rtbcb_bulk_action_leads', [ $this, 'bulk_action_leads' ] );
@@ -217,77 +215,6 @@ class RTBCB_Admin {
         register_setting( 'rtbcb_settings', 'rtbcb_labor_cost_per_hour', [ 'sanitize_callback' => 'floatval' ] );
         register_setting( 'rtbcb_settings', 'rtbcb_bank_fee_baseline', [ 'sanitize_callback' => 'floatval' ] );
         register_setting( 'rtbcb_settings', 'rtbcb_pdf_enabled', [ 'sanitize_callback' => 'rest_sanitize_boolean' ] );
-    }
-
-    /**
-     * Enhanced AJAX handler for generating business cases.
-     *
-     * @return void
-     */
-    /**
-     * Handle AJAX business case generation.
-     */
-    public function handle_business_case_generation() {
-        // Verify nonce
-        if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['rtbcb_nonce'] ?? '' ) ), 'rtbcb_generate' ) ) {
-            wp_die( 'Security check failed' );
-        }
-
-        try {
-            // Sanitize inputs
-            $user_inputs = [
-                'email'                 => sanitize_email( wp_unslash( $_POST['email'] ?? '' ) ),
-                'company_size'          => sanitize_text_field( wp_unslash( $_POST['company_size'] ?? '' ) ),
-                'industry'              => sanitize_text_field( wp_unslash( $_POST['industry'] ?? '' ) ),
-                'hours_reconciliation'  => floatval( wp_unslash( $_POST['hours_reconciliation'] ?? 0 ) ),
-                'hours_cash_positioning'=> floatval( wp_unslash( $_POST['hours_cash_positioning'] ?? 0 ) ),
-                'num_banks'             => intval( wp_unslash( $_POST['num_banks'] ?? 0 ) ),
-                'ftes'                  => floatval( wp_unslash( $_POST['ftes'] ?? 0 ) ),
-                'pain_points'           => array_map( 'sanitize_text_field', (array) wp_unslash( $_POST['pain_points'] ?? [] ) ),
-            ];
-
-            // Generate business case
-            $calculator     = new RTBCB_Calculator();
-            $scenarios      = $calculator->calculate_roi( $user_inputs );
-            $recommender    = new RTBCB_Category_Recommender();
-            $recommendation = $recommender->recommend_category( $user_inputs );
-
-            // Save lead
-            $lead_data = array_merge(
-                $user_inputs,
-                [
-                    'recommended_category' => $recommendation['recommended'],
-                    'roi_low'              => $scenarios['conservative']['total_annual_benefit'],
-                    'roi_base'             => $scenarios['base']['total_annual_benefit'],
-                    'roi_high'             => $scenarios['optimistic']['total_annual_benefit'],
-                ]
-            );
-
-            $lead_id = RTBCB_Leads::save_lead( $lead_data );
-
-            // Generate narrative (if LLM available)
-            $narrative = [ 'narrative' => 'Business case generated successfully.' ];
-            if ( class_exists( 'RTBCB_LLM' ) && ! empty( get_option( 'rtbcb_openai_api_key' ) ) ) {
-                try {
-                    $llm       = new RTBCB_LLM();
-                    $narrative = $llm->generate_business_case( $user_inputs, $scenarios );
-                } catch ( Exception $e ) {
-                    error_log( 'RTBCB LLM Error: ' . $e->getMessage() );
-                }
-            }
-
-            wp_send_json_success(
-                [
-                    'recommendation' => $recommendation,
-                    'scenarios'      => $scenarios,
-                    'narrative'      => $narrative,
-                    'lead_id'        => $lead_id,
-                ]
-            );
-        } catch ( Exception $e ) {
-            error_log( 'RTBCB Error: ' . $e->getMessage() );
-            wp_send_json_error( 'An error occurred while generating your business case.' );
-        }
     }
 
     /**
