@@ -1,0 +1,8 @@
+{
+    "name": "real-treasury/business-case-builder",
+    "description": "Real Treasury Business Case Builder",
+    "type": "wordpress-plugin",
+    "require": {
+        "mpdf/mpdf": "^8.1"
+    }
+}
