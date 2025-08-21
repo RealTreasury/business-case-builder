@@ -334,6 +334,10 @@ A: Check database permissions and ensure tables were created during plugin activ
 - **Database Optimization**: Regular cleanup of old lead data
 - **API Rate Limiting**: Built-in throttling for OpenAI requests
 
+### Troubleshooting
+
+"Unchecked runtime.lastError" messages typically originate from WordPress.com integrations or browser extensions. Allow third-party cookies or disable the offending extension to prevent these warnings.
+
 ## 🛣️ Roadmap and Future Features
 
 ### Version 2.1 (Coming Soon)
