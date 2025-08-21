@@ -469,28 +469,37 @@ class BusinessCaseBuilder {
             });
 
             const responseText = await response.text();
-            let data;
+            let result;
             try {
-                data = JSON.parse(responseText);
+                result = JSON.parse(responseText);
             } catch (jsonError) {
                 this.showError('An unexpected server response was received. Please try again.');
                 console.error('Invalid JSON response:', responseText);
                 return;
             }
 
-            if (data.success) {
+            const data = result.data || {};
+            const narrativeError = data?.narrative?.error;
+            if (narrativeError) {
+                this.hideProgressIndicator();
+                this.enableNavigation();
+                this.showError(narrativeError);
+                return;
+            }
+
+            if (result.success) {
                 this.completeProgress();
-                this.displayResults(data.data);
-                this.showSuccess(data.data.download_url);
+                this.displayResults(result.data);
+                this.showSuccess(result.data.download_url);
                 if (this.form) {
                     this.form.style.display = 'none';
                 }
                 this.trackAnalytics('business_case_generated', {
-                    category: data.data.recommendation?.recommended,
-                    roi_base: data.data.scenarios?.base?.total_annual_benefit
+                    category: result.data.recommendation?.recommended,
+                    roi_base: result.data.scenarios?.base?.total_annual_benefit
                 });
             } else {
-                this.showError(data.data || 'An unknown error occurred.');
+                this.showError(result.data || 'An unknown error occurred.');
             }
 
         } catch (error) {
