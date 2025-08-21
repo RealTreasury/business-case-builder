@@ -16,12 +16,14 @@ class RTBCB_Calculator {
      * @return array
      */
     public static function calculate_roi( $user_inputs ) {
-        $settings = RTBCB_Settings::get_all();
+        $settings       = RTBCB_Settings::get_all();
+        $recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
+        $category       = $recommendation['category_info'];
+        $industry_mult  = self::get_industry_benchmark( $user_inputs['industry'] ?? '' );
 
-        // Calculate scenarios.
         $scenarios = [];
-        foreach ( [ 'low', 'base', 'high' ] as $scenario ) {
-            $scenarios[ $scenario ] = self::calculate_scenario( $user_inputs, $settings, $scenario );
+        foreach ( [ 'conservative', 'base', 'optimistic' ] as $scenario ) {
+            $scenarios[ $scenario ] = self::calculate_scenario( $user_inputs, $settings, $category, $scenario, $industry_mult );
         }
 
         return $scenarios;
@@ -32,34 +34,39 @@ class RTBCB_Calculator {
      *
      * @param array  $inputs        User inputs.
      * @param array  $settings      Plugin settings.
+     * @param array  $category      Recommended category info.
      * @param string $scenario_type Scenario type.
+     * @param float  $industry_mult Industry benchmark multiplier.
      * @return array
      */
-    private static function calculate_scenario( $inputs, $settings, $scenario_type ) {
+    private static function calculate_scenario( $inputs, $settings, $category, $scenario_type, $industry_mult ) {
         $multipliers = [
-            'low'  => 0.8,
-            'base' => 1.0,
-            'high' => 1.2,
+            'conservative' => 0.8,
+            'base'         => 1.0,
+            'optimistic'   => 1.2,
         ];
         $multiplier = $multipliers[ $scenario_type ];
 
-        // Labor cost savings.
-        $labor_savings = self::calculate_labor_savings( $inputs, $settings, $multiplier );
-
-        // Bank fee reduction.
-        $fee_savings = self::calculate_fee_savings( $inputs, $settings, $multiplier );
-
-        // Error reduction benefits.
+        $labor_savings   = self::calculate_labor_savings( $inputs, $settings, $multiplier );
+        $fee_savings     = self::calculate_fee_savings( $inputs, $settings, $multiplier );
         $error_reduction = self::calculate_error_reduction( $inputs, $settings, $multiplier );
 
-        $total_annual_benefit = $labor_savings + $fee_savings + $error_reduction;
+        $total_annual_benefit = ( $labor_savings + $fee_savings + $error_reduction ) * $industry_mult;
+
+        $min_roi = $category['roi_range'][0] ?? 0;
+        $max_roi = $category['roi_range'][1] ?? $total_annual_benefit;
+        $total_annual_benefit = max( $min_roi, min( $total_annual_benefit, $max_roi ) );
+
+        $avg_cost      = ( $min_roi + $max_roi ) / 2;
+        $roi_percentage = $avg_cost > 0 ? ( $total_annual_benefit / $avg_cost ) * 100 : 0;
 
         return [
             'labor_savings'        => $labor_savings,
             'fee_savings'          => $fee_savings,
             'error_reduction'      => $error_reduction,
             'total_annual_benefit' => $total_annual_benefit,
-            'assumptions'          => self::get_scenario_assumptions( $scenario_type, $multiplier ),
+            'roi_percentage'       => $roi_percentage,
+            'assumptions'          => self::get_scenario_assumptions( $scenario_type, $multiplier, $industry_mult ),
         ];
     }
 
@@ -127,15 +134,36 @@ class RTBCB_Calculator {
      *
      * @param string $scenario_type Scenario key.
      * @param float  $multiplier    Scenario multiplier.
+     * @param float  $industry_mult Industry multiplier.
      *
      * @return array Assumptions for the scenario.
      */
-    private static function get_scenario_assumptions( $scenario_type, $multiplier ) {
+    private static function get_scenario_assumptions( $scenario_type, $multiplier, $industry_mult ) {
         return [
             'name'                  => ucfirst( $scenario_type ),
             'efficiency_improvement'=> 0.30 * $multiplier,
             'error_reduction'       => 0.25 * $multiplier,
             'fee_reduction'         => 0.08 * $multiplier,
+            'industry_benchmark'    => $industry_mult,
         ];
+    }
+
+    /**
+     * Retrieve industry benchmark multiplier.
+     *
+     * @param string $industry Industry identifier.
+     * @return float Multiplier.
+     */
+    private static function get_industry_benchmark( $industry ) {
+        $benchmarks = [
+            'manufacturing' => 0.9,
+            'technology'    => 1.1,
+            'finance'       => 1.05,
+            'retail'        => 0.95,
+        ];
+
+        $industry = strtolower( $industry );
+
+        return $benchmarks[ $industry ] ?? 1.0;
     }
 }
