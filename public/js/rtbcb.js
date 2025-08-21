@@ -459,11 +459,11 @@ class BusinessCaseBuilder {
 
             const formData = new FormData(this.form);
             formData.append('action', 'rtbcb_generate_case');
-            formData.append('nonce', ajaxObj.nonce);
+            formData.append('nonce', RTBCB.nonce);
 
             this.startProgressSimulation();
 
-            const response = await fetch(ajaxObj.ajax_url, {
+            const response = await fetch(RTBCB.ajax_url, {
                 method: 'POST',
                 body: new URLSearchParams(formData)
             });
