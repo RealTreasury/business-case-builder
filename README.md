@@ -328,6 +328,10 @@ A: Ensure Chart.js is loading properly and check browser console for JavaScript 
 **Q: Lead data not saving**
 A: Check database permissions and ensure tables were created during plugin activation.
 
+### Troubleshooting
+
+If you encounter `Unchecked runtime.lastError` messages, they typically originate from WordPress.com scripts or browser extensions. Allow third-party cookies or disable the offending extension to resolve the issue.
+
 ### Performance Optimization
 - **Caching**: Use object caching for repeated calculations
 - **CDN Integration**: Host assets on CDN for faster loading
