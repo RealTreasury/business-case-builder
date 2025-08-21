@@ -107,6 +107,9 @@ class RTBCB_Admin {
      */
     public function render_dashboard() {
         echo '<h1>' . esc_html__( 'Business Case Builder Dashboard', 'rtbcb' ) . '</h1>';
+
+        $count = intval( get_option( 'rtbcb_pdf_count', 0 ) );
+        echo '<p>' . sprintf( esc_html__( 'PDF reports generated: %d', 'rtbcb' ), $count ) . '</p>';
     }
 
     /**
@@ -270,7 +273,34 @@ class RTBCB_Admin {
                 wp_send_json_error( $narrative['error'] );
             }
 
+            $recommendation = [];
+            if ( class_exists( 'RTBCB_Category_Recommender' ) ) {
+                try {
+                    $recommender  = new RTBCB_Category_Recommender();
+                    $recommendation = $recommender->recommend( $user_inputs, $scenarios );
+                } catch ( Exception $e ) {
+                    error_log( 'RTBCB: Recommendation failed - ' . $e->getMessage() );
+                }
+            }
+
             $download_url = '';
+            $report_data  = [
+                'user_inputs'    => $user_inputs,
+                'scenarios'      => $scenarios,
+                'narrative'      => $narrative,
+                'recommendation' => $recommendation,
+            ];
+
+            try {
+                $pdf        = new RTBCB_PDF( $report_data );
+                $file_path  = $pdf->generate_business_case();
+                $download_url = RTBCB_PDF::get_download_url( $file_path );
+
+                $count = intval( get_option( 'rtbcb_pdf_count', 0 ) );
+                update_option( 'rtbcb_pdf_count', $count + 1 );
+            } catch ( Exception $e ) {
+                error_log( 'RTBCB: PDF generation failed - ' . $e->getMessage() );
+            }
 
             wp_send_json_success(
                 [
