@@ -740,3 +740,374 @@
         padding: 30px 20px;
     }
 }
+
+/* Modal Overlay */
+.rtbcb-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.rtbcb-modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Main Modal Container */
+.rtbcb-modal-container {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 
+        0 20px 60px rgba(0, 0, 0, 0.3),
+        0 0 0 1px rgba(255, 255, 255, 0.1);
+    max-width: 900px;
+    width: 100%;
+    max-height: 90vh;
+    overflow: hidden;
+    position: relative;
+    transform: scale(0.9) translateY(20px);
+    transition: all 0.3s ease;
+}
+
+.rtbcb-modal-overlay.active .rtbcb-modal-container {
+    transform: scale(1) translateY(0);
+}
+
+/* Modal Header */
+.rtbcb-modal-header {
+    background: linear-gradient(135deg, var(--primary-purple), var(--secondary-purple));
+    color: white;
+    padding: 30px 40px 25px;
+    position: relative;
+    overflow: hidden;
+}
+
+.rtbcb-modal-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20px;
+    width: 200px;
+    height: 200px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    transform: scale(1.5);
+}
+
+.rtbcb-modal-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+    position: relative;
+    z-index: 2;
+}
+
+.rtbcb-modal-subtitle {
+    font-size: 16px;
+    opacity: 0.9;
+    margin: 0;
+    position: relative;
+    z-index: 2;
+}
+
+.rtbcb-modal-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 3;
+}
+
+.rtbcb-modal-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+/* Modal Body */
+.rtbcb-modal-body {
+    padding: 0;
+    max-height: calc(90vh - 120px);
+    overflow-y: auto;
+    position: relative;
+}
+
+/* Scrollbar Styling */
+.rtbcb-modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.rtbcb-modal-body::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.rtbcb-modal-body::-webkit-scrollbar-thumb {
+    background: var(--primary-purple);
+    border-radius: 3px;
+}
+
+.rtbcb-modal-body::-webkit-scrollbar-thumb:hover {
+    background: var(--secondary-purple);
+}
+
+/* Form Container in Modal */
+.rtbcb-form-container {
+    padding: 40px;
+}
+
+/* Enhanced Progress Indicator for Modal */
+.rtbcb-wizard-progress {
+    background: #f8f9ff;
+    margin: -40px -40px 30px -40px;
+    padding: 25px 40px;
+    border-bottom: 1px solid rgba(114, 22, 244, 0.1);
+}
+
+.rtbcb-progress-steps {
+    display: flex;
+    justify-content: center;
+    position: relative;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.rtbcb-progress-steps::before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 50px;
+    right: 50px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--border-light), var(--primary-purple));
+    z-index: 1;
+}
+
+.rtbcb-progress-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+    background: #f8f9ff;
+    padding: 0 15px;
+}
+
+.rtbcb-progress-number {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid var(--border-light);
+    color: var(--gray-text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    margin-bottom: 8px;
+    transition: all 0.3s ease;
+    font-size: 14px;
+}
+
+.rtbcb-progress-step.active .rtbcb-progress-number {
+    background: var(--primary-purple);
+    border-color: var(--primary-purple);
+    color: white;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(114, 22, 244, 0.3);
+}
+
+.rtbcb-progress-step.completed .rtbcb-progress-number {
+    background: var(--success-green);
+    border-color: var(--success-green);
+    color: white;
+}
+
+.rtbcb-progress-step.completed .rtbcb-progress-number::after {
+    content: '✓';
+    font-size: 14px;
+    font-weight: 700;
+}
+
+/* Enhanced Form Styling */
+.rtbcb-field {
+    margin-bottom: 24px;
+    position: relative;
+}
+
+.rtbcb-field label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--dark-text);
+    font-size: 14px;
+}
+
+.rtbcb-field input,
+.rtbcb-field select {
+    width: 100%;
+    padding: 16px 20px;
+    border: 2px solid var(--border-light);
+    border-radius: 12px;
+    font-size: 16px;
+    background: white;
+    color: var(--dark-text);
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+.rtbcb-field input:focus,
+.rtbcb-field select:focus {
+    border-color: var(--primary-purple);
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(114, 22, 244, 0.1);
+    transform: translateY(-1px);
+}
+
+/* Modal Navigation */
+.rtbcb-wizard-navigation {
+    background: #f8f9ff;
+    margin: 30px -40px -40px -40px;
+    padding: 25px 40px;
+    border-top: 1px solid rgba(114, 22, 244, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.rtbcb-nav-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 28px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.rtbcb-nav-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.rtbcb-nav-btn:hover::before {
+    left: 100%;
+}
+
+.rtbcb-nav-prev {
+    background: white;
+    color: var(--primary-purple);
+    border: 2px solid var(--primary-purple);
+}
+
+.rtbcb-nav-prev:hover {
+    background: var(--primary-purple);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(114, 22, 244, 0.3);
+}
+
+.rtbcb-nav-next,
+.rtbcb-nav-submit {
+    background: linear-gradient(135deg, var(--primary-purple), var(--secondary-purple));
+    color: white;
+    box-shadow: 0 4px 16px rgba(114, 22, 244, 0.3);
+}
+
+.rtbcb-nav-next:hover,
+.rtbcb-nav-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(114, 22, 244, 0.4);
+}
+
+/* Responsive Modal */
+@media (max-width: 768px) {
+    .rtbcb-modal-container {
+        margin: 10px;
+        border-radius: 16px;
+        max-height: 95vh;
+    }
+
+    .rtbcb-modal-header {
+        padding: 25px 30px 20px;
+    }
+
+    .rtbcb-modal-title {
+        font-size: 20px;
+    }
+
+    .rtbcb-form-container {
+        padding: 30px 25px;
+    }
+
+    .rtbcb-wizard-progress,
+    .rtbcb-wizard-navigation {
+        margin-left: -25px;
+        margin-right: -25px;
+        padding-left: 25px;
+        padding-right: 25px;
+    }
+
+    .rtbcb-progress-steps {
+        gap: 10px;
+    }
+
+    .rtbcb-progress-number {
+        width: 35px;
+        height: 35px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .rtbcb-modal-overlay {
+        padding: 10px;
+    }
+
+    .rtbcb-form-container {
+        padding: 20px;
+    }
+
+    .rtbcb-wizard-progress,
+    .rtbcb-wizard-navigation {
+        margin-left: -20px;
+        margin-right: -20px;
+        padding: 20px;
+    }
+}
+

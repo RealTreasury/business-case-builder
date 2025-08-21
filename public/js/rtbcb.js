@@ -7,58 +7,119 @@ class BusinessCaseBuilder {
         this.currentStep = 1;
         this.totalSteps = 4;
         this.stepData = {};
-        
-        this.init();
-    }
+        this.isInitialized = false;
 
-    init() {
-        if (this.form) {
-            this.initWizard();
-            this.initFormValidation();
-            this.bindEvents();
+        // Wait for DOM to be fully loaded
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => this.init());
+        } else {
+            this.init();
         }
     }
 
+    init() {
+        if (this.isInitialized || !this.form) {
+            return;
+        }
+
+        console.log('Initializing Business Case Builder...');
+
+        this.initWizard();
+        this.initFormValidation();
+        this.bindEvents();
+        this.isInitialized = true;
+
+        console.log('Business Case Builder initialized successfully');
+    }
+
     initWizard() {
+        // Get wizard elements
         this.steps = this.form.querySelectorAll('.rtbcb-wizard-step');
         this.progressSteps = this.form.querySelectorAll('.rtbcb-progress-step');
         this.nextBtn = this.form.querySelector('.rtbcb-nav-next');
         this.prevBtn = this.form.querySelector('.rtbcb-nav-prev');
         this.submitBtn = this.form.querySelector('.rtbcb-nav-submit');
-        
+
+        console.log('Wizard elements found:', {
+            steps: this.steps.length,
+            progressSteps: this.progressSteps.length,
+            nextBtn: !!this.nextBtn,
+            prevBtn: !!this.prevBtn,
+            submitBtn: !!this.submitBtn
+        });
+
+        if (this.steps.length === 0) {
+            console.error('No wizard steps found!');
+            return;
+        }
+
         this.updateStepDisplay();
         this.updateNavigationState();
     }
 
     bindEvents() {
-        this.nextBtn?.addEventListener('click', () => this.nextStep());
-        this.prevBtn?.addEventListener('click', () => this.previousStep());
-        this.form.addEventListener('submit', this.handleSubmit.bind(this));
-        
-        this.form.querySelectorAll('input[name="pain_points[]"]').forEach(checkbox => {
-            checkbox.addEventListener('change', this.handlePainPointSelection.bind(this));
+        // Navigation events
+        if (this.nextBtn) {
+            this.nextBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log('Next button clicked');
+                this.nextStep();
+            });
+        }
+
+        if (this.prevBtn) {
+            this.prevBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log('Previous button clicked');
+                this.previousStep();
+            });
+        }
+
+        // Form submission
+        this.form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            console.log('Form submitted');
+            this.handleSubmit(e);
         });
-        
-        this.form.querySelectorAll('input, select').forEach(field => {
+
+        // Pain point selection
+        const painPointCheckboxes = this.form.querySelectorAll('input[name="pain_points[]"]');
+        painPointCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', (e) => this.handlePainPointSelection(e));
+        });
+
+        // Field validation
+        const fields = this.form.querySelectorAll('input, select');
+        fields.forEach(field => {
             field.addEventListener('blur', () => this.validateField(field));
             field.addEventListener('input', () => this.clearFieldError(field));
         });
+
+        console.log('Events bound successfully');
     }
 
     nextStep() {
-        if (this.validateCurrentStep()) {
-            this.saveStepData();
-            
-            if (this.currentStep < this.totalSteps) {
-                this.currentStep++;
-                this.updateStepDisplay();
-                this.updateNavigationState();
-                this.updateProgress();
-            }
+        console.log(`Attempting to go from step ${this.currentStep} to ${this.currentStep + 1}`);
+
+        if (!this.validateCurrentStep()) {
+            console.log('Validation failed for current step');
+            return;
+        }
+
+        this.saveStepData();
+
+        if (this.currentStep < this.totalSteps) {
+            this.currentStep++;
+            this.updateStepDisplay();
+            this.updateNavigationState();
+            this.updateProgress();
+            console.log(`Successfully moved to step ${this.currentStep}`);
         }
     }
 
     previousStep() {
+        console.log(`Going back from step ${this.currentStep} to ${this.currentStep - 1}`);
+
         if (this.currentStep > 1) {
             this.currentStep--;
             this.updateStepDisplay();
@@ -71,7 +132,7 @@ class BusinessCaseBuilder {
         this.steps.forEach((step, index) => {
             const stepNumber = index + 1;
             step.classList.remove('active', 'prev');
-            
+
             if (stepNumber === this.currentStep) {
                 step.classList.add('active');
             } else if (stepNumber < this.currentStep) {
@@ -79,22 +140,23 @@ class BusinessCaseBuilder {
             }
         });
 
+        // Smooth scroll to form
         this.form.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     updateNavigationState() {
-        if (this.currentStep === 1) {
-            this.prevBtn.style.display = 'none';
-        } else {
-            this.prevBtn.style.display = 'flex';
+        if (this.prevBtn) {
+            this.prevBtn.style.display = this.currentStep === 1 ? 'none' : 'flex';
         }
 
-        if (this.currentStep === this.totalSteps) {
-            this.nextBtn.style.display = 'none';
-            this.submitBtn.style.display = 'flex';
-        } else {
-            this.nextBtn.style.display = 'flex';
-            this.submitBtn.style.display = 'none';
+        if (this.nextBtn && this.submitBtn) {
+            if (this.currentStep === this.totalSteps) {
+                this.nextBtn.style.display = 'none';
+                this.submitBtn.style.display = 'flex';
+            } else {
+                this.nextBtn.style.display = 'flex';
+                this.submitBtn.style.display = 'none';
+            }
         }
     }
 
@@ -102,7 +164,7 @@ class BusinessCaseBuilder {
         this.progressSteps.forEach((step, index) => {
             const stepNumber = index + 1;
             step.classList.remove('active', 'completed');
-            
+
             if (stepNumber === this.currentStep) {
                 step.classList.add('active');
             } else if (stepNumber < this.currentStep) {
@@ -635,7 +697,48 @@ class BusinessCaseBuilder {
     }
 }
 
-// Initialize
- document.addEventListener('DOMContentLoaded', () => {
-    window.businessCaseBuilder = new BusinessCaseBuilder();
+// Modal control functions
+function openBusinessCaseModal() {
+    const overlay = document.getElementById('rtbcbModalOverlay');
+    if (overlay) {
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+
+        // Initialize builder if not already done
+        if (!window.businessCaseBuilder) {
+            window.businessCaseBuilder = new BusinessCaseBuilder();
+        }
+    }
+}
+
+function closeBusinessCaseModal() {
+    const overlay = document.getElementById('rtbcbModalOverlay');
+    if (overlay) {
+        overlay.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+}
+
+// Close modal on overlay click
+document.addEventListener('click', (e) => {
+    const overlay = document.getElementById('rtbcbModalOverlay');
+    if (e.target === overlay) {
+        closeBusinessCaseModal();
+    }
+});
+
+// Close modal on Escape key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        closeBusinessCaseModal();
+    }
+});
+
+// Initialize with better error handling
+document.addEventListener('DOMContentLoaded', () => {
+    try {
+        window.businessCaseBuilder = new BusinessCaseBuilder();
+    } catch (error) {
+        console.error('Failed to initialize Business Case Builder:', error);
+    }
 });
