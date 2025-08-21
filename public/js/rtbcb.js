@@ -459,16 +459,24 @@ class BusinessCaseBuilder {
 
             const formData = new FormData(this.form);
             formData.append('action', 'rtbcb_generate_case');
-            formData.append('rtbcb_nonce', RTBCB.nonce);
+            formData.append('nonce', ajaxObj.nonce);
 
             this.startProgressSimulation();
 
-            const response = await fetch(RTBCB.ajax_url, {
+            const response = await fetch(ajaxObj.ajax_url, {
                 method: 'POST',
                 body: new URLSearchParams(formData)
             });
 
-            const data = await response.json();
+            const responseText = await response.text();
+            let data;
+            try {
+                data = JSON.parse(responseText);
+            } catch (jsonError) {
+                this.showError('An unexpected server response was received. Please try again.');
+                console.error('Invalid JSON response:', responseText);
+                return;
+            }
 
             if (data.success) {
                 this.completeProgress();
