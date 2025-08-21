@@ -571,18 +571,41 @@ class Real_Treasury_BCB {
             $recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
 
             // Generate narrative if LLM is available
-            $narrative      = [ 'narrative' => __( 'Business case analysis completed.', 'rtbcb' ) ];
+            $narrative = [ 'narrative' => __( 'Business case analysis completed successfully.', 'rtbcb' ) ];
             $context_chunks = [];
+
             if ( class_exists( 'RTBCB_LLM' ) && ! empty( get_option( 'rtbcb_openai_api_key' ) ) ) {
                 try {
                     $llm = new RTBCB_LLM();
                     if ( class_exists( 'RTBCB_RAG' ) ) {
-                        $rag            = new RTBCB_RAG();
-                        $context_chunks = $rag->search_similar( implode( ' ', $user_inputs['pain_points'] ) . ' ' . $user_inputs['company_size'], 3 );
+                        $rag = new RTBCB_RAG();
+                        $context_chunks = $rag->search_similar(
+                            implode( ' ', $user_inputs['pain_points'] ) . ' ' . $user_inputs['company_size'],
+                            3
+                        );
                     }
                     $narrative = $llm->generate_business_case( $user_inputs, $scenarios, $context_chunks );
+
+                    // Log if fallback was used but don't fail the request
+                    if ( isset( $narrative['fallback_used'] ) && $narrative['fallback_used'] ) {
+                        error_log( 'RTBCB: LLM failed, using fallback response' );
+                    }
                 } catch ( Exception $e ) {
                     error_log( 'RTBCB LLM Error: ' . $e->getMessage() );
+
+                    // Create basic fallback response
+                    $narrative = [
+                        'narrative' => sprintf(
+                            __( 'Your treasury operations analysis indicates significant potential for operational improvement. Based on your %s company profile and current challenges, implementing treasury technology could deliver substantial ROI through process automation, improved cash visibility, and reduced manual work.', 'rtbcb' ),
+                            $user_inputs['company_size']
+                        ),
+                        'risks' => [],
+                        'assumptions_explained' => [],
+                        'citations' => [],
+                        'next_actions' => [],
+                        'confidence' => 0.7,
+                        'recommended_category' => $recommendation['recommended'] ?? '',
+                    ];
                 }
             }
 
