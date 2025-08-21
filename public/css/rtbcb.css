@@ -1156,7 +1156,7 @@
 }
 
 .rtbcb-nav-btn {
-    display: flex;
+    display: inline-flex !important;
     align-items: center;
     gap: 6px;
     padding: 10px 18px;
