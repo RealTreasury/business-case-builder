@@ -819,7 +819,7 @@
     width: 100%;
     max-width: 520px;
     max-height: 80vh;
-    overflow: hidden;
+    overflow: visible;
     transform: scale(0.9) translateY(20px);
     transition: all 0.3s ease;
     position: relative;
@@ -878,8 +878,7 @@
 /* Modal Body - Scrollable content */
 .rtbcb-modal-body {
     max-height: calc(80vh - 100px);
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: visible;
 }
 
 .rtbcb-form-container {
