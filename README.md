@@ -1,25 +1,367 @@
-# Real Treasury Business Case Builder
+# Real Treasury Business Case Builder - Enhanced Version 2.0
 
-Real Treasury Business Case Builder is a WordPress plugin that helps treasury teams estimate the return on investment of treasury technology and generate a concise business case.
+A comprehensive WordPress plugin that helps treasury teams quantify the benefits of modern treasury tools, generate professional business case reports, and track lead engagement with advanced analytics.
 
-## Features
+## 🚀 What's New in Version 2.0
 
-- ROI calculator that models low, base, and high benefit scenarios.
-- Generates executive narratives using LLM models.
-- Shortcode `[rt_business_case_builder]` renders an interactive form on the front end.
-- Admin pages for configuring default assumptions, OpenAI models, viewing leads, and monitoring data health.
-- Integrates with the Real Treasury portal for vendor research.
+### ✨ Major Enhancements
 
-## Installation
+**📊 Smart Categorization System**
+- Automatically recommends **Cash Tools**, **TMS-Lite**, or **TRMS** based on company profile
+- Intelligent scoring algorithm considers company size, complexity, and pain points
+- Detailed reasoning provided for each recommendation
 
-1. Upload the plugin to the `wp-content/plugins` directory.
-2. Activate **Real Treasury - Business Case Builder** through the WordPress Plugins screen.
-3. Go to **Real Treasury → Settings** to enter API keys and adjust ROI assumptions.
+**📄 Professional PDF Reports**
+- Generates comprehensive business case PDFs with charts and visualizations
+- Executive summary, ROI analysis, and implementation roadmap
+- Professional formatting ready for stakeholder presentations
+- Automated download links for users
 
-## Usage
+**📈 Advanced Analytics Dashboard**
+- Real-time lead tracking with detailed metrics
+- Interactive charts showing category distribution and trends
+- Company size analysis and ROI benchmarking
+- Monthly lead generation trends with Chart.js visualizations
 
-Insert the `[rt_business_case_builder]` shortcode into any post or page to display the calculator. Users receive estimated annual benefits and a generated narrative summarizing the case for treasury technology.
+**🗃️ Complete Lead Management**
+- Full database tracking of all form submissions
+- Advanced filtering and search capabilities
+- CSV export functionality for lead data
+- Individual lead detail views with action history
 
-## Development
+**🎯 Enhanced User Experience**
+- Multi-step form with progress indicators
+- Real-time form validation and error handling
+- Interactive pain point selection with visual cards
+- Responsive design optimized for all devices
 
-This repository contains the plugin source. Do not modify files in the `vendor/` directory.
+**🔍 Improved ROI Calculations**
+- More sophisticated calculation methodology
+- Industry-specific benchmarks and assumptions
+- Three scenario modeling (Conservative, Base, Optimistic)
+- Detailed benefit breakdown with visualizations
+
+## 📋 Installation & Setup
+
+### Prerequisites
+- WordPress 5.0 or higher
+- PHP 7.4 or higher
+- MySQL 5.6 or higher
+- OpenAI API key (for business case generation)
+
+### Step 1: Plugin Installation
+1. Upload the plugin to `/wp-content/plugins/real-treasury-business-case-builder/`
+2. Activate the plugin through the WordPress admin
+3. Navigate to **Real Treasury → Settings** in your admin dashboard
+
+### Step 2: Configure OpenAI Integration
+1. Sign up for an OpenAI API account at [platform.openai.com](https://platform.openai.com)
+2. Generate an API key in your OpenAI dashboard
+3. Enter the API key in **Real Treasury → Settings**
+4. Configure your preferred models:
+   - **Mini Model**: `gpt-4o-mini` (for efficiency)
+   - **Premium Model**: `gpt-4o` (for complex requests)
+   - **Embedding Model**: `text-embedding-3-small` (for RAG)
+
+### Step 3: Install PDF Dependencies (Optional)
+For PDF generation functionality:
+```bash
+cd wp-content/plugins/real-treasury-business-case-builder
+composer install
+```
+
+If Composer is not available, PDF generation will be disabled but all other features will work.
+
+### Step 4: Configure Database Tables
+The plugin automatically creates required database tables on activation:
+- `wp_rtbcb_leads` - Lead tracking and analytics
+- `wp_rtbcb_rag_index` - Retrieval-augmented generation index
+
+### Step 5: Display the Form
+Add the shortcode to any page or post:
+```
+[rt_business_case_builder]
+```
+
+**Advanced Shortcode Options:**
+```
+[rt_business_case_builder 
+   title="Custom Title" 
+   subtitle="Custom Description"
+   style="modern"]
+```
+
+## 🎛️ Admin Dashboard Features
+
+### Main Dashboard
+- **System Status**: OpenAI API, Portal Integration, RAG Index health
+- **Key Metrics**: Total leads, recent activity, average ROI
+- **Recent Leads**: Latest form submissions with quick actions
+- **Quick Actions**: Test API, export data, rebuild index
+
+### Leads Management
+- **Advanced Filtering**: Search by email, category, date range, company size
+- **Bulk Actions**: Delete multiple leads, export filtered data
+- **Individual Views**: Detailed lead information with submission history
+- **Export Options**: CSV download with customizable date ranges
+
+### Analytics & Reporting
+- **Lead Generation Trends**: Monthly charts with volume and ROI data
+- **Category Distribution**: Visual breakdown of recommended solutions
+- **Company Size Analysis**: Market segment insights
+- **ROI Benchmarking**: Average projections across all leads
+
+### Settings & Configuration
+- **API Configuration**: OpenAI models and authentication
+- **ROI Assumptions**: Labor costs, efficiency rates, fee baselines
+- **PDF Settings**: Enable/disable PDF generation
+- **Portal Integration**: Real Treasury portal connectivity
+
+## 🔧 Technical Architecture
+
+### Core Components
+
+**Category Recommendation Engine (`RTBCB_Category_Recommender`)**
+- Multi-factor scoring algorithm
+- Company size, complexity, and pain point analysis
+- Confidence scoring and alternative suggestions
+
+**PDF Generation System (`RTBCB_PDF`)**
+- mPDF integration for professional reports
+- Chart generation and data visualization
+- Template system for consistent formatting
+
+**Lead Tracking System (`RTBCB_Leads`)**
+- Complete audit trail of user interactions
+- UTM tracking for marketing attribution
+- Advanced querying and analytics capabilities
+
+**Enhanced LLM Integration (`RTBCB_LLM`)**
+- Intelligent model routing based on complexity
+- RAG integration for contextual responses
+- Structured output formatting for consistency
+
+### Database Schema
+
+**Leads Table Structure:**
+```sql
+CREATE TABLE wp_rtbcb_leads (
+    id mediumint(9) NOT NULL AUTO_INCREMENT,
+    email varchar(255) NOT NULL,
+    company_size varchar(50),
+    industry varchar(50),
+    hours_reconciliation decimal(5,2),
+    hours_cash_positioning decimal(5,2),
+    num_banks int(3),
+    ftes decimal(4,1),
+    pain_points longtext,
+    recommended_category varchar(50),
+    roi_low decimal(12,2),
+    roi_base decimal(12,2),
+    roi_high decimal(12,2),
+    pdf_generated tinyint(1),
+    pdf_path varchar(500),
+    ip_address varchar(45),
+    user_agent text,
+    utm_source varchar(100),
+    utm_medium varchar(100),
+    utm_campaign varchar(100),
+    created_at datetime DEFAULT CURRENT_TIMESTAMP,
+    updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY email_unique (email)
+);
+```
+
+### API Integration
+
+**OpenAI Models Used:**
+- **GPT-4o-mini**: Fast responses for simple categorization
+- **GPT-4o**: Complex business case generation
+- **text-embedding-3-small**: RAG search and similarity matching
+
+**Intelligent Model Routing:**
+The system automatically selects the appropriate model based on:
+- Request complexity (number of pain points, company size)
+- Context requirements (amount of RAG data needed)
+- Performance requirements (speed vs. quality trade-offs)
+
+## 📊 ROI Calculation Methodology
+
+### Core Assumptions
+- **Labor Cost**: $100/hour (fully loaded)
+- **Efficiency Gains**: 20-40% reduction in manual tasks
+- **Error Reduction**: 20-30% decrease in costly mistakes
+- **Bank Fee Optimization**: 5-12% reduction through better positioning
+
+### Calculation Components
+
+**1. Labor Cost Savings**
+```
+Annual Savings = (Weekly Hours Saved × 52 weeks × $100/hour)
+Efficiency Rate = 30% ± 6% (scenario dependent)
+```
+
+**2. Bank Fee Reduction**
+```
+Annual Savings = (Number of Banks × $15,000 baseline × 8% reduction rate)
+```
+
+**3. Error Prevention Value**
+```
+Annual Value = Company Size Factor × Error Cost Baseline × 25% reduction
+Size Factors: <$50M=$25k, $50M-$500M=$75k, $500M-$2B=$200k, >$2B=$500k
+```
+
+### Scenario Modeling
+- **Conservative (80% confidence)**: 80% of base case assumptions
+- **Base Case (100% confidence)**: Industry benchmark assumptions
+- **Optimistic (120% confidence)**: 120% of base case assumptions
+
+## 🎨 Customization Options
+
+### Styling and Branding
+The plugin includes CSS custom properties for easy theming:
+```css
+:root {
+    --primary-purple: #7216f4;
+    --secondary-purple: #8f47f6;
+    --light-purple: #c77dff;
+    --dark-text: #281345;
+    --gray-text: #7e7e7e;
+    --success-green: #10b981;
+}
+```
+
+### Custom Templates
+Override templates by creating files in your theme:
+```
+/wp-content/themes/your-theme/rtbcb/business-case-form.php
+/wp-content/themes/your-theme/rtbcb/results-template.php
+```
+
+### Hooks and Filters
+```php
+// Modify ROI assumptions
+add_filter('rtbcb_roi_assumptions', function($assumptions) {
+    $assumptions['labor_cost_per_hour'] = 120;
+    return $assumptions;
+});
+
+// Customize category scoring
+add_filter('rtbcb_category_scores', function($scores, $inputs) {
+    // Custom scoring logic
+    return $scores;
+}, 10, 2);
+
+// Modify PDF template data
+add_filter('rtbcb_pdf_data', function($data) {
+    $data['custom_field'] = 'Custom Value';
+    return $data;
+});
+```
+
+## 📈 Analytics and Reporting
+
+### Key Metrics Tracked
+- **Lead Volume**: Daily, weekly, monthly submissions
+- **Category Distribution**: Which solutions are most commonly recommended
+- **Company Segmentation**: Enterprise vs. SMB lead breakdown
+- **ROI Trends**: Average projected returns over time
+- **Geographic Analysis**: Lead sources by location (IP-based)
+- **Conversion Funnels**: Form completion rates by step
+
+### Export Capabilities
+- **CSV Export**: Complete lead data with filters
+- **Date Range Filtering**: Custom time periods
+- **UTM Attribution**: Marketing campaign performance
+- **ROI Benchmarking**: Industry comparison data
+
+## 🔒 Security and Privacy
+
+### Data Protection
+- **Email Encryption**: Sensitive data stored with encryption
+- **GDPR Compliance**: Built-in consent mechanisms
+- **Data Retention**: Configurable retention policies
+- **Access Controls**: Role-based permissions
+
+### Security Features
+- **Nonce Verification**: All AJAX requests protected
+- **Input Sanitization**: Comprehensive data validation
+- **SQL Injection Protection**: Prepared statements throughout
+- **XSS Prevention**: All output properly escaped
+
+## 🧪 Testing and Quality Assurance
+
+### Automated Tests
+The plugin includes integration tests for all major components:
+```php
+// Run integration tests
+$results = RTBCB_Tests::run_integration_tests();
+```
+
+### Performance Monitoring
+- **Database Query Optimization**: Indexed tables for fast searches
+- **Caching Integration**: Compatible with WordPress caching plugins
+- **Asset Optimization**: Minified CSS/JS for production
+- **Lazy Loading**: Assets only loaded when shortcode is present
+
+## 📞 Support and Documentation
+
+### Getting Help
+1. **Plugin Documentation**: Complete feature documentation in `/docs/`
+2. **WordPress Support Forums**: Community support and troubleshooting
+3. **GitHub Issues**: Bug reports and feature requests
+4. **Real Treasury Support**: Priority support for enterprise users
+
+### Common Issues
+
+**Q: PDF generation fails with "Class not found" error**
+A: Run `composer install` in the plugin directory to install mPDF dependencies.
+
+**Q: OpenAI API calls return authentication errors**
+A: Verify your API key is correct and has sufficient credits in your OpenAI account.
+
+**Q: Charts not displaying in analytics**
+A: Ensure Chart.js is loading properly and check browser console for JavaScript errors.
+
+**Q: Lead data not saving**
+A: Check database permissions and ensure tables were created during plugin activation.
+
+### Performance Optimization
+- **Caching**: Use object caching for repeated calculations
+- **CDN Integration**: Host assets on CDN for faster loading
+- **Database Optimization**: Regular cleanup of old lead data
+- **API Rate Limiting**: Built-in throttling for OpenAI requests
+
+## 🛣️ Roadmap and Future Features
+
+### Version 2.1 (Coming Soon)
+- **Multi-language Support**: Internationalization for global users
+- **Advanced Integrations**: Salesforce, HubSpot, and CRM connectivity
+- **White-label Options**: Complete branding customization
+- **API Endpoints**: REST API for external integrations
+
+### Version 2.2 (Planned)
+- **Machine Learning**: Improved recommendation accuracy
+- **A/B Testing**: Form optimization capabilities
+- **Advanced Reporting**: Executive dashboard templates
+- **Mobile App**: Companion mobile application
+
+## 📄 License and Credits
+
+**License**: GPL v2 or later
+**Author**: Real Treasury Team
+**Contributors**: Treasury technology experts and WordPress developers
+
+### Third-party Libraries
+- **Chart.js**: Data visualization (MIT License)
+- **mPDF**: PDF generation (LGPL License)
+- **WordPress**: Core framework (GPL License)
+
+---
+
+**Ready to transform your treasury technology evaluation process?** Install the Real Treasury Business Case Builder today and start generating data-driven business cases that drive real results.
+
+For enterprise features, custom development, or priority support, contact the Real Treasury team at [contact@realtreasury.com](mailto:contact@realtreasury.com).
+

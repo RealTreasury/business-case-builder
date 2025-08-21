@@ -94,9 +94,9 @@ class RTBCB_Admin {
      * @return void
      */
     public function render_data_health() {
-        // $portal_active = $this->check_portal_integration(); // Uncomment when helper is built.
-        // $vendor_count  = count( apply_filters( 'rt_portal_get_vendors', [] ) );
-        // $last_indexed  = get_option( 'rtbcb_last_indexed', 'Never' );
+        $status        = $this->get_system_health();
+        $portal_active = $status['portal'];
+        $last_indexed  = get_option( 'rtbcb_last_indexed', '' );
         include RTBCB_DIR . 'admin/data-health-page.php';
     }
 
@@ -110,6 +110,15 @@ class RTBCB_Admin {
 
         $count = intval( get_option( 'rtbcb_pdf_count', 0 ) );
         echo '<p>' . sprintf( esc_html__( 'PDF reports generated: %d', 'rtbcb' ), $count ) . '</p>';
+
+        $status = $this->get_system_health();
+        echo '<h2>' . esc_html__( 'System Status', 'rtbcb' ) . '</h2>';
+        echo '<ul>';
+        echo '<li>' . esc_html__( 'OpenAI API:', 'rtbcb' ) . ' ' . ( $status['openai'] ? esc_html__( 'Connected', 'rtbcb' ) : esc_html__( 'Disconnected', 'rtbcb' ) ) . '</li>';
+        echo '<li>' . esc_html__( 'Portal Integration:', 'rtbcb' ) . ' ' . ( $status['portal'] ? esc_html__( 'Active', 'rtbcb' ) : esc_html__( 'Inactive', 'rtbcb' ) ) . '</li>';
+        echo '<li>' . esc_html__( 'RAG Index:', 'rtbcb' ) . ' ' . ( $status['rag'] ? esc_html__( 'Built', 'rtbcb' ) : esc_html__( 'Missing', 'rtbcb' ) ) . '</li>';
+        echo '<li>' . esc_html__( 'PDF Library:', 'rtbcb' ) . ' ' . ( $status['pdf'] ? esc_html__( 'Available', 'rtbcb' ) : esc_html__( 'Unavailable', 'rtbcb' ) ) . '</li>';
+        echo '</ul>';
     }
 
     /**
@@ -276,14 +285,14 @@ class RTBCB_Admin {
             $recommendation = [];
             if ( class_exists( 'RTBCB_Category_Recommender' ) ) {
                 try {
-                    $recommender  = new RTBCB_Category_Recommender();
-                    $recommendation = $recommender->recommend( $user_inputs, $scenarios );
+                    $recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
                 } catch ( Exception $e ) {
                     error_log( 'RTBCB: Recommendation failed - ' . $e->getMessage() );
                 }
             }
 
             $download_url = '';
+            $file_path    = '';
             $report_data  = [
                 'user_inputs'    => $user_inputs,
                 'scenarios'      => $scenarios,
@@ -302,11 +311,36 @@ class RTBCB_Admin {
                 error_log( 'RTBCB: PDF generation failed - ' . $e->getMessage() );
             }
 
+            $lead_data = [
+                'email'                => $email,
+                'company_size'         => $company_size,
+                'pain_points'          => $pain_points,
+                'hours_reconciliation' => $hours_reconciliation,
+                'hours_cash_positioning'=> $hours_cash_positioning,
+                'num_banks'            => $num_banks,
+                'ftes'                 => $ftes,
+                'recommended_category' => $recommendation['recommended'] ?? '',
+                'roi_low'              => $scenarios['low']['total_annual_benefit'],
+                'roi_base'             => $scenarios['base']['total_annual_benefit'],
+                'roi_high'             => $scenarios['high']['total_annual_benefit'],
+                'pdf_generated'        => $download_url ? 1 : 0,
+                'pdf_path'             => $file_path,
+            ];
+
+            if ( class_exists( 'RTBCB_Leads' ) ) {
+                try {
+                    RTBCB_Leads::save_lead( $lead_data );
+                } catch ( Exception $e ) {
+                    error_log( 'RTBCB: Lead save failed - ' . $e->getMessage() );
+                }
+            }
+
             wp_send_json_success(
                 [
                     'scenarios'    => $scenarios,
                     'narrative'    => $narrative,
                     'download_url' => $download_url,
+                    'recommendation' => $recommendation,
                 ]
             );
         } catch ( Exception $e ) {
@@ -322,6 +356,48 @@ class RTBCB_Admin {
      */
     private function check_portal_integration() {
         return (bool) ( has_filter( 'rt_portal_get_vendors' ) || has_filter( 'rt_portal_get_vendor_notes' ) );
+    }
+
+    /**
+     * Run system health checks.
+     *
+     * @return array
+     */
+    private function get_system_health() {
+        return [
+            'openai' => $this->check_openai_connection(),
+            'portal' => $this->check_portal_integration(),
+            'rag'    => (bool) get_option( 'rtbcb_last_indexed', '' ),
+            'pdf'    => class_exists( '\\Mpdf\\Mpdf' ),
+        ];
+    }
+
+    /**
+     * Verify OpenAI API connectivity.
+     *
+     * @return bool
+     */
+    private function check_openai_connection() {
+        $api_key = get_option( 'rtbcb_openai_api_key' );
+        if ( empty( $api_key ) ) {
+            return false;
+        }
+
+        $response = wp_remote_get(
+            'https://api.openai.com/v1/models',
+            [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $api_key,
+                ],
+                'timeout' => 10,
+            ]
+        );
+
+        if ( is_wp_error( $response ) ) {
+            return false;
+        }
+
+        return 200 === wp_remote_retrieve_response_code( $response );
     }
 }
 
