@@ -14,39 +14,55 @@ $subtitle = $subtitle ?? __( 'Generate a data-driven business case for your trea
 $categories = RTBCB_Category_Recommender::get_all_categories();
 ?>
 
-<div class="rtbcb-container rtbcb-style-<?php echo esc_attr( $style ); ?>" id="rtbcbContainer">
-    <div class="rtbcb-header">
-        <h2><?php echo esc_html( $title ); ?></h2>
-        <p><?php echo esc_html( $subtitle ); ?></p>
-    </div>
+<!-- Trigger Button -->
+<div class="rtbcb-trigger-container">
+    <button type="button" class="rtbcb-trigger-btn" onclick="openBusinessCaseModal()">
+        <span class="rtbcb-trigger-icon">📊</span>
+        <span class="rtbcb-trigger-text"><?php esc_html_e( 'Build Your Business Case', 'rtbcb' ); ?></span>
+        <span class="rtbcb-trigger-subtitle"><?php esc_html_e( 'Generate ROI analysis in minutes', 'rtbcb' ); ?></span>
+    </button>
+</div>
 
-    <form id="rtbcbForm" class="rtbcb-form rtbcb-wizard" method="post" novalidate>
-        <?php wp_nonce_field( 'rtbcb_generate', 'rtbcb_nonce' ); ?>
-        
-        <!-- Progress Indicator -->
-        <div class="rtbcb-wizard-progress">
-            <div class="rtbcb-progress-steps">
-                <div class="rtbcb-progress-step active" data-step="1">
-                    <div class="rtbcb-progress-number">1</div>
-                    <div class="rtbcb-progress-label"><?php esc_html_e( 'Company', 'rtbcb' ); ?></div>
-                </div>
-                <div class="rtbcb-progress-step" data-step="2">
-                    <div class="rtbcb-progress-number">2</div>
-                    <div class="rtbcb-progress-label"><?php esc_html_e( 'Operations', 'rtbcb' ); ?></div>
-                </div>
-                <div class="rtbcb-progress-step" data-step="3">
-                    <div class="rtbcb-progress-number">3</div>
-                    <div class="rtbcb-progress-label"><?php esc_html_e( 'Challenges', 'rtbcb' ); ?></div>
-                </div>
-                <div class="rtbcb-progress-step" data-step="4">
-                    <div class="rtbcb-progress-number">4</div>
-                    <div class="rtbcb-progress-label"><?php esc_html_e( 'Contact', 'rtbcb' ); ?></div>
-                </div>
-            </div>
+<!-- Modal Overlay -->
+<div class="rtbcb-modal-overlay" id="rtbcbModalOverlay">
+    <div class="rtbcb-modal-container">
+        <!-- Modal Header -->
+        <div class="rtbcb-modal-header">
+            <button type="button" class="rtbcb-modal-close" onclick="closeBusinessCaseModal()">&times;</button>
+            <h2 class="rtbcb-modal-title"><?php echo esc_html( $title ); ?></h2>
+            <p class="rtbcb-modal-subtitle"><?php echo esc_html( $subtitle ); ?></p>
         </div>
 
-        <!-- Steps Container -->
-        <div class="rtbcb-wizard-steps">
+        <!-- Modal Body -->
+        <div class="rtbcb-modal-body">
+            <div class="rtbcb-form-container">
+                <form id="rtbcbForm" class="rtbcb-form rtbcb-wizard" method="post" novalidate>
+                    <?php wp_nonce_field( 'rtbcb_generate', 'rtbcb_nonce' ); ?>
+
+                    <!-- Progress Indicator -->
+                    <div class="rtbcb-wizard-progress">
+                        <div class="rtbcb-progress-steps">
+                            <div class="rtbcb-progress-step active" data-step="1">
+                                <div class="rtbcb-progress-number">1</div>
+                                <div class="rtbcb-progress-label"><?php esc_html_e( 'Company', 'rtbcb' ); ?></div>
+                            </div>
+                            <div class="rtbcb-progress-step" data-step="2">
+                                <div class="rtbcb-progress-number">2</div>
+                                <div class="rtbcb-progress-label"><?php esc_html_e( 'Operations', 'rtbcb' ); ?></div>
+                            </div>
+                            <div class="rtbcb-progress-step" data-step="3">
+                                <div class="rtbcb-progress-number">3</div>
+                                <div class="rtbcb-progress-label"><?php esc_html_e( 'Challenges', 'rtbcb' ); ?></div>
+                            </div>
+                            <div class="rtbcb-progress-step" data-step="4">
+                                <div class="rtbcb-progress-number">4</div>
+                                <div class="rtbcb-progress-label"><?php esc_html_e( 'Contact', 'rtbcb' ); ?></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Steps Container -->
+                    <div class="rtbcb-wizard-steps">
             <!-- Step 1: Company Profile -->
             <div class="rtbcb-wizard-step active" data-step="1">
                 <div class="rtbcb-step-header">
@@ -303,39 +319,28 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                 <span class="rtbcb-nav-icon">←</span>
                 <?php esc_html_e( 'Previous', 'rtbcb' ); ?>
             </button>
-            
+
             <div class="rtbcb-nav-spacer"></div>
-            
+
             <button type="button" class="rtbcb-nav-btn rtbcb-nav-next">
                 <?php esc_html_e( 'Next', 'rtbcb' ); ?>
                 <span class="rtbcb-nav-icon">→</span>
             </button>
-            
+
             <button type="submit" class="rtbcb-nav-btn rtbcb-nav-submit" style="display: none;">
                 <span class="rtbcb-nav-icon">🚀</span>
                 <?php esc_html_e( 'Generate Business Case', 'rtbcb' ); ?>
             </button>
         </div>
-    </form>
-
-    <!-- Results Section -->
-    <div id="rtbcbResults" class="rtbcb-results" style="display: none;">
-        <!-- Results will be populated by JavaScript -->
+                </form>
+            </div>
+        </div>
     </div>
+</div>
 
-    <!-- Powered By -->
-    <div class="rtbcb-powered-by">
-        <p>
-            <?php
-            printf(
-                wp_kses(
-                    __( 'Powered by <strong>Real Treasury</strong> - Empowering treasury teams with data-driven insights', 'rtbcb' ),
-                    [ 'strong' => [] ]
-                )
-            );
-            ?>
-        </p>
-    </div>
+<!-- Results Section (separate from modal) -->
+<div id="rtbcbResults" class="rtbcb-results" style="display: none;">
+    <!-- Results will be populated by JavaScript -->
 </div>
 
 <!-- Category Information Modal (Hidden by default) -->
