@@ -650,6 +650,20 @@
     font-size: 16px;
 }
 
+.rtbcb-success-message {
+    background: #ecfdf5;
+    color: var(--success-green);
+    border: 2px solid var(--success-green);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 20px 0;
+}
+
+.rtbcb-success-message a {
+    color: var(--primary-purple);
+    text-decoration: underline;
+}
+
 /* Animations */
 @keyframes rtbcb-spin {
     to {
