@@ -571,11 +571,11 @@ class Real_Treasury_BCB {
             $recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
 
             // Generate narrative if LLM is available
-            $narrative = [ 'narrative' => __( 'Business case analysis completed.', 'rtbcb' ) ];
+            $narrative      = [ 'narrative' => __( 'Business case analysis completed.', 'rtbcb' ) ];
+            $context_chunks = [];
             if ( class_exists( 'RTBCB_LLM' ) && ! empty( get_option( 'rtbcb_openai_api_key' ) ) ) {
                 try {
-                    $llm            = new RTBCB_LLM();
-                    $context_chunks = [];
+                    $llm = new RTBCB_LLM();
                     if ( class_exists( 'RTBCB_RAG' ) ) {
                         $rag            = new RTBCB_RAG();
                         $context_chunks = $rag->search_similar( implode( ' ', $user_inputs['pain_points'] ) . ' ' . $user_inputs['company_size'], 3 );
@@ -624,6 +624,7 @@ class Real_Treasury_BCB {
                     'scenarios'      => $scenarios,
                     'recommendation' => $recommendation,
                     'narrative'      => $narrative,
+                    'rag_context'    => $context_chunks,
                     'download_url'   => $download_url,
                     'lead_id'        => $lead_id,
                 ]
