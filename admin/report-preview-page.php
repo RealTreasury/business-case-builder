@@ -52,14 +52,3 @@ $sample_context     = $first_scenario['data'];
     </div>
 </div>
 
-<?php
-$rtbcb_sample_data = [];
-foreach ( $rtbcb_sample_forms as $key => $scenario ) {
-    $rtbcb_sample_data[ $key ] = $scenario['data'];
-}
-?>
-<script type="text/javascript">
-    window.rtbcbAdmin = window.rtbcbAdmin || {};
-    rtbcbAdmin.sampleForms = <?php echo wp_json_encode( $rtbcb_sample_data ); ?>;
-</script>
-
