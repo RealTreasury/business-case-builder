@@ -448,7 +448,7 @@ class Real_Treasury_BCB {
         // Parse attributes
         $atts = shortcode_atts( [
             'style'    => 'default',
-            'title'    => __( 'Treasury Technology Business Case Builder', 'rtbcb' ),
+            'title'    => __( 'Treasury Tech Business Case Builder', 'rtbcb' ),
             'subtitle' => __( 'Generate a data-driven business case for your treasury technology investment.', 'rtbcb' ),
         ], $atts, 'rt_business_case_builder' );
 
