@@ -1595,7 +1595,7 @@
 .rtbcb-chart-title {
     font-weight: 600;
     margin-bottom: 20px;
-    color: var(--dark-text);
+    color: var(--text-primary);
 }
 
 .rtbcb-benefit-bars {
