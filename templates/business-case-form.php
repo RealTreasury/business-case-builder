@@ -862,22 +862,20 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 </style>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Ensure global functions are available
     window.openBusinessCaseModal = function() {
         const overlay = document.getElementById('rtbcbModalOverlay');
         if (overlay) {
             overlay.classList.add('active');
             document.body.style.overflow = 'hidden';
 
-            // Initialize builder after modal is shown
+            // Force initialization after modal is visible
             setTimeout(() => {
-                if (!window.businessCaseBuilder || !window.businessCaseBuilder.isInitialized) {
-                    window.businessCaseBuilder = new BusinessCaseBuilder();
-                } else {
-                    // Reinitialize if already exists
+                if (window.businessCaseBuilder) {
                     window.businessCaseBuilder.reinitialize();
+                } else {
+                    window.businessCaseBuilder = new BusinessCaseBuilder();
                 }
-            }, 100);
+            }, 200);
         }
     };
 
@@ -888,22 +886,5 @@ document.addEventListener('DOMContentLoaded', function() {
             document.body.style.overflow = '';
         }
     };
-
-    // Close modal on overlay click
-    const overlay = document.getElementById('rtbcbModalOverlay');
-    if (overlay) {
-        overlay.addEventListener('click', function(e) {
-            if (e.target === overlay) {
-                window.closeBusinessCaseModal();
-            }
-        });
-    }
-
-    // Close modal on Escape key
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            window.closeBusinessCaseModal();
-        }
-    });
 });
 </script>
