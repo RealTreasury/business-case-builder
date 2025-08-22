@@ -93,7 +93,7 @@
     right: 10% !important;
     height: 2px !important;
     background: #e2e8f0 !important;
-    z-index: 1 !important;
+    z-index: 0 !important;
 }
 
 /* Step content fixes */
@@ -1239,7 +1239,7 @@
     right: 0;
     height: 2px;
     background: rgba(226, 232, 240, 0.6);
-    z-index: 1;
+    z-index: 0;
 }
 
 .rtbcb-progress-step {
