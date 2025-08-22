@@ -712,45 +712,15 @@ class Real_Treasury_BCB {
                 }
             }
 
-            // Generate PDF if enabled
-            $download_url = null;
-            if ( get_option( 'rtbcb_pdf_enabled', true ) && class_exists( 'RTBCB_PDF' ) ) {
-                try {
-                    $pdf_data = [
-                        'user_inputs'            => $user_inputs,
-                        'scenarios'              => $formatted_scenarios,
-                        'recommendation'        => $recommendation,
-                        'comprehensive_analysis' => $comprehensive_analysis,
-                    ];
-
-                    $pdf      = new RTBCB_PDF( $pdf_data );
-
-                    if ( get_option( 'rtbcb_professional_reports', true ) && method_exists( $pdf, 'generate_comprehensive_report' ) ) {
-                        $pdf_path = $pdf->generate_comprehensive_report();
-                    } else {
-                        $pdf_path = $pdf->generate_business_case();
-                    }
-
-                    if ( $pdf_path && file_exists( $pdf_path ) ) {
-                        $download_url = RTBCB_PDF::get_download_url( $pdf_path );
-
-                        // Update lead with PDF info
-                        if ( $lead_id && class_exists( 'RTBCB_Leads' ) ) {
-                            RTBCB_Leads::update_pdf_status( $lead_id, $pdf_path );
-                        }
-                    }
-                } catch ( Exception $e ) {
-                    error_log( 'RTBCB: PDF generation failed - ' . $e->getMessage() );
-                    // Continue without PDF
-                }
-            }
+            // Generate HTML report
+            $report_html = $this->get_report_html( $comprehensive_analysis );
 
             $response_data = [
-                'scenarios'      => $formatted_scenarios,
+                'scenarios'              => $formatted_scenarios,
                 'recommendation'         => $recommendation,
                 'comprehensive_analysis' => $comprehensive_analysis,
                 'rag_context'            => $rag_context,
-                'download_url'           => $download_url,
+                'report_html'            => $report_html,
                 'lead_id'                => $lead_id,
                 'company_name'           => $user_inputs['company_name'],
                 'analysis_type'          => $use_comprehensive ? 'comprehensive' : 'standard',
@@ -775,6 +745,28 @@ class Real_Treasury_BCB {
         }
 
         exit;
+    }
+
+    /**
+     * Generate report HTML from template.
+     *
+     * @param array $business_case_data Business case data.
+     * @return string Report HTML.
+     */
+    private function get_report_html( $business_case_data ) {
+        $template_path = RTBCB_DIR . 'templates/report-template.php';
+
+        if ( ! file_exists( $template_path ) ) {
+            return '';
+        }
+
+        $business_case_data = is_array( $business_case_data ) ? $business_case_data : [];
+
+        ob_start();
+        include $template_path;
+        $html = ob_get_clean();
+
+        return wp_kses_post( $html );
     }
 
     /**
