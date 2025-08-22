@@ -340,13 +340,13 @@ If you encounter `Unchecked runtime.lastError` messages, they typically originat
 
 ## 🛣️ Roadmap and Future Features
 
-### Version 2.1 (Coming Soon)
+### Version 2.2 (Coming Soon)
 - **Multi-language Support**: Internationalization for global users
 - **Advanced Integrations**: Salesforce, HubSpot, and CRM connectivity
 - **White-label Options**: Complete branding customization
 - **API Endpoints**: REST API for external integrations
 
-### Version 2.2 (Planned)
+### Version 2.3 (Planned)
 - **Machine Learning**: Improved recommendation accuracy
 - **A/B Testing**: Form optimization capabilities
 - **Advanced Reporting**: Executive dashboard templates
