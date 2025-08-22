@@ -1,12 +1,4 @@
 <?php
-// Debug mode - set to false in production
-define( 'RTBCB_DEBUG', true );
-
-if ( RTBCB_DEBUG && current_user_can( 'manage_options' ) ) {
-    error_reporting( E_ALL );
-    ini_set( 'display_errors', 1 );
-}
-
 /**
  * Enhanced template for the business case form.
  *
@@ -404,31 +396,3 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
     }
 }
 </style>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    window.openBusinessCaseModal = function() {
-        const overlay = document.getElementById('rtbcbModalOverlay');
-        if (overlay) {
-            overlay.classList.add('active');
-            document.body.style.overflow = 'hidden';
-
-            // Force initialization after modal is visible
-            setTimeout(() => {
-                if (window.businessCaseBuilder) {
-                    window.businessCaseBuilder.reinitialize();
-                } else {
-                    window.businessCaseBuilder = new BusinessCaseBuilder();
-                }
-            }, 200);
-        }
-    };
-
-    window.closeBusinessCaseModal = function() {
-        const overlay = document.getElementById('rtbcbModalOverlay');
-        if (overlay) {
-            overlay.classList.remove('active');
-            document.body.style.overflow = '';
-        }
-    };
-});
-</script>
