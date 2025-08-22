@@ -44,6 +44,7 @@
     --light-purple: var(--accent-color);
     --dark-text: #281345;
     --gray-text: #7e7e7e;
+    --high-contrast-text: #4a4a4a;
     --success-green: var(--success-color);
     --warning-orange: var(--warning-color);
     --error-red: var(--error-color);
