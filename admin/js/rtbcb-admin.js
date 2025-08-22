@@ -369,8 +369,9 @@
             button.disabled = true;
             try {
                 const formData = new FormData();
+                const nonceField = document.getElementById('nonce');
                 formData.append('action', 'rtbcb_generate_sample_report');
-                formData.append('nonce', rtbcbAdmin.nonce);
+                formData.append('nonce', nonceField ? nonceField.value : '');
                 const response = await fetch(rtbcbAdmin.ajax_url, { method: 'POST', body: formData });
                 if (!response.ok) {
                     throw new Error(`Server responded ${response.status}`);
