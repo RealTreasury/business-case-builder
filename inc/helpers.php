@@ -238,3 +238,50 @@ function rtbcb_get_sample_inputs() {
     return apply_filters( 'rtbcb_sample_inputs', $inputs );
 }
 
+/**
+ * Retrieve predefined sample report scenarios.
+ *
+ * @return array Map of scenario keys to labels and input data.
+ */
+function rtbcb_get_sample_report_forms() {
+    return [
+        'enterprise_manufacturer' => [
+            'label' => __( 'Enterprise Manufacturer', 'rtbcb' ),
+            'data'  => [
+                'company_name'  => 'Acme Manufacturing',
+                'company_size'  => '1000-5000',
+                'industry'      => 'Manufacturing',
+                'location'      => 'USA',
+                'analysis_date' => current_time( 'Y-m-d' ),
+            ],
+        ],
+        'tech_startup'           => [
+            'label' => __( 'Tech Startup', 'rtbcb' ),
+            'data'  => [
+                'company_name'  => 'Innovatech',
+                'company_size'  => '1-50',
+                'industry'      => 'Technology',
+                'location'      => 'UK',
+                'analysis_date' => current_time( 'Y-m-d' ),
+            ],
+        ],
+    ];
+}
+
+/**
+ * Map scenario keys to sample report inputs.
+ *
+ * @param array  $inputs       Default inputs.
+ * @param string $scenario_key Scenario identifier.
+ * @return array Filtered inputs.
+ */
+function rtbcb_map_sample_report_inputs( $inputs, $scenario_key ) {
+    $forms = rtbcb_get_sample_report_forms();
+    if ( $scenario_key && isset( $forms[ $scenario_key ] ) ) {
+        return $forms[ $scenario_key ]['data'];
+    }
+
+    return $inputs;
+}
+add_filter( 'rtbcb_sample_report_inputs', 'rtbcb_map_sample_report_inputs', 10, 2 );
+

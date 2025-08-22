@@ -9,30 +9,9 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-$rtbcb_sample_forms = [
-    'enterprise_manufacturer' => [
-        'label' => __( 'Enterprise Manufacturer', 'rtbcb' ),
-        'data'  => [
-            'company_name'  => 'Acme Manufacturing',
-            'company_size'  => '1000-5000',
-            'industry'      => 'Manufacturing',
-            'location'      => 'USA',
-            'analysis_date' => current_time( 'Y-m-d' ),
-        ],
-    ],
-    'tech_startup'           => [
-        'label' => __( 'Tech Startup', 'rtbcb' ),
-        'data'  => [
-            'company_name'  => 'Innovatech',
-            'company_size'  => '1-50',
-            'industry'      => 'Technology',
-            'location'      => 'UK',
-            'analysis_date' => current_time( 'Y-m-d' ),
-        ],
-    ],
-];
-
-$sample_context = $rtbcb_sample_forms['enterprise_manufacturer']['data'];
+$rtbcb_sample_forms = rtbcb_get_sample_report_forms();
+$first_scenario     = reset( $rtbcb_sample_forms );
+$sample_context     = $first_scenario['data'];
 ?>
 <div class="wrap rtbcb-admin-page">
     <h1><?php esc_html_e( 'Report Preview', 'rtbcb' ); ?></h1>
@@ -80,6 +59,7 @@ foreach ( $rtbcb_sample_forms as $key => $scenario ) {
 }
 ?>
 <script type="text/javascript">
-    const rtbcbSampleForms = <?php echo wp_json_encode( $rtbcb_sample_data ); ?>;
+    window.rtbcbAdmin = window.rtbcbAdmin || {};
+    rtbcbAdmin.sampleForms = <?php echo wp_json_encode( $rtbcb_sample_data ); ?>;
 </script>
 
