@@ -8,6 +8,7 @@
             this.initLeadsManager();
             this.bindDiagnosticsButton();
             this.bindReportPreview();
+            this.bindSampleReport();
         },
 
         bindDashboardActions() {
@@ -324,6 +325,40 @@
                     const iframe = document.getElementById('rtbcb-report-iframe');
                     if (iframe) { iframe.srcdoc = data.data.html; }
                     document.getElementById('rtbcb-download-pdf').style.display = 'inline-block';
+                } else {
+                    alert(data.data?.message || rtbcbAdmin.strings.error);
+                }
+            } catch(err) {
+                alert(`${rtbcbAdmin.strings.error} ${err.message}`);
+            }
+            button.textContent = original;
+            button.disabled = false;
+        },
+
+        bindSampleReport() {
+            const button = document.getElementById('rtbcb-generate-sample-report');
+            if (!button) { return; }
+            button.addEventListener('click', this.generateSampleReport.bind(this));
+        },
+
+        async generateSampleReport(e) {
+            e.preventDefault();
+            const button = e.currentTarget;
+            const original = button.textContent;
+            button.textContent = rtbcbAdmin.strings.processing;
+            button.disabled = true;
+            try {
+                const formData = new FormData();
+                formData.append('action', 'rtbcb_generate_sample_report');
+                formData.append('nonce', rtbcbAdmin.nonce);
+                const response = await fetch(rtbcbAdmin.ajax_url, { method: 'POST', body: formData });
+                if (!response.ok) {
+                    throw new Error(`Server responded ${response.status}`);
+                }
+                const data = await response.json();
+                if (data.success) {
+                    const iframe = document.getElementById('rtbcb-sample-report-frame');
+                    if (iframe) { iframe.srcdoc = data.data.report_html; }
                 } else {
                     alert(data.data?.message || rtbcbAdmin.strings.error);
                 }

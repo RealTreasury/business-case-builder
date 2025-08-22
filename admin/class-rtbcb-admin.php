@@ -31,6 +31,7 @@ class RTBCB_Admin {
         add_action( 'wp_ajax_rtbcb_test_api', [ $this, 'ajax_test_api' ] );
         add_action( 'wp_ajax_rtbcb_run_diagnostics', [ $this, 'ajax_run_diagnostics' ] );
         add_action( 'wp_ajax_rtbcb_generate_report_preview', [ $this, 'ajax_generate_report_preview' ] );
+        add_action( 'wp_ajax_rtbcb_generate_sample_report', [ $this, 'ajax_generate_sample_report' ] );
     }
 
     /**
@@ -150,6 +151,15 @@ class RTBCB_Admin {
             'rtbcb-report-preview',
             [ $this, 'render_report_preview' ]
         );
+
+        add_submenu_page(
+            'rtbcb-dashboard',
+            __( 'Report Test', 'rtbcb' ),
+            __( 'Report Test', 'rtbcb' ),
+            'manage_options',
+            'rtbcb-report-test',
+            [ $this, 'render_report_test' ]
+        );
     }
 
     /**
@@ -241,6 +251,15 @@ class RTBCB_Admin {
      */
     public function render_report_preview() {
         include RTBCB_DIR . 'admin/report-preview-page.php';
+    }
+
+    /**
+     * Render report test page.
+     *
+     * @return void
+     */
+    public function render_report_test() {
+        include RTBCB_DIR . 'admin/report-test-page.php';
     }
 
     /**
@@ -495,6 +514,29 @@ class RTBCB_Admin {
         $html = wp_kses_post( $html );
 
         wp_send_json_success( [ 'html' => $html ] );
+    }
+
+    /**
+     * AJAX handler to generate a sample report.
+     *
+     * @return void
+     */
+    public function ajax_generate_sample_report() {
+        check_ajax_referer( 'rtbcb_nonce', 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'message' => __( 'Permission denied.', 'rtbcb' ) ], 403 );
+        }
+
+        $inputs = rtbcb_get_sample_inputs();
+        $inputs['email']               = 'sample@example.com';
+        $inputs['company_description'] = 'Sample company description.';
+        $inputs['rtbcb_nonce']         = wp_create_nonce( 'rtbcb_form_action' );
+
+        $_POST = $inputs;
+
+        $router = new RTBCB_Router();
+        $router->handle_form_submission();
     }
 
     /**
