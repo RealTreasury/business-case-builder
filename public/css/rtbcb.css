@@ -1308,7 +1308,7 @@
 
 .rtbcb-progress-label {
     font-size: 14px;
-    color: var(--primary-purple);
+    color: #ffffff;
     font-weight: 600;
     text-align: center;
 }
@@ -1957,7 +1957,7 @@
 
 /* Progress step labels - much more visible */
 .rtbcb-progress-label {
-    color: var(--primary-purple) !important;  /* Future steps purple */
+    color: #ffffff !important;  /* Future steps white */
     font-size: 14px !important;               /* Increase from 12px */
     font-weight: 600 !important;              /* Add weight */
     text-align: center;
