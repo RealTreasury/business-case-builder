@@ -17,24 +17,6 @@ function handleSubmissionError(errorMessage) {
 }
 
 /**
- * Polls the backend for a generated report.
- * @param {string} reportId - The report identifier.
- * @returns {Promise<object>} The result data.
- */
-async function pollForResult(reportId) {
-    const url = `${ajaxObj.ajax_url}?action=rtbcb_poll_result&report_id=${encodeURIComponent(reportId)}`;
-    const response = await fetch(url);
-    if (!response.ok) {
-        throw new Error(`Server responded with status ${response.status}.`);
-    }
-    const result = await response.json();
-    if (!result.success) {
-        throw new Error(result.data.message || 'An unknown error occurred.');
-    }
-    return result.data;
-}
-
-/**
  * Handles the form submission by sending data to the backend.
  * @param {Event} e - The form submission event.
  */
