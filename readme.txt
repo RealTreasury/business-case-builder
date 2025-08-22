@@ -12,7 +12,7 @@ A WordPress plugin that calculates the ROI of treasury technology, builds a narr
 == Description ==
 Real Treasury Business Case Builder helps treasury teams quantify the benefits of modern treasury tools. The plugin provides an ROI calculator, generates narrative summaries with large language models, integrates with the Real Treasury portal for vendor research, and exports comprehensive PDF reports.
 
-Use the `[rt_business_case_builder]` shortcode to embed the calculator on any page. Admin pages allow you to configure default assumptions, set OpenAI API keys, review captured leads, and monitor data health.
+Use the `[rt_business_case_builder]` shortcode to embed the calculator on any page. Admin pages allow you to configure default assumptions, set OpenAI API keys with format validation, review captured leads, and monitor data health.
 
 == Installation ==
 1. Upload `real-treasury-business-case-builder` to the `/wp-content/plugins/` directory.

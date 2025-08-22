@@ -16,9 +16,11 @@ $roi_stats = $stats['average_roi'] ?? [];
 $leads = $recent_leads_data['leads'] ?? [];
 
 // System health checks
-$api_key_configured = ! empty( get_option( 'rtbcb_openai_api_key' ) );
+$api_key       = get_option( 'rtbcb_openai_api_key' );
+$api_key_configured = ! empty( $api_key );
+$api_key_valid = $api_key_configured && rtbcb_is_valid_openai_api_key( $api_key );
 $portal_active = (bool) ( has_filter( 'rt_portal_get_vendors' ) || has_filter( 'rt_portal_get_vendor_notes' ) );
-$last_indexed = get_option( 'rtbcb_last_indexed', '' );
+$last_indexed  = get_option( 'rtbcb_last_indexed', '' );
 
 // Quick stats
 $conversion_rate = $total_leads > 0 ? ( $recent_leads / $total_leads ) * 100 : 0;
@@ -47,17 +49,25 @@ $avg_roi = intval( $roi_stats['avg_base'] ?? 0 );
     <div class="rtbcb-system-status">
         <h3><?php esc_html_e( 'System Status', 'rtbcb' ); ?></h3>
         <div class="rtbcb-status-grid">
-            <div class="rtbcb-status-item <?php echo $api_key_configured ? 'rtbcb-status-good' : 'rtbcb-status-warning'; ?>">
+            <div class="rtbcb-status-item <?php echo $api_key_valid ? 'rtbcb-status-good' : 'rtbcb-status-warning'; ?>">
                 <div class="rtbcb-status-icon">
-                    <span class="dashicons <?php echo $api_key_configured ? 'dashicons-yes-alt' : 'dashicons-warning'; ?>"></span>
+                    <span class="dashicons <?php echo $api_key_valid ? 'dashicons-yes-alt' : 'dashicons-warning'; ?>"></span>
                 </div>
                 <div class="rtbcb-status-content">
                     <div class="rtbcb-status-label"><?php esc_html_e( 'OpenAI API', 'rtbcb' ); ?></div>
                     <div class="rtbcb-status-value">
-                        <?php echo $api_key_configured ? esc_html__( 'Configured', 'rtbcb' ) : esc_html__( 'Not configured', 'rtbcb' ); ?>
+                        <?php
+                        if ( ! $api_key_configured ) {
+                            esc_html_e( 'Not configured', 'rtbcb' );
+                        } elseif ( ! $api_key_valid ) {
+                            esc_html_e( 'Invalid key format', 'rtbcb' );
+                        } else {
+                            esc_html_e( 'Configured', 'rtbcb' );
+                        }
+                        ?>
                     </div>
                 </div>
-                <?php if ( ! $api_key_configured ) : ?>
+                <?php if ( ! $api_key_valid ) : ?>
                     <a href="<?php echo esc_url( admin_url( 'admin.php?page=rtbcb-settings' ) ); ?>" class="rtbcb-status-action">
                         <?php esc_html_e( 'Configure', 'rtbcb' ); ?>
                     </a>
