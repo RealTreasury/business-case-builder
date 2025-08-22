@@ -23,18 +23,22 @@ php tests/filters-override.test.php
 echo "5. Running scenario selection test..."
 php tests/scenario-selection.test.php
 
+# Parse comprehensive response test
+echo "6. Running parse comprehensive response test..."
+php tests/parse-comprehensive-response.test.php
+
 # JavaScript tests
-echo "6. Running JavaScript tests..."
+echo "7. Running JavaScript tests..."
 node tests/handle-submit-error.test.js
 node tests/render-results-no-narrative.test.js
 node tests/handle-submit-success.test.js
 
 # WordPress coding standards (if installed)
 if command -v phpcs &> /dev/null; then
-    echo "7. Running WordPress coding standards check..."
+    echo "8. Running WordPress coding standards check..."
     phpcs --standard=WordPress --ignore=vendor .
 else
-    echo "7. Skipping WordPress coding standards (phpcs not installed)"
+    echo "8. Skipping WordPress coding standards (phpcs not installed)"
 fi
 
 echo "================================================"

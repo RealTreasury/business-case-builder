@@ -161,8 +161,129 @@ class RTBCB_LLM {
         if ( isset( $parsed['error'] ) ) {
             return new WP_Error( 'llm_parse_error', $parsed['error'] );
         }
-        
+
         return $this->enhance_with_research( $parsed, $company_research, $industry_analysis );
+    }
+
+    /**
+     * Parse and validate comprehensive OpenAI response.
+     *
+     * @param array $response Raw response from wp_remote_post.
+     *
+     * @return array|WP_Error Structured analysis array or error object.
+     */
+    private function parse_comprehensive_response( $response ) {
+        $body    = wp_remote_retrieve_body( $response );
+        $decoded = json_decode( $body, true );
+
+        if ( ! is_array( $decoded ) ) {
+            return new WP_Error( 'llm_response_decode_error', __( 'Failed to decode response body.', 'rtbcb' ) );
+        }
+
+        $content = $decoded['choices'][0]['message']['content'] ?? '';
+
+        if ( is_string( $content ) ) {
+            $json = json_decode( $content, true );
+        } else {
+            $json = is_array( $content ) ? $content : [];
+        }
+
+        if ( ! is_array( $json ) ) {
+            return new WP_Error( 'llm_response_parse_error', __( 'Invalid JSON from language model.', 'rtbcb' ) );
+        }
+
+        $required = [
+            'executive_summary',
+            'operational_analysis',
+            'industry_insights',
+            'technology_recommendations',
+            'financial_analysis',
+            'risk_mitigation',
+            'next_steps',
+        ];
+
+        $missing = array_diff( $required, array_keys( $json ) );
+
+        if ( ! empty( $missing ) ) {
+            return new WP_Error(
+                'llm_missing_fields',
+                __( 'Missing required fields: ', 'rtbcb' ) . implode( ', ', $missing )
+            );
+        }
+
+        return [
+            'executive_summary'      => [
+                'strategic_positioning'   => sanitize_text_field( $json['executive_summary']['strategic_positioning'] ?? '' ),
+                'business_case_strength'  => sanitize_text_field( $json['executive_summary']['business_case_strength'] ?? '' ),
+                'key_value_drivers'       => array_map( 'sanitize_text_field', $json['executive_summary']['key_value_drivers'] ?? [] ),
+                'executive_recommendation'=> sanitize_text_field( $json['executive_summary']['executive_recommendation'] ?? '' ),
+                'confidence_level'        => floatval( $json['executive_summary']['confidence_level'] ?? 0 ),
+            ],
+            'operational_analysis'   => [
+                'current_state_assessment' => [
+                    'efficiency_rating'   => sanitize_text_field( $json['operational_analysis']['current_state_assessment']['efficiency_rating'] ?? '' ),
+                    'benchmark_comparison'=> sanitize_text_field( $json['operational_analysis']['current_state_assessment']['benchmark_comparison'] ?? '' ),
+                    'capacity_utilization'=> sanitize_text_field( $json['operational_analysis']['current_state_assessment']['capacity_utilization'] ?? '' ),
+                ],
+                'process_inefficiencies'  => array_map(
+                    function ( $item ) {
+                        return [
+                            'process'     => sanitize_text_field( $item['process'] ?? '' ),
+                            'impact'      => sanitize_text_field( $item['impact'] ?? '' ),
+                            'description' => sanitize_text_field( $item['description'] ?? '' ),
+                        ];
+                    },
+                    $json['operational_analysis']['process_inefficiencies'] ?? []
+                ),
+                'automation_opportunities' => array_map(
+                    function ( $item ) {
+                        return [
+                            'area'                 => sanitize_text_field( $item['area'] ?? '' ),
+                            'complexity'           => sanitize_text_field( $item['complexity'] ?? '' ),
+                            'potential_hours_saved'=> floatval( $item['potential_hours_saved'] ?? 0 ),
+                        ];
+                    },
+                    $json['operational_analysis']['automation_opportunities'] ?? []
+                ),
+            ],
+            'industry_insights'      => [
+                'sector_trends'          => sanitize_text_field( $json['industry_insights']['sector_trends'] ?? '' ),
+                'competitive_benchmarks' => sanitize_text_field( $json['industry_insights']['competitive_benchmarks'] ?? '' ),
+                'regulatory_considerations' => sanitize_text_field( $json['industry_insights']['regulatory_considerations'] ?? '' ),
+            ],
+            'technology_recommendations' => [
+                'primary_solution' => [
+                    'category'     => sanitize_text_field( $json['technology_recommendations']['primary_solution']['category'] ?? '' ),
+                    'rationale'    => sanitize_text_field( $json['technology_recommendations']['primary_solution']['rationale'] ?? '' ),
+                    'key_features' => array_map( 'sanitize_text_field', $json['technology_recommendations']['primary_solution']['key_features'] ?? [] ),
+                ],
+                'implementation_approach' => [
+                    'phase_1'        => sanitize_text_field( $json['technology_recommendations']['implementation_approach']['phase_1'] ?? '' ),
+                    'phase_2'        => sanitize_text_field( $json['technology_recommendations']['implementation_approach']['phase_2'] ?? '' ),
+                    'success_metrics'=> array_map( 'sanitize_text_field', $json['technology_recommendations']['implementation_approach']['success_metrics'] ?? [] ),
+                ],
+            ],
+            'financial_analysis'     => [
+                'investment_breakdown' => [
+                    'software_licensing'      => sanitize_text_field( $json['financial_analysis']['investment_breakdown']['software_licensing'] ?? '' ),
+                    'implementation_services' => sanitize_text_field( $json['financial_analysis']['investment_breakdown']['implementation_services'] ?? '' ),
+                    'training_change_management' => sanitize_text_field( $json['financial_analysis']['investment_breakdown']['training_change_management'] ?? '' ),
+                ],
+                'payback_analysis'    => [
+                    'payback_months' => floatval( $json['financial_analysis']['payback_analysis']['payback_months'] ?? 0 ),
+                    'roi_3_year'     => floatval( $json['financial_analysis']['payback_analysis']['roi_3_year'] ?? 0 ),
+                    'npv_analysis'   => sanitize_text_field( $json['financial_analysis']['payback_analysis']['npv_analysis'] ?? '' ),
+                ],
+            ],
+            'risk_mitigation'        => [
+                'implementation_risks' => array_map( 'sanitize_text_field', $json['risk_mitigation']['implementation_risks'] ?? [] ),
+                'mitigation_strategies' => [
+                    'risk_1_mitigation' => sanitize_text_field( $json['risk_mitigation']['mitigation_strategies']['risk_1_mitigation'] ?? '' ),
+                    'risk_2_mitigation' => sanitize_text_field( $json['risk_mitigation']['mitigation_strategies']['risk_2_mitigation'] ?? '' ),
+                ],
+            ],
+            'next_steps'             => array_map( 'sanitize_text_field', $json['next_steps'] ?? [] ),
+        ];
     }
 
     /**
