@@ -2,6 +2,44 @@
  * Business Case Builder Wizard Controller
  * Handles multi-step form navigation, validation, and submission
  */
+
+// Ensure modal functions are available immediately
+window.openBusinessCaseModal = function() {
+    const overlay = document.getElementById('rtbcbModalOverlay');
+    if (overlay) {
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+
+        // Force re-initialization
+        setTimeout(() => {
+            if (window.businessCaseBuilder) {
+                window.businessCaseBuilder.reinitialize();
+            } else {
+                window.businessCaseBuilder = new BusinessCaseBuilder();
+            }
+        }, 100);
+    }
+};
+
+window.closeBusinessCaseModal = function() {
+    const overlay = document.getElementById('rtbcbModalOverlay');
+    if (overlay) {
+        overlay.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+};
+
+// Initialize on DOM ready with error handling
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        if (document.getElementById('rtbcbForm')) {
+            window.businessCaseBuilder = new BusinessCaseBuilder();
+        }
+    } catch (error) {
+        console.error('BusinessCaseBuilder initialization failed:', error);
+    }
+});
+
 class BusinessCaseBuilder {
     constructor() {
         this.currentStep = 1;
@@ -581,38 +619,3 @@ class BusinessCaseBuilder {
         this.updateProgressIndicator();
     }
 }
-
-// Initialize on DOM ready
-document.addEventListener('DOMContentLoaded', function() {
-    // Auto-initialize if form exists
-    if (document.getElementById('rtbcbForm')) {
-        window.businessCaseBuilder = new BusinessCaseBuilder();
-    }
-});
-
-// Make sure modal functions are globally available
-window.openBusinessCaseModal = function() {
-    const overlay = document.getElementById('rtbcbModalOverlay');
-    if (overlay) {
-        overlay.classList.add('active');
-        document.body.style.overflow = 'hidden';
-        
-        // Initialize or reinitialize the builder
-        setTimeout(() => {
-            if (!window.businessCaseBuilder) {
-                window.businessCaseBuilder = new BusinessCaseBuilder();
-            } else {
-                window.businessCaseBuilder.reinitialize();
-            }
-        }, 100);
-    }
-};
-
-window.closeBusinessCaseModal = function() {
-    const overlay = document.getElementById('rtbcbModalOverlay');
-    if (overlay) {
-        overlay.classList.remove('active');
-        document.body.style.overflow = '';
-    }
-};
-
