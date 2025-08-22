@@ -79,9 +79,15 @@ class RTBCB_Leads {
     public static function save_lead( $lead_data ) {
         global $wpdb;
 
-        // Sanitize data
+        // Validate required fields
+        if ( empty( $lead_data['email'] ) || ! is_email( $lead_data['email'] ) ) {
+            error_log( 'RTBCB: Invalid email provided to save_lead' );
+            return false;
+        }
+
+        // Sanitize data with proper validation
         $sanitized_data = [
-            'email'                   => sanitize_email( $lead_data['email'] ?? '' ),
+            'email'                   => sanitize_email( $lead_data['email'] ),
             'company_size'            => sanitize_text_field( $lead_data['company_size'] ?? '' ),
             'industry'                => sanitize_text_field( $lead_data['industry'] ?? '' ),
             'hours_reconciliation'    => floatval( $lead_data['hours_reconciliation'] ?? 0 ),
@@ -101,35 +107,69 @@ class RTBCB_Leads {
             'utm_campaign'            => sanitize_text_field( $_GET['utm_campaign'] ?? '' ),
         ];
 
+        // Prepare format array to match the sanitized data
+        $formats = [
+            '%s', // email
+            '%s', // company_size
+            '%s', // industry
+            '%f', // hours_reconciliation
+            '%f', // hours_cash_positioning
+            '%d', // num_banks
+            '%f', // ftes
+            '%s', // pain_points (serialized)
+            '%s', // recommended_category
+            '%f', // roi_low
+            '%f', // roi_base
+            '%f', // roi_high
+            '%s', // report_html
+            '%s', // ip_address
+            '%s', // user_agent
+            '%s', // utm_source
+            '%s', // utm_medium
+            '%s', // utm_campaign
+        ];
+
         // Check if lead exists
-        $existing_lead = self::get_lead_by_email( $sanitized_data['email'] );
+        try {
+            $existing_lead = self::get_lead_by_email( $sanitized_data['email'] );
 
-        if ( $existing_lead ) {
-            // Update existing lead
-            $result = $wpdb->update(
-                self::$table_name,
-                $sanitized_data,
-                [ 'email' => $sanitized_data['email'] ],
-                [
-                    '%s', '%s', '%s', '%f', '%f', '%d', '%f', '%s', '%s',
-                    '%f', '%f', '%f', '%s', '%s', '%s', '%s', '%s', '%s'
-                ],
-                [ '%s' ]
-            );
+            if ( $existing_lead ) {
+                // Update existing lead
+                $result = $wpdb->update(
+                    self::$table_name,
+                    $sanitized_data,
+                    [ 'email' => $sanitized_data['email'] ],
+                    $formats,
+                    [ '%s' ]
+                );
 
-            return $existing_lead['id'];
-        } else {
-            // Insert new lead
-            $result = $wpdb->insert(
-                self::$table_name,
-                $sanitized_data,
-                [
-                    '%s', '%s', '%s', '%f', '%f', '%d', '%f', '%s', '%s',
-                    '%f', '%f', '%f', '%s', '%s', '%s', '%s', '%s', '%s'
-                ]
-            );
+                if ( false === $result ) {
+                    error_log( 'RTBCB: Database update failed: ' . $wpdb->last_error );
+                    return false;
+                }
 
-            return $result ? $wpdb->insert_id : false;
+                return intval( $existing_lead['id'] );
+            } else {
+                // Insert new lead
+                $result = $wpdb->insert(
+                    self::$table_name,
+                    $sanitized_data,
+                    $formats
+                );
+
+                if ( false === $result ) {
+                    error_log( 'RTBCB: Database insert failed: ' . $wpdb->last_error );
+                    return false;
+                }
+
+                return $wpdb->insert_id;
+            }
+        } catch ( Exception $e ) {
+            error_log( 'RTBCB: Exception in save_lead: ' . $e->getMessage() );
+            return false;
+        } catch ( Error $e ) {
+            error_log( 'RTBCB: Fatal error in save_lead: ' . $e->getMessage() );
+            return false;
         }
     }
 
