@@ -537,7 +537,7 @@ $confidence_level = round( ( $business_case_data['confidence_level'] ?? 0.85 ) *
     font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: #6b7280;
+    color: #4b5563;
     margin-bottom: 8px;
 }
 
@@ -617,7 +617,7 @@ $confidence_level = round( ( $business_case_data['confidence_level'] ?? 0.85 ) *
 
 .rtbcb-savings-label {
     font-size: 12px;
-    color: #6b7280;
+    color: #4b5563;
 }
 
 .rtbcb-insights-grid {
@@ -778,7 +778,7 @@ $confidence_level = round( ( $business_case_data['confidence_level'] ?? 0.85 ) *
 
 .rtbcb-disclaimer {
     font-size: 14px;
-    color: #6b7280;
+    color: #4b5563;
     margin-bottom: 20px;
 }
 

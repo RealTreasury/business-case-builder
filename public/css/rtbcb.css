@@ -19,7 +19,7 @@
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
     font-size: 16px !important;
     line-height: 1.5 !important;
-    color: #374151 !important;
+    color: #1f2937 !important;
 }
 
 .rtbcb-modal-overlay h1,
@@ -126,7 +126,7 @@
     font-size: 16px !important;
     font-family: inherit !important;
     background: #ffffff !important;
-    color: #374151 !important;
+    color: #1f2937 !important;
     transition: all 0.2s ease !important;
     box-sizing: border-box !important;
     appearance: none !important;
@@ -217,9 +217,9 @@
     align-items: center !important;
     justify-content: center !important;
     gap: 8px !important;
-    padding: 12px 24px !important;
+    padding: 12px 20px !important;
     border-radius: 8px !important;
-    font-size: 14px !important;
+    font-size: 15px !important;
     font-weight: 600 !important;
     border: none !important;
     cursor: pointer !important;
@@ -284,7 +284,8 @@
     }
 
     .rtbcb-progress-label {
-        font-size: 10px !important;
+        font-size: 13px !important;
+        font-weight: 600 !important;
     }
 }
 
@@ -365,11 +366,12 @@
 
 .rtbcb-field-error {
     color: var(--error-red);
-    font-size: 12px;
+    font-size: 13px;
     margin-top: 4px;
     display: flex;
     align-items: center;
     gap: 4px;
+    font-weight: 500;
 }
 
 .rtbcb-field-error::before {
@@ -481,7 +483,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 12px;
+    font-size: 14px;
 }
 
 /* Recommendation Card */
@@ -518,7 +520,7 @@
     background: rgba(255,255,255,0.2);
     padding: 4px 12px;
     border-radius: 12px;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 600;
 }
 
@@ -583,13 +585,13 @@
     color: white;
     padding: 4px 12px;
     border-radius: 12px;
-    font-size: 10px;
+    font-size: 13px;
     font-weight: 600;
     letter-spacing: 0.5px;
 }
 
 .rtbcb-scenario-label {
-    font-size: 12px;
+    font-size: 14px;
     color: var(--high-contrast-text);
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -604,7 +606,7 @@
 }
 
 .rtbcb-scenario-confidence {
-    font-size: 11px;
+    font-size: 13px;
     color: var(--high-contrast-text);
     opacity: 0.8;
 }
@@ -642,7 +644,7 @@
 
 .rtbcb-benefit-label {
     font-weight: 600;
-    color: var(--dark-text);
+    color: #1f2937;
 }
 
 .rtbcb-benefit-amount {
@@ -697,7 +699,7 @@
 }
 
 .rtbcb-alternative-score {
-    font-size: 12px;
+    font-size: 14px;
     color: var(--primary-purple);
     font-weight: 600;
 }
@@ -800,10 +802,10 @@
 /* Enhanced Form Elements */
 .rtbcb-form label {
     display: block;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
     font-weight: 600;
-    color: var(--dark-text);
-    font-size: 14px;
+    color: #1f2937;
+    font-size: 15px;
 }
 
 .rtbcb-form input[type="text"],
@@ -845,7 +847,7 @@
     gap: 8px;
     margin-bottom: 0;
     font-weight: 500;
-    color: var(--high-contrast-text);
+    color: #1f2937;
     cursor: pointer;
 }
 
@@ -1170,17 +1172,18 @@
 .rtbcb-modal-subtitle {
     font-size: 16px;
     margin: 0;
-    color: #7e7e7e;
+    color: #4b5563;
     line-height: 1.5;
+    font-weight: 500;
 }
 
 .rtbcb-modal-close {
     position: absolute;
     top: 16px;
     right: 20px;
-    background: rgba(107, 114, 128, 0.1);
+    background: rgba(75, 85, 99, 0.1);
     border: none;
-    color: #6b7280;
+    color: #4b5563;
     width: 36px;
     height: 36px;
     border-radius: 50%;
@@ -1256,7 +1259,7 @@
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.9);
     border: 2px solid #e2e8f0;
-    color: #6b7280;
+    color: #4b5563;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1281,15 +1284,15 @@
 }
 
 .rtbcb-progress-label {
-    font-size: 12px;
-    color: #6b7280;
-    font-weight: 500;
+    font-size: 14px;
+    color: #4b5563;
+    font-weight: 600;
     text-align: center;
 }
 
 .rtbcb-progress-step.active .rtbcb-progress-label {
     color: #7216f4;
-    font-weight: 600;
+    font-weight: 700;
 }
 
 /* Steps Container - Fixed height and overflow */
@@ -1330,9 +1333,9 @@
 
 .rtbcb-step-header p {
     margin: 0;
-    color: #6b7280;
-    font-size: 14px;
-    line-height: 1.4;
+    color: #4b5563;
+    font-size: 15px;
+    line-height: 1.5;
 }
 
 .rtbcb-step-content {
@@ -1348,10 +1351,10 @@
 
 .rtbcb-field label {
     display: block;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
     font-weight: 600;
-    color: #374151;
-    font-size: 14px;
+    color: #1f2937;
+    font-size: 15px;
 }
 
 .rtbcb-field input,
@@ -1370,7 +1373,7 @@
  }
 
 .rtbcb-field input {
-    color: #374151;
+    color: #1f2937;
 }
 .rtbcb-form select,
 .rtbcb-field select {
@@ -1399,10 +1402,10 @@
 }
 
 .rtbcb-field-help {
-    font-size: 12px;
-    color: #6b7280;
+    font-size: 14px;
+    color: #4b5563;
     margin-top: 4px;
-    line-height: 1.3;
+    line-height: 1.4;
 }
 
 /* Pain Points Grid - Compact cards */
@@ -1457,16 +1460,16 @@
 }
 
 .rtbcb-pain-point-title {
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
-    color: #374151;
+    color: #1f2937;
     margin-bottom: 4px;
     line-height: 1.2;
 }
 
 .rtbcb-pain-point-description {
-    font-size: 11px;
-    color: #6b7280;
+    font-size: 13px;
+    color: #4b5563;
     line-height: 1.3;
 }
 
@@ -1488,10 +1491,10 @@
 .rtbcb-nav-btn {
     display: inline-flex !important;
     align-items: center;
-    gap: 6px;
-    padding: 10px 18px;
-    border-radius: 6px;
-    font-size: 14px;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 15px;
     font-weight: 600;
     border: none;
     cursor: pointer;
@@ -1576,7 +1579,7 @@
     .rtbcb-progress-number {
         width: 28px;
         height: 28px;
-        font-size: 11px;
+        font-size: 13px;
     }
 
     .rtbcb-step-header h3 {
@@ -1609,7 +1612,7 @@
 }
 
 .rtbcb-benefit-bar-label {
-    font-size: 12px;
+    font-size: 14px;
     margin-bottom: 4px;
     color: var(--high-contrast-text);
     font-weight: 500;
@@ -1651,11 +1654,12 @@
 
 .rtbcb-field-error {
     color: #dc2626;
-    font-size: 12px;
+    font-size: 13px;
     margin-top: 4px;
     display: flex;
     align-items: center;
     gap: 4px;
+    font-weight: 500;
 }
 
 .rtbcb-field-error::before {
@@ -1684,9 +1688,9 @@
 }
 
 .rtbcb-consent-text {
-    font-size: 14px;
-    line-height: 1.5;
-    color: #4b5563;
+    font-size: 15px;
+    line-height: 1.6;
+    color: #1f2937;
 }
 
 .rtbcb-consent-text a {
@@ -1724,7 +1728,7 @@
     align-items: flex-start;
     gap: 8px;
     font-size: 14px;
-    color: #374151;
+    color: #1f2937;
     line-height: 1.4;
 }
 
@@ -1745,9 +1749,10 @@
     .rtbcb-progress-steps {
         gap: 16px;
     }
-    
+
     .rtbcb-progress-label {
-        font-size: 10px;
+        font-size: 13px;
+        font-weight: 600;
     }
     
     .rtbcb-pain-points-grid {
@@ -1759,8 +1764,8 @@
     }
     
     .rtbcb-nav-btn {
-        font-size: 14px;
-        padding: 10px 16px;
+        font-size: 15px;
+        padding: 12px 20px;
     }
 }
 
@@ -1854,4 +1859,216 @@
     padding: 15px;
     border-radius: 4px;
     margin: 20px 0;
+}
+
+/* READABILITY IMPROVEMENTS FOR TREASURY BUSINESS CASE BUILDER */
+
+/* 1. IMPROVE TEXT CONTRAST - Replace light grays with darker, more readable colors */
+
+/* Update color variables for better contrast */
+:root {
+    /* Improved text colors for better readability */
+    --text-primary: #1f2937;        /* Dark gray for primary text */
+    --text-secondary: #4b5563;      /* Medium gray for secondary text */
+    --text-muted: #6b7280;          /* Only for least important text */
+    --text-light: #9ca3af;          /* Only for disabled states */
+
+    /* Ensure minimum 16px base font size */
+    --font-base: 1rem;              /* 16px */
+    --font-sm: 0.9rem;              /* 14.4px (never smaller) */
+    --font-xs: 0.875rem;            /* 14px (minimum readable size) */
+}
+
+/* 2. IMPROVE MODAL TEXT READABILITY */
+
+/* Modal subtitle - make much darker */
+.rtbcb-modal-subtitle {
+    color: var(--text-secondary) !important;  /* Was #7e7e7e - too light */
+    font-size: 16px !important;               /* Increase from 16px for emphasis */
+    font-weight: 500 !important;              /* Add weight for better visibility */
+}
+
+/* Step descriptions - improve contrast */
+.rtbcb-step-header p {
+    color: var(--text-secondary) !important;  /* Was #6b7280 - too light */
+    font-size: 15px !important;               /* Increase from 14px */
+    line-height: 1.5 !important;
+}
+
+/* 3. FORM FIELD IMPROVEMENTS */
+
+/* Field labels - make darker and larger */
+.rtbcb-field label,
+.rtbcb-form label {
+    color: var(--text-primary) !important;    /* Much darker for better readability */
+    font-size: 15px !important;               /* Increase from 14px */
+    font-weight: 600 !important;
+    margin-bottom: 8px !important;            /* More spacing */
+}
+
+/* Field help text - improve contrast */
+.rtbcb-field-help {
+    color: var(--text-secondary) !important;  /* Was #6b7280 - too light */
+    font-size: 14px !important;               /* Increase from 12px */
+    line-height: 1.4 !important;
+    margin-top: 6px !important;
+}
+
+/* 4. PROGRESS INDICATOR IMPROVEMENTS */
+
+/* Progress step labels - much more visible */
+.rtbcb-progress-label {
+    color: var(--text-primary) !important;    /* Was #6b7280 - too light */
+    font-size: 14px !important;               /* Increase from 12px */
+    font-weight: 600 !important;              /* Add weight */
+    text-align: center;
+}
+
+/* Active progress step label */
+.rtbcb-progress-step.active .rtbcb-progress-label {
+    color: #7216f4 !important;
+    font-weight: 700 !important;
+}
+
+/* 5. PAIN POINT CARDS IMPROVEMENTS */
+
+/* Pain point titles - darker and larger */
+.rtbcb-pain-point-title {
+    font-size: 14px !important;               /* Increase from 13px */
+    font-weight: 600 !important;
+    color: var(--text-primary) !important;    /* Was #374151 - make darker */
+    margin-bottom: 6px !important;
+    line-height: 1.3 !important;
+}
+
+/* Pain point descriptions - improve readability */
+.rtbcb-pain-point-description {
+    font-size: 13px !important;               /* Increase from 11px */
+    color: var(--text-secondary) !important;  /* Was #6b7280 - too light */
+    line-height: 1.4 !important;
+}
+
+/* 6. BUTTON TEXT IMPROVEMENTS */
+
+/* Navigation button text */
+.rtbcb-nav-btn {
+    font-size: 15px !important;               /* Increase from 14px */
+    font-weight: 600 !important;
+    padding: 12px 20px !important;            /* More padding for larger touch targets */
+}
+
+/* 7. VALIDATION AND ERROR TEXT */
+
+/* Error messages - ensure high contrast */
+.rtbcb-field-error {
+    color: #dc2626 !important;                /* Darker red for better contrast */
+    font-size: 13px !important;               /* Increase from 12px */
+    font-weight: 500 !important;
+}
+
+/* 8. CONSENT TEXT IMPROVEMENTS */
+
+/* Consent checkbox text */
+.rtbcb-consent-text {
+    font-size: 15px !important;               /* Increase from 14px */
+    line-height: 1.6 !important;              /* Better line spacing */
+    color: var(--text-primary) !important;    /* Was #4b5563 - make darker */
+}
+
+/* 9. MOBILE RESPONSIVENESS IMPROVEMENTS */
+
+@media (max-width: 768px) {
+    /* Increase all text sizes on mobile */
+    .rtbcb-modal-title {
+        font-size: 22px !important;           /* Increase from 20px */
+    }
+    
+    .rtbcb-modal-subtitle {
+        font-size: 17px !important;           /* Increase for mobile */
+    }
+    
+    .rtbcb-step-header h3 {
+        font-size: 19px !important;           /* Increase from 16px */
+    }
+    
+    .rtbcb-step-header p {
+        font-size: 16px !important;           /* Increase for mobile */
+    }
+    
+    .rtbcb-field label {
+        font-size: 16px !important;           /* Larger labels on mobile */
+    }
+    
+    .rtbcb-progress-label {
+        font-size: 13px !important;           /* Slightly larger on mobile */
+        font-weight: 600 !important;
+    }
+    
+    /* Ensure minimum touch targets */
+    .rtbcb-pain-point-label {
+        padding: 16px !important;             /* Larger touch area */
+    }
+}
+
+@media (max-width: 480px) {
+    /* Further mobile improvements */
+    .rtbcb-pain-point-title {
+        font-size: 15px !important;
+    }
+    
+    .rtbcb-pain-point-description {
+        font-size: 14px !important;
+    }
+    
+    .rtbcb-field input,
+    .rtbcb-field select {
+        font-size: 16px !important;           /* Prevent zoom on iOS */
+        padding: 14px 16px !important;        /* Larger touch targets */
+    }
+}
+
+/* 10. FOCUS STATES FOR ACCESSIBILITY */
+
+/* Improve focus indicators for better accessibility */
+.rtbcb-field input:focus,
+.rtbcb-field select:focus {
+    border-color: #7216f4 !important;
+    outline: 2px solid #7216f4 !important;  /* Visible focus ring */
+    outline-offset: 2px !important;
+    box-shadow: 0 0 0 3px rgba(114, 22, 244, 0.2) !important;
+}
+
+/* Button focus states */
+.rtbcb-nav-btn:focus {
+    outline: 2px solid #ffffff !important;
+    outline-offset: 2px !important;
+}
+
+/* 11. HIGH CONTRAST MODE SUPPORT */
+
+@media (prefers-contrast: high) {
+    :root {
+        --text-primary: #000000;
+        --text-secondary: #333333;
+        --text-muted: #666666;
+    }
+    
+    .rtbcb-field input,
+    .rtbcb-field select {
+        border-width: 2px !important;
+    }
+    
+    .rtbcb-pain-point-card {
+        border-width: 2px !important;
+    }
+}
+
+/* 12. REDUCED MOTION SUPPORT */
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
 }

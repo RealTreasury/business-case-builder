@@ -225,7 +225,7 @@ The plugin includes CSS custom properties for easy theming:
     --secondary-purple: #8f47f6;
     --light-purple: #c77dff;
     --dark-text: #281345;
-    --gray-text: #7e7e7e;
+    --gray-text: #4b5563;
     --success-green: #10b981;
 }
 ```
