@@ -25,6 +25,89 @@ class RTBCB_LLM {
     }
 
     /**
+     * Generate a simplified business case analysis.
+     *
+     * Attempts to call the LLM for a brief analysis. Falls back to an
+     * enhanced static analysis when no API key is available. If the LLM call
+     * fails, a {@see WP_Error} is returned for the caller to handle.
+     *
+     * @param array $user_inputs    Sanitized user inputs.
+     * @param array $roi_data       ROI calculation data.
+     * @param array $context_chunks Optional context strings for the prompt.
+     *
+     * @return array|WP_Error Simplified analysis array or error object.
+     */
+    public function generate_business_case( $user_inputs, $roi_data, $context_chunks = [] ) {
+        $inputs = [
+            'company_name'           => sanitize_text_field( $user_inputs['company_name'] ?? '' ),
+            'company_size'           => sanitize_text_field( $user_inputs['company_size'] ?? '' ),
+            'industry'               => sanitize_text_field( $user_inputs['industry'] ?? '' ),
+            'hours_reconciliation'   => floatval( $user_inputs['hours_reconciliation'] ?? 0 ),
+            'hours_cash_positioning' => floatval( $user_inputs['hours_cash_positioning'] ?? 0 ),
+            'num_banks'              => intval( $user_inputs['num_banks'] ?? 0 ),
+            'ftes'                   => floatval( $user_inputs['ftes'] ?? 0 ),
+            'pain_points'            => array_map( 'sanitize_text_field', (array) ( $user_inputs['pain_points'] ?? [] ) ),
+        ];
+
+        $this->current_inputs = $inputs;
+
+        if ( empty( $this->api_key ) ) {
+            return $this->create_enhanced_fallback( $inputs, $roi_data );
+        }
+
+        $model  = $this->models['mini'] ?? 'gpt-4o-mini';
+        $prompt = 'Create a concise treasury technology business case in JSON with keys '
+            . 'executive_summary (strategic_positioning, business_case_strength, key_value_drivers[], '
+            . 'executive_recommendation), operational_analysis (current_state_assessment), '
+            . 'industry_insights (sector_trends, competitive_benchmarks, regulatory_considerations).'
+            . '\nCompany: ' . $inputs['company_name']
+            . '\nIndustry: ' . $inputs['industry']
+            . '\nSize: ' . $inputs['company_size']
+            . '\nPain Points: ' . implode( ', ', $inputs['pain_points'] );
+
+        if ( ! empty( $context_chunks ) ) {
+            $prompt .= '\nContext: ' . implode( '\n', array_map( 'sanitize_text_field', $context_chunks ) );
+        }
+
+        $response = $this->call_openai_with_retry( $model, $prompt );
+
+        if ( is_wp_error( $response ) ) {
+            return new WP_Error( 'llm_failure', __( 'Unable to generate analysis at this time.', 'rtbcb' ) );
+        }
+
+        $body    = wp_remote_retrieve_body( $response );
+        $decoded = json_decode( $body, true );
+        $content = $decoded['choices'][0]['message']['content'] ?? '';
+        $json    = json_decode( $content, true );
+
+        if ( ! is_array( $json ) ) {
+            return new WP_Error( 'llm_parse_error', __( 'Invalid response from language model.', 'rtbcb' ) );
+        }
+
+        $analysis = [
+            'company_name'       => $inputs['company_name'],
+            'analysis_date'      => current_time( 'Y-m-d' ),
+            'executive_summary'  => [
+                'strategic_positioning'   => sanitize_text_field( $json['executive_summary']['strategic_positioning'] ?? '' ),
+                'business_case_strength'  => sanitize_text_field( $json['executive_summary']['business_case_strength'] ?? '' ),
+                'key_value_drivers'       => array_map( 'sanitize_text_field', $json['executive_summary']['key_value_drivers'] ?? [] ),
+                'executive_recommendation'=> sanitize_text_field( $json['executive_summary']['executive_recommendation'] ?? '' ),
+            ],
+            'operational_analysis' => [
+                'current_state_assessment' => sanitize_text_field( $json['operational_analysis']['current_state_assessment'] ?? '' ),
+            ],
+            'industry_insights'   => [
+                'sector_trends'          => sanitize_text_field( $json['industry_insights']['sector_trends'] ?? '' ),
+                'competitive_benchmarks' => sanitize_text_field( $json['industry_insights']['competitive_benchmarks'] ?? '' ),
+                'regulatory_considerations' => sanitize_text_field( $json['industry_insights']['regulatory_considerations'] ?? '' ),
+            ],
+            'financial_analysis' => $this->build_financial_analysis( $roi_data, $inputs ),
+        ];
+
+        return $analysis;
+    }
+
+    /**
      * Generate comprehensive business case with deep analysis
      */
     public function generate_comprehensive_business_case( $user_inputs, $roi_data, $context_chunks = [] ) {
