@@ -324,7 +324,7 @@
     max-width: 900px;
     margin: 40px auto;
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    color: var(--gray-text);
+    color: var(--high-contrast-text);
 }
 
 .rtbcb-container::before {
@@ -429,7 +429,7 @@
     padding: 12px 16px;
     border-radius: 8px;
     font-size: 14px;
-    color: var(--gray-text);
+    color: var(--high-contrast-text);
     border-left: 3px solid var(--primary-purple);
 }
 
@@ -590,7 +590,7 @@
 
 .rtbcb-scenario-label {
     font-size: 12px;
-    color: var(--gray-text);
+    color: var(--high-contrast-text);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin-bottom: 8px;
@@ -605,7 +605,7 @@
 
 .rtbcb-scenario-confidence {
     font-size: 11px;
-    color: var(--gray-text);
+    color: var(--high-contrast-text);
     opacity: 0.8;
 }
 
@@ -692,7 +692,7 @@
 
 .rtbcb-alternative-description {
     font-size: 14px;
-    color: var(--gray-text);
+    color: var(--high-contrast-text);
     margin-bottom: 12px;
 }
 
@@ -793,7 +793,7 @@
 .rtbcb-step-content p {
     margin: 0;
     font-size: 14px;
-    color: var(--gray-text);
+    color: var(--high-contrast-text);
     line-height: 1.4;
 }
 
@@ -845,7 +845,7 @@
     gap: 8px;
     margin-bottom: 0;
     font-weight: 500;
-    color: var(--gray-text);
+    color: var(--high-contrast-text);
     cursor: pointer;
 }
 
@@ -1611,7 +1611,7 @@
 .rtbcb-benefit-bar-label {
     font-size: 12px;
     margin-bottom: 4px;
-    color: var(--gray-text);
+    color: var(--high-contrast-text);
     font-weight: 500;
 }
 
