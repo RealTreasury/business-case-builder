@@ -698,11 +698,12 @@ class BusinessCaseBuilder {
         // Show error in modal
         const modalBody = this.form.closest('.rtbcb-modal-body');
         if (modalBody) {
+            const safeMessage = this.escapeHTML(message);
             const errorHTML = `
                 <div class="rtbcb-error-container" style="padding: 40px; text-align: center;">
                     <div class="rtbcb-error-icon" style="font-size: 48px; color: #ef4444; margin-bottom: 20px;">⚠️</div>
                     <h3 style="color: #ef4444; margin-bottom: 16px;">Unable to Generate Business Case</h3>
-                    <p style="color: #4b5563; margin-bottom: 24px;">${message}</p>
+                    <p style="color: #4b5563; margin-bottom: 24px;">${safeMessage}</p>
                     <button type="button" class="rtbcb-action-btn rtbcb-btn-primary" onclick="location.reload()">
                         Try Again
                     </button>
@@ -710,6 +711,12 @@ class BusinessCaseBuilder {
             `;
             modalBody.innerHTML = errorHTML;
         }
+    }
+
+    escapeHTML(str) {
+        const div = document.createElement('div');
+        div.textContent = str == null ? '' : String(str);
+        return div.innerHTML;
     }
 
     formatNumber(num) {
