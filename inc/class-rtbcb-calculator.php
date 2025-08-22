@@ -42,12 +42,30 @@ class RTBCB_Calculator {
      * @return array
      */
     private static function calculate_scenario( $inputs, $settings, $category, $scenario_type, $industry_mult ) {
-        $multipliers = [
-            'conservative' => 0.8,
-            'base'         => 1.0,
-            'optimistic'   => 1.2,
-        ];
-        $multiplier = $multipliers[ $scenario_type ];
+        /**
+         * Filters the scenario multipliers used to adjust ROI calculations.
+         *
+         * @param array  $multipliers   Associative array of scenario multipliers.
+         * @param array  $inputs        User provided inputs.
+         * @param array  $settings      Plugin settings.
+         * @param array  $category      Recommended category info.
+         * @param string $scenario_type Scenario type.
+         * @param float  $industry_mult Industry benchmark multiplier.
+         */
+        $multipliers = apply_filters(
+            'rtbcb_roi_multipliers',
+            [
+                'conservative' => 0.8,
+                'base'         => 1.0,
+                'optimistic'   => 1.2,
+            ],
+            $inputs,
+            $settings,
+            $category,
+            $scenario_type,
+            $industry_mult
+        );
+        $multiplier  = $multipliers[ $scenario_type ];
 
         $labor_savings   = self::calculate_labor_savings( $inputs, $settings, $multiplier );
         $fee_savings     = self::calculate_fee_savings( $inputs, $settings, $multiplier );
@@ -118,12 +136,26 @@ class RTBCB_Calculator {
      * @return float Annual error reduction benefit.
      */
     private static function calculate_error_reduction( $inputs, $settings, $multiplier ) {
-        $cost_map = [
-            '<$50M'       => 25000,
-            '$50M-$500M'  => 75000,
-            '$500M-$2B'   => 200000,
-            '>$2B'        => 500000,
-        ];
+        /**
+         * Filters the base error cost map used for calculating error reduction savings.
+         *
+         * @param array $cost_map   Map of company sizes to base error costs.
+         * @param array $inputs     User provided inputs.
+         * @param array $settings   Plugin settings.
+         * @param float $multiplier Scenario multiplier.
+         */
+        $cost_map = apply_filters(
+            'rtbcb_error_cost_map',
+            [
+                '<$50M'       => 25000,
+                '$50M-$500M'  => 75000,
+                '$500M-$2B'   => 200000,
+                '>$2B'        => 500000,
+            ],
+            $inputs,
+            $settings,
+            $multiplier
+        );
         $company_size = isset( $inputs['company_size'] ) ? $inputs['company_size'] : '';
         $base_cost    = isset( $cost_map[ $company_size ] ) ? $cost_map[ $company_size ] : 50000;
         $reduction    = 0.25 * $multiplier;
