@@ -277,7 +277,24 @@ async function generateProfessionalReport(businessContext) {
             })
         });
 
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('OpenAI API error response:', errorText);
+            throw new Error(`OpenAI API error: ${response.status}`);
+        }
+
         const data = await response.json();
+
+        if (data.error) {
+            const errorMessage = data.error.message || 'OpenAI API error';
+            const errorElement = document.getElementById('error');
+            if (errorElement) {
+                errorElement.textContent = errorMessage;
+            }
+            console.error('OpenAI API error details:', data.error);
+            throw new Error(errorMessage);
+        }
+
         const htmlContent = data.choices[0].message.content;
         const cleanedHTML = htmlContent
             .replace(/```html\n?/g, '')
