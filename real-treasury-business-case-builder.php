@@ -281,7 +281,6 @@ class Real_Treasury_BCB {
             $new_options = [
                 'rtbcb_advanced_model'        => 'o1-preview',
                 'rtbcb_comprehensive_analysis' => true,
-                'rtbcb_professional_reports'   => true,
             ];
 
             foreach ( $new_options as $option => $value ) {
@@ -331,9 +330,7 @@ class Real_Treasury_BCB {
             'rtbcb_embedding_model'    => 'text-embedding-3-small',
             'rtbcb_labor_cost_per_hour'=> 100,
             'rtbcb_bank_fee_baseline'  => 15000,
-            'rtbcb_pdf_enabled'        => true,
             'rtbcb_comprehensive_analysis' => true,
-            'rtbcb_professional_reports'   => true,
         ];
 
         foreach ( $defaults as $option => $value ) {
