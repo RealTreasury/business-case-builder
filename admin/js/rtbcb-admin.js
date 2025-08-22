@@ -7,6 +7,7 @@
             this.bindExportButtons();
             this.initLeadsManager();
             this.bindDiagnosticsButton();
+            this.bindReportPreview();
         },
 
         bindDashboardActions() {
@@ -296,6 +297,51 @@
                 alert(`${rtbcbAdmin.strings.error} ${err.message}`);
             }
         }
+
+        bindReportPreview() {
+            const form = document.getElementById('rtbcb-report-preview-form');
+            if (!form) { return; }
+            form.addEventListener('submit', this.generateReportPreview.bind(this));
+            document.getElementById('rtbcb-download-pdf')?.addEventListener('click', this.downloadReportPDF.bind(this));
+        },
+
+        async generateReportPreview(e) {
+            e.preventDefault();
+            const form = e.currentTarget;
+            const button = document.getElementById('rtbcb-generate-report');
+            const original = button.textContent;
+            button.textContent = rtbcbAdmin.strings.processing;
+            button.disabled = true;
+            try {
+                const formData = new FormData(form);
+                formData.append('action', 'rtbcb_generate_report_preview');
+                const response = await fetch(rtbcbAdmin.ajax_url, { method: 'POST', body: formData });
+                if (!response.ok) {
+                    throw new Error(`Server responded ${response.status}`);
+                }
+                const data = await response.json();
+                if (data.success) {
+                    const iframe = document.getElementById('rtbcb-report-iframe');
+                    if (iframe) { iframe.srcdoc = data.data.html; }
+                    document.getElementById('rtbcb-download-pdf').style.display = 'inline-block';
+                } else {
+                    alert(data.data?.message || rtbcbAdmin.strings.error);
+                }
+            } catch(err) {
+                alert(`${rtbcbAdmin.strings.error} ${err.message}`);
+            }
+            button.textContent = original;
+            button.disabled = false;
+        },
+
+        downloadReportPDF(e) {
+            e.preventDefault();
+            const iframe = document.getElementById('rtbcb-report-iframe');
+            if (iframe && iframe.contentWindow) {
+                iframe.contentWindow.focus();
+                iframe.contentWindow.print();
+            }
+        },
 
         closeModal() {
             const modal = document.getElementById('rtbcb-lead-modal');
