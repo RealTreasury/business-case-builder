@@ -15,7 +15,6 @@ $advanced_model  = get_option( 'rtbcb_advanced_model', '' );
 $embedding_model = get_option( 'rtbcb_embedding_model', '' );
 $labor_cost      = get_option( 'rtbcb_labor_cost_per_hour', '' );
 $bank_fee        = get_option( 'rtbcb_bank_fee_baseline', '' );
-$pdf_enabled     = (bool) get_option( 'rtbcb_pdf_enabled', true );
 
 $chat_models = [
     'gpt-5'             => 'gpt-5',
@@ -118,17 +117,6 @@ $embedding_models = [
                 </th>
                 <td>
                     <input type="number" step="0.01" id="rtbcb_bank_fee_baseline" name="rtbcb_bank_fee_baseline" value="<?php echo esc_attr( $bank_fee ); ?>" class="regular-text" />
-                </td>
-            </tr>
-            <tr>
-                <th scope="row">
-                    <label for="rtbcb_pdf_enabled"><?php echo esc_html__( 'Enable PDF Generation', 'rtbcb' ); ?></label>
-                </th>
-                <td>
-                    <label>
-                        <input type="checkbox" id="rtbcb_pdf_enabled" name="rtbcb_pdf_enabled" value="1" <?php checked( $pdf_enabled ); ?> />
-                        <?php esc_html_e( 'Generate PDF reports for leads', 'rtbcb' ); ?>
-                    </label>
                 </td>
             </tr>
         </table>
