@@ -49,8 +49,7 @@ class RTBCB_Leads {
             roi_low decimal(12,2) DEFAULT 0,
             roi_base decimal(12,2) DEFAULT 0,
             roi_high decimal(12,2) DEFAULT 0,
-            pdf_generated tinyint(1) DEFAULT 0,
-            pdf_path varchar(500) DEFAULT '',
+            report_html longtext DEFAULT '',
             ip_address varchar(45) DEFAULT '',
             user_agent text DEFAULT '',
             utm_source varchar(100) DEFAULT '',
@@ -94,6 +93,7 @@ class RTBCB_Leads {
             'roi_low'                 => floatval( $lead_data['roi_low'] ?? 0 ),
             'roi_base'                => floatval( $lead_data['roi_base'] ?? 0 ),
             'roi_high'                => floatval( $lead_data['roi_high'] ?? 0 ),
+            'report_html'             => wp_kses_post( $lead_data['report_html'] ?? '' ),
             'ip_address'              => self::get_client_ip(),
             'user_agent'              => sanitize_text_field( $_SERVER['HTTP_USER_AGENT'] ?? '' ),
             'utm_source'              => sanitize_text_field( $_GET['utm_source'] ?? '' ),
@@ -112,7 +112,7 @@ class RTBCB_Leads {
                 [ 'email' => $sanitized_data['email'] ],
                 [
                     '%s', '%s', '%s', '%f', '%f', '%d', '%f', '%s', '%s',
-                    '%f', '%f', '%f', '%s', '%s', '%s', '%s', '%s'
+                    '%f', '%f', '%f', '%s', '%s', '%s', '%s', '%s', '%s'
                 ],
                 [ '%s' ]
             );
@@ -125,7 +125,7 @@ class RTBCB_Leads {
                 $sanitized_data,
                 [
                     '%s', '%s', '%s', '%f', '%f', '%d', '%f', '%s', '%s',
-                    '%f', '%f', '%f', '%s', '%s', '%s', '%s', '%s'
+                    '%f', '%f', '%f', '%s', '%s', '%s', '%s', '%s', '%s'
                 ]
             );
 
@@ -235,28 +235,6 @@ class RTBCB_Leads {
             'current_page'=> $args['page'],
             'total_pages' => ceil( $total_leads / $args['per_page'] ),
         ];
-    }
-
-    /**
-     * Update PDF generation status.
-     *
-     * @param int    $lead_id Lead ID.
-     * @param string $pdf_path Path to generated PDF.
-     * @return bool Success status.
-     */
-    public static function update_pdf_status( $lead_id, $pdf_path = '' ) {
-        global $wpdb;
-
-        return $wpdb->update(
-            self::$table_name,
-            [
-                'pdf_generated' => 1,
-                'pdf_path'      => sanitize_text_field( $pdf_path ),
-            ],
-            [ 'id' => intval( $lead_id ) ],
-            [ '%d', '%s' ],
-            [ '%d' ]
-        );
     }
 
     /**
