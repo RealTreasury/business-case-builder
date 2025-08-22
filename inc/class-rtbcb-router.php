@@ -34,12 +34,11 @@ class RTBCB_Router {
             $form_data = $validated_data;
 
             // Instantiate necessary classes.
-            $calculator = new RTBCB_Calculator();
-            $llm        = new RTBCB_LLM();
-            $rag        = new RTBCB_RAG();
+            $llm = new RTBCB_LLM();
+            $rag = new RTBCB_RAG();
 
             // Perform calculations.
-            $calculations = $calculator->calculate( $form_data );
+            $calculations = RTBCB_Calculator::calculate_roi( $form_data );
 
             // Generate context from RAG.
             $rag_context = $rag->get_context( $form_data['company_description'] );

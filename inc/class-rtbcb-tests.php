@@ -47,7 +47,7 @@ class RTBCB_Tests {
     }
 
     /**
-     * Ensure ROI calculator is available.
+     * Ensure ROI calculator static method is available.
      *
      * @return array Test result.
      */
@@ -61,7 +61,7 @@ class RTBCB_Tests {
 
         return [
             'passed'  => true,
-            'message' => __( 'ROI calculator is available.', 'rtbcb' ),
+            'message' => __( 'ROI calculator static method available.', 'rtbcb' ),
         ];
     }
 

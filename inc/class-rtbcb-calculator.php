@@ -7,6 +7,8 @@
 
 /**
  * Class RTBCB_Calculator.
+ *
+ * Provides static ROI calculation helpers.
  */
 class RTBCB_Calculator {
     /**
