@@ -31,6 +31,7 @@ class RTBCB_Admin {
         add_action( 'wp_ajax_rtbcb_test_api', [ $this, 'ajax_test_api' ] );
         add_action( 'wp_ajax_rtbcb_run_diagnostics', [ $this, 'ajax_run_diagnostics' ] );
         add_action( 'wp_ajax_rtbcb_generate_report_preview', [ $this, 'ajax_generate_report_preview' ] );
+        add_action( 'wp_ajax_rtbcb_generate_sample_report', [ $this, 'ajax_generate_sample_report' ] );
     }
 
     /**
@@ -493,6 +494,44 @@ class RTBCB_Admin {
         }
 
         $html = wp_kses_post( $html );
+
+        wp_send_json_success( [ 'html' => $html ] );
+    }
+
+    /**
+     * AJAX handler for generating sample reports.
+     *
+     * @return void
+     */
+    public function ajax_generate_sample_report() {
+        check_ajax_referer( 'rtbcb_generate_report_preview', 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( __( 'Permission denied', 'rtbcb' ) );
+        }
+
+        $scenario = isset( $_POST['scenario'] ) ? sanitize_text_field( wp_unslash( $_POST['scenario'] ) ) : '';
+
+        $scenarios = apply_filters( 'rtbcb_sample_report_scenarios', [] );
+        $inputs    = [];
+        if ( ! empty( $scenario ) && isset( $scenarios[ $scenario ] ) ) {
+            $inputs = $scenarios[ $scenario ];
+        }
+
+        if ( empty( $inputs ) ) {
+            $inputs = rtbcb_get_sample_inputs();
+        }
+
+        $roi_data = RTBCB_Calculator::calculate_roi( $inputs );
+
+        $llm                = new RTBCB_LLM();
+        $business_case_data = $llm->generate_business_case( $inputs, $roi_data );
+
+        if ( is_wp_error( $business_case_data ) ) {
+            wp_send_json_error( [ 'message' => $business_case_data->get_error_message() ] );
+        }
+
+        $html = RTBCB_Router::get_report_html( $business_case_data );
 
         wp_send_json_success( [ 'html' => $html ] );
     }
