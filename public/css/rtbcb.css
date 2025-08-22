@@ -107,8 +107,8 @@
 /* Step content fixes */
 .rtbcb-wizard-step {
     display: none !important;
-    padding: 24px 32px !important;
-    min-height: 340px !important;
+    padding: 20px 24px !important;
+    min-height: 280px !important;
 }
 
 .rtbcb-wizard-step.active {
@@ -270,8 +270,8 @@
     }
 
     .rtbcb-wizard-step {
-        padding: 20px !important;
-        min-height: 300px !important;
+        padding: 16px 20px !important;
+        min-height: 260px !important;
     }
 
     .rtbcb-wizard-navigation {
@@ -332,9 +332,9 @@
     border: 1px solid rgba(199,125,255,.2);
     border-radius: 16px;
     box-shadow: 0 8px 32px var(--shadow-light), inset 0 1px 0 rgba(255,255,255,.8);
-    padding: 40px;
+    padding: 24px;
     max-width: 900px;
-    margin: 40px auto;
+    margin: 20px auto;
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     color: var(--high-contrast-text);
 }
