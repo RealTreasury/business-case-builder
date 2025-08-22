@@ -876,7 +876,91 @@ class BusinessCaseBuilder {
             }]
         };
 
-        const renderChart = () => {
+        // Simplified approach - just show the chart data without Chart.js
+        const showFallbackChart = () => {
+            const total = baseScenario.labor_savings + baseScenario.fee_savings + baseScenario.error_reduction;
+            const laborPct = ((baseScenario.labor_savings / total) * 100).toFixed(1);
+            const feesPct = ((baseScenario.fee_savings / total) * 100).toFixed(1);
+            const errorsPct = ((baseScenario.error_reduction / total) * 100).toFixed(1);
+
+            const fallbackHTML = `
+                <div class="rtbcb-chart-fallback">
+                    <div class="rtbcb-chart-title">Annual Benefit Breakdown</div>
+                    <div class="rtbcb-benefit-bars">
+                        <div class="rtbcb-benefit-bar">
+                            <div class="rtbcb-benefit-bar-label">Labor Savings (${laborPct}%)</div>
+                            <div class="rtbcb-benefit-bar-fill" style="width: ${laborPct}%; background: #7216f4;">
+                                $${baseScenario.labor_savings.toLocaleString()}
+                            </div>
+                        </div>
+                        <div class="rtbcb-benefit-bar">
+                            <div class="rtbcb-benefit-bar-label">Fee Reduction (${feesPct}%)</div>
+                            <div class="rtbcb-benefit-bar-fill" style="width: ${feesPct}%; background: #8f47f6;">
+                                $${baseScenario.fee_savings.toLocaleString()}
+                            </div>
+                        </div>
+                        <div class="rtbcb-benefit-bar">
+                            <div class="rtbcb-benefit-bar-label">Error Reduction (${errorsPct}%)</div>
+                            <div class="rtbcb-benefit-bar-fill" style="width: ${errorsPct}%; background: #c77dff;">
+                                $${baseScenario.error_reduction.toLocaleString()}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            canvas.outerHTML = fallbackHTML;
+        };
+
+        // Try to load Chart.js, but fall back gracefully
+        if (typeof Chart === 'undefined') {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js';
+            script.onload = () => {
+                if (typeof Chart !== 'undefined') {
+                    try {
+                        new Chart(ctx, {
+                            type: 'doughnut',
+                            data: data,
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        position: 'bottom',
+                                        labels: {
+                                            padding: 20,
+                                            usePointStyle: true
+                                        }
+                                    },
+                                    tooltip: {
+                                        callbacks: {
+                                            label: function(context) {
+                                                const value = context.parsed;
+                                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                                const percentage = ((value / total) * 100).toFixed(1);
+                                                return `${context.label}: $${value.toLocaleString()} (${percentage}%)`;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    } catch (error) {
+                        console.log('Chart.js loaded but rendering failed, using fallback');
+                        showFallbackChart();
+                    }
+                } else {
+                    showFallbackChart();
+                }
+            };
+            script.onerror = () => {
+                console.log('Chart.js failed to load, using fallback display');
+                showFallbackChart();
+            };
+            document.head.appendChild(script);
+        } else {
+            // Chart.js already available
             try {
                 new Chart(ctx, {
                     type: 'doughnut',
@@ -906,28 +990,10 @@ class BusinessCaseBuilder {
                     }
                 });
             } catch (error) {
-                console.error('Chart rendering error:', error);
-                const message = document.createElement('div');
-                message.textContent = 'Chart unavailable';
-                canvas.replaceWith(message);
+                console.log('Chart rendering failed, using fallback');
+                showFallbackChart();
             }
-        };
-
-        if (typeof Chart === 'undefined') {
-            try {
-                const module = await import('https://cdn.jsdelivr.net/npm/chart.js');
-                window.Chart = module.default;
-                renderChart();
-            } catch (error) {
-                console.error('Chart.js failed to load:', error);
-                const message = document.createElement('div');
-                message.textContent = 'Chart unavailable';
-                canvas.replaceWith(message);
-            }
-            return;
         }
-
-        renderChart();
     }
 
     shareResults() {
