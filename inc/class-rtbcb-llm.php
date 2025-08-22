@@ -347,6 +347,40 @@ class RTBCB_LLM {
     }
 
     /**
+     * Parse structured API responses and validate HTTP status code.
+     *
+     * @param array|WP_Error $response Response from wp_remote_* call.
+     *
+     * @return array|WP_Error Parsed data or error object.
+     */
+    private function parse_structured_response( $response ) {
+        if ( is_wp_error( $response ) ) {
+            return $response;
+        }
+
+        $code = wp_remote_retrieve_response_code( $response );
+        error_log( 'RTBCB structured response status: ' . $code );
+
+        if ( 200 !== $code ) {
+            error_log( 'RTBCB structured response error: HTTP ' . $code );
+            return new WP_Error(
+                'rtbcb_api_error',
+                sprintf( __( 'API request failed (%d).', 'rtbcb' ), $code )
+            );
+        }
+
+        $body = wp_remote_retrieve_body( $response );
+        $data = json_decode( $body, true );
+
+        if ( null === $data ) {
+            error_log( 'RTBCB structured response JSON decode error.' );
+            return new WP_Error( 'rtbcb_api_error', __( 'Invalid JSON in API response.', 'rtbcb' ) );
+        }
+
+        return $data;
+    }
+
+    /**
      * Clean common formatting issues from LLM responses.
      *
      * @param string $content Raw LLM response content.
