@@ -69,9 +69,9 @@ class BusinessCaseBuilder {
         this.steps = this.form.querySelectorAll('.rtbcb-wizard-step');
         this.progressSteps = this.form.querySelectorAll('.rtbcb-progress-step');
         
-        // UPDATED: Form fields by step - now includes company_name
+        // UPDATED: Form fields by step - now includes company_name and industry
         this.stepFields = {
-            1: ['company_name', 'company_size'], // Added company_name
+            1: ['company_name', 'company_size', 'industry'], // Added company_name and industry
             2: ['hours_reconciliation', 'hours_cash_positioning', 'num_banks', 'ftes'],
             3: ['pain_points'],
             4: ['business_objective', 'implementation_timeline', 'budget_range'],
