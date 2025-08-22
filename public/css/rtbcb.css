@@ -1191,7 +1191,7 @@
 
 .rtbcb-modal-close {
     position: absolute;
-    top: 16px;
+    top: 60px;
     right: 20px;
     background: rgba(75, 85, 99, 0.1);
     border: none;
@@ -1272,9 +1272,9 @@
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.9);
-    border: 2px solid #e2e8f0;
-    color: var(--text-primary);
+    background: rgba(114, 22, 244, 0.1);
+    border: 2px solid var(--primary-purple);
+    color: var(--primary-purple);
     position: relative;
     z-index: 1;
     display: flex;
@@ -1287,12 +1287,18 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-.rtbcb-progress-step.active .rtbcb-progress-number,
+.rtbcb-progress-step.active .rtbcb-progress-number {
+    background: var(--success-green);
+    border-color: var(--success-green);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
 .rtbcb-progress-step.completed .rtbcb-progress-number {
-    background: linear-gradient(135deg, #7216f4, #8f47f6);
-    color: white;
-    border-color: transparent;
-    box-shadow: 0 4px 12px rgba(114, 22, 244, 0.3);
+    background: var(--success-green);
+    border-color: var(--success-green);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
 .rtbcb-progress-step.completed .rtbcb-progress-number::after {
@@ -1302,13 +1308,14 @@
 
 .rtbcb-progress-label {
     font-size: 14px;
-    color: var(--text-primary);
+    color: var(--primary-purple);
     font-weight: 600;
     text-align: center;
 }
 
-.rtbcb-progress-step.active .rtbcb-progress-label {
-    color: #7216f4;
+.rtbcb-progress-step.active .rtbcb-progress-label,
+.rtbcb-progress-step.completed .rtbcb-progress-label {
+    color: var(--success-green);
     font-weight: 700;
 }
 
@@ -1741,7 +1748,7 @@
 
 .rtbcb-results-preview h4 {
     margin: 0 0 16px 0;
-    color: #7216f4;
+    color: #ffffff;
     font-size: 16px;
     font-weight: 600;
 }
@@ -1950,15 +1957,16 @@
 
 /* Progress step labels - much more visible */
 .rtbcb-progress-label {
-    color: var(--text-primary) !important;    /* Was #6b7280 - too light */
+    color: var(--primary-purple) !important;  /* Future steps purple */
     font-size: 14px !important;               /* Increase from 12px */
     font-weight: 600 !important;              /* Add weight */
     text-align: center;
 }
 
 /* Active progress step label */
-.rtbcb-progress-step.active .rtbcb-progress-label {
-    color: #7216f4 !important;
+.rtbcb-progress-step.active .rtbcb-progress-label,
+.rtbcb-progress-step.completed .rtbcb-progress-label {
+    color: var(--success-green) !important;
     font-weight: 700 !important;
 }
 
