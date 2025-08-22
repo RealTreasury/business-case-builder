@@ -104,9 +104,12 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                         </select>
                     </div>
 
-                    <div class="rtbcb-field">
-                        <label for="industry"><?php esc_html_e( 'Industry', 'rtbcb' ); ?></label>
-                        <select name="industry" id="industry">
+                    <div class="rtbcb-field rtbcb-field-required">
+                        <label for="industry">
+                            <?php esc_html_e( 'Industry', 'rtbcb' ); ?>
+                            <span class="rtbcb-required">*</span>
+                        </label>
+                        <select name="industry" id="industry" required>
                             <option value=""><?php esc_html_e( 'Select your industry...', 'rtbcb' ); ?></option>
                             <option value="manufacturing"><?php esc_html_e( 'Manufacturing', 'rtbcb' ); ?></option>
                             <option value="retail"><?php esc_html_e( 'Retail & E-commerce', 'rtbcb' ); ?></option>
@@ -212,7 +215,7 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                     <div class="rtbcb-pain-points-grid">
                         <div class="rtbcb-pain-point-card">
                             <label class="rtbcb-pain-point-label">
-                                <input type="checkbox" name="pain_points[]" value="manual_processes" />
+                                <input type="checkbox" name="pain_points[]" value="manual_processes" required />
                                 <div class="rtbcb-pain-point-content">
                                     <div class="rtbcb-pain-point-icon">⚙️</div>
                                     <div class="rtbcb-pain-point-title"><?php esc_html_e( 'Manual Processes', 'rtbcb' ); ?></div>

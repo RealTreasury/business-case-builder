@@ -626,8 +626,40 @@ class Real_Treasury_BCB {
                 wp_send_json_error( __( 'Please select your company size.', 'rtbcb' ), 400 );
             }
 
+            if ( empty( $user_inputs['industry'] ) ) {
+                wp_send_json_error( __( 'Please select your industry.', 'rtbcb' ), 400 );
+            }
+
+            if ( $user_inputs['hours_reconciliation'] <= 0 ) {
+                wp_send_json_error( __( 'Please enter your weekly reconciliation hours.', 'rtbcb' ), 400 );
+            }
+
+            if ( $user_inputs['hours_cash_positioning'] <= 0 ) {
+                wp_send_json_error( __( 'Please enter your weekly cash positioning hours.', 'rtbcb' ), 400 );
+            }
+
+            if ( $user_inputs['num_banks'] <= 0 ) {
+                wp_send_json_error( __( 'Please enter the number of banking relationships.', 'rtbcb' ), 400 );
+            }
+
+            if ( $user_inputs['ftes'] <= 0 ) {
+                wp_send_json_error( __( 'Please enter your treasury team size.', 'rtbcb' ), 400 );
+            }
+
             if ( empty( $user_inputs['pain_points'] ) ) {
                 wp_send_json_error( __( 'Please select at least one challenge.', 'rtbcb' ), 400 );
+            }
+
+            if ( empty( $user_inputs['business_objective'] ) ) {
+                wp_send_json_error( __( 'Please select a primary business objective.', 'rtbcb' ), 400 );
+            }
+
+            if ( empty( $user_inputs['implementation_timeline'] ) ) {
+                wp_send_json_error( __( 'Please select an implementation timeline.', 'rtbcb' ), 400 );
+            }
+
+            if ( empty( $user_inputs['budget_range'] ) ) {
+                wp_send_json_error( __( 'Please select a budget range.', 'rtbcb' ), 400 );
             }
 
             rtbcb_log_memory_usage( 'after_validation' );
