@@ -17,23 +17,15 @@ class RTBCB_Leads {
     private static $table_name;
 
     /**
-     * Initialize the class.
-     */
-    public static function init() {
-        global $wpdb;
-        self::$table_name = $wpdb->prefix . 'rtbcb_leads';
-        self::create_table();
-    }
-
-    /**
-     * Create the leads table.
+     * Create the leads table with improved error handling.
      *
-     * @return void
+     * @return bool True on success, false on failure.
      */
     private static function create_table() {
         global $wpdb;
 
         $charset_collate = $wpdb->get_charset_collate();
+        self::$table_name = $wpdb->prefix . 'rtbcb_leads';
 
         $sql = "CREATE TABLE " . self::$table_name . " (
             id mediumint(9) NOT NULL AUTO_INCREMENT,
@@ -66,8 +58,95 @@ class RTBCB_Leads {
             KEY roi_base_index (roi_base)
         ) $charset_collate;";
 
-        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-        dbDelta( $sql );
+        try {
+            require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+
+            $result = dbDelta( $sql );
+
+            // Check if table was actually created
+            $table_exists = $wpdb->get_var( $wpdb->prepare(
+                "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = %s AND table_name = %s",
+                DB_NAME,
+                self::$table_name
+            ) );
+
+            if ( ! $table_exists ) {
+                error_log( 'RTBCB: Failed to create table ' . self::$table_name );
+
+                // Try to create table with simpler structure as fallback
+                $simple_sql = "CREATE TABLE IF NOT EXISTS " . self::$table_name . " (
+                    id mediumint(9) NOT NULL AUTO_INCREMENT,
+                    email varchar(255) NOT NULL,
+                    company_size varchar(50) DEFAULT '',
+                    industry varchar(50) DEFAULT '',
+                    hours_reconciliation decimal(5,2) DEFAULT 0,
+                    hours_cash_positioning decimal(5,2) DEFAULT 0,
+                    num_banks int(3) DEFAULT 0,
+                    ftes decimal(4,1) DEFAULT 0,
+                    pain_points text DEFAULT '',
+                    recommended_category varchar(50) DEFAULT '',
+                    roi_low decimal(12,2) DEFAULT 0,
+                    roi_base decimal(12,2) DEFAULT 0,
+                    roi_high decimal(12,2) DEFAULT 0,
+                    report_html text DEFAULT '',
+                    ip_address varchar(45) DEFAULT '',
+                    user_agent text DEFAULT '',
+                    utm_source varchar(100) DEFAULT '',
+                    utm_medium varchar(100) DEFAULT '',
+                    utm_campaign varchar(100) DEFAULT '',
+                    created_at datetime DEFAULT CURRENT_TIMESTAMP,
+                    updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    PRIMARY KEY (id),
+                    UNIQUE KEY email_unique (email)
+                ) $charset_collate;";
+
+                $wpdb->query( $simple_sql );
+
+                // Check again
+                $table_exists = $wpdb->get_var( $wpdb->prepare(
+                    "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = %s AND table_name = %s",
+                    DB_NAME,
+                    self::$table_name
+                ) );
+
+                if ( ! $table_exists ) {
+                    error_log( 'RTBCB: Failed to create table even with simple structure' );
+                    return false;
+                }
+            }
+
+            error_log( 'RTBCB: Successfully created/updated table ' . self::$table_name );
+            return true;
+
+        } catch ( Exception $e ) {
+            error_log( 'RTBCB: Exception creating table: ' . $e->getMessage() );
+            return false;
+        } catch ( Error $e ) {
+            error_log( 'RTBCB: Fatal error creating table: ' . $e->getMessage() );
+            return false;
+        }
+    }
+
+    /**
+     * Initialize the class with better error handling.
+     */
+    public static function init() {
+        global $wpdb;
+        self::$table_name = $wpdb->prefix . 'rtbcb_leads';
+
+        // Try to create table and log results
+        $table_created = self::create_table();
+
+        if ( ! $table_created ) {
+            error_log( 'RTBCB: Warning - leads table creation failed, plugin may not function correctly' );
+
+            // Add admin notice for database issues
+            add_action( 'admin_notices', function() {
+                echo '<div class="notice notice-error"><p>';
+                echo esc_html__( 'Real Treasury Business Case Builder: Database table creation failed. Please check your database permissions.', 'rtbcb' );
+                echo '</p></div>';
+            } );
+        }
     }
 
     /**
