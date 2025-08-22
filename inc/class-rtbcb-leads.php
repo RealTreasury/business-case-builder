@@ -62,7 +62,9 @@ class RTBCB_Leads {
             UNIQUE KEY email_unique (email),
             KEY created_at_index (created_at),
             KEY company_size_index (company_size),
-            KEY recommended_category_index (recommended_category)
+            KEY recommended_category_index (recommended_category),
+            KEY email_created (email, created_at),
+            KEY roi_base_index (roi_base)
         ) $charset_collate;";
 
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';

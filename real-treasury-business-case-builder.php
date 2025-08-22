@@ -350,9 +350,17 @@ class Real_Treasury_BCB {
 
         // Scripts
         wp_enqueue_script(
+            'rtbcb-wizard',
+            RTBCB_URL . 'public/js/rtbcb-wizard.js',
+            [ 'jquery' ],
+            RTBCB_VERSION,
+            true
+        );
+
+        wp_enqueue_script(
             'rtbcb-script',
             RTBCB_URL . 'public/js/rtbcb.js',
-            [ 'jquery' ],
+            [ 'jquery', 'rtbcb-wizard' ],
             RTBCB_VERSION,
             true
         );
@@ -525,19 +533,18 @@ class Real_Treasury_BCB {
      * @return void
      */
     public function ajax_generate_case() {
-        // Prevent any output before JSON response
+        // Set proper headers
+        header( 'Content-Type: application/json; charset=utf-8' );
+
+        // Prevent any output before JSON
         if ( ob_get_level() ) {
             ob_end_clean();
         }
-
-        // Set proper headers
-        header( 'Content-Type: application/json; charset=utf-8' );
 
         try {
             // Verify nonce
             if ( ! wp_verify_nonce( $_POST['rtbcb_nonce'] ?? '', 'rtbcb_generate' ) ) {
                 wp_send_json_error( __( 'Security check failed.', 'rtbcb' ), 403 );
-                exit;
             }
 
             // Collect and validate form data
@@ -555,13 +562,11 @@ class Real_Treasury_BCB {
             // Validate email
             if ( empty( $user_inputs['email'] ) || ! is_email( $user_inputs['email'] ) ) {
                 wp_send_json_error( __( 'Please enter a valid email address.', 'rtbcb' ), 400 );
-                exit;
             }
 
             // Calculate ROI
             if ( ! class_exists( 'RTBCB_Calculator' ) ) {
                 wp_send_json_error( __( 'System error: Calculator not available.', 'rtbcb' ), 500 );
-                exit;
             }
 
             $scenarios = RTBCB_Calculator::calculate_roi( $user_inputs );
@@ -569,7 +574,6 @@ class Real_Treasury_BCB {
             // Get recommendation
             if ( ! class_exists( 'RTBCB_Category_Recommender' ) ) {
                 wp_send_json_error( __( 'System error: Recommender not available.', 'rtbcb' ), 500 );
-                exit;
             }
 
             $recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
@@ -644,21 +648,32 @@ class Real_Treasury_BCB {
                 }
             }
 
-            // Send clean JSON response
-            wp_send_json_success(
-                [
-                    'scenarios'      => $formatted_scenarios,
-                    'recommendation' => $recommendation,
-                    'narrative'      => $narrative,
-                    'rag_context'    => [],
-                    'download_url'   => null,
-                    'lead_id'        => $lead_id,
-                ]
-            );
+            $response_data = [
+                'scenarios'      => $formatted_scenarios,
+                'recommendation' => $recommendation,
+                'narrative'      => $narrative,
+                'rag_context'    => [],
+                'download_url'   => null,
+                'lead_id'        => $lead_id,
+            ];
 
-        } catch ( Throwable $e ) {
-            error_log( 'RTBCB Error: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine() );
-            wp_send_json_error( __( 'An unexpected error occurred. Please try again.', 'rtbcb' ), 500 );
+            // Add success logging
+            error_log( 'RTBCB: Business case generated successfully for ' . $user_inputs['email'] );
+
+            wp_send_json_success( $response_data );
+
+        } catch ( Exception $e ) {
+            error_log( 'RTBCB Ajax Error: ' . $e->getMessage() );
+            wp_send_json_error(
+                [ 'message' => 'An error occurred. Please try again.' ],
+                500
+            );
+        } catch ( Error $e ) {
+            error_log( 'RTBCB Fatal Error: ' . $e->getMessage() );
+            wp_send_json_error(
+                [ 'message' => 'A system error occurred. Please contact support.' ],
+                500
+            );
         }
 
         exit; // Ensure no additional output
