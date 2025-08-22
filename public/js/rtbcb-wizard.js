@@ -491,7 +491,7 @@ class BusinessCaseBuilder {
                 ${this.renderNarrative(narrative)}
                 ${this.renderRiskAssessmentSection()}
                 ${this.renderNextSteps(narrative?.next_actions || [], displayName)}
-                ${this.renderActions(data)}
+                ${this.renderActions()}
             </div>
         `;
     }
@@ -640,18 +640,26 @@ class BusinessCaseBuilder {
         `;
     }
 
-    renderActions(data) {
+    copyResultsHTML() {
+        const container = document.querySelector('.rtbcb-results-container');
+        if (!container || !navigator.clipboard) {
+            return;
+        }
+        navigator.clipboard.writeText(container.innerHTML)
+            .then(() => alert('Results HTML copied to clipboard'))
+            .catch(err => console.error('Copy failed:', err));
+    }
+
+    renderActions() {
         return `
             <div class="rtbcb-actions-section">
-                ${data.download_url ? `
-                    <a href="${data.download_url}" class="rtbcb-action-btn rtbcb-btn-primary" download>
-                        <span class="rtbcb-btn-icon">📄</span>
-                        Download PDF Report
-                    </a>
-                ` : ''}
                 <button type="button" class="rtbcb-action-btn rtbcb-btn-secondary" onclick="window.print()">
                     <span class="rtbcb-btn-icon">🖨️</span>
                     Print Results
+                </button>
+                <button type="button" class="rtbcb-action-btn rtbcb-btn-secondary" onclick="window.businessCaseBuilder.copyResultsHTML()">
+                    <span class="rtbcb-btn-icon">📋</span>
+                    Copy HTML
                 </button>
                 <button type="button" class="rtbcb-action-btn rtbcb-btn-secondary" onclick="location.reload()">
                     <span class="rtbcb-btn-icon">🔄</span>
