@@ -28,6 +28,7 @@ class RTBCB_Admin {
         add_action( 'wp_ajax_rtbcb_delete_lead', [ $this, 'delete_lead' ] );
         add_action( 'wp_ajax_rtbcb_bulk_action_leads', [ $this, 'bulk_action_leads' ] );
         add_action( 'wp_ajax_rtbcb_run_tests', [ $this, 'run_integration_tests' ] );
+        add_action( 'wp_ajax_rtbcb_test_api', [ $this, 'ajax_test_api' ] );
     }
 
     /**
@@ -128,6 +129,15 @@ class RTBCB_Admin {
             'rtbcb-data-health',
             [ $this, 'render_data_health' ]
         );
+
+        add_submenu_page(
+            'rtbcb-dashboard',
+            __( 'API Test', 'rtbcb' ),
+            __( 'API Test', 'rtbcb' ),
+            'manage_options',
+            'rtbcb-api-test',
+            [ $this, 'render_api_test' ]
+        );
     }
 
     /**
@@ -197,10 +207,19 @@ class RTBCB_Admin {
     public function render_data_health() {
         $portal_active = $this->check_portal_integration();
         $last_indexed = get_option( 'rtbcb_last_indexed', '' );
-        $vendor_count = $this->get_vendor_count();
+       $vendor_count = $this->get_vendor_count();
         $rag_health = $this->check_rag_health();
-        
+
         include RTBCB_DIR . 'admin/data-health-page.php';
+    }
+
+    /**
+     * Render OpenAI API test page.
+     *
+     * @return void
+     */
+    public function render_api_test() {
+        include RTBCB_DIR . 'admin/api-test-page.php';
     }
 
     /**
@@ -353,6 +372,27 @@ class RTBCB_Admin {
         }
 
         wp_send_json_success( [ 'message' => __( 'Connection successful.', 'rtbcb' ) ] );
+    }
+
+    /**
+     * AJAX handler for comprehensive API test.
+     *
+     * @return void
+     */
+    public function ajax_test_api() {
+        check_ajax_referer( 'rtbcb_test_api', 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( __( 'Permission denied', 'rtbcb' ) );
+        }
+
+        $result = RTBCB_API_Tester::test_connection();
+
+        if ( $result['success'] ) {
+            wp_send_json_success( $result );
+        }
+
+        wp_send_json_error( $result );
     }
 
     /**

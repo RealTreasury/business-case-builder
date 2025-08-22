@@ -135,3 +135,29 @@ function rtbcb_get_client_ip() {
     return isset( $_SERVER['REMOTE_ADDR'] ) ? wp_unslash( $_SERVER['REMOTE_ADDR'] ) : '';
 }
 
+
+/**
+ * Log API debug messages.
+ *
+ * @param string $message Log message.
+ * @param mixed  $data    Optional data.
+ * @return void
+ */
+function rtbcb_log_api_debug( $message, $data = null ) {
+    $log_message = 'RTBCB API Debug: ' . $message;
+
+    if ( null !== $data ) {
+        $log_message .= ' | Data: ' . ( is_string( $data ) ? $data : wp_json_encode( $data ) );
+    }
+
+    error_log( $log_message );
+
+    if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+        $upload_dir = wp_get_upload_dir();
+        $log_file   = trailingslashit( $upload_dir['basedir'] ) . 'rtbcb-debug.log';
+        $timestamp  = current_time( 'Y-m-d H:i:s' );
+        $entry      = "[{$timestamp}] {$log_message}\n";
+        file_put_contents( $log_file, $entry, FILE_APPEND | LOCK_EX );
+    }
+}
+
