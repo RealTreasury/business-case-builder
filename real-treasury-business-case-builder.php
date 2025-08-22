@@ -733,11 +733,6 @@ class Real_Treasury_BCB {
 
                     if ( $pdf_path && file_exists( $pdf_path ) ) {
                         $download_url = RTBCB_PDF::get_download_url( $pdf_path );
-
-                        // Update lead with PDF info
-                        if ( $lead_id && class_exists( 'RTBCB_Leads' ) ) {
-                            RTBCB_Leads::update_pdf_status( $lead_id, $pdf_path );
-                        }
                     }
                 } catch ( Exception $e ) {
                     error_log( 'RTBCB: PDF generation failed - ' . $e->getMessage() );
