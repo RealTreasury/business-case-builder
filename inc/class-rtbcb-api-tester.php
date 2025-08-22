@@ -29,11 +29,11 @@ class RTBCB_API_Tester {
             ];
         }
 
-        if ( ! preg_match( '/^sk-[a-zA-Z0-9]{48,}$/', $api_key ) ) {
+        if ( ! rtbcb_is_valid_openai_api_key( $api_key ) ) {
             return [
                 'success' => false,
                 'message' => __( 'Invalid API key format', 'rtbcb' ),
-                'details' => __( 'API key should start with "sk-" followed by alphanumeric characters.', 'rtbcb' ),
+                'details' => __( 'API key must start with "sk-" and may contain letters, numbers, hyphens, and colons.', 'rtbcb' ),
             ];
         }
 

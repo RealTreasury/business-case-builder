@@ -606,7 +606,7 @@ class RTBCB_Admin {
         $api_key = get_option( 'rtbcb_openai_api_key' );
         $diagnostics['openai_api'] = [
             'configured'   => ! empty( $api_key ),
-            'valid_format' => ! empty( $api_key ) && preg_match( '/^sk-[a-zA-Z0-9]{48,}$/', $api_key ),
+            'valid_format' => ! empty( $api_key ) && rtbcb_is_valid_openai_api_key( $api_key ),
             'status'       => ! empty( $api_key ) ? 'CONFIGURED' : 'NOT_CONFIGURED',
         ];
 
