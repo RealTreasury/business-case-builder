@@ -304,15 +304,17 @@
             if (!form) { return; }
             form.addEventListener('submit', this.generateReportPreview.bind(this));
             document.getElementById('rtbcb-download-pdf')?.addEventListener('click', this.downloadReportPDF.bind(this));
-            const loadBtn = document.getElementById('rtbcb-load-sample');
             const select = document.getElementById('rtbcb-sample-select');
-            if (loadBtn && select) {
-                loadBtn.addEventListener('click', () => {
+            if (select) {
+                const injectSample = () => {
                     const key = select.value;
-                    if (key && window.rtbcbSampleForms && rtbcbSampleForms[key]) {
-                        document.getElementById('rtbcb-sample-context').value = JSON.stringify(rtbcbSampleForms[key], null, 2);
+                    const target = document.getElementById('rtbcb-sample-context');
+                    if (key && target && window.rtbcbSampleForms && rtbcbSampleForms[key]) {
+                        target.value = JSON.stringify(rtbcbSampleForms[key], null, 2);
                     }
-                });
+                };
+                select.addEventListener('change', injectSample);
+                document.getElementById('rtbcb-load-sample')?.addEventListener('click', injectSample);
             }
         },
 
@@ -325,7 +327,15 @@
             button.disabled = true;
             try {
                 const formData = new FormData(form);
-                formData.append('action', 'rtbcb_generate_report_preview');
+                const select = document.getElementById('rtbcb-sample-select');
+                const sampleKey = select ? select.value : '';
+                formData.append('nonce', rtbcbAdmin.nonce);
+                if (sampleKey) {
+                    formData.append('action', 'rtbcb_generate_sample_report');
+                    formData.append('sample_key', sampleKey);
+                } else {
+                    formData.append('action', 'rtbcb_generate_report_preview');
+                }
                 const response = await fetch(rtbcbAdmin.ajax_url, { method: 'POST', body: formData });
                 if (!response.ok) {
                     throw new Error(`Server responded ${response.status}`);
@@ -333,7 +343,7 @@
                 const data = await response.json();
                 if (data.success) {
                     const iframe = document.getElementById('rtbcb-report-iframe');
-                    if (iframe) { iframe.srcdoc = data.data.html; }
+                    if (iframe) { iframe.srcdoc = data.data.html || data.data.report_html; }
                     document.getElementById('rtbcb-download-pdf').style.display = 'inline-block';
                 } else {
                     alert(data.data?.message || rtbcbAdmin.strings.error);
