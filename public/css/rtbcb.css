@@ -1152,7 +1152,7 @@
 /* Modal Header - Glassmorphic enhancement */
 .rtbcb-modal-header {
     background: linear-gradient(135deg, rgba(114, 22, 244, 0.1), rgba(143, 71, 246, 0.15));
-    color: #281345;
+    color: var(--text-primary);
     padding: 32px 40px 20px 40px;
     position: relative;
     text-align: center;
@@ -1165,7 +1165,7 @@
     font-weight: 700;
     margin: 0 0 8px 0;
     line-height: 1.2;
-    color: #281345;
+    color: var(--text-primary);
 }
 
 .rtbcb-modal-subtitle {
