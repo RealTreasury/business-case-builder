@@ -11,17 +11,21 @@ find . -name "*.php" -not -path "./vendor/*" -print0 | xargs -0 -n1 php -l
 echo "2. Running JSON output lint..."
 php tests/json-output-lint.php
 
+# Cosine similarity search test
+echo "3. Running cosine similarity search test..."
+php tests/cosine-similarity-search.test.php
+
 # JavaScript tests
-echo "3. Running JavaScript tests..."
+echo "4. Running JavaScript tests..."
 node tests/handle-submit-error.test.js
 node tests/render-results-no-narrative.test.js
 
 # WordPress coding standards (if installed)
 if command -v phpcs &> /dev/null; then
-    echo "4. Running WordPress coding standards check..."
+    echo "5. Running WordPress coding standards check..."
     phpcs --standard=WordPress --ignore=vendor .
 else
-    echo "4. Skipping WordPress coding standards (phpcs not installed)"
+    echo "5. Skipping WordPress coding standards (phpcs not installed)"
 fi
 
 echo "================================================"
