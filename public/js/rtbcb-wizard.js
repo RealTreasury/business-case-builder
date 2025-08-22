@@ -464,6 +464,7 @@ class BusinessCaseBuilder {
         const resultsContainer = document.getElementById('rtbcbResults');
         if (resultsContainer) {
             resultsContainer.innerHTML = this.renderResults(data);
+            this.populateRiskAssessment(data.narrative?.risks || []);
             resultsContainer.style.display = 'block';
             resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
@@ -487,6 +488,7 @@ class BusinessCaseBuilder {
                 ${this.renderRecommendation(recommendation, displayName)}
                 ${this.renderROISummary(scenarios, displayName)}
                 ${this.renderNarrative(narrative, displayName)}
+                ${this.renderRiskAssessmentSection()}
                 ${this.renderNextSteps(narrative.next_actions || [], displayName)}
                 ${this.renderActions(data)}
             </div>
@@ -582,6 +584,32 @@ class BusinessCaseBuilder {
                 </div>
             </div>
         `;
+    }
+
+    renderRiskAssessmentSection() {
+        return `
+            <div class="rtbcb-risk-assessment">
+                <h3>Risk Assessment</h3>
+                <ul class="rtbcb-risk-list"></ul>
+            </div>
+        `;
+    }
+
+    populateRiskAssessment(risks) {
+        const list = document.querySelector('.rtbcb-risk-list');
+        if (!list) return;
+
+        list.innerHTML = '';
+        (risks || []).forEach(risk => {
+            const item = document.createElement('li');
+            if (risk && typeof risk === 'object') {
+                const values = Object.values(risk).filter(Boolean);
+                item.textContent = values.join(' - ');
+            } else if (risk != null) {
+                item.textContent = String(risk);
+            }
+            list.appendChild(item);
+        });
     }
 
     renderNextSteps(steps) {
