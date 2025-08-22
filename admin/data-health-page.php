@@ -23,6 +23,7 @@ $last_index_display = $last_indexed ? $last_indexed : __( 'Never', 'rtbcb' );
         <strong><?php echo esc_html__( 'Last RAG Index:', 'rtbcb' ); ?></strong>
         <?php echo esc_html( $last_index_display ); ?>
     </p>
+    <p><?php echo esc_html__( 'Need more details? Run diagnostics from the settings page.', 'rtbcb' ); ?></p>
 </div>
 
 

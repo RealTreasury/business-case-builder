@@ -6,6 +6,7 @@
             this.bindDashboardActions();
             this.bindExportButtons();
             this.initLeadsManager();
+            this.bindDiagnosticsButton();
         },
 
         bindDashboardActions() {
@@ -16,6 +17,10 @@
 
         bindExportButtons() {
             $('#rtbcb-export-leads').on('click', this.exportLeads);
+        },
+
+        bindDiagnosticsButton() {
+            $('#rtbcb-run-tests').on('click', this.runDiagnostics);
         },
 
         async testApiConnection(e) {
@@ -110,6 +115,39 @@
                 alert(rtbcbAdmin.strings.error);
             }
             label.text(original);
+            button.prop('disabled', false);
+        },
+
+        async runDiagnostics(e) {
+            e.preventDefault();
+            const button = $(this);
+            button.prop('disabled', true);
+
+            try {
+                const formData = new FormData();
+                formData.append('action', 'rtbcb_run_tests');
+                formData.append('nonce', $(this).data('nonce') || rtbcbAdmin.nonce);
+
+                const response = await fetch(rtbcbAdmin.ajax_url, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                if (data.success) {
+                    let message = '';
+                    for (const [key, result] of Object.entries(data.data)) {
+                        message += `${key}: ${result.passed ? 'PASS' : 'FAIL'} - ${result.message}\n`;
+                    }
+                    alert(message);
+                    console.log('Diagnostics results:', data.data);
+                } else {
+                    alert(data.data?.message || rtbcbAdmin.strings.error);
+                }
+            } catch (err) {
+                console.error('Diagnostics error:', err);
+                alert(rtbcbAdmin.strings.error);
+            }
+
             button.prop('disabled', false);
         },
 
