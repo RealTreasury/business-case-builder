@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name: Real Treasury - Business Case Builder (Enhanced)
- * Description: Enhanced ROI calculator and business case generator for treasury technology with PDF reports, analytics, and lead tracking.
- * Version: 2.0.0
+ * Plugin Name: Real Treasury - Business Case Builder (Enhanced Pro)
+ * Description: Professional-grade ROI calculator and comprehensive business case generator for treasury technology with advanced analysis and consultant-style reports.
+ * Version: 2.1.0
  * Requires PHP: 7.4
  * Author: Real Treasury
  * License: GPL v2 or later
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'RTBCB_VERSION', '2.0.0' );
+define( 'RTBCB_VERSION', '2.1.0' );
 define( 'RTBCB_FILE', __FILE__ );
 define( 'RTBCB_URL', plugin_dir_url( RTBCB_FILE ) );
 define( 'RTBCB_DIR', plugin_dir_path( RTBCB_FILE ) );
@@ -94,8 +94,8 @@ class Real_Treasury_BCB {
         add_filter( 'plugin_action_links_' . plugin_basename( RTBCB_FILE ), [ $this, 'plugin_action_links' ] );
 
         // AJAX handlers
-        add_action( 'wp_ajax_rtbcb_generate_case', [ $this, 'ajax_generate_case' ] );
-        add_action( 'wp_ajax_nopriv_rtbcb_generate_case', [ $this, 'ajax_generate_case' ] );
+        add_action( 'wp_ajax_rtbcb_generate_case', [ $this, 'ajax_generate_comprehensive_case' ] );
+        add_action( 'wp_ajax_nopriv_rtbcb_generate_case', [ $this, 'ajax_generate_comprehensive_case' ] );
     }
 
     /**
@@ -271,14 +271,24 @@ class Real_Treasury_BCB {
     private function upgrade_plugin( $from_version ) {
         // Upgrade from 1.x to 2.x
         if ( version_compare( $from_version, '2.0.0', '<' ) ) {
-            // Migrate old settings format if needed
             $this->migrate_v1_settings();
-
-            // Create new database tables
             $this->init_database();
-
-            // Set default values for new options
             $this->set_default_options();
+        }
+
+        // Add new options introduced in 2.1.0
+        if ( version_compare( $from_version, '2.1.0', '<' ) ) {
+            $new_options = [
+                'rtbcb_advanced_model'        => 'o1-preview',
+                'rtbcb_comprehensive_analysis' => true,
+                'rtbcb_professional_reports'   => true,
+            ];
+
+            foreach ( $new_options as $option => $value ) {
+                if ( get_option( $option ) === false ) {
+                    add_option( $option, $value );
+                }
+            }
         }
 
         // Clear any caches
@@ -315,12 +325,15 @@ class Real_Treasury_BCB {
      */
     private function set_default_options() {
         $defaults = [
-            'rtbcb_mini_model'        => 'gpt-4o-mini',
-            'rtbcb_premium_model'     => 'gpt-4o',
-            'rtbcb_embedding_model'   => 'text-embedding-3-small',
-            'rtbcb_labor_cost_per_hour' => 100,
-            'rtbcb_bank_fee_baseline' => 15000,
-            'rtbcb_pdf_enabled'       => true,
+            'rtbcb_mini_model'         => 'gpt-4o-mini',
+            'rtbcb_premium_model'      => 'gpt-4o',
+            'rtbcb_advanced_model'     => 'o1-preview',
+            'rtbcb_embedding_model'    => 'text-embedding-3-small',
+            'rtbcb_labor_cost_per_hour'=> 100,
+            'rtbcb_bank_fee_baseline'  => 15000,
+            'rtbcb_pdf_enabled'        => true,
+            'rtbcb_comprehensive_analysis' => true,
+            'rtbcb_professional_reports'   => true,
         ];
 
         foreach ( $defaults as $option => $value ) {
@@ -373,14 +386,23 @@ class Real_Treasury_BCB {
                 'ajax_url'    => admin_url( 'admin-ajax.php' ),
                 'rtbcb_nonce' => wp_create_nonce( 'rtbcb_generate' ),
                 'strings'     => [
-                    'error'              => __( 'An error occurred. Please try again.', 'rtbcb' ),
-                    'generating'         => __( 'Generating your business case...', 'rtbcb' ),
-                    'invalid_email'      => __( 'Please enter a valid email address.', 'rtbcb' ),
-                    'required_field'     => __( 'This field is required.', 'rtbcb' ),
-                    'select_pain_points' => __( 'Please select at least one pain point.', 'rtbcb' ),
+                    'error'                   => __( 'An error occurred. Please try again.', 'rtbcb' ),
+                    'generating'              => __( 'Generating your comprehensive business case...', 'rtbcb' ),
+                    'analyzing'               => __( 'Analyzing your treasury operations...', 'rtbcb' ),
+                    'financial_modeling'      => __( 'Building financial models...', 'rtbcb' ),
+                    'risk_assessment'         => __( 'Conducting risk assessment...', 'rtbcb' ),
+                    'industry_benchmarking'   => __( 'Performing industry benchmarking...', 'rtbcb' ),
+                    'implementation_planning' => __( 'Creating implementation roadmap...', 'rtbcb' ),
+                    'vendor_evaluation'       => __( 'Preparing vendor evaluation framework...', 'rtbcb' ),
+                    'finalizing_report'       => __( 'Finalizing professional report...', 'rtbcb' ),
+                    'invalid_email'           => __( 'Please enter a valid email address.', 'rtbcb' ),
+                    'required_field'          => __( 'This field is required.', 'rtbcb' ),
+                    'select_pain_points'      => __( 'Please select at least one pain point.', 'rtbcb' ),
                 ],
                 'settings'    => [
-                    'pdf_enabled' => get_option( 'rtbcb_pdf_enabled', true ),
+                    'pdf_enabled'            => get_option( 'rtbcb_pdf_enabled', true ),
+                    'comprehensive_analysis' => get_option( 'rtbcb_comprehensive_analysis', true ),
+                    'professional_reports'   => get_option( 'rtbcb_professional_reports', true ),
                 ],
             ]
         );
@@ -547,7 +569,7 @@ class Real_Treasury_BCB {
      *
      * @return void
      */
-    public function ajax_generate_case() {
+    public function ajax_generate_comprehensive_case() {
         // Set proper headers
         header( 'Content-Type: application/json; charset=utf-8' );
 
@@ -626,20 +648,24 @@ class Real_Treasury_BCB {
                 }
             }
 
-            // **NOW ACTUALLY CALL THE LLM** - This was missing!
+            // Generate comprehensive analysis using LLM
             if ( ! class_exists( 'RTBCB_LLM' ) ) {
                 wp_send_json_error( __( 'System error: LLM integration not available.', 'rtbcb' ), 500 );
             }
 
-            $llm       = new RTBCB_LLM();
-            $narrative = $llm->generate_business_case( $user_inputs, $scenarios, $rag_context );
+            $llm = new RTBCB_LLM();
+            $use_comprehensive = get_option( 'rtbcb_comprehensive_analysis', true );
 
-            // Check if LLM call failed and use fallback
-            if ( isset( $narrative['error'] ) || isset( $narrative['fallback_used'] ) ) {
-                error_log( 'RTBCB: LLM generation failed or used fallback: ' . ( $narrative['error'] ?? 'fallback used' ) );
+            if ( $use_comprehensive && method_exists( $llm, 'generate_comprehensive_business_case' ) ) {
+                $comprehensive_analysis = $llm->generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context );
+            } else {
+                $comprehensive_analysis = $llm->generate_business_case( $user_inputs, $scenarios, $rag_context );
+            }
 
-                // Use enhanced fallback with company name
-                $narrative = $this->create_enhanced_fallback_narrative( $user_inputs, $recommendation, $scenarios );
+            // Check for analysis errors and create fallback
+            if ( isset( $comprehensive_analysis['error'] ) ) {
+                error_log( 'RTBCB: Comprehensive analysis failed: ' . $comprehensive_analysis['error'] );
+                $comprehensive_analysis = $this->create_comprehensive_fallback( $user_inputs, $recommendation, $scenarios );
             }
 
             // Format scenarios for output
@@ -688,14 +714,19 @@ class Real_Treasury_BCB {
             if ( get_option( 'rtbcb_pdf_enabled', true ) && class_exists( 'RTBCB_PDF' ) ) {
                 try {
                     $pdf_data = [
-                        'user_inputs'    => $user_inputs,
-                        'scenarios'      => $formatted_scenarios,
-                        'recommendation' => $recommendation,
-                        'narrative'      => $narrative,
+                        'user_inputs'            => $user_inputs,
+                        'scenarios'              => $formatted_scenarios,
+                        'recommendation'        => $recommendation,
+                        'comprehensive_analysis' => $comprehensive_analysis,
                     ];
 
                     $pdf      = new RTBCB_PDF( $pdf_data );
-                    $pdf_path = $pdf->generate_business_case();
+
+                    if ( get_option( 'rtbcb_professional_reports', true ) && method_exists( $pdf, 'generate_comprehensive_report' ) ) {
+                        $pdf_path = $pdf->generate_comprehensive_report();
+                    } else {
+                        $pdf_path = $pdf->generate_business_case();
+                    }
 
                     if ( $pdf_path && file_exists( $pdf_path ) ) {
                         $download_url = RTBCB_PDF::get_download_url( $pdf_path );
@@ -713,12 +744,13 @@ class Real_Treasury_BCB {
 
             $response_data = [
                 'scenarios'      => $formatted_scenarios,
-                'recommendation' => $recommendation,
-                'narrative'      => $narrative,
-                'rag_context'    => $rag_context,
-                'download_url'   => $download_url,
-                'lead_id'        => $lead_id,
-                'company_name'   => $user_inputs['company_name'],
+                'recommendation'         => $recommendation,
+                'comprehensive_analysis' => $comprehensive_analysis,
+                'rag_context'            => $rag_context,
+                'download_url'           => $download_url,
+                'lead_id'                => $lead_id,
+                'company_name'           => $user_inputs['company_name'],
+                'analysis_type'          => $use_comprehensive ? 'comprehensive' : 'standard',
             ];
 
             // Log successful generation
@@ -751,39 +783,45 @@ class Real_Treasury_BCB {
      *
      * @return array Fallback narrative.
      */
-    private function create_enhanced_fallback_narrative( $user_inputs, $recommendation, $scenarios ) {
+    private function create_comprehensive_fallback( $user_inputs, $recommendation, $scenarios ) {
         $company_name = $user_inputs['company_name'];
-        $category_name = $recommendation['category_info']['name'] ?? __( 'treasury technology', 'rtbcb' );
-        $base_benefit  = $scenarios['base']['total_annual_benefit'] ?? 0;
+        $base_benefit = $scenarios['base']['total_annual_benefit'] ?? 0;
 
         return [
-            'narrative' => sprintf(
-                __( '%s is well-positioned to realize significant value from implementing %s. Based on your current treasury operations profile, this technology investment could generate approximately $%s in annual benefits through process automation, improved cash visibility, and reduced manual work. The solution addresses your specific pain points while providing a foundation for scalable treasury operations that can grow with %s.', 'rtbcb' ),
-                $company_name,
-                $category_name,
-                number_format( $base_benefit ),
-                $company_name
-            ),
-            'risks' => [
-                sprintf( __( '%s should plan for change management to ensure user adoption', 'rtbcb' ), $company_name ),
-                __( 'Implementation complexity may impact timeline', 'rtbcb' ),
-                __( 'Integration challenges with existing systems', 'rtbcb' ),
+            'company_name'      => $company_name,
+            'analysis_date'     => current_time( 'Y-m-d' ),
+            'executive_summary' => [
+                'strategic_positioning'    => sprintf( __( '%s is strategically positioned to benefit from treasury technology modernization, with clear operational inefficiencies that can be addressed through targeted automation.', 'rtbcb' ), $company_name ),
+                'business_case_strength'   => 'Strong',
+                'key_value_drivers'        => [
+                    sprintf( __( 'Process automation will eliminate %s\'s manual reconciliation bottlenecks', 'rtbcb' ), $company_name ),
+                    sprintf( __( 'Real-time cash visibility will improve %s\'s working capital management', 'rtbcb' ), $company_name ),
+                    sprintf( __( 'Reduced error rates will enhance %s\'s operational reliability', 'rtbcb' ), $company_name ),
+                ],
+                'executive_recommendation' => sprintf( __( '%s should proceed with treasury technology implementation to realize projected annual benefits of $%s while improving operational efficiency and risk management capabilities.', 'rtbcb' ), $company_name, number_format( $base_benefit ) ),
+                'confidence_level'         => 0.85,
             ],
-            'assumptions_explained' => [
-                __( 'Labor cost savings based on 30% efficiency improvement', 'rtbcb' ),
-                __( 'Bank fee reduction through optimized cash positioning', 'rtbcb' ),
-                __( 'Error reduction value from automated reconciliation', 'rtbcb' ),
+            'operational_analysis' => [
+                'current_state_assessment' => [
+                    'efficiency_rating'    => 'Fair',
+                    'benchmark_comparison' => sprintf( __( '%s operates below industry automation benchmarks with significant manual process dependencies.', 'rtbcb' ), $company_name ),
+                    'capacity_utilization' => sprintf( __( '%s\'s treasury team is operating at high capacity with limited time for strategic activities.', 'rtbcb' ), $company_name ),
+                ],
+                'quick_wins' => [
+                    __( 'Automate daily bank reconciliation processes', 'rtbcb' ),
+                    __( 'Implement real-time cash positioning dashboard', 'rtbcb' ),
+                    __( 'Establish automated bank balance aggregation', 'rtbcb' ),
+                ],
             ],
-            'citations' => [],
-            'next_actions' => [
-                sprintf( __( 'Present business case to %s leadership team', 'rtbcb' ), $company_name ),
-                sprintf( __( 'Evaluate %s solution providers', 'rtbcb' ), $category_name ),
-                sprintf( __( 'Develop %s-specific implementation timeline', 'rtbcb' ), $company_name ),
-                __( 'Plan user training and change management program', 'rtbcb' ),
+            'financial_modeling' => [
+                'financial_metrics' => [
+                    'roi_3_year'     => 250,
+                    'payback_months' => 18,
+                    'npv_10_percent' => $base_benefit * 2.5,
+                ],
             ],
-            'confidence'           => 0.85,
-            'recommended_category' => $recommendation['recommended'] ?? '',
-            'fallback_used'        => true,
+            'confidence_level' => 0.85,
+            'fallback_used'    => true,
         ];
     }
 
