@@ -88,9 +88,14 @@ class RTBCB_LLM {
      * @return string Model name.
      */
     private function select_model( $inputs, $chunks ) {
-        // TODO: Implement model routing logic via RTBCB_Router class
-        $router = new RTBCB_Router();
-        return $router->route_model( $inputs, $chunks );
+        if ( class_exists( 'RTBCB_Router' ) ) {
+            $router = new RTBCB_Router();
+            return $router->route_model( $inputs, $chunks );
+        }
+
+        error_log( 'RTBCB: Router class missing. Using default model.' );
+
+        return isset( $this->models['mini'] ) ? $this->models['mini'] : 'gpt-4o-mini';
     }
 
     /**
