@@ -416,11 +416,15 @@ class Real_Treasury_BCB {
             true
         );
 
-        $api_key = sanitize_text_field( get_option( 'rtbcb_openai_api_key', '' ) );
+        $api_key     = sanitize_text_field( get_option( 'rtbcb_openai_api_key', '' ) );
+        $report_model = sanitize_text_field( get_option( 'rtbcb_advanced_model', 'gpt-5-chat-latest' ) );
         wp_localize_script(
             'rtbcb-report',
             'rtbcbReport',
-            [ 'api_key' => $api_key ]
+            [
+                'api_key'      => $api_key,
+                'report_model' => $report_model,
+            ]
         );
     }
 

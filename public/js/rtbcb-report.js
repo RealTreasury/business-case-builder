@@ -261,7 +261,7 @@ async function generateProfessionalReport(businessContext) {
                 'Authorization': `Bearer ${rtbcbReport.api_key}`
             },
             body: JSON.stringify({
-                model: 'gpt-4-turbo-preview',
+                model: rtbcbReport.report_model,
                 messages: [
                     {
                         role: 'system',
