@@ -72,6 +72,19 @@ class RTBCB_Admin {
                 'error'              => __( 'An error occurred. Please try again.', 'rtbcb' ),
             ],
         ] );
+
+        $rtbcb_sample_forms = rtbcb_get_sample_report_forms();
+        $rtbcb_sample_data  = [];
+
+        foreach ( $rtbcb_sample_forms as $key => $scenario ) {
+            $rtbcb_sample_data[ $key ] = $scenario['data'];
+        }
+
+        wp_add_inline_script(
+            'rtbcb-admin',
+            'rtbcbAdmin.sampleForms = ' . wp_json_encode( $rtbcb_sample_data ) . ';',
+            'after'
+        );
     }
 
     /**
