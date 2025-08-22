@@ -138,7 +138,19 @@ class RTBCB_Router {
      * @return string Report HTML.
      */
     private function get_report_html( $business_case_data ) {
-        return '';
+        $template_path = RTBCB_DIR . 'templates/report-template.php';
+
+        if ( ! file_exists( $template_path ) ) {
+            return '';
+        }
+
+        $business_case_data = is_array( $business_case_data ) ? $business_case_data : [];
+
+        ob_start();
+        include $template_path;
+        $html = ob_get_clean();
+
+        return wp_kses_post( $html );
     }
 }
 
