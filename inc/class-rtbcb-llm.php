@@ -252,13 +252,14 @@ class RTBCB_LLM {
         }
 
         $allowed_models = [
-            'gpt-4o',
-            'gpt-4o-mini',
+            $this->models['mini'],
+            $this->models['premium'],
+            $this->models['advanced'],
         ];
 
         if ( ! is_string( $model ) || '' === trim( $model ) || ! in_array( $model, $allowed_models, true ) ) {
-            error_log( 'RTBCB: Invalid model specified. Falling back to gpt-4o.' );
-            $model = 'gpt-4o';
+            error_log( 'RTBCB: Invalid model specified. Falling back to ' . $this->models['premium'] . '.' );
+            $model = $this->models['premium'];
         }
 
         $endpoint = 'https://api.openai.com/v1/chat/completions';

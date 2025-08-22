@@ -11,10 +11,23 @@ if ( ! defined( 'ABSPATH' ) ) {
 $api_key         = get_option( 'rtbcb_openai_api_key', '' );
 $mini_model      = get_option( 'rtbcb_mini_model', '' );
 $premium_model   = get_option( 'rtbcb_premium_model', '' );
+$advanced_model  = get_option( 'rtbcb_advanced_model', '' );
 $embedding_model = get_option( 'rtbcb_embedding_model', '' );
 $labor_cost      = get_option( 'rtbcb_labor_cost_per_hour', '' );
 $bank_fee        = get_option( 'rtbcb_bank_fee_baseline', '' );
 $pdf_enabled     = (bool) get_option( 'rtbcb_pdf_enabled', true );
+
+$chat_models = [
+    'gpt-4o-mini' => 'gpt-4o-mini',
+    'gpt-4o'      => 'gpt-4o',
+    'o1-mini'     => 'o1-mini',
+    'o1-preview'  => 'o1-preview',
+];
+
+$embedding_models = [
+    'text-embedding-3-small' => 'text-embedding-3-small',
+    'text-embedding-3-large' => 'text-embedding-3-large',
+];
 ?>
 
 <div class="wrap">
@@ -35,7 +48,11 @@ $pdf_enabled     = (bool) get_option( 'rtbcb_pdf_enabled', true );
                     <label for="rtbcb_mini_model"><?php echo esc_html__( 'Mini Model', 'rtbcb' ); ?></label>
                 </th>
                 <td>
-                    <input type="text" id="rtbcb_mini_model" name="rtbcb_mini_model" value="<?php echo esc_attr( $mini_model ); ?>" class="regular-text" />
+                    <select id="rtbcb_mini_model" name="rtbcb_mini_model">
+                        <?php foreach ( $chat_models as $value => $label ) : ?>
+                            <option value="<?php echo esc_attr( $value ); ?>" <?php selected( $mini_model, $value ); ?>><?php echo esc_html( $label ); ?></option>
+                        <?php endforeach; ?>
+                    </select>
                 </td>
             </tr>
             <tr>
@@ -43,7 +60,23 @@ $pdf_enabled     = (bool) get_option( 'rtbcb_pdf_enabled', true );
                     <label for="rtbcb_premium_model"><?php echo esc_html__( 'Premium Model', 'rtbcb' ); ?></label>
                 </th>
                 <td>
-                    <input type="text" id="rtbcb_premium_model" name="rtbcb_premium_model" value="<?php echo esc_attr( $premium_model ); ?>" class="regular-text" />
+                    <select id="rtbcb_premium_model" name="rtbcb_premium_model">
+                        <?php foreach ( $chat_models as $value => $label ) : ?>
+                            <option value="<?php echo esc_attr( $value ); ?>" <?php selected( $premium_model, $value ); ?>><?php echo esc_html( $label ); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="rtbcb_advanced_model"><?php echo esc_html__( 'Advanced Model', 'rtbcb' ); ?></label>
+                </th>
+                <td>
+                    <select id="rtbcb_advanced_model" name="rtbcb_advanced_model">
+                        <?php foreach ( $chat_models as $value => $label ) : ?>
+                            <option value="<?php echo esc_attr( $value ); ?>" <?php selected( $advanced_model, $value ); ?>><?php echo esc_html( $label ); ?></option>
+                        <?php endforeach; ?>
+                    </select>
                 </td>
             </tr>
             <tr>
@@ -51,7 +84,11 @@ $pdf_enabled     = (bool) get_option( 'rtbcb_pdf_enabled', true );
                     <label for="rtbcb_embedding_model"><?php echo esc_html__( 'Embedding Model', 'rtbcb' ); ?></label>
                 </th>
                 <td>
-                    <input type="text" id="rtbcb_embedding_model" name="rtbcb_embedding_model" value="<?php echo esc_attr( $embedding_model ); ?>" class="regular-text" />
+                    <select id="rtbcb_embedding_model" name="rtbcb_embedding_model">
+                        <?php foreach ( $embedding_models as $value => $label ) : ?>
+                            <option value="<?php echo esc_attr( $value ); ?>" <?php selected( $embedding_model, $value ); ?>><?php echo esc_html( $label ); ?></option>
+                        <?php endforeach; ?>
+                    </select>
                 </td>
             </tr>
             <tr>
