@@ -33,6 +33,7 @@ class RTBCB_RAG {
             text_hash varchar(64) NOT NULL,
             embedding longtext NOT NULL,
             metadata longtext NOT NULL,
+            embedding_norm float NOT NULL,
             updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
             UNIQUE KEY hash_key (text_hash),
@@ -131,13 +132,14 @@ class RTBCB_RAG {
         $wpdb->replace(
             $table_name,
             [
-                'type'      => 'vendor',
-                'ref_id'    => isset( $vendor['id'] ) ? sanitize_text_field( $vendor['id'] ) : '',
-                'text_hash' => $text_hash,
-                'embedding' => maybe_serialize( $embedding ),
-                'metadata'  => maybe_serialize( $vendor ),
+                'type'          => 'vendor',
+                'ref_id'        => isset( $vendor['id'] ) ? sanitize_text_field( $vendor['id'] ) : '',
+                'text_hash'     => $text_hash,
+                'embedding'     => maybe_serialize( $embedding ),
+                'metadata'      => maybe_serialize( $vendor ),
+                'embedding_norm' => $this->calculate_embedding_norm( $embedding ),
             ],
-            [ '%s', '%s', '%s', '%s', '%s' ]
+            [ '%s', '%s', '%s', '%s', '%s', '%f' ]
         );
     }
 
@@ -159,13 +161,14 @@ class RTBCB_RAG {
         $wpdb->replace(
             $table_name,
             [
-                'type'      => 'note',
-                'ref_id'    => isset( $note['id'] ) ? sanitize_text_field( $note['id'] ) : '',
-                'text_hash' => $text_hash,
-                'embedding' => maybe_serialize( $embedding ),
-                'metadata'  => maybe_serialize( $note ),
+                'type'          => 'note',
+                'ref_id'        => isset( $note['id'] ) ? sanitize_text_field( $note['id'] ) : '',
+                'text_hash'     => $text_hash,
+                'embedding'     => maybe_serialize( $embedding ),
+                'metadata'      => maybe_serialize( $note ),
+                'embedding_norm' => $this->calculate_embedding_norm( $embedding ),
             ],
-            [ '%s', '%s', '%s', '%s', '%s' ]
+            [ '%s', '%s', '%s', '%s', '%s', '%f' ]
         );
     }
 
@@ -222,7 +225,17 @@ class RTBCB_RAG {
         global $wpdb;
         $table_name = $wpdb->prefix . 'rtbcb_rag_index';
 
-        $rows = $wpdb->get_results( "SELECT * FROM {$table_name}", ARRAY_A );
+        $query_norm = $this->calculate_embedding_norm( $query_embedding );
+        $limit      = max( $top_k * 10, $top_k );
+
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT type, ref_id, embedding, metadata FROM {$table_name} ORDER BY ABS( embedding_norm - %f ) ASC LIMIT %d",
+                $query_norm,
+                $limit
+            ),
+            ARRAY_A
+        );
 
         $scores = [];
         foreach ( $rows as $row ) {
@@ -230,7 +243,7 @@ class RTBCB_RAG {
             if ( ! is_array( $embedding ) ) {
                 continue;
             }
-            $score      = $this->cosine_similarity( $query_embedding, $embedding );
+            $score    = $this->cosine_similarity( $query_embedding, $embedding );
             $scores[] = [
                 'score'    => $score,
                 'type'     => $row['type'],
@@ -250,6 +263,21 @@ class RTBCB_RAG {
         );
 
         return array_slice( $scores, 0, $top_k );
+    }
+
+    /**
+     * Calculate the Euclidean norm of an embedding vector.
+     *
+     * @param array $embedding Embedding vector.
+     *
+     * @return float Vector norm.
+     */
+    private function calculate_embedding_norm( $embedding ) {
+        $norm = 0;
+        foreach ( $embedding as $value ) {
+            $norm += $value * $value;
+        }
+        return sqrt( $norm );
     }
 
     /**
