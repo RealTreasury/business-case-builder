@@ -687,7 +687,7 @@
 
 .rtbcb-alternative-name {
     font-weight: 600;
-    color: var(--dark-text);
+    color: var(--text-primary);
     margin-bottom: 8px;
 }
 
@@ -787,7 +787,7 @@
 
 .rtbcb-step-content h5 {
     margin: 0 0 8px 0;
-    color: var(--dark-text);
+    color: var(--text-primary);
     font-weight: 600;
 }
 
