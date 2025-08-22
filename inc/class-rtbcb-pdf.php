@@ -88,6 +88,19 @@ class RTBCB_PDF {
     }
 
     /**
+     * Generate a comprehensive consulting report.
+     *
+     * This placeholder method currently delegates to the standard business
+     * case generator but allows callers to request a professional report
+     * layout when available.
+     *
+     * @return string PDF file path.
+     */
+    public function generate_comprehensive_report() {
+        return $this->generate_business_case();
+    }
+
+    /**
      * Setup document properties and styles.
      *
      * @return void

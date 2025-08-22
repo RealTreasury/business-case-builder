@@ -38,6 +38,7 @@ class RTBCB_LLM {
         $this->models  = [
             'mini'      => get_option( 'rtbcb_mini_model', 'gpt-4o-mini' ),
             'premium'   => get_option( 'rtbcb_premium_model', 'gpt-4o' ),
+            'advanced'  => get_option( 'rtbcb_advanced_model', 'o1-preview' ),
             'embedding' => get_option( 'rtbcb_embedding_model', 'text-embedding-3-small' ),
         ];
     }
@@ -240,13 +241,14 @@ class RTBCB_LLM {
         }
 
         $allowed_models = [
-            'gpt-4o',
-            'gpt-4o-mini',
+            $this->models['mini'],
+            $this->models['premium'],
+            $this->models['advanced'],
         ];
 
         if ( ! is_string( $model ) || '' === trim( $model ) || ! in_array( $model, $allowed_models, true ) ) {
-            error_log( 'RTBCB: Invalid model specified. Falling back to gpt-4o.' );
-            $model = 'gpt-4o';
+            error_log( 'RTBCB: Invalid model specified. Falling back to ' . $this->models['premium'] . '.' );
+            $model = $this->models['premium'];
         }
 
         $endpoint = 'https://api.openai.com/v1/chat/completions';
@@ -452,6 +454,46 @@ class RTBCB_LLM {
             'confidence'           => 0.75,
             'recommended_category' => $category_data['recommended'] ?? '',
             'fallback_used'        => true,
+        ];
+    }
+
+    /**
+     * Generate a placeholder comprehensive business case structure.
+     *
+     * This wrapper uses the existing business case generator and expands the
+     * result into the more detailed structure expected by professional
+     * reports. It allows other components to function even if advanced LLM
+     * analysis is unavailable.
+     *
+     * @param array $user_inputs   User provided inputs.
+     * @param array $roi_data      ROI calculation results.
+     * @param array $context_chunks Context chunks for RAG.
+     *
+     * @return array Structured analysis.
+     */
+    public function generate_comprehensive_business_case( $user_inputs, $roi_data, $context_chunks = [] ) {
+        $basic = $this->generate_business_case( $user_inputs, $roi_data, $context_chunks );
+
+        return [
+            'company_name'         => $user_inputs['company_name'] ?? '',
+            'analysis_date'        => current_time( 'Y-m-d' ),
+            'executive_summary'    => [
+                'strategic_positioning'   => $basic['narrative'] ?? '',
+                'business_case_strength'  => 'Strong',
+                'key_value_drivers'       => $basic['assumptions_explained'] ?? [],
+                'executive_recommendation'=> $basic['narrative'] ?? '',
+                'confidence_level'        => $basic['confidence'] ?? 0,
+            ],
+            'operational_analysis' => [],
+            'financial_modeling'   => [],
+            'risk_assessment'      => [
+                'implementation_risks' => $basic['risks'] ?? [],
+            ],
+            'implementation_roadmap' => [],
+            'industry_benchmarks'  => [],
+            'vendor_evaluation'    => [],
+            'roi_scenarios'        => $roi_data,
+            'confidence_level'     => $basic['confidence'] ?? 0,
         ];
     }
 }
