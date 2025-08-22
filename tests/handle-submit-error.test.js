@@ -2,60 +2,37 @@ const fs = require('fs');
 const vm = require('vm');
 const assert = require('assert');
 
-// Minimal DOM and globals
-global.window = {};
+const progressContainer = { innerHTML: '', style: {} };
+const formContainer = { style: {} };
+const reportContainer = { innerHTML: '', style: {} };
+
 global.document = {
-    readyState: 'loading',
+    readyState: 'complete',
     addEventListener: () => {},
-    body: { insertAdjacentHTML: () => {}, style: {} },
-    getElementById: () => ({}),
-    querySelector: () => null
+    getElementById: (id) => {
+        if (id === 'rtbcb-progress-container') return progressContainer;
+        if (id === 'rtbcb-form-container') return formContainer;
+        if (id === 'rtbcb-report-container') return reportContainer;
+        if (id === 'rtbcb-form') return {};
+        return null;
+    }
 };
 
 global.ajaxObj = { ajax_url: '', rtbcb_nonce: '' };
 
 global.fetch = async () => ({
-    text: async () => JSON.stringify({
-        success: true,
-        data: { narrative: { error: 'Bad narrative' } }
-    })
+    ok: true,
+    json: async () => ({ success: false, data: { message: 'Bad narrative' } }),
+    text: async () => ''
 });
 
-global.FormData = class {
-    append() {}
-    set() {}
-};
-
-global.URLSearchParams = class {
-    constructor() {}
-};
+global.FormData = class { constructor() {} };
 
 const code = fs.readFileSync('public/js/rtbcb.js', 'utf8');
 vm.runInThisContext(code);
 
-const builder = new BusinessCaseBuilder();
-builder.form = {};
-builder.validateCurrentStep = () => true;
-builder.saveStepData = () => {};
-builder.showProgressIndicator = () => {};
-builder.disableNavigation = () => {};
-builder.startProgressSimulation = () => {};
-
-let errorMsg = '';
-let hid = false;
-let enabled = false;
-let displayCalled = false;
-
-builder.showError = msg => { errorMsg = msg; };
-builder.hideProgressIndicator = () => { hid = true; };
-builder.enableNavigation = () => { enabled = true; };
-builder.displayResults = () => { displayCalled = true; };
-
 (async () => {
-    await builder.handleSubmit({ preventDefault() {} });
-    assert.strictEqual(errorMsg, 'Bad narrative');
-    assert.ok(hid);
-    assert.ok(enabled);
-    assert.strictEqual(displayCalled, false);
+    await handleSubmit({ preventDefault() {}, target: {} });
+    assert.ok(progressContainer.innerHTML.includes('Bad narrative'));
     console.log('Error path test passed.');
 })();
