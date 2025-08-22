@@ -1867,8 +1867,8 @@
 /* Update color variables for better contrast */
 :root {
     /* Improved text colors for better readability */
-    --text-primary: #f3f4f6;        /* Light gray for primary text */
-    --text-secondary: #e5e7eb;      /* Lighter gray for secondary text */
+    --text-primary: #1f2937;        /* Dark slate for primary text */
+    --text-secondary: #4b5563;      /* Darker gray for secondary text */
     --text-muted: #6b7280;          /* Only for least important text */
     --text-light: #9ca3af;          /* Only for disabled states */
 
@@ -1876,6 +1876,13 @@
     --font-base: 1rem;              /* 16px */
     --font-sm: 0.9rem;              /* 14.4px (never smaller) */
     --font-xs: 0.875rem;            /* 14px (minimum readable size) */
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --text-primary: #f3f4f6;
+        --text-secondary: #e5e7eb;
+    }
 }
 
 /* 2. IMPROVE MODAL TEXT READABILITY */
