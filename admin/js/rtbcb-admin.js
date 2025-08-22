@@ -303,6 +303,16 @@
             if (!form) { return; }
             form.addEventListener('submit', this.generateReportPreview.bind(this));
             document.getElementById('rtbcb-download-pdf')?.addEventListener('click', this.downloadReportPDF.bind(this));
+            const sampleSelect = document.getElementById('rtbcb-sample-select');
+            const sampleField  = document.getElementById('rtbcb-sample-context');
+            const loadSample = () => {
+                const option = sampleSelect?.options[sampleSelect.selectedIndex];
+                if (option && option.dataset.sample && sampleField) {
+                    sampleField.value = option.dataset.sample;
+                }
+            };
+            sampleSelect?.addEventListener('change', loadSample);
+            document.getElementById('rtbcb-load-sample')?.addEventListener('click', loadSample);
         },
 
         async generateReportPreview(e) {
@@ -314,7 +324,14 @@
             button.disabled = true;
             try {
                 const formData = new FormData(form);
-                formData.append('action', 'rtbcb_generate_report_preview');
+                formData.append('nonce', rtbcbAdmin.nonce);
+                const sampleKey = document.getElementById('rtbcb-sample-select')?.value;
+                if (sampleKey) {
+                    formData.append('sample_key', sampleKey);
+                    formData.set('action', 'rtbcb_generate_sample_report');
+                } else {
+                    formData.set('action', 'rtbcb_generate_report_preview');
+                }
                 const response = await fetch(rtbcbAdmin.ajax_url, { method: 'POST', body: formData });
                 if (!response.ok) {
                     throw new Error(`Server responded ${response.status}`);
