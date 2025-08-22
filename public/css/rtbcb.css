@@ -1,19 +1,6 @@
 /* Enhanced Styles for Real Treasury Business Case Builder plugin */
+@import url("rtbcb-variables.css");
 
-:root {
-    --primary-purple: #7216f4;
-    --secondary-purple: #8f47f6;
-    --light-purple: #c77dff;
-    --dark-text: #281345;
-    --gray-text: #7e7e7e;
-    --success-green: #10b981;
-    --warning-orange: #f59e0b;
-    --error-red: #ef4444;
-    --background-light: #fafbfc;
-    --border-light: #e2e8f0;
-    --shadow-light: rgba(114,22,244,0.12);
-    --shadow-medium: rgba(114,22,244,0.2);
-}
 
 
 /* Base Container Styles */

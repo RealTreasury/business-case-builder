@@ -56,6 +56,10 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                             </div>
                             <div class="rtbcb-progress-step" data-step="4">
                                 <div class="rtbcb-progress-number">4</div>
+                                <div class="rtbcb-progress-label"><?php esc_html_e( 'Strategy', 'rtbcb' ); ?></div>
+                            </div>
+                            <div class="rtbcb-progress-step" data-step="5">
+                                <div class="rtbcb-progress-number">5</div>
                                 <div class="rtbcb-progress-label"><?php esc_html_e( 'Contact', 'rtbcb' ); ?></div>
                             </div>
                         </div>
@@ -260,8 +264,74 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                 </div>
             </div>
 
-            <!-- Step 4: Contact Information -->
+            <!-- Step 4: Strategic Context -->
             <div class="rtbcb-wizard-step" data-step="4">
+                <div class="rtbcb-step-header">
+                    <h3><?php esc_html_e( 'Strategic context for your initiative', 'rtbcb' ); ?></h3>
+                    <p><?php esc_html_e( 'Help us understand the goals and constraints for your project.', 'rtbcb' ); ?></p>
+                </div>
+
+                <div class="rtbcb-step-content">
+                    <div class="rtbcb-field">
+                        <label for="current_tech"><?php esc_html_e( 'Current Treasury Technology', 'rtbcb' ); ?></label>
+                        <input type="text" name="current_tech" id="current_tech" />
+                    </div>
+
+                    <div class="rtbcb-field rtbcb-field-required">
+                        <label for="business_objective">
+                            <?php esc_html_e( 'Primary Business Objective', 'rtbcb' ); ?>
+                            <span class="rtbcb-required">*</span>
+                        </label>
+                        <select name="business_objective" id="business_objective" required>
+                            <option value=""><?php esc_html_e( 'Select an objective...', 'rtbcb' ); ?></option>
+                            <option value="cost_reduction"><?php esc_html_e( 'Cost reduction', 'rtbcb' ); ?></option>
+                            <option value="risk_management"><?php esc_html_e( 'Risk management', 'rtbcb' ); ?></option>
+                            <option value="growth_support"><?php esc_html_e( 'Growth support', 'rtbcb' ); ?></option>
+                            <option value="compliance"><?php esc_html_e( 'Compliance', 'rtbcb' ); ?></option>
+                        </select>
+                    </div>
+
+                    <div class="rtbcb-field rtbcb-field-required">
+                        <label for="implementation_timeline">
+                            <?php esc_html_e( 'Implementation Timeline', 'rtbcb' ); ?>
+                            <span class="rtbcb-required">*</span>
+                        </label>
+                        <select name="implementation_timeline" id="implementation_timeline" required>
+                            <option value=""><?php esc_html_e( 'Select a timeline...', 'rtbcb' ); ?></option>
+                            <option value="3-6"><?php esc_html_e( '3-6 months', 'rtbcb' ); ?></option>
+                            <option value="6-12"><?php esc_html_e( '6-12 months', 'rtbcb' ); ?></option>
+                            <option value="12+"><?php esc_html_e( '12+ months', 'rtbcb' ); ?></option>
+                        </select>
+                    </div>
+
+                    <div class="rtbcb-field">
+                        <label for="decision_makers"><?php esc_html_e( 'Decision Makers', 'rtbcb' ); ?></label>
+                        <select name="decision_makers[]" id="decision_makers" multiple>
+                            <option value="cfo"><?php esc_html_e( 'CFO', 'rtbcb' ); ?></option>
+                            <option value="treasurer"><?php esc_html_e( 'Treasurer', 'rtbcb' ); ?></option>
+                            <option value="finance_team"><?php esc_html_e( 'Finance Team', 'rtbcb' ); ?></option>
+                            <option value="it"><?php esc_html_e( 'IT', 'rtbcb' ); ?></option>
+                        </select>
+                    </div>
+
+                    <div class="rtbcb-field rtbcb-field-required">
+                        <label for="budget_range">
+                            <?php esc_html_e( 'Budget Range', 'rtbcb' ); ?>
+                            <span class="rtbcb-required">*</span>
+                        </label>
+                        <select name="budget_range" id="budget_range" required>
+                            <option value=""><?php esc_html_e( 'Select a range...', 'rtbcb' ); ?></option>
+                            <option value="50-100"><?php esc_html_e( '$50K-$100K', 'rtbcb' ); ?></option>
+                            <option value="100-250"><?php esc_html_e( '$100K-$250K', 'rtbcb' ); ?></option>
+                            <option value="250-500"><?php esc_html_e( '$250K-$500K', 'rtbcb' ); ?></option>
+                            <option value="500+"><?php esc_html_e( '$500K+', 'rtbcb' ); ?></option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 5: Contact Information -->
+            <div class="rtbcb-wizard-step" data-step="5">
                 <div class="rtbcb-step-header">
                     <h3><?php esc_html_e( 'Get your business case', 'rtbcb' ); ?></h3>
                     <p><?php esc_html_e( 'Enter your email to receive your personalized ROI analysis and recommendations.', 'rtbcb' ); ?></p>

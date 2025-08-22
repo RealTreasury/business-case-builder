@@ -5,7 +5,7 @@
 class BusinessCaseBuilder {
     constructor() {
         this.currentStep = 1;
-        this.totalSteps = 4;
+        this.totalSteps = 5;
         this.form = document.getElementById('rtbcbForm');
         this.overlay = document.getElementById('rtbcbModalOverlay');
         
@@ -36,7 +36,8 @@ class BusinessCaseBuilder {
             1: ['company_size'],
             2: ['hours_reconciliation', 'hours_cash_positioning', 'num_banks', 'ftes'],
             3: ['pain_points'],
-            4: ['email']
+            4: ['business_objective', 'implementation_timeline', 'budget_range'],
+            5: ['email']
         };
     }
 
@@ -59,7 +60,7 @@ class BusinessCaseBuilder {
         // Form submission
         this.form.addEventListener('submit', (e) => {
             e.preventDefault();
-            if (this.validateStep(4)) {
+            if (this.validateStep(this.totalSteps)) {
                 this.handleSubmit();
             }
         });
