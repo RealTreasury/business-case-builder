@@ -562,9 +562,10 @@ class Real_Treasury_BCB {
                 wp_send_json_error( __( 'Security check failed.', 'rtbcb' ), 403 );
             }
 
-            // Collect and validate form data
+            // Collect and validate form data - NOW INCLUDING COMPANY NAME
             $user_inputs = [
                 'email'                  => sanitize_email( $_POST['email'] ?? '' ),
+                'company_name'           => sanitize_text_field( $_POST['company_name'] ?? '' ),
                 'company_size'           => sanitize_text_field( $_POST['company_size'] ?? '' ),
                 'industry'               => sanitize_text_field( $_POST['industry'] ?? '' ),
                 'hours_reconciliation'   => floatval( $_POST['hours_reconciliation'] ?? 0 ),
@@ -572,11 +573,22 @@ class Real_Treasury_BCB {
                 'num_banks'              => intval( $_POST['num_banks'] ?? 0 ),
                 'ftes'                   => floatval( $_POST['ftes'] ?? 0 ),
                 'pain_points'            => array_map( 'sanitize_text_field', $_POST['pain_points'] ?? [] ),
+                'business_objective'     => sanitize_text_field( $_POST['business_objective'] ?? '' ),
+                'implementation_timeline'=> sanitize_text_field( $_POST['implementation_timeline'] ?? '' ),
+                'budget_range'           => sanitize_text_field( $_POST['budget_range'] ?? '' ),
             ];
 
-            // Validate email
+            // Validate required fields
             if ( empty( $user_inputs['email'] ) || ! is_email( $user_inputs['email'] ) ) {
                 wp_send_json_error( __( 'Please enter a valid email address.', 'rtbcb' ), 400 );
+            }
+
+            if ( empty( $user_inputs['company_name'] ) ) {
+                wp_send_json_error( __( 'Please enter your company name.', 'rtbcb' ), 400 );
+            }
+
+            if ( empty( $user_inputs['pain_points'] ) ) {
+                wp_send_json_error( __( 'Please select at least one challenge.', 'rtbcb' ), 400 );
             }
 
             // Calculate ROI
@@ -593,33 +605,42 @@ class Real_Treasury_BCB {
 
             $recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
 
-            // Create narrative (simplified, no LLM call)
-            $narrative = [
-                'narrative' => sprintf(
-                    __( 'Based on your %s company profile, implementing %s could generate annual benefits of approximately $%s through process automation and improved efficiency. This solution aligns perfectly with your operational needs and will address your key pain points.', 'rtbcb' ),
-                    $user_inputs['company_size'],
-                    $recommendation['category_info']['name'] ?? __( 'treasury technology', 'rtbcb' ),
-                    number_format( $scenarios['base']['total_annual_benefit'] ?? 0 )
-                ),
-                'risks' => [
-                    __( 'Implementation complexity may impact timeline', 'rtbcb' ),
-                    __( 'User adoption requires proper change management', 'rtbcb' ),
-                    __( 'Integration challenges with existing systems', 'rtbcb' ),
-                ],
-                'assumptions_explained' => [
-                    __( 'Labor cost savings based on 30% efficiency improvement', 'rtbcb' ),
-                    __( 'Bank fee reduction through optimized cash positioning', 'rtbcb' ),
-                    __( 'Error reduction value from automated reconciliation', 'rtbcb' ),
-                ],
-                'citations' => [],
-                'next_actions' => [
-                    __( 'Present business case to stakeholders', 'rtbcb' ),
-                    __( 'Evaluate solution providers', 'rtbcb' ),
-                    __( 'Plan implementation timeline', 'rtbcb' ),
-                ],
-                'confidence' => 0.85,
-                'recommended_category' => $recommendation['recommended'] ?? '',
-            ];
+            // Get RAG context (optional, can be empty array if RAG not configured)
+            $rag_context = [];
+            if ( class_exists( 'RTBCB_RAG' ) ) {
+                try {
+                    $rag = new RTBCB_RAG();
+                    $rag_context = $rag->search_similar(
+                        implode(
+                            ' ',
+                            array_merge(
+                                [ $user_inputs['company_name'], $user_inputs['industry'] ],
+                                $user_inputs['pain_points']
+                            )
+                        ),
+                        3
+                    );
+                } catch ( Exception $e ) {
+                    error_log( 'RTBCB: RAG search failed - ' . $e->getMessage() );
+                    // Continue without RAG context
+                }
+            }
+
+            // **NOW ACTUALLY CALL THE LLM** - This was missing!
+            if ( ! class_exists( 'RTBCB_LLM' ) ) {
+                wp_send_json_error( __( 'System error: LLM integration not available.', 'rtbcb' ), 500 );
+            }
+
+            $llm       = new RTBCB_LLM();
+            $narrative = $llm->generate_business_case( $user_inputs, $scenarios, $rag_context );
+
+            // Check if LLM call failed and use fallback
+            if ( isset( $narrative['error'] ) || isset( $narrative['fallback_used'] ) ) {
+                error_log( 'RTBCB: LLM generation failed or used fallback: ' . ( $narrative['error'] ?? 'fallback used' ) );
+
+                // Use enhanced fallback with company name
+                $narrative = $this->create_enhanced_fallback_narrative( $user_inputs, $recommendation, $scenarios );
+            }
 
             // Format scenarios for output
             $formatted_scenarios = [
@@ -643,7 +664,7 @@ class Real_Treasury_BCB {
                 ],
             ];
 
-            // Save lead if possible
+            // Save lead
             $lead_id = null;
             if ( class_exists( 'RTBCB_Leads' ) ) {
                 try {
@@ -658,8 +679,35 @@ class Real_Treasury_BCB {
                     );
                     $lead_id = RTBCB_Leads::save_lead( $lead_data );
                 } catch ( Throwable $e ) {
-                    // Don't fail the request for lead saving issues
-                    error_log( 'RTBCB: Failed to save lead - ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine() );
+                    error_log( 'RTBCB: Failed to save lead - ' . $e->getMessage() );
+                }
+            }
+
+            // Generate PDF if enabled
+            $download_url = null;
+            if ( get_option( 'rtbcb_pdf_enabled', true ) && class_exists( 'RTBCB_PDF' ) ) {
+                try {
+                    $pdf_data = [
+                        'user_inputs'    => $user_inputs,
+                        'scenarios'      => $formatted_scenarios,
+                        'recommendation' => $recommendation,
+                        'narrative'      => $narrative,
+                    ];
+
+                    $pdf      = new RTBCB_PDF( $pdf_data );
+                    $pdf_path = $pdf->generate_business_case();
+
+                    if ( $pdf_path && file_exists( $pdf_path ) ) {
+                        $download_url = RTBCB_PDF::get_download_url( $pdf_path );
+
+                        // Update lead with PDF info
+                        if ( $lead_id && class_exists( 'RTBCB_Leads' ) ) {
+                            RTBCB_Leads::update_pdf_status( $lead_id, $pdf_path );
+                        }
+                    }
+                } catch ( Exception $e ) {
+                    error_log( 'RTBCB: PDF generation failed - ' . $e->getMessage() );
+                    // Continue without PDF
                 }
             }
 
@@ -667,31 +715,76 @@ class Real_Treasury_BCB {
                 'scenarios'      => $formatted_scenarios,
                 'recommendation' => $recommendation,
                 'narrative'      => $narrative,
-                'rag_context'    => [],
-                'download_url'   => null,
+                'rag_context'    => $rag_context,
+                'download_url'   => $download_url,
                 'lead_id'        => $lead_id,
+                'company_name'   => $user_inputs['company_name'],
             ];
 
-            // Add success logging
-            error_log( 'RTBCB: Business case generated successfully for ' . $user_inputs['email'] );
+            // Log successful generation
+            error_log( 'RTBCB: Business case generated successfully for ' . $user_inputs['company_name'] . ' (' . $user_inputs['email'] . ')' );
 
             wp_send_json_success( $response_data );
-
         } catch ( Exception $e ) {
             error_log( 'RTBCB Ajax Error: ' . $e->getMessage() );
             wp_send_json_error(
-                [ 'message' => 'An error occurred. Please try again.' ],
+                [ 'message' => __( 'An error occurred while generating your business case. Please try again.', 'rtbcb' ) ],
                 500
             );
         } catch ( Error $e ) {
             error_log( 'RTBCB Fatal Error: ' . $e->getMessage() );
             wp_send_json_error(
-                [ 'message' => 'A system error occurred. Please contact support.' ],
+                [ 'message' => __( 'A system error occurred. Please contact support.', 'rtbcb' ) ],
                 500
             );
         }
 
-        exit; // Ensure no additional output
+        exit;
+    }
+
+    /**
+     * Create enhanced fallback narrative with company name
+     *
+     * @param array $user_inputs     User inputs.
+     * @param array $recommendation  Recommendation data.
+     * @param array $scenarios       ROI scenarios.
+     *
+     * @return array Fallback narrative.
+     */
+    private function create_enhanced_fallback_narrative( $user_inputs, $recommendation, $scenarios ) {
+        $company_name = $user_inputs['company_name'];
+        $category_name = $recommendation['category_info']['name'] ?? __( 'treasury technology', 'rtbcb' );
+        $base_benefit  = $scenarios['base']['total_annual_benefit'] ?? 0;
+
+        return [
+            'narrative' => sprintf(
+                __( '%s is well-positioned to realize significant value from implementing %s. Based on your current treasury operations profile, this technology investment could generate approximately $%s in annual benefits through process automation, improved cash visibility, and reduced manual work. The solution addresses your specific pain points while providing a foundation for scalable treasury operations that can grow with %s.', 'rtbcb' ),
+                $company_name,
+                $category_name,
+                number_format( $base_benefit ),
+                $company_name
+            ),
+            'risks' => [
+                sprintf( __( '%s should plan for change management to ensure user adoption', 'rtbcb' ), $company_name ),
+                __( 'Implementation complexity may impact timeline', 'rtbcb' ),
+                __( 'Integration challenges with existing systems', 'rtbcb' ),
+            ],
+            'assumptions_explained' => [
+                __( 'Labor cost savings based on 30% efficiency improvement', 'rtbcb' ),
+                __( 'Bank fee reduction through optimized cash positioning', 'rtbcb' ),
+                __( 'Error reduction value from automated reconciliation', 'rtbcb' ),
+            ],
+            'citations' => [],
+            'next_actions' => [
+                sprintf( __( 'Present business case to %s leadership team', 'rtbcb' ), $company_name ),
+                sprintf( __( 'Evaluate %s solution providers', 'rtbcb' ), $category_name ),
+                sprintf( __( 'Develop %s-specific implementation timeline', 'rtbcb' ), $company_name ),
+                __( 'Plan user training and change management program', 'rtbcb' ),
+            ],
+            'confidence'           => 0.85,
+            'recommended_category' => $recommendation['recommended'] ?? '',
+            'fallback_used'        => true,
+        ];
     }
 
     /**
