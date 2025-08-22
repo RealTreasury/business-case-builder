@@ -33,7 +33,7 @@ class RTBCB_API_Tester {
             return [
                 'success' => false,
                 'message' => __( 'Invalid API key format', 'rtbcb' ),
-                'details' => __( 'API key must start with "sk-" and may contain letters, numbers, hyphens, and colons.', 'rtbcb' ),
+                'details' => __( 'API key must start with "sk-" and may contain letters, numbers, hyphens, colons, and underscores.', 'rtbcb' ),
             ];
         }
 
