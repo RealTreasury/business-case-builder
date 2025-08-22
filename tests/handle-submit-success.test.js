@@ -18,7 +18,7 @@ global.document = {
     }
 };
 
-global.ajaxObj = { ajax_url: '', rtbcb_nonce: '' };
+global.ajaxObj = { ajax_url: '' };
 
 global.fetch = async () => ({
     ok: true,

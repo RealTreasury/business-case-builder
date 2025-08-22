@@ -33,6 +33,7 @@ A comprehensive WordPress plugin that helps treasury teams quantify the benefits
 - Multi-step form with progress indicators
 - Real-time form validation and error handling
 - Interactive pain point selection with visual cards
+- Immediate report rendering via a single AJAX request—no polling needed
 - Responsive design optimized for all devices
 
 **🔍 Improved ROI Calculations**
