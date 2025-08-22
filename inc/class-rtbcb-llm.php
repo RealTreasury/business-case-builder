@@ -105,11 +105,11 @@ class RTBCB_LLM {
     private function build_prompt( $inputs, $roi_data, $chunks, $category_data = [] ) {
         $context = $this->format_context_chunks( $chunks );
 
-        // Extract company information
-        $company_name = $inputs['company_name'] ?? 'the company';
-        $company_size = $inputs['company_size'] ?? '';
-        $industry     = $inputs['industry'] ?? '';
-        $job_title    = $inputs['job_title'] ?? '';
+        // Extract and sanitize company information
+        $company_name = isset( $inputs['company_name'] ) ? sanitize_text_field( $inputs['company_name'] ) : 'the company';
+        $company_size = isset( $inputs['company_size'] ) ? sanitize_text_field( $inputs['company_size'] ) : '';
+        $industry     = isset( $inputs['industry'] ) ? sanitize_text_field( $inputs['industry'] ) : '';
+        $job_title    = isset( $inputs['job_title'] ) ? sanitize_text_field( $inputs['job_title'] ) : '';
 
         // Build company context
         $company_context = $company_name;
@@ -123,8 +123,10 @@ class RTBCB_LLM {
 
         $recommended = '';
         if ( ! empty( $category_data['recommended'] ) ) {
-            $recommended  = 'Recommended solution category: ' . $category_data['recommended'] . "\n";
-            $recommended .= 'Reasoning: ' . ( $category_data['reasoning'] ?? '' ) . "\n\n";
+            $recommended_cat = sanitize_text_field( $category_data['recommended'] );
+            $reasoning       = isset( $category_data['reasoning'] ) ? sanitize_text_field( $category_data['reasoning'] ) : '';
+            $recommended     = 'Recommended solution category: ' . $recommended_cat . "\n";
+            $recommended    .= 'Reasoning: ' . $reasoning . "\n\n";
         }
 
         $prompt  = "You are a CFO advisor creating a business case for treasury technology specifically for {$company_context}.\n\n";
@@ -147,24 +149,32 @@ class RTBCB_LLM {
         }
 
         $prompt .= "\nCURRENT OPERATIONS:\n";
-        $prompt .= "- Weekly reconciliation hours: " . ( $inputs['hours_reconciliation'] ?? 0 ) . "\n";
-        $prompt .= "- Weekly cash positioning hours: " . ( $inputs['hours_cash_positioning'] ?? 0 ) . "\n";
-        $prompt .= "- Number of banks: " . ( $inputs['num_banks'] ?? 0 ) . "\n";
-        $prompt .= "- Treasury team size: " . ( $inputs['ftes'] ?? 0 ) . " FTEs\n";
+        $recon_hours = isset( $inputs['hours_reconciliation'] ) ? sanitize_text_field( $inputs['hours_reconciliation'] ) : 0;
+        $cash_hours  = isset( $inputs['hours_cash_positioning'] ) ? sanitize_text_field( $inputs['hours_cash_positioning'] ) : 0;
+        $num_banks   = isset( $inputs['num_banks'] ) ? sanitize_text_field( $inputs['num_banks'] ) : 0;
+        $ftes        = isset( $inputs['ftes'] ) ? sanitize_text_field( $inputs['ftes'] ) : 0;
+        $prompt       .= "- Weekly reconciliation hours: {$recon_hours}\n";
+        $prompt       .= "- Weekly cash positioning hours: {$cash_hours}\n";
+        $prompt       .= "- Number of banks: {$num_banks}\n";
+        $prompt       .= "- Treasury team size: {$ftes} FTEs\n";
 
         if ( ! empty( $inputs['business_objective'] ) ) {
-            $prompt .= "- Primary objective: {$inputs['business_objective']}\n";
+            $business_objective = sanitize_text_field( $inputs['business_objective'] );
+            $prompt             .= "- Primary objective: {$business_objective}\n";
         }
 
         if ( ! empty( $inputs['implementation_timeline'] ) ) {
-            $prompt .= "- Implementation timeline: {$inputs['implementation_timeline']}\n";
+            $implementation_timeline = sanitize_text_field( $inputs['implementation_timeline'] );
+            $prompt                 .= "- Implementation timeline: {$implementation_timeline}\n";
         }
 
         if ( ! empty( $inputs['budget_range'] ) ) {
-            $prompt .= "- Budget range: {$inputs['budget_range']}\n";
+            $budget_range = sanitize_text_field( $inputs['budget_range'] );
+            $prompt      .= "- Budget range: {$budget_range}\n";
         }
 
-        $prompt .= "- Key challenges: " . implode( ', ', $inputs['pain_points'] ?? [] ) . "\n\n";
+        $pain_points = array_map( 'sanitize_text_field', $inputs['pain_points'] ?? [] );
+        $prompt     .= "- Key challenges: " . implode( ', ', $pain_points ) . "\n\n";
 
         $prompt .= "ROI ANALYSIS:\n";
         $prompt .= "- Conservative annual benefit: $" . number_format( $roi_data['conservative']['total_annual_benefit'] ?? 0 ) . "\n";
@@ -220,8 +230,9 @@ class RTBCB_LLM {
             if ( empty( $chunk['text'] ) ) {
                 continue;
             }
-            $ref      = isset( $chunk['ref'] ) ? '[' . $chunk['ref'] . '] ' : '';
-            $formatted .= $ref . $chunk['text'] . "\n";
+            $text = sanitize_text_field( $chunk['text'] );
+            $ref  = isset( $chunk['ref'] ) ? '[' . sanitize_text_field( $chunk['ref'] ) . '] ' : '';
+            $formatted .= $ref . $text . "\n";
         }
         return trim( $formatted );
     }
