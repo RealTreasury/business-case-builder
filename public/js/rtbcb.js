@@ -293,36 +293,48 @@ class BusinessCaseBuilder {
     validateCurrentStep() {
         const currentStepElement = this.steps[this.currentStep - 1];
         if (!currentStepElement) {
-            console.error('Current step element not found');
             return false;
         }
 
+        // For final step (step 4), allow submission with minimal validation
+        if (this.currentStep === this.totalSteps) {
+            const email = this.form.querySelector('input[name="email"]');
+            const consent = this.form.querySelector('input[name="consent"]');
+
+            if (!email || !email.value || !this.isValidEmail(email.value)) {
+                this.showFieldError(email, 'Please enter a valid email address.');
+                return false;
+            }
+
+            if (!consent || !consent.checked) {
+                this.showFieldError(consent, 'Please agree to receive your business case report.');
+                return false;
+            }
+
+            return true;
+        }
+
+        // For other steps, check required fields
         const requiredFields = currentStepElement.querySelectorAll('input[required], select[required]');
         let isValid = true;
 
         requiredFields.forEach(field => {
-            if (!this.validateField(field)) {
+            if (!field.value || field.value.trim() === '') {
+                this.showFieldError(field, 'This field is required.');
                 isValid = false;
+            } else {
+                this.clearFieldError(field);
             }
         });
 
-        // Special validation for step 3 (pain points)
+        // Special case for pain points step
         if (this.currentStep === 3) {
-            const painPoints = currentStepElement.querySelectorAll('input[name="pain_points[]"]:checked');
+            const painPoints = this.form.querySelectorAll('input[name="pain_points[]"]:checked');
             if (painPoints.length === 0) {
                 this.showPainPointsError();
                 isValid = false;
             } else {
                 this.hidePainPointsError();
-            }
-        }
-
-        // Special validation for step 4 (consent)
-        if (this.currentStep === 4) {
-            const consent = currentStepElement.querySelector('input[name="consent"]');
-            if (consent && !consent.checked) {
-                this.showFieldError(consent, 'Please agree to receive your business case report.');
-                isValid = false;
             }
         }
 
