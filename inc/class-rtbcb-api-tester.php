@@ -163,34 +163,67 @@ class RTBCB_API_Tester {
         $response_body = wp_remote_retrieve_body( $response );
 
         if ( 200 !== $code ) {
-            $error_data = json_decode( $response_body, true );
-            return [
-                'success' => false,
-                'message' => __( 'Completion API error', 'rtbcb' ),
-                'details' => sanitize_text_field( $error_data['error']['message'] ?? 'HTTP ' . $code ),
-                'http_code' => $code,
-            ];
+            $error_data    = json_decode( $response_body, true );
+            $error_message = $error_data['error']['message'] ?? '';
+
+            if ( false !== strpos( strtolower( $error_message ), 'response_format' ) ) {
+                unset( $body['response_format'] );
+                $args['body'] = wp_json_encode( $body );
+                $response     = wp_remote_post( $endpoint, $args );
+
+                if ( is_wp_error( $response ) ) {
+                    return [
+                        'success' => false,
+                        'message' => __( 'Completion request failed', 'rtbcb' ),
+                        'details' => sanitize_text_field( $response->get_error_message() ),
+                    ];
+                }
+
+                $code          = wp_remote_retrieve_response_code( $response );
+                $response_body = wp_remote_retrieve_body( $response );
+
+                if ( 200 !== $code ) {
+                    $error_data = json_decode( $response_body, true );
+                    return [
+                        'success' => false,
+                        'message' => __( 'Completion API error', 'rtbcb' ),
+                        'details' => sanitize_text_field( $error_data['error']['message'] ?? 'HTTP ' . $code ),
+                        'http_code' => $code,
+                    ];
+                }
+            } else {
+                return [
+                    'success' => false,
+                    'message' => __( 'Completion API error', 'rtbcb' ),
+                    'details' => sanitize_text_field( $error_message ?: 'HTTP ' . $code ),
+                    'http_code' => $code,
+                ];
+            }
         }
 
         $data = json_decode( $response_body, true );
-
-        if ( empty( $data['choices'][0]['message']['content'] ) ) {
-            return [
-                'success' => false,
-                'message' => __( 'No response content', 'rtbcb' ),
-                'details' => __( 'API returned empty response', 'rtbcb' ),
-            ];
-        }
-
-        $content = $data['choices'][0]['message']['content'];
-        $parsed  = json_decode( $content, true );
 
         if ( JSON_ERROR_NONE !== json_last_error() ) {
             return [
                 'success' => false,
                 'message' => __( 'Invalid JSON response', 'rtbcb' ),
-                'details' => 'Response: ' . sanitize_text_field( $content ),
+                'details' => 'Response: ' . sanitize_text_field( $response_body ),
             ];
+        }
+
+        if ( isset( $data['choices'][0]['message']['content'] ) ) {
+            $content = $data['choices'][0]['message']['content'];
+            $parsed  = json_decode( $content, true );
+            if ( JSON_ERROR_NONE !== json_last_error() ) {
+                return [
+                    'success' => false,
+                    'message' => __( 'Invalid JSON response', 'rtbcb' ),
+                    'details' => 'Response: ' . sanitize_text_field( $content ),
+                ];
+            }
+        } else {
+            $content = $response_body;
+            $parsed  = $data;
         }
 
         if ( 'success' !== ( $parsed['test'] ?? '' ) ) {
