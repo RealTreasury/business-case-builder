@@ -36,9 +36,9 @@ class RTBCB_LLM {
     public function __construct() {
         $this->api_key = get_option( 'rtbcb_openai_api_key' );
         $this->models  = [
-            'mini'      => get_option( 'rtbcb_mini_model', 'gpt-4o-mini' ),
-            'premium'   => get_option( 'rtbcb_premium_model', 'gpt-4o' ),
-            'advanced'  => get_option( 'rtbcb_advanced_model', 'o1-preview' ),
+            'mini'      => get_option( 'rtbcb_mini_model', 'gpt-5-mini' ),
+            'premium'   => get_option( 'rtbcb_premium_model', 'gpt-5' ),
+            'advanced'  => get_option( 'rtbcb_advanced_model', 'gpt-5-chat-latest' ),
             'embedding' => get_option( 'rtbcb_embedding_model', 'text-embedding-3-small' ),
         ];
     }

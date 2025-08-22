@@ -97,12 +97,14 @@ class RTBCB_Router {
         $complexity = $this->calculate_complexity( $inputs, $chunks );
         $category   = RTBCB_Category_Recommender::recommend_category( $inputs )['recommended'];
 
-        $model = get_option( 'rtbcb_mini_model', 'gpt-4o-mini' );
+        $model = get_option( 'rtbcb_mini_model', 'gpt-5-mini' );
 
-        if ( $complexity > 0.6 || 'trms' === $category ) {
-            $model = get_option( 'rtbcb_premium_model', 'gpt-4o' );
+        if ( $complexity > 0.8 ) {
+            $model = get_option( 'rtbcb_advanced_model', 'gpt-5-chat-latest' );
+        } elseif ( $complexity > 0.6 || 'trms' === $category ) {
+            $model = get_option( 'rtbcb_premium_model', 'gpt-5' );
         } elseif ( 'tms_lite' === $category && $complexity > 0.4 ) {
-            $model = get_option( 'rtbcb_premium_model', 'gpt-4o' );
+            $model = get_option( 'rtbcb_premium_model', 'gpt-5' );
         }
 
         return $model;
