@@ -471,7 +471,8 @@ class BusinessCaseBuilder {
     }
 
     renderResults(data) {
-        const { scenarios, recommendation, narrative, company_name } = data;
+        const { scenarios, recommendation, company_name } = data;
+        const narrative = data.narrative || {};
         const displayName = company_name || 'Your Company';
 
         return `
@@ -487,9 +488,9 @@ class BusinessCaseBuilder {
 
                 ${this.renderRecommendation(recommendation, displayName)}
                 ${this.renderROISummary(scenarios, displayName)}
-                ${this.renderNarrative(narrative, displayName)}
+                ${this.renderNarrative(narrative)}
                 ${this.renderRiskAssessmentSection()}
-                ${this.renderNextSteps(narrative.next_actions || [], displayName)}
+                ${this.renderNextSteps(narrative?.next_actions || [], displayName)}
                 ${this.renderActions(data)}
             </div>
         `;
@@ -575,12 +576,12 @@ class BusinessCaseBuilder {
         `;
     }
 
-    renderNarrative(narrative) {
+    renderNarrative(narrative = {}) {
         return `
             <div class="rtbcb-narrative-section">
                 <h3>Executive Summary</h3>
                 <div class="rtbcb-narrative-content">
-                    ${narrative.narrative || 'Treasury technology investment presents a compelling opportunity for operational efficiency.'}
+                    ${narrative?.narrative || 'Treasury technology investment presents a compelling opportunity for operational efficiency.'}
                 </div>
             </div>
         `;
