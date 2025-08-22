@@ -594,7 +594,7 @@ class Real_Treasury_BCB {
                 'hours_cash_positioning' => floatval( $_POST['hours_cash_positioning'] ?? 0 ),
                 'num_banks'              => intval( $_POST['num_banks'] ?? 0 ),
                 'ftes'                   => floatval( $_POST['ftes'] ?? 0 ),
-                'pain_points'            => array_map( 'sanitize_text_field', $_POST['pain_points'] ?? [] ),
+                'pain_points'            => array_map( 'sanitize_text_field', (array) ( $_POST['pain_points'] ?? [] ) ),
                 'business_objective'     => sanitize_text_field( $_POST['business_objective'] ?? '' ),
                 'implementation_timeline'=> sanitize_text_field( $_POST['implementation_timeline'] ?? '' ),
                 'budget_range'           => sanitize_text_field( $_POST['budget_range'] ?? '' ),
