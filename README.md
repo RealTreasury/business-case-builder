@@ -94,7 +94,7 @@ Add the shortcode to any page or post:
 ## 🎛️ Admin Dashboard Features
 
 ### Main Dashboard
-- **System Status**: OpenAI API, Portal Integration, RAG Index health
+- **System Status**: OpenAI API (configuration and key format), Portal Integration, RAG Index health
 - **Key Metrics**: Total leads, recent activity, average ROI
 - **Recent Leads**: Latest form submissions with quick actions
 - **Quick Actions**: Test API, export data, rebuild index
