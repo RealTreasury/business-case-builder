@@ -692,20 +692,31 @@ class Real_Treasury_BCB {
                     rtbcb_log_memory_usage( 'after_llm_generation' );
 
                     if ( is_wp_error( $comprehensive_analysis ) || isset( $comprehensive_analysis['error'] ) ) {
-                        $comprehensive_analysis = $this->create_comprehensive_fallback( $user_inputs, $recommendation, $scenarios );
-                        rtbcb_log_memory_usage( 'after_fallback_generation' );
+                        wp_send_json_error(
+                            [ 'message' => __( 'Failed to generate business case analysis.', 'rtbcb' ) ],
+                            500
+                        );
                     }
                 } catch ( Exception $e ) {
                     error_log( 'RTBCB: LLM generation failed - ' . $e->getMessage() );
-                    $comprehensive_analysis = $this->create_comprehensive_fallback( $user_inputs, $recommendation, $scenarios );
+                    wp_send_json_error(
+                        [ 'message' => __( 'Failed to generate business case analysis.', 'rtbcb' ) ],
+                        500
+                    );
                 } catch ( Error $e ) {
                     error_log( 'RTBCB: LLM generation fatal error - ' . $e->getMessage() );
-                    $comprehensive_analysis = $this->create_comprehensive_fallback( $user_inputs, $recommendation, $scenarios );
+                    wp_send_json_error(
+                        [ 'message' => __( 'Failed to generate business case analysis.', 'rtbcb' ) ],
+                        500
+                    );
                 }
             }
 
             if ( empty( $comprehensive_analysis ) ) {
-                $comprehensive_analysis = $this->create_comprehensive_fallback( $user_inputs, $recommendation, $scenarios );
+                wp_send_json_error(
+                    [ 'message' => __( 'Failed to generate business case analysis.', 'rtbcb' ) ],
+                    500
+                );
             }
 
             if ( empty( $comprehensive_analysis['company_name'] ) ) {
@@ -741,12 +752,18 @@ class Real_Treasury_BCB {
             try {
                 $report_html = $this->get_comprehensive_report_html( $comprehensive_analysis );
                 if ( empty( $report_html ) ) {
-                    $report_html = $this->get_fallback_report_html( $comprehensive_analysis );
+                    wp_send_json_error(
+                        [ 'message' => __( 'Failed to render business case report.', 'rtbcb' ) ],
+                        500
+                    );
                 }
                 rtbcb_log_memory_usage( 'after_report_generation' );
             } catch ( Exception $e ) {
                 error_log( 'RTBCB: Report generation failed - ' . $e->getMessage() );
-                $report_html = $this->get_fallback_report_html( $comprehensive_analysis );
+                wp_send_json_error(
+                    [ 'message' => __( 'Failed to render business case report.', 'rtbcb' ) ],
+                    500
+                );
             }
 
             // Save lead data (non-blocking)
@@ -839,228 +856,6 @@ class Real_Treasury_BCB {
         return wp_kses_post( $html );
     }
 
-    /**
-     * Generate fallback report HTML when templates fail.
-     */
-    private function get_fallback_report_html( $business_case_data ) {
-        $company_name = $business_case_data['company_name'] ?? 'Your Company';
-        
-        $html = '<div class="rtbcb-fallback-report">';
-        $html .= '<h2>' . esc_html( $company_name . ' Business Case Report' ) . '</h2>';
-        
-        if ( !empty( $business_case_data['executive_summary']['strategic_positioning'] ) ) {
-            $html .= '<div class="rtbcb-executive-summary">';
-            $html .= '<h3>Executive Summary</h3>';
-            $html .= '<p>' . esc_html( $business_case_data['executive_summary']['strategic_positioning'] ) . '</p>';
-            $html .= '</div>';
-        }
-        
-        if ( !empty( $business_case_data['executive_summary']['key_value_drivers'] ) ) {
-            $html .= '<div class="rtbcb-value-drivers">';
-            $html .= '<h3>Key Value Drivers</h3>';
-            $html .= '<ul>';
-            foreach ( $business_case_data['executive_summary']['key_value_drivers'] as $driver ) {
-                $html .= '<li>' . esc_html( $driver ) . '</li>';
-            }
-            $html .= '</ul>';
-            $html .= '</div>';
-        }
-        
-        if ( !empty( $business_case_data['next_steps'] ) ) {
-            $html .= '<div class="rtbcb-next-steps">';
-            $html .= '<h3>Recommended Next Steps</h3>';
-            $html .= '<ol>';
-            foreach ( $business_case_data['next_steps'] as $step ) {
-                $html .= '<li>' . esc_html( $step ) . '</li>';
-            }
-            $html .= '</ol>';
-            $html .= '</div>';
-        }
-        
-        $html .= '</div>';
-        
-        return $html;
-    }
-
-    /**
-     * Create comprehensive fallback with detailed analysis when API fails.
-     */
-    private function create_comprehensive_fallback( $user_inputs, $recommendation, $scenarios ) {
-        $company_name = $user_inputs['company_name'] ?? 'Your Company';
-        $base_benefit = $scenarios['base']['total_annual_benefit'] ?? 0;
-        $company_size = $user_inputs['company_size'] ?? '';
-        $industry = $user_inputs['industry'] ?? '';
-        $pain_points = $user_inputs['pain_points'] ?? [];
-        
-        // Calculate current inefficiency metrics
-        $total_hours = floatval( $user_inputs['hours_reconciliation'] ?? 0 ) + floatval( $user_inputs['hours_cash_positioning'] ?? 0 );
-        $num_banks = intval( $user_inputs['num_banks'] ?? 0 );
-        $ftes = floatval( $user_inputs['ftes'] ?? 0 );
-        
-        // Determine business stage and characteristics
-        $stage_mapping = [
-            '<$50M' => 'emerging growth company',
-            '$50M-$500M' => 'scaling mid-market business', 
-            '$500M-$2B' => 'established enterprise',
-            '>$2B' => 'large enterprise organization'
-        ];
-        
-        $business_stage = $stage_mapping[$company_size] ?? 'growing business';
-        
-        // Industry-specific insights
-        $industry_insights = [
-            'manufacturing' => [
-                'trends' => 'Digital transformation and supply chain optimization are driving treasury automation adoption in manufacturing',
-                'benchmarks' => 'Leading manufacturers have reduced treasury processing time by 60% through automation',
-                'regulatory' => 'Environmental reporting and supply chain transparency requirements increase operational complexity'
-            ],
-            'technology' => [
-                'trends' => 'High-growth tech companies prioritize real-time cash management to support rapid scaling',
-                'benchmarks' => 'Tech companies achieve 40% faster month-end close with automated treasury processes',
-                'regulatory' => 'Data privacy regulations and international expansion create complex compliance requirements'
-            ],
-            'retail' => [
-                'trends' => 'Omnichannel operations and seasonal volatility drive demand for advanced cash forecasting',
-                'benchmarks' => 'Retail leaders improve cash forecast accuracy by 35% with automated treasury tools',
-                'regulatory' => 'Payment processing regulations and consumer data protection create compliance overhead'
-            ]
-        ];
-        
-        $industry_context = $industry_insights[$industry] ?? [
-            'trends' => 'Industry leaders are modernizing treasury operations to improve efficiency and risk management',
-            'benchmarks' => 'Companies of similar size typically achieve 30-50% efficiency gains through treasury automation',
-            'regulatory' => 'Standard compliance requirements and operational risk management drive technology adoption'
-        ];
-        
-        return [
-            'company_name' => $company_name,
-            'analysis_date' => current_time( 'Y-m-d' ),
-            'executive_summary' => [
-                'strategic_positioning' => sprintf(
-                    '%s, as a %s in the %s sector, has significant opportunity to modernize treasury operations and achieve operational excellence. Current manual processes consuming %d weekly hours indicate clear automation potential, while %d banking relationships suggest complexity that would benefit from centralized management.',
-                    $company_name,
-                    $business_stage,
-                    $industry,
-                    $total_hours,
-                    $num_banks
-                ),
-                'business_case_strength' => 'Strong',
-                'key_value_drivers' => [
-                    sprintf( 'Process automation will eliminate %s\'s current %d hours of weekly manual work, freeing treasury team for strategic activities', $company_name, $total_hours ),
-                    sprintf( 'Real-time cash visibility across %d banking relationships will optimize working capital for %s', $num_banks, $company_name ),
-                    sprintf( 'Reduced operational risk and improved compliance will strengthen %s\'s financial controls and stakeholder confidence', $company_name )
-                ],
-                'executive_recommendation' => sprintf(
-                    '%s should proceed with treasury technology implementation to achieve projected annual benefits of $%s while positioning for sustainable growth and operational resilience.',
-                    $company_name,
-                    number_format( $base_benefit )
-                ),
-                'confidence_level' => 0.85
-            ],
-            'operational_analysis' => [
-                'current_state_assessment' => [
-                    'efficiency_rating' => $total_hours > 20 ? 'Poor' : ($total_hours > 10 ? 'Fair' : 'Good'),
-                    'benchmark_comparison' => sprintf(
-                        '%s\'s treasury operations show significant manual dependency compared to industry leaders who have automated 70%% of routine processes',
-                        $company_name
-                    ),
-                    'capacity_utilization' => sprintf(
-                        'Treasury team operates at %d%% manual task capacity, limiting time for strategic value-add activities',
-                        min( 100, round( ($total_hours / 40) * 100 ) )
-                    )
-                ],
-                'process_inefficiencies' => array_map( function( $pain_point ) use ( $company_name ) {
-                    $descriptions = [
-                        'manual_processes' => sprintf( '%s relies heavily on manual data entry and reconciliation, creating bottlenecks and error risk', $company_name ),
-                        'poor_visibility' => sprintf( '%s lacks real-time cash visibility, delaying critical financial decisions', $company_name ),
-                        'forecast_accuracy' => sprintf( '%s experiences forecasting challenges that impact cash optimization', $company_name ),
-                        'compliance_risk' => sprintf( '%s faces regulatory compliance complexity requiring enhanced controls', $company_name ),
-                        'bank_fees' => sprintf( '%s incurs unnecessary banking costs due to suboptimal cash positioning', $company_name ),
-                        'integration_issues' => sprintf( '%s operates with disconnected systems creating data silos', $company_name )
-                    ];
-                    
-                    return [
-                        'process' => ucwords( str_replace( '_', ' ', $pain_point ) ),
-                        'impact' => 'High',
-                        'description' => $descriptions[$pain_point] ?? sprintf( '%s faces operational challenges in %s', $company_name, $pain_point )
-                    ];
-                }, $pain_points ),
-                'automation_opportunities' => [
-                    [
-                        'area' => 'Bank Reconciliation',
-                        'complexity' => 'Medium',
-                        'potential_hours_saved' => round( floatval( $user_inputs['hours_reconciliation'] ?? 0 ) * 0.7, 1 )
-                    ],
-                    [
-                        'area' => 'Cash Position Management', 
-                        'complexity' => 'Low',
-                        'potential_hours_saved' => round( floatval( $user_inputs['hours_cash_positioning'] ?? 0 ) * 0.6, 1 )
-                    ]
-                ]
-            ],
-            'industry_insights' => [
-                'sector_trends' => $industry_context['trends'],
-                'competitive_benchmarks' => $industry_context['benchmarks'], 
-                'regulatory_considerations' => $industry_context['regulatory']
-            ],
-            'technology_recommendations' => [
-                'primary_solution' => [
-                    'category' => $recommendation['category_info']['name'] ?? 'Treasury Management System',
-                    'rationale' => sprintf(
-                        'Based on %s\'s operational profile and %s industry requirements, this solution provides optimal balance of functionality and complexity',
-                        $company_name,
-                        $industry
-                    ),
-                    'key_features' => $recommendation['category_info']['features'] ?? [
-                        'Automated bank reconciliation',
-                        'Real-time cash positioning', 
-                        'Advanced forecasting capabilities'
-                    ]
-                ],
-                'implementation_approach' => [
-                    'phase_1' => sprintf( 'Implement core cash management and reconciliation automation for %s', $company_name ),
-                    'phase_2' => sprintf( 'Expand to advanced analytics and forecasting capabilities across %s operations', $company_name ),
-                    'success_metrics' => [
-                        'Reduce manual processing time by 60%',
-                        'Improve cash forecast accuracy by 30%',
-                        'Achieve 99%+ reconciliation automation'
-                    ]
-                ]
-            ],
-            'financial_analysis' => [
-                'investment_breakdown' => [
-                    'software_licensing' => '$' . number_format( $base_benefit * 0.4 ) . ' - $' . number_format( $base_benefit * 0.6 ),
-                    'implementation_services' => '$' . number_format( $base_benefit * 0.1 ) . ' - $' . number_format( $base_benefit * 0.2 ),
-                    'training_change_management' => '$' . number_format( $base_benefit * 0.05 ) . ' - $' . number_format( $base_benefit * 0.1 )
-                ],
-                'payback_analysis' => [
-                    'payback_months' => $base_benefit > 0 ? max( 12, round( 12 * ($base_benefit * 0.5) / $base_benefit ) ) : 18,
-                    'roi_3_year' => round( (($base_benefit * 3) / ($base_benefit * 0.5) - 1) * 100 ),
-                    'npv_analysis' => sprintf( 'Positive NPV of $%s over 3 years at 10%% discount rate', number_format( $base_benefit * 2.1 ) )
-                ]
-            ],
-            'risk_mitigation' => [
-                'implementation_risks' => [
-                    sprintf( 'User adoption challenges during %s transition to new processes', $company_name ),
-                    sprintf( 'Integration complexity with %s existing systems and workflows', $company_name ),
-                    'Data migration and validation requirements during implementation'
-                ],
-                'mitigation_strategies' => [
-                    'adoption_risk_mitigation' => sprintf( 'Comprehensive change management program with %s leadership engagement', $company_name ),
-                    'integration_risk_mitigation' => 'Phased implementation approach with thorough testing and validation',
-                    'data_risk_mitigation' => 'Parallel processing during transition with comprehensive data validation'
-                ]
-            ],
-            'next_steps' => [
-                sprintf( 'Present comprehensive business case to %s executive leadership for approval', $company_name ),
-                sprintf( 'Initiate vendor evaluation process aligned with %s requirements and timeline', $company_name ),
-                sprintf( 'Develop detailed implementation roadmap and change management strategy for %s', $company_name ),
-                sprintf( 'Establish success metrics and governance framework for %s treasury transformation', $company_name )
-            ],
-            'confidence_level' => 0.85,
-            'enhanced_fallback' => true
-        ];
-    }
     public function admin_notices() {
         // Check if API key is configured
         if ( current_user_can( 'manage_options' ) && empty( get_option( 'rtbcb_openai_api_key' ) ) ) {
