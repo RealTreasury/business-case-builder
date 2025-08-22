@@ -78,6 +78,36 @@ class RTBCB_RAG {
     }
 
     /**
+     * Retrieve context metadata for a query.
+     *
+     * Calls {@see search_similar()} and returns only the metadata portion of
+     * the results. If embeddings cannot be generated, an empty array is
+     * returned.
+     *
+     * @param string $query Query string.
+     * @param int    $top_k Number of results to retrieve.
+     *
+     * @return array List of metadata arrays.
+     */
+    public function get_context( $query, $top_k = 3 ) {
+        $embedding = $this->get_embedding( $query );
+        if ( empty( $embedding ) ) {
+            return [];
+        }
+
+        $results = $this->search_similar( $query, $top_k );
+        $context = [];
+
+        foreach ( $results as $row ) {
+            if ( isset( $row['metadata'] ) ) {
+                $context[] = $row['metadata'];
+            }
+        }
+
+        return $context;
+    }
+
+    /**
      * Index a vendor record.
      *
      * @param array $vendor Vendor data.
