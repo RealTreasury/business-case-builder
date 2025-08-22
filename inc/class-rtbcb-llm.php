@@ -24,6 +24,13 @@ class RTBCB_LLM {
     private $models;
 
     /**
+     * Current inputs for fallback use.
+     *
+     * @var array
+     */
+    private $current_inputs = [];
+
+    /**
      * Constructor.
      */
     public function __construct() {
@@ -45,6 +52,10 @@ class RTBCB_LLM {
      * @return array Parsed LLM response.
      */
     public function generate_business_case( $user_inputs, $roi_data, $context_chunks = [] ) {
+        // Store inputs for fallback use
+        $this->current_inputs = $user_inputs;
+
+        // Rest of the method remains the same...
         $category_data = [];
         if ( class_exists( 'RTBCB_Category_Recommender' ) ) {
             try {
@@ -82,11 +93,11 @@ class RTBCB_LLM {
     }
 
     /**
-     * Build the prompt for the LLM with stricter JSON requirements.
+     * Build the prompt for the LLM with company name personalization.
      *
-     * @param array $inputs User inputs.
-     * @param array $roi_data ROI data.
-     * @param array $chunks Context chunks.
+     * @param array $inputs        User inputs.
+     * @param array $roi_data      ROI data.
+     * @param array $chunks        Context chunks.
      * @param array $category_data Category data.
      *
      * @return string Prompt text.
@@ -94,47 +105,101 @@ class RTBCB_LLM {
     private function build_prompt( $inputs, $roi_data, $chunks, $category_data = [] ) {
         $context = $this->format_context_chunks( $chunks );
 
+        // Extract company information
+        $company_name = $inputs['company_name'] ?? 'the company';
+        $company_size = $inputs['company_size'] ?? '';
+        $industry     = $inputs['industry'] ?? '';
+        $job_title    = $inputs['job_title'] ?? '';
+
+        // Build company context
+        $company_context = $company_name;
+        if ( $company_size && $industry ) {
+            $company_context .= ", a {$company_size} {$industry} company";
+        } elseif ( $company_size ) {
+            $company_context .= ", a {$company_size} company";
+        } elseif ( $industry ) {
+            $company_context .= ", a {$industry} company";
+        }
+
         $recommended = '';
         if ( ! empty( $category_data['recommended'] ) ) {
             $recommended  = 'Recommended solution category: ' . $category_data['recommended'] . "\n";
             $recommended .= 'Reasoning: ' . ( $category_data['reasoning'] ?? '' ) . "\n\n";
         }
 
-        $prompt  = "You are a CFO advisor creating a business case for treasury technology.\n\n";
-        $prompt .= "CONTEXT from vendor research:\n{$context}\n\n";
-        $prompt .= $recommended;
-        $prompt .= "USER SITUATION:\n";
-        $prompt .= "- Company size: {$inputs['company_size']}\n";
-        if ( ! empty( $inputs['current_tech'] ) ) {
-            $prompt .= "- Current technology: {$inputs['current_tech']}\n";
+        $prompt  = "You are a CFO advisor creating a business case for treasury technology specifically for {$company_context}.\n\n";
+
+        if ( $context ) {
+            $prompt .= "CONTEXT from vendor research:\n{$context}\n\n";
         }
+
+        $prompt .= $recommended;
+        $prompt .= "COMPANY PROFILE:\n";
+        $prompt .= "- Company: {$company_name}\n";
+        $prompt .= "- Size: {$company_size}\n";
+
+        if ( $industry ) {
+            $prompt .= "- Industry: {$industry}\n";
+        }
+
+        if ( $job_title ) {
+            $prompt .= "- Requestor role: {$job_title}\n";
+        }
+
+        $prompt .= "\nCURRENT OPERATIONS:\n";
+        $prompt .= "- Weekly reconciliation hours: " . ( $inputs['hours_reconciliation'] ?? 0 ) . "\n";
+        $prompt .= "- Weekly cash positioning hours: " . ( $inputs['hours_cash_positioning'] ?? 0 ) . "\n";
+        $prompt .= "- Number of banks: " . ( $inputs['num_banks'] ?? 0 ) . "\n";
+        $prompt .= "- Treasury team size: " . ( $inputs['ftes'] ?? 0 ) . " FTEs\n";
+
         if ( ! empty( $inputs['business_objective'] ) ) {
             $prompt .= "- Primary objective: {$inputs['business_objective']}\n";
         }
+
         if ( ! empty( $inputs['implementation_timeline'] ) ) {
             $prompt .= "- Implementation timeline: {$inputs['implementation_timeline']}\n";
         }
+
         if ( ! empty( $inputs['budget_range'] ) ) {
             $prompt .= "- Budget range: {$inputs['budget_range']}\n";
         }
-        $prompt .= "- Current pain points: " . implode( ', ', $inputs['pain_points'] ) . "\n\n";
-        $prompt .= "ROI ANALYSIS (assumption-driven, not vendor pricing):\n";
-        $prompt .= "- Base case annual benefit: $" . number_format( $roi_data['base']['total_annual_benefit'] ) . "\n\n";
-        $prompt .= "Create a concise business case narrative (≤180 words) with CFO tone.\n\n";
 
-        // More explicit JSON instructions
-        $prompt .= "CRITICAL: Respond with ONLY valid JSON. No explanations, no markdown, no additional text.\n";
-        $prompt .= "Return exactly this JSON structure:\n\n";
+        $prompt .= "- Key challenges: " . implode( ', ', $inputs['pain_points'] ?? [] ) . "\n\n";
+
+        $prompt .= "ROI ANALYSIS:\n";
+        $prompt .= "- Conservative annual benefit: $" . number_format( $roi_data['conservative']['total_annual_benefit'] ?? 0 ) . "\n";
+        $prompt .= "- Base case annual benefit: $" . number_format( $roi_data['base']['total_annual_benefit'] ?? 0 ) . "\n";
+        $prompt .= "- Optimistic annual benefit: $" . number_format( $roi_data['optimistic']['total_annual_benefit'] ?? 0 ) . "\n\n";
+
+        $prompt .= "Create a personalized business case narrative for {$company_name} with a CFO/executive tone.\n";
+        $prompt .= "Address how this technology investment specifically benefits {$company_name}'s operations.\n\n";
+
+        // More explicit JSON instructions with company personalization
+        $prompt .= 'CRITICAL: Respond with ONLY valid JSON. No explanations, no markdown, no additional text.' . "\n";
+        $prompt .= "Return exactly this JSON structure with {$company_name}-specific content:\n\n";
 
         $prompt .= json_encode(
             [
-                'narrative'            => 'Your business case narrative here',
-                'risks'                => [ 'Implementation risk', 'Adoption risk' ],
-                'assumptions_explained'=> [ 'Labor cost assumption', 'Efficiency assumption' ],
-                'citations'            => [ [ 'ref' => 'source', 'loc' => 'location' ] ],
-                'next_actions'         => [ 'Present to stakeholders', 'Evaluate vendors' ],
-                'confidence'           => 0.85,
-                'recommended_category' => $category_data['recommended'] ?? '',
+                'narrative'             => "Your personalized business case narrative for {$company_name} here (150-180 words)",
+                'risks'                 => [
+                    "Implementation risk specific to {$company_name}",
+                    "Adoption risk for {$company_name} team",
+                    "Integration challenges with {$company_name}'s systems",
+                ],
+                'assumptions_explained' => [
+                    'Labor cost assumption explanation',
+                    'Efficiency assumption explanation',
+                    'Fee reduction assumption explanation',
+                ],
+                'citations'             => [ [ 'ref' => 'source', 'loc' => 'location' ] ],
+                'next_actions'          => [
+                    "Present to {$company_name} stakeholders",
+                    'Evaluate vendors',
+                    "Plan {$company_name} implementation",
+                    "Design {$company_name} change management",
+                ],
+                'confidence'            => 0.85,
+                'recommended_category'  => $category_data['recommended'] ?? '',
             ],
             JSON_PRETTY_PRINT
         );
@@ -331,7 +396,7 @@ class RTBCB_LLM {
     }
 
     /**
-     * Generate a comprehensive fallback response when the API call fails.
+     * Enhanced fallback response generator with company name.
      *
      * @param array  $category_data Category data for context.
      * @param string $error_message Error message.
@@ -339,14 +404,15 @@ class RTBCB_LLM {
      * @return array Complete fallback response.
      */
     private function get_fallback_response( $category_data, $error_message ) {
-        $category      = $category_data['recommended'] ?? 'Treasury Management System';
+        $company_name = $this->current_inputs['company_name'] ?? 'your company';
+        $category     = $category_data['recommended'] ?? 'Treasury Management System';
         $category_info = $category_data['category_info'] ?? [];
-        $reasoning     = $category_data['reasoning'] ?? '';
+        $reasoning    = $category_data['reasoning'] ?? '';
 
-        // Generate a meaningful narrative
+        // Generate a meaningful narrative with company name
         $narrative = sprintf(
-            /* translators: %s: recommended category */
-            __( 'Based on your treasury operations profile, implementing %s presents a compelling investment opportunity. ', 'rtbcb' ),
+            __( '%s is well-positioned to realize significant value from implementing %s. ', 'rtbcb' ),
+            $company_name,
             $category
         );
 
@@ -354,15 +420,22 @@ class RTBCB_LLM {
             $narrative .= $reasoning . ' ';
         }
 
-        $narrative .= __( 'The projected ROI demonstrates strong potential returns through operational efficiency gains, reduced manual processes, and improved cash management. ', 'rtbcb' );
-        $narrative .= __( 'This technology investment aligns with industry best practices and provides a foundation for scalable treasury operations.', 'rtbcb' );
+        $narrative .= sprintf(
+            __( 'The projected ROI demonstrates strong potential returns for %s through operational efficiency gains, reduced manual processes, and improved cash management. ', 'rtbcb' ),
+            $company_name
+        );
+
+        $narrative .= sprintf(
+            __( 'This technology investment aligns with %s\'s operational needs and provides a foundation for scalable treasury operations.', 'rtbcb' ),
+            $company_name
+        );
 
         return [
             'narrative'            => $narrative,
             'risks'                => [
-                __( 'Implementation complexity may impact timeline', 'rtbcb' ),
-                __( 'User adoption requires proper change management', 'rtbcb' ),
-                __( 'Integration challenges with existing systems', 'rtbcb' ),
+                sprintf( __( 'Implementation complexity may impact %s\'s timeline', 'rtbcb' ), $company_name ),
+                sprintf( __( 'User adoption at %s requires proper change management', 'rtbcb' ), $company_name ),
+                sprintf( __( 'Integration challenges with %s\'s existing systems', 'rtbcb' ), $company_name ),
             ],
             'assumptions_explained'=> [
                 __( 'Labor cost savings based on 30% efficiency improvement', 'rtbcb' ),
@@ -371,10 +444,10 @@ class RTBCB_LLM {
             ],
             'citations'            => [],
             'next_actions'         => [
-                __( 'Present business case to key stakeholders', 'rtbcb' ),
+                sprintf( __( 'Present business case to %s leadership team', 'rtbcb' ), $company_name ),
                 sprintf( __( 'Evaluate %s solution providers', 'rtbcb' ), $category ),
-                __( 'Develop detailed implementation timeline', 'rtbcb' ),
-                __( 'Plan user training and change management program', 'rtbcb' ),
+                sprintf( __( 'Develop %s-specific implementation timeline', 'rtbcb' ), $company_name ),
+                sprintf( __( 'Plan %s user training and change management program', 'rtbcb' ), $company_name ),
             ],
             'confidence'           => 0.75,
             'recommended_category' => $category_data['recommended'] ?? '',
