@@ -222,10 +222,12 @@ The plugin includes CSS custom properties for easy theming:
 ```css
 :root {
     --primary-purple: #7216f4;
+    --primary-purple-light: #a78bfa;
     --secondary-purple: #8f47f6;
     --light-purple: #c77dff;
     --dark-text: #281345;
     --gray-text: #4b5563;
+    --neutral-200: #e5e7eb;
     --success-green: #10b981;
 }
 ```

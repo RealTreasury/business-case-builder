@@ -1269,12 +1269,12 @@
 }
 
 .rtbcb-progress-number {
-    width: 40px;
-    height: 40px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
-    background: rgba(114, 22, 244, 0.1);
+    background: var(--neutral-200);
     border: 2px solid var(--primary-purple);
-    color: var(--primary-purple);
+    color: var(--primary-purple-light);
     position: relative;
     z-index: 1;
     display: flex;
@@ -1283,8 +1283,8 @@
     font-weight: 600;
     margin-bottom: 6px;
     transition: all 0.3s ease;
-    font-size: 16px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    font-size: 20px;
+    box-shadow: var(--shadow-sm);
 }
 
 .rtbcb-progress-step.active .rtbcb-progress-number {
@@ -1599,6 +1599,12 @@
 
     .rtbcb-progress-step {
         padding: 0 4px;
+    }
+
+    .rtbcb-progress-number {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
     }
 }
 
