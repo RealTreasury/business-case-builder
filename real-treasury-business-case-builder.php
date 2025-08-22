@@ -114,7 +114,6 @@ class Real_Treasury_BCB {
         require_once RTBCB_DIR . 'inc/class-rtbcb-leads.php';
         require_once RTBCB_DIR . 'inc/class-rtbcb-db.php';
         require_once RTBCB_DIR . 'inc/class-rtbcb-category-recommender.php';
-        require_once RTBCB_DIR . 'inc/class-rtbcb-pdf.php';
         require_once RTBCB_DIR . 'inc/class-rtbcb-tests.php';
         require_once RTBCB_DIR . 'inc/class-rtbcb-validator.php';
         require_once RTBCB_DIR . 'inc/helpers.php';
@@ -712,45 +711,11 @@ class Real_Treasury_BCB {
                 }
             }
 
-            // Generate PDF if enabled
-            $download_url = null;
-            if ( get_option( 'rtbcb_pdf_enabled', true ) && class_exists( 'RTBCB_PDF' ) ) {
-                try {
-                    $pdf_data = [
-                        'user_inputs'            => $user_inputs,
-                        'scenarios'              => $formatted_scenarios,
-                        'recommendation'        => $recommendation,
-                        'comprehensive_analysis' => $comprehensive_analysis,
-                    ];
-
-                    $pdf      = new RTBCB_PDF( $pdf_data );
-
-                    if ( get_option( 'rtbcb_professional_reports', true ) && method_exists( $pdf, 'generate_comprehensive_report' ) ) {
-                        $pdf_path = $pdf->generate_comprehensive_report();
-                    } else {
-                        $pdf_path = $pdf->generate_business_case();
-                    }
-
-                    if ( $pdf_path && file_exists( $pdf_path ) ) {
-                        $download_url = RTBCB_PDF::get_download_url( $pdf_path );
-
-                        // Update lead with PDF info
-                        if ( $lead_id && class_exists( 'RTBCB_Leads' ) ) {
-                            RTBCB_Leads::update_pdf_status( $lead_id, $pdf_path );
-                        }
-                    }
-                } catch ( Exception $e ) {
-                    error_log( 'RTBCB: PDF generation failed - ' . $e->getMessage() );
-                    // Continue without PDF
-                }
-            }
-
             $response_data = [
                 'scenarios'      => $formatted_scenarios,
                 'recommendation'         => $recommendation,
                 'comprehensive_analysis' => $comprehensive_analysis,
                 'rag_context'            => $rag_context,
-                'download_url'           => $download_url,
                 'lead_id'                => $lead_id,
                 'company_name'           => $user_inputs['company_name'],
                 'analysis_type'          => $use_comprehensive ? 'comprehensive' : 'standard',

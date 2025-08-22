@@ -127,11 +127,6 @@ Add the shortcode to any page or post:
 - Company size, complexity, and pain point analysis
 - Confidence scoring and alternative suggestions
 
-**PDF Generation System (`RTBCB_PDF`)**
-- mPDF integration for professional reports
-- Chart generation and data visualization
-- Template system for consistent formatting
-
 **Lead Tracking System (`RTBCB_Leads`)**
 - Complete audit trail of user interactions
 - UTM tracking for marketing attribution
