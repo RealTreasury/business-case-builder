@@ -303,6 +303,16 @@
             if (!form) { return; }
             form.addEventListener('submit', this.generateReportPreview.bind(this));
             document.getElementById('rtbcb-download-pdf')?.addEventListener('click', this.downloadReportPDF.bind(this));
+            const loadBtn = document.getElementById('rtbcb-load-sample');
+            const select = document.getElementById('rtbcb-sample-select');
+            if (loadBtn && select) {
+                loadBtn.addEventListener('click', () => {
+                    const key = select.value;
+                    if (key && window.rtbcbSampleForms && rtbcbSampleForms[key]) {
+                        document.getElementById('rtbcb-sample-context').value = JSON.stringify(rtbcbSampleForms[key], null, 2);
+                    }
+                });
+            }
         },
 
         async generateReportPreview(e) {

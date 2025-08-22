@@ -9,14 +9,43 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-$sample_context = [
-    'company_name'  => 'Sample Company',
-    'analysis_date' => current_time( 'Y-m-d' ),
+$rtbcb_sample_forms = [
+    'enterprise_manufacturer' => [
+        'label' => __( 'Enterprise Manufacturer', 'rtbcb' ),
+        'data'  => [
+            'company_name'  => 'Acme Manufacturing',
+            'company_size'  => '1000-5000',
+            'industry'      => 'Manufacturing',
+            'location'      => 'USA',
+            'analysis_date' => current_time( 'Y-m-d' ),
+        ],
+    ],
+    'tech_startup'           => [
+        'label' => __( 'Tech Startup', 'rtbcb' ),
+        'data'  => [
+            'company_name'  => 'Innovatech',
+            'company_size'  => '1-50',
+            'industry'      => 'Technology',
+            'location'      => 'UK',
+            'analysis_date' => current_time( 'Y-m-d' ),
+        ],
+    ],
 ];
+
+$sample_context = $rtbcb_sample_forms['enterprise_manufacturer']['data'];
 ?>
 <div class="wrap rtbcb-admin-page">
     <h1><?php esc_html_e( 'Report Preview', 'rtbcb' ); ?></h1>
     <form id="rtbcb-report-preview-form">
+        <p>
+            <label for="rtbcb-sample-select"><?php esc_html_e( 'Sample Scenarios', 'rtbcb' ); ?></label>
+            <select id="rtbcb-sample-select" class="regular-text">
+                <?php foreach ( $rtbcb_sample_forms as $key => $scenario ) : ?>
+                    <option value="<?php echo esc_attr( $key ); ?>"><?php echo esc_html( $scenario['label'] ); ?></option>
+                <?php endforeach; ?>
+            </select>
+            <button type="button" class="button" id="rtbcb-load-sample"><?php esc_html_e( 'Load Sample', 'rtbcb' ); ?></button>
+        </p>
         <p>
             <label for="rtbcb-sample-context">
                 <?php esc_html_e( 'Business Context (JSON)', 'rtbcb' ); ?>
@@ -43,4 +72,14 @@ $sample_context = [
         <iframe id="rtbcb-report-iframe"></iframe>
     </div>
 </div>
+
+<?php
+$rtbcb_sample_data = [];
+foreach ( $rtbcb_sample_forms as $key => $scenario ) {
+    $rtbcb_sample_data[ $key ] = $scenario['data'];
+}
+?>
+<script type="text/javascript">
+    const rtbcbSampleForms = <?php echo wp_json_encode( $rtbcb_sample_data ); ?>;
+</script>
 
