@@ -7,7 +7,7 @@
 
 // Default values for template arguments
 $style   = $style ?? 'default';
-$title   = $title ?? __( 'Treasury Technology Business Case Builder', 'rtbcb' );
+$title   = $title ?? __( 'Treasury Tech Business Case Builder', 'rtbcb' );
 $subtitle = $subtitle ?? __( 'Generate a data-driven business case for your treasury technology investment.', 'rtbcb' );
 
 // Get categories for display
