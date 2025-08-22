@@ -638,9 +638,9 @@ class Real_Treasury_BCB {
                         ]
                     );
                     $lead_id = RTBCB_Leads::save_lead( $lead_data );
-                } catch ( Exception $e ) {
+                } catch ( Throwable $e ) {
                     // Don't fail the request for lead saving issues
-                    error_log( 'RTBCB: Failed to save lead - ' . $e->getMessage() );
+                    error_log( 'RTBCB: Failed to save lead - ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine() );
                 }
             }
 
@@ -656,9 +656,9 @@ class Real_Treasury_BCB {
                 ]
             );
 
-        } catch ( Exception $e ) {
-            error_log( 'RTBCB Error: ' . $e->getMessage() );
-            wp_send_json_error( __( 'An error occurred while generating your business case. Please try again.', 'rtbcb' ), 500 );
+        } catch ( Throwable $e ) {
+            error_log( 'RTBCB Error: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine() );
+            wp_send_json_error( __( 'An unexpected error occurred. Please try again.', 'rtbcb' ), 500 );
         }
 
         exit; // Ensure no additional output
