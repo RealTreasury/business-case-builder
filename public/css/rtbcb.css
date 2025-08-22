@@ -1820,3 +1820,38 @@
     border-radius: 50%;
     animation: rtbcb-spin 1s linear infinite;
 }
+.export-btn {
+    background: #0066cc;
+    color: #ffffff;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    margin: 20px 0;
+    transition: background 0.3s;
+}
+
+.export-btn:hover {
+    background: #0052a3;
+}
+
+#report-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+#loading {
+    text-align: center;
+    padding: 40px;
+    color: #666666;
+}
+
+#error {
+    background: #ffeeee;
+    color: #cc3333;
+    padding: 15px;
+    border-radius: 4px;
+    margin: 20px 0;
+}

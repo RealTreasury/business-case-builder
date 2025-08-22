@@ -384,6 +384,21 @@ class Real_Treasury_BCB {
                 ],
             ]
         );
+
+        wp_enqueue_script(
+            'rtbcb-report',
+            RTBCB_URL . 'public/js/rtbcb-report.js',
+            [],
+            RTBCB_VERSION,
+            true
+        );
+
+        $api_key = sanitize_text_field( get_option( 'rtbcb_openai_api_key', '' ) );
+        wp_localize_script(
+            'rtbcb-report',
+            'rtbcbReport',
+            [ 'api_key' => $api_key ]
+        );
     }
 
     /**
