@@ -169,12 +169,6 @@ $leads = $leads_data['leads'] ?? [];
                                         <span class="dashicons dashicons-visibility"></span>
                                         <?php esc_html_e( 'View', 'rtbcb' ); ?>
                                     </button>
-                                    <?php if ( $lead['pdf_generated'] && ! empty( $lead['pdf_path'] ) ) : ?>
-                                        <a href="<?php echo esc_url( RTBCB_PDF::get_download_url( $lead['pdf_path'] ) ); ?>" class="button button-small" target="_blank">
-                                            <span class="dashicons dashicons-media-document"></span>
-                                            <?php esc_html_e( 'PDF', 'rtbcb' ); ?>
-                                        </a>
-                                    <?php endif; ?>
                                 </div>
                             </td>
                         </tr>
