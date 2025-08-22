@@ -66,27 +66,29 @@
     border-radius: 20px !important;
     box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25), 0 8px 32px rgba(114, 22, 244, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
     width: 100% !important;
-    max-width: 900px !important;
+    max-width: 800px !important;
     margin: 0 auto !important;
     overflow: auto !important;
-    max-height: 90vh !important;
+    max-height: 85vh !important;
     position: relative !important;
 }
 
 /* Progress indicator fixes */
 .rtbcb-wizard-progress {
     background: linear-gradient(135deg, rgba(248, 249, 255, 0.8), rgba(243, 244, 255, 0.9)) !important;
-    padding: 20px 40px !important;
+    padding: 16px 32px !important;
     margin: 0 !important;
     border-bottom: 1px solid rgba(114, 22, 244, 0.1) !important;
     position: relative !important;
+    display: flex !important;
+    justify-content: center !important;
 }
 
 .rtbcb-progress-steps {
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
-    max-width: 600px !important;
+    width: 100% !important;
     margin: 0 auto !important;
     position: relative !important;
 }
@@ -95,8 +97,8 @@
     content: '' !important;
     position: absolute !important;
     top: 18px !important;
-    left: 10% !important;
-    right: 10% !important;
+    left: 0 !important;
+    right: 0 !important;
     height: 2px !important;
     background: #e2e8f0 !important;
     z-index: 0 !important;
@@ -105,8 +107,8 @@
 /* Step content fixes */
 .rtbcb-wizard-step {
     display: none !important;
-    padding: 32px 40px !important;
-    min-height: 400px !important;
+    padding: 24px 32px !important;
+    min-height: 340px !important;
 }
 
 .rtbcb-wizard-step.active {
@@ -191,11 +193,15 @@
 
 .rtbcb-pain-point-label {
     all: unset !important;
-    display: block !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
     padding: 20px !important;
     cursor: pointer !important;
     width: 100% !important;
     height: 100% !important;
+    text-align: center !important;
 }
 
 .rtbcb-pain-point-label input[type="checkbox"] {
@@ -211,7 +217,7 @@
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
-    padding: 20px 40px !important;
+    padding: 16px 32px !important;
     border-top: 1px solid #e2e8f0 !important;
     background: #f9fafb !important;
     border-radius: 0 0 20px 20px !important;
@@ -1224,17 +1230,20 @@
 /* Progress Indicator - Glassmorphic */
 .rtbcb-wizard-progress {
     background: linear-gradient(135deg, rgba(248, 249, 255, 0.8), rgba(243, 244, 255, 0.9));
-    max-width: 600px;
+    width: 100%;
     margin: -32px auto 32px;
-    padding: 20px 40px;
+    padding: 16px 32px;
     border-bottom: 1px solid rgba(114, 22, 244, 0.1);
     backdrop-filter: blur(10px);
+    display: flex;
+    justify-content: center;
 }
 
 .rtbcb-progress-steps {
     display: flex;
-    justify-content: center;
-    gap: 40px;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
     position: relative;
 }
 
@@ -1559,6 +1568,8 @@
         margin: -32px auto 32px;
         padding-left: 20px;
         padding-right: 20px;
+        display: flex;
+        justify-content: center;
     }
 
     .rtbcb-wizard-navigation {
