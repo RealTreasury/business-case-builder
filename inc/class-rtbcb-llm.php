@@ -20,16 +20,16 @@ class RTBCB_LLM {
         ];
         
         if ( empty( $this->api_key ) ) {
-            error_log( 'RTBCB: OpenAI API key not configured - reports will use fallback content' );
+            error_log( 'RTBCB: OpenAI API key not configured' );
         }
     }
 
     /**
      * Generate a simplified business case analysis.
      *
-     * Attempts to call the LLM for a brief analysis. Falls back to an
-     * enhanced static analysis when no API key is available. If the LLM call
-     * fails, a {@see WP_Error} is returned for the caller to handle.
+     * Attempts to call the LLM for a brief analysis. If no API key is
+     * configured or the LLM call fails, a {@see WP_Error} is returned for the
+     * caller to handle.
      *
      * @param array       $user_inputs    Sanitized user inputs.
      * @param array       $roi_data       ROI calculation data.
@@ -53,7 +53,7 @@ class RTBCB_LLM {
         $this->current_inputs = $inputs;
 
         if ( empty( $this->api_key ) ) {
-            return $this->create_enhanced_fallback( $inputs, $roi_data );
+            return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
         }
 
         $selected_model = $model ? sanitize_text_field( $model ) : ( $this->models['mini'] ?? 'gpt-4o-mini' );
@@ -109,14 +109,22 @@ class RTBCB_LLM {
     }
 
     /**
-     * Generate comprehensive business case with deep analysis
+     * Generate comprehensive business case with deep analysis.
+     *
+     * Returns a {@see WP_Error} when the API key is missing or when the LLM
+     * call or response parsing fails.
+     *
+     * @param array $user_inputs    Sanitized user inputs.
+     * @param array $roi_data       ROI calculation data.
+     * @param array $context_chunks Optional context strings for the prompt.
+     *
+     * @return array|WP_Error Comprehensive analysis array or error object.
      */
     public function generate_comprehensive_business_case( $user_inputs, $roi_data, $context_chunks = [] ) {
         $this->current_inputs = $user_inputs;
-        
+
         if ( empty( $this->api_key ) ) {
-            error_log( 'RTBCB: No API key - using enhanced fallback' );
-            return $this->create_enhanced_fallback( $user_inputs, $roi_data );
+            return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
         }
 
         // Enhanced company research
@@ -139,17 +147,19 @@ class RTBCB_LLM {
         );
         
         $response = $this->call_openai_with_retry( $model, $prompt );
-        
+
         if ( is_wp_error( $response ) ) {
-            error_log( 'RTBCB: OpenAI call failed: ' . $response->get_error_message() );
-            return $this->create_enhanced_fallback( $user_inputs, $roi_data );
+            return $response;
         }
-        
+
         $parsed = $this->parse_comprehensive_response( $response );
-        
+
+        if ( is_wp_error( $parsed ) ) {
+            return $parsed;
+        }
+
         if ( isset( $parsed['error'] ) ) {
-            error_log( 'RTBCB: Response parsing failed: ' . $parsed['error'] );
-            return $this->create_enhanced_fallback( $user_inputs, $roi_data );
+            return new WP_Error( 'llm_parse_error', $parsed['error'] );
         }
         
         return $this->enhance_with_research( $parsed, $company_research, $industry_analysis );
@@ -384,68 +394,6 @@ class RTBCB_LLM {
         return $prompt;
     }
 
-    /**
-     * Create enhanced fallback with detailed analysis
-     */
-    private function create_enhanced_fallback( $user_inputs, $roi_data ) {
-        $company_name = $user_inputs['company_name'] ?? 'Your Company';
-        $company_research = $this->conduct_company_research( $user_inputs );
-        $company_profile = $company_research['company_profile'];
-        
-        return [
-            'company_name' => $company_name,
-            'analysis_date' => current_time( 'Y-m-d' ),
-            'executive_summary' => [
-                'strategic_positioning' => sprintf(
-                    "%s, as a %s company in the %s sector, is well-positioned to realize significant operational improvements through treasury technology modernization. The current manual processes and %s pain points indicate clear automation opportunities that align with industry best practices.",
-                    $company_name,
-                    $company_profile['business_stage'],
-                    $user_inputs['industry'] ?? 'business',
-                    count($user_inputs['pain_points'] ?? [])
-                ),
-                'business_case_strength' => 'Strong',
-                'key_value_drivers' => [
-                    sprintf("Process automation will eliminate %s's current manual bottlenecks, saving %.1f hours weekly", 
-                        $company_name, 
-                        ($user_inputs['hours_reconciliation'] ?? 0) + ($user_inputs['hours_cash_positioning'] ?? 0)
-                    ),
-                    sprintf("Real-time cash visibility will improve %s's working capital optimization by 15-25%%", $company_name),
-                    sprintf("Reduced error rates will enhance %s's operational reliability and stakeholder confidence", $company_name)
-                ],
-                'executive_recommendation' => sprintf(
-                    "%s should proceed with treasury technology implementation focusing on %s to achieve projected annual benefits of $%s while improving operational efficiency and risk management capabilities.",
-                    $company_name,
-                    $company_profile['treasury_priorities'],
-                    number_format($roi_data['base']['total_annual_benefit'] ?? 0)
-                ),
-                'confidence_level' => 0.85
-            ],
-            'operational_analysis' => [
-                'current_state_assessment' => [
-                    'efficiency_rating' => $this->calculate_efficiency_rating( $user_inputs ),
-                    'benchmark_comparison' => sprintf(
-                        "%s's current treasury operations show %s automation levels compared to industry benchmarks, with significant opportunity for process improvement.",
-                        $company_name,
-                        $this->get_automation_level( $user_inputs )
-                    ),
-                    'capacity_utilization' => sprintf(
-                        "The treasury team is operating at high manual capacity with %.1f weekly hours spent on routine tasks that could be automated.",
-                        ($user_inputs['hours_reconciliation'] ?? 0) + ($user_inputs['hours_cash_positioning'] ?? 0)
-                    )
-                ],
-                'process_inefficiencies' => $this->analyze_process_inefficiencies( $user_inputs ),
-                'automation_opportunities' => $this->identify_automation_opportunities( $user_inputs )
-            ],
-            'industry_insights' => [
-                'sector_trends' => $this->get_industry_trends( $user_inputs['industry'] ?? '' ),
-                'competitive_benchmarks' => $this->get_competitive_benchmarks( $user_inputs ),
-                'regulatory_considerations' => $this->get_regulatory_considerations( $user_inputs['industry'] ?? '' )
-            ],
-            'financial_analysis' => $this->build_financial_analysis( $roi_data, $user_inputs ),
-            'confidence_level' => 0.85,
-            'enhanced_fallback' => true
-        ];
-    }
 
     /**
      * Call OpenAI with retry logic
