@@ -564,10 +564,21 @@ class Real_Treasury_BCB {
         }
     }
 
+    
+
     /**
-     * Enhanced AJAX handler for comprehensive business case generation.
+     * Enhanced AJAX handler with memory management
      */
     public function ajax_generate_comprehensive_case() {
+        // STEP 1: Increase memory limit and log initial state
+        rtbcb_increase_memory_limit();
+        rtbcb_log_memory_usage( 'start' );
+
+        // STEP 2: Set longer execution time
+        if ( ! ini_get( 'safe_mode' ) ) {
+            set_time_limit( 300 ); // 5 minutes
+        }
+
         // Set proper headers
         header( 'Content-Type: application/json; charset=utf-8' );
 
@@ -582,6 +593,8 @@ class Real_Treasury_BCB {
                 error_log( 'RTBCB: Nonce verification failed' );
                 wp_send_json_error( __( 'Security check failed.', 'rtbcb' ), 403 );
             }
+
+            rtbcb_log_memory_usage( 'after_nonce_verification' );
 
             // Collect and validate form data
             $user_inputs = [
@@ -600,8 +613,6 @@ class Real_Treasury_BCB {
                 'budget_range'           => sanitize_text_field( $_POST['budget_range'] ?? '' ),
             ];
 
-            error_log( 'RTBCB: Processing request for company: ' . $user_inputs['company_name'] );
-
             // Validate required fields
             if ( empty( $user_inputs['email'] ) || ! is_email( $user_inputs['email'] ) ) {
                 wp_send_json_error( __( 'Please enter a valid email address.', 'rtbcb' ), 400 );
@@ -619,14 +630,16 @@ class Real_Treasury_BCB {
                 wp_send_json_error( __( 'Please select at least one challenge.', 'rtbcb' ), 400 );
             }
 
+            rtbcb_log_memory_usage( 'after_validation' );
+
             // Calculate ROI scenarios
             if ( ! class_exists( 'RTBCB_Calculator' ) ) {
                 error_log( 'RTBCB: Calculator class not found' );
                 wp_send_json_error( __( 'System error: Calculator not available.', 'rtbcb' ), 500 );
             }
 
-            error_log( 'RTBCB: Calculating ROI scenarios' );
             $scenarios = RTBCB_Calculator::calculate_roi( $user_inputs );
+            rtbcb_log_memory_usage( 'after_roi_calculation' );
 
             // Get category recommendation
             if ( ! class_exists( 'RTBCB_Category_Recommender' ) ) {
@@ -634,14 +647,13 @@ class Real_Treasury_BCB {
                 wp_send_json_error( __( 'System error: Recommender not available.', 'rtbcb' ), 500 );
             }
 
-            error_log( 'RTBCB: Getting category recommendation' );
             $recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
+            rtbcb_log_memory_usage( 'after_category_recommendation' );
 
-            // Get RAG context (enhanced search)
+            // Get RAG context (with memory monitoring)
             $rag_context = [];
             if ( class_exists( 'RTBCB_RAG' ) ) {
                 try {
-                    error_log( 'RTBCB: Searching RAG context' );
                     $rag = new RTBCB_RAG();
                     $search_query = implode(
                         ' ',
@@ -651,49 +663,37 @@ class Real_Treasury_BCB {
                             [ $recommendation['recommended'] ?? '' ]
                         )
                     );
-                    $rag_context = $rag->search_similar( $search_query, 5 );
-                    error_log( 'RTBCB: Found ' . count( $rag_context ) . ' RAG context items' );
+                    $rag_context = $rag->search_similar( $search_query, 3 );
+                    rtbcb_log_memory_usage( 'after_rag_search' );
                 } catch ( Exception $e ) {
                     error_log( 'RTBCB: RAG search failed - ' . $e->getMessage() );
-                    // Continue without RAG context
                 } catch ( Error $e ) {
                     error_log( 'RTBCB: RAG search fatal error - ' . $e->getMessage() );
-                    // Continue without RAG context
                 }
             }
 
-            // Generate comprehensive business case using enhanced LLM
+            // Generate business case with memory optimization
             $comprehensive_analysis = null;
             if ( class_exists( 'RTBCB_LLM' ) ) {
                 try {
-                    error_log( 'RTBCB: Generating comprehensive business case' );
-                    $llm = new RTBCB_LLM();
+                    if ( function_exists( 'gc_collect_cycles' ) ) {
+                        gc_collect_cycles();
+                    }
 
-                    // Always try the comprehensive version first
+                    rtbcb_log_memory_usage( 'before_llm_generation' );
+
+                    $llm = new RTBCB_LLM();
                     $comprehensive_analysis = $llm->generate_comprehensive_business_case(
                         $user_inputs,
                         $scenarios,
                         $rag_context
                     );
 
-                    // Check if we got a proper comprehensive analysis
+                    rtbcb_log_memory_usage( 'after_llm_generation' );
+
                     if ( is_wp_error( $comprehensive_analysis ) || isset( $comprehensive_analysis['error'] ) ) {
-                        $error_message = is_wp_error( $comprehensive_analysis )
-                            ? $comprehensive_analysis->get_error_message()
-                            : $comprehensive_analysis['error'];
-
-                        error_log( 'RTBCB: Comprehensive analysis failed: ' . $error_message );
-
-                        // Fall back to basic analysis
-                        error_log( 'RTBCB: Falling back to basic business case generation' );
-                        $basic_analysis = $llm->generate_business_case( $user_inputs, $scenarios, $rag_context );
-
-                        if ( is_wp_error( $basic_analysis ) ) {
-                            error_log( 'RTBCB: Basic analysis also failed, using enhanced fallback' );
-                            $comprehensive_analysis = $this->create_comprehensive_fallback( $user_inputs, $recommendation, $scenarios );
-                        } else {
-                            $comprehensive_analysis = $basic_analysis;
-                        }
+                        $comprehensive_analysis = $this->create_comprehensive_fallback( $user_inputs, $recommendation, $scenarios );
+                        rtbcb_log_memory_usage( 'after_fallback_generation' );
                     }
                 } catch ( Exception $e ) {
                     error_log( 'RTBCB: LLM generation failed - ' . $e->getMessage() );
@@ -704,18 +704,15 @@ class Real_Treasury_BCB {
                 }
             }
 
-            // If no LLM class or all methods failed, use fallback
             if ( empty( $comprehensive_analysis ) ) {
-                error_log( 'RTBCB: Using fallback analysis' );
                 $comprehensive_analysis = $this->create_comprehensive_fallback( $user_inputs, $recommendation, $scenarios );
             }
 
-            // Ensure we have the company name in the analysis
             if ( empty( $comprehensive_analysis['company_name'] ) ) {
                 $comprehensive_analysis['company_name'] = $user_inputs['company_name'];
             }
 
-            // Format scenarios for output (with validation)
+            // Format scenarios
             $formatted_scenarios = [
                 'low'  => [
                     'total_annual_benefit' => $scenarios['conservative']['total_annual_benefit'] ?? 0,
@@ -737,42 +734,25 @@ class Real_Treasury_BCB {
                 ],
             ];
 
-            // Validate scenarios have different values (not all the same)
-            $base_benefit = $formatted_scenarios['base']['total_annual_benefit'];
-            if ( $formatted_scenarios['low']['total_annual_benefit'] === $base_benefit &&
-                 $formatted_scenarios['high']['total_annual_benefit'] === $base_benefit ) {
-                error_log( 'RTBCB: All ROI scenarios are identical, recalculating with variation' );
+            rtbcb_log_memory_usage( 'after_scenario_formatting' );
 
-                // Add some variation to make scenarios realistic
-                $formatted_scenarios['low']['total_annual_benefit']  = round( $base_benefit * 0.8 );
-                $formatted_scenarios['high']['total_annual_benefit'] = round( $base_benefit * 1.2 );
-            }
-
-            // Generate HTML report using comprehensive template
-            error_log( 'RTBCB: Generating HTML report' );
+            // Generate HTML report
             $report_html = '';
             try {
                 $report_html = $this->get_comprehensive_report_html( $comprehensive_analysis );
-
                 if ( empty( $report_html ) ) {
-                    error_log( 'RTBCB: Report HTML generation failed, using fallback' );
                     $report_html = $this->get_fallback_report_html( $comprehensive_analysis );
                 }
+                rtbcb_log_memory_usage( 'after_report_generation' );
             } catch ( Exception $e ) {
                 error_log( 'RTBCB: Report generation failed - ' . $e->getMessage() );
                 $report_html = $this->get_fallback_report_html( $comprehensive_analysis );
-            } catch ( Error $e ) {
-                error_log( 'RTBCB: Report generation fatal error - ' . $e->getMessage() );
-                $report_html = $this->get_fallback_report_html( $comprehensive_analysis );
             }
 
-            // Save lead to database (non-blocking)
+            // Save lead data (non-blocking)
             $lead_id = null;
             if ( class_exists( 'RTBCB_Leads' ) ) {
                 try {
-                    error_log( 'RTBCB: Saving lead data' );
-
-                    // Prepare lead data with only the fields the database expects
                     $lead_data = [
                         'email'                  => $user_inputs['email'],
                         'company_size'           => $user_inputs['company_size'],
@@ -790,62 +770,50 @@ class Real_Treasury_BCB {
                     ];
 
                     $lead_id = RTBCB_Leads::save_lead( $lead_data );
-                    error_log( 'RTBCB: Lead saved with ID: ' . $lead_id );
+                    rtbcb_log_memory_usage( 'after_lead_save' );
                 } catch ( Throwable $e ) {
-                    error_log( 'RTBCB: Failed to save lead - ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine() );
-                    // Continue without saving lead data - don't fail the whole request
+                    error_log( 'RTBCB: Failed to save lead - ' . $e->getMessage() );
                 }
             }
 
-            // Prepare response data
+            // Prepare final response
             $response_data = [
                 'scenarios'              => $formatted_scenarios,
                 'recommendation'         => $recommendation,
                 'comprehensive_analysis' => $comprehensive_analysis,
-                'narrative'              => $comprehensive_analysis, // For backward compatibility
+                'narrative'              => $comprehensive_analysis,
                 'rag_context'            => $rag_context,
                 'report_html'            => $report_html,
                 'lead_id'                => $lead_id,
                 'company_name'           => $user_inputs['company_name'],
                 'analysis_type'          => 'comprehensive',
                 'api_used'               => ! empty( get_option( 'rtbcb_openai_api_key' ) ),
-                'fallback_used'          => isset( $comprehensive_analysis['enhanced_fallback'] ) || isset( $comprehensive_analysis['fallback_used'] ),
+                'fallback_used'          => isset( $comprehensive_analysis['enhanced_fallback'] ),
+                'memory_info'            => rtbcb_get_memory_status(),
             ];
 
-            // Log successful generation
-            error_log(
-                'RTBCB: Business case generated successfully for ' .
-                $user_inputs['company_name'] . ' (' . $user_inputs['email'] . ')' .
-                ' - API Used: ' . ( $response_data['api_used'] ? 'Yes' : 'No' ) .
-                ' - Fallback: ' . ( $response_data['fallback_used'] ? 'Yes' : 'No' )
-            );
+            rtbcb_log_memory_usage( 'before_response' );
 
             wp_send_json_success( $response_data );
 
         } catch ( Exception $e ) {
+            rtbcb_log_memory_usage( 'exception_occurred' );
             error_log( 'RTBCB Ajax Error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine() );
             wp_send_json_error(
                 [ 'message' => __( 'An error occurred while generating your business case. Please try again.', 'rtbcb' ) ],
                 500
             );
         } catch ( Error $e ) {
+            rtbcb_log_memory_usage( 'fatal_error_occurred' );
             error_log( 'RTBCB Fatal Error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine() );
             wp_send_json_error(
                 [ 'message' => __( 'A system error occurred. Please contact support.', 'rtbcb' ) ],
-                500
-            );
-        } catch ( Throwable $e ) {
-            error_log( 'RTBCB Throwable Error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine() );
-            wp_send_json_error(
-                [ 'message' => __( 'A critical error occurred. Please contact support.', 'rtbcb' ) ],
                 500
             );
         }
 
         exit;
     }
-
-
     /**
      * Generate comprehensive report HTML from template.
      */

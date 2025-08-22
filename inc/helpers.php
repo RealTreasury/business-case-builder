@@ -161,3 +161,41 @@ function rtbcb_log_api_debug( $message, $data = null ) {
     }
 }
 
+/**
+ * Attempt to increase PHP memory limit for heavy operations.
+ *
+ * @return void
+ */
+function rtbcb_increase_memory_limit() {
+    if ( function_exists( 'ini_set' ) ) {
+        @ini_set( 'memory_limit', '512M' );
+    }
+}
+
+/**
+ * Log current memory usage and peak usage.
+ *
+ * @param string $stage Description of current stage.
+ * @return void
+ */
+function rtbcb_log_memory_usage( $stage ) {
+    if ( function_exists( 'memory_get_usage' ) ) {
+        $usage = size_format( memory_get_usage( true ) );
+        $peak  = size_format( memory_get_peak_usage( true ) );
+        error_log( "RTBCB Memory ({$stage}): usage={$usage}, peak={$peak}" );
+    }
+}
+
+/**
+ * Get memory usage statistics.
+ *
+ * @return array
+ */
+function rtbcb_get_memory_status() {
+    return [
+        'usage' => memory_get_usage( true ),
+        'peak'  => memory_get_peak_usage( true ),
+        'limit' => ini_get( 'memory_limit' ),
+    ];
+}
+
