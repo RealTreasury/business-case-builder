@@ -5,6 +5,7 @@
  * Version: 2.1.0
  * Requires PHP: 7.4
  * Author: Real Treasury
+ * Text Domain: rtbcb
  * License: GPL v2 or later
  *
  * @package RealTreasuryBusinessCaseBuilder
