@@ -87,13 +87,7 @@ class RTBCB_Tests {
 
         $llm = new RTBCB_LLM();
 
-        $user_inputs = [
-            'company_name' => 'Acme Corp',
-            'company_size' => '$50M-$500M',
-            'industry'     => 'manufacturing',
-            'job_title'    => 'Treasury Manager',
-            'pain_points'  => [ 'manual_processes', 'bank_fees' ],
-        ];
+        $user_inputs = rtbcb_get_sample_inputs();
 
         $roi_data = [
             'base' => [

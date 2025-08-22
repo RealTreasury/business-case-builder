@@ -642,15 +642,7 @@ class RTBCB_Admin {
 
         // 10. Test Basic Functionality
         try {
-            $test_inputs = [
-                'company_size'           => '$50M-$500M',
-                'industry'               => 'manufacturing',
-                'hours_reconciliation'   => 5,
-                'hours_cash_positioning' => 3,
-                'num_banks'              => 3,
-                'ftes'                   => 1,
-                'pain_points'            => [ 'manual_processes' ],
-            ];
+            $test_inputs = rtbcb_get_sample_inputs();
 
             if ( class_exists( 'RTBCB_Calculator' ) ) {
                 $roi_result = RTBCB_Calculator::calculate_roi( $test_inputs );
