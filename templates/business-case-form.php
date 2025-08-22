@@ -67,14 +67,29 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 
                     <!-- Steps Container -->
                     <div class="rtbcb-wizard-steps">
-            <!-- Step 1: Company Profile -->
+            <!-- Step 1: Company Profile - UPDATED -->
             <div class="rtbcb-wizard-step active" data-step="1">
                 <div class="rtbcb-step-header">
                     <h3><?php esc_html_e( 'Tell us about your company', 'rtbcb' ); ?></h3>
                     <p><?php esc_html_e( 'This helps us provide relevant recommendations for your organization.', 'rtbcb' ); ?></p>
                 </div>
-                
+
                 <div class="rtbcb-step-content">
+                    <!-- NEW: Company Name Field -->
+                    <div class="rtbcb-field rtbcb-field-required">
+                        <label for="company_name">
+                            <?php esc_html_e( 'Company Name', 'rtbcb' ); ?>
+                            <span class="rtbcb-required">*</span>
+                        </label>
+                        <input type="text" name="company_name" id="company_name" 
+                               placeholder="<?php esc_attr_e( 'Enter your company name', 'rtbcb' ); ?>" 
+                               required 
+                               maxlength="100" />
+                        <div class="rtbcb-field-help">
+                            <?php esc_html_e( 'This will be used to personalize your business case report', 'rtbcb' ); ?>
+                        </div>
+                    </div>
+
                     <div class="rtbcb-field rtbcb-field-required">
                         <label for="company_size">
                             <?php esc_html_e( 'Company Size (Annual Revenue)', 'rtbcb' ); ?>
@@ -82,10 +97,10 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                         </label>
                         <select name="company_size" id="company_size" required>
                             <option value=""><?php esc_html_e( 'Select your company size...', 'rtbcb' ); ?></option>
-                              <option value="&lt;$50M"><?php esc_html_e( 'Small Business (&lt;$50M)', 'rtbcb' ); ?></option>
-                              <option value="$50M-$500M"><?php esc_html_e( 'Mid-Market ($50M-$500M)', 'rtbcb' ); ?></option>
-                              <option value="$500M-$2B"><?php esc_html_e( 'Large Enterprise ($500M-$2B)', 'rtbcb' ); ?></option>
-                              <option value="&gt;$2B"><?php esc_html_e( 'Fortune 500 (&gt;$2B)', 'rtbcb' ); ?></option>
+                            <option value="&lt;$50M"><?php esc_html_e( 'Small Business (&lt;$50M)', 'rtbcb' ); ?></option>
+                            <option value="$50M-$500M"><?php esc_html_e( 'Mid-Market ($50M-$500M)', 'rtbcb' ); ?></option>
+                            <option value="$500M-$2B"><?php esc_html_e( 'Large Enterprise ($500M-$2B)', 'rtbcb' ); ?></option>
+                            <option value="&gt;$2B"><?php esc_html_e( 'Fortune 500 (&gt;$2B)', 'rtbcb' ); ?></option>
                         </select>
                     </div>
 
@@ -106,6 +121,24 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                             <option value="government"><?php esc_html_e( 'Government', 'rtbcb' ); ?></option>
                             <option value="other"><?php esc_html_e( 'Other', 'rtbcb' ); ?></option>
                         </select>
+                    </div>
+
+                    <!-- Optional: Add current position field for more personalization -->
+                    <div class="rtbcb-field">
+                        <label for="job_title"><?php esc_html_e( 'Your Role (Optional)', 'rtbcb' ); ?></label>
+                        <select name="job_title" id="job_title">
+                            <option value=""><?php esc_html_e( 'Select your role...', 'rtbcb' ); ?></option>
+                            <option value="cfo"><?php esc_html_e( 'CFO', 'rtbcb' ); ?></option>
+                            <option value="treasurer"><?php esc_html_e( 'Treasurer', 'rtbcb' ); ?></option>
+                            <option value="finance_director"><?php esc_html_e( 'Finance Director', 'rtbcb' ); ?></option>
+                            <option value="finance_manager"><?php esc_html_e( 'Finance Manager', 'rtbcb' ); ?></option>
+                            <option value="treasury_analyst"><?php esc_html_e( 'Treasury Analyst', 'rtbcb' ); ?></option>
+                            <option value="controller"><?php esc_html_e( 'Controller', 'rtbcb' ); ?></option>
+                            <option value="other"><?php esc_html_e( 'Other', 'rtbcb' ); ?></option>
+                        </select>
+                        <div class="rtbcb-field-help">
+                            <?php esc_html_e( 'Helps us tailor recommendations to your perspective', 'rtbcb' ); ?>
+                        </div>
                     </div>
                 </div>
             </div>
