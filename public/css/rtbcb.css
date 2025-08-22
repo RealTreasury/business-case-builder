@@ -1269,8 +1269,8 @@
 }
 
 .rtbcb-progress-number {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     background: rgba(114, 22, 244, 0.1);
     border: 2px solid var(--primary-purple);
@@ -1283,7 +1283,7 @@
     font-weight: 600;
     margin-bottom: 6px;
     transition: all 0.3s ease;
-    font-size: 13px;
+    font-size: 16px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
@@ -1616,9 +1616,9 @@
     }
 
     .rtbcb-progress-number {
-        width: 28px;
-        height: 28px;
-        font-size: 13px;
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
     }
 
     .rtbcb-step-header h3 {
