@@ -336,11 +336,6 @@ class BusinessCaseBuilder {
             this.submitBtn.style.display = this.currentStep === this.totalSteps ? 'inline-flex' : 'none';
         }
 
-        // Hide fallback submit button
-        const fallbackSubmit = this.form.querySelector('.rtbcb-fallback-submit');
-        if (fallbackSubmit) {
-            fallbackSubmit.style.display = 'none';
-        }
     }
 
     updateProgressIndicator() {
