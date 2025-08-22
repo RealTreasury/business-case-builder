@@ -15,6 +15,7 @@
     --shadow-medium: rgba(114,22,244,0.2);
 }
 
+
 /* Base Container Styles */
 .rtbcb-container {
     position: relative;
@@ -1286,5 +1287,49 @@
     .rtbcb-step-header h3 {
         font-size: 16px;
     }
+}
+
+/* Chart fallback styles */
+.rtbcb-chart-fallback {
+    padding: 20px;
+    text-align: center;
+}
+
+.rtbcb-chart-title {
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: var(--dark-text);
+}
+
+.rtbcb-benefit-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.rtbcb-benefit-bar {
+    text-align: left;
+}
+
+.rtbcb-benefit-bar-label {
+    font-size: 12px;
+    margin-bottom: 4px;
+    color: var(--gray-text);
+    font-weight: 500;
+}
+
+.rtbcb-benefit-bar-fill {
+    height: 32px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    color: white;
+    font-weight: 600;
+    font-size: 13px;
+    min-width: 120px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
