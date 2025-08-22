@@ -15,6 +15,7 @@ php tests/json-output-lint.php
 echo "3. Running JavaScript tests..."
 node tests/handle-submit-error.test.js
 node tests/render-results-no-narrative.test.js
+node tests/handle-submit-success.test.js
 
 # WordPress coding standards (if installed)
 if command -v phpcs &> /dev/null; then
