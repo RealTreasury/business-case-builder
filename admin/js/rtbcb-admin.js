@@ -40,10 +40,13 @@
                     method: 'POST',
                     body: formData
                 });
+                if (!response.ok) {
+                    throw new Error(`Server responded ${response.status}`);
+                }
                 const data = await response.json();
                 alert(data.success ? 'API connection successful!' : (rtbcbAdmin.strings.error + (data.data?.message || '')));
             } catch (err) {
-                alert(rtbcbAdmin.strings.error);
+                alert(`${rtbcbAdmin.strings.error} ${err.message}`);
             }
             label.text(original);
             button.prop('disabled', false);
@@ -62,6 +65,9 @@
                     method: 'POST',
                     body: formData
                 });
+                if (!response.ok) {
+                    throw new Error(`Server responded ${response.status}`);
+                }
                 const data = await response.json();
                 if (data.success) {
                     alert('RAG index rebuilt successfully');
@@ -70,7 +76,7 @@
                     alert(data.data?.message || rtbcbAdmin.strings.error);
                 }
             } catch (err) {
-                alert(rtbcbAdmin.strings.error);
+                alert(`${rtbcbAdmin.strings.error} ${err.message}`);
             }
             button.text(original).prop('disabled', false);
         },
@@ -97,6 +103,9 @@
                     method: 'POST',
                     body: formData
                 });
+                if (!response.ok) {
+                    throw new Error(`Server responded ${response.status}`);
+                }
                 const data = await response.json();
                 if (data.success) {
                     const blob = new Blob([data.data.content], {type: 'text/csv'});
@@ -112,7 +121,7 @@
                     alert(data.data?.message || rtbcbAdmin.strings.error);
                 }
             } catch(err) {
-                alert(rtbcbAdmin.strings.error);
+                alert(`${rtbcbAdmin.strings.error} ${err.message}`);
             }
             label.text(original);
             button.prop('disabled', false);
@@ -132,6 +141,9 @@
                     method: 'POST',
                     body: formData
                 });
+                if (!response.ok) {
+                    throw new Error(`Server responded ${response.status}`);
+                }
                 const data = await response.json();
                 if (data.success) {
                     let message = '';
@@ -145,7 +157,7 @@
                 }
             } catch (err) {
                 console.error('Diagnostics error:', err);
-                alert(rtbcbAdmin.strings.error);
+                alert(`${rtbcbAdmin.strings.error} ${err.message}`);
             }
 
             button.prop('disabled', false);
@@ -226,6 +238,9 @@
                 formData.append('action', action);
                 formData.append('lead_ids', JSON.stringify(ids));
                 const response = await fetch(rtbcbAdmin.ajax_url, { method: 'POST', body: formData });
+                if (!response.ok) {
+                    throw new Error(`Server responded ${response.status}`);
+                }
                 const data = await response.json();
                 if (data.success) {
                     location.reload();
@@ -233,7 +248,7 @@
                     alert(data.data?.message || rtbcbAdmin.strings.error);
                 }
             } catch(err){
-                alert(rtbcbAdmin.strings.error);
+                alert(`${rtbcbAdmin.strings.error} ${err.message}`);
             }
         }
 
@@ -267,6 +282,9 @@
                 formData.append('nonce', rtbcbAdmin.nonce);
                 formData.append('lead_id', id);
                 const response = await fetch(rtbcbAdmin.ajax_url, { method: 'POST', body: formData });
+                if (!response.ok) {
+                    throw new Error(`Server responded ${response.status}`);
+                }
                 const data = await response.json();
                 if (data.success) {
                     e.currentTarget.closest('tr').remove();
@@ -275,7 +293,7 @@
                     alert(data.data?.message || rtbcbAdmin.strings.error);
                 }
             } catch(err){
-                alert(rtbcbAdmin.strings.error);
+                alert(`${rtbcbAdmin.strings.error} ${err.message}`);
             }
         }
 
