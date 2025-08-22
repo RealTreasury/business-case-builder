@@ -91,13 +91,29 @@ class RTBCB_Router {
         $complexity = $this->calculate_complexity( $inputs, $chunks );
         $category   = RTBCB_Category_Recommender::recommend_category( $inputs )['recommended'];
 
-        $model = get_option( 'rtbcb_mini_model', 'gpt-4o-mini' );
+        // Get available models
+        $mini_model    = get_option( 'rtbcb_mini_model', 'gpt-4o-mini' );
+        $premium_model = get_option( 'rtbcb_premium_model', 'gpt-4o' );
+
+        // Start with mini model as default
+        $model     = $mini_model;
+        $reasoning = 'Default mini model for basic requests';
 
         if ( $complexity > 0.6 || 'trms' === $category ) {
-            $model = get_option( 'rtbcb_premium_model', 'gpt-4o' );
+            $model     = $premium_model;
+            $reasoning = 'Premium model for high complexity or TRMS category';
         } elseif ( 'tms_lite' === $category && $complexity > 0.4 ) {
-            $model = get_option( 'rtbcb_premium_model', 'gpt-4o' );
+            $model     = $premium_model;
+            $reasoning = 'Premium model for TMS-Lite with moderate complexity';
         }
+
+        // Validate selected model
+        if ( empty( $model ) ) {
+            $model     = 'gpt-4o-mini'; // Final fallback
+            $reasoning = 'Fallback to gpt-4o-mini due to missing model configuration';
+        }
+
+        error_log( "RTBCB: Model selected: {$model} (Complexity: {$complexity}, Category: {$category}, Reason: {$reasoning})" );
 
         return $model;
     }
