@@ -70,70 +70,51 @@ class RTBCB_PDF {
     }
 
     /**
-     * Generate comprehensive treasury consulting report.
-     *
-     * @return string PDF file path.
-     */
-    public function generate_comprehensive_report() {
-        $this->setup_professional_document();
-
-        // Cover page.
-        $this->add_professional_cover_page();
-
-        // Table of contents.
-        $this->add_table_of_contents();
-
-        // Executive summary (2 pages).
-        $this->add_comprehensive_executive_summary();
-
-        // Current state analysis (2-3 pages).
-        $this->add_operational_analysis_section();
-
-        // Financial analysis and modeling (3-4 pages).
-        $this->add_comprehensive_financial_analysis();
-
-        // Industry benchmarking (2 pages).
-        $this->add_industry_benchmarking_section();
-
-        // Risk assessment (2 pages).
-        $this->add_risk_assessment_section();
-
-        // Implementation roadmap (3 pages).
-        $this->add_implementation_roadmap_section();
-
-        // Vendor evaluation framework (2 pages).
-        $this->add_vendor_evaluation_section();
-
-        // Appendices.
-        $this->add_appendices();
-
-        return $this->save_professional_pdf();
-    }
-
-    /**
      * Generate a comprehensive consulting report.
      *
-     * This placeholder method currently delegates to the standard business
-     * case generator but allows callers to request a professional report
-     * layout when available.
+     * Builds a professionally styled report while preserving the ability to
+     * fall back to the standard business case generation when an error occurs.
      *
      * @return string PDF file path.
      */
     public function generate_comprehensive_report() {
-        return $this->generate_business_case();
-    }
+        try {
+            $this->setup_professional_document();
 
-    /**
-     * Generate a comprehensive consulting report.
-     *
-     * This placeholder method currently delegates to the standard business
-     * case generator but allows callers to request a professional report
-     * layout when available.
-     *
-     * @return string PDF file path.
-     */
-    public function generate_comprehensive_report() {
-        return $this->generate_business_case();
+            // Cover page.
+            $this->add_professional_cover_page();
+
+            // Table of contents.
+            $this->add_table_of_contents();
+
+            // Executive summary (2 pages).
+            $this->add_comprehensive_executive_summary();
+
+            // Current state analysis (2-3 pages).
+            $this->add_operational_analysis_section();
+
+            // Financial analysis and modeling (3-4 pages).
+            $this->add_comprehensive_financial_analysis();
+
+            // Industry benchmarking (2 pages).
+            $this->add_industry_benchmarking_section();
+
+            // Risk assessment (2 pages).
+            $this->add_risk_assessment_section();
+
+            // Implementation roadmap (3 pages).
+            $this->add_implementation_roadmap_section();
+
+            // Vendor evaluation framework (2 pages).
+            $this->add_vendor_evaluation_section();
+
+            // Appendices.
+            $this->add_appendices();
+
+            return $this->save_professional_pdf();
+        } catch ( Exception $e ) {
+            return $this->generate_business_case();
+        }
     }
 
     /**
