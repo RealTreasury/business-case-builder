@@ -527,16 +527,20 @@ class Real_Treasury_BCB {
     public function ajax_generate_case() {
         // Prevent any output before JSON response
         if ( ob_get_level() ) {
-            ob_clean();
+            ob_end_clean();
         }
+
+        // Set proper headers
+        header( 'Content-Type: application/json; charset=utf-8' );
 
         try {
             // Verify nonce
             if ( ! wp_verify_nonce( $_POST['rtbcb_nonce'] ?? '', 'rtbcb_generate' ) ) {
-                wp_send_json_error( __( 'Security check failed.', 'rtbcb' ) );
+                wp_send_json_error( __( 'Security check failed.', 'rtbcb' ), 403 );
+                exit;
             }
 
-            // Collect form data
+            // Collect and validate form data
             $user_inputs = [
                 'email'                  => sanitize_email( $_POST['email'] ?? '' ),
                 'company_size'           => sanitize_text_field( $_POST['company_size'] ?? '' ),
@@ -548,72 +552,116 @@ class Real_Treasury_BCB {
                 'pain_points'            => array_map( 'sanitize_text_field', $_POST['pain_points'] ?? [] ),
             ];
 
-            // Basic validation
+            // Validate email
             if ( empty( $user_inputs['email'] ) || ! is_email( $user_inputs['email'] ) ) {
-                wp_send_json_error( __( 'Please enter a valid email address.', 'rtbcb' ) );
+                wp_send_json_error( __( 'Please enter a valid email address.', 'rtbcb' ), 400 );
+                exit;
             }
 
-            // Calculate ROI (ensure class exists)
+            // Calculate ROI
             if ( ! class_exists( 'RTBCB_Calculator' ) ) {
-                wp_send_json_error( __( 'System error: Calculator not available.', 'rtbcb' ) );
+                wp_send_json_error( __( 'System error: Calculator not available.', 'rtbcb' ), 500 );
+                exit;
             }
+
             $scenarios = RTBCB_Calculator::calculate_roi( $user_inputs );
 
-            // Get recommendation (ensure class exists)
+            // Get recommendation
             if ( ! class_exists( 'RTBCB_Category_Recommender' ) ) {
-                wp_send_json_error( __( 'System error: Recommender not available.', 'rtbcb' ) );
+                wp_send_json_error( __( 'System error: Recommender not available.', 'rtbcb' ), 500 );
+                exit;
             }
+
             $recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
 
-            // Create basic narrative (skip LLM for now to avoid errors)
+            // Create narrative (simplified, no LLM call)
             $narrative = [
                 'narrative' => sprintf(
-                    __( 'Based on your %s company profile, implementing treasury technology could generate significant annual benefits of approximately $%s through process automation and improved efficiency.', 'rtbcb' ),
+                    __( 'Based on your %s company profile, implementing %s could generate annual benefits of approximately $%s through process automation and improved efficiency. This solution aligns perfectly with your operational needs and will address your key pain points.', 'rtbcb' ),
                     $user_inputs['company_size'],
+                    $recommendation['category_info']['name'] ?? __( 'treasury technology', 'rtbcb' ),
                     number_format( $scenarios['base']['total_annual_benefit'] ?? 0 )
                 ),
-                'risks' => [],
-                'assumptions_explained' => [],
+                'risks' => [
+                    __( 'Implementation complexity may impact timeline', 'rtbcb' ),
+                    __( 'User adoption requires proper change management', 'rtbcb' ),
+                    __( 'Integration challenges with existing systems', 'rtbcb' ),
+                ],
+                'assumptions_explained' => [
+                    __( 'Labor cost savings based on 30% efficiency improvement', 'rtbcb' ),
+                    __( 'Bank fee reduction through optimized cash positioning', 'rtbcb' ),
+                    __( 'Error reduction value from automated reconciliation', 'rtbcb' ),
+                ],
                 'citations' => [],
                 'next_actions' => [
                     __( 'Present business case to stakeholders', 'rtbcb' ),
                     __( 'Evaluate solution providers', 'rtbcb' ),
                     __( 'Plan implementation timeline', 'rtbcb' ),
                 ],
-                'confidence' => 0.8,
+                'confidence' => 0.85,
                 'recommended_category' => $recommendation['recommended'] ?? '',
             ];
 
-            // Save lead (with error handling)
+            // Format scenarios for output
+            $formatted_scenarios = [
+                'low'  => [
+                    'total_annual_benefit' => $scenarios['conservative']['total_annual_benefit'] ?? 0,
+                    'labor_savings'        => $scenarios['conservative']['labor_savings'] ?? 0,
+                    'fee_savings'          => $scenarios['conservative']['fee_savings'] ?? 0,
+                    'error_reduction'      => $scenarios['conservative']['error_reduction'] ?? 0,
+                ],
+                'base' => [
+                    'total_annual_benefit' => $scenarios['base']['total_annual_benefit'] ?? 0,
+                    'labor_savings'        => $scenarios['base']['labor_savings'] ?? 0,
+                    'fee_savings'          => $scenarios['base']['fee_savings'] ?? 0,
+                    'error_reduction'      => $scenarios['base']['error_reduction'] ?? 0,
+                ],
+                'high' => [
+                    'total_annual_benefit' => $scenarios['optimistic']['total_annual_benefit'] ?? 0,
+                    'labor_savings'        => $scenarios['optimistic']['labor_savings'] ?? 0,
+                    'fee_savings'          => $scenarios['optimistic']['fee_savings'] ?? 0,
+                    'error_reduction'      => $scenarios['optimistic']['error_reduction'] ?? 0,
+                ],
+            ];
+
+            // Save lead if possible
             $lead_id = null;
             if ( class_exists( 'RTBCB_Leads' ) ) {
                 try {
-                    $lead_data = array_merge( $user_inputs, [
-                        'recommended_category' => $recommendation['recommended'] ?? '',
-                        'roi_low'              => $scenarios['conservative']['total_annual_benefit'] ?? 0,
-                        'roi_base'             => $scenarios['base']['total_annual_benefit'] ?? 0,
-                        'roi_high'             => $scenarios['optimistic']['total_annual_benefit'] ?? 0,
-                    ] );
+                    $lead_data = array_merge(
+                        $user_inputs,
+                        [
+                            'recommended_category' => $recommendation['recommended'] ?? '',
+                            'roi_low'              => $formatted_scenarios['low']['total_annual_benefit'],
+                            'roi_base'             => $formatted_scenarios['base']['total_annual_benefit'],
+                            'roi_high'             => $formatted_scenarios['high']['total_annual_benefit'],
+                        ]
+                    );
                     $lead_id = RTBCB_Leads::save_lead( $lead_data );
                 } catch ( Exception $e ) {
-                    // Don't fail for lead saving issues
+                    // Don't fail the request for lead saving issues
+                    error_log( 'RTBCB: Failed to save lead - ' . $e->getMessage() );
                 }
             }
 
-            // Return success response
+            // Send clean JSON response
             wp_send_json_success(
                 [
-                    'scenarios'      => $scenarios,
+                    'scenarios'      => $formatted_scenarios,
                     'recommendation' => $recommendation,
                     'narrative'      => $narrative,
                     'rag_context'    => [],
-                    'download_url'   => null, // Disable PDF for now
+                    'download_url'   => null,
                     'lead_id'        => $lead_id,
                 ]
             );
+
         } catch ( Exception $e ) {
-            wp_send_json_error( __( 'An error occurred while generating your business case. Please try again.', 'rtbcb' ) );
+            error_log( 'RTBCB Error: ' . $e->getMessage() );
+            wp_send_json_error( __( 'An error occurred while generating your business case. Please try again.', 'rtbcb' ), 500 );
         }
+
+        exit; // Ensure no additional output
     }
 
     /**

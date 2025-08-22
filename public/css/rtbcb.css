@@ -791,7 +791,7 @@
     font-size: 20px;
 }
 
-/* Modal Overlay - Fixed positioning and backdrop */
+/* Modal Overlay - Enhanced glassmorphic design matching portal access */
 .rtbcb-modal-overlay {
     position: fixed;
     top: 0;
@@ -817,7 +817,7 @@
     visibility: visible;
 }
 
-/* Modal Container - Compact and responsive */
+/* Modal Container - Glassmorphic design */
 .rtbcb-modal-container {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 248, 248, 0.98) 50%, rgba(255, 255, 255, 0.95));
     backdrop-filter: blur(25px) saturate(140%);
@@ -828,7 +828,6 @@
     width: 100%;
     max-width: 900px;
     margin: 0 auto;
-    height: auto;
     max-height: 90vh;
     overflow-y: auto;
     transform: scale(0.9) translateY(30px);
@@ -840,11 +839,24 @@
     transform: scale(1) translateY(0);
 }
 
-/* Modal Header - lightweight styling */
+/* Purple top bar accent */
+.rtbcb-modal-container::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #7216f4, #8f47f6);
+    border-radius: 20px 20px 0 0;
+    z-index: 1;
+}
+
+/* Modal Header - Glassmorphic enhancement */
 .rtbcb-modal-header {
     background: linear-gradient(135deg, rgba(114, 22, 244, 0.1), rgba(143, 71, 246, 0.15));
     color: #281345;
-    padding: 24px 32px 16px 32px;
+    padding: 32px 40px 20px 40px;
     position: relative;
     text-align: center;
     border-bottom: 1px solid rgba(199, 125, 255, 0.2);
@@ -852,10 +864,11 @@
 }
 
 .rtbcb-modal-title {
-    font-size: 24px;
+    font-size: 26px;
     font-weight: 700;
     margin: 0 0 8px 0;
     line-height: 1.2;
+    color: #281345;
 }
 
 .rtbcb-modal-subtitle {
@@ -892,34 +905,24 @@
     border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
-.rtbcb-modal-container:before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #7216f4, #8f47f6);
-    border-radius: 20px 20px 0 0;
-    z-index: 1;
-}
-
-/* Modal Body - Scrollable content */
+/* Modal Body */
 .rtbcb-modal-body {
-    max-height: calc(90vh - 80px);
-    overflow: visible;
+    padding: 0;
+    max-height: calc(90vh - 100px);
+    overflow-y: auto;
 }
 
 .rtbcb-form-container {
-    padding: 20px;
+    padding: 32px 40px 40px 40px;
 }
 
-/* Progress Indicator - Compact */
+/* Progress Indicator - Glassmorphic */
 .rtbcb-wizard-progress {
-    background: #f8f9ff;
-    margin: -24px -24px 20px -24px;
-    padding: 16px 24px;
+    background: linear-gradient(135deg, rgba(248, 249, 255, 0.8), rgba(243, 244, 255, 0.9));
+    margin: -32px -40px 32px -40px;
+    padding: 20px 40px;
     border-bottom: 1px solid rgba(114, 22, 244, 0.1);
+    backdrop-filter: blur(10px);
 }
 
 .rtbcb-progress-steps {
@@ -935,7 +938,7 @@
     left: 0;
     right: 0;
     height: 2px;
-    background: #e2e8f0;
+    background: rgba(226, 232, 240, 0.6);
     z-index: 1;
 }
 
@@ -945,15 +948,16 @@
     align-items: center;
     position: relative;
     z-index: 2;
-    background: #f8f9ff;
+    background: transparent;
     padding: 0 8px;
 }
 
 .rtbcb-progress-number {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
-    background: #e2e8f0;
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid #e2e8f0;
     color: #6b7280;
     display: flex;
     align-items: center;
@@ -961,26 +965,25 @@
     font-weight: 600;
     margin-bottom: 6px;
     transition: all 0.3s ease;
-    font-size: 12px;
+    font-size: 13px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .rtbcb-progress-step.active .rtbcb-progress-number,
 .rtbcb-progress-step.completed .rtbcb-progress-number {
-    background: #7216f4;
+    background: linear-gradient(135deg, #7216f4, #8f47f6);
     color: white;
-}
-
-.rtbcb-progress-step.completed .rtbcb-progress-number {
-    background: #10b981;
+    border-color: transparent;
+    box-shadow: 0 4px 12px rgba(114, 22, 244, 0.3);
 }
 
 .rtbcb-progress-step.completed .rtbcb-progress-number::after {
     content: '✓';
-    font-size: 12px;
+    font-size: 14px;
 }
 
 .rtbcb-progress-label {
-    font-size: 11px;
+    font-size: 12px;
     color: #6b7280;
     font-weight: 500;
     text-align: center;
