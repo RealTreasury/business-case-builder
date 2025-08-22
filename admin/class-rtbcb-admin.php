@@ -522,21 +522,30 @@ class RTBCB_Admin {
      * @return void
      */
     public function ajax_generate_sample_report() {
-        check_ajax_referer( 'rtbcb_nonce', 'nonce' );
+        check_ajax_referer( 'rtbcb_generate_report_preview', 'nonce' );
 
         if ( ! current_user_can( 'manage_options' ) ) {
-            wp_send_json_error( [ 'message' => __( 'Permission denied.', 'rtbcb' ) ], 403 );
+            wp_send_json_error( __( 'Permission denied.', 'rtbcb' ) );
         }
 
-        $inputs = rtbcb_get_sample_inputs();
-        $inputs['email']               = 'sample@example.com';
-        $inputs['company_description'] = 'Sample company description.';
-        $inputs['rtbcb_nonce']         = wp_create_nonce( 'rtbcb_form_action' );
+        $scenario_key = isset( $_POST['scenario_key'] ) ? sanitize_key( wp_unslash( $_POST['scenario_key'] ) ) : '';
 
-        $_POST = $inputs;
+        $inputs = apply_filters( 'rtbcb_sample_report_inputs', rtbcb_get_sample_inputs(), $scenario_key );
+        if ( empty( $inputs ) || ! is_array( $inputs ) ) {
+            wp_send_json_error( [ 'message' => __( 'Invalid scenario selected.', 'rtbcb' ) ] );
+        }
 
-        $router = new RTBCB_Router();
-        $router->handle_form_submission();
+        $roi_data = RTBCB_Calculator::calculate_roi( $inputs );
+
+        $llm            = new RTBCB_LLM();
+        $business_case  = $llm->generate_business_case( $inputs, $roi_data );
+        if ( is_wp_error( $business_case ) ) {
+            wp_send_json_error( [ 'message' => $business_case->get_error_message() ] );
+        }
+
+        $html = RTBCB_Router::get_report_html( $business_case );
+
+        wp_send_json_success( [ 'report_html' => $html ] );
     }
 
     /**
