@@ -691,7 +691,18 @@ class Real_Treasury_BCB {
 
                     rtbcb_log_memory_usage( 'after_llm_generation' );
 
-                    if ( is_wp_error( $comprehensive_analysis ) || isset( $comprehensive_analysis['error'] ) ) {
+                    if ( is_wp_error( $comprehensive_analysis ) ) {
+                        $error_message   = $comprehensive_analysis->get_error_message();
+                        error_log( 'RTBCB: LLM generation error - ' . $error_message );
+                        $response_message = __( 'Failed to generate business case analysis.', 'rtbcb' );
+                        if ( function_exists( 'wp_get_environment_type' ) && 'production' !== wp_get_environment_type() ) {
+                            $response_message = $error_message;
+                        }
+                        wp_send_json_error( [ 'message' => $response_message ], 500 );
+                    }
+
+                    if ( isset( $comprehensive_analysis['error'] ) ) {
+                        error_log( 'RTBCB: LLM generation error - ' . $comprehensive_analysis['error'] );
                         wp_send_json_error(
                             [ 'message' => __( 'Failed to generate business case analysis.', 'rtbcb' ) ],
                             500
