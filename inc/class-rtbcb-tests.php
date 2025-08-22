@@ -85,11 +85,35 @@ class RTBCB_Tests {
             ];
         }
 
-        $llm      = new RTBCB_LLM();
-        $response = $llm->generate_business_case(
-            [ 'company_size' => '', 'pain_points' => [] ],
-            [ 'base' => [ 'total_annual_benefit' => 0 ] ]
-        );
+        $llm = new RTBCB_LLM();
+
+        $user_inputs = [
+            'company_name' => 'Acme Corp',
+            'company_size' => '$50M-$500M',
+            'industry'     => 'manufacturing',
+            'job_title'    => 'Treasury Manager',
+            'pain_points'  => [ 'manual_processes', 'bank_fees' ],
+        ];
+
+        $roi_data = [
+            'base' => [
+                'labor_savings'        => 50000,
+                'fee_savings'          => 10000,
+                'error_reduction'      => 20000,
+                'total_annual_benefit' => 80000,
+                'roi_percentage'       => 160,
+                'assumptions'          => [],
+            ],
+        ];
+
+        $response = $llm->generate_business_case( $user_inputs, $roi_data );
+
+        if ( is_wp_error( $response ) ) {
+            return [
+                'passed'  => false,
+                'message' => $response->get_error_message(),
+            ];
+        }
 
         $passed  = is_array( $response );
         $message = $passed ? __( 'LLM call executed.', 'rtbcb' ) : __( 'LLM call failed.', 'rtbcb' );
