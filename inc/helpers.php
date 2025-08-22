@@ -212,3 +212,29 @@ function rtbcb_get_memory_status() {
     ];
 }
 
+/**
+ * Retrieve sample user inputs for testing purposes.
+ *
+ * @return array Sample user inputs.
+ */
+function rtbcb_get_sample_inputs() {
+    $inputs = [
+        'company_name'          => 'Acme Corp',
+        'company_size'          => '$50M-$500M',
+        'industry'              => 'manufacturing',
+        'job_title'             => 'Treasury Manager',
+        'hours_reconciliation'  => 5,
+        'hours_cash_positioning'=> 3,
+        'num_banks'             => 3,
+        'ftes'                  => 1,
+        'pain_points'           => [ 'manual_processes', 'bank_fees' ],
+    ];
+
+    /**
+     * Filter sample inputs used for diagnostics and tests.
+     *
+     * @param array $inputs Default sample inputs.
+     */
+    return apply_filters( 'rtbcb_sample_inputs', $inputs );
+}
+
