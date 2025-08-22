@@ -22,7 +22,13 @@ global.ajaxObj = { ajax_url: '' };
 
 global.fetch = async () => ({
     ok: true,
-    json: async () => ({ success: true, data: { report_html: '<div>Report</div>' } }),
+    json: async () => ({
+        success: true,
+        data: {
+            report_html: '<div>Report</div>',
+            download_url: 'http://example.com/test.pdf'
+        }
+    }),
     text: async () => ''
 });
 
@@ -33,6 +39,7 @@ vm.runInThisContext(code);
 
 (async () => {
     await handleSubmit({ preventDefault() {}, target: {} });
-    assert.ok(reportContainer.innerHTML.includes('Report'));
+    assert.strictEqual(reportContainer.innerHTML, '<div>Report</div>');
+    assert.ok(!reportContainer.innerHTML.includes('test.pdf'));
     console.log('Success path test passed.');
 })();
