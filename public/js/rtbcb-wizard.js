@@ -374,24 +374,48 @@ class BusinessCaseBuilder {
             const formData = new FormData(this.form);
             formData.append('action', 'rtbcb_generate_case');
 
+            console.log('RTBCB: Submitting form data:', Object.fromEntries(formData));
+
             const response = await fetch(ajaxObj.ajax_url, {
                 method: 'POST',
                 body: formData
             });
 
+            console.log('RTBCB: Response status:', response.status);
+            console.log('RTBCB: Response headers:', Object.fromEntries(response.headers));
+
             if (!response.ok) {
-                throw new Error(`Server error: ${response.status}`);
+                const errorText = await response.text();
+                console.error('RTBCB: Server error response:', errorText);
+
+                let errorMessage = `Server responded with status ${response.status}`;
+                try {
+                    const errorJson = JSON.parse(errorText);
+                    errorMessage = errorJson.data?.message || errorMessage;
+                } catch (parseError) {
+                    console.error('RTBCB: Could not parse error response as JSON:', parseError);
+                }
+
+                throw new Error(errorMessage);
             }
 
             const result = await response.json();
+            console.log('RTBCB: Parsed response:', result);
 
             if (result.success) {
+                console.log('RTBCB: Business case generated successfully');
                 this.showResults(result.data);
             } else {
-                throw new Error(result.data?.message || 'Failed to generate business case');
+                const errorMessage = result.data?.message || 'Failed to generate business case';
+                console.error('RTBCB: Business case generation failed:', errorMessage);
+                throw new Error(errorMessage);
             }
         } catch (error) {
-            console.error('Submission error:', error);
+            console.error('RTBCB: Submission error details:', {
+                message: error.message,
+                stack: error.stack,
+                type: error.constructor.name
+            });
             this.showError(error.message);
         }
     }

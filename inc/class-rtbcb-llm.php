@@ -35,12 +35,67 @@ class RTBCB_LLM {
      */
     public function __construct() {
         $this->api_key = get_option( 'rtbcb_openai_api_key' );
+        $this->validate_api_key();
         $this->models  = [
             'mini'      => get_option( 'rtbcb_mini_model', 'gpt-4o-mini' ),
             'premium'   => get_option( 'rtbcb_premium_model', 'gpt-4o' ),
             'advanced'  => get_option( 'rtbcb_advanced_model', 'o1-preview' ),
             'embedding' => get_option( 'rtbcb_embedding_model', 'text-embedding-3-small' ),
         ];
+    }
+
+    /**
+     * Validate API key and log status.
+     *
+     * @return bool
+     */
+    private function validate_api_key() {
+        if ( empty( $this->api_key ) ) {
+            error_log( 'RTBCB: OpenAI API key is not configured' );
+            return false;
+        }
+
+        if ( ! preg_match( '/^sk-[a-zA-Z0-9]{48,}$/', $this->api_key ) ) {
+            error_log( 'RTBCB: OpenAI API key format is invalid' );
+            return false;
+        }
+
+        // Test API key with a minimal request
+        $test_result = $this->test_api_connection();
+        if ( is_wp_error( $test_result ) ) {
+            error_log( 'RTBCB: OpenAI API key validation failed: ' . $test_result->get_error_message() );
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Test API connection with minimal request.
+     *
+     * @return bool|WP_Error
+     */
+    public function test_api_connection() {
+        if ( empty( $this->api_key ) ) {
+            return new WP_Error( 'no_api_key', 'API key not configured' );
+        }
+
+        $endpoint = 'https://api.openai.com/v1/models';
+        $args     = [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $this->api_key,
+            ],
+            'timeout' => 10,
+        ];
+
+        $response = wp_remote_get( $endpoint, $args );
+
+        if ( is_wp_error( $response ) ) {
+            return $response;
+        }
+
+        $code = wp_remote_retrieve_response_code( $response );
+        return 200 === $code ? true : new WP_Error( 'api_test_failed', "API test failed with code: {$code}" );
     }
 
     /**
@@ -254,7 +309,8 @@ class RTBCB_LLM {
      */
     private function call_openai( $model, $prompt ) {
         if ( empty( $this->api_key ) ) {
-            return new WP_Error( 'rtbcb_no_api_key', __( 'Missing OpenAI API key.', 'rtbcb' ) );
+            error_log( 'RTBCB: API call attempted without API key' );
+            return new WP_Error( 'rtbcb_no_api_key', __( 'OpenAI API key is not configured. Please check settings.', 'rtbcb' ) );
         }
 
         $allowed_models = [
@@ -263,9 +319,18 @@ class RTBCB_LLM {
             $this->models['advanced'],
         ];
 
+        // Filter out empty models
+        $allowed_models = array_filter( $allowed_models );
+
         if ( ! is_string( $model ) || '' === trim( $model ) || ! in_array( $model, $allowed_models, true ) ) {
-            error_log( 'RTBCB: Invalid model specified. Falling back to ' . $this->models['premium'] . '.' );
+            error_log( 'RTBCB: Invalid model specified: ' . $model . '. Available: ' . implode( ', ', $allowed_models ) );
             $model = $this->models['premium'];
+
+            // If premium model is also invalid, use mini as final fallback
+            if ( ! in_array( $model, $allowed_models, true ) ) {
+                $model = 'gpt-4o-mini';
+                error_log( 'RTBCB: Using final fallback model: ' . $model );
+            }
         }
 
         $endpoint = 'https://api.openai.com/v1/chat/completions';
@@ -284,13 +349,20 @@ class RTBCB_LLM {
                         ],
                     ],
                     'temperature' => 0.2,
+                    'max_tokens'  => 2000,
                 ]
             ),
             'timeout' => 60,
         ];
 
+        error_log( 'RTBCB: Making OpenAI API call with model: ' . $model );
+
         $response = wp_remote_post( $endpoint, $args );
+
+        error_log( 'RTBCB: OpenAI response code: ' . wp_remote_retrieve_response_code( $response ) );
+
         if ( is_wp_error( $response ) ) {
+            error_log( 'RTBCB: OpenAI request failed: ' . $response->get_error_message() );
             return $response;
         }
 
