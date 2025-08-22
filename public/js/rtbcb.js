@@ -483,23 +483,55 @@ class BusinessCaseBuilder {
             formData.append('action', 'rtbcb_generate_case');
             formData.set('rtbcb_nonce', ajaxObj.rtbcb_nonce);
 
+            // Add debug logging
+            console.log('Submitting form to:', ajaxObj.ajax_url);
+            
             this.startProgressSimulation();
 
             const response = await fetch(ajaxObj.ajax_url, {
                 method: 'POST',
-                body: new URLSearchParams(formData)
+                body: new URLSearchParams(formData),
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
             });
 
+            console.log('Response status:', response.status);
+            
             const responseText = await response.text();
+            console.log('Raw response:', responseText);
+            
             let result;
             try {
-                result = JSON.parse(responseText);
+                // Clean the response in case there's extra whitespace or BOM
+                const cleanedResponse = responseText.trim();
+                result = JSON.parse(cleanedResponse);
             } catch (jsonError) {
-                this.showError('An unexpected server response was received. Please try again.');
-                console.error('Invalid JSON response:', responseText);
+                console.error('JSON Parse Error:', jsonError);
+                console.error('Response that failed to parse:', responseText);
+                this.hideProgressIndicator();
+                this.enableNavigation();
+                this.showError('Server returned an invalid response. Please try again.');
                 return;
             }
 
+            console.log('Parsed result:', result);
+
+            // Check for WordPress error response
+            if (!result || typeof result !== 'object') {
+                throw new Error('Invalid response format');
+            }
+
+            // Handle success/error from WordPress
+            if (result.success === false) {
+                const errorMessage = result.data || 'An error occurred while generating your business case.';
+                this.hideProgressIndicator();
+                this.enableNavigation();
+                this.showError(errorMessage);
+                return;
+            }
+
+            // Check for narrative error
             const data = result.data || {};
             const narrativeError = data?.narrative?.error;
             if (narrativeError) {
@@ -509,24 +541,35 @@ class BusinessCaseBuilder {
                 return;
             }
 
-            if (result.success) {
-                this.completeProgress();
+            // Success - display results
+            this.completeProgress();
+            setTimeout(() => {
                 this.displayResults(result.data);
                 this.showSuccess(result.data.download_url);
+                
+                // Hide the form
                 if (this.form) {
                     this.form.style.display = 'none';
                 }
+                
+                // Close the modal
+                const modal = document.getElementById('rtbcbModalOverlay');
+                if (modal) {
+                    setTimeout(() => {
+                        modal.classList.remove('active');
+                        document.body.style.overflow = '';
+                    }, 1000);
+                }
+                
                 this.trackAnalytics('business_case_generated', {
                     category: result.data.recommendation?.recommended,
                     roi_base: result.data.scenarios?.base?.total_annual_benefit
                 });
-            } else {
-                this.showError(result.data || 'An unknown error occurred.');
-            }
+            }, 500);
 
         } catch (error) {
-            this.showError('A network error occurred. Please try again.');
             console.error('Submission Error:', error);
+            this.showError('A network error occurred. Please check your connection and try again.');
         } finally {
             this.hideProgressIndicator();
             this.enableNavigation();
