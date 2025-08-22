@@ -329,7 +329,6 @@
                 const formData = new FormData(form);
                 const select = document.getElementById('rtbcb-sample-select');
                 const sampleKey = select ? select.value : '';
-                formData.append('nonce', rtbcbAdmin.nonce);
                 if (sampleKey) {
                     formData.append('action', 'rtbcb_generate_sample_report');
                     formData.append('scenario_key', sampleKey);
