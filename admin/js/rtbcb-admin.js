@@ -329,7 +329,6 @@
                 const formData = new FormData(form);
                 const select = document.getElementById('rtbcb-sample-select');
                 const sampleKey = select ? select.value : '';
-                formData.append('nonce', rtbcbAdmin.nonce);
                 if (sampleKey) {
                     formData.append('action', 'rtbcb_generate_sample_report');
                     formData.append('sample_key', sampleKey);
@@ -370,7 +369,7 @@
             try {
                 const formData = new FormData();
                 formData.append('action', 'rtbcb_generate_sample_report');
-                formData.append('nonce', rtbcbAdmin.nonce);
+                formData.append('nonce', rtbcbAdmin.report_preview_nonce);
                 const response = await fetch(rtbcbAdmin.ajax_url, { method: 'POST', body: formData });
                 if (!response.ok) {
                     throw new Error(`Server responded ${response.status}`);
