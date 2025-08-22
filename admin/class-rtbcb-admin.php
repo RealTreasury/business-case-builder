@@ -41,7 +41,8 @@ class RTBCB_Admin {
      * @return void
      */
     public function enqueue_admin_assets( $hook ) {
-        if ( strpos( $hook, 'rtbcb' ) === false ) {
+        $page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
+        if ( strpos( $hook, 'rtbcb' ) === false && strpos( $page, 'rtbcb' ) === false ) {
             return;
         }
 
