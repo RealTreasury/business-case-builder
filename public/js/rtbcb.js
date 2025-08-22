@@ -6,13 +6,57 @@ function handleSubmissionError(errorMessage) {
     console.error('Submission Error:', errorMessage);
     const progressContainer = document.getElementById('rtbcb-progress-container');
     if (progressContainer) {
-        progressContainer.innerHTML = `
-            <div class="rtbcb-error-content">
-                <h3 style="color: #dc3545;">Generation Failed</h3>
-                <p>We're sorry, but we couldn't generate your business case. Please try again later.</p>
-                <p style="font-size: 0.9em; color: #6c757d; margin-top: 15px;"><strong>Error Details:</strong> ${errorMessage}</p>
-            </div>
-        `;
+        progressContainer.style.display = 'block';
+        progressContainer.innerHTML = '';
+
+        const escapeHtml = (str) => str.replace(/[&<>"']/g, (m) => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        })[m]);
+
+        if (typeof document.createElement === 'function') {
+            const errorContent = document.createElement('div');
+            errorContent.className = 'rtbcb-error-content';
+
+            const heading = document.createElement('h3');
+            heading.style.color = '#dc3545';
+            heading.textContent = 'Generation Failed';
+
+            const message = document.createElement('p');
+            message.textContent = "We're sorry, but we couldn't generate your business case. Please try again later.";
+
+            const details = document.createElement('p');
+            details.style.fontSize = '0.9em';
+            details.style.color = '#6c757d';
+            details.style.marginTop = '15px';
+
+            const strong = document.createElement('strong');
+            strong.textContent = 'Error Details:';
+
+            details.appendChild(strong);
+            details.appendChild(document.createTextNode(' ' + errorMessage));
+
+            errorContent.appendChild(heading);
+            errorContent.appendChild(message);
+            errorContent.appendChild(details);
+
+            if (typeof progressContainer.appendChild === 'function') {
+                progressContainer.appendChild(errorContent);
+            } else {
+                progressContainer.innerHTML = errorContent.outerHTML;
+            }
+        } else {
+            progressContainer.innerHTML = '<div class="rtbcb-error-content">' +
+                '<h3 style="color: #dc3545;">Generation Failed</h3>' +
+                "<p>We're sorry, but we couldn't generate your business case. Please try again later.</p>" +
+                '<p style="font-size: 0.9em; color: #6c757d; margin-top: 15px;"><strong>Error Details:</strong> ' +
+                escapeHtml(errorMessage) +
+                '</p>' +
+                '</div>';
+        }
     }
 }
 
