@@ -1,6 +1,5 @@
 <?php
 define( 'ABSPATH', __DIR__ );
-require_once __DIR__ . '/../inc/helpers.php';
 
 if ( ! function_exists( 'add_filter' ) ) {
     $GLOBALS['rtbcb_filters'] = [];
@@ -17,6 +16,8 @@ if ( ! function_exists( 'add_filter' ) ) {
         return $value;
     }
 }
+
+require_once __DIR__ . '/../inc/helpers.php';
 
 $received = '';
 add_filter( 'rtbcb_sample_report_inputs', function ( $inputs, $scenario_key ) use ( &$received ) {
