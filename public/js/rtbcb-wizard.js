@@ -69,9 +69,9 @@ class BusinessCaseBuilder {
         this.steps = this.form.querySelectorAll('.rtbcb-wizard-step');
         this.progressSteps = this.form.querySelectorAll('.rtbcb-progress-step');
         
-        // Form fields by step
+        // UPDATED: Form fields by step - now includes company_name
         this.stepFields = {
-            1: ['company_size'],
+            1: ['company_name', 'company_size'], // Added company_name
             2: ['hours_reconciliation', 'hours_cash_positioning', 'num_banks', 'ftes'],
             3: ['pain_points'],
             4: ['business_objective', 'implementation_timeline', 'budget_range'],
@@ -172,6 +172,27 @@ class BusinessCaseBuilder {
         return isValid;
     }
 
+    // NEW: Show field warning (non-blocking)
+    showFieldWarning(field, message) {
+        const fieldContainer = field.closest('.rtbcb-field');
+        if (!fieldContainer) return;
+
+        // Remove existing warning
+        const existingWarning = fieldContainer.querySelector('.rtbcb-field-warning');
+        if (existingWarning) {
+            existingWarning.remove();
+        }
+
+        // Create warning element
+        const warningEl = document.createElement('div');
+        warningEl.className = 'rtbcb-field-warning';
+        warningEl.textContent = message;
+        warningEl.style.color = '#f59e0b';
+        warningEl.style.fontSize = '12px';
+        warningEl.style.marginTop = '4px';
+        fieldContainer.appendChild(warningEl);
+    }
+
     validateField(field) {
         const value = field.value.trim();
         let isValid = true;
@@ -183,12 +204,34 @@ class BusinessCaseBuilder {
             isValid = false;
         }
 
+        // NEW: Company name validation
+        if (field.name === 'company_name' && value) {
+            if (value.length < 2) {
+                errorMessage = 'Company name must be at least 2 characters';
+                isValid = false;
+            } else if (value.length > 100) {
+                errorMessage = 'Company name must be less than 100 characters';
+                isValid = false;
+            } else if (/^[^a-zA-Z]*$/.test(value)) {
+                errorMessage = 'Please enter a valid company name';
+                isValid = false;
+            }
+        }
+
         // Email validation
         if (field.type === 'email' && value) {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(value)) {
                 errorMessage = 'Please enter a valid email address';
                 isValid = false;
+            }
+
+            // Enhanced business email validation
+            const domain = value.split('@')[1]?.toLowerCase();
+            const consumerDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'aol.com'];
+            if (domain && consumerDomains.includes(domain)) {
+                // Warning but don't block
+                this.showFieldWarning(field, 'Consider using your business email for better results');
             }
         }
 
@@ -197,7 +240,7 @@ class BusinessCaseBuilder {
             const num = parseFloat(value);
             const min = parseFloat(field.min);
             const max = parseFloat(field.max);
-            
+
             if (isNaN(num)) {
                 errorMessage = 'Please enter a valid number';
                 isValid = false;
@@ -383,11 +426,13 @@ class BusinessCaseBuilder {
     }
 
     animateProgressSteps() {
+        const companyName = this.form.querySelector('[name="company_name"]')?.value || 'your company';
+
         const steps = [
-            'Analyzing your treasury operations...',
-            'Calculating ROI projections...',
-            'Generating recommendations...',
-            'Preparing your report...'
+            `Analyzing ${companyName}'s treasury operations...`,
+            `Calculating ROI projections for ${companyName}...`,
+            `Generating personalized recommendations...`,
+            `Preparing ${companyName}'s business case report...`
         ];
 
         let currentStep = 0;
@@ -398,11 +443,11 @@ class BusinessCaseBuilder {
                 currentStep = (currentStep + 1) % steps.length;
                 stepElement.textContent = steps[currentStep];
                 stepElement.parentElement.classList.add('rtbcb-progress-step-animation');
-                
+
                 setTimeout(() => {
                     stepElement.parentElement.classList.remove('rtbcb-progress-step-animation');
                 }, 500);
-            }, 2000);
+            }, 2500); // Increased interval for longer messages
         }
     }
 
@@ -425,8 +470,9 @@ class BusinessCaseBuilder {
     }
 
     renderResults(data) {
-        const { scenarios, recommendation, narrative } = data;
-        
+        const { scenarios, recommendation, narrative, company_name } = data;
+        const displayName = company_name || 'Your Company';
+
         return `
             <div class="rtbcb-results-container">
                 <div class="rtbcb-results-header">
@@ -434,26 +480,27 @@ class BusinessCaseBuilder {
                         <span class="rtbcb-badge-icon">✓</span>
                         Business Case Generated Successfully
                     </div>
-                    <h2>Your Treasury Technology Business Case</h2>
+                    <h2>${displayName} Treasury Technology Business Case</h2>
+                    <p class="rtbcb-results-subtitle">Personalized ROI analysis and strategic recommendations</p>
                 </div>
 
-                ${this.renderRecommendation(recommendation)}
-                ${this.renderROISummary(scenarios)}
-                ${this.renderNarrative(narrative)}
-                ${this.renderNextSteps(narrative.next_actions || [])}
+                ${this.renderRecommendation(recommendation, displayName)}
+                ${this.renderROISummary(scenarios, displayName)}
+                ${this.renderNarrative(narrative, displayName)}
+                ${this.renderNextSteps(narrative.next_actions || [], displayName)}
                 ${this.renderActions(data)}
             </div>
         `;
     }
 
-    renderRecommendation(recommendation) {
+    renderRecommendation(recommendation, companyName) {
         const category = recommendation.category_info || {};
         const confidence = Math.round((recommendation.confidence || 0.75) * 100);
 
         return `
             <div class="rtbcb-recommendation-card">
                 <div class="rtbcb-recommendation-header">
-                    <h3>Recommended Solution</h3>
+                    <h3>Recommended Solution for ${companyName}</h3>
                     <span class="rtbcb-confidence-badge">${confidence}% Confidence</span>
                 </div>
                 <div class="rtbcb-recommendation-name">${category.name || 'Treasury Management System'}</div>
@@ -461,16 +508,16 @@ class BusinessCaseBuilder {
                     ${category.description || 'Modern treasury platform with automation and analytics'}
                 </div>
                 <div class="rtbcb-recommendation-reasoning">
-                    ${recommendation.reasoning || 'Based on your profile, this solution best fits your needs.'}
+                    ${recommendation.reasoning || `Based on ${companyName}'s profile, this solution best fits your needs.`}
                 </div>
             </div>
         `;
     }
 
-    renderROISummary(scenarios) {
+    renderROISummary(scenarios, companyName) {
         return `
             <div class="rtbcb-roi-section">
-                <h3>Projected Annual Benefits</h3>
+                <h3>${companyName} Projected Annual Benefits</h3>
                 <div class="rtbcb-roi-summary">
                     <div class="rtbcb-scenario">
                         <div class="rtbcb-scenario-label">Conservative</div>
