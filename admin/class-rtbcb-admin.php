@@ -30,6 +30,7 @@ class RTBCB_Admin {
         add_action( 'wp_ajax_rtbcb_run_tests', [ $this, 'run_integration_tests' ] );
         add_action( 'wp_ajax_rtbcb_test_api', [ $this, 'ajax_test_api' ] );
         add_action( 'wp_ajax_rtbcb_run_diagnostics', [ $this, 'ajax_run_diagnostics' ] );
+        add_action( 'wp_ajax_rtbcb_generate_report_preview', [ $this, 'ajax_generate_report_preview' ] );
     }
 
     /**
@@ -140,6 +141,15 @@ class RTBCB_Admin {
             'rtbcb-api-test',
             [ $this, 'render_api_test' ]
         );
+
+        add_submenu_page(
+            'rtbcb-dashboard',
+            __( 'Report Preview', 'rtbcb' ),
+            __( 'Report Preview', 'rtbcb' ),
+            'manage_options',
+            'rtbcb-report-preview',
+            [ $this, 'render_report_preview' ]
+        );
     }
 
     /**
@@ -222,6 +232,15 @@ class RTBCB_Admin {
      */
     public function render_api_test() {
         include RTBCB_DIR . 'admin/api-test-page.php';
+    }
+
+    /**
+     * Render report preview page.
+     *
+     * @return void
+     */
+    public function render_report_preview() {
+        include RTBCB_DIR . 'admin/report-preview-page.php';
     }
 
     /**
@@ -430,6 +449,52 @@ class RTBCB_Admin {
         $results = RTBCB_Tests::run_integration_tests();
 
         wp_send_json_success( $results );
+    }
+
+    /**
+     * AJAX handler for generating report preview.
+     *
+     * @return void
+     */
+    public function ajax_generate_report_preview() {
+        check_ajax_referer( 'rtbcb_generate_report_preview', 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( __( 'Permission denied', 'rtbcb' ) );
+        }
+
+        $context_raw  = isset( $_POST['context'] ) ? wp_unslash( $_POST['context'] ) : '';
+        $template_raw = isset( $_POST['template'] ) ? wp_unslash( $_POST['template'] ) : '';
+
+        $context = json_decode( $context_raw, true );
+        if ( ! is_array( $context ) ) {
+            wp_send_json_error( [ 'message' => __( 'Invalid context data.', 'rtbcb' ) ] );
+        }
+
+        $html = '';
+
+        if ( ! empty( $template_raw ) ) {
+            $business_case_data = $context;
+            ob_start();
+            eval( '?>' . $template_raw ); // phpcs:ignore WordPress.PHP.DiscouragedFunctions.eval
+            $html = ob_get_clean();
+        } else {
+            $template_path = RTBCB_DIR . 'templates/comprehensive-report-template.php';
+            if ( ! file_exists( $template_path ) ) {
+                $template_path = RTBCB_DIR . 'templates/report-template.php';
+            }
+
+            if ( file_exists( $template_path ) ) {
+                $business_case_data = $context;
+                ob_start();
+                include $template_path;
+                $html = ob_get_clean();
+            }
+        }
+
+        $html = wp_kses_post( $html );
+
+        wp_send_json_success( [ 'html' => $html ] );
     }
 
     /**
