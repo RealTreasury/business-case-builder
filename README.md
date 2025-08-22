@@ -11,11 +11,11 @@ A comprehensive WordPress plugin that helps treasury teams quantify the benefits
 - Intelligent scoring algorithm considers company size, complexity, and pain points
 - Detailed reasoning provided for each recommendation
 
-**📄 Professional PDF Reports**
-- Generates comprehensive business case PDFs with charts and visualizations
+**📄 HTML Reports**
+- Generates comprehensive business case reports as HTML with charts and visualizations
 - Executive summary, ROI analysis, and implementation roadmap
-- Professional formatting ready for stakeholder presentations
-- Automated download links for users
+- Responsive formatting ready for stakeholder presentations
+- Report HTML returned via AJAX for immediate viewing
 
 **📈 Advanced Analytics Dashboard**
 - Real-time lead tracking with detailed metrics
@@ -64,21 +64,12 @@ A comprehensive WordPress plugin that helps treasury teams quantify the benefits
    - **Premium Model**: `gpt-4o` (for complex requests)
    - **Embedding Model**: `text-embedding-3-small` (for RAG)
 
-### Step 3: Install PDF Dependencies (Optional)
-For PDF generation functionality:
-```bash
-cd wp-content/plugins/real-treasury-business-case-builder
-composer install
-```
-
-If Composer is not available, PDF generation will be disabled but all other features will work.
-
-### Step 4: Configure Database Tables
+### Step 3: Configure Database Tables
 The plugin automatically creates required database tables on activation:
 - `wp_rtbcb_leads` - Lead tracking and analytics
 - `wp_rtbcb_rag_index` - Retrieval-augmented generation index
 
-### Step 5: Display the Form
+### Step 4: Display the Form
 Add the shortcode to any page or post:
 ```
 [rt_business_case_builder]
@@ -86,11 +77,19 @@ Add the shortcode to any page or post:
 
 **Advanced Shortcode Options:**
 ```
-[rt_business_case_builder 
-   title="Custom Title" 
+[rt_business_case_builder
+   title="Custom Title"
    subtitle="Custom Description"
    style="modern"]
 ```
+
+## 📄 HTML Reports
+
+- Reports are rendered server-side using `templates/report-template.php`.
+- After form submission, `RTBCB_Router` returns the report HTML via AJAX as `report_html`.
+- `public/js/rtbcb.js` injects this HTML into `#rtbcb-report-container` for immediate viewing.
+- Reports are not saved as files; only lead metadata is stored in the database.
+- Users can save or print the report directly from their browser if needed.
 
 ## 🎛️ Admin Dashboard Features
 
@@ -115,7 +114,6 @@ Add the shortcode to any page or post:
 ### Settings & Configuration
 - **API Configuration**: OpenAI models and authentication
 - **ROI Assumptions**: Labor costs, efficiency rates, fee baselines
-- **PDF Settings**: Enable/disable PDF generation
 - **Portal Integration**: Real Treasury portal connectivity
 
 ## 🔧 Technical Architecture
@@ -127,10 +125,10 @@ Add the shortcode to any page or post:
 - Company size, complexity, and pain point analysis
 - Confidence scoring and alternative suggestions
 
-**PDF Generation System (`RTBCB_PDF`)**
-- mPDF integration for professional reports
-- Chart generation and data visualization
-- Template system for consistent formatting
+**HTML Report Rendering (`RTBCB_Router`)**
+- Uses `templates/report-template.php` for dynamic reports
+- Returns sanitized HTML for inline display
+- No external rendering dependencies
 
 **Lead Tracking System (`RTBCB_Leads`)**
 - Complete audit trail of user interactions
@@ -160,8 +158,6 @@ CREATE TABLE wp_rtbcb_leads (
     roi_low decimal(12,2),
     roi_base decimal(12,2),
     roi_high decimal(12,2),
-    pdf_generated tinyint(1),
-    pdf_path varchar(500),
     ip_address varchar(45),
     user_agent text,
     utm_source varchar(100),
@@ -238,7 +234,7 @@ The plugin includes CSS custom properties for easy theming:
 Override templates by creating files in your theme:
 ```
 /wp-content/themes/your-theme/rtbcb/business-case-form.php
-/wp-content/themes/your-theme/rtbcb/results-template.php
+/wp-content/themes/your-theme/rtbcb/report-template.php
 ```
 
 ### Hooks and Filters
@@ -255,11 +251,6 @@ add_filter('rtbcb_category_scores', function($scores, $inputs) {
     return $scores;
 }, 10, 2);
 
-// Modify PDF template data
-add_filter('rtbcb_pdf_data', function($data) {
-    $data['custom_field'] = 'Custom Value';
-    return $data;
-});
 ```
 
 ## 📈 Analytics and Reporting
@@ -317,9 +308,6 @@ $results = RTBCB_Tests::run_integration_tests();
 
 ### Common Issues
 
-**Q: PDF generation fails with "Class not found" error**
-A: Run `composer install` in the plugin directory to install mPDF dependencies.
-
 **Q: OpenAI API calls return authentication errors**
 A: Verify your API key is correct and has sufficient credits in your OpenAI account.
 
@@ -361,7 +349,6 @@ If you encounter `Unchecked runtime.lastError` messages, they typically originat
 
 ### Third-party Libraries
 - **Chart.js**: Data visualization (MIT License)
-- **mPDF**: PDF generation (LGPL License)
 - **WordPress**: Core framework (GPL License)
 
 ---
