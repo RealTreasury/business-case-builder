@@ -707,7 +707,7 @@ class BusinessCaseBuilder {
                 <div class="rtbcb-error-container" style="padding: 40px; text-align: center;">
                     <div class="rtbcb-error-icon" style="font-size: 48px; color: #ef4444; margin-bottom: 20px;">⚠️</div>
                     <h3 style="color: #ef4444; margin-bottom: 16px;">Unable to Generate Business Case</h3>
-                    <p style="color: #6b7280; margin-bottom: 24px;">${message}</p>
+                    <p style="color: #4b5563; margin-bottom: 24px;">${message}</p>
                     <button type="button" class="rtbcb-action-btn rtbcb-btn-primary" onclick="location.reload()">
                         Try Again
                     </button>
