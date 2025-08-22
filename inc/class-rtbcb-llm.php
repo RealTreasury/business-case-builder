@@ -105,6 +105,18 @@ class RTBCB_LLM {
         $prompt .= $recommended;
         $prompt .= "USER SITUATION:\n";
         $prompt .= "- Company size: {$inputs['company_size']}\n";
+        if ( ! empty( $inputs['current_tech'] ) ) {
+            $prompt .= "- Current technology: {$inputs['current_tech']}\n";
+        }
+        if ( ! empty( $inputs['business_objective'] ) ) {
+            $prompt .= "- Primary objective: {$inputs['business_objective']}\n";
+        }
+        if ( ! empty( $inputs['implementation_timeline'] ) ) {
+            $prompt .= "- Implementation timeline: {$inputs['implementation_timeline']}\n";
+        }
+        if ( ! empty( $inputs['budget_range'] ) ) {
+            $prompt .= "- Budget range: {$inputs['budget_range']}\n";
+        }
         $prompt .= "- Current pain points: " . implode( ', ', $inputs['pain_points'] ) . "\n\n";
         $prompt .= "ROI ANALYSIS (assumption-driven, not vendor pricing):\n";
         $prompt .= "- Base case annual benefit: $" . number_format( $roi_data['base']['total_annual_benefit'] ) . "\n\n";
