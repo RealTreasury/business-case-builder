@@ -55,16 +55,11 @@ class RTBCB_Router {
                 throw new Exception( $business_case_data->get_error_message() );
             }
 
-            // Generate PDF.
-            $pdf      = new RTBCB_PDF();
-            $pdf_path = $pdf->generate( $lead_id, $business_case_data );
-
             // Send success response.
             wp_send_json_success(
                 [
                     'message'     => __( 'Business case generated successfully.', 'rtbcb' ),
                     'report_id'   => $lead_id,
-                    'pdf_url'     => $pdf_path,
                     'report_html' => $this->get_report_html( $business_case_data ),
                 ]
             );
