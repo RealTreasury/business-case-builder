@@ -56,7 +56,7 @@ class RTBCB_LLM {
         // Store inputs for fallback use
         $this->current_inputs = $user_inputs;
 
-        // Rest of the method remains the same...
+        // Obtain recommended solution category to enrich the prompt.
         $category_data = [];
         if ( class_exists( 'RTBCB_Category_Recommender' ) ) {
             try {
@@ -66,12 +66,13 @@ class RTBCB_LLM {
             }
         }
 
+        // Build the prompt, call the LLM, and parse its response.
         $model    = $this->select_model( $user_inputs, $context_chunks );
         $prompt   = $this->build_prompt( $user_inputs, $roi_data, $context_chunks, $category_data );
         $response = $this->call_openai( $model, $prompt );
+        $parsed   = $this->parse_response( $response, $category_data );
 
-        $parsed = $this->parse_response( $response, $category_data );
-
+        // Return fallback content if the LLM responded with an error.
         if ( isset( $parsed['error'] ) ) {
             return $this->get_fallback_response( $category_data, $parsed['error'] );
         }
