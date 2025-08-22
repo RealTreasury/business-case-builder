@@ -471,6 +471,10 @@ class BusinessCaseBuilder {
     }
 
     renderResults(data) {
+        if (data.report_html) {
+            return data.report_html;
+        }
+
         const { scenarios, recommendation, company_name } = data;
         const narrative = data.narrative || {};
         const displayName = company_name || 'Your Company';
@@ -491,7 +495,7 @@ class BusinessCaseBuilder {
                 ${this.renderNarrative(narrative)}
                 ${this.renderRiskAssessmentSection()}
                 ${this.renderNextSteps(narrative?.next_actions || [], displayName)}
-                ${this.renderActions(data)}
+                ${this.renderActions()}
             </div>
         `;
     }
@@ -640,15 +644,9 @@ class BusinessCaseBuilder {
         `;
     }
 
-    renderActions(data) {
+    renderActions() {
         return `
             <div class="rtbcb-actions-section">
-                ${data.download_url ? `
-                    <a href="${data.download_url}" class="rtbcb-action-btn rtbcb-btn-primary" download>
-                        <span class="rtbcb-btn-icon">📄</span>
-                        Download PDF Report
-                    </a>
-                ` : ''}
                 <button type="button" class="rtbcb-action-btn rtbcb-btn-secondary" onclick="window.print()">
                     <span class="rtbcb-btn-icon">🖨️</span>
                     Print Results

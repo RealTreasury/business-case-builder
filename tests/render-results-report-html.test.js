@@ -15,12 +15,9 @@ vm.runInThisContext(code);
 const builder = new BusinessCaseBuilder();
 
 const data = {
-    scenarios: {},
-    recommendation: {},
-    company_name: 'Test Co'
+    report_html: '<div id="custom-report">Custom Report</div>'
 };
 
 const html = builder.renderResults(data);
-assert.ok(html.includes('Treasury technology investment presents a compelling opportunity for operational efficiency.'));
-assert.ok(!html.includes('Download PDF Report'));
-console.log('Render results without narrative test passed.');
+assert.ok(html.includes('Custom Report'));
+console.log('Render results with report_html test passed.');
