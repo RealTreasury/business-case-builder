@@ -332,7 +332,7 @@
                 formData.append('nonce', rtbcbAdmin.nonce);
                 if (sampleKey) {
                     formData.append('action', 'rtbcb_generate_sample_report');
-                    formData.append('sample_key', sampleKey);
+                    formData.append('scenario_key', sampleKey);
                 } else {
                     formData.append('action', 'rtbcb_generate_report_preview');
                 }
