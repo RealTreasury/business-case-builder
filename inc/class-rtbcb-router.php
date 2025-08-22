@@ -46,14 +46,14 @@ class RTBCB_Router {
             // Generate business case with LLM.
             $business_case_data = $llm->generate_business_case( $form_data, $calculations, $rag_context );
 
-            // Save the lead.
-            $leads   = new RTBCB_Leads();
-            $lead_id = $leads->save_lead( $form_data, $business_case_data );
-
-            // Check for LLM generation errors.
+            // Check for LLM generation errors before proceeding.
             if ( is_wp_error( $business_case_data ) ) {
                 throw new Exception( $business_case_data->get_error_message() );
             }
+
+            // Save the lead.
+            $leads   = new RTBCB_Leads();
+            $lead_id = $leads->save_lead( $form_data, $business_case_data );
 
             // Send success response.
             wp_send_json_success(

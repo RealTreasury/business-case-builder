@@ -673,17 +673,23 @@ class Real_Treasury_BCB {
             );
 
             // Check if we got a proper comprehensive analysis
-            if ( isset( $comprehensive_analysis['error'] ) ) {
-                error_log( 'RTBCB: Comprehensive analysis failed: ' . $comprehensive_analysis['error'] );
-                
+            if ( is_wp_error( $comprehensive_analysis ) || isset( $comprehensive_analysis['error'] ) ) {
+                $error_message = is_wp_error( $comprehensive_analysis )
+                    ? $comprehensive_analysis->get_error_message()
+                    : $comprehensive_analysis['error'];
+
+                error_log( 'RTBCB: Comprehensive analysis failed: ' . $error_message );
+
                 // Fall back to basic analysis
                 error_log( 'RTBCB: Falling back to basic business case generation' );
-                $comprehensive_analysis = $llm->generate_business_case( $user_inputs, $scenarios, $rag_context );
-                
+                $basic_analysis = $llm->generate_business_case( $user_inputs, $scenarios, $rag_context );
+
                 // If that also fails, use enhanced fallback
-                if ( isset( $comprehensive_analysis['error'] ) ) {
+                if ( is_wp_error( $basic_analysis ) ) {
                     error_log( 'RTBCB: Basic analysis also failed, using enhanced fallback' );
                     $comprehensive_analysis = $this->create_comprehensive_fallback( $user_inputs, $recommendation, $scenarios );
+                } else {
+                    $comprehensive_analysis = $basic_analysis;
                 }
             }
 
