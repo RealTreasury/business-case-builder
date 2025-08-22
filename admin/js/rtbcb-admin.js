@@ -369,8 +369,9 @@
             try {
                 const formData = new FormData();
                 const nonceField = document.getElementById('nonce');
+                const nonce = nonceField ? nonceField.value : (rtbcbAdmin?.report_preview_nonce || '');
                 formData.append('action', 'rtbcb_generate_sample_report');
-                formData.append('nonce', nonceField ? nonceField.value : '');
+                formData.append('nonce', nonce);
                 const response = await fetch(rtbcbAdmin.ajax_url, { method: 'POST', body: formData });
                 if (!response.ok) {
                     throw new Error(`Server responded ${response.status}`);
