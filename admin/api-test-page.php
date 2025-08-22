@@ -39,6 +39,42 @@ if ( ! defined( 'ABSPATH' ) ) {
                     }
                     html += '</div>';
                     $results.html(html);
+
+                    var reportHtml = response.data.html || html;
+                    var $actions = $('<p></p>');
+                    var $viewLink = $('<a>', {
+                        href: '#',
+                        target: '_blank',
+                        class: 'button',
+                        text: '<?php echo esc_js( __( 'View Full Page', 'rtbcb' ) ); ?>'
+                    });
+                    var $downloadBtn = $('<button>', {
+                        type: 'button',
+                        class: 'button button-secondary',
+                        text: '<?php echo esc_js( __( 'Download HTML', 'rtbcb' ) ); ?>'
+                    });
+                    $actions.append($viewLink).append(' ').append($downloadBtn);
+                    $results.append($actions);
+
+                    $viewLink.on('click', function(e){
+                        e.preventDefault();
+                        var blob = new Blob([reportHtml], {type: 'text/html'});
+                        var url = URL.createObjectURL(blob);
+                        window.open(url, '_blank');
+                        setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+                    });
+
+                    $downloadBtn.on('click', function(){
+                        var blob = new Blob([reportHtml], {type: 'text/html'});
+                        var url = URL.createObjectURL(blob);
+                        var a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'rtbcb-test.html';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                    });
                 } else {
                     var errorHtml = '<div class="notice notice-error"><p><strong>❌ ' + response.data.message + '</strong></p>' +
                         '<p>' + response.data.details + '</p>';
