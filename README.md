@@ -294,7 +294,7 @@ add_filter('rtbcb_pdf_data', function($data) {
 ## 🧪 Testing and Quality Assurance
 
 ### Automated Tests
-The plugin includes integration tests for all major components:
+The plugin includes integration tests for all major components. These can be run from the settings page via the **Run Diagnostics** button or programmatically:
 ```php
 // Run integration tests
 $results = RTBCB_Tests::run_integration_tests();

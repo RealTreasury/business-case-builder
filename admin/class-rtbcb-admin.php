@@ -27,6 +27,7 @@ class RTBCB_Admin {
         add_action( 'wp_ajax_rtbcb_export_leads', [ $this, 'export_leads_csv' ] );
         add_action( 'wp_ajax_rtbcb_delete_lead', [ $this, 'delete_lead' ] );
         add_action( 'wp_ajax_rtbcb_bulk_action_leads', [ $this, 'bulk_action_leads' ] );
+        add_action( 'wp_ajax_rtbcb_run_tests', [ $this, 'run_integration_tests' ] );
     }
 
     /**
@@ -371,6 +372,23 @@ class RTBCB_Admin {
         $rag->rebuild_index();
 
         wp_send_json_success( [ 'message' => __( 'RAG index rebuilt successfully.', 'rtbcb' ) ] );
+    }
+
+    /**
+     * Run integration diagnostics.
+     *
+     * @return void
+     */
+    public function run_integration_tests() {
+        check_ajax_referer( 'rtbcb_nonce', 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'message' => __( 'Permission denied.', 'rtbcb' ) ], 403 );
+        }
+
+        $results = RTBCB_Tests::run_integration_tests();
+
+        wp_send_json_success( $results );
     }
 
     /**
