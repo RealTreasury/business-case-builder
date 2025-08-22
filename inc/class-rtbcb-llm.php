@@ -31,13 +31,14 @@ class RTBCB_LLM {
      * enhanced static analysis when no API key is available. If the LLM call
      * fails, a {@see WP_Error} is returned for the caller to handle.
      *
-     * @param array $user_inputs    Sanitized user inputs.
-     * @param array $roi_data       ROI calculation data.
-     * @param array $context_chunks Optional context strings for the prompt.
+     * @param array       $user_inputs    Sanitized user inputs.
+     * @param array       $roi_data       ROI calculation data.
+     * @param array       $context_chunks Optional context strings for the prompt.
+     * @param string|null $model          LLM model to use.
      *
      * @return array|WP_Error Simplified analysis array or error object.
      */
-    public function generate_business_case( $user_inputs, $roi_data, $context_chunks = [] ) {
+    public function generate_business_case( $user_inputs, $roi_data, $context_chunks = [], $model = null ) {
         $inputs = [
             'company_name'           => sanitize_text_field( $user_inputs['company_name'] ?? '' ),
             'company_size'           => sanitize_text_field( $user_inputs['company_size'] ?? '' ),
@@ -55,7 +56,7 @@ class RTBCB_LLM {
             return $this->create_enhanced_fallback( $inputs, $roi_data );
         }
 
-        $model  = $this->models['mini'] ?? 'gpt-4o-mini';
+        $selected_model = $model ? sanitize_text_field( $model ) : ( $this->models['mini'] ?? 'gpt-4o-mini' );
         $prompt = 'Create a concise treasury technology business case in JSON with keys '
             . 'executive_summary (strategic_positioning, business_case_strength, key_value_drivers[], '
             . 'executive_recommendation), operational_analysis (current_state_assessment), '
@@ -69,7 +70,7 @@ class RTBCB_LLM {
             $prompt .= '\nContext: ' . implode( '\n', array_map( 'sanitize_text_field', $context_chunks ) );
         }
 
-        $response = $this->call_openai_with_retry( $model, $prompt );
+        $response = $this->call_openai_with_retry( $selected_model, $prompt );
 
         if ( is_wp_error( $response ) ) {
             return new WP_Error( 'llm_failure', __( 'Unable to generate analysis at this time.', 'rtbcb' ) );

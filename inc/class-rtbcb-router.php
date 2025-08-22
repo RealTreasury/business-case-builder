@@ -43,8 +43,14 @@ class RTBCB_Router {
             // Generate context from RAG.
             $rag_context = $rag->get_context( $form_data['company_description'] );
 
+            // Route to the appropriate model.
+            $model = $this->route_model( $form_data, $rag_context );
+            if ( is_wp_error( $model ) ) {
+                throw new Exception( $model->get_error_message() );
+            }
+
             // Generate business case with LLM.
-            $business_case_data = $llm->generate_business_case( $form_data, $calculations, $rag_context );
+            $business_case_data = $llm->generate_business_case( $form_data, $calculations, $rag_context, $model );
 
             // Check for LLM generation errors before proceeding.
             if ( is_wp_error( $business_case_data ) ) {
@@ -85,7 +91,7 @@ class RTBCB_Router {
      * @param array $inputs User inputs.
      * @param array $chunks Context chunks.
      *
-     * @return string Model name.
+     * @return string|WP_Error Model name or error if no model configured.
      */
     public function route_model( $inputs, $chunks ) {
         $complexity = $this->calculate_complexity( $inputs, $chunks );
@@ -109,8 +115,12 @@ class RTBCB_Router {
 
         // Validate selected model
         if ( empty( $model ) ) {
-            $model     = 'gpt-4o-mini'; // Final fallback
-            $reasoning = 'Fallback to gpt-4o-mini due to missing model configuration';
+            $error = new WP_Error(
+                'rtbcb_missing_model',
+                __( 'No language model configured. Please review the plugin settings.', 'rtbcb' )
+            );
+            error_log( 'RTBCB: ' . $error->get_error_message() );
+            return $error;
         }
 
         error_log( "RTBCB: Model selected: {$model} (Complexity: {$complexity}, Category: {$category}, Reason: {$reasoning})" );
