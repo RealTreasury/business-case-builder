@@ -62,8 +62,8 @@
     width: 100% !important;
     max-width: 900px !important;
     margin: 0 auto !important;
-    max-height: 90vh !important;
-    overflow-y: auto !important;
+    overflow: visible !important;
+    max-height: none !important;
     position: relative !important;
 }
 
@@ -251,7 +251,6 @@
 
     .rtbcb-modal-container {
         max-width: 95vw !important;
-        max-height: 95vh !important;
     }
 
     .rtbcb-wizard-progress {
@@ -360,7 +359,7 @@
 }
 
 .rtbcb-field {
-    margin-bottom: 15px;
+    margin-bottom: 12px;
     position: relative;
 }
 
@@ -1126,8 +1125,8 @@
     width: 100%;
     max-width: 900px;
     margin: 0 auto;
-    max-height: 90vh;
-    overflow-y: auto;
+    max-height: none;
+    overflow: visible;
     transform: scale(0.9) translateY(30px);
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
@@ -1207,8 +1206,8 @@
 /* Modal Body */
 .rtbcb-modal-body {
     padding: 0;
-    max-height: calc(90vh - 100px);
-    overflow-y: auto;
+    max-height: none;
+    overflow: visible;
 }
 
 .rtbcb-form-container {
@@ -1321,7 +1320,7 @@
 
 .rtbcb-step-header {
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 12px;
 }
 
 .rtbcb-step-header h3 {
@@ -1346,7 +1345,7 @@
 
 /* Form Fields - Compact styling */
 .rtbcb-field {
-    margin-bottom: 18px;
+    margin-bottom: 12px;
 }
 
 .rtbcb-field label {
