@@ -603,11 +603,12 @@ class RTBCB_Admin {
         }
 
         // 7. Check OpenAI API Configuration
-        $api_key = get_option( 'rtbcb_openai_api_key' );
+        $api_key      = get_option( 'rtbcb_openai_api_key' );
+        $valid_format = ! empty( $api_key ) && rtbcb_is_valid_openai_api_key( $api_key );
         $diagnostics['openai_api'] = [
             'configured'   => ! empty( $api_key ),
-            'valid_format' => ! empty( $api_key ) && rtbcb_is_valid_openai_api_key( $api_key ),
-            'status'       => ! empty( $api_key ) ? 'CONFIGURED' : 'NOT_CONFIGURED',
+            'valid_format' => $valid_format,
+            'status'       => ! empty( $api_key ) ? ( $valid_format ? 'CONFIGURED' : 'INVALID_FORMAT' ) : 'NOT_CONFIGURED',
         ];
 
         // 8. Check Memory Limit

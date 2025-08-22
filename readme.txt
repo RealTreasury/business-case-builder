@@ -26,6 +26,9 @@ Add the `[rt_business_case_builder]` shortcode to a post or page.
 = Does the plugin generate PDF reports? =
 Yes. The plugin generates downloadable PDF reports for each business case.
 
+= Why does the dashboard say "Invalid key format" for my OpenAI API key? =
+This indicates the saved API key doesn't match the expected pattern. Verify the key starts with `sk-` and is copied completely.
+
 == Changelog ==
 = 2.1.0 =
 * Added PDF report generation capabilities.
