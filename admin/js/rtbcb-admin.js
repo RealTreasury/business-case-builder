@@ -309,8 +309,8 @@
                 const injectSample = () => {
                     const key = select.value;
                     const target = document.getElementById('rtbcb-sample-context');
-                    if (key && target && window.rtbcbSampleForms && rtbcbSampleForms[key]) {
-                        target.value = JSON.stringify(rtbcbSampleForms[key], null, 2);
+                    if (key && target && rtbcbAdmin.sampleForms && rtbcbAdmin.sampleForms[key]) {
+                        target.value = JSON.stringify(rtbcbAdmin.sampleForms[key], null, 2);
                     }
                 };
                 select.addEventListener('change', injectSample);
@@ -332,7 +332,7 @@
                 formData.append('nonce', rtbcbAdmin.nonce);
                 if (sampleKey) {
                     formData.append('action', 'rtbcb_generate_sample_report');
-                    formData.append('sample_key', sampleKey);
+                    formData.append('scenario_key', sampleKey);
                 } else {
                     formData.append('action', 'rtbcb_generate_report_preview');
                 }
