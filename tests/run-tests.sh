@@ -11,9 +11,10 @@ find . -name "*.php" -not -path "./vendor/*" -print0 | xargs -0 -n1 php -l
 echo "2. Running JSON output lint..."
 php tests/json-output-lint.php
 
-# JavaScript test
+# JavaScript tests
 echo "3. Running JavaScript tests..."
 node tests/handle-submit-error.test.js
+node tests/render-results-no-narrative.test.js
 
 # WordPress coding standards (if installed)
 if command -v phpcs &> /dev/null; then
