@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 $api_key         = get_option( 'rtbcb_openai_api_key', '' );
 $mini_model      = get_option( 'rtbcb_mini_model', '' );
 $premium_model   = get_option( 'rtbcb_premium_model', '' );
-$advanced_model  = get_option( 'rtbcb_advanced_model', '' );
+$advanced_model  = get_option( 'rtbcb_advanced_model', 'gpt-5-mini' );
 $embedding_model = get_option( 'rtbcb_embedding_model', '' );
 $labor_cost      = get_option( 'rtbcb_labor_cost_per_hour', '' );
 $bank_fee        = get_option( 'rtbcb_bank_fee_baseline', '' );
