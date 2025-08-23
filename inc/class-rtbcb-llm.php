@@ -143,6 +143,40 @@ class RTBCB_LLM {
     }
 
     /**
+     * Generate a concise overview for a company.
+     *
+     * @param string $company_name Company name.
+     * @return string|WP_Error Overview text or error object.
+     */
+    public function generate_company_overview( $company_name ) {
+        $company_name = sanitize_text_field( $company_name );
+
+        if ( empty( $this->api_key ) ) {
+            return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
+        }
+
+        $model  = $this->models['mini'] ?? 'gpt-4o-mini';
+        $prompt = 'Provide a concise company overview covering background, recent news, company size, financial highlights, treasury challenges or opportunities, and market position for ' . $company_name . '.';
+
+        $response = $this->call_openai_with_retry( $model, $prompt );
+
+        if ( is_wp_error( $response ) ) {
+            return new WP_Error( 'llm_failure', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
+        }
+
+        $body     = wp_remote_retrieve_body( $response );
+        $decoded  = json_decode( $body, true );
+        $content  = $decoded['choices'][0]['message']['content'] ?? '';
+        $overview = sanitize_textarea_field( $content );
+
+        if ( empty( $overview ) ) {
+            return new WP_Error( 'llm_empty_response', __( 'No overview returned.', 'rtbcb' ) );
+        }
+
+        return $overview;
+    }
+
+    /**
      * Generate comprehensive business case with deep analysis.
      *
      * Returns a {@see WP_Error} when the API key is missing or when the LLM
