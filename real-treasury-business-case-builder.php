@@ -1350,6 +1350,8 @@ function rtbcb_ajax_generate_company_overview() {
         return;
     }
 
+    $start_time = microtime( true );
+
     try {
         $overview = rtbcb_test_generate_company_overview( $company_name );
 
@@ -1360,10 +1362,17 @@ function rtbcb_ajax_generate_company_overview() {
             return;
         }
 
+        $word_count   = str_word_count( wp_strip_all_tags( $overview ) );
+        $elapsed_time = microtime( true ) - $start_time;
+        $timestamp    = current_time( 'mysql' );
+
         wp_send_json_success(
             [
                 'overview'     => wp_kses_post( $overview ),
                 'company_name' => $company_name,
+                'word_count'   => intval( $word_count ),
+                'elapsed_time' => round( $elapsed_time, 2 ),
+                'generated_at' => $timestamp,
             ]
         );
     } catch ( Exception $e ) {

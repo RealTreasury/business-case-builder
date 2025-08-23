@@ -37,13 +37,20 @@ if ( ! defined( 'ABSPATH' ) ) {
             <button type="button" id="rtbcb-generate-company-overview" class="button button-primary">
                 <?php esc_html_e( 'Generate Overview', 'rtbcb' ); ?>
             </button>
+            <button type="button" id="rtbcb-regenerate-company-overview" class="button" style="display:none;">
+                <?php esc_html_e( 'Regenerate', 'rtbcb' ); ?>
+            </button>
+            <button type="button" id="rtbcb-copy-company-overview" class="button" style="display:none;">
+                <?php esc_html_e( 'Copy to Clipboard', 'rtbcb' ); ?>
+            </button>
             <button type="button" id="rtbcb-clear-company-overview" class="button">
-                <?php esc_html_e( 'Clear Results', 'rtbcb' ); ?>
+                <?php esc_html_e( 'Clear', 'rtbcb' ); ?>
             </button>
         </p>
     </div>
 
     <div id="rtbcb-company-overview-results"></div>
+    <div id="rtbcb-company-overview-meta"></div>
 </div>
 
 <style>
@@ -58,6 +65,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 #rtbcb-company-overview-results div[style*="background"] {
     white-space: pre-wrap;
     line-height: 1.6;
+}
+
+#rtbcb-company-overview-meta {
+    margin-top: 10px;
 }
 </style>
 
