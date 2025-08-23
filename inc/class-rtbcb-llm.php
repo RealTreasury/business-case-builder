@@ -1111,37 +1111,31 @@ class RTBCB_LLM {
      */
     private function call_openai( $model, $prompt, $max_output_tokens = null ) {
         if ( empty( $this->api_key ) ) {
-            return new WP_Error( 'no_api_key', 'OpenAI API key not configured' );
+            return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
         }
 
-        $endpoint   = 'https://api.openai.com/v1/responses';
-        $model_name = sanitize_text_field( $model ?: ( $this->gpt5_config['model'] ?? '' ) );
-        $max_output_tokens = $max_output_tokens ?? intval( $this->gpt5_config['max_output_tokens'] );
-        // gpt-5-mini requires a minimum of 256 output tokens.
-        $max_output_tokens = max( 256, intval( $max_output_tokens ) );
+        $endpoint = 'https://api.openai.com/v1/responses'; // Correct endpoint.
+        $model_name = sanitize_text_field( $model ?: 'gpt-5-mini' );
+        $max_output_tokens = max( 256, intval( $max_output_tokens ?? 4000 ) );
 
         if ( is_array( $prompt ) && isset( $prompt['input'] ) ) {
-            $instructions = function_exists( 'sanitize_textarea_field' ) ? sanitize_textarea_field( $prompt['instructions'] ?? '' ) : ( $prompt['instructions'] ?? '' );
-            $input        = function_exists( 'sanitize_textarea_field' ) ? sanitize_textarea_field( $prompt['input'] ) : $prompt['input'];
+            $instructions = sanitize_textarea_field( $prompt['instructions'] ?? '' );
+            $input = sanitize_textarea_field( $prompt['input'] );
         } else {
             $instructions = '';
-            $input        = function_exists( 'sanitize_textarea_field' ) ? sanitize_textarea_field( (string) $prompt ) : (string) $prompt;
+            $input = sanitize_textarea_field( (string) $prompt );
         }
 
         $body = [
-            'model'                 => $model_name,
-            'input'                 => $input,
-            'instructions'          => $instructions,
-            'max_output_tokens'     => $max_output_tokens,
-            'text'                  => $this->gpt5_config['text'],
-            'store'                 => (bool) $this->gpt5_config['store'],
+            'model' => $model_name,
+            'input' => $input,
+            'max_output_tokens' => $max_output_tokens,
         ];
 
-        if ( rtbcb_model_supports_temperature( $model_name ) ) {
-            $body['temperature'] = floatval( $this->gpt5_config['temperature'] );
+        if ( ! empty( $instructions ) ) {
+            $body['instructions'] = $instructions;
         }
 
-        // Add reasoning and verbosity for GPT-5 models
         if ( strpos( $model_name, 'gpt-5' ) === 0 ) {
             $body['reasoning'] = [
                 'effort' => $this->get_reasoning_effort_for_task( $prompt ),
@@ -1151,103 +1145,24 @@ class RTBCB_LLM {
             ];
         }
 
+        if ( rtbcb_model_supports_temperature( $model_name ) ) {
+            $body['temperature'] = floatval( $this->gpt5_config['temperature'] ?? 0.7 );
+        }
+
+        if ( isset( $this->gpt5_config['store'] ) ) {
+            $body['store'] = (bool) $this->gpt5_config['store'];
+        }
+
         $args = [
             'headers' => [
                 'Authorization' => 'Bearer ' . $this->api_key,
-                'Content-Type'  => 'application/json',
+                'Content-Type' => 'application/json',
             ],
-            'body'    => wp_json_encode( $body ),
-            'timeout' => intval( $this->gpt5_config['timeout'] ),
+            'body' => wp_json_encode( $body ),
+            'timeout' => intval( $this->gpt5_config['timeout'] ?? 120 ),
         ];
 
-        error_log( 'RTBCB: Making OpenAI API call with model: ' . $model_name );
-
-        try {
-            $response = wp_remote_post( $endpoint, $args );
-        } catch ( \Throwable $e ) {
-            error_log( 'RTBCB: HTTP request exception: ' . $e->getMessage() );
-            $this->log_gpt5_call( [ 'instructions' => $instructions, 'input' => $input ], [], $e->getMessage() );
-            return new WP_Error( 'openai_http_exception', __( 'Unable to contact OpenAI service.', 'rtbcb' ) );
-        }
-
-        if ( is_wp_error( $response ) ) {
-            error_log( 'RTBCB: HTTP request failed: ' . $response->get_error_message() );
-            $this->log_gpt5_call( [ 'instructions' => $instructions, 'input' => $input ], [], $response->get_error_message() );
-            return $response;
-        }
-
-        $status_code   = wp_remote_retrieve_response_code( $response );
-        $response_body = wp_remote_retrieve_body( $response );
-
-        if ( 400 === intval( $status_code ) && defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-            $has_temp = isset( $body['temperature'] ) ? 'present' : 'missing';
-            error_log( 'RTBCB: 400 response for model ' . $model_name . ' (temperature ' . $has_temp . ')' );
-        }
-
-        error_log( 'RTBCB: OpenAI response status: ' . $status_code );
-
-        if ( $status_code !== 200 ) {
-            $error_data    = json_decode( $response_body, true );
-            $error_message = $error_data['error']['message'] ?? 'Unknown API error';
-            error_log( 'RTBCB: Responses API error: ' . $error_message );
-            $this->log_gpt5_call( [ 'instructions' => $instructions, 'input' => $input ], (array) $error_data, $error_message );
-            return new WP_Error( 'openai_api_error', $error_message );
-        }
-
-        $decoded = json_decode( $response_body, true );
-        $content = '';
-        $finish_reason = '';
-
-        if ( isset( $decoded['output'] ) && is_array( $decoded['output'] ) ) {
-            foreach ( $decoded['output'] as $chunk ) {
-                if ( ! is_array( $chunk ) ) {
-                    continue;
-                }
-
-                $text = '';
-                if ( isset( $chunk['content'] ) && is_array( $chunk['content'] ) ) {
-                    foreach ( $chunk['content'] as $piece ) {
-                        if ( isset( $piece['text'] ) && '' !== $piece['text'] ) {
-                            $text = $piece['text'];
-                            break;
-                        }
-                    }
-                }
-
-                if ( 'message' === ( $chunk['type'] ?? '' ) || '' !== $text ) {
-                    $content       = $text;
-                    $finish_reason = $chunk['finish_reason'] ?? '';
-                    break;
-                }
-            }
-        }
-
-        if ( '' === $content && isset( $decoded['output_text'] ) ) {
-            $content = is_array( $decoded['output_text'] ) ? implode( ' ', (array) $decoded['output_text'] ) : $decoded['output_text'];
-        }
-
-        error_log( 'RTBCB: OpenAI content: ' . $content );
-        error_log( 'RTBCB: OpenAI finish_reason: ' . $finish_reason );
-
-        if ( 'length' === $finish_reason || empty( $content ) ) {
-            // Retry with more tokens if the response was truncated or empty.
-            $this->log_gpt5_call( [ 'instructions' => $instructions, 'input' => $input ], $decoded, 'Truncated or empty response from OpenAI' );
-            if ( $max_output_tokens < 8000 ) {
-                $new_max_output_tokens = $max_output_tokens + 1000;
-                error_log( 'RTBCB: Retrying with higher max_output_tokens: ' . $new_max_output_tokens );
-                return $this->call_openai( $model, [ 'instructions' => $instructions, 'input' => $input ], $new_max_output_tokens );
-            }
-
-            // Return specific error when truncation cannot be resolved by retry.
-            return new WP_Error(
-                'openai_response_truncated',
-                __( 'OpenAI response was truncated due to the max output tokens limit.', 'rtbcb' )
-            );
-        }
-
-        $this->log_gpt5_call( [ 'instructions' => $instructions, 'input' => $input ], $decoded );
-
-        return $response;
+        return wp_remote_post( $endpoint, $args );
     }
 
     /**

@@ -50,6 +50,12 @@ if ( ! function_exists( 'sanitize_text_field' ) ) {
     }
 }
 
+if ( ! function_exists( 'sanitize_textarea_field' ) ) {
+    function sanitize_textarea_field( $text ) {
+        return $text;
+    }
+}
+
 if ( ! function_exists( 'sanitize_key' ) ) {
     function sanitize_key( $key ) {
         $key = strtolower( $key );
