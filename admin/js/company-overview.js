@@ -2,71 +2,142 @@
     'use strict';
 
     $(document).ready(function() {
-        const $generateBtn    = $('#rtbcb-generate-company-overview');
-        const $regenerateBtn  = $('#rtbcb-regenerate-company-overview');
-        const $clearBtn       = $('#rtbcb-clear-company-overview');
-        const $copyBtn        = $('#rtbcb-copy-company-overview');
-        const $resultsDiv     = $('#rtbcb-company-overview-results');
-        const nonce           = $('#rtbcb_test_company_overview_nonce').val();
+        const generateBtn = $('#rtbcb-generate-company-overview');
+        const regenerateBtn = $('#rtbcb-regenerate-company-overview');
+        const clearBtn = $('#rtbcb-clear-company-overview');
+        const copyBtn = $('#rtbcb-copy-company-overview');
+        const resultsDiv = $('#rtbcb-company-overview-results');
+        const nonce = rtbcb_ajax.nonce;
 
-        function sendRequest() {
-            const companyName = $('#rtbcb-test-company-name').val().trim();
-
-            if (!companyName) {
-                alert('Please enter a company name.');
-                return;
-            }
-
-            const start = performance.now();
-            const originalGen = rtbcbTestUtils.showLoading($generateBtn, 'Analyzing... (this may take up to 5 minutes)');
-            const originalRegen = rtbcbTestUtils.showLoading($regenerateBtn, 'Analyzing... (this may take up to 5 minutes)');
-            $resultsDiv.html('<p>Generating company overview...</p>');
-
+        function generateCompanyOverview(companyName) {
             $.ajax({
                 url: ajaxurl,
                 method: 'POST',
-                timeout: 300000, // 5 minutes (300,000 ms)
                 data: {
-                    action: 'rtbcb_generate_company_overview',
+                    action: 'rtbcb_start_company_overview',
                     company_name: companyName,
                     nonce: nonce
                 },
                 success: function(response) {
                     if (response.success) {
-                        const data = response.data;
-                        rtbcbTestUtils.renderSuccess($resultsDiv, data.overview || '', start, {
-                            word_count: data.word_count,
-                            generated_at: data.generated_at,
-                            elapsed_time: data.elapsed_time
-                        });
-                        $regenerateBtn.show();
-                        $copyBtn.show();
+                        pollJobStatus(response.data.job_id);
+                        updateUI('processing', 'Analysis started. This may take several minutes...');
                     } else {
-                        rtbcbTestUtils.renderError($resultsDiv, response.data.message || 'Failed to generate overview', sendRequest);
-                        $regenerateBtn.show();
+                        showError('Failed to start analysis: ' + (response.data.message || ''));
                     }
                 },
-                error: function( xhr, status, error ) {
-                    if ( status === 'timeout' ) {
-                        alert('Analysis is taking longer than expected. Please try again or contact support.');
-                    } else {
-                        alert('Error: ' + error);
-                    }
-                    rtbcbTestUtils.renderError($resultsDiv, 'Request failed. Please try again.', sendRequest);
-                    $regenerateBtn.show();
-                },
-                complete: function() {
-                    rtbcbTestUtils.hideLoading($generateBtn, originalGen);
-                    rtbcbTestUtils.hideLoading($regenerateBtn, originalRegen);
+                error: function() {
+                    showError('Failed to start analysis. Please try again.');
                 }
             });
         }
 
-        $generateBtn.on('click', sendRequest);
-        $regenerateBtn.on('click', sendRequest);
+        function pollJobStatus(jobId) {
+            const pollInterval = setInterval(function() {
+                $.ajax({
+                    url: ajaxurl,
+                    method: 'POST',
+                    data: {
+                        action: 'rtbcb_check_job_status',
+                        job_id: jobId,
+                        nonce: nonce
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            const job = response.data;
+                            if (job.status === 'completed') {
+                                clearInterval(pollInterval);
+                                displayResults(job.result);
+                                updateUI('completed', 'Analysis completed!');
+                            } else if (job.status === 'failed') {
+                                clearInterval(pollInterval);
+                                showError('Analysis failed: ' + (job.error || 'Unknown error'));
+                            } else {
+                                updateUI('processing', job.progress || 'Processing...');
+                            }
+                        } else {
+                            clearInterval(pollInterval);
+                            showError('Job status check failed');
+                        }
+                    },
+                    error: function() {
+                        clearInterval(pollInterval);
+                        showError('Connection error while checking status');
+                    }
+                });
+            }, 3000);
 
-        $clearBtn.on('click', function() {
-            const originalClear = rtbcbTestUtils.showLoading($clearBtn, 'Clearing...');
+            setTimeout(function() {
+                clearInterval(pollInterval);
+                showError('Analysis timed out. Please try again.');
+            }, 600000);
+        }
+
+        function updateUI(status, message) {
+            if (status === 'processing') {
+                generateBtn.prop('disabled', true).text('Analyzing...');
+                regenerateBtn.prop('disabled', true);
+                copyBtn.hide();
+                resultsDiv.html('<div class="notice notice-info"><p>' + message + '</p></div>');
+            } else if (status === 'completed') {
+                generateBtn.prop('disabled', false).text('Generate Overview');
+                regenerateBtn.prop('disabled', false).show();
+                copyBtn.show();
+                resultsDiv.prepend('<div class="notice notice-success"><p>' + message + '</p></div>');
+            }
+        }
+
+        function showError(message) {
+            resultsDiv.html('<div class="notice notice-error"><p>' + message + '</p></div>');
+            generateBtn.prop('disabled', false).text('Generate Overview');
+            regenerateBtn.prop('disabled', false).show();
+            copyBtn.hide();
+        }
+
+        function displayResults(result) {
+            let html = '<div class="company-overview-results">';
+            html += '<h3>Company Analysis</h3>';
+            html += '<div class="analysis">' + (result.analysis || '') + '</div>';
+
+            if (Array.isArray(result.recommendations) && result.recommendations.length > 0) {
+                html += '<h4>Recommendations</h4><ul>';
+                result.recommendations.forEach(function(rec) {
+                    html += '<li>' + rec + '</li>';
+                });
+                html += '</ul>';
+            }
+
+            if (Array.isArray(result.references) && result.references.length > 0) {
+                html += '<h4>References</h4><ul>';
+                result.references.forEach(function(ref) {
+                    html += '<li><a href="' + ref + '" target="_blank">' + ref + '</a></li>';
+                });
+                html += '</ul>';
+            }
+
+            html += '</div>';
+            resultsDiv.html(html);
+        }
+
+        generateBtn.on('click', function() {
+            const companyName = $('#rtbcb-test-company-name').val().trim();
+            if (!companyName) {
+                alert('Please enter a company name.');
+                return;
+            }
+            generateCompanyOverview(companyName);
+        });
+
+        regenerateBtn.on('click', function() {
+            const companyName = $('#rtbcb-test-company-name').val().trim();
+            if (!companyName) {
+                alert('Please enter a company name.');
+                return;
+            }
+            generateCompanyOverview(companyName);
+        });
+
+        clearBtn.on('click', function() {
             $.ajax({
                 url: ajaxurl,
                 type: 'POST',
@@ -75,27 +146,25 @@
                     nonce: nonce
                 },
                 complete: function() {
-                    rtbcbTestUtils.hideLoading($clearBtn, originalClear);
-                    $resultsDiv.html('');
+                    resultsDiv.html('');
                     $('#rtbcb-test-company-name').val('');
-                    $regenerateBtn.hide();
-                    $copyBtn.hide();
+                    regenerateBtn.hide().prop('disabled', false);
+                    copyBtn.hide();
                 }
             });
         });
 
-        $copyBtn.on('click', function() {
-            const text = $resultsDiv.find('.rtbcb-result-text').text();
+        copyBtn.on('click', function() {
+            const text = resultsDiv.find('.company-overview-results').text();
             rtbcbTestUtils.copyToClipboard(text).then(function() {
-                $copyBtn.text('Copied!').prop('disabled', true);
+                copyBtn.text('Copied!').prop('disabled', true);
                 setTimeout(function() {
-                    $copyBtn.text('Copy to Clipboard').prop('disabled', false);
+                    copyBtn.text('Copy to Clipboard').prop('disabled', false);
                 }, 2000);
             });
         });
 
-        $regenerateBtn.hide();
-        $copyBtn.hide();
+        regenerateBtn.hide();
+        copyBtn.hide();
     });
 })(jQuery);
-
