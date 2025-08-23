@@ -178,6 +178,71 @@ class RTBCB_LLM {
     }
 
     /**
+     * Generate estimated benefits narrative and metrics.
+     *
+     * @param float  $revenue     Annual revenue.
+     * @param int    $staff_count Staff count.
+     * @param int    $efficiency  Efficiency rating 1-10.
+     * @param string $category    Solution category.
+     *
+     * @return array|WP_Error Benefits data or error object.
+     */
+    public function generate_benefits_estimate( $revenue, $staff_count, $efficiency, $category ) {
+        $revenue     = floatval( $revenue );
+        $staff_count = intval( $staff_count );
+        $efficiency  = max( 1, min( 10, intval( $efficiency ) ) );
+        $category    = sanitize_text_field( $category );
+
+        if ( empty( $this->api_key ) ) {
+            return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
+        }
+
+        $time_savings       = $staff_count * ( $efficiency / 10 ) * 100;
+        $cost_reductions    = $revenue * ( $efficiency / 100 );
+        $efficiency_gains   = $efficiency * 10;
+        $roi                = $revenue > 0 ? ( $cost_reductions / $revenue ) * 100 : 0;
+        $risk_mitigation    = ( 11 - $efficiency ) * 2;
+        $productivity_gains = $staff_count * ( $efficiency / 10 ) * 5;
+
+        $prompt = 'Using the baseline metrics time_savings=' . $time_savings
+            . ', cost_reductions=' . $cost_reductions
+            . ', efficiency_gains=' . $efficiency_gains
+            . ', roi=' . $roi
+            . ', risk_mitigation=' . $risk_mitigation
+            . ', productivity_gains=' . $productivity_gains
+            . " for a {$category} solution, provide a brief narrative and return JSON with keys time_savings, cost_reductions, efficiency_gains, roi, risk_mitigation, productivity_gains, narrative.";
+
+        $response = $this->call_openai_with_retry( $this->models['mini'] ?? 'gpt-4o-mini', $prompt );
+
+        if ( is_wp_error( $response ) ) {
+            return new WP_Error( 'llm_failure', __( 'Unable to generate estimate at this time.', 'rtbcb' ) );
+        }
+
+        $body    = wp_remote_retrieve_body( $response );
+        $decoded = json_decode( $body, true );
+        $content = $decoded['choices'][0]['message']['content'] ?? '';
+        $data    = json_decode( $content, true );
+
+        if ( empty( $data ) ) {
+            return new WP_Error( 'llm_empty_response', __( 'No estimate returned.', 'rtbcb' ) );
+        }
+
+        $narrative  = sanitize_textarea_field( $data['narrative'] ?? '' );
+        $word_count = str_word_count( $narrative );
+
+        return [
+            'time_savings'       => floatval( $data['time_savings'] ?? $time_savings ),
+            'cost_reductions'    => floatval( $data['cost_reductions'] ?? $cost_reductions ),
+            'efficiency_gains'   => floatval( $data['efficiency_gains'] ?? $efficiency_gains ),
+            'roi'                => floatval( $data['roi'] ?? $roi ),
+            'risk_mitigation'    => floatval( $data['risk_mitigation'] ?? $risk_mitigation ),
+            'productivity_gains' => floatval( $data['productivity_gains'] ?? $productivity_gains ),
+            'narrative'          => $narrative,
+            'words'              => $word_count,
+        ];
+    }
+
+    /**
      * Generate comprehensive business case with deep analysis.
      *
      * Returns a {@see WP_Error} when the API key is missing or when the LLM

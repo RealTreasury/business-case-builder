@@ -363,3 +363,25 @@ function rtbcb_test_generate_company_overview( $company_name ) {
     return $overview;
 }
 
+/**
+ * Test generating estimated benefits using the LLM.
+ *
+ * @param float  $revenue     Annual revenue.
+ * @param int    $staff_count Staff count.
+ * @param int    $efficiency  Efficiency rating 1-10.
+ * @param string $category    Solution category.
+ *
+ * @return array|WP_Error Benefits estimate data or error object.
+ */
+function rtbcb_test_generate_benefits_estimate( $revenue, $staff_count, $efficiency, $category ) {
+    $revenue     = floatval( $revenue );
+    $staff_count = intval( $staff_count );
+    $efficiency  = max( 1, min( 10, intval( $efficiency ) ) );
+    $category    = sanitize_text_field( $category );
+
+    $llm    = new RTBCB_LLM();
+    $result = $llm->generate_benefits_estimate( $revenue, $staff_count, $efficiency, $category );
+
+    return $result;
+}
+

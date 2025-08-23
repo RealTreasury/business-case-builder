@@ -1406,3 +1406,37 @@ function rtbcb_enqueue_company_overview_scripts( $hook ) {
     }
 }
 
+
+add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_estimated_benefits_scripts' );
+
+/**
+ * Enqueue admin scripts for estimated benefits test page.
+ *
+ * @param string $hook Current admin page hook.
+ * @return void
+ */
+function rtbcb_enqueue_estimated_benefits_scripts( $hook ) {
+    if ( strpos( $hook, 'rtbcb' ) !== false && strpos( $hook, 'estimated-benefits' ) !== false ) {
+        wp_enqueue_script(
+            'rtbcb-estimated-benefits',
+            plugin_dir_url( __FILE__ ) . 'admin/js/estimated-benefits.js',
+            [ 'jquery' ],
+            '1.0.0',
+            true
+        );
+
+        wp_localize_script(
+            'rtbcb-estimated-benefits',
+            'rtbcb_estimated_benefits',
+            [
+                'ajax_url' => admin_url( 'admin-ajax.php' ),
+                'nonce'    => wp_create_nonce( 'rtbcb_test_estimated_benefits' ),
+                'strings'  => [
+                    'generating' => __( 'Generating...', 'rtbcb' ),
+                    'error'      => __( 'An error occurred. Please try again.', 'rtbcb' ),
+                    'copied'     => __( 'Copied to clipboard.', 'rtbcb' ),
+                ],
+            ]
+        );
+    }
+}

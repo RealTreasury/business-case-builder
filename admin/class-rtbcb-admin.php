@@ -36,6 +36,7 @@ class RTBCB_Admin {
         add_action( 'wp_ajax_nopriv_rtbcb_sync_to_local', [ $this, 'sync_to_local' ] );
         add_action( 'wp_ajax_rtbcb_test_commentary', [ $this, 'ajax_test_commentary' ] );
         add_action( 'wp_ajax_rtbcb_test_company_overview', [ $this, 'ajax_test_company_overview' ] );
+        add_action( 'wp_ajax_rtbcb_test_estimated_benefits', [ $this, 'ajax_test_estimated_benefits' ] );
     }
 
     /**
@@ -202,6 +203,15 @@ class RTBCB_Admin {
             'rtbcb-test-company-overview',
             [ $this, 'render_test_company_overview' ]
         );
+
+        add_submenu_page(
+            'rtbcb-dashboard',
+            __( 'Test Estimated Benefits', 'rtbcb' ),
+            __( 'Test Estimated Benefits', 'rtbcb' ),
+            'manage_options',
+            'rtbcb-test-estimated-benefits',
+            [ $this, 'render_test_estimated_benefits' ]
+        );
     }
 
     /**
@@ -320,6 +330,15 @@ class RTBCB_Admin {
      */
     public function render_test_company_overview() {
         include RTBCB_DIR . 'admin/test-company-overview-page.php';
+    }
+
+    /**
+     * Render test estimated benefits page.
+     *
+     * @return void
+     */
+    public function render_test_estimated_benefits() {
+        include RTBCB_DIR . 'admin/test-estimated-benefits-page.php';
     }
 
     /**
@@ -551,6 +570,35 @@ class RTBCB_Admin {
                 'generated'  => current_time( 'mysql' ),
             ]
         );
+    }
+
+    /**
+     * AJAX handler for estimated benefits testing.
+     *
+     * @return void
+     */
+    public function ajax_test_estimated_benefits() {
+        check_ajax_referer( 'rtbcb_test_estimated_benefits', 'nonce' );
+
+        $revenue     = isset( $_POST['revenue'] ) ? floatval( wp_unslash( $_POST['revenue'] ) ) : 0;
+        $staff_count = isset( $_POST['staff_count'] ) ? intval( wp_unslash( $_POST['staff_count'] ) ) : 0;
+        $efficiency  = isset( $_POST['efficiency'] ) ? intval( wp_unslash( $_POST['efficiency'] ) ) : 0;
+        $category    = isset( $_POST['category'] ) ? sanitize_text_field( wp_unslash( $_POST['category'] ) ) : '';
+
+        if ( $revenue <= 0 || $staff_count <= 0 || $efficiency < 1 || $efficiency > 10 || empty( $category ) ) {
+            wp_send_json_error( __( 'Invalid input data.', 'rtbcb' ) );
+        }
+
+        $start  = microtime( true );
+        $result = rtbcb_test_generate_benefits_estimate( $revenue, $staff_count, $efficiency, $category );
+        $elapsed = round( microtime( true ) - $start, 2 );
+
+        if ( is_wp_error( $result ) ) {
+            wp_send_json_error( sanitize_text_field( $result->get_error_message() ) );
+        }
+
+        $result['duration'] = $elapsed;
+        wp_send_json_success( $result );
     }
 
     /**
