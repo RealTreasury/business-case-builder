@@ -185,6 +185,69 @@ function rtbcb_log_api_debug( $message, $data = null ) {
 }
 
 /**
+ * Log error messages.
+ *
+ * @param string $message Error message.
+ * @param mixed  $data    Optional context data.
+ * @return void
+ */
+function rtbcb_log_error( $message, $data = null ) {
+    $log_message = 'RTBCB Error: ' . $message;
+
+    if ( null !== $data ) {
+        $log_message .= ' | Data: ' . ( is_string( $data ) ? $data : wp_json_encode( $data ) );
+    }
+
+    error_log( $log_message );
+
+    if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+        $upload_dir = wp_get_upload_dir();
+        $log_file   = trailingslashit( $upload_dir['basedir'] ) . 'rtbcb-debug.log';
+        $timestamp  = current_time( 'Y-m-d H:i:s' );
+        $entry      = "[{$timestamp}] {$log_message}\n";
+        file_put_contents( $log_file, $entry, FILE_APPEND | LOCK_EX );
+    }
+}
+
+/**
+ * Set up temporary error handlers for AJAX debugging.
+ *
+ * @return void
+ */
+function rtbcb_setup_ajax_logging() {
+    set_error_handler(
+        function ( $severity, $message, $file, $line ) {
+            rtbcb_log_error(
+                sprintf(
+                    'PHP error [%s] %s in %s:%d',
+                    $severity,
+                    $message,
+                    $file,
+                    $line
+                )
+            );
+            return false;
+        }
+    );
+
+    register_shutdown_function(
+        function () {
+            $error = error_get_last();
+            if ( $error && E_ERROR === $error['type'] ) {
+                rtbcb_log_error(
+                    sprintf(
+                        'Fatal error %s in %s:%d',
+                        $error['message'],
+                        $error['file'],
+                        $error['line']
+                    )
+                );
+            }
+        }
+    );
+}
+
+/**
  * Attempt to increase PHP memory limit for heavy operations.
  *
  * @return void

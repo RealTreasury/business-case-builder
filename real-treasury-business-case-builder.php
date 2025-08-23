@@ -581,6 +581,8 @@ class Real_Treasury_BCB {
      * Enhanced AJAX handler with memory management
      */
     public function ajax_generate_comprehensive_case() {
+        rtbcb_setup_ajax_logging();
+
         // STEP 1: Increase memory limit and log initial state
         rtbcb_increase_memory_limit();
         rtbcb_log_memory_usage( 'start' );
@@ -600,8 +602,8 @@ class Real_Treasury_BCB {
 
         try {
             // Verify nonce
-            if ( ! wp_verify_nonce( $_POST['rtbcb_nonce'] ?? '', 'rtbcb_generate' ) ) {
-                error_log( 'RTBCB: Nonce verification failed' );
+            if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
+                rtbcb_log_error( 'Nonce verification failed', $_POST );
                 wp_send_json_error( __( 'Security check failed.', 'rtbcb' ), 403 );
             }
 
@@ -630,50 +632,62 @@ class Real_Treasury_BCB {
 
             // Validate required fields
             if ( empty( $user_inputs['email'] ) || ! is_email( $user_inputs['email'] ) ) {
+                rtbcb_log_error( 'Invalid email address', $user_inputs );
                 wp_send_json_error( __( 'Please enter a valid email address.', 'rtbcb' ), 400 );
             }
 
             if ( empty( $user_inputs['company_name'] ) ) {
+                rtbcb_log_error( 'Missing company name', $user_inputs );
                 wp_send_json_error( __( 'Please enter your company name.', 'rtbcb' ), 400 );
             }
 
             if ( empty( $user_inputs['company_size'] ) ) {
+                rtbcb_log_error( 'Missing company size', $user_inputs );
                 wp_send_json_error( __( 'Please select your company size.', 'rtbcb' ), 400 );
             }
 
             if ( empty( $user_inputs['industry'] ) ) {
+                rtbcb_log_error( 'Missing industry', $user_inputs );
                 wp_send_json_error( __( 'Please select your industry.', 'rtbcb' ), 400 );
             }
 
             if ( $user_inputs['hours_reconciliation'] <= 0 ) {
+                rtbcb_log_error( 'Invalid reconciliation hours', $user_inputs );
                 wp_send_json_error( __( 'Please enter your weekly reconciliation hours.', 'rtbcb' ), 400 );
             }
 
             if ( $user_inputs['hours_cash_positioning'] <= 0 ) {
+                rtbcb_log_error( 'Invalid cash positioning hours', $user_inputs );
                 wp_send_json_error( __( 'Please enter your weekly cash positioning hours.', 'rtbcb' ), 400 );
             }
 
             if ( $user_inputs['num_banks'] <= 0 ) {
+                rtbcb_log_error( 'Invalid number of banks', $user_inputs );
                 wp_send_json_error( __( 'Please enter the number of banking relationships.', 'rtbcb' ), 400 );
             }
 
             if ( $user_inputs['ftes'] <= 0 ) {
+                rtbcb_log_error( 'Invalid treasury team size', $user_inputs );
                 wp_send_json_error( __( 'Please enter your treasury team size.', 'rtbcb' ), 400 );
             }
 
             if ( empty( $user_inputs['pain_points'] ) ) {
+                rtbcb_log_error( 'No pain points selected', $user_inputs );
                 wp_send_json_error( __( 'Please select at least one challenge.', 'rtbcb' ), 400 );
             }
 
             if ( empty( $user_inputs['business_objective'] ) ) {
+                rtbcb_log_error( 'Missing business objective', $user_inputs );
                 wp_send_json_error( __( 'Please select a primary business objective.', 'rtbcb' ), 400 );
             }
 
             if ( empty( $user_inputs['implementation_timeline'] ) ) {
+                rtbcb_log_error( 'Missing implementation timeline', $user_inputs );
                 wp_send_json_error( __( 'Please select an implementation timeline.', 'rtbcb' ), 400 );
             }
 
             if ( empty( $user_inputs['budget_range'] ) ) {
+                rtbcb_log_error( 'Missing budget range', $user_inputs );
                 wp_send_json_error( __( 'Please select a budget range.', 'rtbcb' ), 400 );
             }
 
@@ -682,7 +696,7 @@ class Real_Treasury_BCB {
 
             // Calculate ROI scenarios
             if ( ! class_exists( 'RTBCB_Calculator' ) ) {
-                error_log( 'RTBCB: Calculator class not found' );
+                rtbcb_log_error( 'Calculator class not found' );
                 wp_send_json_error( __( 'System error: Calculator not available.', 'rtbcb' ), 500 );
             }
 
@@ -693,7 +707,7 @@ class Real_Treasury_BCB {
 
             // Get category recommendation
             if ( ! class_exists( 'RTBCB_Category_Recommender' ) ) {
-                error_log( 'RTBCB: Category Recommender class not found' );
+                rtbcb_log_error( 'Category Recommender class not found' );
                 wp_send_json_error( __( 'System error: Recommender not available.', 'rtbcb' ), 500 );
             }
 
@@ -720,9 +734,9 @@ class Real_Treasury_BCB {
                     rtbcb_log_api_debug( 'RAG search results', $rag_context );
                     rtbcb_log_memory_usage( 'after_rag_search' );
                 } catch ( Exception $e ) {
-                    error_log( 'RTBCB: RAG search failed - ' . $e->getMessage() );
+                    rtbcb_log_error( 'RAG search failed', $e->getMessage() );
                 } catch ( Error $e ) {
-                    error_log( 'RTBCB: RAG search fatal error - ' . $e->getMessage() );
+                    rtbcb_log_error( 'RAG search fatal error', $e->getMessage() );
                 }
             }
 
@@ -777,13 +791,13 @@ class Real_Treasury_BCB {
                     }
                     rtbcb_log_api_debug( 'LLM generation succeeded' );
                 } catch ( Exception $e ) {
-                    error_log( 'RTBCB: LLM generation failed - ' . $e->getMessage() );
+                    rtbcb_log_error( 'LLM generation failed', $e->getMessage() );
                     wp_send_json_error(
                         [ 'message' => __( 'Failed to generate business case analysis.', 'rtbcb' ) ],
                         500
                     );
                 } catch ( Error $e ) {
-                    error_log( 'RTBCB: LLM generation fatal error - ' . $e->getMessage() );
+                    rtbcb_log_error( 'LLM generation fatal error', $e->getMessage() );
                     wp_send_json_error(
                         [ 'message' => __( 'Failed to generate business case analysis.', 'rtbcb' ) ],
                         500
@@ -792,6 +806,7 @@ class Real_Treasury_BCB {
             }
 
             if ( empty( $comprehensive_analysis ) ) {
+                rtbcb_log_error( 'LLM returned empty analysis', $user_inputs );
                 wp_send_json_error(
                     [ 'message' => __( 'Failed to generate business case analysis.', 'rtbcb' ) ],
                     500
@@ -831,6 +846,7 @@ class Real_Treasury_BCB {
             try {
                 $report_html = $this->get_comprehensive_report_html( $comprehensive_analysis );
                 if ( empty( $report_html ) ) {
+                    rtbcb_log_error( 'Report HTML generation returned empty', $comprehensive_analysis );
                     wp_send_json_error(
                         [ 'message' => __( 'Failed to render business case report.', 'rtbcb' ) ],
                         500
@@ -838,7 +854,7 @@ class Real_Treasury_BCB {
                 }
                 rtbcb_log_memory_usage( 'after_report_generation' );
             } catch ( Exception $e ) {
-                error_log( 'RTBCB: Report generation failed - ' . $e->getMessage() );
+                rtbcb_log_error( 'Report generation failed', $e->getMessage() );
                 wp_send_json_error(
                     [ 'message' => __( 'Failed to render business case report.', 'rtbcb' ) ],
                     500
@@ -866,9 +882,12 @@ class Real_Treasury_BCB {
                     ];
 
                     $lead_id = RTBCB_Leads::save_lead( $lead_data );
+                    if ( false === $lead_id ) {
+                        rtbcb_log_error( 'Failed to save lead', $lead_data );
+                    }
                     rtbcb_log_memory_usage( 'after_lead_save' );
                 } catch ( Throwable $e ) {
-                    error_log( 'RTBCB: Failed to save lead - ' . $e->getMessage() );
+                    rtbcb_log_error( 'Failed to save lead', $e->getMessage() );
                 }
             }
 
@@ -894,14 +913,20 @@ class Real_Treasury_BCB {
 
         } catch ( Exception $e ) {
             rtbcb_log_memory_usage( 'exception_occurred' );
-            error_log( 'RTBCB Ajax Error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine() );
+            rtbcb_log_error(
+                'Ajax exception',
+                $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine()
+            );
             wp_send_json_error(
                 [ 'message' => __( 'An error occurred while generating your business case. Please try again.', 'rtbcb' ) ],
                 500
             );
         } catch ( Error $e ) {
             rtbcb_log_memory_usage( 'fatal_error_occurred' );
-            error_log( 'RTBCB Fatal Error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine() );
+            rtbcb_log_error(
+                'Ajax fatal error',
+                $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine()
+            );
             wp_send_json_error(
                 [ 'message' => __( 'A system error occurred. Please contact support.', 'rtbcb' ) ],
                 500
