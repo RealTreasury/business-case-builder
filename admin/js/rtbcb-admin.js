@@ -3,15 +3,8 @@
 // Ensure proper minification compatibility
 "use strict";
 
-function _regeneratorKeys(e) { var n = Object(e), r = []; for (var t in n) r.unshift(t); return function e() { for (; r.length;) if ((t = r.pop()) in n) return e.value = t, e.done = !1, e; return e.done = !0, e; }; }
-function _regenerator() { /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE */ var e, t, r = "function" == typeof Symbol ? Symbol : {}, n = r.iterator || "@@iterator", o = r.toStringTag || "@@toStringTag"; function i(r, n, o, i) { var c = n && n.prototype instanceof Generator ? n : Generator, u = Object.create(c.prototype); return _regeneratorDefine2(u, "_invoke", function (r, n, o) { var i, c, u, f = 0, p = o || [], y = !1, G = { p: 0, n: 0, v: e, a: d, f: d.bind(e, 4), d: function d(t, r) { return i = t, c = 0, u = e, G.n = r, a; } }; function d(r, n) { for (c = r, u = n, t = 0; !y && f && !o && t < p.length; t++) { var o, i = p[t], d = G.p, l = i[2]; r > 3 ? (o = l === n) && (u = i[(c = i[4]) ? 5 : (c = 3, 3)], i[4] = i[5] = e) : i[0] <= d && ((o = r < 2 && d < i[1]) ? (c = 0, G.v = n, G.n = i[1]) : d < l && (o = r < 3 || i[0] > n || n > l) && (i[4] = r, i[5] = n, G.n = l, c = 0)); } if (o || r > 1) return a; throw y = !0, n; } return function (o, p, l) { if (f > 1) throw TypeError("Generator is already running"); for (y && 1 === p && d(p, l), c = p, u = l; (t = c < 2 ? e : u) || !y;) { i || (c ? c < 3 ? (c > 1 && (G.n = -1), d(c, u)) : G.n = u : G.v = u); try { if (f = 2, i) { if (c || (o = "next"), t = i[o]) { if (!(t = t.call(i, u))) throw TypeError("iterator result is not an object"); if (!t.done) return t; u = t.value, c < 2 && (c = 0); } else 1 === c && (t = i.return) && t.call(i), c < 2 && (u = TypeError("The iterator does not provide a '" + o + "' method"), c = 1); i = e; } else if ((t = (y = G.n < 0) ? u : r.call(n, G)) !== a) break; } catch (t) { i = e, c = 1, u = t; } finally { f = 1; } } return { value: t, done: y }; }; }(r, o, i), !0), u; } var a = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} t = Object.getPrototypeOf; var c = [][n] ? t(t([][n]())) : (_regeneratorDefine2(t = {}, n, function () { return this; }), t), u = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(c); function f(e) { return Object.setPrototypeOf ? Object.setPrototypeOf(e, GeneratorFunctionPrototype) : (e.__proto__ = GeneratorFunctionPrototype, _regeneratorDefine2(e, o, "GeneratorFunction")), e.prototype = Object.create(u), e; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, _regeneratorDefine2(u, "constructor", GeneratorFunctionPrototype), _regeneratorDefine2(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = "GeneratorFunction", _regeneratorDefine2(GeneratorFunctionPrototype, o, "GeneratorFunction"), _regeneratorDefine2(u), _regeneratorDefine2(u, o, "Generator"), _regeneratorDefine2(u, n, function () { return this; }), _regeneratorDefine2(u, "toString", function () { return "[object Generator]"; }), (_regenerator = function _regenerator() { return { w: i, m: f }; })(); }
-function _regeneratorDefine2(e, r, n, t) { var i = Object.defineProperty; try { i({}, "", {}); } catch (e) { i = 0; } _regeneratorDefine2 = function _regeneratorDefine(e, r, n, t) { function o(r, n) { _regeneratorDefine2(e, r, function (e) { return this._invoke(r, n, e); }); } r ? i ? i(e, r, { value: n, enumerable: !t, configurable: !t, writable: !t }) : e[r] = n : (o("next", 0), o("throw", 1), o("return", 2)); }, _regeneratorDefine2(e, r, n, t); }
-function asyncGeneratorStep(n, t, e, r, o, a, c) { try { var i = n[a](c), u = i.value; } catch (n) { return void e(n); } i.done ? t(u) : Promise.resolve(u).then(r, o); }
-function _asyncToGenerator(n) { return function () { var t = this, e = arguments; return new Promise(function (r, o) { var a = n.apply(t, e); function _next(n) { asyncGeneratorStep(a, r, o, _next, _throw, "next", n); } function _throw(n) { asyncGeneratorStep(a, r, o, _next, _throw, "throw", n); } _next(void 0); }); }; }
 function _typeof(o) {
-  "@babel/helpers - typeof";
-
-  return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) {
+  "@babel/helpers - typeof";return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) {
     return typeof o;
   } : function (o) {
     return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o;
@@ -90,7 +83,7 @@ function _settle(pact, state, value) {
     }
   }
 }
-var _Pact = /*#__PURE__*/function () {
+var _Pact = /*#__PURE__*/(function () {
   function _Pact() {}
   _Pact.prototype.then = function (onFulfilled, onRejected) {
     var result = new _Pact();
@@ -125,14 +118,14 @@ var _Pact = /*#__PURE__*/function () {
     return result;
   };
   return _Pact;
-}();
+})();
 function _isSettledPact(thenable) {
   return thenable instanceof _Pact && thenable.s & 1;
 }
 function _forTo(array, body, check) {
   var i = -1,
-    pact,
-    reject;
+      pact,
+      reject;
   function _cycle(result) {
     try {
       while (++i < array.length && (!check || !check())) {
@@ -183,9 +176,9 @@ function _forOf(target, body, check) {
       }
     };
     var iterator = target[_iteratorSymbol](),
-      step,
-      pact,
-      reject;
+        step,
+        pact,
+        reject;
     _cycle2();
     if (iterator["return"]) {
       var _fixup = function _fixup(value) {
@@ -235,28 +228,19 @@ function _classCallCheck(a, n) {
 }
 function _defineProperties(e, r) {
   for (var t = 0; t < r.length; t++) {
-    var o = r[t];
-    o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o);
+    var o = r[t];o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o);
   }
 }
 function _createClass(e, r, t) {
-  return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", {
-    writable: !1
-  }), e;
+  return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e;
 }
 function _toPropertyKey(t) {
-  var i = _toPrimitive(t, "string");
-  return "symbol" == _typeof(i) ? i : i + "";
+  var i = _toPrimitive(t, "string");return "symbol" == _typeof(i) ? i : i + "";
 }
 function _toPrimitive(t, r) {
-  if ("object" != _typeof(t) || !t) return t;
-  var e = t[Symbol.toPrimitive];
-  if (void 0 !== e) {
-    var i = e.call(t, r || "default");
-    if ("object" != _typeof(i)) return i;
-    throw new TypeError("@@toPrimitive must return a primitive value.");
-  }
-  return ("string" === r ? String : Number)(t);
+  if ("object" != _typeof(t) || !t) return t;var e = t[Symbol.toPrimitive];if (void 0 !== e) {
+    var i = e.call(t, r || "default");if ("object" != _typeof(i)) return i;throw new TypeError("@@toPrimitive must return a primitive value.");
+  }return ("string" === r ? String : Number)(t);
 }
 function _slicedToArray(r, e) {
   return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest();
@@ -266,30 +250,23 @@ function _nonIterableRest() {
 }
 function _unsupportedIterableToArray(r, a) {
   if (r) {
-    if ("string" == typeof r) return _arrayLikeToArray(r, a);
-    var t = {}.toString.call(r).slice(8, -1);
-    return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0;
+    if ("string" == typeof r) return _arrayLikeToArray(r, a);var t = ({}).toString.call(r).slice(8, -1);return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0;
   }
 }
 function _arrayLikeToArray(r, a) {
-  (null == a || a > r.length) && (a = r.length);
-  for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e];
-  return n;
+  (null == a || a > r.length) && (a = r.length);for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e];return n;
 }
 function _iterableToArrayLimit(r, l) {
-  var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"];
-  if (null != t) {
+  var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"];if (null != t) {
     var e,
-      n,
-      i,
-      u,
-      a = [],
-      f = !0,
-      o = !1;
-    try {
-      if (i = (t = t.call(r)).next, 0 === l) {
-        if (Object(t) !== t) return;
-        f = !1;
+        n,
+        i,
+        u,
+        a = [],
+        f = !0,
+        o = !1;try {
+      if ((i = (t = t.call(r)).next, 0 === l)) {
+        if (Object(t) !== t) return;f = !1;
       } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0);
     } catch (r) {
       o = !0, n = r;
@@ -299,8 +276,7 @@ function _iterableToArrayLimit(r, l) {
       } finally {
         if (o) throw n;
       }
-    }
-    return a;
+    }return a;
   }
 }
 function _arrayWithHoles(r) {
@@ -443,221 +419,174 @@ function _arrayWithHoles(r) {
       if (!rtbcbAdmin || rtbcbAdmin.page !== 'rtbcb-test-company-overview') {
         return;
       }
+
       var form = document.getElementById('rtbcb-company-overview-form');
       if (!form) {
         return;
       }
+
       var results = document.getElementById('rtbcb-company-overview-results');
       var clearBtn = document.getElementById('rtbcb-clear-results');
       var submitBtn = form.querySelector('button[type="submit"]');
-      var submitHandler = /*#__PURE__*/function () {
-        var _ref = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee(e) {
-          var originalText, companyName, basicInfo, detailedAnalysis, finalReport, recommendationsHtml, _t;
-          return _regenerator().w(function (_context) {
-            while (1) switch (_context.p = _context.n) {
-              case 0:
-                e.preventDefault();
-                originalText = submitBtn.textContent;
-                companyName = document.getElementById('rtbcb-company-name').value.trim();
-                if (companyName) {
-                  _context.n = 1;
-                  break;
-                }
-                alert('Please enter a company name.');
-                return _context.a(2);
-              case 1:
-                submitBtn.disabled = true;
-                _context.p = 2;
-                // Phase 1: Basic Info
-                submitBtn.textContent = 'Phase 1: Gathering basic info...';
-                results.innerHTML = '<div class="notice"><p>Phase 1: Gathering basic company information...</p></div>';
-                _context.n = 3;
-                return RTBCBAdmin.gatherBasicCompanyInfo(companyName);
-              case 3:
-                basicInfo = _context.v;
-                results.innerHTML = '<div class="notice notice-info"><p><strong>Phase 1 Complete:</strong> Found ' + basicInfo.company_name + ' in ' + basicInfo.industry + '</p></div>';
 
-                // Phase 2: Detailed Analysis
-                submitBtn.textContent = 'Phase 2: Analyzing details...';
-                _context.n = 4;
-                return RTBCBAdmin.conductDetailedAnalysis(basicInfo);
-              case 4:
-                detailedAnalysis = _context.v;
-                // Phase 3: Final Report
-                submitBtn.textContent = 'Phase 3: Compiling report...';
-                finalReport = RTBCBAdmin.compileFinalReport(basicInfo, detailedAnalysis); // Display results
-                $(results).html(RTBCBAdmin.utils.buildResult(finalReport.analysis, performance.now(), form, {
-                  word_count: finalReport.analysis.split(' ').length,
-                  recommendations_count: finalReport.recommendations.length,
-                  references_count: finalReport.references.length
-                }));
+      var submitHandler = async function (e) {
+        e.preventDefault();
 
-                // Add recommendations section
-                if (finalReport.recommendations.length > 0) {
-                  recommendationsHtml = '<div class="rtbcb-recommendations" style="margin-top: 20px;"><h4>Treasury Technology Recommendations:</h4><ul>' + finalReport.recommendations.map(function (rec) {
-                    return '<li>' + rec + '</li>';
-                  }).join('') + '</ul></div>';
-                  results.querySelector('.rtbcb-results').insertAdjacentHTML('beforeend', recommendationsHtml);
-                }
-                _context.n = 6;
-                break;
-              case 5:
-                _context.p = 5;
-                _t = _context.v;
-                console.error('Company analysis failed:', _t);
-                results.innerHTML = '<div class="notice notice-error"><p><strong>Analysis failed:</strong> ' + _t.message + '</p></div>';
-              case 6:
-                _context.p = 6;
-                submitBtn.disabled = false;
-                submitBtn.textContent = originalText;
-                return _context.f(6);
-              case 7:
-                return _context.a(2);
-            }
-          }, _callee, null, [[2, 5, 6, 7]]);
-        }));
-        return function submitHandler(_x) {
-          return _ref.apply(this, arguments);
-        };
-      }();
+        var originalText = submitBtn.textContent;
+        var companyName = document.getElementById('rtbcb-company-name').value.trim();
+
+        if (!companyName) {
+          alert('Please enter a company name.');
+          return;
+        }
+
+        submitBtn.disabled = true;
+
+        try {
+          // Phase 1: Basic Info
+          submitBtn.textContent = 'Phase 1: Gathering basic info...';
+          results.innerHTML = '<div class="notice"><p>Phase 1: Gathering basic company information...</p></div>';
+
+          var basicInfo = await RTBCBAdmin.gatherBasicCompanyInfo(companyName);
+
+          results.innerHTML = '<div class="notice notice-info"><p><strong>Phase 1 Complete:</strong> Found ' + basicInfo.company_name + ' in ' + basicInfo.industry + '</p></div>';
+
+          // Phase 2: Detailed Analysis
+          submitBtn.textContent = 'Phase 2: Analyzing details...';
+
+          var detailedAnalysis = await RTBCBAdmin.conductDetailedAnalysis(basicInfo);
+
+          // Phase 3: Final Report
+          submitBtn.textContent = 'Phase 3: Compiling report...';
+
+          var finalReport = RTBCBAdmin.compileFinalReport(basicInfo, detailedAnalysis);
+
+          // Display results
+      $(results).html(
+        RTBCBAdmin.utils.buildResult(
+          finalReport.analysis,
+          performance.now(),
+          form,
+          {
+            word_count: finalReport.analysis.split(' ').length,
+            recommendations_count: finalReport.recommendations.length,
+            references_count: finalReport.references.length
+          }
+        )
+      );
+
+          // Add recommendations section
+          if (finalReport.recommendations.length > 0) {
+            var recommendationsHtml = '<div class="rtbcb-recommendations" style="margin-top: 20px;"><h4>Treasury Technology Recommendations:</h4><ul>' + finalReport.recommendations.map(function (rec) {
+              return '<li>' + rec + '</li>';
+            }).join('') + '</ul></div>';
+            results.querySelector('.rtbcb-results').insertAdjacentHTML('beforeend', recommendationsHtml);
+          }
+        } catch (error) {
+          console.error('Company analysis failed:', error);
+          results.innerHTML = '<div class="notice notice-error"><p><strong>Analysis failed:</strong> ' + error.message + '</p></div>';
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalText;
+        }
+      };
+
       form.addEventListener('submit', submitHandler);
       RTBCBAdmin.utils.bindClear($(clearBtn), $(results));
     },
-    gatherBasicCompanyInfo: function () {
-      var _gatherBasicCompanyInfo = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee2(companyName) {
-        var prompt, formData, response, data;
-        return _regenerator().w(function (_context2) {
-          while (1) switch (_context2.n) {
-            case 0:
-              prompt = "Extract basic company information for " + companyName + ". Return only valid JSON:\n\n{\n  \"company_name\": \"string\",\n  \"industry\": \"string\", \n  \"primary_business\": \"string\",\n  \"annual_revenue\": \"string\",\n  \"employee_count\": \"string\",\n  \"headquarters\": \"string\",\n  \"public_private\": \"string\",\n  \"major_markets\": [\"string\"],\n  \"key_business_segments\": [\"string\"]\n}\n\nUse \"Not available\" for missing data.";
-              formData = new FormData();
-              formData.append('action', 'rtbcb_openai_request');
-              formData.append('prompt', prompt);
-              formData.append('max_tokens', '800');
-              formData.append('temperature', '0.3');
-              formData.append('nonce', rtbcbAdmin.nonce);
-              _context2.n = 1;
-              return fetch(rtbcbAdmin.ajax_url, {
-                method: 'POST',
-                body: formData
-              });
-            case 1:
-              response = _context2.v;
-              if (response.ok) {
-                _context2.n = 2;
-                break;
-              }
-              throw new Error('Phase 1 API call failed: ' + response.status);
-            case 2:
-              _context2.n = 3;
-              return response.json();
-            case 3:
-              data = _context2.v;
-              if (data.success) {
-                _context2.n = 4;
-                break;
-              }
-              throw new Error(data.data.message || 'Phase 1 failed');
-            case 4:
-              return _context2.a(2, JSON.parse(data.data.response));
-          }
-        }, _callee2);
-      }));
-      function gatherBasicCompanyInfo(_x2) {
-        return _gatherBasicCompanyInfo.apply(this, arguments);
+
+    gatherBasicCompanyInfo: async function gatherBasicCompanyInfo(companyName) {
+      var prompt = "Extract basic company information for " + companyName + ". Return only valid JSON:\n\n{\n  \"company_name\": \"string\",\n  \"industry\": \"string\", \n  \"primary_business\": \"string\",\n  \"annual_revenue\": \"string\",\n  \"employee_count\": \"string\",\n  \"headquarters\": \"string\",\n  \"public_private\": \"string\",\n  \"major_markets\": [\"string\"],\n  \"key_business_segments\": [\"string\"]\n}\n\nUse \"Not available\" for missing data.";
+
+      var formData = new FormData();
+      formData.append('action', 'rtbcb_openai_request');
+      formData.append('prompt', prompt);
+      formData.append('max_tokens', '800');
+      formData.append('temperature', '0.3');
+      formData.append('nonce', rtbcbAdmin.nonce);
+
+      var response = await fetch(rtbcbAdmin.ajax_url, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error('Phase 1 API call failed: ' + response.status);
       }
-      return gatherBasicCompanyInfo;
-    }(),
-    conductDetailedAnalysis: function () {
-      var _conductDetailedAnalysis = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee3(basicInfo) {
-        var analysisSteps, results, key, prompt, formData, response, data, _t2, _t3, _t4;
-        return _regenerator().w(function (_context3) {
-          while (1) switch (_context3.p = _context3.n) {
-            case 0:
-              analysisSteps = {
-                financial: 'Company: ' + basicInfo.company_name + ', Industry: ' + basicInfo.industry + '\n\nProvide financial treasury analysis. Return valid JSON:\n{\n  "cash_position": "string",\n  "debt_profile": "string", \n  "working_capital": "string",\n  "currency_exposure": "string"\n}',
-                challenges: 'Company: ' + basicInfo.company_name + ', Industry: ' + basicInfo.industry + '\n\nIdentify treasury challenges. Return valid JSON:\n{\n  "primary_challenges": ["string"],\n  "risk_factors": ["string"],\n  "compliance_requirements": ["string"]\n}',
-                technology: 'Company: ' + basicInfo.company_name + ', Industry: ' + basicInfo.industry + '\n\nSuggest treasury technology solutions. Return valid JSON:\n{\n  "immediate_wins": ["string"],\n  "strategic_initiatives": ["string"],\n  "implementation_priorities": ["string"]\n}'
-              };
-              results = {};
-              _t2 = _regeneratorKeys(analysisSteps);
-            case 1:
-              if ((_t3 = _t2()).done) {
-                _context3.n = 9;
-                break;
-              }
-              key = _t3.value;
-              if (!analysisSteps.hasOwnProperty(key)) {
-                _context3.n = 8;
-                break;
-              }
-              prompt = analysisSteps[key];
-              _context3.p = 2;
-              formData = new FormData();
-              formData.append('action', 'rtbcb_openai_request');
-              formData.append('prompt', prompt);
-              formData.append('max_tokens', '600');
-              formData.append('temperature', '0.4');
-              formData.append('nonce', rtbcbAdmin.nonce);
-              _context3.n = 3;
-              return fetch(rtbcbAdmin.ajax_url, {
-                method: 'POST',
-                body: formData
-              });
-            case 3:
-              response = _context3.v;
-              if (!response.ok) {
-                _context3.n = 5;
-                break;
-              }
-              _context3.n = 4;
-              return response.json();
-            case 4:
-              data = _context3.v;
+
+      var data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.data.message || 'Phase 1 failed');
+      }
+
+      return JSON.parse(data.data.response);
+    },
+
+    conductDetailedAnalysis: async function conductDetailedAnalysis(basicInfo) {
+      var analysisSteps = {
+        financial: 'Company: ' + basicInfo.company_name + ', Industry: ' + basicInfo.industry + '\n\nProvide financial treasury analysis. Return valid JSON:\n{\n  "cash_position": "string",\n  "debt_profile": "string", \n  "working_capital": "string",\n  "currency_exposure": "string"\n}',
+        challenges: 'Company: ' + basicInfo.company_name + ', Industry: ' + basicInfo.industry + '\n\nIdentify treasury challenges. Return valid JSON:\n{\n  "primary_challenges": ["string"],\n  "risk_factors": ["string"],\n  "compliance_requirements": ["string"]\n}',
+        technology: 'Company: ' + basicInfo.company_name + ', Industry: ' + basicInfo.industry + '\n\nSuggest treasury technology solutions. Return valid JSON:\n{\n  "immediate_wins": ["string"],\n  "strategic_initiatives": ["string"],\n  "implementation_priorities": ["string"]\n}'
+      };
+
+      var results = {};
+
+      for (var key in analysisSteps) {
+        if (analysisSteps.hasOwnProperty(key)) {
+          var prompt = analysisSteps[key];
+          try {
+            var formData = new FormData();
+            formData.append('action', 'rtbcb_openai_request');
+            formData.append('prompt', prompt);
+            formData.append('max_tokens', '600');
+            formData.append('temperature', '0.4');
+            formData.append('nonce', rtbcbAdmin.nonce);
+
+            var response = await fetch(rtbcbAdmin.ajax_url, {
+              method: 'POST',
+              body: formData
+            });
+
+            if (response.ok) {
+              var data = await response.json();
               if (data.success) {
                 results[key] = JSON.parse(data.data.response);
               }
-            case 5:
-              _context3.n = 6;
-              return new Promise(function (resolve) {
-                return setTimeout(resolve, 500);
-              });
-            case 6:
-              _context3.n = 8;
-              break;
-            case 7:
-              _context3.p = 7;
-              _t4 = _context3.v;
-              console.warn('Step ' + key + ' failed:', _t4);
-              results[key] = {
-                error: 'Failed to analyze ' + key
-              };
-            case 8:
-              _context3.n = 1;
-              break;
-            case 9:
-              return _context3.a(2, results);
+            }
+
+            await new Promise(function (resolve) {
+              return setTimeout(resolve, 500);
+            });
+          } catch (error) {
+            console.warn('Step ' + key + ' failed:', error);
+            results[key] = { error: 'Failed to analyze ' + key };
           }
-        }, _callee3, null, [[2, 7]]);
-      }));
-      function conductDetailedAnalysis(_x3) {
-        return _conductDetailedAnalysis.apply(this, arguments);
+        }
       }
-      return conductDetailedAnalysis;
-    }(),
+
+      return results;
+    },
+
     compileFinalReport: function compileFinalReport(basicInfo, analysisResults) {
       var analysis = basicInfo.company_name + ' is a ' + basicInfo.public_private + ' company in the ' + basicInfo.industry + ' industry';
+
       if (basicInfo.annual_revenue !== 'Not available') {
         analysis += ' with ' + basicInfo.annual_revenue + ' in annual revenue';
       }
+
       if (basicInfo.employee_count !== 'Not available') {
         analysis += ' and approximately ' + basicInfo.employee_count + ' employees';
       }
+
       analysis += '. The company operates primarily in ' + basicInfo.primary_business;
+
       if (basicInfo.key_business_segments.length > 0 && basicInfo.key_business_segments[0] !== 'Not available') {
         analysis += ' with key business segments including ' + basicInfo.key_business_segments.join(', ');
       }
+
       analysis += '. ';
+
       if (analysisResults.financial && !analysisResults.financial.error) {
         var fin = analysisResults.financial;
         analysis += 'From a treasury perspective, the company maintains ' + fin.cash_position + ' with ' + fin.debt_profile + '. ';
@@ -666,23 +595,27 @@ function _arrayWithHoles(r) {
           analysis += 'Currency exposure includes ' + fin.currency_exposure + '. ';
         }
       }
+
       if (analysisResults.challenges && !analysisResults.challenges.error) {
         var challenges = analysisResults.challenges;
         if (challenges.primary_challenges.length > 0) {
           analysis += 'Primary treasury challenges include ' + challenges.primary_challenges.join(', ') + '. ';
         }
       }
+
       var recommendations = [];
       if (analysisResults.technology && !analysisResults.technology.error) {
         var tech = analysisResults.technology;
         recommendations = recommendations.concat(tech.immediate_wins, tech.strategic_initiatives);
       }
+
       var references = [];
       if (basicInfo.public_private === 'Public') {
         references.push('SEC Edgar Database - ' + basicInfo.company_name);
         references.push(basicInfo.company_name + ' Investor Relations');
       }
       references.push(basicInfo.industry + ' Industry Analysis');
+
       return {
         analysis: analysis,
         recommendations: recommendations.filter(function (rec) {
@@ -1007,8 +940,8 @@ function _arrayWithHoles(r) {
                 var message = '';
                 for (var _i = 0, _Object$entries = Object.entries(data.data); _i < _Object$entries.length; _i++) {
                   var _Object$entries$_i = _slicedToArray(_Object$entries[_i], 2),
-                    key = _Object$entries$_i[0],
-                    result = _Object$entries$_i[1];
+                      key = _Object$entries$_i[0],
+                      result = _Object$entries$_i[1];
                   message += "".concat(key, ": ").concat(result.passed ? 'PASS' : 'FAIL', " - ").concat(result.message, "\n");
                 }
                 alert(message);
@@ -1241,7 +1174,7 @@ function _arrayWithHoles(r) {
       }
     }
   };
-  var RTBCBLeadsManager = /*#__PURE__*/function () {
+  var RTBCBLeadsManager = /*#__PURE__*/(function () {
     function RTBCBLeadsManager() {
       _classCallCheck(this, RTBCBLeadsManager);
       this.bindEvents();
@@ -1414,7 +1347,7 @@ function _arrayWithHoles(r) {
         }
       }
     }]);
-  }();
+  })();
   $(function () {
     RTBCBAdmin.init();
   });
