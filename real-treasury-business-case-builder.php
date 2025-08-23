@@ -120,6 +120,7 @@ class Real_Treasury_BCB {
      */
     private function includes() {
         // Core classes
+        require_once RTBCB_DIR . 'inc/config.php';
         require_once RTBCB_DIR . 'inc/class-rtbcb-settings.php';
         require_once RTBCB_DIR . 'inc/class-rtbcb-calculator.php';
         require_once RTBCB_DIR . 'inc/class-rtbcb-router.php';
@@ -434,14 +435,33 @@ class Real_Treasury_BCB {
             true
         );
 
-        $api_key     = sanitize_text_field( get_option( 'rtbcb_openai_api_key', '' ) );
+        $api_key      = sanitize_text_field( get_option( 'rtbcb_openai_api_key', '' ) );
         $report_model = sanitize_text_field( get_option( 'rtbcb_advanced_model', 'gpt-5-mini' ) );
+
+        $config = defined( 'GPT5_CONFIG' ) ? GPT5_CONFIG : [];
+        $overrides = get_option( 'rtbcb_gpt5_config', [] );
+        if ( is_array( $overrides ) ) {
+            $config = array_merge( $config, array_intersect_key( $overrides, $config ) );
+        }
+
+        $config_localized = [
+            'model'       => sanitize_text_field( $config['model'] ),
+            'max_tokens'  => intval( $config['max_tokens'] ),
+            'reasoning'   => [ 'effort' => sanitize_text_field( $config['reasoning']['effort'] ?? '' ) ],
+            'text'        => [ 'verbosity' => sanitize_text_field( $config['text']['verbosity'] ?? '' ) ],
+            'temperature' => floatval( $config['temperature'] ),
+            'store'       => (bool) $config['store'],
+            'timeout'     => intval( $config['timeout'] ),
+            'max_retries' => intval( $config['max_retries'] ),
+        ];
+
         wp_localize_script(
             'rtbcb-report',
             'rtbcbReport',
             [
                 'api_key'      => $api_key,
                 'report_model' => $report_model,
+                'defaults'     => $config_localized,
             ]
         );
     }

@@ -2,6 +2,17 @@
  * Generate and display professional reports using OpenAI.
  */
 
+const RTBCB_GPT5_DEFAULTS = (typeof rtbcbReport !== 'undefined' && rtbcbReport.defaults) ? rtbcbReport.defaults : {
+    model: 'gpt-5-mini',
+    max_tokens: 4000,
+    reasoning: { effort: 'medium' },
+    text: { verbosity: 'medium' },
+    temperature: 0.7,
+    store: true,
+    timeout: 120,
+    max_retries: 2
+};
+
 function buildEnhancedPrompt(businessContext) {
     return `
 Generate a professional business consulting report in HTML format with the following requirements:
@@ -252,10 +263,31 @@ Ensure the report is:
 `;
 }
 
+async function fetchWithRetry(url, options, retries, timeout) {
+    let lastError;
+    for (let attempt = 1; attempt <= retries; attempt++) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeout * 1000);
+        try {
+            const response = await fetch(url, { ...options, signal: controller.signal });
+            clearTimeout(timer);
+            if (response.ok) {
+                return response;
+            }
+            lastError = new Error(`HTTP ${response.status}`);
+        } catch (error) {
+            clearTimeout(timer);
+            lastError = error;
+        }
+    }
+    throw lastError;
+}
+
 async function generateProfessionalReport(businessContext) {
     try {
+        const cfg = RTBCB_GPT5_DEFAULTS;
         const requestBody = {
-            model: rtbcbReport.report_model,
+            model: rtbcbReport.report_model || cfg.model,
             input: [
                 {
                     role: 'system',
@@ -266,21 +298,21 @@ async function generateProfessionalReport(businessContext) {
                     content: buildEnhancedPrompt(businessContext)
                 }
             ],
-            max_tokens: 4000,
-            reasoning: { effort: 'medium' },
-            text: { verbosity: 'medium' },
-            temperature: 0.7,
-            store: true
+            max_tokens: cfg.max_tokens,
+            reasoning: cfg.reasoning,
+            text: cfg.text,
+            temperature: cfg.temperature,
+            store: cfg.store
         };
 
-        const response = await fetch('https://api.openai.com/v1/responses', {
+        const response = await fetchWithRetry('https://api.openai.com/v1/responses', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${rtbcbReport.api_key}`
             },
             body: JSON.stringify(requestBody)
-        });
+        }, cfg.max_retries, cfg.timeout);
 
         if (!response.ok) {
             const errorText = await response.text();
