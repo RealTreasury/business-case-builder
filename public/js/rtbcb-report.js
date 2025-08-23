@@ -268,21 +268,58 @@ async function generateProfessionalReport(businessContext) {
             ]
         };
 
+        const maxTokens = typeof rtbcbReport.max_tokens === 'number' ? rtbcbReport.max_tokens : 4000;
+        const temp = typeof rtbcbReport.temperature === 'number'
+            ? rtbcbReport.temperature
+            : (rtbcbReport.report_model.startsWith('gpt-5') ? null : 0.7);
+
         if (rtbcbReport.report_model.startsWith('gpt-5')) {
-            requestBody.max_completion_tokens = 4000;
+            requestBody.max_completion_tokens = maxTokens;
+            if (rtbcbReport.reasoning) {
+                requestBody.reasoning = rtbcbReport.reasoning;
+            }
+            if (rtbcbReport.text) {
+                requestBody.text = rtbcbReport.text;
+            }
+            if (typeof rtbcbReport.store !== 'undefined') {
+                requestBody.store = rtbcbReport.store;
+            }
+            if (temp !== null) {
+                requestBody.temperature = temp;
+            }
         } else {
-            requestBody.max_tokens = 4000;
-            requestBody.temperature = 0.7;
+            requestBody.max_tokens = maxTokens;
+            requestBody.temperature = temp;
         }
 
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${rtbcbReport.api_key}`
-            },
-            body: JSON.stringify(requestBody)
-        });
+        const timeoutMs = (rtbcbReport.timeout || 120) * 1000;
+        const maxRetries = rtbcbReport.max_retries || 1;
+        let response;
+
+        for (let attempt = 0; attempt < maxRetries; attempt++) {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), timeoutMs);
+            try {
+                response = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${rtbcbReport.api_key}`
+                    },
+                    body: JSON.stringify(requestBody),
+                    signal: controller.signal
+                });
+                clearTimeout(timer);
+                if (response.ok) {
+                    break;
+                }
+            } catch (err) {
+                clearTimeout(timer);
+                if (attempt + 1 >= maxRetries) {
+                    throw err;
+                }
+            }
+        }
 
         if (!response.ok) {
             const errorText = await response.text();

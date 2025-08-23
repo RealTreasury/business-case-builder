@@ -5,9 +5,17 @@
  * @package RealTreasuryBusinessCaseBuilder
  */
 
+require_once __DIR__ . '/config.php';
+
 class RTBCB_LLM {
     private $api_key;
     private $models;
+    /**
+     * GPT-5 configuration defaults.
+     *
+     * @var array
+     */
+    private $gpt5_config = [];
     private $current_inputs = [];
 
     public function __construct() {
@@ -19,7 +27,20 @@ class RTBCB_LLM {
             'gpt5_mini' => get_option( 'rtbcb_gpt5_mini_model', 'gpt-5-mini' ),
             'embedding' => get_option( 'rtbcb_embedding_model', 'text-embedding-3-small' ),
         ];
-        
+
+        $config        = GPT5_CONFIG;
+        $model_option  = get_option( 'rtbcb_gpt5_model', $config['model'] );
+        $config['model'] = function_exists( 'sanitize_text_field' ) ? sanitize_text_field( $model_option ) : $model_option;
+        $config['max_tokens']        = (int) get_option( 'rtbcb_gpt5_max_tokens', $config['max_tokens'] );
+        $config['reasoning']         = (int) get_option( 'rtbcb_gpt5_reasoning', $config['reasoning'] );
+        $config['text']              = (int) get_option( 'rtbcb_gpt5_text', $config['text'] );
+        $temp                        = get_option( 'rtbcb_gpt5_temperature', $config['temperature'] );
+        $config['temperature']       = is_numeric( $temp ) ? floatval( $temp ) : null;
+        $config['store']             = (bool) get_option( 'rtbcb_gpt5_store', $config['store'] );
+        $config['timeout']           = (int) get_option( 'rtbcb_gpt5_timeout', $config['timeout'] );
+        $config['max_retries']       = (int) get_option( 'rtbcb_gpt5_max_retries', $config['max_retries'] );
+        $this->gpt5_config           = $config;
+
         if ( empty( $this->api_key ) ) {
             error_log( 'RTBCB: OpenAI API key not configured' );
         }
@@ -981,7 +1002,8 @@ class RTBCB_LLM {
     /**
      * Call OpenAI with retry logic
      */
-    private function call_openai_with_retry( $model, $prompt, $max_retries = 2 ) {
+    private function call_openai_with_retry( $model, $prompt, $max_retries = null ) {
+        $max_retries = $max_retries ?? $this->gpt5_config['max_retries'];
         for ( $attempt = 1; $attempt <= $max_retries; $attempt++ ) {
             $response = $this->call_openai( $model, $prompt );
 
@@ -1002,13 +1024,15 @@ class RTBCB_LLM {
     /**
      * Enhanced OpenAI call with better error handling
      */
-    private function call_openai( $model, $prompt, $max_tokens = 4000 ) {
+    private function call_openai( $model, $prompt, $max_tokens = null ) {
         if ( empty( $this->api_key ) ) {
             return new WP_Error( 'no_api_key', 'OpenAI API key not configured' );
         }
 
         $endpoint      = 'https://api.openai.com/v1/chat/completions';
         $is_gpt5_model = $this->is_gpt5_model( $model );
+        $config        = $this->gpt5_config;
+        $max_tokens    = $max_tokens ?? ( $is_gpt5_model ? $config['max_tokens'] : 4000 );
         $body          = [
             'model'           => $model,
             'messages'        => [
@@ -1024,14 +1048,23 @@ class RTBCB_LLM {
             'response_format' => [ 'type' => 'json_object' ], // Force JSON response
         ];
 
-        if ( ! $is_gpt5_model ) {
-            $body['temperature'] = 0.4;
-        }
-
         if ( $is_gpt5_model ) {
             $body['max_completion_tokens'] = $max_tokens;
+            if ( null !== $config['temperature'] ) {
+                $body['temperature'] = $config['temperature'];
+            }
+            if ( ! empty( $config['reasoning'] ) ) {
+                $body['reasoning'] = $config['reasoning'];
+            }
+            if ( ! empty( $config['text'] ) ) {
+                $body['text'] = $config['text'];
+            }
+            if ( isset( $config['store'] ) ) {
+                $body['store'] = (bool) $config['store'];
+            }
         } else {
-            $body['max_tokens'] = $max_tokens;
+            $body['max_tokens']  = $max_tokens;
+            $body['temperature'] = 0.4;
         }
 
         $args = [
@@ -1040,7 +1073,7 @@ class RTBCB_LLM {
                 'Content-Type'  => 'application/json',
             ],
             'body'    => wp_json_encode( $body ),
-            'timeout' => 120, // Longer timeout for comprehensive analysis
+            'timeout' => $config['timeout'],
         ];
 
         error_log( 'RTBCB: Making OpenAI API call with model: ' . $model );
@@ -1087,7 +1120,8 @@ class RTBCB_LLM {
                 return $this->call_openai( $model, $prompt, 1000 );
             }
 
-            return new WP_Error( 'openai_empty_response', __( 'OpenAI returned an empty response.', 'rtbcb' ) );
+            $message = function_exists( '__' ) ? __( 'OpenAI returned an empty response.', 'rtbcb' ) : 'OpenAI returned an empty response.';
+            return new WP_Error( 'openai_empty_response', $message );
         }
 
         return $response;

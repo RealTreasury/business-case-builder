@@ -119,6 +119,9 @@ class Real_Treasury_BCB {
      * @return void
      */
     private function includes() {
+        // Configuration
+        require_once RTBCB_DIR . 'inc/config.php';
+
         // Core classes
         require_once RTBCB_DIR . 'inc/class-rtbcb-settings.php';
         require_once RTBCB_DIR . 'inc/class-rtbcb-calculator.php';
@@ -425,14 +428,31 @@ class Real_Treasury_BCB {
             true
         );
 
-        $api_key     = sanitize_text_field( get_option( 'rtbcb_openai_api_key', '' ) );
-        $report_model = sanitize_text_field( get_option( 'rtbcb_advanced_model', 'gpt-5-chat-latest' ) );
+        $api_key = sanitize_text_field( get_option( 'rtbcb_openai_api_key', '' ) );
+        $config  = GPT5_CONFIG;
+        $config['model']       = sanitize_text_field( get_option( 'rtbcb_gpt5_model', $config['model'] ) );
+        $config['max_tokens']  = (int) get_option( 'rtbcb_gpt5_max_tokens', $config['max_tokens'] );
+        $config['reasoning']   = (int) get_option( 'rtbcb_gpt5_reasoning', $config['reasoning'] );
+        $config['text']        = (int) get_option( 'rtbcb_gpt5_text', $config['text'] );
+        $temp                  = get_option( 'rtbcb_gpt5_temperature', $config['temperature'] );
+        $config['temperature'] = is_numeric( $temp ) ? floatval( $temp ) : null;
+        $config['store']       = (bool) get_option( 'rtbcb_gpt5_store', $config['store'] );
+        $config['timeout']     = (int) get_option( 'rtbcb_gpt5_timeout', $config['timeout'] );
+        $config['max_retries'] = (int) get_option( 'rtbcb_gpt5_max_retries', $config['max_retries'] );
+
         wp_localize_script(
             'rtbcb-report',
             'rtbcbReport',
             [
                 'api_key'      => $api_key,
-                'report_model' => $report_model,
+                'report_model' => $config['model'],
+                'max_tokens'   => $config['max_tokens'],
+                'reasoning'    => $config['reasoning'],
+                'text'         => $config['text'],
+                'temperature'  => $config['temperature'],
+                'store'        => $config['store'],
+                'timeout'      => $config['timeout'],
+                'max_retries'  => $config['max_retries'],
             ]
         );
     }
