@@ -305,6 +305,48 @@ class RTBCB_LLM {
     }
 
     /**
+     * Generate implementation roadmap and success factors for a category.
+     *
+     * @param string $category Category key.
+     * @return array|WP_Error Roadmap and success factor text or error object.
+     */
+    public function generate_category_recommendation( $category ) {
+        $category = sanitize_text_field( $category );
+
+        if ( empty( $this->api_key ) ) {
+            return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
+        }
+
+        $info = RTBCB_Category_Recommender::get_category_info( $category );
+        if ( empty( $info ) ) {
+            return new WP_Error( 'invalid_category', __( 'Invalid category.', 'rtbcb' ) );
+        }
+
+        $model  = $this->models['mini'] ?? 'gpt-4o-mini';
+        $prompt = 'Return a JSON object with keys "roadmap" and "success_factors" describing the implementation roadmap and key success factors for adopting a ' . $info['name'] . ' solution.';
+
+        $response = $this->call_openai_with_retry( $model, $prompt );
+
+        if ( is_wp_error( $response ) ) {
+            return new WP_Error( 'llm_failure', __( 'Unable to generate recommendation details at this time.', 'rtbcb' ) );
+        }
+
+        $body    = wp_remote_retrieve_body( $response );
+        $decoded = json_decode( $body, true );
+        $content = $decoded['choices'][0]['message']['content'] ?? '';
+        $parsed  = json_decode( $content, true );
+
+        if ( empty( $parsed ) || ! is_array( $parsed ) ) {
+            return new WP_Error( 'llm_empty_response', __( 'No recommendation details returned.', 'rtbcb' ) );
+        }
+
+        return [
+            'roadmap'        => sanitize_textarea_field( $parsed['roadmap'] ?? '' ),
+            'success_factors' => sanitize_textarea_field( $parsed['success_factors'] ?? '' ),
+        ];
+    }
+
+    /**
      * Generate comprehensive business case with deep analysis.
      *
      * Returns a {@see WP_Error} when the API key is missing or when the LLM
