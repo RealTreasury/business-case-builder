@@ -961,6 +961,7 @@ class RTBCB_LLM {
 
     /**
      * Enhanced OpenAI call with better error handling.
+     * Automatically retries with a higher token limit when responses are truncated.
      *
      * @param string $model      Model name (ignored, gpt-5-mini is used).
      * @param string $prompt     Prompt text.
@@ -1027,8 +1028,10 @@ class RTBCB_LLM {
             return new WP_Error( 'openai_api_error', $error_message );
         }
 
-        $decoded = json_decode( $response_body, true );
-        $content = '';
+        $decoded       = json_decode( $response_body, true );
+        $content       = '';
+        // Track why the generation ended to detect truncation.
+        $finish_reason = $decoded['output'][0]['finish_reason'] ?? '';
 
         if ( isset( $decoded['output_text'] ) ) {
             $content = is_array( $decoded['output_text'] ) ? implode( ' ', (array) $decoded['output_text'] ) : $decoded['output_text'];
@@ -1038,14 +1041,17 @@ class RTBCB_LLM {
 
         error_log( 'RTBCB: OpenAI content: ' . $content );
 
-        if ( empty( $content ) ) {
-            error_log( 'RTBCB: Empty content received from OpenAI.' );
-            if ( $max_tokens > 1000 ) {
-                error_log( 'RTBCB: Retrying with lower max_tokens.' );
-                return $this->call_openai( $model, $prompt, 1000 );
+        // Retry with higher token limit if response was truncated or empty.
+        if ( 'length' === $finish_reason || empty( $content ) ) {
+            error_log( 'RTBCB: Detected truncated or empty content from OpenAI.' );
+
+            if ( $max_tokens < 8000 ) {
+                $new_max_tokens = min( $max_tokens * 2, 8000 );
+                error_log( 'RTBCB: Retrying with increased max_tokens: ' . $new_max_tokens );
+                return $this->call_openai( $model, $prompt, $new_max_tokens );
             }
 
-            return new WP_Error( 'openai_empty_response', __( 'OpenAI returned an empty response.', 'rtbcb' ) );
+            return new WP_Error( 'openai_response_truncated', __( 'OpenAI response truncated due to token limit.', 'rtbcb' ) );
         }
 
         return $response;
