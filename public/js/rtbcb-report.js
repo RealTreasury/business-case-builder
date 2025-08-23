@@ -12,7 +12,7 @@ const RTBCB_GPT5_DEFAULTS = {
 };
 
 function supportsTemperature(model) {
-    const unsupported = ['gpt-4.1', 'gpt-4.1-mini', 'gpt-5'];
+    const unsupported = ['gpt-4.1', 'gpt-4.1-mini', 'gpt-5', 'gpt-5-mini'];
     return !unsupported.includes(model);
 }
 
