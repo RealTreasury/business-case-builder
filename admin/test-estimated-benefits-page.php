@@ -9,6 +9,10 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+if ( ! rtbcb_require_completed_steps( 'rtbcb-test-estimated-benefits' ) ) {
+    return;
+}
+
 $company_data        = get_option( 'rtbcb_company_data', [] );
 $recommended_category = get_option( 'rtbcb_last_recommended_category', '' );
 $categories          = RTBCB_Category_Recommender::get_all_categories();
@@ -64,4 +68,5 @@ $categories          = RTBCB_Category_Recommender::get_all_categories();
     </form>
 
     <div id="rtbcb-benefits-estimate-results"></div>
+    <?php rtbcb_render_test_navigation( 'rtbcb-test-estimated-benefits' ); ?>
 </div>

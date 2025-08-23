@@ -8,6 +8,10 @@
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
+
+if ( ! rtbcb_require_completed_steps( 'rtbcb-test-real-treasury-overview' ) ) {
+    return;
+}
 ?>
 <div class="wrap rtbcb-admin-page">
     <h1><?php esc_html_e( 'Test Real Treasury Overview Generation', 'rtbcb' ); ?></h1>
@@ -67,6 +71,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     </div>
 
     <div id="rtbcb-real-treasury-overview-results"></div>
+    <?php rtbcb_render_test_navigation( 'rtbcb-test-real-treasury-overview' ); ?>
 </div>
 
 <style>
