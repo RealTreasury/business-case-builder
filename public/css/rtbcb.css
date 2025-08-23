@@ -1290,14 +1290,14 @@
 .rtbcb-progress-step.active .rtbcb-progress-number {
     background: var(--success-green);
     border-color: var(--success-green);
-    color: #ffffff;
+    color: var(--dark-text);
     box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
 .rtbcb-progress-step.completed .rtbcb-progress-number {
     background: var(--success-green);
     border-color: var(--success-green);
-    color: #ffffff;
+    color: var(--dark-text);
     box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
