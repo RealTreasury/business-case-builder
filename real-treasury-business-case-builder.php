@@ -1328,6 +1328,7 @@ if ( ! function_exists( 'rtbcb_is_configured' ) ) {
 add_action( 'wp_ajax_rtbcb_generate_company_overview', 'rtbcb_ajax_generate_company_overview' );
 add_action( 'wp_ajax_rtbcb_generate_real_treasury_overview', 'rtbcb_ajax_generate_real_treasury_overview' );
 add_action( 'wp_ajax_rtbcb_generate_category_recommendation', 'rtbcb_ajax_generate_category_recommendation' );
+add_action( 'wp_ajax_rtbcb_clear_current_company', 'rtbcb_ajax_clear_current_company' );
 
 /**
  * AJAX handler for generating company overview.
@@ -1346,6 +1347,8 @@ function rtbcb_ajax_generate_company_overview() {
     }
 
     $company_name = isset( $_POST['company_name'] ) ? sanitize_text_field( wp_unslash( $_POST['company_name'] ) ) : '';
+    $company_size = isset( $_POST['company_size'] ) ? sanitize_text_field( wp_unslash( $_POST['company_size'] ) ) : '';
+    $industry     = isset( $_POST['industry'] ) ? sanitize_text_field( wp_unslash( $_POST['industry'] ) ) : '';
 
     if ( empty( $company_name ) ) {
         wp_send_json_error( [ 'message' => __( 'Company name is required.', 'rtbcb' ) ] );
@@ -1368,6 +1371,17 @@ function rtbcb_ajax_generate_company_overview() {
         $elapsed_time = microtime( true ) - $start_time;
         $timestamp    = current_time( 'mysql' );
 
+        $company_data = [
+            'name'         => $company_name,
+            'summary'      => sanitize_textarea_field( wp_strip_all_tags( $overview ) ),
+            'size'         => $company_size,
+            'industry'     => $industry,
+            'word_count'   => intval( $word_count ),
+            'generated_at' => $timestamp,
+        ];
+
+        update_option( 'rtbcb_current_company', $company_data );
+
         wp_send_json_success(
             [
                 'overview'     => wp_kses_post( $overview ),
@@ -1385,6 +1399,27 @@ function rtbcb_ajax_generate_company_overview() {
             ]
         );
     }
+}
+
+/**
+ * AJAX handler to clear current company data.
+ *
+ * @return void
+ */
+function rtbcb_ajax_clear_current_company() {
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'rtbcb_test_company_overview' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ] );
+        return;
+    }
+
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'rtbcb' ) ] );
+        return;
+    }
+
+    rtbcb_clear_current_company();
+
+    wp_send_json_success();
 }
 
 /**

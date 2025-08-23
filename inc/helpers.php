@@ -8,6 +8,25 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
+ * Retrieve current company data.
+ *
+ * @return array Current company data.
+ */
+function rtbcb_get_current_company() {
+    $company = get_option( 'rtbcb_current_company', [] );
+    return is_array( $company ) ? $company : [];
+}
+
+/**
+ * Clear stored company data.
+ *
+ * @return bool True on success, false on failure.
+ */
+function rtbcb_clear_current_company() {
+    return delete_option( 'rtbcb_current_company' );
+}
+
+/**
  * Sanitize form input data
  *
  * @param array $data Raw form data
