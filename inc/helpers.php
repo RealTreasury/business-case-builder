@@ -377,93 +377,103 @@ add_filter( 'rtbcb_sample_report_inputs', 'rtbcb_map_sample_report_inputs', 10, 
  * @param array $requirements User provided requirement data.
  * @return array Structured recommendation data.
  */
-function rtbcb_test_generate_category_recommendation( $requirements ) {
-    $requirements = is_array( $requirements ) ? $requirements : [];
+function rtbcb_test_generate_category_recommendation( $analysis ) {
+    $analysis = is_array( $analysis ) ? $analysis : [];
 
-    $sanitized          = [];
-    $text_fields        = [ 'company_size', 'treasury_complexity', 'budget_range', 'timeline' ];
-    $numeric_fields     = [
-        'num_banks'              => [ 'min' => 1, 'max' => 50 ],
-        'ftes'                   => [ 'min' => 0.5, 'max' => 100 ],
-        'hours_reconciliation'   => [ 'min' => 0, 'max' => 168 ],
-        'hours_cash_positioning' => [ 'min' => 0, 'max' => 168 ],
+    $payload = [
+        'company_overview'       => sanitize_textarea_field( $analysis['company_overview'] ?? '' ),
+        'industry_insights'      => sanitize_textarea_field( $analysis['industry_insights'] ?? '' ),
+        'treasury_tech_overview' => sanitize_textarea_field( $analysis['treasury_tech_overview'] ?? '' ),
+        'treasury_challenges'    => sanitize_textarea_field( $analysis['treasury_challenges'] ?? '' ),
+        'extra_requirements'     => sanitize_textarea_field( $analysis['extra_requirements'] ?? '' ),
     ];
-
-    foreach ( $text_fields as $field ) {
-        if ( isset( $requirements[ $field ] ) ) {
-            $sanitized[ $field ] = sanitize_text_field( $requirements[ $field ] );
-        }
-    }
-
-    foreach ( $numeric_fields as $field => $limits ) {
-        if ( isset( $requirements[ $field ] ) ) {
-            $value               = floatval( $requirements[ $field ] );
-            $value               = max( $limits['min'], min( $limits['max'], $value ) );
-            $sanitized[ $field ] = $value;
-        }
-    }
-
-    if ( isset( $requirements['pain_points'] ) && is_array( $requirements['pain_points'] ) ) {
-        $sanitized['pain_points'] = array_filter(
-            array_map( 'sanitize_text_field', $requirements['pain_points'] )
-        );
-    } else {
-        $sanitized['pain_points'] = [];
-    }
-
-    $recommendation = RTBCB_Category_Recommender::recommend_category( $sanitized );
-
-    $recommended_key  = $recommendation['recommended'];
-    $category_info    = $recommendation['category_info'];
-    $alternatives     = [];
-    $static_roadmaps  = [
-        'cash_tools' => __( 'Centralize bank data, introduce basic forecasting, then automate reporting.', 'rtbcb' ),
-        'tms_lite'   => __( 'Connect banks first, roll out payment automation and forecasting, then integrate ERP systems.', 'rtbcb' ),
-        'trms'       => __( 'Begin with global cash visibility, add risk modules, and complete enterprise integrations.', 'rtbcb' ),
-    ];
-    $static_success   = [
-        'cash_tools' => __( 'Accurate bank feeds and staff training are key to realizing visibility gains.', 'rtbcb' ),
-        'tms_lite'   => __( 'Cross-functional buy-in and phased deployment drive success.', 'rtbcb' ),
-        'trms'       => __( 'Strong governance and global process alignment are critical.', 'rtbcb' ),
-    ];
-
-    foreach ( $recommendation['alternatives'] as $alt ) {
-        $alternatives[] = [
-            'key'   => $alt['category'],
-            'name'  => $alt['info']['name'] ?? '',
-            'score' => $alt['score'],
-        ];
-    }
-
-    $roadmap       = $static_roadmaps[ $recommended_key ] ?? '';
-    $success_facts = $static_success[ $recommended_key ] ?? '';
 
     try {
-        $llm = new RTBCB_LLM();
-        $llm_output = $llm->generate_category_recommendation( $recommended_key );
-        if ( ! is_wp_error( $llm_output ) && is_array( $llm_output ) ) {
-            $roadmap       = $llm_output['roadmap'] ?: $roadmap;
-            $success_facts = $llm_output['success_factors'] ?: $success_facts;
+        $api_key = get_option( 'rtbcb_openai_api_key' );
+        if ( empty( $api_key ) ) {
+            return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
         }
-    } catch ( \Throwable $e ) {
-        // Fall back to static guidance.
-    }
 
-    return [
-        'recommended'          => [
-            'key'         => $recommended_key,
-            'name'        => $category_info['name'] ?? '',
-            'description' => $category_info['description'] ?? '',
-            'features'    => $category_info['features'] ?? [],
-            'ideal_for'   => $category_info['ideal_for'] ?? '',
-        ],
-        'reasoning'            => $recommendation['reasoning'],
-        'alternatives'         => $alternatives,
-        'confidence'           => $recommendation['confidence'],
-        'scores'               => $recommendation['scores'],
-        'implementation_roadmap' => $roadmap,
-        'success_factors'      => $success_facts,
-    ];
+        $model  = get_option( 'rtbcb_mini_model', 'gpt-4o-mini' );
+        $prompt = 'You are a treasury technology advisor. Based on the company overview, industry insights, technology overview, '
+            . 'and treasury challenges provided, recommend the most suitable solution category (cash_tools, tms_lite, trms). '
+            . 'Return JSON with keys "recommended", "reasoning", and "alternatives" (array of objects with "category" and '
+            . '"reasoning").';
+
+        $prompt .= "\n\nCompany Overview: {$payload['company_overview']}";
+        $prompt .= "\nIndustry Insights: {$payload['industry_insights']}";
+        $prompt .= "\nTechnology Overview: {$payload['treasury_tech_overview']}";
+        $prompt .= "\nTreasury Challenges: {$payload['treasury_challenges']}";
+        if ( ! empty( $payload['extra_requirements'] ) ) {
+            $prompt .= "\nExtra Requirements: {$payload['extra_requirements']}";
+        }
+
+        $response = wp_remote_post(
+            'https://api.openai.com/v1/chat/completions',
+            [
+                'headers' => [
+                    'Content-Type'  => 'application/json',
+                    'Authorization' => 'Bearer ' . $api_key,
+                ],
+                'body'    => wp_json_encode(
+                    [
+                        'model'    => $model,
+                        'messages' => [ [ 'role' => 'user', 'content' => $prompt ] ],
+                    ]
+                ),
+                'timeout' => 60,
+            ]
+        );
+
+        if ( is_wp_error( $response ) ) {
+            return new WP_Error( 'llm_failure', __( 'Unable to generate recommendation at this time.', 'rtbcb' ) );
+        }
+
+        $body    = wp_remote_retrieve_body( $response );
+        $decoded = json_decode( $body, true );
+        $content = sanitize_textarea_field( $decoded['choices'][0]['message']['content'] ?? '' );
+
+        if ( empty( $content ) ) {
+            return new WP_Error( 'llm_empty_response', __( 'No recommendation returned.', 'rtbcb' ) );
+        }
+
+        $json = json_decode( $content, true );
+        if ( ! is_array( $json ) ) {
+            return new WP_Error( 'invalid_response', __( 'Invalid recommendation format.', 'rtbcb' ) );
+        }
+
+        $recommended_key = sanitize_key( $json['recommended'] ?? '' );
+        $category_info   = RTBCB_Category_Recommender::get_category_info( $recommended_key );
+
+        $alternatives = [];
+        if ( ! empty( $json['alternatives'] ) && is_array( $json['alternatives'] ) ) {
+            foreach ( $json['alternatives'] as $alt ) {
+                $alt_key  = sanitize_key( $alt['category'] ?? '' );
+                $alt_info = RTBCB_Category_Recommender::get_category_info( $alt_key );
+                if ( $alt_key && $alt_info ) {
+                    $alternatives[] = [
+                        'key'       => $alt_key,
+                        'name'      => $alt_info['name'] ?? '',
+                        'reasoning' => sanitize_text_field( $alt['reasoning'] ?? '' ),
+                    ];
+                }
+            }
+        }
+
+        return [
+            'recommended' => [
+                'key'         => $recommended_key,
+                'name'        => $category_info['name'] ?? '',
+                'description' => $category_info['description'] ?? '',
+                'features'    => $category_info['features'] ?? [],
+                'ideal_for'   => $category_info['ideal_for'] ?? '',
+            ],
+            'reasoning'    => sanitize_textarea_field( $json['reasoning'] ?? '' ),
+            'alternatives' => $alternatives,
+        ];
+    } catch ( \Throwable $e ) {
+        return new WP_Error( 'llm_exception', __( 'Unable to generate recommendation at this time.', 'rtbcb' ) );
+    }
 }
 
 /**

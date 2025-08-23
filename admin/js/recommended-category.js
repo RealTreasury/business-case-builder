@@ -9,13 +9,7 @@
             const data = {
                 action: 'rtbcb_generate_category_recommendation',
                 nonce: rtbcb_ajax.nonce,
-                company_size: $('#rtbcb-company-size').val(),
-                treasury_complexity: $('#rtbcb-treasury-complexity').val(),
-                budget_range: $('#rtbcb-budget-range').val(),
-                timeline: $('#rtbcb-timeline').val(),
-                pain_points: $('input[name="pain_points[]"]:checked').map(function() {
-                    return $(this).val();
-                }).get()
+                extra_requirements: $('#rtbcb-extra-requirements').val()
             };
 
             const original = rtbcbTestUtils.showLoading($generateBtn, 'Generating...');
@@ -35,7 +29,11 @@
                         if (rec.alternatives && rec.alternatives.length) {
                             html += '<p><strong>Alternatives:</strong></p><ul>';
                             rec.alternatives.forEach(function(alt) {
-                                html += '<li>' + $('<div/>').text(alt.name || alt.key).html() + ' (' + alt.score + '%)</li>';
+                                html += '<li>' + $('<div/>').text(alt.name || alt.key).html();
+                                if (alt.reasoning) {
+                                    html += ' - ' + $('<div/>').text(alt.reasoning).html();
+                                }
+                                html += '</li>';
                             });
                             html += '</ul>';
                         }
