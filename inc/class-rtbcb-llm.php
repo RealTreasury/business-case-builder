@@ -1090,6 +1090,14 @@ class RTBCB_LLM {
         ];
     }
 
+    /**
+     * Call the OpenAI Responses API.
+     *
+     * @param string       $model             Model name.
+     * @param array|string $prompt            Prompt array or string.
+     * @param int|null     $max_output_tokens Maximum output tokens.
+     * @return array|WP_Error HTTP response array or WP_Error on failure.
+     */
     private function call_openai( $model, $prompt, $max_output_tokens = null ) {
         if ( empty( $this->api_key ) ) {
             return new WP_Error( 'no_api_key', 'OpenAI API key not configured' );
@@ -1098,6 +1106,7 @@ class RTBCB_LLM {
         $endpoint   = 'https://api.openai.com/v1/responses';
         $model_name = sanitize_text_field( $model ?: ( $this->gpt5_config['model'] ?? '' ) );
         $max_output_tokens = $max_output_tokens ?? intval( $this->gpt5_config['max_output_tokens'] );
+        $max_output_tokens = max( 16, intval( $max_output_tokens ) );
 
         if ( is_array( $prompt ) && isset( $prompt['input'] ) ) {
             $instructions = function_exists( 'sanitize_textarea_field' ) ? sanitize_textarea_field( $prompt['instructions'] ?? '' ) : ( $prompt['instructions'] ?? '' );
