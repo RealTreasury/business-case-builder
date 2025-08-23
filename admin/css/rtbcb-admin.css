@@ -24,36 +24,36 @@
     border: 1px solid #ccd0d4;
 }
 
-.rtbcb-company-overview-results {
+.rtbcb-generated-text {
     padding: 15px;
     border: 1px solid #ccd0d4;
     white-space: pre-wrap;
 }
 
-.rtbcb-company-overview-meta {
+.rtbcb-meta {
     font-size: 12px;
     color: #555d66;
     margin-top: 10px;
 }
 
-.rtbcb-company-overview-actions {
+.rtbcb-actions {
     margin-top: 10px;
 }
 
-.rtbcb-company-overview-actions .button {
+.rtbcb-actions .button {
     margin-right: 8px;
 }
 
-.rtbcb-company-overview-actions .button:last-child {
+.rtbcb-actions .button:last-child {
     margin-right: 0;
 }
 
-.rtbcb-company-overview .spinner {
+.rtbcb-loading .spinner {
     margin-left: 5px;
     visibility: hidden;
 }
 
-.rtbcb-company-overview .spinner.is-active {
+.rtbcb-loading .spinner.is-active {
     visibility: visible;
 }
 
@@ -63,13 +63,13 @@
         margin-left: 0;
     }
 
-    .rtbcb-company-overview-actions .button {
+    .rtbcb-actions .button {
         width: 100%;
         margin-right: 0;
         margin-bottom: 10px;
     }
 
-    .rtbcb-company-overview-actions .button:last-child {
+    .rtbcb-actions .button:last-child {
         margin-bottom: 0;
     }
 }

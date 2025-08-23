@@ -72,6 +72,7 @@ class RTBCB_Admin {
             'diagnostics_nonce'    => wp_create_nonce( 'rtbcb_diagnostics' ),
             'report_preview_nonce' => wp_create_nonce( 'rtbcb_generate_report_preview' ),
             'company_overview_nonce' => wp_create_nonce( 'rtbcb_test_company_overview' ),
+            'commentary_nonce'       => wp_create_nonce( 'rtbcb_test_commentary' ),
             'treasury_tech_overview_nonce' => wp_create_nonce( 'rtbcb_test_treasury_tech_overview' ),
             'page'                 => $page,
             'strings'              => [
@@ -82,6 +83,12 @@ class RTBCB_Admin {
                 'testing'             => __( 'Testing...', 'rtbcb' ),
                 'generating'          => __( 'Generating...', 'rtbcb' ),
                 'copied'              => __( 'Copied to clipboard.', 'rtbcb' ),
+                'word_count'          => __( 'Word count:', 'rtbcb' ),
+                'elapsed'             => __( 'Elapsed:', 'rtbcb' ),
+                'generated'           => __( 'Generated:', 'rtbcb' ),
+                'regenerate'          => __( 'Regenerate', 'rtbcb' ),
+                'copy'                => __( 'Copy Text', 'rtbcb' ),
+                'clear'               => __( 'Clear', 'rtbcb' ),
             ],
         ] );
 
@@ -529,14 +536,25 @@ class RTBCB_Admin {
             wp_send_json_error( [ 'message' => __( 'Invalid industry.', 'rtbcb' ) ] );
         }
 
-        $llm        = new RTBCB_LLM();
-        $commentary = $llm->generate_industry_commentary( $industry );
+        $start       = microtime( true );
+        $llm         = new RTBCB_LLM();
+        $commentary  = $llm->generate_industry_commentary( $industry );
+        $elapsed     = round( microtime( true ) - $start, 2 );
 
         if ( is_wp_error( $commentary ) ) {
             wp_send_json_error( [ 'message' => sanitize_text_field( $commentary->get_error_message() ) ] );
         }
 
-        wp_send_json_success( [ 'commentary' => sanitize_text_field( $commentary ) ] );
+        $word_count = str_word_count( $commentary );
+
+        wp_send_json_success(
+            [
+                'commentary' => sanitize_textarea_field( $commentary ),
+                'word_count' => $word_count,
+                'elapsed'    => $elapsed,
+                'generated'  => current_time( 'mysql' ),
+            ]
+        );
     }
 
     /**
@@ -665,6 +683,8 @@ class RTBCB_Admin {
             wp_send_json_error( [ 'message' => __( 'Invalid context data.', 'rtbcb' ) ], 400 );
         }
 
+        $start = microtime( true );
+
         try {
             $html = '';
 
@@ -693,7 +713,17 @@ class RTBCB_Admin {
             $allowed_tags['style'] = [];
             $html = wp_kses( $html, $allowed_tags );
 
-            wp_send_json_success( [ 'html' => $html ] );
+            $word_count = str_word_count( wp_strip_all_tags( $html ) );
+            $elapsed    = round( microtime( true ) - $start, 2 );
+
+            wp_send_json_success(
+                [
+                    'html'       => $html,
+                    'word_count' => $word_count,
+                    'elapsed'    => $elapsed,
+                    'generated'  => current_time( 'mysql' ),
+                ]
+            );
         } catch ( RTBCB_JSON_Response $e ) {
             throw $e;
         } catch ( \Throwable $e ) {
@@ -720,6 +750,8 @@ class RTBCB_Admin {
             wp_send_json_error( [ 'message' => __( 'Invalid scenario selected.', 'rtbcb' ) ], 400 );
         }
 
+        $start = microtime( true );
+
         try {
             $roi_data = RTBCB_Calculator::calculate_roi( $inputs );
 
@@ -735,7 +767,17 @@ class RTBCB_Admin {
                 wp_send_json_error( [ 'message' => __( 'Report template not found.', 'rtbcb' ) ], 500 );
             }
 
-            wp_send_json_success( [ 'report_html' => $html ] );
+            $word_count = str_word_count( wp_strip_all_tags( $html ) );
+            $elapsed    = round( microtime( true ) - $start, 2 );
+
+            wp_send_json_success(
+                [
+                    'report_html' => $html,
+                    'word_count'  => $word_count,
+                    'elapsed'     => $elapsed,
+                    'generated'   => current_time( 'mysql' ),
+                ]
+            );
         } catch ( RTBCB_JSON_Response $e ) {
             throw $e;
         } catch ( \Throwable $e ) {

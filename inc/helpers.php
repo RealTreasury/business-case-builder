@@ -357,8 +357,12 @@ add_filter( 'rtbcb_sample_report_inputs', 'rtbcb_map_sample_report_inputs', 10, 
 function rtbcb_test_generate_company_overview( $company_name ) {
     $company_name = sanitize_text_field( $company_name );
 
-    $llm      = new RTBCB_LLM();
-    $overview = $llm->generate_company_overview( $company_name );
+    try {
+        $llm      = new RTBCB_LLM();
+        $overview = $llm->generate_company_overview( $company_name );
+    } catch ( \Throwable $e ) {
+        return new WP_Error( 'llm_exception', __( 'An unexpected error occurred while generating the overview.', 'rtbcb' ) );
+    }
 
     return $overview;
 }
@@ -375,8 +379,12 @@ function rtbcb_test_generate_treasury_tech_overview( $focus_areas, $complexity )
     $focus_areas = array_filter( $focus_areas );
     $complexity  = sanitize_text_field( $complexity );
 
-    $llm      = new RTBCB_LLM();
-    $overview = $llm->generate_treasury_tech_overview( $focus_areas, $complexity );
+    try {
+        $llm      = new RTBCB_LLM();
+        $overview = $llm->generate_treasury_tech_overview( $focus_areas, $complexity );
+    } catch ( \Throwable $e ) {
+        return new WP_Error( 'llm_exception', __( 'An unexpected error occurred while generating the overview.', 'rtbcb' ) );
+    }
 
     return $overview;
 }
