@@ -11,7 +11,7 @@
             $.ajax({
                 url: ajaxurl,
                 method: 'POST',
-                timeout: 30000,
+                timeout: 60000,
                 data: {
                     action: 'rtbcb_company_overview_simple',
                     company_name: companyName,
@@ -30,7 +30,11 @@
                 },
                 error: function(xhr, status, error) {
                     console.log('AJAX Error:', status, error);
-                    showError('Connection failed: ' + status + ' - ' + error);
+                    if (status === 'timeout') {
+                        showError('The request timed out. Please try again.');
+                    } else {
+                        showError('Connection failed: ' + status + ' - ' + error);
+                    }
                 },
                 complete: function() {
                     generateBtn.prop('disabled', false).text('Generate Overview');

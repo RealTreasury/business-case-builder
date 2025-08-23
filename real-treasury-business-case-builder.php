@@ -1383,6 +1383,9 @@ add_action( 'wp_ajax_rtbcb_company_overview_simple', 'rtbcb_handle_company_overv
  * @return void
  */
 function rtbcb_handle_company_overview_simple() {
+    $start_time = microtime( true );
+    error_log( 'rtbcb_handle_company_overview_simple: start' );
+
     if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'rtbcb_test_company_overview' ) ) {
         wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ] );
         return;
@@ -1395,11 +1398,16 @@ function rtbcb_handle_company_overview_simple() {
         return;
     }
 
+    error_log( 'rtbcb_handle_company_overview_simple: generating simple info' );
+    $simple_info = rtbcb_get_simple_company_info( $company_name );
+    $duration = microtime( true ) - $start_time;
+    error_log( 'rtbcb_handle_company_overview_simple: completed in ' . $duration . ' seconds' );
+
     wp_send_json_success(
         [
             'message'         => sprintf( __( 'Processing started for %s', 'rtbcb' ), $company_name ),
             'status'          => 'processing',
-            'simple_analysis' => rtbcb_get_simple_company_info( $company_name ),
+            'simple_analysis' => $simple_info,
         ]
     );
 }
