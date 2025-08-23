@@ -16,6 +16,7 @@ class RTBCB_LLM {
             'mini'      => get_option( 'rtbcb_mini_model', 'gpt-4o-mini' ),
             'premium'   => get_option( 'rtbcb_premium_model', 'gpt-4o' ),
             'advanced'  => get_option( 'rtbcb_advanced_model', 'o1-preview' ),
+            'gpt5_mini' => get_option( 'rtbcb_gpt5_mini_model', 'gpt-5-mini' ),
             'embedding' => get_option( 'rtbcb_embedding_model', 'text-embedding-3-small' ),
         ];
         
@@ -585,6 +586,23 @@ class RTBCB_LLM {
 
 
     /**
+     * Check if a model is a GPT-5 model.
+     *
+     * @param string $model Model name.
+     * @return bool True if GPT-5 model.
+     */
+    private function is_gpt5_model( $model ) {
+        $gpt5_models = [
+            'gpt-5-mini',
+            'gpt-5',
+            'gpt-5-preview',
+        ];
+
+        return in_array( strtolower( $model ), $gpt5_models, true ) ||
+            strpos( strtolower( $model ), 'gpt-5' ) !== false;
+    }
+
+    /**
      * Call OpenAI with retry logic
      */
     private function call_openai_with_retry( $model, $prompt, $max_retries = 2 ) {
@@ -614,6 +632,7 @@ class RTBCB_LLM {
         }
 
         $endpoint = 'https://api.openai.com/v1/chat/completions';
+        $is_gpt5_model = $this->is_gpt5_model( $model );
         $body = [
             'model' => $model,
             'messages' => [
@@ -627,9 +646,14 @@ class RTBCB_LLM {
                 ]
             ],
             'temperature' => 0.4,
-            'max_tokens' => 4000,
-            'response_format' => ['type' => 'json_object'] // Force JSON response
+            'response_format' => [ 'type' => 'json_object' ], // Force JSON response
         ];
+
+        if ( $is_gpt5_model ) {
+            $body['max_completion_tokens'] = 4000;
+        } else {
+            $body['max_tokens'] = 4000;
+        }
 
         $args = [
             'headers' => [
