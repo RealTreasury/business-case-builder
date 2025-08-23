@@ -69,6 +69,18 @@ if ( ! function_exists( 'wp_kses_post' ) ) {
     }
 }
 
+if ( ! function_exists( 'wp_kses' ) ) {
+    function wp_kses( $text, $allowed_html = [] ) {
+        return $text;
+    }
+}
+
+if ( ! function_exists( 'wp_kses_allowed_html' ) ) {
+    function wp_kses_allowed_html( $context = '' ) {
+        return [];
+    }
+}
+
 if ( ! function_exists( 'sanitize_key' ) ) {
     function sanitize_key( $key ) {
         $key = strtolower( $key );
@@ -181,6 +193,7 @@ final class RTBCB_AdminAjaxReportTest extends TestCase {
             $this->assertTrue( $e->success );
             $this->assertNotEmpty( $e->data['html'] );
             $this->assertStringContainsString( 'rtbcb-report', $e->data['html'] );
+            $this->assertStringContainsString( '<style>', $e->data['html'] );
         }
     }
 

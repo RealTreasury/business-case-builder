@@ -531,9 +531,13 @@ class RTBCB_Admin {
                 $html = ob_get_clean();
             }
 
-            $html = wp_kses_post( $html );
+            $allowed_tags = wp_kses_allowed_html( 'post' );
+            $allowed_tags['style'] = [];
+            $html = wp_kses( $html, $allowed_tags );
 
             wp_send_json_success( [ 'html' => $html ] );
+        } catch ( RTBCB_JSON_Response $e ) {
+            throw $e;
         } catch ( \Throwable $e ) {
             wp_send_json_error( [ 'message' => $e->getMessage() ], 500 );
         }
@@ -574,6 +578,8 @@ class RTBCB_Admin {
             }
 
             wp_send_json_success( [ 'report_html' => $html ] );
+        } catch ( RTBCB_JSON_Response $e ) {
+            throw $e;
         } catch ( \Throwable $e ) {
             wp_send_json_error( [ 'message' => $e->getMessage() ], 500 );
         }
