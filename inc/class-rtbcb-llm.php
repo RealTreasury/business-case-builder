@@ -1120,11 +1120,14 @@ class RTBCB_LLM {
             'model'                 => $model_name,
             'input'                 => $input,
             'instructions'          => $instructions,
-            'max_output_tokens' => $max_output_tokens,
+            'max_output_tokens'     => $max_output_tokens,
             'text'                  => $this->gpt5_config['text'],
-            'temperature'           => floatval( $this->gpt5_config['temperature'] ),
             'store'                 => (bool) $this->gpt5_config['store'],
         ];
+
+        if ( rtbcb_model_supports_temperature( $model_name ) ) {
+            $body['temperature'] = floatval( $this->gpt5_config['temperature'] );
+        }
 
         $args = [
             'headers' => [
