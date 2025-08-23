@@ -80,7 +80,8 @@ if ( ! function_exists( 'wp_remote_retrieve_body' ) ) {
 
 if ( ! function_exists( 'rtbcb_model_supports_temperature' ) ) {
     function rtbcb_model_supports_temperature( $model ) {
-        $unsupported = [ 'gpt-4.1', 'gpt-4.1-mini', 'gpt-5' ];
+        $capabilities = include __DIR__ . '/../../inc/model-capabilities.php';
+        $unsupported  = $capabilities['temperature']['unsupported'] ?? [];
         return ! in_array( $model, $unsupported, true );
     }
 }

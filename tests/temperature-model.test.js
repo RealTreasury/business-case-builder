@@ -7,12 +7,13 @@ const { execSync } = require('child_process');
     const code = fs.readFileSync('public/js/rtbcb-report.js', 'utf8');
     vm.runInThisContext(code);
 
-    const unsupportedModels = ['gpt-4.1', 'gpt-4.1-mini', 'gpt-5'];
+    const capabilities = JSON.parse(execSync("php -r \"echo json_encode(include 'inc/model-capabilities.php');\"").toString());
+    const unsupportedModels = capabilities.temperature.unsupported;
     const supportedModels = ['gpt-4o', 'gpt-4.1-preview'];
 
     for (const model of [...unsupportedModels, ...supportedModels]) {
         let capturedBody;
-        global.rtbcbReport = { report_model: model, api_key: 'test' };
+        global.rtbcbReport = { report_model: model, api_key: 'test', model_capabilities: capabilities };
         global.fetch = async (url, options) => {
             capturedBody = JSON.parse(options.body);
             return { ok: true, json: async () => ({ output_text: '<html></html>' }) };
