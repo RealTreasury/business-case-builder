@@ -1460,7 +1460,10 @@
 }
 
 .rtbcb-pain-point-label {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     padding: 14px;
     cursor: pointer;
     margin: 0;
