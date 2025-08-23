@@ -115,8 +115,8 @@ class RTBCB_Router {
         $category   = RTBCB_Category_Recommender::recommend_category( $inputs )['recommended'];
 
         // Get available models
-        $mini_model    = get_option( 'rtbcb_mini_model', 'gpt-4o-mini' );
-        $premium_model = get_option( 'rtbcb_premium_model', 'gpt-4o' );
+        $mini_model    = get_option( 'rtbcb_mini_model', rtbcb_get_default_model( 'mini' ) );
+        $premium_model = get_option( 'rtbcb_premium_model', rtbcb_get_default_model( 'premium' ) );
 
         // Start with mini model as default
         $model     = $mini_model;

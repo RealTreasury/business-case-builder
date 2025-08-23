@@ -36,6 +36,13 @@ if ( ! function_exists( 'sanitize_text_field' ) ) {
     }
 }
 
+if ( ! function_exists( 'sanitize_key' ) ) {
+    function sanitize_key( $key ) {
+        $key = strtolower( $key );
+        return preg_replace( '/[^a-z0-9_]/', '', $key );
+    }
+}
+
 if ( ! function_exists( 'wp_remote_retrieve_body' ) ) {
     function wp_remote_retrieve_body( $response ) {
         return $response['body'] ?? '';

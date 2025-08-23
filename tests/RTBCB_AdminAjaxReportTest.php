@@ -118,6 +118,12 @@ if ( ! function_exists( 'rtbcb_get_sample_inputs' ) ) {
     }
 }
 
+if ( ! function_exists( 'rtbcb_get_current_company' ) ) {
+    function rtbcb_get_current_company() {
+        return [ 'company_name' => 'Acme Corp' ];
+    }
+}
+
 if ( ! function_exists( 'current_time' ) ) {
     function current_time( $format ) {
         return '2025-01-01';

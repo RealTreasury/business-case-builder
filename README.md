@@ -60,7 +60,7 @@ A comprehensive WordPress plugin that helps treasury teams quantify the benefits
 2. Generate an API key in your OpenAI dashboard
 3. Enter the API key in **Real Treasury → Settings**
 4. Configure your preferred models:
-   - **Mini Model**: `gpt-4o-mini` (for efficiency)
+   - **Mini Model**: configurable via settings (default `gpt-4o-mini` for efficiency)
    - **Premium Model**: `gpt-4o` (for complex requests)
    - **Embedding Model**: `text-embedding-3-small` (for RAG)
 

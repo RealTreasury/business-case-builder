@@ -33,15 +33,9 @@ class RTBCB_LLM {
      * @return string Sanitized model name.
      */
     private function get_model( $tier ) {
-        $defaults = [
-            'mini'      => 'gpt-4o-mini',
-            'premium'   => 'gpt-4o',
-            'advanced'  => 'gpt-5-mini',
-            'gpt5_mini' => 'gpt-5-mini',
-            'embedding' => 'text-embedding-3-small',
-        ];
-
-        $model = get_option( "rtbcb_{$tier}_model", $defaults[ $tier ] ?? '' );
+        $tier    = sanitize_key( $tier );
+        $default = rtbcb_get_default_model( $tier );
+        $model   = get_option( "rtbcb_{$tier}_model", $default );
 
         return sanitize_text_field( $model );
     }

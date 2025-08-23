@@ -339,10 +339,10 @@ class Real_Treasury_BCB {
      */
     private function set_default_options() {
         $defaults = [
-            'rtbcb_mini_model'         => 'gpt-4o-mini',
-            'rtbcb_premium_model'      => 'gpt-4o',
-            'rtbcb_advanced_model'     => 'gpt-5-mini',
-            'rtbcb_embedding_model'    => 'text-embedding-3-small',
+            'rtbcb_mini_model'         => rtbcb_get_default_model( 'mini' ),
+            'rtbcb_premium_model'      => rtbcb_get_default_model( 'premium' ),
+            'rtbcb_advanced_model'     => rtbcb_get_default_model( 'advanced' ),
+            'rtbcb_embedding_model'    => rtbcb_get_default_model( 'embedding' ),
             'rtbcb_labor_cost_per_hour'=> 100,
             'rtbcb_bank_fee_baseline'  => 15000,
             'rtbcb_comprehensive_analysis' => true,
