@@ -265,14 +265,15 @@ async function generateProfessionalReport(businessContext) {
                     role: 'user',
                     content: buildEnhancedPrompt(businessContext)
                 }
-            ],
-            temperature: 0.7
+            ]
         };
 
         if (rtbcbReport.report_model.startsWith('gpt-5')) {
             requestBody.max_completion_tokens = 4000;
+            requestBody.temperature = 1;
         } else {
             requestBody.max_tokens = 4000;
+            requestBody.temperature = 0.7;
         }
 
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
