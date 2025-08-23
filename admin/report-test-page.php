@@ -57,6 +57,8 @@ if ( ! defined( 'ABSPATH' ) ) {
     <div id="rtbcb-report-actions" style="display:none;">
         <a id="rtbcb-export-html" class="button" href="#" target="_blank"><?php esc_html_e( 'Download HTML', 'rtbcb' ); ?></a>
         <button id="rtbcb-export-pdf" class="button" type="button"><?php esc_html_e( 'Export PDF', 'rtbcb' ); ?></button>
+        <button id="rtbcb-copy-report" class="button" type="button"><?php esc_html_e( 'Copy Report', 'rtbcb' ); ?></button>
+        <button id="rtbcb-clear-report" class="button" type="button"><?php esc_html_e( 'Clear', 'rtbcb' ); ?></button>
     </div>
 
     <div id="rtbcb-report-sections" style="display:none;">
@@ -64,6 +66,7 @@ if ( ! defined( 'ABSPATH' ) ) {
             <h2>
                 <?php esc_html_e( 'Company Overview', 'rtbcb' ); ?>
                 <button type="button" class="button rtbcb-regenerate" data-section="company_overview"><?php esc_html_e( 'Regenerate', 'rtbcb' ); ?></button>
+                <button type="button" class="button rtbcb-copy" data-section="company_overview"><?php esc_html_e( 'Copy', 'rtbcb' ); ?></button>
             </h2>
             <p class="rtbcb-section-stats">
                 <?php esc_html_e( 'Word count:', 'rtbcb' ); ?> <span class="rtbcb-word-count"></span>
@@ -77,6 +80,7 @@ if ( ! defined( 'ABSPATH' ) ) {
             <h2>
                 <?php esc_html_e( 'Treasury Tech Overview', 'rtbcb' ); ?>
                 <button type="button" class="button rtbcb-regenerate" data-section="treasury_tech_overview"><?php esc_html_e( 'Regenerate', 'rtbcb' ); ?></button>
+                <button type="button" class="button rtbcb-copy" data-section="treasury_tech_overview"><?php esc_html_e( 'Copy', 'rtbcb' ); ?></button>
             </h2>
             <p class="rtbcb-section-stats">
                 <?php esc_html_e( 'Word count:', 'rtbcb' ); ?> <span class="rtbcb-word-count"></span>
@@ -90,6 +94,7 @@ if ( ! defined( 'ABSPATH' ) ) {
             <h2>
                 <?php esc_html_e( 'ROI', 'rtbcb' ); ?>
                 <button type="button" class="button rtbcb-regenerate" data-section="roi"><?php esc_html_e( 'Regenerate', 'rtbcb' ); ?></button>
+                <button type="button" class="button rtbcb-copy" data-section="roi"><?php esc_html_e( 'Copy', 'rtbcb' ); ?></button>
             </h2>
             <p class="rtbcb-section-stats">
                 <?php esc_html_e( 'Generated:', 'rtbcb' ); ?> <span class="rtbcb-generated"></span>

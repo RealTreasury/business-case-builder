@@ -51,6 +51,7 @@
             this.bindCommentaryTest();
             this.bindCompanyOverviewTest();
             this.bindIndustryOverviewTest();
+            this.bindTestDashboard();
         },
 
         bindDashboardActions() {
@@ -196,6 +197,58 @@
             };
             form.on('submit', submitHandler);
             RTBCBAdmin.utils.bindClear(clearBtn, results);
+        },
+
+        bindTestDashboard() {
+            if (!rtbcbAdmin || rtbcbAdmin.page !== 'rtbcb-test-dashboard') { return; }
+            const button = $('#rtbcb-test-all-sections');
+            if (!button.length) { return; }
+            const status = $('#rtbcb-test-status');
+            const tableBody = $('#rtbcb-test-results-summary tbody');
+            const originalText = button.text();
+
+            async function runTests() {
+                const tests = [
+                    { action: 'rtbcb_test_company_overview', nonce: rtbcbAdmin.company_overview_nonce, label: 'Company Overview' },
+                    { action: 'rtbcb_test_treasury_tech_overview', nonce: rtbcbAdmin.treasury_tech_overview_nonce, label: 'Treasury Tech Overview' },
+                    { action: 'rtbcb_test_industry_overview', nonce: rtbcbAdmin.industry_overview_nonce, label: 'Industry Overview' }
+                ];
+                const results = [];
+                for (const test of tests) {
+                    status.text('Testing ' + test.label + '...');
+                    try {
+                        const response = await $.post(rtbcbAdmin.ajax_url, { action: test.action, nonce: test.nonce });
+                        const message = response && response.data && response.data.message ? response.data.message : '';
+                        results.push({ section: test.label, status: response.success ? 'success' : 'error', message });
+                    } catch (err) {
+                        results.push({ section: test.label, status: 'error', message: err.message });
+                    }
+                }
+
+                status.text('Saving results...');
+                try {
+                    await $.post(rtbcbAdmin.ajax_url, {
+                        action: 'rtbcb_save_test_results',
+                        nonce: rtbcbAdmin.test_dashboard_nonce,
+                        results: JSON.stringify(results)
+                    });
+                } catch (err) {
+                    // Ignore save errors; proceed to update UI.
+                }
+
+                tableBody.empty();
+                results.forEach(function(item) {
+                    const row = '<tr><td>' + item.section + '</td><td>' + item.status + '</td><td>' + item.message + '</td><td>' + new Date().toLocaleString() + '</td></tr>';
+                    tableBody.append(row);
+                });
+                status.text('');
+                button.prop('disabled', false).text(originalText);
+            }
+
+            button.on('click', function() {
+                button.prop('disabled', true).text(rtbcbAdmin.strings.testing);
+                runTests();
+            });
         },
 
         async testApiConnection(e) {
