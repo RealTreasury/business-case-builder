@@ -36,6 +36,7 @@ class RTBCB_Admin {
         add_action( 'wp_ajax_nopriv_rtbcb_sync_to_local', [ $this, 'sync_to_local' ] );
         add_action( 'wp_ajax_rtbcb_test_commentary', [ $this, 'ajax_test_commentary' ] );
         add_action( 'wp_ajax_rtbcb_test_company_overview', [ $this, 'ajax_test_company_overview' ] );
+        add_action( 'wp_ajax_rtbcb_test_recommended_category', [ $this, 'ajax_test_recommended_category' ] );
     }
 
     /**
@@ -71,6 +72,7 @@ class RTBCB_Admin {
             'diagnostics_nonce'    => wp_create_nonce( 'rtbcb_diagnostics' ),
             'report_preview_nonce' => wp_create_nonce( 'rtbcb_generate_report_preview' ),
             'company_overview_nonce' => wp_create_nonce( 'rtbcb_test_company_overview' ),
+            'category_recommendation_nonce' => wp_create_nonce( 'rtbcb_test_recommended_category' ),
             'page'                 => $page,
             'strings'              => [
                 'confirm_delete'      => __( 'Are you sure you want to delete this lead?', 'rtbcb' ),
@@ -202,6 +204,15 @@ class RTBCB_Admin {
             'rtbcb-test-company-overview',
             [ $this, 'render_test_company_overview' ]
         );
+
+        add_submenu_page(
+            'rtbcb-dashboard',
+            __( 'Test Recommended Category', 'rtbcb' ),
+            __( 'Test Recommended Category', 'rtbcb' ),
+            'manage_options',
+            'rtbcb-test-recommended-category',
+            [ $this, 'render_test_recommended_category' ]
+        );
     }
 
     /**
@@ -320,6 +331,15 @@ class RTBCB_Admin {
      */
     public function render_test_company_overview() {
         include RTBCB_DIR . 'admin/test-company-overview-page.php';
+    }
+
+    /**
+     * Render test recommended category page.
+     *
+     * @return void
+     */
+    public function render_test_recommended_category() {
+        include RTBCB_DIR . 'admin/test-recommended-category-page.php';
     }
 
     /**
@@ -549,6 +569,46 @@ class RTBCB_Admin {
                 'word_count' => $word_count,
                 'elapsed'    => $elapsed,
                 'generated'  => current_time( 'mysql' ),
+            ]
+        );
+    }
+
+    /**
+     * AJAX handler for recommended category testing.
+     *
+     * @return void
+     */
+    public function ajax_test_recommended_category() {
+        check_ajax_referer( 'rtbcb_test_recommended_category', 'nonce' );
+
+        $requirements = [
+            'company_size' => isset( $_POST['company_size'] ) ? sanitize_text_field( wp_unslash( $_POST['company_size'] ) ) : '',
+            'complexity'   => isset( $_POST['complexity'] ) ? sanitize_text_field( wp_unslash( $_POST['complexity'] ) ) : '',
+            'budget_range' => isset( $_POST['budget_range'] ) ? sanitize_text_field( wp_unslash( $_POST['budget_range'] ) ) : '',
+            'timeline'     => isset( $_POST['timeline'] ) ? sanitize_text_field( wp_unslash( $_POST['timeline'] ) ) : '',
+            'pain_points'  => isset( $_POST['pain_points'] ) ? array_map( 'sanitize_text_field', (array) wp_unslash( $_POST['pain_points'] ) ) : [],
+        ];
+
+        if ( empty( $requirements['company_size'] ) || empty( $requirements['complexity'] ) || empty( $requirements['budget_range'] ) || empty( $requirements['timeline'] ) ) {
+            wp_send_json_error( [ 'message' => __( 'Please complete all fields.', 'rtbcb' ) ] );
+        }
+
+        $start          = microtime( true );
+        $recommendation = rtbcb_test_generate_category_recommendation( $requirements );
+        $elapsed        = round( microtime( true ) - $start, 2 );
+
+        if ( is_wp_error( $recommendation ) ) {
+            wp_send_json_error( [ 'message' => sanitize_text_field( $recommendation->get_error_message() ) ] );
+        }
+
+        wp_send_json_success(
+            [
+                'recommendation' => sanitize_text_field( $recommendation['recommended_category'] ?? '' ),
+                'reasoning'      => sanitize_textarea_field( $recommendation['reasoning'] ?? '' ),
+                'alternatives'   => array_map( 'sanitize_text_field', $recommendation['alternatives'] ?? [] ),
+                'confidence'     => floatval( $recommendation['confidence'] ?? 0 ),
+                'elapsed'        => $elapsed,
+                'generated'      => current_time( 'mysql' ),
             ]
         );
     }

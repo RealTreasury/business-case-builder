@@ -12,6 +12,7 @@
             this.bindSyncLocal();
             this.bindCommentaryTest();
             this.bindCompanyOverviewTest();
+            this.bindRecommendedCategoryTest();
         },
 
         bindDashboardActions() {
@@ -135,6 +136,75 @@
             form.on('submit', submitHandler);
             if (clearBtn.length) {
                 clearBtn.on('click', function(){ results.empty(); });
+            }
+        },
+
+        bindRecommendedCategoryTest() {
+            if (!rtbcbAdmin || rtbcbAdmin.page !== 'rtbcb-test-recommended-category') { return; }
+            const form = $('#rtbcb-recommended-category-form');
+            if (!form.length) { return; }
+            const results = $('#rtbcb-recommended-category-results');
+            const clearBtn = $('#rtbcb-clear-recommended-category');
+            const submitBtn = form.find('button[type="submit"]');
+            form.on('submit', async function(e){
+                e.preventDefault();
+                const original = submitBtn.text();
+                submitBtn.prop('disabled', true).text(rtbcbAdmin.strings.processing);
+                const nonce = form.find('[name="nonce"]').val();
+                const start = performance.now();
+                try {
+                    const formData = new FormData(form[0]);
+                    formData.append('action', 'rtbcb_test_recommended_category');
+                    formData.append('nonce', nonce);
+                    const response = await fetch(rtbcbAdmin.ajax_url, { method: 'POST', body: formData });
+                    if (!response.ok) {
+                        throw new Error(`Server responded ${response.status}`);
+                    }
+                    const data = await response.json();
+                    if (data.success) {
+                        const rec = data.data?.recommendation || '';
+                        const reasoning = data.data?.reasoning || '';
+                        const alternatives = data.data?.alternatives || [];
+                        const confidence = data.data?.confidence || 0;
+                        const duration = ((performance.now() - start) / 1000).toFixed(2);
+                        const timestamp = new Date().toLocaleTimeString();
+                        const container = $('<div />');
+                        container.append($('<p />').html('<strong>Recommendation:</strong> ' + rec));
+                        container.append($('<p />').html('<strong>Reasoning:</strong> ' + reasoning));
+                        if (alternatives.length) {
+                            const list = $('<ul />');
+                            alternatives.forEach(a => list.append($('<li />').text(a)));
+                            container.append($('<p />').text('Alternatives:')).append(list);
+                        }
+                        container.append($('<p />').text('Confidence: ' + confidence + '%'));
+                        container.append($('<p />').text('Duration: ' + duration + 's'));
+                        container.append($('<p />').text('Timestamp: ' + timestamp));
+                        const actions = $('<p />');
+                        const regen = $('<button type="button" class="button" />').text('Regenerate');
+                        const copy = $('<button type="button" class="button" />').text('Copy');
+                        regen.on('click', function(){ form.trigger('submit'); });
+                        copy.on('click', async function(){
+                            try {
+                                await navigator.clipboard.writeText(container.text());
+                                alert(rtbcbAdmin.strings.copied);
+                            } catch (err) {
+                                alert(rtbcbAdmin.strings.error + ' ' + err.message);
+                            }
+                        });
+                        actions.append(regen).append(' ').append(copy);
+                        container.append(actions);
+                        results.html(container);
+                    } else {
+                        const message = data.data?.message || rtbcbAdmin.strings.error;
+                        results.html('<div class="notice notice-error"><p>' + message + '</p></div>');
+                    }
+                } catch (err) {
+                    results.html('<div class="notice notice-error"><p>' + rtbcbAdmin.strings.error + ' ' + err.message + '</p></div>');
+                }
+                submitBtn.prop('disabled', false).text(original);
+            });
+            if (clearBtn.length) {
+                clearBtn.on('click', function(){ form[0].reset(); results.empty(); });
             }
         },
 

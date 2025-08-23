@@ -178,6 +178,66 @@ class RTBCB_LLM {
     }
 
     /**
+     * Generate a category recommendation based on requirements.
+     *
+     * @param array $requirements Requirement fields.
+     * @return array|WP_Error Recommendation data or error.
+     */
+    public function generate_category_recommendation( $requirements ) {
+        $req = [
+            'company_size' => sanitize_text_field( $requirements['company_size'] ?? '' ),
+            'complexity'   => sanitize_text_field( $requirements['complexity'] ?? '' ),
+            'budget_range' => sanitize_text_field( $requirements['budget_range'] ?? '' ),
+            'timeline'     => sanitize_text_field( $requirements['timeline'] ?? '' ),
+            'pain_points'  => array_map( 'sanitize_text_field', (array) ( $requirements['pain_points'] ?? [] ) ),
+        ];
+
+        if ( empty( $this->api_key ) ) {
+            return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
+        }
+
+        $model  = $this->models['mini'] ?? 'gpt-4o-mini';
+        $prompt = 'Recommend the best treasury technology category (Cash Tools, TMS-Lite, TRMS) for a company based on the '
+            . 'following requirements. Return JSON with keys recommended_category, reasoning, alternatives[], confidence, '
+            . 'scoring (object mapping categories to scores), roadmap[], success_factors[].'
+            . '\nCompany Size: ' . $req['company_size']
+            . '\nOperational Complexity: ' . $req['complexity']
+            . '\nBudget Range: ' . $req['budget_range']
+            . '\nImplementation Timeline: ' . $req['timeline'];
+
+        if ( ! empty( $req['pain_points'] ) ) {
+            $prompt .= '\nPain Points: ' . implode( ', ', $req['pain_points'] );
+        }
+
+        $response = $this->call_openai_with_retry( $model, $prompt );
+
+        if ( is_wp_error( $response ) ) {
+            return new WP_Error( 'llm_failure', __( 'Unable to generate recommendation at this time.', 'rtbcb' ) );
+        }
+
+        $body    = wp_remote_retrieve_body( $response );
+        $decoded = json_decode( $body, true );
+        $content = $decoded['choices'][0]['message']['content'] ?? '';
+        $json    = json_decode( $content, true );
+
+        if ( ! is_array( $json ) ) {
+            return new WP_Error( 'llm_parse_error', __( 'Invalid response from language model.', 'rtbcb' ) );
+        }
+
+        $result = [
+            'recommended_category' => sanitize_text_field( $json['recommended_category'] ?? '' ),
+            'reasoning'            => sanitize_textarea_field( $json['reasoning'] ?? '' ),
+            'alternatives'         => array_map( 'sanitize_text_field', $json['alternatives'] ?? [] ),
+            'confidence'           => floatval( $json['confidence'] ?? 0 ),
+            'scoring'              => array_map( 'floatval', $json['scoring'] ?? [] ),
+            'roadmap'              => array_map( 'sanitize_text_field', $json['roadmap'] ?? [] ),
+            'success_factors'      => array_map( 'sanitize_text_field', $json['success_factors'] ?? [] ),
+        ];
+
+        return $result;
+    }
+
+    /**
      * Generate comprehensive business case with deep analysis.
      *
      * Returns a {@see WP_Error} when the API key is missing or when the LLM

@@ -363,3 +363,23 @@ function rtbcb_test_generate_company_overview( $company_name ) {
     return $overview;
 }
 
+/**
+ * Test generating a category recommendation using the LLM.
+ *
+ * @param array $requirements_array Requirement fields.
+ * @return array|WP_Error Recommendation data or error.
+ */
+function rtbcb_test_generate_category_recommendation( $requirements_array ) {
+    $requirements = [
+        'company_size' => sanitize_text_field( $requirements_array['company_size'] ?? '' ),
+        'complexity'   => sanitize_text_field( $requirements_array['complexity'] ?? '' ),
+        'budget_range' => sanitize_text_field( $requirements_array['budget_range'] ?? '' ),
+        'timeline'     => sanitize_text_field( $requirements_array['timeline'] ?? '' ),
+        'pain_points'  => array_map( 'sanitize_text_field', (array) ( $requirements_array['pain_points'] ?? [] ) ),
+    ];
+
+    $llm = new RTBCB_LLM();
+
+    return $llm->generate_category_recommendation( $requirements );
+}
+
