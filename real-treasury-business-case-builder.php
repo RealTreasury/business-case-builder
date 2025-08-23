@@ -456,13 +456,16 @@ class Real_Treasury_BCB {
         $supported = [ 'model', 'max_output_tokens', 'text', 'temperature', 'store', 'timeout', 'max_retries' ];
         $config_localized = array_intersect_key( $config_localized, array_flip( $supported ) );
 
+        $model_capabilities = rtbcb_get_model_capabilities();
+
         wp_localize_script(
             'rtbcb-report',
             'rtbcbReport',
             [
-                'api_key'      => $api_key,
-                'report_model' => $report_model,
-                'defaults'     => $config_localized,
+                'api_key'            => $api_key,
+                'report_model'       => $report_model,
+                'defaults'           => $config_localized,
+                'model_capabilities' => $model_capabilities,
             ]
         );
     }
