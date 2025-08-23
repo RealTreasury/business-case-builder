@@ -97,6 +97,20 @@ class Real_Treasury_BCB {
         // AJAX handlers
         add_action( 'wp_ajax_rtbcb_generate_case', [ $this, 'ajax_generate_comprehensive_case' ] );
         add_action( 'wp_ajax_nopriv_rtbcb_generate_case', [ $this, 'ajax_generate_comprehensive_case' ] );
+
+        $this->init_hooks_debug();
+    }
+
+    /**
+     * Initialize debug-related hooks.
+     *
+     * @return void
+     */
+    private function init_hooks_debug() {
+        add_action( 'wp_ajax_rtbcb_debug_test', [ $this, 'debug_ajax_handler' ] );
+        add_action( 'wp_ajax_nopriv_rtbcb_debug_test', [ $this, 'debug_ajax_handler' ] );
+        add_action( 'wp_ajax_rtbcb_simple_test', [ $this, 'ajax_generate_case_simple' ] );
+        add_action( 'wp_ajax_nopriv_rtbcb_simple_test', [ $this, 'ajax_generate_case_simple' ] );
     }
 
     /**
@@ -1127,6 +1141,64 @@ class Real_Treasury_BCB {
             return $this->plugin_data[ $key ] ?? null;
         }
         return $this->plugin_data;
+    }
+
+    /**
+     * Handle debug diagnostics via AJAX.
+     *
+     * @return void
+     */
+    public function debug_ajax_handler() {
+        $nonce       = isset( $_POST['rtbcb_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['rtbcb_nonce'] ) ) : '';
+        $nonce_valid = wp_verify_nonce( $nonce, 'rtbcb_debug' );
+
+        $post_keys = array_map( 'sanitize_key', array_keys( $_POST ) );
+        $api_key   = get_option( 'rtbcb_openai_api_key', '' );
+
+        global $wpdb;
+        $table_name   = $wpdb->prefix . 'rtbcb_leads';
+        $table_exists = ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) ) === $table_name );
+
+        $diagnostics = [
+            'wp_functions'     => function_exists( 'add_action' ) && function_exists( 'wp_send_json_success' ),
+            'required_classes' => class_exists( 'RTBCB_Calculator' ) && class_exists( 'RTBCB_DB' ),
+            'nonce_valid'      => $nonce_valid,
+            'post_keys'        => $post_keys,
+            'api_key_present'  => ! empty( $api_key ),
+            'db_table_exists'  => $table_exists,
+            'memory_usage'     => size_format( memory_get_usage( true ) ),
+        ];
+
+        wp_send_json_success( $diagnostics );
+    }
+
+    /**
+     * Handle simplified ROI test via AJAX.
+     *
+     * @return void
+     */
+    public function ajax_generate_case_simple() {
+        if ( ! check_ajax_referer( 'rtbcb_simple', 'rtbcb_nonce', false ) ) {
+            wp_send_json_error( __( 'Security check failed.', 'rtbcb' ), 403 );
+        }
+
+        $investment = floatval( wp_unslash( $_POST['investment'] ?? 0 ) );
+        $returns    = floatval( wp_unslash( $_POST['returns'] ?? 0 ) );
+
+        if ( $investment <= 0 || $returns <= 0 ) {
+            wp_send_json_error( __( 'Invalid values provided.', 'rtbcb' ), 400 );
+        }
+
+        $roi = 0;
+        if ( $investment > 0 ) {
+            $roi = ( ( $returns - $investment ) / $investment ) * 100;
+        }
+
+        wp_send_json_success(
+            [
+                'roi' => round( $roi, 2 ),
+            ]
+        );
     }
 }
 
