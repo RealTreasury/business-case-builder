@@ -179,6 +179,21 @@ class RTBCB_API_Tester {
             ];
         }
 
+        $status = sanitize_text_field( $data['status'] ?? '' );
+        $reason = sanitize_text_field( $data['incomplete_details']['reason'] ?? '' );
+
+        if ( 'completed' !== $status ) {
+            $message = $reason
+                ? sprintf( __( 'Output %1$s: %2$s', 'rtbcb' ), $status, $reason )
+                : sprintf( __( 'Output %s', 'rtbcb' ), $status );
+
+            return [
+                'success' => false,
+                'message' => sanitize_text_field( $message ),
+                'details' => 'Response: ' . sanitize_text_field( $response_body ),
+            ];
+        }
+
         $content = '';
 
         if ( isset( $data['output_text'] ) ) {
