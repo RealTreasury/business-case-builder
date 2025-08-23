@@ -670,8 +670,19 @@ function rtbcb_test_generate_category_recommendation( $analysis ) {
 
         if ( isset( $decoded['output_text'] ) ) {
             $content = is_array( $decoded['output_text'] ) ? implode( ' ', (array) $decoded['output_text'] ) : $decoded['output_text'];
-        } elseif ( isset( $decoded['output'][0]['content'][0]['text'] ) ) {
-            $content = $decoded['output'][0]['content'][0]['text'];
+        } elseif ( ! empty( $decoded['output'] ) && is_array( $decoded['output'] ) ) {
+            foreach ( $decoded['output'] as $message ) {
+                if ( empty( $message['content'] ) || ! is_array( $message['content'] ) ) {
+                    continue;
+                }
+
+                foreach ( $message['content'] as $chunk ) {
+                    if ( isset( $chunk['text'] ) && '' !== $chunk['text'] ) {
+                        $content = $chunk['text'];
+                        break 2;
+                    }
+                }
+            }
         }
 
         $content = sanitize_textarea_field( $content );
