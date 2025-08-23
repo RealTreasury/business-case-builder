@@ -5,10 +5,13 @@
  * @package RealTreasuryBusinessCaseBuilder
  */
 
+require_once __DIR__ . '/config.php';
+
 class RTBCB_LLM {
     private $api_key;
     private $models;
     private $current_inputs = [];
+    private $gpt5_config;
 
     public function __construct() {
         $this->api_key = get_option( 'rtbcb_openai_api_key' );
@@ -19,7 +22,14 @@ class RTBCB_LLM {
             'gpt5_mini' => get_option( 'rtbcb_gpt5_mini_model', 'gpt-5-mini' ),
             'embedding' => get_option( 'rtbcb_embedding_model', 'text-embedding-3-small' ),
         ];
-        
+
+        $defaults  = defined( 'GPT5_CONFIG' ) ? GPT5_CONFIG : [];
+        $overrides = get_option( 'rtbcb_gpt5_config', [] );
+        if ( is_array( $overrides ) ) {
+            $defaults = array_merge( $defaults, array_intersect_key( $overrides, $defaults ) );
+        }
+        $this->gpt5_config = $defaults;
+
         if ( empty( $this->api_key ) ) {
             error_log( 'RTBCB: OpenAI API key not configured' );
         }
@@ -939,9 +949,11 @@ class RTBCB_LLM {
     }
 
     /**
-     * Call OpenAI with retry logic
+     * Call OpenAI with retry logic.
      */
-    private function call_openai_with_retry( $model, $prompt, $max_retries = 2 ) {
+    private function call_openai_with_retry( $model, $prompt, $max_retries = null ) {
+        $max_retries = $max_retries ?? intval( $this->gpt5_config['max_retries'] );
+
         for ( $attempt = 1; $attempt <= $max_retries; $attempt++ ) {
             $response = $this->call_openai( $model, $prompt );
 
@@ -962,19 +974,21 @@ class RTBCB_LLM {
     /**
      * Enhanced OpenAI call with better error handling.
      *
-     * @param string $model      Model name (ignored, gpt-5-mini is used).
-     * @param string $prompt     Prompt text.
-     * @param int    $max_tokens Maximum tokens for the response.
-     * @return array|WP_Error    Response array or error object.
+     * @param string $model  Model name.
+     * @param string $prompt Prompt text.
+     * @param int    $max_tokens Optional max tokens.
+     * @return array|WP_Error Response array or error object.
      */
-    private function call_openai( $model, $prompt, $max_tokens = 4000 ) {
+    private function call_openai( $model, $prompt, $max_tokens = null ) {
         if ( empty( $this->api_key ) ) {
             return new WP_Error( 'no_api_key', 'OpenAI API key not configured' );
         }
 
-        $endpoint = 'https://api.openai.com/v1/responses';
-        $body     = [
-            'model'      => 'gpt-5-mini',
+        $endpoint   = 'https://api.openai.com/v1/responses';
+        $model_name = sanitize_text_field( $model ?: ( $this->gpt5_config['model'] ?? '' ) );
+        $max_tokens = $max_tokens ?? intval( $this->gpt5_config['max_tokens'] );
+        $body       = [
+            'model'      => $model_name,
             'input'      => [
                 [
                     'role'    => 'system',
@@ -986,10 +1000,10 @@ class RTBCB_LLM {
                 ],
             ],
             'max_tokens' => $max_tokens,
-            'reasoning'  => [ 'effort' => 'medium' ],
-            'text'       => [ 'verbosity' => 'medium' ],
-            'temperature'=> 0.7,
-            'store'      => true,
+            'reasoning'  => $this->gpt5_config['reasoning'],
+            'text'       => $this->gpt5_config['text'],
+            'temperature'=> floatval( $this->gpt5_config['temperature'] ),
+            'store'      => (bool) $this->gpt5_config['store'],
         ];
 
         $args = [
@@ -998,10 +1012,10 @@ class RTBCB_LLM {
                 'Content-Type'  => 'application/json',
             ],
             'body'    => wp_json_encode( $body ),
-            'timeout' => 120, // Longer timeout for comprehensive analysis
+            'timeout' => intval( $this->gpt5_config['timeout'] ),
         ];
 
-        error_log( 'RTBCB: Making OpenAI API call with model: gpt-5-mini' );
+        error_log( 'RTBCB: Making OpenAI API call with model: ' . $model_name );
 
         try {
             $response = wp_remote_post( $endpoint, $args );
