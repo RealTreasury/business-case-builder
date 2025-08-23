@@ -1,216 +1,110 @@
 <?php
 /**
- * OpenAI API test utilities.
+ * API connection testing utilities.
  *
  * @package RealTreasuryBusinessCaseBuilder
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-    exit;
-}
-
-require_once __DIR__ . '/config.php';
-require_once __DIR__ . '/helpers.php';
-
 /**
- * Provides OpenAI API diagnostics.
+ * Class RTBCB_API_Tester.
  */
 class RTBCB_API_Tester {
     /**
-     * Run full connection test.
+     * Test OpenAI API connection.
      *
-     * @return array Test results.
+     * @param string $api_key Optional API key to test.
+     * @return array Test result.
      */
-    public static function test_connection() {
-        $api_key = get_option( 'rtbcb_openai_api_key' );
+    public static function test_connection( $api_key = null ) {
+        $api_key = $api_key ?: get_option( 'rtbcb_openai_api_key' );
 
         if ( empty( $api_key ) ) {
             return [
                 'success' => false,
-                'message' => __( 'No API key configured', 'rtbcb' ),
-                'details' => __( 'Please configure your OpenAI API key in the settings.', 'rtbcb' ),
+                'message' => __( 'No API key configured.', 'rtbcb' ),
+                'details' => __( 'Please add your OpenAI API key in settings.', 'rtbcb' ),
             ];
         }
 
         if ( ! rtbcb_is_valid_openai_api_key( $api_key ) ) {
             return [
                 'success' => false,
-                'message' => __( 'Invalid API key format', 'rtbcb' ),
-                'details' => __( 'API key must start with "sk-" and may contain letters, numbers, hyphens, colons, and underscores.', 'rtbcb' ),
+                'message' => __( 'Invalid API key format.', 'rtbcb' ),
+                'details' => __( 'OpenAI API keys should start with "sk-".', 'rtbcb' ),
             ];
         }
 
-        $models_test = self::test_models_endpoint( $api_key );
-        if ( ! $models_test['success'] ) {
-            return $models_test;
-        }
-
-        $completion_test = self::test_completion( $api_key );
-        if ( ! $completion_test['success'] ) {
-            return $completion_test;
-        }
-
-        return [
-            'success'         => true,
-            'message'         => __( 'OpenAI API connection successful', 'rtbcb' ),
-            'details'         => __( 'All tests passed. API is ready for business case generation.', 'rtbcb' ),
-            'models_available' => $models_test['models'] ?? [],
-            'test_response'    => $completion_test['response'] ?? '',
-        ];
+        return self::test_completion( $api_key );
     }
 
     /**
-     * Test models endpoint.
-     *
-     * @param string $api_key API key.
-     * @return array Test result.
-     */
-    private static function test_models_endpoint( $api_key ) {
-        $endpoint = 'https://api.openai.com/v1/models';
-        $args     = [
-            'headers' => [
-                'Authorization' => 'Bearer ' . $api_key,
-            ],
-            'timeout' => 15,
-        ];
-
-        $response = wp_remote_get( $endpoint, $args );
-
-        if ( is_wp_error( $response ) ) {
-            return [
-                'success' => false,
-                'message' => __( 'HTTP request failed', 'rtbcb' ),
-                'details' => sanitize_text_field( $response->get_error_message() ),
-            ];
-        }
-
-        $code = wp_remote_retrieve_response_code( $response );
-        $body = wp_remote_retrieve_body( $response );
-
-        if ( 200 !== $code ) {
-            $error_data = json_decode( $body, true );
-            return [
-                'success' => false,
-                'message' => __( 'API authentication failed', 'rtbcb' ),
-                'details' => sanitize_text_field( $error_data['error']['message'] ?? 'HTTP ' . $code ),
-                'http_code' => $code,
-            ];
-        }
-
-        $data   = json_decode( $body, true );
-        $models = [];
-
-        if ( isset( $data['data'] ) ) {
-            foreach ( $data['data'] as $model ) {
-                if ( strpos( $model['id'], 'gpt' ) !== false ) {
-                    $models[] = sanitize_text_field( $model['id'] );
-                }
-            }
-        }
-
-        return [
-            'success' => true,
-            'message' => __( 'Models endpoint accessible', 'rtbcb' ),
-            'models'  => $models,
-        ];
-    }
-
-    /**
-     * Test Responses API endpoint.
+     * Test API with a simple completion request.
      *
      * @param string $api_key API key.
      * @return array Test result.
      */
     private static function test_completion( $api_key ) {
-        $endpoint = 'https://api.openai.com/v1/responses';
+        $model = get_option( 'rtbcb_mini_model', rtbcb_get_default_model( 'mini' ) );
 
-        $model             = 'gpt-5-mini';
-        $config            = rtbcb_get_gpt5_config( get_option( 'rtbcb_gpt5_config', [] ) );
-        $max_output_tokens = intval( $config['max_output_tokens'] ); // Sanitize token limit.
-        $body              = [
-            'model'             => $model,
-            'input'             => __( "Briefly confirm the API is wired correctly. Reply with: 'API connection successful and ready for business case generation.'", 'rtbcb' ),
-            // Use the configured token limit for the API test.
-            'max_output_tokens' => $max_output_tokens,
-            'reasoning'         => [ 'effort' => 'minimal' ],
-            'text'              => [ 'verbosity' => 'low' ],
+        $body = [
+            'model' => rtbcb_normalize_model_name( $model ),
+            'input' => 'Test connection - respond with exactly: "API connection successful"',
+            'max_output_tokens' => 256,
         ];
+
+        if ( rtbcb_model_supports_temperature( $model ) ) {
+            $body['temperature'] = 0.1;
+        }
 
         $args = [
             'headers' => [
                 'Authorization' => 'Bearer ' . $api_key,
-                'Content-Type'  => 'application/json',
+                'Content-Type' => 'application/json',
             ],
-            'body'    => wp_json_encode( $body ),
+            'body' => wp_json_encode( $body ),
             'timeout' => 30,
         ];
 
-        $response = wp_remote_post( $endpoint, $args );
+        $response = wp_remote_post( 'https://api.openai.com/v1/responses', $args );
 
         if ( is_wp_error( $response ) ) {
             return [
                 'success' => false,
-                'message' => __( 'Responses API request failed', 'rtbcb' ),
-                'details' => sanitize_text_field( $response->get_error_message() ),
+                'message' => __( 'Connection failed.', 'rtbcb' ),
+                'details' => $response->get_error_message(),
             ];
         }
 
-        $code          = wp_remote_retrieve_response_code( $response );
-        $response_body = wp_remote_retrieve_body( $response );
-
+        $code = wp_remote_retrieve_response_code( $response );
         if ( 200 !== $code ) {
-            $error_data = json_decode( $response_body, true );
+            $body    = wp_remote_retrieve_body( $response );
+            $decoded = json_decode( $body, true );
+            $error_message = $decoded['error']['message'] ?? 'Unknown error';
+
             return [
-                'success'   => false,
-                'message'   => __( 'Responses API error', 'rtbcb' ),
-                'details'   => sanitize_text_field( $error_data['error']['message'] ?? 'HTTP ' . $code ),
-                'http_code' => $code,
+                'success' => false,
+                'message' => sprintf( __( 'API error (%d)', 'rtbcb' ), $code ),
+                'details' => $error_message,
             ];
         }
 
-        $data = json_decode( $response_body, true );
+        $parsed      = rtbcb_parse_gpt5_response( $response );
+        $output_text = $parsed['output_text'];
 
-        if ( JSON_ERROR_NONE !== json_last_error() || ! is_array( $data ) ) {
+        if ( empty( $output_text ) ) {
             return [
                 'success' => false,
-                'message' => __( 'Invalid JSON response', 'rtbcb' ),
-                'details' => 'Response: ' . sanitize_text_field( $response_body ),
-            ];
-        }
-
-        $text = '';
-
-        if ( isset( $data['output_text'] ) && '' !== $data['output_text'] ) {
-            $text = is_array( $data['output_text'] ) ? implode( ' ', (array) $data['output_text'] ) : (string) $data['output_text'];
-        }
-
-        if ( '' === $text && ! empty( $data['output'] ) && is_array( $data['output'] ) ) {
-            foreach ( $data['output'] as $item ) {
-                if ( 'message' === ( $item['type'] ?? '' ) && ! empty( $item['content'] ) ) {
-                    foreach ( $item['content'] as $content_piece ) {
-                        if ( 'output_text' === ( $content_piece['type'] ?? '' ) && isset( $content_piece['text'] ) ) {
-                            $text = (string) $content_piece['text'];
-                            break 2;
-                        }
-                    }
-                }
-            }
-        }
-
-        $text = trim( $text );
-
-        if ( '' === $text ) {
-            return [
-                'success' => false,
-                'message' => __( 'Could not extract assistant text from Responses payload', 'rtbcb' ),
-                'raw'     => sanitize_text_field( $response_body ),
+                'message' => __( 'Empty response from API.', 'rtbcb' ),
+                'details' => __( 'The API returned an empty response.', 'rtbcb' ),
             ];
         }
 
         return [
-            'success'  => true,
-            'message'  => __( 'API connection test successful', 'rtbcb' ),
-            'response' => sanitize_text_field( $text ),
+            'success' => true,
+            'message' => __( 'Connection successful.', 'rtbcb' ),
+            'response' => $output_text,
+            'details' => sprintf( __( 'Model: %s, Response length: %d characters', 'rtbcb' ),
+                $model, strlen( $output_text ) ),
         ];
     }
 }

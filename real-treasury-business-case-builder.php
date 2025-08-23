@@ -399,33 +399,35 @@ class Real_Treasury_BCB {
             true
         );
 
-        // CRITICAL FIX: Always localize script, even if ajaxObj exists
-        wp_localize_script(
-            'rtbcb-script',
-            'ajaxObj',
-            [
-                'ajax_url'    => admin_url( 'admin-ajax.php' ),
-                'strings'     => [
-                    'error'                   => __( 'An error occurred. Please try again.', 'rtbcb' ),
-                    'generating'              => __( 'Generating your comprehensive business case...', 'rtbcb' ),
-                    'analyzing'               => __( 'Analyzing your treasury operations...', 'rtbcb' ),
-                    'financial_modeling'      => __( 'Building financial models...', 'rtbcb' ),
-                    'risk_assessment'         => __( 'Conducting risk assessment...', 'rtbcb' ),
-                    'industry_benchmarking'   => __( 'Performing industry benchmarking...', 'rtbcb' ),
-                    'implementation_planning' => __( 'Creating implementation roadmap...', 'rtbcb' ),
-                    'vendor_evaluation'       => __( 'Preparing vendor evaluation framework...', 'rtbcb' ),
-                    'finalizing_report'       => __( 'Finalizing professional report...', 'rtbcb' ),
-                    'invalid_email'           => __( 'Please enter a valid email address.', 'rtbcb' ),
-                    'required_field'          => __( 'This field is required.', 'rtbcb' ),
-                    'select_pain_points'      => __( 'Please select at least one pain point.', 'rtbcb' ),
-                ],
-                'settings'    => [
-                    'pdf_enabled'            => get_option( 'rtbcb_pdf_enabled', true ),
-                    'comprehensive_analysis' => get_option( 'rtbcb_comprehensive_analysis', true ),
-                    'professional_reports'   => get_option( 'rtbcb_professional_reports', true ),
-                ],
-            ]
-        );
+        // CRITICAL FIX: Check if ajaxObj already exists to prevent override
+        if ( ! wp_script_is( 'rtbcb-script', 'done' ) ) {
+            wp_localize_script(
+                'rtbcb-script',
+                'ajaxObj',
+                [
+                    'ajax_url'    => admin_url( 'admin-ajax.php' ),
+                    'strings'     => [
+                        'error'                   => __( 'An error occurred. Please try again.', 'rtbcb' ),
+                        'generating'              => __( 'Generating your comprehensive business case...', 'rtbcb' ),
+                        'analyzing'               => __( 'Analyzing your treasury operations...', 'rtbcb' ),
+                        'financial_modeling'      => __( 'Building financial models...', 'rtbcb' ),
+                        'risk_assessment'         => __( 'Conducting risk assessment...', 'rtbcb' ),
+                        'industry_benchmarking'   => __( 'Performing industry benchmarking...', 'rtbcb' ),
+                        'implementation_planning' => __( 'Creating implementation roadmap...', 'rtbcb' ),
+                        'vendor_evaluation'       => __( 'Preparing vendor evaluation framework...', 'rtbcb' ),
+                        'finalizing_report'       => __( 'Finalizing professional report...', 'rtbcb' ),
+                        'invalid_email'           => __( 'Please enter a valid email address.', 'rtbcb' ),
+                        'required_field'          => __( 'This field is required.', 'rtbcb' ),
+                        'select_pain_points'      => __( 'Please select at least one pain point.', 'rtbcb' ),
+                    ],
+                    'settings'    => [
+                        'pdf_enabled'            => get_option( 'rtbcb_pdf_enabled', true ),
+                        'comprehensive_analysis' => get_option( 'rtbcb_comprehensive_analysis', true ),
+                        'professional_reports'   => get_option( 'rtbcb_professional_reports', true ),
+                    ],
+                ]
+            );
+        }
 
         wp_enqueue_script(
             'rtbcb-report',

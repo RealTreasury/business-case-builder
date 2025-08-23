@@ -740,30 +740,50 @@ class RTBCB_Admin {
     public function ajax_test_company_overview() {
         check_ajax_referer( 'rtbcb_test_company_overview', 'nonce' );
 
-        $company_name = isset( $_POST['company_name'] ) ? sanitize_text_field( wp_unslash( $_POST['company_name'] ) ) : '';
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'rtbcb' ) ] );
+        }
+
+        $company_name = isset( $_POST['company_name'] ) ?
+            sanitize_text_field( wp_unslash( $_POST['company_name'] ) ) : '';
 
         if ( empty( $company_name ) ) {
-            wp_send_json_error( [ 'message' => __( 'Invalid company name.', 'rtbcb' ) ] );
+            wp_send_json_error( [ 'message' => __( 'Company name is required.', 'rtbcb' ) ] );
         }
 
-        $start    = microtime( true );
-        $overview = rtbcb_test_generate_company_overview( $company_name );
-        $elapsed  = round( microtime( true ) - $start, 2 );
+        $start_time = microtime( true );
 
-        if ( is_wp_error( $overview ) ) {
-            wp_send_json_error( [ 'message' => sanitize_text_field( $overview->get_error_message() ) ] );
+        try {
+            $overview = rtbcb_test_generate_company_overview( $company_name );
+
+            if ( is_wp_error( $overview ) ) {
+                wp_send_json_error( [
+                    'message' => $overview->get_error_message(),
+                ] );
+            }
+
+            $word_count   = str_word_count( wp_strip_all_tags( $overview ) );
+            $elapsed_time = microtime( true ) - $start_time;
+
+            update_option( 'rtbcb_current_company', [
+                'name'         => $company_name,
+                'summary'      => wp_strip_all_tags( $overview ),
+                'generated_at' => current_time( 'mysql' ),
+            ] );
+
+            wp_send_json_success( [
+                'overview'  => wp_kses_post( $overview ),
+                'word_count'=> $word_count,
+                'elapsed'   => round( $elapsed_time, 2 ),
+                'generated' => current_time( 'mysql' ),
+            ] );
+
+        } catch ( Exception $e ) {
+            error_log( 'RTBCB Company Overview Error: ' . $e->getMessage() );
+            wp_send_json_error( [
+                'message' => __( 'An error occurred while generating the overview.', 'rtbcb' ),
+            ] );
         }
-
-        $word_count = str_word_count( $overview );
-
-        wp_send_json_success(
-            [
-                'overview'   => sanitize_textarea_field( $overview ),
-                'word_count' => $word_count,
-                'elapsed'    => $elapsed,
-                'generated'  => current_time( 'mysql' ),
-            ]
-        );
     }
 
     /**
