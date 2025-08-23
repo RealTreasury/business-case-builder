@@ -113,30 +113,20 @@ class RTBCB_API_Tester {
     }
 
     /**
-     * Test completion endpoint.
+     * Test Responses API endpoint.
      *
      * @param string $api_key API key.
      * @return array Test result.
      */
     private static function test_completion( $api_key ) {
-        $endpoint = 'https://api.openai.com/v1/chat/completions';
+        $endpoint = 'https://api.openai.com/v1/responses';
 
         $model = sanitize_text_field( get_option( 'rtbcb_mini_model', 'gpt-4o-mini' ) );
         $body  = [
-            'model'       => $model,
-            'messages'    => [
-                [
-                    'role'    => 'user',
-                    'content' => [
-                        [
-                            'type' => 'text',
-                            'text' => 'ping',
-                        ],
-                    ],
-                ],
-            ],
+            'model'                 => $model,
+            'input'                 => 'ping',
             'max_completion_tokens' => 10,
-            'temperature' => 0,
+            'temperature'           => 0,
         ];
 
         $args = [
@@ -153,7 +143,7 @@ class RTBCB_API_Tester {
         if ( is_wp_error( $response ) ) {
             return [
                 'success' => false,
-                'message' => __( 'Completion request failed', 'rtbcb' ),
+                'message' => __( 'Responses API request failed', 'rtbcb' ),
                 'details' => sanitize_text_field( $response->get_error_message() ),
             ];
         }
@@ -165,7 +155,7 @@ class RTBCB_API_Tester {
             $error_data = json_decode( $response_body, true );
             return [
                 'success'   => false,
-                'message'   => __( 'Completion API error', 'rtbcb' ),
+                'message'   => __( 'Responses API error', 'rtbcb' ),
                 'details'   => sanitize_text_field( $error_data['error']['message'] ?? 'HTTP ' . $code ),
                 'http_code' => $code,
             ];
@@ -181,19 +171,27 @@ class RTBCB_API_Tester {
             ];
         }
 
-        $content = trim( (string) ( $data['choices'][0]['message']['content'] ?? '' ) );
+        $content = '';
+
+        if ( isset( $data['output_text'] ) ) {
+            $content = is_array( $data['output_text'] ) ? implode( ' ', (array) $data['output_text'] ) : $data['output_text'];
+        } elseif ( isset( $data['output'][0]['content'][0]['text'] ) ) {
+            $content = $data['output'][0]['content'][0]['text'];
+        }
+
+        $content = trim( (string) $content );
 
         if ( '' === $content ) {
             return [
                 'success' => false,
-                'message' => __( 'Empty completion response', 'rtbcb' ),
+                'message' => __( 'Empty Responses API response', 'rtbcb' ),
                 'details' => 'Response: ' . sanitize_text_field( $response_body ),
             ];
         }
 
         return [
             'success'  => true,
-            'message'  => __( 'Completion ping successful', 'rtbcb' ),
+            'message'  => __( 'Responses API ping successful', 'rtbcb' ),
             'response' => sanitize_text_field( $content ),
         ];
     }
