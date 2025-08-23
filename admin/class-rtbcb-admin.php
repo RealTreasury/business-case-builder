@@ -224,6 +224,15 @@ class RTBCB_Admin {
             'rtbcb-test-industry-overview',
             [ $this, 'render_test_industry_overview' ]
         );
+
+        add_submenu_page(
+            'rtbcb-dashboard',
+            __( 'Test Category Recommendation', 'rtbcb' ),
+            __( 'Test Category Recommendation', 'rtbcb' ),
+            'manage_options',
+            'rtbcb-test-recommended-category',
+            [ $this, 'render_test_recommended_category' ]
+        );
     }
 
     /**
@@ -374,6 +383,15 @@ class RTBCB_Admin {
      */
     public function render_test_industry_overview() {
         include RTBCB_DIR . 'admin/test-industry-overview-page.php';
+    }
+
+    /**
+     * Render test category recommendation page.
+     *
+     * @return void
+     */
+    public function render_test_recommended_category() {
+        include RTBCB_DIR . 'admin/test-recommended-category-page.php';
     }
 
     /**

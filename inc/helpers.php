@@ -413,3 +413,38 @@ function rtbcb_test_generate_industry_overview( $industry, $company_size ) {
     return $overview;
 }
 
+/**
+ * Test generating a category recommendation.
+ *
+ * @param array $inputs User inputs.
+ * @return array|WP_Error Recommendation data or error object.
+ */
+function rtbcb_test_generate_category_recommendation( $inputs ) {
+    $inputs = array_map( 'sanitize_text_field', (array) $inputs );
+    if ( isset( $inputs['pain_points'] ) && is_array( $inputs['pain_points'] ) ) {
+        $inputs['pain_points'] = array_map( 'sanitize_text_field', (array) $inputs['pain_points'] );
+    }
+
+    if ( ! class_exists( 'RTBCB_Category_Recommender' ) ) {
+        return new WP_Error( 'missing_recommender', __( 'Category recommender not available.', 'rtbcb' ) );
+    }
+
+    $rec = RTBCB_Category_Recommender::recommend_category( $inputs );
+
+    $alternatives = [];
+    if ( ! empty( $rec['alternatives'] ) ) {
+        foreach ( $rec['alternatives'] as $alt ) {
+            $alternatives[] = $alt['info']['name'];
+        }
+    }
+
+    return [
+        'recommended'     => $rec['category_info']['name'],
+        'reasoning'       => $rec['reasoning'],
+        'alternatives'    => $alternatives,
+        'confidence'      => $rec['confidence'],
+        'roadmap'         => __( 'Sample implementation roadmap.', 'rtbcb' ),
+        'success_factors' => __( 'Sample success factors.', 'rtbcb' ),
+    ];
+}
+
