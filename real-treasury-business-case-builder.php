@@ -438,7 +438,7 @@ class Real_Treasury_BCB {
         $api_key      = sanitize_text_field( get_option( 'rtbcb_openai_api_key', '' ) );
         $report_model = sanitize_text_field( get_option( 'rtbcb_advanced_model', 'gpt-5-mini' ) );
 
-        $config = defined( 'GPT5_CONFIG' ) ? GPT5_CONFIG : [];
+        $config = rtbcb_get_gpt5_config();
         $overrides = get_option( 'rtbcb_gpt5_config', [] );
         if ( is_array( $overrides ) ) {
             $config = array_merge( $config, array_intersect_key( $overrides, $config ) );
