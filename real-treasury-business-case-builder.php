@@ -1326,6 +1326,7 @@ if ( ! function_exists( 'rtbcb_is_configured' ) ) {
 
 // Add AJAX handler for company overview generation.
 add_action( 'wp_ajax_rtbcb_generate_company_overview', 'rtbcb_ajax_generate_company_overview' );
+add_action( 'wp_ajax_rtbcb_generate_category_recommendation', 'rtbcb_ajax_generate_category_recommendation' );
 
 /**
  * AJAX handler for generating company overview.
@@ -1376,9 +1377,48 @@ function rtbcb_ajax_generate_company_overview() {
     }
 }
 
+/**
+ * AJAX handler for generating category recommendation.
+ *
+ * @return void
+ */
+function rtbcb_ajax_generate_category_recommendation() {
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'rtbcb_test_category_recommendation' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ] );
+        return;
+    }
+
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'rtbcb' ) ] );
+        return;
+    }
+
+    $inputs = [
+        'company_size'            => isset( $_POST['company_size'] ) ? sanitize_text_field( wp_unslash( $_POST['company_size'] ) ) : '',
+        'treasury_complexity'     => isset( $_POST['treasury_complexity'] ) ? sanitize_text_field( wp_unslash( $_POST['treasury_complexity'] ) ) : '',
+        'pain_points'             => isset( $_POST['pain_points'] ) ? array_map( 'sanitize_text_field', (array) wp_unslash( $_POST['pain_points'] ) ) : [],
+        'budget_range'            => isset( $_POST['budget_range'] ) ? sanitize_text_field( wp_unslash( $_POST['budget_range'] ) ) : '',
+        'implementation_timeline' => isset( $_POST['implementation_timeline'] ) ? sanitize_text_field( wp_unslash( $_POST['implementation_timeline'] ) ) : '',
+    ];
+
+    try {
+        $result = rtbcb_test_generate_category_recommendation( $inputs );
+
+        if ( is_wp_error( $result ) ) {
+            wp_send_json_error( [ 'message' => sanitize_text_field( $result->get_error_message() ) ] );
+            return;
+        }
+
+        wp_send_json_success( $result );
+    } catch ( Exception $e ) {
+        wp_send_json_error( [ 'message' => __( 'An error occurred while generating the recommendation.', 'rtbcb' ) ] );
+    }
+}
+
 // Enqueue admin scripts for company overview page.
 add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_company_overview_scripts' );
 add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_treasury_tech_overview_scripts' );
+add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_recommended_category_scripts' );
 
 /**
  * Enqueue admin scripts for company overview page.
@@ -1429,6 +1469,33 @@ function rtbcb_enqueue_treasury_tech_overview_scripts( $hook ) {
             [
                 'ajax_url' => admin_url( 'admin-ajax.php' ),
                 'nonce'    => wp_create_nonce( 'rtbcb_test_treasury_tech_overview' ),
+            ]
+        );
+    }
+}
+
+/**
+ * Enqueue admin scripts for category recommendation page.
+ *
+ * @param string $hook Current admin page hook.
+ * @return void
+ */
+function rtbcb_enqueue_recommended_category_scripts( $hook ) {
+    if ( strpos( $hook, 'rtbcb' ) !== false && strpos( $hook, 'recommended-category' ) !== false ) {
+        wp_enqueue_script(
+            'rtbcb-recommended-category',
+            plugin_dir_url( __FILE__ ) . 'admin/js/recommended-category.js',
+            [ 'jquery' ],
+            '1.0.0',
+            true
+        );
+
+        wp_localize_script(
+            'rtbcb-recommended-category',
+            'rtbcbCategory',
+            [
+                'ajax_url' => admin_url( 'admin-ajax.php' ),
+                'nonce'    => wp_create_nonce( 'rtbcb_test_category_recommendation' ),
             ]
         );
     }

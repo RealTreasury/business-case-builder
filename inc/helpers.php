@@ -396,3 +396,29 @@ function rtbcb_test_generate_treasury_tech_overview( $focus_areas, $complexity )
     return $overview;
 }
 
+/**
+ * Test generating a category recommendation.
+ *
+ * @param array $inputs User inputs.
+ * @return array Recommendation data.
+ */
+function rtbcb_test_generate_category_recommendation( $inputs ) {
+    $inputs = [
+        'company_size'            => sanitize_text_field( $inputs['company_size'] ?? '' ),
+        'treasury_complexity'     => sanitize_text_field( $inputs['treasury_complexity'] ?? '' ),
+        'pain_points'             => array_map( 'sanitize_text_field', $inputs['pain_points'] ?? [] ),
+        'budget_range'            => sanitize_text_field( $inputs['budget_range'] ?? '' ),
+        'implementation_timeline' => sanitize_text_field( $inputs['implementation_timeline'] ?? '' ),
+    ];
+
+    $recommendation = RTBCB_Category_Recommender::recommend_category( $inputs );
+
+    $recommendation['roadmap'] = __( 'Phase 1: Assess needs, Phase 2: Select vendor, Phase 3: Implement and optimize.', 'rtbcb' );
+    $recommendation['success_factors'] = [
+        __( 'Stakeholder alignment', 'rtbcb' ),
+        __( 'Clear objectives', 'rtbcb' ),
+    ];
+
+    return $recommendation;
+}
+

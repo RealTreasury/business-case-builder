@@ -213,6 +213,15 @@ class RTBCB_Admin {
             'rtbcb-test-treasury-tech-overview',
             [ $this, 'render_test_treasury_tech_overview' ]
         );
+
+        add_submenu_page(
+            'rtbcb-dashboard',
+            __( 'Test Category Recommendation', 'rtbcb' ),
+            __( 'Test Category Recommendation', 'rtbcb' ),
+            'manage_options',
+            'rtbcb-test-recommended-category',
+            [ $this, 'render_test_recommended_category' ]
+        );
     }
 
     /**
@@ -354,6 +363,15 @@ class RTBCB_Admin {
      */
     public function render_test_treasury_tech_overview() {
         include RTBCB_DIR . 'admin/test-treasury-tech-overview-page.php';
+    }
+
+    /**
+     * Render test category recommendation page.
+     *
+     * @return void
+     */
+    public function render_test_recommended_category() {
+        include RTBCB_DIR . 'admin/test-recommended-category-page.php';
     }
 
     /**
