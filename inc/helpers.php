@@ -550,6 +550,31 @@ function rtbcb_test_generate_real_treasury_overview( $include_portal, $categorie
 }
 
 /**
+ * Test generating a benefits estimate using the LLM.
+ *
+ * @param float  $revenue     Annual revenue.
+ * @param int    $staff_count Number of staff.
+ * @param float  $efficiency  Current efficiency percentage.
+ * @param string $category    Solution category.
+ * @return array|WP_Error Structured estimate array or error object.
+ */
+function rtbcb_test_generate_benefits_estimate( $revenue, $staff_count, $efficiency, $category ) {
+    $revenue     = floatval( $revenue );
+    $staff_count = intval( $staff_count );
+    $efficiency  = floatval( $efficiency );
+    $category    = sanitize_text_field( $category );
+
+    try {
+        $llm      = new RTBCB_LLM();
+        $estimate = $llm->generate_benefits_estimate( $revenue, $staff_count, $efficiency, $category );
+    } catch ( \Throwable $e ) {
+        return new WP_Error( 'llm_exception', __( 'Unable to estimate benefits at this time.', 'rtbcb' ) );
+    }
+
+    return $estimate;
+}
+
+/**
  * Test generating a complete report with ROI calculations.
  *
  * Validates and sanitizes inputs, generates required sections, performs ROI
