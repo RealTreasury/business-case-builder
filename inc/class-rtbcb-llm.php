@@ -15,12 +15,8 @@ class RTBCB_LLM {
     public function __construct() {
         $this->api_key = get_option( 'rtbcb_openai_api_key' );
 
-        $defaults  = rtbcb_get_gpt5_config();
-        $overrides = get_option( 'rtbcb_gpt5_config', [] );
-        if ( is_array( $overrides ) ) {
-            $defaults = array_merge( $defaults, array_intersect_key( $overrides, $defaults ) );
-        }
-        $this->gpt5_config = $defaults;
+        $config     = rtbcb_get_gpt5_config( get_option( 'rtbcb_gpt5_config', [] ) );
+        $this->gpt5_config = $config;
 
         if ( empty( $this->api_key ) ) {
             error_log( 'RTBCB: OpenAI API key not configured' );
@@ -1100,14 +1096,14 @@ class RTBCB_LLM {
         ];
     }
 
-    private function call_openai( $model, $prompt, $max_completion_tokens = null ) {
+    private function call_openai( $model, $prompt, $max_output_tokens = null ) {
         if ( empty( $this->api_key ) ) {
             return new WP_Error( 'no_api_key', 'OpenAI API key not configured' );
         }
 
         $endpoint   = 'https://api.openai.com/v1/responses';
         $model_name = sanitize_text_field( $model ?: ( $this->gpt5_config['model'] ?? '' ) );
-        $max_completion_tokens = $max_completion_tokens ?? intval( $this->gpt5_config['max_completion_tokens'] );
+        $max_output_tokens = $max_output_tokens ?? intval( $this->gpt5_config['max_output_tokens'] );
 
         if ( is_array( $prompt ) && isset( $prompt['input'] ) ) {
             $instructions = function_exists( 'sanitize_textarea_field' ) ? sanitize_textarea_field( $prompt['instructions'] ?? '' ) : ( $prompt['instructions'] ?? '' );
@@ -1121,7 +1117,7 @@ class RTBCB_LLM {
             'model'                 => $model_name,
             'input'                 => $input,
             'instructions'          => $instructions,
-            'max_completion_tokens' => $max_completion_tokens,
+            'max_output_tokens' => $max_output_tokens,
             'text'                  => $this->gpt5_config['text'],
             'temperature'           => floatval( $this->gpt5_config['temperature'] ),
             'store'                 => (bool) $this->gpt5_config['store'],
@@ -1183,16 +1179,16 @@ class RTBCB_LLM {
         if ( 'length' === $finish_reason || empty( $content ) ) {
             // Retry with more tokens if the response was truncated or empty.
             $this->log_gpt5_call( [ 'instructions' => $instructions, 'input' => $input ], $decoded, 'Truncated or empty response from OpenAI' );
-            if ( $max_completion_tokens < 8000 ) {
-                $new_max_completion_tokens = $max_completion_tokens + 1000;
-                error_log( 'RTBCB: Retrying with higher max_completion_tokens: ' . $new_max_completion_tokens );
-                return $this->call_openai( $model, [ 'instructions' => $instructions, 'input' => $input ], $new_max_completion_tokens );
+            if ( $max_output_tokens < 8000 ) {
+                $new_max_output_tokens = $max_output_tokens + 1000;
+                error_log( 'RTBCB: Retrying with higher max_output_tokens: ' . $new_max_output_tokens );
+                return $this->call_openai( $model, [ 'instructions' => $instructions, 'input' => $input ], $new_max_output_tokens );
             }
 
             // Return specific error when truncation cannot be resolved by retry.
             return new WP_Error(
                 'openai_response_truncated',
-                __( 'OpenAI response was truncated due to the max completion tokens limit.', 'rtbcb' )
+                __( 'OpenAI response was truncated due to the max output tokens limit.', 'rtbcb' )
             );
         }
 
