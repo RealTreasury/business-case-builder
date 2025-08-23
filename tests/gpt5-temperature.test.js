@@ -48,10 +48,9 @@ const { execSync } = require('child_process');
     vm.runInThisContext(code);
     await generateProfessionalReport('context');
 
-    const unsupportedModels = ['gpt-4.1', 'gpt-4.1-mini', 'gpt-5'];
-    const supportsTemperature = !unsupportedModels.includes(testModel);
+    const supports = supportsTemperature(testModel);
 
-    if ( supportsTemperature ) {
+    if ( supports ) {
         assert.strictEqual(capturedBody.temperature, 0.7, 'Client request body should include temperature 0.7');
     } else {
         assert.ok(!('temperature' in capturedBody), 'Client request body should not include temperature');
@@ -62,7 +61,7 @@ const { execSync } = require('child_process');
 
     // Server-side test for call_openai
     const serverBody = JSON.parse(execSync('php tests/helpers/capture-call-openai-body.php 2>/dev/null', { encoding: 'utf8' }));
-    if ( supportsTemperature ) {
+    if ( supports ) {
         assert.strictEqual(serverBody.temperature, 0.7, 'Server request body should include temperature 0.7');
     } else {
         assert.ok(!('temperature' in serverBody), 'Server request body should not include temperature');

@@ -11,6 +11,11 @@ const RTBCB_GPT5_DEFAULTS = {
     max_retries: 3
 };
 
+function supportsTemperature(model) {
+    const unsupported = ['gpt-4.1', 'gpt-4.1-mini', 'gpt-5'];
+    return !unsupported.includes(model);
+}
+
 function buildEnhancedPrompt(businessContext) {
     return `
 Generate a professional business consulting report in HTML format with the following requirements:
@@ -267,6 +272,9 @@ async function generateProfessionalReport(businessContext) {
         ...(typeof rtbcbReport !== 'undefined' ? rtbcbReport : {})
     };
     cfg.model = rtbcbReport.report_model;
+    if ( !supportsTemperature( cfg.model ) ) {
+        delete cfg.temperature;
+    }
     const requestBody = {
         model: cfg.model,
         input: [
@@ -281,9 +289,11 @@ async function generateProfessionalReport(businessContext) {
         ],
         max_output_tokens: cfg.max_output_tokens,
         text: cfg.text,
-        temperature: cfg.temperature,
         store: cfg.store
     };
+    if ( supportsTemperature( cfg.model ) ) {
+        requestBody.temperature = cfg.temperature;
+    }
 
     const maxAttempts = cfg.max_retries || 3;
     const baseDelay = 500;
