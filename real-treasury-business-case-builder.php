@@ -1412,28 +1412,36 @@ function rtbcb_ajax_generate_company_overview() {
             return;
         }
 
-        $word_count   = str_word_count( wp_strip_all_tags( $overview ) );
+        $analysis        = $overview['analysis'] ?? '';
+        $recommendations = array_map( 'sanitize_text_field', $overview['recommendations'] ?? [] );
+        $references      = array_map( 'esc_url_raw', $overview['references'] ?? [] );
+
+        $word_count   = str_word_count( wp_strip_all_tags( $analysis ) );
         $elapsed_time = microtime( true ) - $start_time;
         $timestamp    = current_time( 'mysql' );
 
         $company_data = [
-            'name'         => $company_name,
-            'summary'      => sanitize_textarea_field( wp_strip_all_tags( $overview ) ),
-            'size'         => $company_size,
-            'industry'     => $industry,
-            'word_count'   => intval( $word_count ),
-            'generated_at' => $timestamp,
+            'name'            => $company_name,
+            'summary'         => sanitize_textarea_field( wp_strip_all_tags( $analysis ) ),
+            'size'            => $company_size,
+            'industry'        => $industry,
+            'recommendations' => $recommendations,
+            'references'      => $references,
+            'word_count'      => intval( $word_count ),
+            'generated_at'    => $timestamp,
         ];
 
         update_option( 'rtbcb_current_company', $company_data );
 
         wp_send_json_success(
             [
-                'overview'     => wp_kses_post( $overview ),
-                'company_name' => $company_name,
-                'word_count'   => intval( $word_count ),
-                'elapsed_time' => round( $elapsed_time, 2 ),
-                'generated_at' => $timestamp,
+                'overview'        => wp_kses_post( $analysis ),
+                'company_name'    => $company_name,
+                'recommendations' => $recommendations,
+                'references'      => $references,
+                'word_count'      => intval( $word_count ),
+                'elapsed_time'    => round( $elapsed_time, 2 ),
+                'generated_at'    => $timestamp,
             ]
         );
     } catch ( Exception $e ) {

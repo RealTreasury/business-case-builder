@@ -170,10 +170,10 @@ class RTBCB_LLM {
     }
 
     /**
-     * Generate a concise overview for a company.
+     * Generate a comprehensive company overview with structured analysis.
      *
      * @param string $company_name Company name.
-     * @return string|WP_Error Overview text or error object.
+     * @return array|WP_Error Structured overview array or error object.
      */
     public function generate_company_overview( $company_name ) {
         $company_name = sanitize_text_field( $company_name );
@@ -182,30 +182,135 @@ class RTBCB_LLM {
             return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
         }
 
-        $model  = $this->get_model( 'mini' );
-        $prompt = 'Provide a concise company overview covering background, recent news, company size, financial highlights, treasury challenges or opportunities, and market position for ' . $company_name . '.';
+        $model = $this->get_model( 'mini' );
 
-        $history  = [
+        // System prompt optimized for comprehensive company analysis
+        $system_prompt = 'You are a senior treasury technology consultant. Your role is to provide a detailed, research-based company analysis strictly using the specified JSON schema—respond with valid JSON only, matching the required structure exactly.
+
+# Role and Objective
+Analyze companies thoroughly from a treasury technology perspective, supplying actionable insights with reputable citations. Format all outputs strictly as valid JSON using the provided schema.
+
+# Instructions
+- Begin by reviewing the company information and planning your response as a conceptual checklist (3-7 bullets) internally.
+- Responses must use the provided JSON schema and be fully valid JSON. Do not include text or formatting outside of the required JSON object.
+- Base all analysis on reputable research and cite credible sources where possible.
+- Focus on treasury-relevant aspects: financial position, operational challenges, technology adoption potential, and market dynamics.
+- After generating the JSON output, quickly validate that it is structurally correct and all required fields are populated.
+
+# Output Format
+Respond with a JSON object conforming to:
+{
+  "analysis": string, // In-depth analysis covering company background, recent news, size, financial highlights, treasury challenges/opportunities, and market position.
+  "recommendations": [string], // Treasury technology recommendations specific to this company.
+  "references": [string] // List of reputable sources backing your analysis.
+}
+
+# Example Structure
+{
+  "analysis": "Apple Inc. is a multinational technology corporation with annual revenue exceeding $390 billion. The company maintains strong cash positions but faces treasury challenges in managing global cash flows across multiple currencies and regulatory jurisdictions. Recent developments include increased focus on services revenue and supply chain diversification.",
+  "recommendations": [
+    "Implement advanced multi-currency cash management systems to optimize global liquidity",
+    "Deploy automated FX hedging solutions to manage currency exposure across international operations"
+  ],
+  "references": [
+    "https://www.sec.gov/edgar/browse/?CIK=320193",
+    "https://www.apple.com/investor/"
+  ]
+}';
+
+        // Enhanced user prompt with comprehensive company analysis request
+        $user_prompt = 'Provide a comprehensive company overview and treasury technology analysis for ' . $company_name . '.
+
+# Required Analysis Coverage:
+- Company background and business model overview
+- Recent news, developments, and significant market activity
+- Company size, scale, revenue range, and organizational structure
+- Financial highlights and performance indicators (revenue, profitability, cash position)
+- Treasury challenges and opportunities specific to their industry and size
+- Market position and competitive landscape context
+- Treasury technology maturity and digital transformation potential
+
+# Context Enhancement:
+If available from your knowledge, include relevant details about:
+- Industry-specific treasury requirements and regulations
+- Regulatory considerations affecting treasury operations
+- Seasonal or cyclical business patterns impacting cash flow
+- Recent financial performance trends and outlook
+- Technology adoption patterns and digital maturity in their sector
+- Geographic footprint and multi-currency exposure
+
+# Analysis Depth:
+- Provide specific, actionable insights rather than generic statements
+- Include quantitative details where available (revenue figures, employee count, etc.)
+- Address both current state and future trajectory
+- Consider industry benchmarks and peer comparisons
+
+# Recommendation Requirements:
+- Treasury technology recommendations tailored to company-specific factors
+- Consider implementation complexity relative to company size and resources
+- Address the most pressing treasury challenges identified in the analysis
+- Include both immediate quick-wins and strategic long-term initiatives
+
+Respond with valid JSON only, following the specified schema exactly. Ensure all fields are populated with substantive content.';
+
+        $history = [
             [
                 'role'    => 'user',
-                'content' => $prompt,
+                'content' => $user_prompt,
             ],
         ];
-        $context  = $this->build_context_for_responses( $history );
+
+        $context  = $this->build_context_for_responses( $history, $system_prompt );
         $response = $this->call_openai_with_retry( $model, $context );
 
         if ( is_wp_error( $response ) ) {
             return new WP_Error( 'llm_failure', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
         }
 
-        $parsed   = rtbcb_parse_gpt5_response( $response );
-        $overview = sanitize_textarea_field( $parsed['output_text'] );
+        $parsed  = rtbcb_parse_gpt5_response( $response );
+        $content = $parsed['output_text'];
 
-        if ( empty( $overview ) ) {
+        if ( empty( $content ) ) {
             return new WP_Error( 'llm_empty_response', __( 'No overview returned.', 'rtbcb' ) );
         }
 
-        return $overview;
+        // Parse JSON response
+        $json = json_decode( $content, true );
+
+        if ( ! is_array( $json ) ) {
+            return new WP_Error( 'llm_parse_error', __( 'Invalid JSON response from language model.', 'rtbcb' ) );
+        }
+
+        // Validate required fields
+        $required_fields = [ 'analysis', 'recommendations', 'references' ];
+        $missing_fields  = array_diff( $required_fields, array_keys( $json ) );
+
+        if ( ! empty( $missing_fields ) ) {
+            return new WP_Error(
+                'llm_missing_fields',
+                __( 'Missing required fields in response: ', 'rtbcb' ) . implode( ', ', $missing_fields )
+            );
+        }
+
+        // Additional validation for content quality
+        $analysis = trim( $json['analysis'] ?? '' );
+        if ( strlen( $analysis ) < 200 ) {
+            return new WP_Error( 'llm_insufficient_analysis', __( 'Analysis content is too brief.', 'rtbcb' ) );
+        }
+
+        if ( empty( $json['recommendations'] ) || ! is_array( $json['recommendations'] ) ) {
+            return new WP_Error( 'llm_missing_recommendations', __( 'No recommendations provided.', 'rtbcb' ) );
+        }
+
+        // Sanitize and structure the response
+        return [
+            'company_name'   => $company_name,
+            'analysis'       => sanitize_textarea_field( $json['analysis'] ),
+            'recommendations' => array_map( 'sanitize_text_field', array_filter( (array) $json['recommendations'] ) ),
+            'references'     => array_map( 'esc_url_raw', array_filter( (array) $json['references'] ) ),
+            'generated_at'   => current_time( 'Y-m-d H:i:s' ),
+            'analysis_type'  => 'comprehensive_company_overview',
+        ];
     }
 
     /**

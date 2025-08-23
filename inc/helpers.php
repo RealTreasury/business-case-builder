@@ -618,7 +618,7 @@ function rtbcb_test_generate_industry_commentary( $industry ) {
  * Test generating a company overview using the LLM.
  *
  * @param string $company_name Company name.
- * @return string|WP_Error Overview text or error object.
+ * @return array|WP_Error Structured overview array or error object.
  */
 function rtbcb_test_generate_company_overview( $company_name ) {
     if ( ! class_exists( 'RTBCB_LLM' ) ) {
@@ -792,7 +792,7 @@ function rtbcb_test_generate_complete_report( $all_inputs ) {
 
     $company_text = is_wp_error( $sections['company_overview'] )
         ? $sections['company_overview']->get_error_message()
-        : (string) $sections['company_overview'];
+        : (string) ( $sections['company_overview']['analysis'] ?? '' );
 
     $tech_text = is_wp_error( $sections['treasury_tech_overview'] )
         ? $sections['treasury_tech_overview']->get_error_message()
