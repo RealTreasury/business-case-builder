@@ -552,21 +552,20 @@ function rtbcb_test_generate_real_treasury_overview( $include_portal, $categorie
 /**
  * Test generating a benefits estimate using the LLM.
  *
- * @param float  $revenue     Annual revenue.
- * @param int    $staff_count Number of staff.
- * @param float  $efficiency  Current efficiency percentage.
- * @param string $category    Solution category.
+ * @param array  $company_data        Company context including revenue, staff count and efficiency.
+ * @param string $recommended_category Solution category.
  * @return array|WP_Error Structured estimate array or error object.
  */
-function rtbcb_test_generate_benefits_estimate( $revenue, $staff_count, $efficiency, $category ) {
-    $revenue     = floatval( $revenue );
-    $staff_count = intval( $staff_count );
-    $efficiency  = floatval( $efficiency );
-    $category    = sanitize_text_field( $category );
+function rtbcb_test_generate_benefits_estimate( $company_data, $recommended_category ) {
+    $company_data = is_array( $company_data ) ? $company_data : [];
+    $revenue      = isset( $company_data['revenue'] ) ? floatval( $company_data['revenue'] ) : 0;
+    $staff_count  = isset( $company_data['staff_count'] ) ? intval( $company_data['staff_count'] ) : 0;
+    $efficiency   = isset( $company_data['efficiency'] ) ? floatval( $company_data['efficiency'] ) : 0;
+    $recommended_category = sanitize_text_field( $recommended_category );
 
     try {
         $llm      = new RTBCB_LLM();
-        $estimate = $llm->generate_benefits_estimate( $revenue, $staff_count, $efficiency, $category );
+        $estimate = $llm->generate_benefits_estimate( $revenue, $staff_count, $efficiency, $recommended_category );
     } catch ( \Throwable $e ) {
         return new WP_Error( 'llm_exception', __( 'Unable to estimate benefits at this time.', 'rtbcb' ) );
     }

@@ -210,10 +210,12 @@
                 results.text(rtbcbAdmin.strings.processing);
                 const data = {
                     action: 'rtbcb_test_estimated_benefits',
-                    revenue: $('#rtbcb-test-revenue').val(),
-                    staff: $('#rtbcb-test-staff-count').val(),
-                    efficiency: $('#rtbcb-test-efficiency').val(),
-                    category: $('#rtbcb-test-category').val(),
+                    company_data: {
+                        revenue: $('#rtbcb-test-revenue').val(),
+                        staff_count: $('#rtbcb-test-staff-count').val(),
+                        efficiency: $('#rtbcb-test-efficiency').val()
+                    },
+                    recommended_category: $('#rtbcb-test-category').val(),
                     nonce: rtbcbAdmin.benefits_estimate_nonce
                 };
                 $.post(rtbcbAdmin.ajax_url, data)

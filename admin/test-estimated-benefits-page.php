@@ -9,7 +9,9 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-$categories = RTBCB_Category_Recommender::get_all_categories();
+$company_data        = get_option( 'rtbcb_company_data', [] );
+$recommended_category = get_option( 'rtbcb_last_recommended_category', '' );
+$categories          = RTBCB_Category_Recommender::get_all_categories();
 ?>
 <div class="wrap rtbcb-admin-page">
     <h1><?php esc_html_e( 'Test Estimated Benefits', 'rtbcb' ); ?></h1>
@@ -21,7 +23,7 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                     <label for="rtbcb-test-revenue"><?php esc_html_e( 'Company Annual Revenue', 'rtbcb' ); ?></label>
                 </th>
                 <td>
-                    <input type="number" id="rtbcb-test-revenue" />
+                    <input type="number" id="rtbcb-test-revenue" value="<?php echo esc_attr( $company_data['revenue'] ?? '' ); ?>" />
                 </td>
             </tr>
             <tr>
@@ -29,7 +31,7 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                     <label for="rtbcb-test-staff-count"><?php esc_html_e( 'Treasury Staff Count', 'rtbcb' ); ?></label>
                 </th>
                 <td>
-                    <input type="number" id="rtbcb-test-staff-count" />
+                    <input type="number" id="rtbcb-test-staff-count" value="<?php echo esc_attr( $company_data['staff_count'] ?? '' ); ?>" />
                 </td>
             </tr>
             <tr>
@@ -37,7 +39,7 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                     <label for="rtbcb-test-efficiency"><?php esc_html_e( 'Current Process Efficiency', 'rtbcb' ); ?></label>
                 </th>
                 <td>
-                    <input type="range" id="rtbcb-test-efficiency" min="1" max="10" />
+                    <input type="range" id="rtbcb-test-efficiency" min="1" max="10" value="<?php echo esc_attr( $company_data['efficiency'] ?? '' ); ?>" />
                 </td>
             </tr>
             <tr>
@@ -47,7 +49,7 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                 <td>
                     <select id="rtbcb-test-category">
                         <?php foreach ( $categories as $key => $label ) : ?>
-                            <option value="<?php echo esc_attr( $key ); ?>"><?php echo esc_html( $label ); ?></option>
+                            <option value="<?php echo esc_attr( $key ); ?>" <?php selected( $key, $recommended_category ); ?>><?php echo esc_html( $label ); ?></option>
                         <?php endforeach; ?>
                     </select>
                     <?php wp_nonce_field( 'rtbcb_test_estimated_benefits', 'rtbcb_test_estimated_benefits_nonce' ); ?>
