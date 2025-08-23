@@ -19,7 +19,8 @@
                 return;
             }
 
-            generateBtn.prop('disabled', true).text('Generating...');
+            const start = performance.now();
+            const original = rtbcbTestUtils.showLoading(generateBtn, 'Generating...');
             resultsDiv.html('<p>Generating overview...</p>');
 
             $.ajax({
@@ -35,10 +36,11 @@
                     if (response.success) {
                         const data = response.data;
                         const text = data.overview || '';
-                        const container = $('<div class="notice notice-success" />');
-                        container.append('<p><strong>Overview:</strong></p>');
-                        container.append('<div style="background: #f9f9f9; padding: 15px; border-left: 4px solid #0073aa; margin-top: 10px;">' + text + '</div>');
-                        container.append('<p>Word count: ' + data.word_count + ' | Time: ' + data.elapsed + 's | Generated: ' + data.generated + '</p>');
+                        rtbcbTestUtils.renderSuccess(resultsDiv, text, start, {
+                            word_count: data.word_count,
+                            elapsed_time: data.elapsed,
+                            generated_at: data.generated
+                        });
                         const actions = $('<p />');
                         const regen = $('<button type="button" class="button" />').text('Regenerate');
                         const copy = $('<button type="button" class="button" />').text('Copy');
@@ -46,43 +48,31 @@
                         regen.on('click', function() {
                             generateBtn.trigger('click');
                         });
-                        copy.on('click', async function() {
-                            try {
-                                await navigator.clipboard.writeText(text);
+                        copy.on('click', function() {
+                            rtbcbTestUtils.copyToClipboard(text).then(function(){
                                 alert('Copied to clipboard');
-                            } catch (err) {
+                            }).catch(function(err){
                                 alert('Copy failed: ' + err.message);
-                            }
+                            });
                         });
                         clear.on('click', function() {
                             clearBtn.trigger('click');
                         });
                         actions.append(regen).append(' ').append(copy).append(' ').append(clear);
-                        container.append(actions);
-                        resultsDiv.html(container);
+                        resultsDiv.find('.notice').append(actions);
                     } else {
-                        const container = $('<div class="notice notice-error" />');
-                        container.append('<p><strong>Error:</strong> ' + (response.data.message || 'Failed to generate overview') + '</p>');
-                        const retry = $('<button type="button" class="button" />').text('Retry');
-                        retry.on('click', function() {
+                        rtbcbTestUtils.renderError(resultsDiv, response.data.message || 'Failed to generate overview', function(){
                             generateBtn.trigger('click');
                         });
-                        container.append(retry);
-                        resultsDiv.html(container);
                     }
                 },
                 error: function() {
-                    const container = $('<div class="notice notice-error" />');
-                    container.append('<p><strong>Error:</strong> Request failed. Please try again.</p>');
-                    const retry = $('<button type="button" class="button" />').text('Retry');
-                    retry.on('click', function() {
+                    rtbcbTestUtils.renderError(resultsDiv, 'Request failed. Please try again.', function(){
                         generateBtn.trigger('click');
                     });
-                    container.append(retry);
-                    resultsDiv.html(container);
                 },
                 complete: function() {
-                    generateBtn.prop('disabled', false).text('Generate Overview');
+                    rtbcbTestUtils.hideLoading(generateBtn, original);
                 }
             });
         });

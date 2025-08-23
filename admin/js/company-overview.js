@@ -7,7 +7,6 @@
         const $clearBtn       = $('#rtbcb-clear-company-overview');
         const $copyBtn        = $('#rtbcb-copy-company-overview');
         const $resultsDiv     = $('#rtbcb-company-overview-results');
-        const $metaDiv        = $('#rtbcb-company-overview-meta');
         const nonce           = $('#rtbcb_test_company_overview_nonce').val();
 
         function sendRequest() {
@@ -18,10 +17,10 @@
                 return;
             }
 
-            $generateBtn.prop('disabled', true).text('Generating...');
-            $regenerateBtn.prop('disabled', true).text('Generating...');
+            const start = performance.now();
+            const originalGen = rtbcbTestUtils.showLoading($generateBtn, 'Generating...');
+            const originalRegen = rtbcbTestUtils.showLoading($regenerateBtn, 'Generating...');
             $resultsDiv.html('<p>Generating company overview...</p>');
-            $metaDiv.html('');
 
             $.ajax({
                 url: ajaxurl,
@@ -34,50 +33,42 @@
                 success: function(response) {
                     if (response.success) {
                         const data = response.data;
-                        const overviewHtml = '<div class="notice notice-success"><p><strong>Company Overview:</strong></p><div class="rtbcb-overview" style="background: #f9f9f9; padding: 15px; border-left: 4px solid #0073aa; margin-top: 10px;">' + data.overview + '</div></div>';
-                        $resultsDiv.html(overviewHtml);
-                        const metaHtml = '<p><strong>Word count:</strong> ' + data.word_count + '<br><strong>Generated at:</strong> ' + data.generated_at + '<br><strong>Elapsed time:</strong> ' + data.elapsed_time + 's</p>';
-                        $metaDiv.html(metaHtml);
-                        $regenerateBtn.show().prop('disabled', false).text('Regenerate');
+                        rtbcbTestUtils.renderSuccess($resultsDiv, data.overview || '', start, {
+                            word_count: data.word_count,
+                            generated_at: data.generated_at,
+                            elapsed_time: data.elapsed_time
+                        });
+                        $regenerateBtn.show();
                         $copyBtn.show();
                     } else {
-                        showError(response.data.message || 'Failed to generate overview');
+                        rtbcbTestUtils.renderError($resultsDiv, response.data.message || 'Failed to generate overview', sendRequest);
+                        $regenerateBtn.show();
                     }
                 },
                 error: function() {
-                    showError('Request failed. Please try again.');
+                    rtbcbTestUtils.renderError($resultsDiv, 'Request failed. Please try again.', sendRequest);
+                    $regenerateBtn.show();
                 },
                 complete: function() {
-                    $generateBtn.prop('disabled', false).text('Generate Overview');
+                    rtbcbTestUtils.hideLoading($generateBtn, originalGen);
+                    rtbcbTestUtils.hideLoading($regenerateBtn, originalRegen);
                 }
             });
         }
-
-        function showError(message) {
-            $resultsDiv.html('<div class="notice notice-error"><p><strong>Error:</strong> ' + message + ' <a href="#" class="rtbcb-retry">Retry</a></p></div>');
-            $metaDiv.html('');
-            $regenerateBtn.show().prop('disabled', false).text('Regenerate');
-        }
-
-        $resultsDiv.on('click', '.rtbcb-retry', function(e) {
-            e.preventDefault();
-            sendRequest();
-        });
 
         $generateBtn.on('click', sendRequest);
         $regenerateBtn.on('click', sendRequest);
 
         $clearBtn.on('click', function() {
             $resultsDiv.html('');
-            $metaDiv.html('');
             $('#rtbcb-test-company-name').val('');
-            $regenerateBtn.hide().prop('disabled', false).text('Regenerate');
+            $regenerateBtn.hide();
             $copyBtn.hide();
         });
 
         $copyBtn.on('click', function() {
-            const text = $resultsDiv.find('.rtbcb-overview').text();
-            navigator.clipboard.writeText(text).then(function() {
+            const text = $resultsDiv.find('.rtbcb-result-text').text();
+            rtbcbTestUtils.copyToClipboard(text).then(function() {
                 $copyBtn.text('Copied!').prop('disabled', true);
                 setTimeout(function() {
                     $copyBtn.text('Copy to Clipboard').prop('disabled', false);
