@@ -396,3 +396,21 @@ function rtbcb_test_generate_treasury_tech_overview( $focus_areas, $complexity )
     return $overview;
 }
 
+/**
+ * Test generating a Real Treasury overview using the LLM.
+ *
+ * @param bool  $include_portal Include portal integration section.
+ * @param array $categories     Vendor categories.
+ * @return string|WP_Error Overview text or error object.
+ */
+function rtbcb_test_generate_real_treasury_overview( $include_portal, $categories ) {
+    $include_portal = rest_sanitize_boolean( $include_portal );
+    $categories     = array_map( 'sanitize_text_field', (array) $categories );
+    $categories     = array_filter( $categories );
+
+    $llm      = new RTBCB_LLM();
+    $overview = $llm->generate_real_treasury_overview( $include_portal, $categories );
+
+    return $overview;
+}
+

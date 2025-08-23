@@ -178,6 +178,51 @@ class RTBCB_LLM {
     }
 
     /**
+     * Generate an overview of the Real Treasury platform.
+     *
+     * @param bool  $include_portal Include portal integration benefits.
+     * @param array $categories     Vendor categories.
+     * @return string|WP_Error Overview text or error object.
+     */
+    public function generate_real_treasury_overview( $include_portal, $categories ) {
+        $include_portal = rest_sanitize_boolean( $include_portal );
+        $categories     = array_map( 'sanitize_text_field', (array) $categories );
+        $categories     = array_filter( $categories );
+
+        if ( empty( $this->api_key ) ) {
+            return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
+        }
+
+        $model = $this->models['mini'] ?? 'gpt-4o-mini';
+        $list  = empty( $categories ) ? 'general treasury technology' : implode( ', ', $categories );
+
+        $prompt = 'Provide an overview of the Real Treasury platform including sections for platform capabilities';
+
+        if ( $include_portal ) {
+            $prompt .= ', portal integration benefits';
+        }
+
+        $prompt .= ', vendor ecosystem overview for categories: ' . $list . ', Real Treasury differentiators, implementation approach, and support and community aspects.';
+
+        $response = $this->call_openai_with_retry( $model, $prompt );
+
+        if ( is_wp_error( $response ) ) {
+            return new WP_Error( 'llm_failure', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
+        }
+
+        $body     = wp_remote_retrieve_body( $response );
+        $decoded  = json_decode( $body, true );
+        $content  = $decoded['choices'][0]['message']['content'] ?? '';
+        $overview = sanitize_textarea_field( $content );
+
+        if ( empty( $overview ) ) {
+            return new WP_Error( 'llm_empty_response', __( 'No overview returned.', 'rtbcb' ) );
+        }
+
+        return $overview;
+    }
+
+    /**
      * Generate a treasury technology overview.
      *
      * @param array  $focus_areas Focus areas.
