@@ -440,16 +440,21 @@ class Real_Treasury_BCB {
 
         $config = rtbcb_get_gpt5_config( get_option( 'rtbcb_gpt5_config', [] ) );
 
-
         $config_localized = [
-            'model'                 => sanitize_text_field( $config['model'] ),
-            'max_output_tokens'    => intval( $config['max_output_tokens'] ),
-            'text'                  => [ 'verbosity' => sanitize_text_field( $config['text']['verbosity'] ?? '' ) ],
-            'temperature'           => floatval( $config['temperature'] ),
-            'store'                 => (bool) $config['store'],
-            'timeout'               => intval( $config['timeout'] ),
-            'max_retries'           => intval( $config['max_retries'] ),
+            'model'              => sanitize_text_field( $config['model'] ),
+            'max_output_tokens'  => intval( $config['max_output_tokens'] ),
+            'text'               => [ 'verbosity' => sanitize_text_field( $config['text']['verbosity'] ?? '' ) ],
+            'store'              => (bool) $config['store'],
+            'timeout'            => intval( $config['timeout'] ),
+            'max_retries'        => intval( $config['max_retries'] ),
         ];
+
+        if ( rtbcb_model_supports_temperature( $config['model'] ) ) {
+            $config_localized['temperature'] = floatval( $config['temperature'] );
+        }
+
+        $supported = [ 'model', 'max_output_tokens', 'text', 'temperature', 'store', 'timeout', 'max_retries' ];
+        $config_localized = array_intersect_key( $config_localized, array_flip( $supported ) );
 
         wp_localize_script(
             'rtbcb-report',
