@@ -36,6 +36,8 @@ const { execSync } = require('child_process');
             env: { ...process.env, RTBCB_TEST_MODEL: model }
         }));
 
+        assert.strictEqual(serverBody.max_output_tokens, 256, 'Server request body should enforce minimum max_output_tokens of 256');
+
         if (shouldInclude) {
             assert.strictEqual(serverBody.temperature, 0.7, `Server request body for ${model} should include temperature 0.7`);
         } else {

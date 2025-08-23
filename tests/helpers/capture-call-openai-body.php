@@ -92,7 +92,8 @@ $llm       = new RTBCB_LLM();
 $ref       = new ReflectionClass( $llm );
 $method    = $ref->getMethod( 'call_openai' );
 $method->setAccessible( true );
-$method->invoke( $llm, get_option( 'rtbcb_advanced_model', 'gpt-5-mini' ), 'test prompt' );
+// Pass a low max_output_tokens to ensure the minimum is enforced.
+$method->invoke( $llm, get_option( 'rtbcb_advanced_model', 'gpt-5-mini' ), 'test prompt', 1 );
 
 global $captured_body;
 echo json_encode( $captured_body );
