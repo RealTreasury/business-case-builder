@@ -580,7 +580,7 @@
             } catch(err){
                 alert(`${rtbcbAdmin.strings.error} ${err.message}`);
             }
-        }
+        },
 
         bindReportPreview() {
             const form = document.getElementById('rtbcb-report-preview-form');
