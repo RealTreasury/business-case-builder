@@ -451,6 +451,43 @@ function rtbcb_test_generate_real_treasury_overview( $include_portal, $categorie
 }
 
 /**
+ * Test generating a category recommendation.
+ *
+ * @param array $inputs User input data.
+ * @return array|WP_Error Recommendation data or error object.
+ */
+function rtbcb_test_generate_category_recommendation( $inputs ) {
+    $sanitized = [];
+    foreach ( (array) $inputs as $key => $value ) {
+        if ( is_array( $value ) ) {
+            $sanitized[ $key ] = array_map( 'sanitize_text_field', $value );
+        } else {
+            $sanitized[ $key ] = sanitize_text_field( $value );
+        }
+    }
+
+    try {
+        $recommendation = RTBCB_Category_Recommender::recommend_category( $sanitized );
+    } catch ( \Throwable $e ) {
+        return new WP_Error( 'recommender_error', __( 'Unable to generate recommendation at this time.', 'rtbcb' ) );
+    }
+
+    return [
+        'recommended_category' => $recommendation['category_info']['name'] ?? '',
+        'reasoning'            => $recommendation['reasoning'] ?? '',
+        'alternatives'         => array_map(
+            function ( $alt ) {
+                return $alt['info']['name'] ?? $alt['category'];
+            },
+            $recommendation['alternatives'] ?? []
+        ),
+        'confidence'           => $recommendation['confidence'] ?? '',
+        'roadmap'              => $recommendation['category_info']['ideal_for'] ?? '',
+        'success_factors'      => implode( ', ', $recommendation['category_info']['features'] ?? [] ),
+    ];
+}
+
+/**
  * Test generating a complete report with ROI calculations.
  *
  * Validates and sanitizes inputs, generates required sections, performs ROI
