@@ -158,8 +158,8 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                             <?php esc_html_e( 'Weekly Hours: Bank Reconciliation', 'rtbcb' ); ?>
                             <span class="rtbcb-required">*</span>
                         </label>
-                        <input type="number" name="hours_reconciliation" id="hours_reconciliation" 
-                               min="0" max="168" step="0.5" placeholder="0" required />
+                        <input type="number" name="hours_reconciliation" id="hours_reconciliation"
+                               min="0" max="168" step="0.5" placeholder="0" required inputmode="decimal" />
                         <div class="rtbcb-field-help">
                             <?php esc_html_e( 'Total weekly hours spent on bank reconciliation tasks', 'rtbcb' ); ?>
                         </div>
@@ -170,8 +170,8 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                             <?php esc_html_e( 'Weekly Hours: Cash Positioning', 'rtbcb' ); ?>
                             <span class="rtbcb-required">*</span>
                         </label>
-                        <input type="number" name="hours_cash_positioning" id="hours_cash_positioning" 
-                               min="0" max="168" step="0.5" placeholder="0" required />
+                        <input type="number" name="hours_cash_positioning" id="hours_cash_positioning"
+                               min="0" max="168" step="0.5" placeholder="0" required inputmode="decimal" />
                         <div class="rtbcb-field-help">
                             <?php esc_html_e( 'Time spent on cash visibility, forecasting, and positioning', 'rtbcb' ); ?>
                         </div>
@@ -182,8 +182,8 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                             <?php esc_html_e( 'Number of Banking Relationships', 'rtbcb' ); ?>
                             <span class="rtbcb-required">*</span>
                         </label>
-                        <input type="number" name="num_banks" id="num_banks" 
-                               min="1" max="50" placeholder="0" required />
+                        <input type="number" name="num_banks" id="num_banks"
+                               min="1" max="50" placeholder="0" required inputmode="decimal" />
                         <div class="rtbcb-field-help">
                             <?php esc_html_e( 'Total number of banks where your company maintains accounts', 'rtbcb' ); ?>
                         </div>
@@ -194,8 +194,8 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                             <?php esc_html_e( 'Treasury Team Size (FTEs)', 'rtbcb' ); ?>
                             <span class="rtbcb-required">*</span>
                         </label>
-                        <input type="number" name="ftes" id="ftes" 
-                               min="0.5" max="100" step="0.5" placeholder="0" required />
+                        <input type="number" name="ftes" id="ftes"
+                               min="0.5" max="100" step="0.5" placeholder="0" required inputmode="decimal" />
                         <div class="rtbcb-field-help">
                             <?php esc_html_e( 'Full-time equivalent employees dedicated to treasury functions', 'rtbcb' ); ?>
                         </div>
