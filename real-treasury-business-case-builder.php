@@ -1596,7 +1596,9 @@ function rtbcb_enqueue_real_treasury_overview_scripts( $hook ) {
  * @return void
  */
 function rtbcb_enqueue_recommended_category_scripts( $hook ) {
-    if ( strpos( $hook, 'rtbcb' ) !== false && strpos( $hook, 'recommended-category' ) !== false ) {
+    $page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
+
+    if ( false !== strpos( $page, 'recommended-category' ) ) {
         wp_enqueue_script(
             'rtbcb-test-utils',
             plugin_dir_url( __FILE__ ) . 'admin/js/rtbcb-test-utils.js',
