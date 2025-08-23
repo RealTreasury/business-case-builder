@@ -256,7 +256,7 @@ async function generateProfessionalReport(businessContext) {
     try {
         const requestBody = {
             model: rtbcbReport.report_model,
-            messages: [
+            input: [
                 {
                     role: 'system',
                     content: 'You are a senior BCG consultant creating professional HTML-formatted strategic reports. Output only valid HTML code with no additional text or markdown.'
@@ -265,17 +265,15 @@ async function generateProfessionalReport(businessContext) {
                     role: 'user',
                     content: buildEnhancedPrompt(businessContext)
                 }
-            ]
+            ],
+            max_tokens: 4000,
+            reasoning: { effort: 'medium' },
+            text: { verbosity: 'medium' },
+            temperature: 0.7,
+            store: true
         };
 
-        if (rtbcbReport.report_model.startsWith('gpt-5')) {
-            requestBody.max_completion_tokens = 4000;
-        } else {
-            requestBody.max_tokens = 4000;
-            requestBody.temperature = 0.7;
-        }
-
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        const response = await fetch('https://api.openai.com/v1/responses', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -302,7 +300,7 @@ async function generateProfessionalReport(businessContext) {
             throw new Error(errorMessage);
         }
 
-        const htmlContent = data.choices[0].message.content;
+        const htmlContent = data.output_text;
         const cleanedHTML = htmlContent
             .replace(/```html\n?/g, '')
             .replace(/```\n?/g, '')
