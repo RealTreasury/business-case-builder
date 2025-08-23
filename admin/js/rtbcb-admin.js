@@ -357,12 +357,12 @@
             try {
                 const formData = new FormData(form);
                 const select = document.getElementById('rtbcb-sample-select');
-                const sampleKey = select ? select.value : '';
-                if (sampleKey) {
+                const sampleKey = select && select.value ? select.value.trim() : '';
+                if (sampleKey === '') {
+                    formData.append('action', 'rtbcb_generate_report_preview');
+                } else {
                     formData.append('action', 'rtbcb_generate_sample_report');
                     formData.append('scenario_key', sampleKey);
-                } else {
-                    formData.append('action', 'rtbcb_generate_report_preview');
                 }
                 const response = await fetch(rtbcbAdmin.ajax_url, { method: 'POST', body: formData });
                 if (!response.ok) {
