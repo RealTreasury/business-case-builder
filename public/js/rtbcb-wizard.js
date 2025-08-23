@@ -246,18 +246,8 @@ class BusinessCaseBuilder {
 
         // Number validation
         if (field.type === 'number' && value) {
-            const num = parseFloat(value);
-            const min = parseFloat(field.min);
-            const max = parseFloat(field.max);
-
-            if (isNaN(num)) {
+            if (!Number.isFinite(Number(value))) {
                 errorMessage = 'Please enter a valid number';
-                isValid = false;
-            } else if (min !== undefined && num < min) {
-                errorMessage = `Value must be at least ${min}`;
-                isValid = false;
-            } else if (max !== undefined && num > max) {
-                errorMessage = `Value must not exceed ${max}`;
                 isValid = false;
             }
         }
@@ -399,7 +389,18 @@ class BusinessCaseBuilder {
         this.showProgress();
 
         try {
-            const formData = new FormData(this.form);
+            const formData = new FormData();
+            const rawData = new FormData(this.form);
+            const numericFields = ['hours_reconciliation', 'hours_cash_positioning', 'num_banks', 'ftes'];
+
+            for (const [key, value] of rawData.entries()) {
+                if (numericFields.includes(key)) {
+                    const numValue = Number(value);
+                    formData.append(key, Number.isFinite(numValue) ? numValue : 0);
+                } else {
+                    formData.append(key, value);
+                }
+            }
             formData.append('action', 'rtbcb_generate_case');
 
             console.log('RTBCB: Submitting form data:', Object.fromEntries(formData));
