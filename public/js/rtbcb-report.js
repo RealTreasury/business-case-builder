@@ -313,19 +313,25 @@ function displayReport(htmlContent) {
     iframe.style.width = '100%';
     iframe.style.height = '800px';
     iframe.style.border = '1px solid #ddd';
+    iframe.srcdoc = htmlContent;
     document.getElementById('report-container').appendChild(iframe);
-
-    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-    iframeDoc.open();
-    iframeDoc.write(htmlContent);
-    iframeDoc.close();
 }
 
 function exportToPDF(htmlContent) {
     const printWindow = window.open('', '_blank');
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
-    printWindow.print();
+    const doc = printWindow.document;
+    doc.documentElement.innerHTML = htmlContent;
+
+    const triggerPrint = () => {
+        printWindow.focus();
+        printWindow.print();
+    };
+
+    if (printWindow.requestAnimationFrame) {
+        printWindow.requestAnimationFrame(triggerPrint);
+    } else {
+        setTimeout(triggerPrint, 0);
+    }
 }
 
 async function generateAndDisplayReport(businessContext) {
