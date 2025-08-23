@@ -309,23 +309,23 @@ function rtbcb_get_client_info() {
 }
 
 /**
- * Get client IP address
+ * Get client IP address.
  *
- * @return string IP address
+ * @return string IP address.
  */
 function rtbcb_get_client_ip() {
     $ip_keys = [ 'HTTP_X_FORWARDED_FOR', 'HTTP_X_REAL_IP', 'HTTP_CLIENT_IP', 'REMOTE_ADDR' ];
-    
+
     foreach ( $ip_keys as $key ) {
         if ( ! empty( $_SERVER[ $key ] ) ) {
-            $ip = wp_unslash( $_SERVER[ $key ] );
-            
-            // Handle comma-separated IPs
+            $ip = sanitize_text_field( wp_unslash( $_SERVER[ $key ] ) );
+
+            // Handle comma-separated IPs.
             if ( strpos( $ip, ',' ) !== false ) {
-                $ip = trim( explode( ',', $ip )[0] );
+                $ip = sanitize_text_field( trim( explode( ',', $ip )[0] ) );
             }
-            
-            // Validate IP
+
+            // Validate IP.
             if ( filter_var(
                 $ip,
                 FILTER_VALIDATE_IP,
@@ -335,8 +335,10 @@ function rtbcb_get_client_ip() {
             }
         }
     }
-    
-    return isset( $_SERVER['REMOTE_ADDR'] ) ? wp_unslash( $_SERVER['REMOTE_ADDR'] ) : '';
+
+    return isset( $_SERVER['REMOTE_ADDR'] )
+        ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) )
+        : '';
 }
 
 
