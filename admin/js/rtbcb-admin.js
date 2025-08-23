@@ -164,10 +164,10 @@
             const submitHandler = async function(e) {
                 e.preventDefault();
                 const original = RTBCBAdmin.utils.setLoading(submitBtn, rtbcbAdmin.strings.processing);
-                const industry = $('#rtbcb-industry-name').val();
-                const size = $('#rtbcb-company-size').val();
+                const company = Object.assign({}, rtbcbAdmin.company || {});
+                company.industry = $('#rtbcb-industry-name').val();
                 const nonce = form.find('[name="nonce"]').val();
-                if (!industry || !size) {
+                if (!company.industry) {
                     results.html('<div class="notice notice-error"><p>' + rtbcbAdmin.strings.error + '</p></div>');
                     RTBCBAdmin.utils.clearLoading(submitBtn, original);
                     return;
@@ -176,8 +176,7 @@
                 try {
                     const formData = new FormData();
                     formData.append('action', 'rtbcb_test_industry_overview');
-                    formData.append('industry', industry);
-                    formData.append('company_size', size);
+                    formData.append('company_data', JSON.stringify(company));
                     formData.append('nonce', nonce);
                     const response = await fetch(rtbcbAdmin.ajax_url, { method: 'POST', body: formData });
                     if (!response.ok) {

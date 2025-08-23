@@ -66,12 +66,27 @@ class RTBCB_Admin {
             RTBCB_VERSION, 
             true 
         );
-        wp_enqueue_style( 
-            'rtbcb-admin', 
-            RTBCB_URL . 'admin/css/rtbcb-admin.css', 
-            [], 
-            RTBCB_VERSION 
+        wp_enqueue_style(
+            'rtbcb-admin',
+            RTBCB_URL . 'admin/css/rtbcb-admin.css',
+            [],
+            RTBCB_VERSION
         );
+
+        $company_data = [];
+        if ( function_exists( 'rtbcb_get_current_company' ) ) {
+            $raw_company = rtbcb_get_current_company();
+            if ( is_array( $raw_company ) ) {
+                $company_data = [
+                    'name'           => isset( $raw_company['name'] ) ? sanitize_text_field( $raw_company['name'] ) : '',
+                    'summary'        => isset( $raw_company['summary'] ) ? sanitize_textarea_field( $raw_company['summary'] ) : '',
+                    'industry'       => isset( $raw_company['industry'] ) ? sanitize_text_field( $raw_company['industry'] ) : '',
+                    'size'           => isset( $raw_company['size'] ) ? sanitize_text_field( $raw_company['size'] ) : '',
+                    'geography'      => isset( $raw_company['geography'] ) ? sanitize_text_field( $raw_company['geography'] ) : '',
+                    'business_model' => isset( $raw_company['business_model'] ) ? sanitize_text_field( $raw_company['business_model'] ) : '',
+                ];
+            }
+        }
 
         wp_localize_script( 'rtbcb-admin', 'rtbcbAdmin', [
             'ajax_url'                   => admin_url( 'admin-ajax.php' ),
@@ -86,6 +101,7 @@ class RTBCB_Admin {
             'test_dashboard_nonce'       => wp_create_nonce( 'rtbcb_test_dashboard' ),
             'roi_nonce'                  => wp_create_nonce( 'rtbcb_test_calculate_roi' ),
             'page'                       => $page,
+            'company'                    => $company_data,
             'strings'                    => [
                 'confirm_delete'      => __( 'Are you sure you want to delete this lead?', 'rtbcb' ),
                 'confirm_bulk_delete' => __( 'Are you sure you want to delete the selected leads?', 'rtbcb' ),
@@ -756,16 +772,15 @@ class RTBCB_Admin {
      */
     public function ajax_test_industry_overview() {
         check_ajax_referer( 'rtbcb_test_industry_overview', 'nonce' );
+        $raw_data     = isset( $_POST['company_data'] ) ? wp_unslash( $_POST['company_data'] ) : '';
+        $company_data = json_decode( $raw_data, true );
 
-        $industry     = isset( $_POST['industry'] ) ? sanitize_text_field( wp_unslash( $_POST['industry'] ) ) : '';
-        $company_size = isset( $_POST['company_size'] ) ? sanitize_text_field( wp_unslash( $_POST['company_size'] ) ) : '';
-
-        if ( empty( $industry ) || empty( $company_size ) ) {
-            wp_send_json_error( [ 'message' => __( 'Please provide industry and company size.', 'rtbcb' ) ] );
+        if ( empty( $company_data ) || ! is_array( $company_data ) ) {
+            wp_send_json_error( [ 'message' => __( 'Invalid company data.', 'rtbcb' ) ] );
         }
 
         $start    = microtime( true );
-        $overview = rtbcb_test_generate_industry_overview( $industry, $company_size );
+        $overview = rtbcb_test_generate_industry_overview( $company_data );
         $elapsed  = round( microtime( true ) - $start, 2 );
 
         if ( is_wp_error( $overview ) ) {
