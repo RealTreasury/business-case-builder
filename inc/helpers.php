@@ -27,6 +27,69 @@ function rtbcb_clear_current_company() {
 }
 
 /**
+ * Determine if a model supports the temperature parameter.
+ *
+ * Attempts to query the OpenAI models endpoint and caches the result. Falls
+ * back to a static list of unsupported models if the request fails.
+ *
+ * @param string $model Model identifier.
+ * @return bool Whether the model supports temperature.
+ */
+function rtbcb_model_supports_temperature( $model ) {
+    $model = sanitize_text_field( $model );
+
+    $unsupported = [ 'gpt-4.1', 'gpt-4.1-mini', 'gpt-5' ];
+    if ( in_array( $model, $unsupported, true ) ) {
+        return false;
+    }
+
+    $cache_key = 'rtbcb_temperature_support_cache';
+    $cache     = get_transient( $cache_key );
+    if ( ! is_array( $cache ) ) {
+        $cache = [];
+    }
+
+    if ( array_key_exists( $model, $cache ) ) {
+        return (bool) $cache[ $model ];
+    }
+
+    $api_key = get_option( 'rtbcb_openai_api_key' );
+    if ( empty( $api_key ) ) {
+        return true;
+    }
+
+    $url      = 'https://api.openai.com/v1/models/' . rawurlencode( $model );
+    $response = wp_remote_get(
+        $url,
+        [
+            'timeout' => 10,
+            'headers' => [
+                'Authorization' => 'Bearer ' . $api_key,
+            ],
+        ]
+    );
+
+    if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
+        return true;
+    }
+
+    $body      = json_decode( wp_remote_retrieve_body( $response ), true );
+    $supported = true;
+
+    if ( isset( $body['capabilities']['temperature'] ) ) {
+        $supported = (bool) $body['capabilities']['temperature'];
+    } elseif ( isset( $body['temperature'] ) ) {
+        $supported = (bool) $body['temperature'];
+    }
+
+    $cache[ $model ] = $supported;
+    $expiration      = defined( 'DAY_IN_SECONDS' ) ? DAY_IN_SECONDS : 86400;
+    set_transient( $cache_key, $cache, $expiration );
+
+    return $supported;
+}
+
+/**
  * Get ordered list of test steps and their option keys.
  *
  * @return array[] Step data keyed by page slug.
