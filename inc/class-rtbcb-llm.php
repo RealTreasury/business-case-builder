@@ -875,11 +875,19 @@ class RTBCB_LLM {
      * Build comprehensive prompt with research context
      */
     private function build_comprehensive_prompt( $user_inputs, $roi_data, $company_research, $industry_analysis, $tech_landscape ) {
-        $company_name = $user_inputs['company_name'] ?? 'the company';
+        $company_name    = $user_inputs['company_name'] ?? 'the company';
         $company_profile = $company_research['company_profile'];
-        
-        $prompt = "You are a senior treasury technology consultant creating a comprehensive business case for {$company_name}.\n\n";
-        
+
+        $prompt  = "As a senior treasury technology consultant with 15+ years of experience, create a comprehensive business case for {$company_name}.\n\n";
+
+        // Add detailed context sections...
+        $prompt .= "EXECUTIVE BRIEF:\n";
+        $prompt .= "Create a strategic business case that justifies treasury technology investment with:\n";
+        $prompt .= "- Clear ROI projections with risk-adjusted scenarios\n";
+        $prompt .= "- Industry-specific operational improvements\n";
+        $prompt .= "- Implementation roadmap with success metrics\n";
+        $prompt .= "- Risk mitigation strategies\n\n";
+
         // Company Context
         $prompt .= "COMPANY PROFILE:\n";
         $prompt .= "Company: {$company_name}\n";
@@ -918,18 +926,21 @@ class RTBCB_LLM {
         $prompt .= "Optimistic Scenario: $" . number_format($roi_data['optimistic']['total_annual_benefit'] ?? 0) . "\n\n";
         
         // Strategic Context
-        if ( !empty($user_inputs['business_objective']) ) {
+        if ( ! empty( $user_inputs['business_objective'] ) ) {
             $prompt .= "Primary Business Objective: " . $user_inputs['business_objective'] . "\n";
         }
-        if ( !empty($user_inputs['implementation_timeline']) ) {
+        if ( ! empty( $user_inputs['implementation_timeline'] ) ) {
             $prompt .= "Implementation Timeline: " . $user_inputs['implementation_timeline'] . "\n";
         }
-        if ( !empty($user_inputs['budget_range']) ) {
+        if ( ! empty( $user_inputs['budget_range'] ) ) {
             $prompt .= "Budget Range: " . $user_inputs['budget_range'] . "\n";
         }
-        
-        $prompt .= "\nCreate a comprehensive business case analysis that includes:\n\n";
-        
+
+        $prompt .= "\nDELIVER A PROFESSIONAL BUSINESS CASE:\n";
+        $prompt .= "Respond with a comprehensive JSON structure containing all required sections.\n";
+        $prompt .= "Ensure each section provides actionable insights specific to {$company_name}'s situation.\n";
+        $prompt .= "Use professional consulting language appropriate for C-level executives.\n\n";
+
         $prompt .= "REQUIRED JSON STRUCTURE (respond with ONLY this JSON, no other text):\n";
         $prompt .= json_encode([
             'executive_summary' => [
