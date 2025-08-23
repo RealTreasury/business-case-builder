@@ -51,6 +51,7 @@
             this.bindCommentaryTest();
             this.bindCompanyOverviewTest();
             this.bindIndustryOverviewTest();
+            this.bindBenefitsEstimateTest();
             this.bindTestDashboard();
         },
 
@@ -197,6 +198,44 @@
             };
             form.on('submit', submitHandler);
             RTBCBAdmin.utils.bindClear(clearBtn, results);
+        },
+
+        bindBenefitsEstimateTest() {
+            if (!rtbcbAdmin || rtbcbAdmin.page !== 'rtbcb-test-estimated-benefits') { return; }
+            const form = $('#rtbcb-benefits-estimate-form');
+            if (!form.length) { return; }
+            const results = $('#rtbcb-benefits-estimate-results');
+            const submitBtn = $('#rtbcb-generate-benefits-estimate');
+            const submitHandler = async function(e) {
+                e.preventDefault();
+                const original = RTBCBAdmin.utils.setLoading(submitBtn, rtbcbAdmin.strings.generating);
+                const formData = new FormData();
+                formData.append('action', 'rtbcb_test_estimated_benefits');
+                formData.append('revenue', $('#rtbcb-test-revenue').val());
+                formData.append('staff', $('#rtbcb-test-staff-count').val());
+                formData.append('efficiency', $('#rtbcb-test-efficiency').val());
+                formData.append('category', $('#rtbcb-test-category').val());
+                formData.append('nonce', rtbcbAdmin.benefits_estimate_nonce);
+                results.empty();
+                try {
+                    const response = await fetch(rtbcbAdmin.ajax_url, { method: 'POST', body: formData });
+                    const data = await response.json();
+                    if (data.success) {
+                        const text = JSON.stringify(data.data);
+                        const safe = $('<div/>').text(text).html();
+                        results.html('<div class="notice notice-success"><pre>' + safe + '</pre></div>');
+                    } else {
+                        const message = data.data?.message || rtbcbAdmin.strings.error;
+                        const safe = $('<div/>').text(message).html();
+                        results.html('<div class="notice notice-error"><p>' + safe + '</p></div>');
+                    }
+                } catch (err) {
+                    const safe = $('<div/>').text(err.message).html();
+                    results.html('<div class="notice notice-error"><p>' + rtbcbAdmin.strings.error + ' ' + safe + '</p></div>');
+                }
+                RTBCBAdmin.utils.clearLoading(submitBtn, original);
+            };
+            form.on('submit', submitHandler);
         },
 
         bindTestDashboard() {
