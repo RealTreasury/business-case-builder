@@ -51,6 +51,7 @@
             this.bindCommentaryTest();
             this.bindCompanyOverviewTest();
             this.bindIndustryOverviewTest();
+            this.bindBenefitsEstimateTest();
             this.bindTestDashboard();
         },
 
@@ -197,6 +198,37 @@
             };
             form.on('submit', submitHandler);
             RTBCBAdmin.utils.bindClear(clearBtn, results);
+        },
+
+        bindBenefitsEstimateTest() {
+            if (!rtbcbAdmin || rtbcbAdmin.page !== 'rtbcb-test-estimated-benefits') { return; }
+            const form = $('#rtbcb-benefits-estimate-form');
+            if (!form.length) { return; }
+            const results = $('#rtbcb-benefits-estimate-results');
+            form.on('submit', function(e) {
+                e.preventDefault();
+                results.text(rtbcbAdmin.strings.processing);
+                const data = {
+                    action: 'rtbcb_test_estimated_benefits',
+                    revenue: $('#rtbcb-test-revenue').val(),
+                    staff: $('#rtbcb-test-staff-count').val(),
+                    efficiency: $('#rtbcb-test-efficiency').val(),
+                    category: $('#rtbcb-test-category').val(),
+                    nonce: rtbcbAdmin.benefits_estimate_nonce
+                };
+                $.post(rtbcbAdmin.ajax_url, data)
+                    .done(function(response) {
+                        if (response && response.success) {
+                            results.text(JSON.stringify(response.data.estimate || response.data));
+                        } else {
+                            const message = response?.data?.message || rtbcbAdmin.strings.error;
+                            results.text(message);
+                        }
+                    })
+                    .fail(function() {
+                        results.text(rtbcbAdmin.strings.error);
+                    });
+            });
         },
 
         bindTestDashboard() {
