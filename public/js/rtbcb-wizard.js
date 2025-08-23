@@ -141,6 +141,9 @@ class BusinessCaseBuilder {
                 this.updateStepVisibility();
                 this.updateProgressIndicator();
                 this.scrollToTop();
+
+                // Safeguard to ensure navigation buttons reflect the current step
+                this.updateStepVisibility();
             }
         }
     }
@@ -338,12 +341,22 @@ class BusinessCaseBuilder {
             this.prevBtn.style.display = this.currentStep === 1 ? 'none' : 'inline-flex';
         }
 
-        if (this.nextBtn) {
-            this.nextBtn.style.display = this.currentStep === this.totalSteps ? 'none' : 'inline-flex';
-        }
+        if (this.currentStep === this.totalSteps) {
+            if (this.nextBtn) {
+                this.nextBtn.style.display = 'none';
+            }
 
-        if (this.submitBtn) {
-            this.submitBtn.style.display = this.currentStep === this.totalSteps ? 'inline-flex' : 'none';
+            if (this.submitBtn) {
+                this.submitBtn.style.display = 'inline-flex';
+            }
+        } else {
+            if (this.nextBtn) {
+                this.nextBtn.style.display = 'inline-flex';
+            }
+
+            if (this.submitBtn) {
+                this.submitBtn.style.display = 'none';
+            }
         }
 
     }
