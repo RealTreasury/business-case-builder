@@ -922,12 +922,14 @@ class RTBCB_Admin {
     public function ajax_test_estimated_benefits() {
         check_ajax_referer( 'rtbcb_test_estimated_benefits', 'nonce' );
 
-        $revenue    = isset( $_POST['revenue'] ) ? floatval( wp_unslash( $_POST['revenue'] ) ) : 0;
-        $staff      = isset( $_POST['staff'] ) ? intval( wp_unslash( $_POST['staff'] ) ) : 0;
-        $efficiency = isset( $_POST['efficiency'] ) ? floatval( wp_unslash( $_POST['efficiency'] ) ) : 0;
-        $category   = isset( $_POST['category'] ) ? sanitize_text_field( wp_unslash( $_POST['category'] ) ) : '';
+        $company_data = [
+            'revenue'     => isset( $_POST['company_data']['revenue'] ) ? floatval( wp_unslash( $_POST['company_data']['revenue'] ) ) : 0,
+            'staff_count' => isset( $_POST['company_data']['staff_count'] ) ? intval( wp_unslash( $_POST['company_data']['staff_count'] ) ) : 0,
+            'efficiency'  => isset( $_POST['company_data']['efficiency'] ) ? floatval( wp_unslash( $_POST['company_data']['efficiency'] ) ) : 0,
+        ];
+        $category = isset( $_POST['recommended_category'] ) ? sanitize_text_field( wp_unslash( $_POST['recommended_category'] ) ) : '';
 
-        $estimate = rtbcb_test_generate_benefits_estimate( $revenue, $staff, $efficiency, $category );
+        $estimate = rtbcb_test_generate_benefits_estimate( $company_data, $category );
 
         if ( is_wp_error( $estimate ) ) {
             wp_send_json_error( [ 'message' => sanitize_text_field( $estimate->get_error_message() ) ] );
