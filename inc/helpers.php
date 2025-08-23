@@ -1011,3 +1011,68 @@ function rtbcb_test_generate_complete_report( $all_inputs ) {
     return $result;
 }
 
+/**
+ * Parse GPT-5 Responses API output with quality validation.
+ *
+ * @param array $response Response data from GPT-5 API.
+ *
+ * @return array Parsed response with quality information.
+ */
+function rtbcb_parse_gpt5_business_case_response( $response ) {
+    $parsed = rtbcb_parse_gpt5_response( $response );
+
+    $result = [
+        'text'           => $parsed['output_text'],
+        'reasoning_notes' => $parsed['reasoning'],
+        'function_calls' => $parsed['function_calls'],
+        'quality_score'  => 0,
+        'alerts'         => [],
+    ];
+
+    // Quality validation for business case content.
+    $text        = $result['text'];
+    $text_length = strlen( $text );
+    $word_count  = str_word_count( $text );
+
+    // Score based on content quality indicators.
+    if ( $text_length > 500 ) {
+        $result['quality_score'] += 2;
+    }
+    if ( $word_count > 100 ) {
+        $result['quality_score'] += 2;
+    }
+    if ( stripos( $text, 'business case' ) !== false ) {
+        $result['quality_score'] += 1;
+    }
+    if ( stripos( $text, 'ROI' ) !== false ) {
+        $result['quality_score'] += 1;
+    }
+    if ( stripos( $text, 'implementation' ) !== false ) {
+        $result['quality_score'] += 1;
+    }
+    if ( null !== json_decode( $text, true ) ) {
+        $result['quality_score'] += 2;
+    }
+
+    // Alert conditions.
+    if ( $text_length < 100 ) {
+        $result['alerts'][] = 'SUSPICIOUSLY_SHORT_CONTENT';
+    }
+
+    if ( stripos( $text, 'pong' ) !== false ||
+        stripos( $text, 'how can I help' ) !== false ) {
+        $result['alerts'][] = 'HEALTH_CHECK_RESPONSE';
+    }
+
+    if ( $result['quality_score'] < 3 ) {
+        $result['alerts'][] = 'LOW_QUALITY_BUSINESS_CASE';
+    }
+
+    // Log results.
+    if ( ! empty( $result['alerts'] ) ) {
+        error_log( 'RTBCB: Business case quality issues - ' . implode( ', ', $result['alerts'] ) );
+    }
+
+    return $result;
+}
+
