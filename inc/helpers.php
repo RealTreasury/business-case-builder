@@ -465,31 +465,38 @@ function rtbcb_test_generate_complete_report( $all_inputs ) {
     $sections = [];
     $timings  = [];
 
-    $section_start               = microtime( true );
-    $sections['company_overview'] = rtbcb_test_generate_company_overview( $company_name );
-    $timings['company_overview']  = microtime( true ) - $section_start;
+    $section_start = microtime( true );
+    $company_overview = rtbcb_test_generate_company_overview( $company_name );
+    $timings['company_overview'] = microtime( true ) - $section_start;
+    $sections['company_overview'] = [
+        'content' => is_wp_error( $company_overview ) ? $company_overview->get_error_message() : (string) $company_overview,
+        'status'  => is_wp_error( $company_overview ) ? 'error' : 'ok',
+    ];
 
-    $section_start                      = microtime( true );
-    $sections['treasury_tech_overview'] = rtbcb_test_generate_treasury_tech_overview( $focus_areas, $complexity );
-    $timings['treasury_tech_overview']  = microtime( true ) - $section_start;
+    $section_start = microtime( true );
+    $treasury_overview = rtbcb_test_generate_treasury_tech_overview( $focus_areas, $complexity );
+    $timings['treasury_tech_overview'] = microtime( true ) - $section_start;
+    $sections['treasury_tech_overview'] = [
+        'content' => is_wp_error( $treasury_overview ) ? $treasury_overview->get_error_message() : (string) $treasury_overview,
+        'status'  => is_wp_error( $treasury_overview ) ? 'error' : 'ok',
+    ];
 
-    $section_start         = microtime( true );
-    $sections['roi']       = RTBCB_Calculator::calculate_roi( $roi_inputs );
-    $timings['roi']        = microtime( true ) - $section_start;
+    $section_start = microtime( true );
+    $roi_result = RTBCB_Calculator::calculate_roi( $roi_inputs );
+    $timings['roi'] = microtime( true ) - $section_start;
+    $sections['roi'] = [
+        'content' => is_wp_error( $roi_result ) ? $roi_result->get_error_message() : $roi_result,
+        'status'  => is_wp_error( $roi_result ) ? 'error' : 'ok',
+    ];
 
-    $company_text = is_wp_error( $sections['company_overview'] )
-        ? $sections['company_overview']->get_error_message()
-        : (string) $sections['company_overview'];
-
-    $tech_text = is_wp_error( $sections['treasury_tech_overview'] )
-        ? $sections['treasury_tech_overview']->get_error_message()
-        : (string) $sections['treasury_tech_overview'];
+    $company_text = (string) $sections['company_overview']['content'];
+    $tech_text    = (string) $sections['treasury_tech_overview']['content'];
 
     $router = new RTBCB_Router();
     $html   = $router->get_report_html(
         [
-            'narrative' => $company_text . '\n\n' . $tech_text,
-            'roi'       => $sections['roi'],
+            'narrative' => $company_text . "\n\n" . $tech_text,
+            'roi'       => $sections['roi']['content'],
         ]
     );
 
@@ -503,11 +510,7 @@ function rtbcb_test_generate_complete_report( $all_inputs ) {
 
     $result = [
         'html'        => $html,
-        'sections'    => [
-            'company_overview'       => $company_text,
-            'treasury_tech_overview' => $tech_text,
-            'roi'                    => $sections['roi'],
-        ],
+        'sections'    => $sections,
         'word_counts' => $word_counts,
         'timestamps'  => [
             'start'       => $start_time,

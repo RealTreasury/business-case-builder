@@ -51,6 +51,7 @@
             this.bindCommentaryTest();
             this.bindCompanyOverviewTest();
             this.bindIndustryOverviewTest();
+            this.bindTestDashboard();
         },
 
         bindDashboardActions() {
@@ -150,6 +151,113 @@
             };
             form.on('submit', submitHandler);
             RTBCBAdmin.utils.bindClear(clearBtn, results);
+        },
+
+        bindTestDashboard() {
+            if (!rtbcbAdmin || rtbcbAdmin.page !== 'rtbcb-test-dashboard') { return; }
+            const button = $('#rtbcb-test-all');
+            const status = $('#rtbcb-test-dashboard-status');
+            const reportWrap = $('#rtbcb-complete-report');
+            const reportContent = $('#rtbcb-complete-report-content');
+            const reportMeta = $('#rtbcb-complete-report-meta');
+            const regen = $('#rtbcb-regenerate-report');
+            const copy = $('#rtbcb-copy-report');
+            const clear = $('#rtbcb-clear-report');
+
+            const sampleInputs = {
+                company_name: 'Acme Corp',
+                focus_areas: ['cash', 'payments'],
+                complexity: 'moderate',
+                roi_inputs: {
+                    company_size: '100-500',
+                    industry: 'Manufacturing',
+                    hours_reconciliation: 10,
+                    hours_cash_positioning: 8,
+                    num_banks: 5,
+                    ftes: 2,
+                    pain_points: ['manual_processes']
+                }
+            };
+
+            const runTests = async () => {
+                status.empty();
+                reportWrap.hide();
+                const sections = [
+                    {
+                        label: 'Company Overview',
+                        action: 'rtbcb_test_company_overview',
+                        nonce: rtbcbAdmin.company_overview_nonce,
+                        data: { company_name: sampleInputs.company_name }
+                    },
+                    {
+                        label: 'Industry Overview',
+                        action: 'rtbcb_test_industry_overview',
+                        nonce: rtbcbAdmin.industry_overview_nonce,
+                        data: { industry: sampleInputs.roi_inputs.industry, company_size: sampleInputs.roi_inputs.company_size }
+                    },
+                    {
+                        label: 'Treasury Tech Overview',
+                        action: 'rtbcb_test_treasury_tech_overview',
+                        nonce: rtbcbAdmin.treasury_tech_overview_nonce,
+                        data: { complexity: sampleInputs.complexity, 'focus_areas[]': sampleInputs.focus_areas }
+                    },
+                    {
+                        label: 'Complete Report',
+                        action: 'rtbcb_test_complete_report',
+                        nonce: rtbcbAdmin.complete_report_nonce,
+                        data: { inputs: JSON.stringify(sampleInputs) }
+                    }
+                ];
+
+                const list = $('<ul />');
+                for (const section of sections) {
+                    const li = $('<li />').text(section.label + ': ' + (rtbcbAdmin.strings.testing || 'Testing...'));
+                    list.append(li);
+                    try {
+                        const formData = new FormData();
+                        formData.append('action', section.action);
+                        formData.append('nonce', section.nonce);
+                        for (const [key, val] of Object.entries(section.data)) {
+                            if (Array.isArray(val)) {
+                                val.forEach(v => formData.append(key, v));
+                            } else {
+                                formData.append(key, val);
+                            }
+                        }
+                        const response = await fetch(rtbcbAdmin.ajax_url, { method: 'POST', body: formData });
+                        const data = await response.json();
+                        if (data.success) {
+                            li.text(section.label + ': OK');
+                            if (section.action === 'rtbcb_test_complete_report') {
+                                const text = data.data.html || '';
+                                const words = data.data.word_counts?.combined || 0;
+                                const elapsed = data.data.timestamps?.elapsed || 0;
+                                const time = new Date().toLocaleTimeString();
+                                reportContent.text(text);
+                                reportMeta.text(`Word count: ${words} | Duration: ${elapsed}s | Time: ${time}`);
+                                reportWrap.show();
+                            }
+                        } else {
+                            li.text(section.label + ': FAIL - ' + (data.data?.message || 'Error'));
+                        }
+                    } catch (err) {
+                        li.text(section.label + ': ERROR - ' + err.message);
+                    }
+                }
+                status.append(list);
+            };
+
+            button.on('click', function(e){ e.preventDefault(); runTests(); });
+            regen.on('click', function(e){ e.preventDefault(); runTests(); });
+            clear.on('click', function(){ reportContent.empty(); reportMeta.empty(); reportWrap.hide(); });
+            copy.on('click', async function(){
+                try {
+                    await navigator.clipboard.writeText(reportContent.text());
+                    alert(rtbcbAdmin.strings.copied);
+                } catch (err) {
+                    alert(rtbcbAdmin.strings.error + ' ' + err.message);
+                }
+            });
         },
 
         bindIndustryOverviewTest() {
