@@ -1229,43 +1229,29 @@ class RTBCB_LLM {
         return $response;
     }
 
+    /**
+     * Log details about a GPT-5 API call.
+     *
+     * @param array|string $context  Context or instructions sent to the model.
+     * @param array        $response Decoded response array or HTTP response array.
+     * @param string|null  $error    Optional error message.
+     */
     private function log_gpt5_call( $context, $response, $error = null ) {
         $context_serialized = is_array( $context ) ? wp_json_encode( $context ) : (string) $context;
         $context_size       = strlen( $context_serialized );
-        $usage              = $response['usage'] ?? [];
-        $completion_tokens  = intval( $usage['completion_tokens'] ?? 0 );
-        $reasoning_tokens   = intval( $usage['reasoning_tokens'] ?? 0 );
-        $total_tokens       = intval( $usage['total_tokens'] ?? 0 );
 
-        $content = '';
-        if ( isset( $response['output'] ) && is_array( $response['output'] ) ) {
-            foreach ( $response['output'] as $chunk ) {
-                if ( ! is_array( $chunk ) ) {
-                    continue;
-                }
+        $response_for_parser = ( is_array( $response ) && isset( $response['body'] ) )
+            ? $response
+            : [ 'body' => wp_json_encode( is_array( $response ) ? $response : [] ) ];
 
-                $text = '';
-                if ( isset( $chunk['content'] ) && is_array( $chunk['content'] ) ) {
-                    foreach ( $chunk['content'] as $piece ) {
-                        if ( isset( $piece['text'] ) && '' !== $piece['text'] ) {
-                            $text = $piece['text'];
-                            break;
-                        }
-                    }
-                }
+        $parsed = rtbcb_parse_gpt5_response( $response_for_parser );
+        $content = $parsed['output_text'];
+        $usage   = $parsed['raw']['usage'] ?? [];
 
-                if ( 'message' === ( $chunk['type'] ?? '' ) || '' !== $text ) {
-                    $content = $text;
-                    break;
-                }
-            }
-        }
-
-        if ( '' === $content && isset( $response['output_text'] ) ) {
-            $content = is_array( $response['output_text'] ) ? implode( ' ', (array) $response['output_text'] ) : $response['output_text'];
-        }
-
-        $response_length = strlen( $content );
+        $completion_tokens = intval( $usage['completion_tokens'] ?? 0 );
+        $reasoning_tokens  = intval( $usage['reasoning_tokens'] ?? 0 );
+        $total_tokens      = intval( $usage['total_tokens'] ?? 0 );
+        $response_length   = strlen( $content );
 
         $log_message = sprintf(
             'RTBCB GPT5 Call: context_size=%d, completion_tokens=%d, reasoning_tokens=%d, total_tokens=%d, response_length=%d',
