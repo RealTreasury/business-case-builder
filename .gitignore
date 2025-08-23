@@ -2,4 +2,3 @@ wp-config.php
 .phpunit.result.cache
 .env
 tests/test-config.json
-node_modules/
