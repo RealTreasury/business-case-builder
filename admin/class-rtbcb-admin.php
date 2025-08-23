@@ -38,6 +38,7 @@ class RTBCB_Admin {
         add_action( 'wp_ajax_rtbcb_test_company_overview', [ $this, 'ajax_test_company_overview' ] );
         add_action( 'wp_ajax_rtbcb_test_treasury_tech_overview', [ $this, 'ajax_test_treasury_tech_overview' ] );
         add_action( 'wp_ajax_rtbcb_test_industry_overview', [ $this, 'ajax_test_industry_overview' ] );
+        add_action( 'wp_ajax_rtbcb_save_test_results', [ $this, 'save_test_results' ] );
     }
 
     /**
@@ -200,6 +201,15 @@ class RTBCB_Admin {
 
         add_submenu_page(
             'rtbcb-dashboard',
+            __( 'Test Dashboard', 'rtbcb' ),
+            __( 'Test Dashboard', 'rtbcb' ),
+            'manage_options',
+            'rtbcb-test-dashboard',
+            [ $this, 'render_test_dashboard' ]
+        );
+
+        add_submenu_page(
+            'rtbcb-dashboard',
             __( 'Test Company Overview', 'rtbcb' ),
             __( 'Test Company Overview', 'rtbcb' ),
             'manage_options',
@@ -350,6 +360,21 @@ class RTBCB_Admin {
     }
 
     /**
+     * Render test dashboard page.
+     *
+     * @return void
+     */
+    public function render_test_dashboard() {
+        $test_results   = get_option( 'rtbcb_test_results', [] );
+        $openai_key     = get_option( 'rtbcb_openai_api_key', '' );
+        $openai_status  = empty( $openai_key ) ? false : true;
+        $portal_active  = $this->check_portal_integration();
+        $rag_health     = $this->check_rag_health();
+
+        include RTBCB_DIR . 'admin/test-dashboard-page.php';
+    }
+
+    /**
      * Render test company overview page.
      *
      * @return void
@@ -374,6 +399,39 @@ class RTBCB_Admin {
      */
     public function render_test_industry_overview() {
         include RTBCB_DIR . 'admin/test-industry-overview-page.php';
+    }
+
+    /**
+     * Save test results from dashboard.
+     *
+     * @return void
+     */
+    public function save_test_results() {
+        check_ajax_referer( 'rtbcb_test_dashboard', 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'message' => __( 'Unauthorized', 'rtbcb' ) ] );
+        }
+
+        $results = isset( $_POST['results'] ) ? wp_unslash( $_POST['results'] ) : '';
+        $decoded = json_decode( $results, true );
+        if ( ! is_array( $decoded ) ) {
+            wp_send_json_error( [ 'message' => __( 'Invalid data format.', 'rtbcb' ) ] );
+        }
+
+        $sanitized = [];
+        foreach ( $decoded as $item ) {
+            $sanitized[] = [
+                'section'   => isset( $item['section'] ) ? sanitize_text_field( $item['section'] ) : '',
+                'status'    => isset( $item['status'] ) ? sanitize_text_field( $item['status'] ) : '',
+                'message'   => isset( $item['message'] ) ? sanitize_text_field( $item['message'] ) : '',
+                'timestamp' => current_time( 'mysql' ),
+            ];
+        }
+
+        update_option( 'rtbcb_test_results', $sanitized );
+
+        wp_send_json_success();
     }
 
     /**
