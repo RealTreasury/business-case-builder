@@ -130,8 +130,13 @@ class RTBCB_API_Tester {
                 ],
             ],
             'temperature' => 0,
-            'max_tokens'  => 10,
         ];
+
+        if ( strpos( strtolower( $body['model'] ), 'gpt-5' ) !== false ) {
+            $body['max_completion_tokens'] = 10;
+        } else {
+            $body['max_tokens'] = 10;
+        }
 
         $args = [
             'headers' => [
