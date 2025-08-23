@@ -1157,6 +1157,11 @@ class RTBCB_LLM {
         $status_code   = wp_remote_retrieve_response_code( $response );
         $response_body = wp_remote_retrieve_body( $response );
 
+        if ( 400 === intval( $status_code ) && defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+            $has_temp = isset( $body['temperature'] ) ? 'present' : 'missing';
+            error_log( 'RTBCB: 400 response for model ' . $model_name . ' (temperature ' . $has_temp . ')' );
+        }
+
         error_log( 'RTBCB: OpenAI response status: ' . $status_code );
 
         if ( $status_code !== 200 ) {

@@ -313,7 +313,10 @@ async function generateProfessionalReport(businessContext) {
 
             if (!response.ok) {
                 const errorText = await response.text();
-                console.error(`Attempt ${attempt} failed:`, errorText);
+                if (rtbcbReport?.debug) {
+                    console.error(`Attempt ${attempt} failed:`, errorText);
+                    console.error('RTBCB request body:', requestBody);
+                }
                 throw new Error(`HTTP ${response.status}`);
             }
 
