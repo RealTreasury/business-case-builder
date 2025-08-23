@@ -1327,6 +1327,7 @@ if ( ! function_exists( 'rtbcb_is_configured' ) ) {
 // Add AJAX handlers for overview generation.
 add_action( 'wp_ajax_rtbcb_generate_company_overview', 'rtbcb_ajax_generate_company_overview' );
 add_action( 'wp_ajax_rtbcb_generate_real_treasury_overview', 'rtbcb_ajax_generate_real_treasury_overview' );
+add_action( 'wp_ajax_rtbcb_generate_category_recommendation', 'rtbcb_ajax_generate_category_recommendation' );
 
 /**
  * AJAX handler for generating company overview.
@@ -1442,10 +1443,49 @@ function rtbcb_ajax_generate_real_treasury_overview() {
     }
 }
 
+/**
+ * AJAX handler for generating category recommendation.
+ *
+ * @return void
+ */
+function rtbcb_ajax_generate_category_recommendation() {
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'rtbcb_test_category_recommendation' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ] );
+        return;
+    }
+
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'rtbcb' ) ] );
+        return;
+    }
+
+    $requirements = [
+        'company_size'        => isset( $_POST['company_size'] ) ? sanitize_text_field( wp_unslash( $_POST['company_size'] ) ) : '',
+        'treasury_complexity' => isset( $_POST['treasury_complexity'] ) ? sanitize_text_field( wp_unslash( $_POST['treasury_complexity'] ) ) : '',
+        'budget_range'        => isset( $_POST['budget_range'] ) ? sanitize_text_field( wp_unslash( $_POST['budget_range'] ) ) : '',
+        'timeline'            => isset( $_POST['timeline'] ) ? sanitize_text_field( wp_unslash( $_POST['timeline'] ) ) : '',
+    ];
+
+    $pain_points = [];
+    if ( isset( $_POST['pain_points'] ) && is_array( $_POST['pain_points'] ) ) {
+        $pain_points = array_filter( array_map( 'sanitize_text_field', (array) wp_unslash( $_POST['pain_points'] ) ) );
+    }
+
+    $requirements['pain_points'] = $pain_points;
+
+    try {
+        $recommendation = rtbcb_test_generate_category_recommendation( $requirements );
+        wp_send_json_success( $recommendation );
+    } catch ( Exception $e ) {
+        wp_send_json_error( [ 'message' => __( 'An error occurred while generating the recommendation.', 'rtbcb' ) ] );
+    }
+}
+
 // Enqueue admin scripts for company overview page.
 add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_company_overview_scripts' );
 add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_treasury_tech_overview_scripts' );
 add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_real_treasury_overview_scripts' );
+add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_recommended_category_scripts' );
 
 /**
  * Enqueue admin scripts for company overview page.
@@ -1544,6 +1584,40 @@ function rtbcb_enqueue_real_treasury_overview_scripts( $hook ) {
             [
                 'ajax_url' => admin_url( 'admin-ajax.php' ),
                 'nonce'    => wp_create_nonce( 'rtbcb_test_real_treasury_overview' ),
+            ]
+        );
+    }
+}
+
+/**
+ * Enqueue admin scripts for category recommendation page.
+ *
+ * @param string $hook Current admin page hook.
+ * @return void
+ */
+function rtbcb_enqueue_recommended_category_scripts( $hook ) {
+    if ( strpos( $hook, 'rtbcb' ) !== false && strpos( $hook, 'recommended-category' ) !== false ) {
+        wp_enqueue_script(
+            'rtbcb-test-utils',
+            plugin_dir_url( __FILE__ ) . 'admin/js/rtbcb-test-utils.js',
+            [ 'jquery' ],
+            '1.0.0',
+            true
+        );
+        wp_enqueue_script(
+            'rtbcb-recommended-category',
+            plugin_dir_url( __FILE__ ) . 'admin/js/recommended-category.js',
+            [ 'jquery', 'rtbcb-test-utils' ],
+            '1.0.0',
+            true
+        );
+
+        wp_localize_script(
+            'rtbcb-recommended-category',
+            'rtbcb_ajax',
+            [
+                'ajax_url' => admin_url( 'admin-ajax.php' ),
+                'nonce'    => wp_create_nonce( 'rtbcb_test_category_recommendation' ),
             ]
         );
     }
