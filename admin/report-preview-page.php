@@ -19,6 +19,7 @@ $sample_context     = $first_scenario['data'];
         <p>
             <label for="rtbcb-sample-select"><?php esc_html_e( 'Sample Scenarios', 'rtbcb' ); ?></label>
             <select id="rtbcb-sample-select" class="regular-text">
+                <option value=""></option>
                 <?php foreach ( $rtbcb_sample_forms as $key => $scenario ) : ?>
                     <option value="<?php echo esc_attr( $key ); ?>"><?php echo esc_html( $scenario['label'] ); ?></option>
                 <?php endforeach; ?>
