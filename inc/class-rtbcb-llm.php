@@ -666,7 +666,23 @@ Respond with valid JSON only, following the specified schema exactly. Ensure all
         }
 
         if ( is_string( $content ) ) {
-            $json = json_decode( $content, true );
+            $json_content = rtbcb_clean_json_content( $content );
+            $json         = json_decode( $json_content, true );
+
+            if ( json_last_error() !== JSON_ERROR_NONE ) {
+                $error_msg = 'Invalid JSON response format: ' . json_last_error_msg();
+                error_log( 'RTBCB: JSON decode failed: ' . $error_msg );
+                error_log( 'RTBCB: Raw content length: ' . strlen( $json_content ) );
+                error_log( 'RTBCB: Content preview: ' . substr( $json_content, 0, 500 ) );
+
+                if ( empty( $json_content ) ) {
+                    return new WP_Error( 'llm_parse_error', __( 'Empty response content', 'rtbcb' ) );
+                } elseif ( strlen( $json_content ) < 50 ) {
+                    return new WP_Error( 'llm_parse_error', __( 'Response too short: ', 'rtbcb' ) . $json_content );
+                } else {
+                    return new WP_Error( 'llm_parse_error', $error_msg );
+                }
+            }
         } else {
             $json = is_array( $content ) ? $content : [];
         }
@@ -1506,131 +1522,15 @@ Respond with valid JSON only, following the specified schema exactly. Ensure all
         
         return [
             'investment_breakdown' => [
-                'software_licensing' => '$' . number_format( $estimated_cost * 0.6 ) . ' - $' . number_format( $estimated_cost * 0.8 ),
+                'software_licensing'       => '$' . number_format( $estimated_cost * 0.6 ) . ' - $' . number_format( $estimated_cost * 0.8 ),
                 'implementation_services' => '$' . number_format( $estimated_cost * 0.15 ) . ' - $' . number_format( $estimated_cost * 0.25 ),
-                'training_change_management' => '$' . number_format( $estimated_cost * 0.05 ) . ' - $' . number_format( $estimated_cost * 0.15 )
+                'training_change_management' => '$' . number_format( $estimated_cost * 0.05 ) . ' - $' . number_format( $estimated_cost * 0.15 ),
             ],
-            'payback_analysis' => [
+            'payback_analysis'       => [
                 'payback_months' => $base_benefit > 0 ? round( 12 * $estimated_cost / $base_benefit ) : 24,
-                'roi_3_year' => round( ( $base_benefit * 3 - $estimated_cost ) / $estimated_cost * 100 ),
-                'npv_analysis' => 'Positive NPV of $' . number_format( $base_benefit * 2.5 - $estimated_cost ) . ' over 3 years at 10% discount rate'
-            ]
+                'roi_3_year'     => round( ( $base_benefit * 3 - $estimated_cost ) / $estimated_cost * 100 ),
+                'npv_analysis'   => 'Positive NPV of $' . number_format( $base_benefit * 2.5 - $estimated_cost ) . ' over 3 years at 10% discount rate',
+            ],
         ];
     }
 }
-
-/**
- * Parse a GPT-5 response into output text, reasoning, and function calls.
- *
- * The parser first looks for a convenience `output_text` field. If a valid
- * string is not found, it manually walks the `output` chunks, prioritizing
- * message content before reasoning.
- *
- * @param array $response HTTP response array from wp_remote_post().
- * @return array {
- *     @type string $output_text    Combined output text from the response.
- *     @type array  $reasoning      Reasoning segments provided by the model.
- *     @type array  $function_calls Function call items returned by the model.
- *     @type array  $raw            Raw decoded response body.
- * }
- */
-function rtbcb_parse_gpt5_response( $response ) {
-    $body    = wp_remote_retrieve_body( $response );
-    $decoded = json_decode( $body, true );
-
-    if ( ! is_array( $decoded ) ) {
-        return [
-            'output_text'    => '',
-            'reasoning'      => [],
-            'function_calls' => [],
-            'raw'            => [],
-        ];
-    }
-
-    $output_text    = '';
-    $reasoning      = [];
-    $function_calls = [];
-
-    // PRIORITY 1: Convenience field.
-    if ( isset( $decoded['output_text'] ) && ! empty( trim( $decoded['output_text'] ) ) ) {
-        $output_text = trim( $decoded['output_text'] );
-
-        // Reject trivial responses.
-        if ( strlen( $output_text ) < 20 ||
-            false !== stripos( $output_text, 'pong' ) ||
-            false !== stripos( $output_text, 'how can I help' ) ) {
-            error_log( 'RTBCB: Detected trivial response: ' . $output_text );
-            $output_text = '';
-        }
-    }
-
-    // PRIORITY 2: Manual parsing when no good output text was found.
-    if ( empty( $output_text ) && isset( $decoded['output'] ) && is_array( $decoded['output'] ) ) {
-
-        // First pass: Look for message content only.
-        foreach ( $decoded['output'] as $chunk ) {
-            if ( ! is_array( $chunk ) || 'message' !== ( $chunk['type'] ?? '' ) ) {
-                continue;
-            }
-
-            if ( isset( $chunk['content'] ) && is_array( $chunk['content'] ) ) {
-                foreach ( $chunk['content'] as $content_piece ) {
-                    if ( isset( $content_piece['text'] ) && ! empty( trim( $content_piece['text'] ) ) ) {
-                        $candidate = trim( $content_piece['text'] );
-
-                        if ( strlen( $candidate ) >= 20 &&
-                            false === stripos( $candidate, 'pong' ) ) {
-                            $output_text = $candidate;
-                            break 2;
-                        }
-                    }
-                }
-            }
-        }
-
-        // Second pass: Collect reasoning and function calls.
-        foreach ( $decoded['output'] as $chunk ) {
-            $chunk_type = $chunk['type'] ?? '';
-
-            if ( 'reasoning' === $chunk_type ) {
-                if ( isset( $chunk['content'] ) && is_array( $chunk['content'] ) ) {
-                    foreach ( $chunk['content'] as $piece ) {
-                        if ( isset( $piece['text'] ) && ! empty( $piece['text'] ) ) {
-                            $reasoning[] = $piece['text'];
-                        }
-                    }
-                }
-            }
-
-            if ( 'function_call' === $chunk_type ) {
-                $function_calls[] = $chunk;
-            }
-        }
-    }
-
-    // Log quality metrics.
-    $text_length    = strlen( $output_text );
-    $usage          = $decoded['usage'] ?? [];
-    $output_tokens  = $usage['output_tokens'] ?? 0;
-
-    error_log(
-        sprintf(
-            'RTBCB: Parsed response - text_length=%d, output_tokens=%d, reasoning_chunks=%d',
-            $text_length,
-            $output_tokens,
-            count( $reasoning )
-        )
-    );
-
-    if ( $output_tokens > 50 && $text_length < 100 ) {
-        error_log( 'RTBCB: WARNING - High token count but short text output' );
-    }
-
-    return [
-        'output_text'    => $output_text,
-        'reasoning'      => $reasoning,
-        'function_calls' => $function_calls,
-        'raw'            => $decoded,
-    ];
-}
-
