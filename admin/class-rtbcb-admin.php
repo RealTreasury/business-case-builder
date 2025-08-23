@@ -40,6 +40,7 @@ class RTBCB_Admin {
         add_action( 'wp_ajax_rtbcb_test_industry_overview', [ $this, 'ajax_test_industry_overview' ] );
         add_action( 'wp_ajax_rtbcb_save_test_results', [ $this, 'save_test_results' ] );
         add_action( 'wp_ajax_rtbcb_test_generate_complete_report', [ $this, 'ajax_test_generate_complete_report' ] );
+        add_action( 'wp_ajax_rtbcb_test_complete_report', [ $this, 'ajax_test_generate_complete_report' ] );
         add_action( 'wp_ajax_rtbcb_test_calculate_roi', [ $this, 'ajax_test_calculate_roi' ] );
     }
 
@@ -79,6 +80,7 @@ class RTBCB_Admin {
             'treasury_tech_overview_nonce' => wp_create_nonce( 'rtbcb_test_treasury_tech_overview' ),
             'industry_overview_nonce'    => wp_create_nonce( 'rtbcb_test_industry_overview' ),
             'complete_report_nonce'      => wp_create_nonce( 'rtbcb_test_generate_complete_report' ),
+            'test_dashboard_nonce'       => wp_create_nonce( 'rtbcb_test_dashboard' ),
             'roi_nonce'                  => wp_create_nonce( 'rtbcb_test_calculate_roi' ),
             'page'                       => $page,
             'strings'                    => [

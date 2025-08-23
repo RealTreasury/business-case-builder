@@ -1,4 +1,5 @@
 jQuery( function( $ ) {
+    var latestReportText = '';
     function setStatus( message, isError, retryFn ) {
         var status = $( '#rtbcb-report-status' );
         status.removeClass( 'error' ).empty();
@@ -74,6 +75,7 @@ jQuery( function( $ ) {
                     elapsed: d.timestamps.per_section.roi,
                     generated: new Date( d.timestamps.end * 1000 ).toLocaleString()
                 } );
+                latestReportText = d.sections.company_overview + '\n\n' + d.sections.treasury_tech_overview + '\n\n' + JSON.stringify( d.sections.roi );
                 $( '#rtbcb-summary-word-count' ).text( d.word_counts.combined );
                 $( '#rtbcb-summary-generated' ).text( new Date( d.timestamps.end * 1000 ).toLocaleString() );
                 $( '#rtbcb-summary-elapsed' ).text( d.timestamps.elapsed.toFixed( 2 ) + 's' );
@@ -104,6 +106,38 @@ jQuery( function( $ ) {
         } else if ( 'roi' === section ) {
             regenerateROI();
         }
+    } );
+
+    $( '.rtbcb-copy' ).on( 'click', function( e ) {
+        e.preventDefault();
+        var section = $( this ).data( 'section' );
+        var text = $( '#rtbcb-section-' + section + ' .rtbcb-section-content' ).text();
+        if ( navigator.clipboard ) {
+            navigator.clipboard.writeText( text ).then( function() {
+                alert( rtbcbAdmin.strings.copied );
+            } ).catch( function() {
+                alert( rtbcbAdmin.strings.error );
+            } );
+        }
+    } );
+
+    $( '#rtbcb-copy-report' ).on( 'click', function( e ) {
+        e.preventDefault();
+        if ( navigator.clipboard && latestReportText ) {
+            navigator.clipboard.writeText( latestReportText ).then( function() {
+                alert( rtbcbAdmin.strings.copied );
+            } ).catch( function() {
+                alert( rtbcbAdmin.strings.error );
+            } );
+        }
+    } );
+
+    $( '#rtbcb-clear-report' ).on( 'click', function( e ) {
+        e.preventDefault();
+        $( '#rtbcb-report-preview' ).empty();
+        $( '#rtbcb-report-sections, #rtbcb-report-actions, #rtbcb-report-summary' ).hide();
+        $( '#rtbcb-report-sections .rtbcb-section-content' ).empty();
+        latestReportText = '';
     } );
 
     function regenerateCompany() {
