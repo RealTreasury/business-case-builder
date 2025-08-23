@@ -396,3 +396,52 @@ function rtbcb_test_generate_treasury_tech_overview( $focus_areas, $complexity )
     return $overview;
 }
 
+/**
+ * Test generating a complete report using the LLM.
+ *
+ * @param string $industry     Industry slug.
+ * @param string $company_name Company name.
+ * @param array  $focus_areas  Focus areas.
+ * @param string $complexity   Company complexity.
+ * @return array|WP_Error Report data or error object.
+ */
+function rtbcb_test_generate_complete_report( $industry, $company_name, $focus_areas, $complexity ) {
+    $industry     = sanitize_text_field( $industry );
+    $company_name = sanitize_text_field( $company_name );
+    $focus_areas  = array_map( 'sanitize_text_field', (array) $focus_areas );
+    $focus_areas  = array_filter( $focus_areas );
+    $complexity   = sanitize_text_field( $complexity );
+
+    if ( empty( $industry ) || empty( $company_name ) || empty( $focus_areas ) ) {
+        return new WP_Error( 'invalid_input', __( 'Missing required fields.', 'rtbcb' ) );
+    }
+
+    $commentary = rtbcb_test_generate_industry_commentary( $industry );
+    if ( is_wp_error( $commentary ) ) {
+        return $commentary;
+    }
+
+    $overview = rtbcb_test_generate_company_overview( $company_name );
+    if ( is_wp_error( $overview ) ) {
+        return $overview;
+    }
+
+    $tech_overview = rtbcb_test_generate_treasury_tech_overview( $focus_areas, $complexity );
+    if ( is_wp_error( $tech_overview ) ) {
+        return $tech_overview;
+    }
+
+    $sections   = [
+        'industry_commentary'    => sanitize_textarea_field( $commentary ),
+        'company_overview'       => sanitize_textarea_field( $overview ),
+        'treasury_tech_overview' => sanitize_textarea_field( $tech_overview ),
+    ];
+    $word_count = str_word_count( implode( ' ', $sections ) );
+
+    return [
+        'sections'   => $sections,
+        'word_count' => $word_count,
+        'generated'  => current_time( 'mysql' ),
+    ];
+}
+

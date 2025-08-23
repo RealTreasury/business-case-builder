@@ -37,6 +37,7 @@ class RTBCB_Admin {
         add_action( 'wp_ajax_rtbcb_test_commentary', [ $this, 'ajax_test_commentary' ] );
         add_action( 'wp_ajax_rtbcb_test_company_overview', [ $this, 'ajax_test_company_overview' ] );
         add_action( 'wp_ajax_rtbcb_test_treasury_tech_overview', [ $this, 'ajax_test_treasury_tech_overview' ] );
+        add_action( 'wp_ajax_rtbcb_test_complete_report', [ $this, 'ajax_test_complete_report' ] );
     }
 
     /**
@@ -73,6 +74,8 @@ class RTBCB_Admin {
             'report_preview_nonce' => wp_create_nonce( 'rtbcb_generate_report_preview' ),
             'company_overview_nonce' => wp_create_nonce( 'rtbcb_test_company_overview' ),
             'treasury_tech_overview_nonce' => wp_create_nonce( 'rtbcb_test_treasury_tech_overview' ),
+            'commentary_nonce'     => wp_create_nonce( 'rtbcb_test_commentary' ),
+            'complete_report_nonce' => wp_create_nonce( 'rtbcb_test_complete_report' ),
             'page'                 => $page,
             'strings'              => [
                 'confirm_delete'      => __( 'Are you sure you want to delete this lead?', 'rtbcb' ),
@@ -82,8 +85,20 @@ class RTBCB_Admin {
                 'testing'             => __( 'Testing...', 'rtbcb' ),
                 'generating'          => __( 'Generating...', 'rtbcb' ),
                 'copied'              => __( 'Copied to clipboard.', 'rtbcb' ),
+                'generate'            => __( 'Generate Report', 'rtbcb' ),
+                'retry'               => __( 'Retry', 'rtbcb' ),
             ],
         ] );
+
+        if ( 'rtbcb-report-test' === $page ) {
+            wp_enqueue_script(
+                'rtbcb-report-test',
+                RTBCB_URL . 'admin/js/report-test.js',
+                [ 'jquery' ],
+                RTBCB_VERSION,
+                true
+            );
+        }
 
         $rtbcb_sample_forms = rtbcb_get_sample_report_forms();
         $rtbcb_sample_data  = [];
@@ -621,6 +636,34 @@ class RTBCB_Admin {
                 'generated'  => current_time( 'mysql' ),
             ]
         );
+    }
+
+    /**
+     * AJAX handler for complete report generation.
+     *
+     * @return void
+     */
+    public function ajax_test_complete_report() {
+        check_ajax_referer( 'rtbcb_test_complete_report', 'nonce' );
+
+        $industry     = isset( $_POST['industry'] ) ? sanitize_text_field( wp_unslash( $_POST['industry'] ) ) : '';
+        $company_name = isset( $_POST['company_name'] ) ? sanitize_text_field( wp_unslash( $_POST['company_name'] ) ) : '';
+        $focus_areas  = isset( $_POST['focus_areas'] ) ? (array) wp_unslash( $_POST['focus_areas'] ) : [];
+        $focus_areas  = array_map( 'sanitize_text_field', $focus_areas );
+        $focus_areas  = array_filter( $focus_areas );
+        $complexity   = isset( $_POST['complexity'] ) ? sanitize_text_field( wp_unslash( $_POST['complexity'] ) ) : '';
+
+        if ( empty( $industry ) || empty( $company_name ) || empty( $focus_areas ) ) {
+            wp_send_json_error( [ 'message' => __( 'Missing required fields.', 'rtbcb' ) ] );
+        }
+
+        $report = rtbcb_test_generate_complete_report( $industry, $company_name, $focus_areas, $complexity );
+
+        if ( is_wp_error( $report ) ) {
+            wp_send_json_error( [ 'message' => sanitize_text_field( $report->get_error_message() ) ] );
+        }
+
+        wp_send_json_success( $report );
     }
 
     /**
