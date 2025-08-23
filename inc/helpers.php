@@ -97,16 +97,6 @@ function rtbcb_is_valid_openai_api_key( $api_key ) {
 }
 
 /**
- * Retrieve Cloudflare Turnstile site key.
- *
- * @return string Turnstile site key.
- */
-function rtbcb_get_turnstile_site_key() {
-    $key = get_option( 'rtbcb_turnstile_site_key', '' );
-    return sanitize_text_field( $key );
-}
-
-/**
  * Get client information for analytics
  *
  * @return array Client data
