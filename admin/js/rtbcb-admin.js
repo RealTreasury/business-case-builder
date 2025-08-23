@@ -497,17 +497,19 @@
                 const formData = new FormData(form);
                 const select = document.getElementById('rtbcb-sample-select');
                 const sampleKey = select && select.value ? select.value.trim() : '';
+                let action = 'rtbcb_generate_report_preview';
                 if (sampleKey === '') {
-                    formData.set('action', 'rtbcb_generate_report_preview');
+                    formData.set('action', action);
                 } else {
-                    formData.set('action', 'rtbcb_generate_sample_report');
+                    action = 'rtbcb_generate_sample_report';
+                    formData.set('action', action);
                     formData.append('scenario_key', sampleKey);
                 }
                 const response = await fetch(rtbcbAdmin.ajax_url, { method: 'POST', body: formData });
                 if (!response.ok) {
-                    console.error('Report preview request failed with status', response.status);
                     const text = await response.text();
-                    console.error('Response body:', text);
+                    const requestDetails = { action: action, scenario_key: sampleKey };
+                    console.error('generateReportPreview failed:', response.status, text, requestDetails);
                     alert(`${rtbcbAdmin.strings.error} ${response.status}: ${text}`);
                     return;
                 }
@@ -521,6 +523,7 @@
                     alert(message);
                 }
             } catch(err) {
+                console.error('generateReportPreview exception:', err);
                 alert(`${rtbcbAdmin.strings.error} ${err.message}`);
             }
             button.textContent = original;
@@ -543,13 +546,14 @@
                 const formData = new FormData();
                 const nonceField = document.getElementById('nonce');
                 const nonce = nonceField ? nonceField.value : ((rtbcbAdmin && rtbcbAdmin.report_preview_nonce) ? rtbcbAdmin.report_preview_nonce : '');
-                formData.append('action', 'rtbcb_generate_sample_report');
+                const action = 'rtbcb_generate_sample_report';
+                formData.append('action', action);
                 formData.append('nonce', nonce);
                 const response = await fetch(rtbcbAdmin.ajax_url, { method: 'POST', body: formData });
                 if (!response.ok) {
-                    console.error('Sample report request failed with status', response.status);
                     const text = await response.text();
-                    console.error('Response body:', text);
+                    const requestDetails = { action: action, nonce: nonce };
+                    console.error('generateSampleReport failed:', response.status, text, requestDetails);
                     alert(`${rtbcbAdmin.strings.error} ${response.status}: ${text}`);
                     return;
                 }
@@ -562,6 +566,7 @@
                     alert(message);
                 }
             } catch(err) {
+                console.error('generateSampleReport exception:', err);
                 alert(`${rtbcbAdmin.strings.error} ${err.message}`);
             }
             button.textContent = original;
