@@ -12,6 +12,24 @@ if ( ! defined( 'ABSPATH' ) ) {
 <div class="wrap rtbcb-admin-page">
     <h1><?php esc_html_e( 'Treasury Report Section Testing Dashboard', 'rtbcb' ); ?></h1>
 
+    <?php
+    $steps = rtbcb_get_test_steps();
+    ?>
+    <div class="card">
+        <h2 class="title"><?php esc_html_e( 'Analysis Progress', 'rtbcb' ); ?></h2>
+        <ul>
+            <?php foreach ( $steps as $slug => $step ) : ?>
+                <?php $done = ! empty( get_option( $step['option'] ) ); ?>
+                <li class="<?php echo $done ? 'completed' : 'missing'; ?>">
+                    <a href="<?php echo esc_url( admin_url( 'admin.php?page=' . $slug ) ); ?>">
+                        <?php echo esc_html( $step['label'] ); ?>
+                    </a>
+                    - <?php echo $done ? esc_html__( 'Complete', 'rtbcb' ) : esc_html__( 'Incomplete', 'rtbcb' ); ?>
+                </li>
+            <?php endforeach; ?>
+        </ul>
+    </div>
+
     <div class="card">
         <h2 class="title"><?php esc_html_e( 'Test Tools', 'rtbcb' ); ?></h2>
         <ul>

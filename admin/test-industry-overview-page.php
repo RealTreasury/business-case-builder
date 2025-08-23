@@ -8,6 +8,10 @@
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
+$allowed = rtbcb_require_completed_steps( 'rtbcb-test-industry-overview' );
+if ( ! $allowed ) {
+    return;
+}
 
 $company       = function_exists( 'rtbcb_get_current_company' ) ? rtbcb_get_current_company() : [];
 $company_name  = isset( $company['name'] ) ? sanitize_text_field( $company['name'] ) : '';
@@ -44,4 +48,5 @@ $company_ind   = isset( $company['industry'] ) ? sanitize_text_field( $company['
     </form>
 
     <div id="rtbcb-industry-overview-results"></div>
+    <?php rtbcb_render_test_navigation( 'rtbcb-test-industry-overview' ); ?>
 </div>

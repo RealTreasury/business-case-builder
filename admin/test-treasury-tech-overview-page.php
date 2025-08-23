@@ -8,6 +8,10 @@
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
+
+if ( ! rtbcb_require_completed_steps( 'rtbcb-test-treasury-tech-overview' ) ) {
+    return;
+}
 /**
  * Retrieve current company information.
  */
@@ -88,6 +92,7 @@ if ( empty( $suggested_focus_areas ) && ! empty( $company_size ) ) {
     </div>
 
     <div id="rtbcb-treasury-tech-overview-results"></div>
+    <?php rtbcb_render_test_navigation( 'rtbcb-test-treasury-tech-overview' ); ?>
 </div>
 
 <style>

@@ -9,6 +9,10 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+if ( ! rtbcb_require_completed_steps( 'rtbcb-test-recommended-category' ) ) {
+    return;
+}
+
 $company_overview    = get_option( 'rtbcb_company_overview', '' );
 $industry_insights   = get_option( 'rtbcb_industry_insights', '' );
 $treasury_challenges = get_option( 'rtbcb_treasury_challenges', '' );
@@ -52,4 +56,5 @@ $treasury_challenges = get_option( 'rtbcb_treasury_challenges', '' );
     </form>
 
     <div id="rtbcb-category-recommendation-results"></div>
+    <?php rtbcb_render_test_navigation( 'rtbcb-test-recommended-category' ); ?>
 </div>

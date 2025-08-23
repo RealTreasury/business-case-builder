@@ -27,6 +27,122 @@ function rtbcb_clear_current_company() {
 }
 
 /**
+ * Get ordered list of test steps and their option keys.
+ *
+ * @return array[] Step data keyed by page slug.
+ */
+function rtbcb_get_test_steps() {
+    return [
+        'rtbcb-test-company-overview' => [
+            'label'  => __( 'Company Overview', 'rtbcb' ),
+            'option' => 'rtbcb_current_company',
+        ],
+        'rtbcb-test-treasury-tech-overview' => [
+            'label'  => __( 'Treasury Tech Overview', 'rtbcb' ),
+            'option' => 'rtbcb_treasury_tech_overview',
+        ],
+        'rtbcb-test-industry-overview' => [
+            'label'  => __( 'Industry Overview', 'rtbcb' ),
+            'option' => 'rtbcb_industry_insights',
+        ],
+        'rtbcb-test-recommended-category' => [
+            'label'  => __( 'Category Recommendation', 'rtbcb' ),
+            'option' => 'rtbcb_last_recommended_category',
+        ],
+        'rtbcb-test-real-treasury-overview' => [
+            'label'  => __( 'Real Treasury Overview', 'rtbcb' ),
+            'option' => 'rtbcb_real_treasury_overview',
+        ],
+        'rtbcb-test-estimated-benefits' => [
+            'label'  => __( 'Estimated Benefits', 'rtbcb' ),
+            'option' => 'rtbcb_benefits_estimate',
+        ],
+    ];
+}
+
+/**
+ * Ensure all previous steps are complete before rendering a page.
+ *
+ * Outputs a warning linking to the starting page when prerequisites are
+ * missing.
+ *
+ * @param string $current_slug Current page slug.
+ * @return bool True when allowed, false otherwise.
+ */
+function rtbcb_require_completed_steps( $current_slug ) {
+    $steps = rtbcb_get_test_steps();
+    $slugs = array_keys( $steps );
+    $index = array_search( $current_slug, $slugs, true );
+
+    if ( false === $index || 0 === $index ) {
+        return true;
+    }
+
+    for ( $i = 0; $i < $index; $i++ ) {
+        $option = $steps[ $slugs[ $i ] ]['option'];
+        if ( empty( get_option( $option ) ) ) {
+            echo '<div class="notice notice-warning"><p>'
+                . sprintf(
+                    esc_html__( 'Please complete earlier steps before proceeding. Start at the %1$s.', 'rtbcb' ),
+                    '<a href="' . esc_url( admin_url( 'admin.php?page=' . $slugs[0] ) ) . '">' . esc_html( $steps[ $slugs[0] ]['label'] ) . '</a>'
+                )
+                . '</p></div>';
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Render navigation and progress list for test pages.
+ *
+ * @param string $current_slug Current page slug.
+ * @return void
+ */
+function rtbcb_render_test_navigation( $current_slug ) {
+    $steps = rtbcb_get_test_steps();
+    $slugs = array_keys( $steps );
+    $index = array_search( $current_slug, $slugs, true );
+
+    if ( false === $index ) {
+        return;
+    }
+
+    echo '<div class="rtbcb-test-navigation">';
+    echo '<ol class="rtbcb-test-progress">';
+    foreach ( $steps as $slug => $step ) {
+        $classes = [];
+        if ( ! empty( get_option( $step['option'] ) ) ) {
+            $classes[] = 'completed';
+        }
+        if ( $slug === $current_slug ) {
+            $classes[] = 'current';
+        }
+        echo '<li class="' . esc_attr( implode( ' ', $classes ) ) . '">' . esc_html( $step['label'] ) . '</li>';
+    }
+    echo '</ol>';
+
+    echo '<p class="rtbcb-nav-links">';
+    if ( $index > 0 ) {
+        $prev_slug = $slugs[ $index - 1 ];
+        echo '<a class="button" href="' . esc_url( admin_url( 'admin.php?page=' . $prev_slug ) ) . '">' . esc_html__( 'Previous', 'rtbcb' ) . '</a> ';
+    }
+
+    if ( $index < count( $slugs ) - 1 ) {
+        $current_option = $steps[ $slugs[ $index ] ]['option'];
+        $next_slug      = $slugs[ $index + 1 ];
+        if ( empty( get_option( $current_option ) ) ) {
+            echo '<span class="button disabled" aria-disabled="true">' . esc_html__( 'Next', 'rtbcb' ) . '</span>';
+        } else {
+            echo '<a class="button" href="' . esc_url( admin_url( 'admin.php?page=' . $next_slug ) ) . '">' . esc_html__( 'Next', 'rtbcb' ) . '</a>';
+        }
+    }
+    echo '</p>';
+    echo '</div>';
+}
+
+/**
  * Sanitize form input data
  *
  * @param array $data Raw form data

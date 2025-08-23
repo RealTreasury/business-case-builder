@@ -8,6 +8,10 @@
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
+
+if ( ! rtbcb_require_completed_steps( 'rtbcb-test-company-overview' ) ) {
+    return;
+}
 ?>
 <div class="wrap rtbcb-admin-page">
     <h1><?php esc_html_e( 'Test Company Overview', 'rtbcb' ); ?></h1>
@@ -51,6 +55,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
     <div id="rtbcb-company-overview-results"></div>
     <div id="rtbcb-company-overview-meta"></div>
+    <?php rtbcb_render_test_navigation( 'rtbcb-test-company-overview' ); ?>
 </div>
 
 <style>
