@@ -261,6 +261,50 @@ class RTBCB_LLM {
     }
 
     /**
+     * Generate a Real Treasury platform overview.
+     *
+     * @param bool  $include_portal Include portal integration details.
+     * @param array $categories     Vendor categories.
+     * @return string|WP_Error Overview text or error object.
+     */
+    public function generate_real_treasury_overview( $include_portal, $categories ) {
+        $include_portal = (bool) $include_portal;
+        $categories     = array_filter( array_map( 'sanitize_text_field', (array) $categories ) );
+
+        if ( empty( $this->api_key ) ) {
+            return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
+        }
+
+        $model  = $this->models['mini'] ?? 'gpt-4o-mini';
+        $prompt = 'Provide a Real Treasury platform overview with sections for platform capabilities, portal integration benefits, vendor ecosystem overview, Real Treasury differentiators, implementation approach, and support/community aspects.';
+
+        if ( ! empty( $categories ) ) {
+            $prompt .= ' Highlight vendor categories: ' . implode( ', ', $categories ) . '.';
+        }
+
+        if ( $include_portal ) {
+            $prompt .= ' Include how the Real Treasury portal complements the platform.';
+        }
+
+        $response = $this->call_openai_with_retry( $model, $prompt );
+
+        if ( is_wp_error( $response ) ) {
+            return new WP_Error( 'llm_failure', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
+        }
+
+        $body     = wp_remote_retrieve_body( $response );
+        $decoded  = json_decode( $body, true );
+        $content  = $decoded['choices'][0]['message']['content'] ?? '';
+        $overview = sanitize_textarea_field( $content );
+
+        if ( empty( $overview ) ) {
+            return new WP_Error( 'llm_empty_response', __( 'No overview returned.', 'rtbcb' ) );
+        }
+
+        return $overview;
+    }
+
+    /**
      * Generate comprehensive business case with deep analysis.
      *
      * Returns a {@see WP_Error} when the API key is missing or when the LLM
