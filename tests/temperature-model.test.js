@@ -8,7 +8,7 @@ const { execSync } = require('child_process');
     vm.runInThisContext(code);
 
     const capabilities = JSON.parse(execSync("php -r \"echo json_encode(include 'inc/model-capabilities.php');\"").toString());
-    const unsupportedModels = capabilities.temperature.unsupported;
+    const unsupportedModels = [...capabilities.temperature.unsupported, 'gpt-5-mini'];
     const supportedModels = ['gpt-4o', 'gpt-4.1-preview'];
 
     for (const model of [...unsupportedModels, ...supportedModels]) {
