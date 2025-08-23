@@ -531,17 +531,31 @@ function rtbcb_test_generate_industry_overview( $industry, $company_size ) {
 /**
  * Test generating a Real Treasury overview using the LLM.
  *
- * @param bool  $include_portal Whether to include portal information.
- * @param array $categories     Vendor categories.
+ * @param array $company_data {
+ *     Company context data.
+ *
+ *     @type bool   $include_portal Include portal integration details.
+ *     @type string $company_size   Company size description.
+ *     @type string $industry       Company industry.
+ *     @type array  $challenges     List of identified challenges.
+ *     @type array  $categories     Optional vendor categories to highlight.
+ * }
  * @return string|WP_Error Overview text or error object.
  */
-function rtbcb_test_generate_real_treasury_overview( $include_portal, $categories ) {
-    $include_portal = (bool) $include_portal;
-    $categories     = array_filter( array_map( 'sanitize_text_field', (array) $categories ) );
+function rtbcb_test_generate_real_treasury_overview( $company_data ) {
+    $company_data = is_array( $company_data ) ? $company_data : [];
+
+    $company_data['include_portal'] = ! empty( $company_data['include_portal'] );
+    $company_data['company_size']   = sanitize_text_field( $company_data['company_size'] ?? '' );
+    $company_data['industry']       = sanitize_text_field( $company_data['industry'] ?? '' );
+    $company_data['challenges']     = array_filter( array_map( 'sanitize_text_field', (array) ( $company_data['challenges'] ?? [] ) ) );
+    if ( isset( $company_data['categories'] ) ) {
+        $company_data['categories'] = array_filter( array_map( 'sanitize_text_field', (array) $company_data['categories'] ) );
+    }
 
     try {
         $llm      = new RTBCB_LLM();
-        $overview = $llm->generate_real_treasury_overview( $include_portal, $categories );
+        $overview = $llm->generate_real_treasury_overview( $company_data );
     } catch ( \Throwable $e ) {
         return new WP_Error( 'llm_exception', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
     }

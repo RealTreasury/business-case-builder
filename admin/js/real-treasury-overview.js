@@ -7,10 +7,40 @@
         const resultsDiv = $('#rtbcb-real-treasury-overview-results');
         const includePortal = $('#rtbcb-include-portal');
         const categoriesSelect = $('#rtbcb-vendor-categories');
+        const overrideCategories = $('#rtbcb-override-categories');
+        const summaryDiv = $('#rtbcb-company-summary');
+        const challengesList = $('#rtbcb-company-challenges');
+
+        // Fetch stored company data
+        $.ajax({
+            url: rtbcb_ajax.ajax_url,
+            type: 'POST',
+            data: {
+                action: 'rtbcb_get_company_data',
+                nonce: rtbcb_ajax.nonce,
+            },
+            success: function(response) {
+                if (response.success) {
+                    summaryDiv.text(response.data.summary || '');
+                    challengesList.empty();
+                    (response.data.challenges || []).forEach(function(ch) {
+                        challengesList.append($('<li />').text(ch));
+                    });
+                }
+            }
+        });
+
+        overrideCategories.on('change', function() {
+            if (overrideCategories.is(':checked')) {
+                categoriesSelect.show();
+            } else {
+                categoriesSelect.hide().val([]);
+            }
+        });
 
         generateBtn.on('click', function() {
             const include = includePortal.is(':checked') ? 1 : 0;
-            const categories = categoriesSelect.val() || [];
+            const categories = overrideCategories.is(':checked') ? (categoriesSelect.val() || []) : [];
             const nonce = rtbcb_ajax.nonce;
             const url = rtbcb_ajax.ajax_url;
 
@@ -74,7 +104,8 @@
 
         clearBtn.on('click', function() {
             includePortal.prop('checked', false);
-            categoriesSelect.val([]);
+            overrideCategories.prop('checked', false);
+            categoriesSelect.val([]).hide();
             resultsDiv.html('');
         });
     });

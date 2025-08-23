@@ -16,6 +16,12 @@ if ( ! defined( 'ABSPATH' ) ) {
         <h2 class="title"><?php esc_html_e( 'Generate Real Treasury Overview', 'rtbcb' ); ?></h2>
         <p><?php esc_html_e( 'Configure options and generate an overview.', 'rtbcb' ); ?></p>
 
+        <h3><?php esc_html_e( 'Company Summary', 'rtbcb' ); ?></h3>
+        <p id="rtbcb-company-summary"></p>
+
+        <h3><?php esc_html_e( 'Identified Challenges', 'rtbcb' ); ?></h3>
+        <ul id="rtbcb-company-challenges"></ul>
+
         <table class="form-table">
             <tr>
                 <th scope="row">
@@ -30,20 +36,25 @@ if ( ! defined( 'ABSPATH' ) ) {
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="rtbcb-vendor-categories"><?php esc_html_e( 'Vendor Categories', 'rtbcb' ); ?></label>
+                    <label for="rtbcb-override-categories"><?php esc_html_e( 'Override Categories', 'rtbcb' ); ?></label>
                 </th>
                 <td>
-                    <select id="rtbcb-vendor-categories" multiple size="5">
+                    <label>
+                        <input type="checkbox" id="rtbcb-override-categories" />
+                        <?php esc_html_e( 'Specify vendor categories', 'rtbcb' ); ?>
+                    </label>
+                    <select id="rtbcb-vendor-categories" multiple size="5" style="display:none;">
                         <option value="tms"><?php esc_html_e( 'TMS', 'rtbcb' ); ?></option>
                         <option value="cash_management"><?php esc_html_e( 'Cash Management', 'rtbcb' ); ?></option>
                         <option value="payments"><?php esc_html_e( 'Payments', 'rtbcb' ); ?></option>
                         <option value="liquidity"><?php esc_html_e( 'Liquidity', 'rtbcb' ); ?></option>
                         <option value="risk_management"><?php esc_html_e( 'Risk Management', 'rtbcb' ); ?></option>
                     </select>
-                    <?php wp_nonce_field( 'rtbcb_test_real_treasury_overview', 'rtbcb_test_real_treasury_overview_nonce' ); ?>
                 </td>
             </tr>
         </table>
+
+        <?php wp_nonce_field( 'rtbcb_test_real_treasury_overview', 'rtbcb_test_real_treasury_overview_nonce' ); ?>
 
         <p class="submit">
             <button type="button" id="rtbcb-generate-real-treasury-overview" class="button button-primary">
