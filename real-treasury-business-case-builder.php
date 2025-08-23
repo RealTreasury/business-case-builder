@@ -95,8 +95,8 @@ class Real_Treasury_BCB {
         add_filter( 'plugin_action_links_' . plugin_basename( RTBCB_FILE ), [ $this, 'plugin_action_links' ] );
 
         // AJAX handlers
-        add_action( 'wp_ajax_rtbcb_generate_case', [ $this, 'ajax_generate_comprehensive_case' ] );
-        add_action( 'wp_ajax_nopriv_rtbcb_generate_case', [ $this, 'ajax_generate_comprehensive_case' ] );
+        add_action( 'wp_ajax_rtbcb_generate_case', [ $this, 'ajax_generate_comprehensive_case_debug' ] );
+        add_action( 'wp_ajax_nopriv_rtbcb_generate_case', [ $this, 'ajax_generate_comprehensive_case_debug' ] );
     }
 
     /**
@@ -580,8 +580,31 @@ class Real_Treasury_BCB {
     /**
      * Enhanced AJAX handler with memory management
      */
-    public function ajax_generate_comprehensive_case() {
+    public function ajax_generate_comprehensive_case_debug() {
         rtbcb_setup_ajax_logging();
+
+        rtbcb_log_api_debug( 'ENTER ajax_generate_comprehensive_case_debug' );
+
+        if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+            ini_set( 'display_errors', '1' );
+        }
+
+        rtbcb_log_api_debug( 'POST keys', array_keys( $_POST ) );
+        $nonce_present = isset( $_POST['rtbcb_nonce'] );
+        rtbcb_log_api_debug( 'Nonce present', $nonce_present );
+        $nonce_valid = check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false );
+        rtbcb_log_api_debug( 'Nonce verification', $nonce_valid );
+
+        $required_classes = [
+            'RTBCB_Calculator',
+            'RTBCB_Category_Recommender',
+            'RTBCB_RAG',
+            'RTBCB_LLM',
+        ];
+
+        foreach ( $required_classes as $class ) {
+            rtbcb_log_api_debug( 'Class check: ' . $class, class_exists( $class ) );
+        }
 
         // STEP 1: Increase memory limit and log initial state
         rtbcb_increase_memory_limit();
@@ -601,8 +624,7 @@ class Real_Treasury_BCB {
         }
 
         try {
-            // Verify nonce
-            if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
+            if ( ! $nonce_valid ) {
                 rtbcb_log_error( 'Nonce verification failed', $_POST );
                 wp_send_json_error( __( 'Security check failed.', 'rtbcb' ), 403 );
             }
@@ -932,6 +954,8 @@ class Real_Treasury_BCB {
                 500
             );
         }
+
+        rtbcb_log_api_debug( 'EXIT ajax_generate_comprehensive_case_debug' );
 
         exit;
     }
