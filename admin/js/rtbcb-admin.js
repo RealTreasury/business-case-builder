@@ -284,118 +284,6 @@
             });
         },
 
-        bindReportPreview() {
-            const form = document.getElementById('rtbcb-report-preview-form');
-            if (!form) { return; }
-            form.addEventListener('submit', this.generateReportPreview.bind(this));
-            document.getElementById('rtbcb-download-pdf')?.addEventListener('click', this.downloadReportPDF.bind(this));
-            const select = document.getElementById('rtbcb-sample-select');
-            if (select) {
-                const injectSample = () => {
-                    const key = select.value;
-                    const target = document.getElementById('rtbcb-sample-context');
-                    if (key && target && rtbcbAdmin.sampleForms && rtbcbAdmin.sampleForms[key]) {
-                        target.value = JSON.stringify(rtbcbAdmin.sampleForms[key], null, 2);
-                    }
-                };
-                select.addEventListener('change', injectSample);
-                document.getElementById('rtbcb-load-sample')?.addEventListener('click', injectSample);
-            }
-        },
-
-        async generateReportPreview(e) {
-            e.preventDefault();
-            const form = e.currentTarget;
-            const button = document.getElementById('rtbcb-generate-report');
-            const original = button.textContent;
-            button.textContent = rtbcbAdmin.strings.processing;
-            button.disabled = true;
-            try {
-                const formData = new FormData(form);
-                const select = document.getElementById('rtbcb-sample-select');
-                const sampleKey = select && select.value ? select.value.trim() : '';
-                if (sampleKey === '') {
-                    formData.set('action', 'rtbcb_generate_report_preview');
-                } else {
-                    formData.set('action', 'rtbcb_generate_sample_report');
-                    formData.append('scenario_key', sampleKey);
-                }
-                const response = await fetch(rtbcbAdmin.ajax_url, { method: 'POST', body: formData });
-                if (!response.ok) {
-                    console.error('Report preview request failed with status', response.status);
-                    const text = await response.text();
-                    console.error('Response body:', text);
-                    alert(`${rtbcbAdmin.strings.error} ${response.status}: ${text}`);
-                    return;
-                }
-                const data = await response.json();
-                if (data.success) {
-                    const iframe = document.getElementById('rtbcb-report-iframe');
-                    if (iframe) { iframe.srcdoc = data.data.html || data.data.report_html; }
-                    document.getElementById('rtbcb-download-pdf').style.display = 'inline-block';
-                } else {
-                    alert(data.data?.message || rtbcbAdmin.strings.error);
-                }
-            } catch(err) {
-                alert(`${rtbcbAdmin.strings.error} ${err.message}`);
-            }
-            button.textContent = original;
-            button.disabled = false;
-        },
-
-        bindSampleReport() {
-            const button = document.getElementById('rtbcb-generate-sample-report');
-            if (!button) { return; }
-            button.addEventListener('click', this.generateSampleReport.bind(this));
-        },
-
-        async generateSampleReport(e) {
-            e.preventDefault();
-            const button = e.currentTarget;
-            const original = button.textContent;
-            button.textContent = rtbcbAdmin.strings.processing;
-            button.disabled = true;
-            try {
-                const formData = new FormData();
-                const nonceField = document.getElementById('nonce');
-                const nonce = nonceField ? nonceField.value : (rtbcbAdmin?.report_preview_nonce || '');
-                formData.append('action', 'rtbcb_generate_sample_report');
-                formData.append('nonce', nonce);
-                const response = await fetch(rtbcbAdmin.ajax_url, { method: 'POST', body: formData });
-                if (!response.ok) {
-                    console.error('Sample report request failed with status', response.status);
-                    const text = await response.text();
-                    console.error('Response body:', text);
-                    alert(`${rtbcbAdmin.strings.error} ${response.status}: ${text}`);
-                    return;
-                }
-                const data = await response.json();
-                if (data.success) {
-                    const iframe = document.getElementById('rtbcb-sample-report-frame');
-                    if (iframe) { iframe.srcdoc = data.data.report_html; }
-                } else {
-                    alert(data.data?.message || rtbcbAdmin.strings.error);
-                }
-            } catch(err) {
-                alert(`${rtbcbAdmin.strings.error} ${err.message}`);
-            }
-            button.textContent = original;
-            button.disabled = false;
-        },
-
-        downloadReportPDF(e) {
-            e.preventDefault();
-            const iframe = document.getElementById('rtbcb-report-iframe');
-            if (iframe && iframe.contentWindow) {
-                iframe.contentWindow.focus();
-                iframe.contentWindow.print();
-            }
-        },
-
-        closeModal() {
-            const modal = document.getElementById('rtbcb-lead-modal');
-            if (modal) { modal.style.display = 'none'; }
-        },
 
         async testApiConnection(e) {
             e.preventDefault();
@@ -694,7 +582,121 @@
                 alert(`${rtbcbAdmin.strings.error} ${err.message}`);
             }
         }
-    }
+    } // ← Class ends here
+
+    // Report-related methods should be part of RTBCBAdmin, not RTBCBLeadsManager
+    RTBCBAdmin.bindReportPreview = function() {
+        const form = document.getElementById('rtbcb-report-preview-form');
+        if (!form) { return; }
+        form.addEventListener('submit', this.generateReportPreview.bind(this));
+        document.getElementById('rtbcb-download-pdf')?.addEventListener('click', this.downloadReportPDF.bind(this));
+        const select = document.getElementById('rtbcb-sample-select');
+        if (select) {
+            const injectSample = () => {
+                const key = select.value;
+                const target = document.getElementById('rtbcb-sample-context');
+                if (key && target && rtbcbAdmin.sampleForms && rtbcbAdmin.sampleForms[key]) {
+                    target.value = JSON.stringify(rtbcbAdmin.sampleForms[key], null, 2);
+                }
+            };
+            select.addEventListener('change', injectSample);
+            document.getElementById('rtbcb-load-sample')?.addEventListener('click', injectSample);
+        }
+    };
+
+    RTBCBAdmin.generateReportPreview = async function(e) {
+        e.preventDefault();
+        const form = e.currentTarget;
+        const button = document.getElementById('rtbcb-generate-report');
+        const original = button.textContent;
+        button.textContent = rtbcbAdmin.strings.processing;
+        button.disabled = true;
+        try {
+            const formData = new FormData(form);
+            const select = document.getElementById('rtbcb-sample-select');
+            const sampleKey = select && select.value ? select.value.trim() : '';
+            if (sampleKey === '') {
+                formData.set('action', 'rtbcb_generate_report_preview');
+            } else {
+                formData.set('action', 'rtbcb_generate_sample_report');
+                formData.append('scenario_key', sampleKey);
+            }
+            const response = await fetch(rtbcbAdmin.ajax_url, { method: 'POST', body: formData });
+            if (!response.ok) {
+                console.error('Report preview request failed with status', response.status);
+                const text = await response.text();
+                console.error('Response body:', text);
+                alert(`${rtbcbAdmin.strings.error} ${response.status}: ${text}`);
+                return;
+            }
+            const data = await response.json();
+            if (data.success) {
+                const iframe = document.getElementById('rtbcb-report-iframe');
+                if (iframe) { iframe.srcdoc = data.data.html || data.data.report_html; }
+                document.getElementById('rtbcb-download-pdf').style.display = 'inline-block';
+            } else {
+                alert(data.data?.message || rtbcbAdmin.strings.error);
+            }
+        } catch(err) {
+            alert(`${rtbcbAdmin.strings.error} ${err.message}`);
+        }
+        button.textContent = original;
+        button.disabled = false;
+    };
+
+    RTBCBAdmin.bindSampleReport = function() {
+        const button = document.getElementById('rtbcb-generate-sample-report');
+        if (!button) { return; }
+        button.addEventListener('click', this.generateSampleReport.bind(this));
+    };
+
+    RTBCBAdmin.generateSampleReport = async function(e) {
+        e.preventDefault();
+        const button = e.currentTarget;
+        const original = button.textContent;
+        button.textContent = rtbcbAdmin.strings.processing;
+        button.disabled = true;
+        try {
+            const formData = new FormData();
+            const nonceField = document.getElementById('nonce');
+            const nonce = nonceField ? nonceField.value : (rtbcbAdmin?.report_preview_nonce || '');
+            formData.append('action', 'rtbcb_generate_sample_report');
+            formData.append('nonce', nonce);
+            const response = await fetch(rtbcbAdmin.ajax_url, { method: 'POST', body: formData });
+            if (!response.ok) {
+                console.error('Sample report request failed with status', response.status);
+                const text = await response.text();
+                console.error('Response body:', text);
+                alert(`${rtbcbAdmin.strings.error} ${response.status}: ${text}`);
+                return;
+            }
+            const data = await response.json();
+            if (data.success) {
+                const iframe = document.getElementById('rtbcb-sample-report-frame');
+                if (iframe) { iframe.srcdoc = data.data.report_html; }
+            } else {
+                alert(data.data?.message || rtbcbAdmin.strings.error);
+            }
+        } catch(err) {
+            alert(`${rtbcbAdmin.strings.error} ${err.message}`);
+        }
+        button.textContent = original;
+        button.disabled = false;
+    };
+
+    RTBCBAdmin.downloadReportPDF = function(e) {
+        e.preventDefault();
+        const iframe = document.getElementById('rtbcb-report-iframe');
+        if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+        }
+    };
+
+    RTBCBAdmin.closeModal = function() {
+        const modal = document.getElementById('rtbcb-lead-modal');
+        if (modal) { modal.style.display = 'none'; }
+    };
 
     $(function(){ RTBCBAdmin.init(); });
 
