@@ -1445,6 +1445,7 @@ function rtbcb_ajax_generate_real_treasury_overview() {
 // Enqueue admin scripts for company overview page.
 add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_company_overview_scripts' );
 add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_treasury_tech_overview_scripts' );
+add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_real_treasury_overview_scripts' );
 
 /**
  * Enqueue admin scripts for company overview page.
@@ -1509,6 +1510,40 @@ function rtbcb_enqueue_treasury_tech_overview_scripts( $hook ) {
             [
                 'ajax_url' => admin_url( 'admin-ajax.php' ),
                 'nonce'    => wp_create_nonce( 'rtbcb_test_treasury_tech_overview' ),
+            ]
+        );
+    }
+}
+
+/**
+ * Enqueue admin scripts for real treasury overview page.
+ *
+ * @param string $hook Current admin page hook.
+ * @return void
+ */
+function rtbcb_enqueue_real_treasury_overview_scripts( $hook ) {
+    if ( strpos( $hook, 'rtbcb' ) !== false && strpos( $hook, 'real-treasury-overview' ) !== false ) {
+        wp_enqueue_script(
+            'rtbcb-test-utils',
+            plugin_dir_url( __FILE__ ) . 'admin/js/rtbcb-test-utils.js',
+            [ 'jquery' ],
+            '1.0.0',
+            true
+        );
+        wp_enqueue_script(
+            'rtbcb-real-treasury-overview',
+            plugin_dir_url( __FILE__ ) . 'admin/js/real-treasury-overview.js',
+            [ 'jquery', 'rtbcb-test-utils' ],
+            '1.0.0',
+            true
+        );
+
+        wp_localize_script(
+            'rtbcb-real-treasury-overview',
+            'rtbcb_ajax',
+            [
+                'ajax_url' => admin_url( 'admin-ajax.php' ),
+                'nonce'    => wp_create_nonce( 'rtbcb_test_real_treasury_overview' ),
             ]
         );
     }
