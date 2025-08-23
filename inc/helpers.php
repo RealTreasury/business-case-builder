@@ -396,3 +396,87 @@ function rtbcb_test_generate_treasury_tech_overview( $focus_areas, $complexity )
     return $overview;
 }
 
+/**
+ * Test generating category recommendation details.
+ *
+ * @param array $requirements User requirement inputs.
+ * @return array Recommendation data ready for JSON encoding.
+ */
+function rtbcb_test_generate_category_recommendation( $requirements ) {
+    $requirements = (array) $requirements;
+
+    $sanitized = [];
+
+    $text_fields = [ 'company_size', 'treasury_complexity', 'budget_range', 'timeline' ];
+    foreach ( $text_fields as $field ) {
+        if ( isset( $requirements[ $field ] ) ) {
+            $sanitized[ $field ] = sanitize_text_field( $requirements[ $field ] );
+        }
+    }
+
+    if ( isset( $requirements['num_banks'] ) ) {
+        $sanitized['num_banks'] = intval( $requirements['num_banks'] );
+    }
+
+    if ( isset( $requirements['ftes'] ) ) {
+        $sanitized['ftes'] = floatval( $requirements['ftes'] );
+    }
+
+    if ( isset( $requirements['pain_points'] ) && is_array( $requirements['pain_points'] ) ) {
+        $sanitized['pain_points'] = array_map( 'sanitize_text_field', $requirements['pain_points'] );
+    }
+
+    foreach ( $requirements as $key => $value ) {
+        if ( ! isset( $sanitized[ $key ] ) ) {
+            $sanitized[ $key ] = is_array( $value ) ? array_map( 'sanitize_text_field', $value ) : sanitize_text_field( $value );
+        }
+    }
+
+    $result = RTBCB_Category_Recommender::recommend_category( $sanitized );
+
+    $recommendation = [
+        'category'      => $result['recommended'],
+        'category_name' => $result['category_info']['name'] ?? '',
+        'reasoning'     => $result['reasoning'] ?? '',
+        'alternatives'  => [],
+        'confidence'    => $result['confidence'] ?? 0,
+        'scores'        => $result['scores'] ?? [],
+    ];
+
+    foreach ( $result['alternatives'] ?? [] as $alt ) {
+        $recommendation['alternatives'][] = [
+            'category' => $alt['category'],
+            'name'     => $alt['info']['name'] ?? '',
+            'score'    => $alt['score'],
+        ];
+    }
+
+    $llm       = new RTBCB_LLM();
+    $narrative = method_exists( $llm, 'generate_category_recommendation' ) ? $llm->generate_category_recommendation( $result['recommended'], $sanitized ) : new WP_Error( 'missing_method', '' );
+
+    $static_roadmaps = [
+        'cash_tools' => __( '1. Assess cash visibility needs. 2. Enable bank feeds. 3. Train team. 4. Review after launch.', 'rtbcb' ),
+        'tms_lite'   => __( '1. Define requirements. 2. Evaluate TMS vendors. 3. Pilot integrations. 4. Roll out regionally.', 'rtbcb' ),
+        'trms'       => __( '1. Conduct enterprise assessment. 2. Run TRMS RFP. 3. Plan phased deployment. 4. Execute change management.', 'rtbcb' ),
+    ];
+
+    $static_success = [
+        'cash_tools' => __( 'Maintain clean bank data and focus on user adoption.', 'rtbcb' ),
+        'tms_lite'   => __( 'Engage stakeholders and allocate resources for integrations.', 'rtbcb' ),
+        'trms'       => __( 'Secure executive sponsorship and robust project governance.', 'rtbcb' ),
+    ];
+
+    if ( is_wp_error( $narrative ) ) {
+        $recommendation['roadmap']        = $static_roadmaps[ $result['recommended'] ] ?? '';
+        $recommendation['success_factors'] = $static_success[ $result['recommended'] ] ?? '';
+    } else {
+        $recommendation['roadmap']        = $narrative['roadmap'] ?? $static_roadmaps[ $result['recommended'] ] ?? '';
+        $recommendation['success_factors'] = $narrative['success_factors'] ?? $static_success[ $result['recommended'] ] ?? '';
+    }
+
+    $recommendation['roadmap']        = sanitize_textarea_field( $recommendation['roadmap'] );
+    $recommendation['success_factors'] = sanitize_textarea_field( $recommendation['success_factors'] );
+
+    return $recommendation;
+}
+
