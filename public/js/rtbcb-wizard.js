@@ -540,7 +540,7 @@ class BusinessCaseBuilder {
                         <span class="rtbcb-badge-icon">✓</span>
                         Business Case Generated Successfully
                     </div>
-                    <h2>${displayName} Treasury Technology Business Case</h2>
+                    <h2>${this.escapeHTML(displayName)} Treasury Technology Business Case</h2>
                     <p class="rtbcb-results-subtitle">Personalized ROI analysis and strategic recommendations</p>
                 </div>
 
@@ -557,28 +557,34 @@ class BusinessCaseBuilder {
     renderRecommendation(recommendation, companyName) {
         const category = recommendation.category_info || {};
         const confidence = Math.round((recommendation.confidence || 0.75) * 100);
+        const safeCompany = this.escapeHTML(companyName);
+        const safeCategoryName = this.escapeHTML(category.name || 'Treasury Management System');
+        const safeDescription = this.escapeHTML(category.description || 'Modern treasury platform with automation and analytics');
+        const reasoning = recommendation.reasoning || `Based on ${companyName}'s profile, this solution best fits your needs.`;
+        const safeReasoning = this.escapeHTML(reasoning);
 
         return `
             <div class="rtbcb-recommendation-card">
                 <div class="rtbcb-recommendation-header">
-                    <h3>Recommended Solution for ${companyName}</h3>
+                    <h3>Recommended Solution for ${safeCompany}</h3>
                     <span class="rtbcb-confidence-badge">${confidence}% Confidence</span>
                 </div>
-                <div class="rtbcb-recommendation-name">${category.name || 'Treasury Management System'}</div>
+                <div class="rtbcb-recommendation-name">${safeCategoryName}</div>
                 <div class="rtbcb-recommendation-description">
-                    ${category.description || 'Modern treasury platform with automation and analytics'}
+                    ${safeDescription}
                 </div>
                 <div class="rtbcb-recommendation-reasoning">
-                    ${recommendation.reasoning || `Based on ${companyName}'s profile, this solution best fits your needs.`}
+                    ${safeReasoning}
                 </div>
             </div>
         `;
     }
 
     renderROISummary(scenarios, companyName) {
+        const safeCompany = this.escapeHTML(companyName);
         return `
             <div class="rtbcb-roi-section">
-                <h3>${companyName} Projected Annual Benefits</h3>
+                <h3>${safeCompany} Projected Annual Benefits</h3>
                 <div class="rtbcb-roi-summary">
                     <div class="rtbcb-scenario">
                         <div class="rtbcb-scenario-label">Conservative</div>
@@ -635,11 +641,12 @@ class BusinessCaseBuilder {
     }
 
     renderNarrative(narrative = {}) {
+        const summary = narrative?.narrative || 'Treasury technology investment presents a compelling opportunity for operational efficiency.';
         return `
             <div class="rtbcb-narrative-section">
                 <h3>Executive Summary</h3>
                 <div class="rtbcb-narrative-content">
-                    ${narrative?.narrative || 'Treasury technology investment presents a compelling opportunity for operational efficiency.'}
+                    ${this.escapeHTML(summary)}
                 </div>
             </div>
         `;
@@ -689,7 +696,7 @@ class BusinessCaseBuilder {
                         <div class="rtbcb-step">
                             <div class="rtbcb-step-number">${index + 1}</div>
                             <div class="rtbcb-step-content">
-                                <p>${step}</p>
+                                <p>${this.escapeHTML(step)}</p>
                             </div>
                         </div>
                     `).join('')}
@@ -753,9 +760,12 @@ class BusinessCaseBuilder {
     }
 
     escapeHTML(str) {
-        const div = document.createElement('div');
-        div.textContent = str == null ? '' : String(str);
-        return div.innerHTML;
+        return str == null ? '' : String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
     }
 
     formatNumber(num) {
