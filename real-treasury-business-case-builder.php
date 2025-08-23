@@ -1328,21 +1328,22 @@ if ( ! function_exists( 'rtbcb_is_configured' ) ) {
 add_action( 'wp_ajax_rtbcb_generate_company_overview', 'rtbcb_ajax_generate_company_overview' );
 
 /**
- * AJAX handler for generating company overview.
- *
- * @return void
+ * Updated AJAX handler for generating company overview with current information.
  */
 function rtbcb_ajax_generate_company_overview() {
+    // Check nonce.
     if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'rtbcb_test_company_overview' ) ) {
         wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ] );
         return;
     }
 
+    // Check user permissions.
     if ( ! current_user_can( 'manage_options' ) ) {
         wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'rtbcb' ) ] );
         return;
     }
 
+    // Get and validate company name.
     $company_name = isset( $_POST['company_name'] ) ? sanitize_text_field( wp_unslash( $_POST['company_name'] ) ) : '';
 
     if ( empty( $company_name ) ) {
@@ -1351,21 +1352,41 @@ function rtbcb_ajax_generate_company_overview() {
     }
 
     try {
-        $overview = rtbcb_test_generate_company_overview( $company_name );
+        $llm = new RTBCB_LLM();
+
+        // Try to use web search version if available, fallback to basic version.
+        if ( method_exists( $llm, 'generate_company_overview_with_web_search' ) ) {
+            $overview    = $llm->generate_company_overview_with_web_search( $company_name );
+            $method_used = 'with current web search';
+        } else {
+            // Use the updated basic version with better prompting.
+            $overview    = $llm->generate_company_overview( $company_name );
+            $method_used = 'with historical data';
+        }
 
         if ( is_wp_error( $overview ) ) {
-            wp_send_json_error( [
-                'message' => sanitize_text_field( $overview->get_error_message() ),
-            ] );
+            wp_send_json_error(
+                [
+                    'message' => sanitize_text_field( $overview->get_error_message() ),
+                ]
+            );
             return;
         }
 
+        // Add a note about the data freshness.
+        $current_date = current_time( 'F j, Y' );
+        $note         = "\n\n---\n*Overview generated on {$current_date} ({$method_used})*";
+
+        // Return success with overview.
         wp_send_json_success(
             [
-                'overview'     => wp_kses_post( $overview ),
+                'overview'     => wp_kses_post( $overview . $note ),
                 'company_name' => $company_name,
+                'method_used'  => $method_used,
+                'generated_at' => $current_date,
             ]
         );
+
     } catch ( Exception $e ) {
         error_log( 'RTBCB Company Overview Error: ' . $e->getMessage() );
         wp_send_json_error(
