@@ -1007,11 +1007,13 @@ class RTBCB_LLM {
             $response = wp_remote_post( $endpoint, $args );
         } catch ( \Throwable $e ) {
             error_log( 'RTBCB: HTTP request exception: ' . $e->getMessage() );
+            $this->log_gpt5_call( $prompt, [], $e->getMessage() );
             return new WP_Error( 'openai_http_exception', __( 'Unable to contact OpenAI service.', 'rtbcb' ) );
         }
 
         if ( is_wp_error( $response ) ) {
             error_log( 'RTBCB: HTTP request failed: ' . $response->get_error_message() );
+            $this->log_gpt5_call( $prompt, [], $response->get_error_message() );
             return $response;
         }
 
@@ -1024,6 +1026,7 @@ class RTBCB_LLM {
             $error_data    = json_decode( $response_body, true );
             $error_message = $error_data['error']['message'] ?? 'Unknown API error';
             error_log( 'RTBCB: OpenAI API error: ' . $error_message );
+            $this->log_gpt5_call( $prompt, (array) $error_data, $error_message );
             return new WP_Error( 'openai_api_error', $error_message );
         }
 
@@ -1040,6 +1043,7 @@ class RTBCB_LLM {
 
         if ( empty( $content ) ) {
             error_log( 'RTBCB: Empty content received from OpenAI.' );
+            $this->log_gpt5_call( $prompt, $decoded, 'Empty content received from OpenAI' );
             if ( $max_tokens > 1000 ) {
                 error_log( 'RTBCB: Retrying with lower max_tokens.' );
                 return $this->call_openai( $model, $prompt, 1000 );
@@ -1048,7 +1052,50 @@ class RTBCB_LLM {
             return new WP_Error( 'openai_empty_response', __( 'OpenAI returned an empty response.', 'rtbcb' ) );
         }
 
+        $this->log_gpt5_call( $prompt, $decoded );
+
         return $response;
+    }
+
+    /**
+     * Log GPT-5 API calls for debugging and monitoring.
+     *
+     * @param string      $context  Prompt or context sent to the API.
+     * @param array       $response Decoded API response data.
+     * @param string|null $error    Optional error message.
+     *
+     * @return void
+     */
+    private function log_gpt5_call( $context, $response, $error = null ) {
+        $context_size      = strlen( (string) $context );
+        $usage             = $response['usage'] ?? [];
+        $completion_tokens = intval( $usage['completion_tokens'] ?? 0 );
+        $reasoning_tokens  = intval( $usage['reasoning_tokens'] ?? 0 );
+        $total_tokens      = intval( $usage['total_tokens'] ?? 0 );
+
+        $content = '';
+        if ( isset( $response['output_text'] ) ) {
+            $content = is_array( $response['output_text'] ) ? implode( ' ', (array) $response['output_text'] ) : $response['output_text'];
+        } elseif ( isset( $response['output'][0]['content'][0]['text'] ) ) {
+            $content = $response['output'][0]['content'][0]['text'];
+        }
+
+        $response_length = strlen( $content );
+
+        $log_message = sprintf(
+            'RTBCB GPT5 Call: context_size=%d, completion_tokens=%d, reasoning_tokens=%d, total_tokens=%d, response_length=%d',
+            $context_size,
+            $completion_tokens,
+            $reasoning_tokens,
+            $total_tokens,
+            $response_length
+        );
+
+        if ( ! empty( $error ) ) {
+            $log_message .= ', error=' . $error;
+        }
+
+        error_log( $log_message );
     }
 
     /**
