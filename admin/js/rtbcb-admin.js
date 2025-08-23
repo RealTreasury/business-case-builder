@@ -40,12 +40,12 @@
             button.on('click', async function (e) {
                 e.preventDefault();
                 const industry = $('#rtbcb-commentary-industry').val();
-                const nonce = button.data('nonce');
+                const nonce = rtbcbAdmin.company_overview_nonce;
                 const original = button.text();
-                button.prop('disabled', true).text(rtbcbAdmin.strings.testing);
+                button.prop('disabled', true).text(rtbcbAdmin.strings.generating);
                 try {
                     const formData = new FormData();
-                    formData.append('action', 'rtbcb_test_commentary');
+                    formData.append('action', 'rtbcb_test_company_overview');
                     formData.append('industry', industry);
                     formData.append('nonce', nonce);
                     const response = await fetch(rtbcbAdmin.ajax_url, { method: 'POST', body: formData });
@@ -54,7 +54,16 @@
                     }
                     const data = await response.json();
                     if (data.success) {
-                        results.text(data.data.commentary || '');
+                        const overview = data.data.overview || '';
+                        results.text(overview);
+                        if (navigator.clipboard) {
+                            try {
+                                await navigator.clipboard.writeText(overview);
+                                alert(rtbcbAdmin.strings.copied);
+                            } catch (clipErr) {
+                                // Ignore clipboard errors.
+                            }
+                        }
                     } else {
                         alert(data.data?.message || rtbcbAdmin.strings.error);
                     }
