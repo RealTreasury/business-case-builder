@@ -2,25 +2,25 @@
     'use strict';
 
     $(document).ready(function() {
-        const generateBtn = $('#rtbcb-generate-treasury-tech-overview');
-        const clearBtn = $('#rtbcb-clear-treasury-tech-overview');
-        const resultsDiv = $('#rtbcb-treasury-tech-overview-results');
+        const $generateBtn = $('#rtbcb-generate-treasury-tech-overview');
+        const $clearBtn    = $('#rtbcb-clear-treasury-tech-overview');
+        const $resultsDiv  = $('#rtbcb-treasury-tech-overview-results');
+        const nonce        = $('#rtbcb_test_treasury_tech_overview_nonce').val();
 
-        generateBtn.on('click', function() {
+        function sendRequest() {
             const focusAreas = [];
             $('input[name="rtbcb_focus_areas[]"]:checked').each(function() {
                 focusAreas.push($(this).val());
             });
             const complexity = $('#rtbcb-company-complexity').val();
-            const nonce = $('#rtbcb_test_treasury_tech_overview_nonce').val();
 
             if (focusAreas.length === 0) {
                 alert('Please select at least one focus area.');
                 return;
             }
 
-            generateBtn.prop('disabled', true).text('Generating...');
-            resultsDiv.html('<p>Generating overview...</p>');
+            RTBCBTestUtils.showLoading($generateBtn);
+            const start = performance.now();
 
             $.ajax({
                 url: ajaxurl,
@@ -33,45 +33,39 @@
                 },
                 success: function(response) {
                     if (response.success) {
-                        const data = response.data;
-                        const text = data.overview || '';
-                        const container = $('<div class="notice notice-success" />');
-                        container.append('<p><strong>Overview:</strong></p>');
-                        container.append('<div style="background: #f9f9f9; padding: 15px; border-left: 4px solid #0073aa; margin-top: 10px;">' + text + '</div>');
-                        container.append('<p>Word count: ' + data.word_count + ' | Time: ' + data.elapsed + 's</p>');
+                        const text = response.data.overview || '';
+                        const overviewDiv = $('<div style="background: #f9f9f9; padding: 15px; border-left: 4px solid #0073aa; margin-top: 10px;" />').text(text);
+                        RTBCBTestUtils.renderNotice($resultsDiv, 'success', '<strong>Overview:</strong>', null, overviewDiv);
+                        const metrics = RTBCBTestUtils.computeMetrics(text, start);
+                        const meta = $('<div />');
+                        RTBCBTestUtils.renderMetrics(meta, metrics);
+                        $resultsDiv.find('.notice').append(meta);
                         const actions = $('<p />');
-                        const regen = $('<button type="button" class="button" />').text('Regenerate');
-                        const copy = $('<button type="button" class="button" />').text('Copy');
-                        regen.on('click', function() {
-                            generateBtn.trigger('click');
-                        });
-                        copy.on('click', async function() {
-                            try {
-                                await navigator.clipboard.writeText(text);
-                                alert('Copied to clipboard');
-                            } catch (err) {
-                                alert('Copy failed: ' + err.message);
-                            }
+                        const regen = $('<button type="button" class="button" />').text('Regenerate').on('click', sendRequest);
+                        const copy = $('<button type="button" class="button" />').text('Copy').on('click', async function() {
+                            const success = await RTBCBTestUtils.copy(text);
+                            alert(success ? 'Copied to clipboard' : 'Copy failed');
                         });
                         actions.append(regen).append(' ').append(copy);
-                        container.append(actions);
-                        resultsDiv.html(container);
+                        $resultsDiv.find('.notice').append(actions);
                     } else {
-                        resultsDiv.html('<div class="notice notice-error"><p><strong>Error:</strong> ' + (response.data.message || 'Failed to generate overview') + '</p></div>');
+                        RTBCBTestUtils.renderNotice($resultsDiv, 'error', response.data.message || 'Failed to generate overview', sendRequest);
                     }
                 },
                 error: function() {
-                    resultsDiv.html('<div class="notice notice-error"><p><strong>Error:</strong> Request failed. Please try again.</p></div>');
+                    RTBCBTestUtils.renderNotice($resultsDiv, 'error', 'Request failed. Please try again.', sendRequest);
                 },
                 complete: function() {
-                    generateBtn.prop('disabled', false).text('Generate Overview');
+                    RTBCBTestUtils.hideLoading($generateBtn);
                 }
             });
-        });
+        }
 
-        clearBtn.on('click', function() {
+        $generateBtn.on('click', sendRequest);
+
+        $clearBtn.on('click', function() {
             $('input[name="rtbcb_focus_areas[]"]').prop('checked', false);
-            resultsDiv.html('');
+            $resultsDiv.html('');
         });
     });
 })(jQuery);
