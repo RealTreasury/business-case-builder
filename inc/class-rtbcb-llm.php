@@ -15,7 +15,7 @@ class RTBCB_LLM {
         $this->models  = [
             'mini'      => get_option( 'rtbcb_mini_model', 'gpt-4o-mini' ),
             'premium'   => get_option( 'rtbcb_premium_model', 'gpt-4o' ),
-            'advanced'  => get_option( 'rtbcb_advanced_model', 'o1-preview' ),
+            'advanced'  => get_option( 'rtbcb_advanced_model', 'gpt-5-mini' ),
             'gpt5_mini' => get_option( 'rtbcb_gpt5_mini_model', 'gpt-5-mini' ),
             'embedding' => get_option( 'rtbcb_embedding_model', 'text-embedding-3-small' ),
         ];
@@ -791,7 +791,7 @@ class RTBCB_LLM {
      * @return string Model identifier.
      */
     private function select_optimal_model( $user_inputs, $context_chunks ) {
-        $model = $this->models['advanced'] ?? 'o1-preview';
+        $model = $this->models['advanced'] ?? 'gpt-5-mini';
 
         if ( count( $context_chunks ) < 3 ) {
             $model = $this->models['premium'] ?? 'gpt-4o';

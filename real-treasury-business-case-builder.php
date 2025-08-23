@@ -293,7 +293,7 @@ class Real_Treasury_BCB {
         // Add new options introduced in 2.1.0
         if ( version_compare( $from_version, '2.1.0', '<' ) ) {
             $new_options = [
-                'rtbcb_advanced_model'        => 'o1-preview',
+                'rtbcb_advanced_model'        => 'gpt-5-mini',
                 'rtbcb_comprehensive_analysis' => true,
             ];
 
@@ -340,7 +340,7 @@ class Real_Treasury_BCB {
         $defaults = [
             'rtbcb_mini_model'         => 'gpt-4o-mini',
             'rtbcb_premium_model'      => 'gpt-4o',
-            'rtbcb_advanced_model'     => 'o1-preview',
+            'rtbcb_advanced_model'     => 'gpt-5-mini',
             'rtbcb_embedding_model'    => 'text-embedding-3-small',
             'rtbcb_labor_cost_per_hour'=> 100,
             'rtbcb_bank_fee_baseline'  => 15000,
@@ -426,7 +426,7 @@ class Real_Treasury_BCB {
         );
 
         $api_key     = sanitize_text_field( get_option( 'rtbcb_openai_api_key', '' ) );
-        $report_model = sanitize_text_field( get_option( 'rtbcb_advanced_model', 'gpt-5-chat-latest' ) );
+        $report_model = sanitize_text_field( get_option( 'rtbcb_advanced_model', 'gpt-5-mini' ) );
         wp_localize_script(
             'rtbcb-report',
             'rtbcbReport',
