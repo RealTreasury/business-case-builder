@@ -29,8 +29,12 @@
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.log('AJAX Error:', status, error);
-                    showError('Connection failed: ' + status + ' - ' + error);
+                    console.log('AJAX Error:', status, error, 'Status:', xhr.status, 'Response:', xhr.responseText);
+                    let message = 'Connection failed: ' + status + ' - ' + error;
+                    if (xhr.status === 504) {
+                        message = 'Connection failed: The server took too long to respond.';
+                    }
+                    showError(message);
                 },
                 complete: function() {
                     generateBtn.prop('disabled', false).text('Generate Overview');
