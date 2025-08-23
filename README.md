@@ -294,6 +294,26 @@ The plugin includes integration tests for all major components. These can be run
 $results = RTBCB_Tests::run_integration_tests();
 ```
 
+### Runtime Debugging
+For manual verification during development, `debug_ajax_handler()` includes runtime checks for common setup issues:
+
+- **Leads Table Test**
+  ```php
+  global $wpdb;
+  $wpdb->get_results( "SHOW TABLES LIKE '{$wpdb->prefix}rtbcb_leads'" );
+  ```
+  Use this query to confirm the `rtbcb_leads` table exists.
+
+- **Missing API Key Logging**
+  ```php
+  if ( '' === get_option( 'rtbcb_openai_api_key' ) ) {
+      error_log( 'rtbcb_openai_api_key option is empty' );
+  }
+  ```
+  This logs a warning when the OpenAI API key is not set.
+
+`debug_ajax_handler()` executes these checks automatically for runtime verification.
+
 ### Performance Monitoring
 - **Database Query Optimization**: Indexed tables for fast searches
 - **Caching Integration**: Compatible with WordPress caching plugins
