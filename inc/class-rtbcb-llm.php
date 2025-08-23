@@ -178,6 +178,48 @@ class RTBCB_LLM {
     }
 
     /**
+     * Generate a treasury technology overview.
+     *
+     * @param array  $focus_areas Focus areas.
+     * @param string $complexity  Company complexity.
+     * @return string|WP_Error Overview text or error object.
+     */
+    public function generate_treasury_tech_overview( $focus_areas, $complexity ) {
+        $focus_areas = array_map( 'sanitize_text_field', (array) $focus_areas );
+        $focus_areas = array_filter( $focus_areas );
+        $complexity  = sanitize_text_field( $complexity );
+
+        if ( empty( $focus_areas ) ) {
+            return new WP_Error( 'no_focus_areas', __( 'No focus areas provided.', 'rtbcb' ) );
+        }
+
+        if ( empty( $this->api_key ) ) {
+            return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
+        }
+
+        $areas_list = implode( ', ', $focus_areas );
+        $model      = $this->models['mini'] ?? 'gpt-4o-mini';
+        $prompt     = 'Provide a treasury technology overview covering current landscape, emerging trends, technology gaps, key vendor or solution comparisons, implementation considerations, and adoption trends. Focus on: ' . $areas_list . '. Company complexity: ' . $complexity . '.';
+
+        $response = $this->call_openai_with_retry( $model, $prompt );
+
+        if ( is_wp_error( $response ) ) {
+            return new WP_Error( 'llm_failure', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
+        }
+
+        $body     = wp_remote_retrieve_body( $response );
+        $decoded  = json_decode( $body, true );
+        $content  = $decoded['choices'][0]['message']['content'] ?? '';
+        $overview = sanitize_textarea_field( $content );
+
+        if ( empty( $overview ) ) {
+            return new WP_Error( 'llm_empty_response', __( 'No overview returned.', 'rtbcb' ) );
+        }
+
+        return $overview;
+    }
+
+    /**
      * Generate comprehensive business case with deep analysis.
      *
      * Returns a {@see WP_Error} when the API key is missing or when the LLM

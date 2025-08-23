@@ -363,3 +363,21 @@ function rtbcb_test_generate_company_overview( $company_name ) {
     return $overview;
 }
 
+/**
+ * Test generating a treasury tech overview using the LLM.
+ *
+ * @param array  $focus_areas Focus areas.
+ * @param string $complexity  Company complexity.
+ * @return string|WP_Error Overview text or error object.
+ */
+function rtbcb_test_generate_treasury_tech_overview( $focus_areas, $complexity ) {
+    $focus_areas = array_map( 'sanitize_text_field', (array) $focus_areas );
+    $focus_areas = array_filter( $focus_areas );
+    $complexity  = sanitize_text_field( $complexity );
+
+    $llm      = new RTBCB_LLM();
+    $overview = $llm->generate_treasury_tech_overview( $focus_areas, $complexity );
+
+    return $overview;
+}
+

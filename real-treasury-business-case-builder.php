@@ -1378,6 +1378,7 @@ function rtbcb_ajax_generate_company_overview() {
 
 // Enqueue admin scripts for company overview page.
 add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_company_overview_scripts' );
+add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_treasury_tech_overview_scripts' );
 
 /**
  * Enqueue admin scripts for company overview page.
@@ -1401,6 +1402,33 @@ function rtbcb_enqueue_company_overview_scripts( $hook ) {
             [
                 'ajax_url' => admin_url( 'admin-ajax.php' ),
                 'nonce'    => wp_create_nonce( 'rtbcb_test_company_overview' ),
+            ]
+        );
+    }
+}
+
+/**
+ * Enqueue admin scripts for treasury tech overview page.
+ *
+ * @param string $hook Current admin page hook.
+ * @return void
+ */
+function rtbcb_enqueue_treasury_tech_overview_scripts( $hook ) {
+    if ( strpos( $hook, 'rtbcb' ) !== false && strpos( $hook, 'treasury-tech-overview' ) !== false ) {
+        wp_enqueue_script(
+            'rtbcb-treasury-tech-overview',
+            plugin_dir_url( __FILE__ ) . 'admin/js/treasury-tech-overview.js',
+            [ 'jquery' ],
+            '1.0.0',
+            true
+        );
+
+        wp_localize_script(
+            'rtbcb-treasury-tech-overview',
+            'rtbcb_ajax',
+            [
+                'ajax_url' => admin_url( 'admin-ajax.php' ),
+                'nonce'    => wp_create_nonce( 'rtbcb_test_treasury_tech_overview' ),
             ]
         );
     }
