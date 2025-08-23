@@ -23,7 +23,7 @@ class RTBCB_LLM {
             'embedding' => get_option( 'rtbcb_embedding_model', 'text-embedding-3-small' ),
         ];
 
-        $defaults  = defined( 'GPT5_CONFIG' ) ? GPT5_CONFIG : [];
+        $defaults  = rtbcb_get_gpt5_config();
         $overrides = get_option( 'rtbcb_gpt5_config', [] );
         if ( is_array( $overrides ) ) {
             $defaults = array_merge( $defaults, array_intersect_key( $overrides, $defaults ) );
