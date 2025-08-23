@@ -1494,9 +1494,13 @@ class RTBCB_LLM {
 }
 
 /**
- * Parse a GPT-5 response and extract relevant content.
+ * Parse a GPT-5 response into output text, reasoning, and function calls.
  *
- * @param array $response HTTP response array from wp_remote_post.
+ * The parser first looks for a convenience `output_text` field. If a valid
+ * string is not found, it manually walks the `output` chunks, prioritizing
+ * message content before reasoning.
+ *
+ * @param array $response HTTP response array from wp_remote_post().
  * @return array {
  *     @type string $output_text    Combined output text from the response.
  *     @type array  $reasoning      Reasoning segments provided by the model.
@@ -1521,39 +1525,79 @@ function rtbcb_parse_gpt5_response( $response ) {
     $reasoning      = [];
     $function_calls = [];
 
-    if ( isset( $decoded['output'] ) && is_array( $decoded['output'] ) ) {
+    // PRIORITY 1: Convenience field.
+    if ( isset( $decoded['output_text'] ) && ! empty( trim( $decoded['output_text'] ) ) ) {
+        $output_text = trim( $decoded['output_text'] );
+
+        // Reject trivial responses.
+        if ( strlen( $output_text ) < 20 ||
+            false !== stripos( $output_text, 'pong' ) ||
+            false !== stripos( $output_text, 'how can I help' ) ) {
+            error_log( 'RTBCB: Detected trivial response: ' . $output_text );
+            $output_text = '';
+        }
+    }
+
+    // PRIORITY 2: Manual parsing when no good output text was found.
+    if ( empty( $output_text ) && isset( $decoded['output'] ) && is_array( $decoded['output'] ) ) {
+
+        // First pass: Look for message content only.
         foreach ( $decoded['output'] as $chunk ) {
-            if ( ! is_array( $chunk ) ) {
+            if ( ! is_array( $chunk ) || 'message' !== ( $chunk['type'] ?? '' ) ) {
                 continue;
             }
 
-            $text = '';
             if ( isset( $chunk['content'] ) && is_array( $chunk['content'] ) ) {
-                foreach ( $chunk['content'] as $piece ) {
-                    if ( isset( $piece['text'] ) && '' !== $piece['text'] ) {
-                        $text = $piece['text'];
-                    }
+                foreach ( $chunk['content'] as $content_piece ) {
+                    if ( isset( $content_piece['text'] ) && ! empty( trim( $content_piece['text'] ) ) ) {
+                        $candidate = trim( $content_piece['text'] );
 
-                    if ( isset( $piece['type'] ) ) {
-                        if ( 'reasoning' === $piece['type'] && ! empty( $piece['text'] ) ) {
+                        if ( strlen( $candidate ) >= 20 &&
+                            false === stripos( $candidate, 'pong' ) ) {
+                            $output_text = $candidate;
+                            break 2;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Second pass: Collect reasoning and function calls.
+        foreach ( $decoded['output'] as $chunk ) {
+            $chunk_type = $chunk['type'] ?? '';
+
+            if ( 'reasoning' === $chunk_type ) {
+                if ( isset( $chunk['content'] ) && is_array( $chunk['content'] ) ) {
+                    foreach ( $chunk['content'] as $piece ) {
+                        if ( isset( $piece['text'] ) && ! empty( $piece['text'] ) ) {
                             $reasoning[] = $piece['text'];
-                        } elseif ( 'function_call' === $piece['type'] ) {
-                            $function_calls[] = $piece;
                         }
                     }
                 }
             }
 
-            $chunk_type = $chunk['type'] ?? '';
-
-            if ( '' === $output_text && ( 'message' === $chunk_type || ( '' !== $text && 'reasoning' !== $chunk_type ) ) ) {
-                $output_text = $text;
+            if ( 'function_call' === $chunk_type ) {
+                $function_calls[] = $chunk;
             }
         }
     }
 
-    if ( '' === $output_text && isset( $decoded['output_text'] ) ) {
-        $output_text = is_array( $decoded['output_text'] ) ? implode( ' ', (array) $decoded['output_text'] ) : $decoded['output_text'];
+    // Log quality metrics.
+    $text_length    = strlen( $output_text );
+    $usage          = $decoded['usage'] ?? [];
+    $output_tokens  = $usage['output_tokens'] ?? 0;
+
+    error_log(
+        sprintf(
+            'RTBCB: Parsed response - text_length=%d, output_tokens=%d, reasoning_chunks=%d',
+            $text_length,
+            $output_tokens,
+            count( $reasoning )
+        )
+    );
+
+    if ( $output_tokens > 50 && $text_length < 100 ) {
+        error_log( 'RTBCB: WARNING - High token count but short text output' );
     }
 
     return [
