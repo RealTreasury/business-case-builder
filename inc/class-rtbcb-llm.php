@@ -261,6 +261,51 @@ class RTBCB_LLM {
     }
 
     /**
+     * Generate implementation roadmap and success factors for a category.
+     *
+     * @param string $category_key Category identifier.
+     * @param array  $requirements User requirement inputs.
+     * @return array|WP_Error Array with roadmap and success factors or error object.
+     */
+    public function generate_category_recommendation( $category_key, $requirements = [] ) {
+        $category_key = sanitize_text_field( $category_key );
+
+        $requirements = array_map(
+            'sanitize_text_field',
+            (array) $requirements
+        );
+
+        if ( empty( $this->api_key ) ) {
+            return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
+        }
+
+        $model  = $this->models['mini'] ?? 'gpt-4o-mini';
+        $prompt = 'Given the treasury requirements: ' . wp_json_encode( $requirements )
+            . ' provide JSON with keys "implementation_roadmap" and "success_factors" '
+            . 'for the category ' . $category_key . '.';
+
+        $response = $this->call_openai_with_retry( $model, $prompt );
+
+        if ( is_wp_error( $response ) ) {
+            return new WP_Error( 'llm_failure', __( 'Unable to generate recommendation narrative.', 'rtbcb' ) );
+        }
+
+        $body    = wp_remote_retrieve_body( $response );
+        $decoded = json_decode( $body, true );
+        $content = $decoded['choices'][0]['message']['content'] ?? '';
+        $json    = json_decode( $content, true );
+
+        if ( ! is_array( $json ) ) {
+            return new WP_Error( 'llm_parse_error', __( 'Invalid response from language model.', 'rtbcb' ) );
+        }
+
+        return [
+            'roadmap'        => sanitize_textarea_field( $json['implementation_roadmap'] ?? '' ),
+            'success_factors' => sanitize_textarea_field( $json['success_factors'] ?? '' ),
+        ];
+    }
+
+    /**
      * Generate comprehensive business case with deep analysis.
      *
      * Returns a {@see WP_Error} when the API key is missing or when the LLM

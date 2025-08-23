@@ -430,6 +430,77 @@ function rtbcb_test_generate_industry_overview( $industry, $company_size ) {
 }
 
 /**
+ * Generate a treasury technology category recommendation.
+ *
+ * Sanitizes requirement inputs, calls the category recommender, and augments
+ * the response with narrative guidance such as implementation roadmaps and
+ * success factors.
+ *
+ * @param array $requirements Requirement inputs from the user.
+ * @return array Associative array ready for JSON encoding.
+ */
+function rtbcb_test_generate_category_recommendation( $requirements ) {
+    $inputs = [
+        'company_size'           => sanitize_text_field( $requirements['company_size'] ?? '' ),
+        'treasury_complexity'    => sanitize_text_field( $requirements['treasury_complexity'] ?? '' ),
+        'pain_points'            => array_map( 'sanitize_text_field', (array) ( $requirements['pain_points'] ?? [] ) ),
+        'budget_range'           => sanitize_text_field( $requirements['budget_range'] ?? '' ),
+        'timeline'               => sanitize_text_field( $requirements['timeline'] ?? '' ),
+        'num_banks'              => intval( $requirements['num_banks'] ?? 0 ),
+        'ftes'                   => floatval( $requirements['ftes'] ?? 0 ),
+        'hours_reconciliation'   => floatval( $requirements['hours_reconciliation'] ?? 0 ),
+        'hours_cash_positioning' => floatval( $requirements['hours_cash_positioning'] ?? 0 ),
+    ];
+
+    $recommendation = RTBCB_Category_Recommender::recommend_category( $inputs );
+
+    $category_key  = $recommendation['recommended'];
+    $category_name = $recommendation['category_info']['name'] ?? '';
+
+    $static_guidance = [
+        'cash_tools' => [
+            'roadmap'        => __( 'Assess current cash workflows, implement basic cash positioning and forecasting tools, train staff, and review results after initial rollout.', 'rtbcb' ),
+            'success'        => __( 'Maintain accurate bank data, secure stakeholder buy-in, and adopt a phased rollout to minimize disruption.', 'rtbcb' ),
+        ],
+        'tms_lite' => [
+            'roadmap'        => __( 'Gather requirements, select a mid-tier TMS vendor, configure core modules, migrate data, integrate with banks, and provide user training.', 'rtbcb' ),
+            'success'        => __( 'Ensure executive sponsorship, prepare clean master data, and dedicate resources for change management.', 'rtbcb' ),
+        ],
+        'trms' => [
+            'roadmap'        => __( 'Engage global stakeholders, define enterprise processes, implement the system in phases, integrate ERP and trading platforms, and conduct extensive testing and training.', 'rtbcb' ),
+            'success'        => __( 'Establish strong governance, encourage cross-functional collaboration, and perform rigorous testing before go-live.', 'rtbcb' ),
+        ],
+    ];
+
+    $roadmap_text  = $static_guidance[ $category_key ]['roadmap'] ?? '';
+    $success_text  = $static_guidance[ $category_key ]['success'] ?? '';
+
+    try {
+        $llm    = new RTBCB_LLM();
+        $narr   = $llm->generate_category_recommendation( $category_key, $inputs );
+        if ( ! is_wp_error( $narr ) ) {
+            $roadmap_text = ! empty( $narr['roadmap'] ) ? $narr['roadmap'] : $roadmap_text;
+            $success_text = ! empty( $narr['success_factors'] ) ? $narr['success_factors'] : $success_text;
+        }
+    } catch ( \Throwable $e ) {
+        // Fall back to static guidance if LLM fails.
+    }
+
+    return [
+        'recommended' => [
+            'key'  => $category_key,
+            'name' => $category_name,
+        ],
+        'reasoning'               => $recommendation['reasoning'],
+        'alternatives'            => $recommendation['alternatives'],
+        'confidence'              => $recommendation['confidence'],
+        'scores'                  => $recommendation['scores'],
+        'implementation_roadmap'  => $roadmap_text,
+        'success_factors'         => $success_text,
+    ];
+}
+
+/**
  * Test generating a complete report with ROI calculations.
  *
  * Validates and sanitizes inputs, generates required sections, performs ROI
