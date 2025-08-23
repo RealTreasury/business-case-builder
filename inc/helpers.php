@@ -267,13 +267,14 @@ function rtbcb_is_business_email( $email ) {
  * Validate OpenAI API key format.
  *
  * Accepts standard and project-scoped keys which start with "sk-" and may
- * include letters, numbers, hyphens, colons, and underscores.
+ * include letters, numbers, hyphens, colons, and underscores and are at
+ * least 32 characters long after the prefix.
  *
  * @param string $api_key API key.
  * @return bool Whether the format is valid.
  */
 function rtbcb_is_valid_openai_api_key( $api_key ) {
-    return preg_match( '/^sk-[A-Za-z0-9]{48,}$/', $api_key );
+    return (bool) preg_match( '/^sk-[A-Za-z0-9:_-]{32,}$/', $api_key );
 }
 
 /**
