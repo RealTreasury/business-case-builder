@@ -177,6 +177,15 @@ class RTBCB_Admin {
             'rtbcb-report-test',
             [ $this, 'render_report_test' ]
         );
+
+        add_submenu_page(
+            'rtbcb-dashboard',
+            __( 'Calculation Info', 'rtbcb' ),
+            __( 'Calculation Info', 'rtbcb' ),
+            'manage_options',
+            'rtbcb-calculations',
+            [ $this, 'render_calculation_info' ]
+        );
     }
 
     /**
@@ -277,6 +286,15 @@ class RTBCB_Admin {
      */
     public function render_report_test() {
         include RTBCB_DIR . 'admin/report-test-page.php';
+    }
+
+    /**
+     * Render calculation info page.
+     *
+     * @return void
+     */
+    public function render_calculation_info() {
+        include RTBCB_DIR . 'admin/calculations-page.php';
     }
 
     /**
