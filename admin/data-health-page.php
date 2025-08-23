@@ -24,6 +24,12 @@ $last_index_display = $last_indexed ? $last_indexed : __( 'Never', 'rtbcb' );
         <?php echo esc_html( $last_index_display ); ?>
     </p>
     <p><?php echo esc_html__( 'Need more details? Run diagnostics from the settings page.', 'rtbcb' ); ?></p>
+    <form id="rtbcb-sync-local-form">
+        <?php wp_nonce_field( 'rtbcb_sync_local', 'rtbcb_sync_local_nonce' ); ?>
+        <button type="button" class="button" id="rtbcb-sync-local">
+            <?php echo esc_html__( 'Sync to Local', 'rtbcb' ); ?>
+        </button>
+    </form>
 </div>
 
 
