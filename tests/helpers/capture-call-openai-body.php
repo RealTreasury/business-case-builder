@@ -39,7 +39,7 @@ if ( ! function_exists( 'wp_remote_post' ) ) {
     function wp_remote_post( $url, $args ) {
         global $captured_body;
         $captured_body = json_decode( $args['body'], true );
-        return [];
+        return [ 'body' => json_encode( [ 'output_text' => 'test' ] ) ];
     }
 }
 
@@ -51,7 +51,7 @@ if ( ! function_exists( 'wp_remote_retrieve_response_code' ) ) {
 
 if ( ! function_exists( 'wp_remote_retrieve_body' ) ) {
     function wp_remote_retrieve_body( $response ) {
-        return '{}';
+        return $response['body'] ?? '{}';
     }
 }
 
