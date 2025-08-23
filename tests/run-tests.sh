@@ -7,48 +7,52 @@ echo "================================================"
 echo "1. Running PHP syntax check..."
 find . -name "*.php" -not -path "./vendor/*" -print0 | xargs -0 -n1 php -l
 
+# JavaScript syntax check
+echo "2. Running JavaScript syntax check..."
+node --check admin/js/rtbcb-admin.js
+
 # JSON output lint
-echo "2. Running JSON output lint..."
+echo "3. Running JSON output lint..."
 php tests/json-output-lint.php
 
 # Cosine similarity search test
-echo "3. Running cosine similarity search test..."
+echo "4. Running cosine similarity search test..."
 php tests/cosine-similarity-search.test.php
 
 # Filter override test
-echo "4. Running filter override test..."
+echo "5. Running filter override test..."
 php tests/filters-override.test.php
 
 # Scenario selection test
-echo "5. Running scenario selection test..."
+echo "6. Running scenario selection test..."
 php tests/scenario-selection.test.php
 
 # Parse comprehensive response test
-echo "6. Running parse comprehensive response test..."
+echo "7. Running parse comprehensive response test..."
 php tests/parse-comprehensive-response.test.php
 
 # Mini model dynamic test
-echo "7. Running mini model dynamic test..."
+echo "8. Running mini model dynamic test..."
 php tests/mini-model-dynamic.test.php
 
 # API tester GPT-5 mini test
-echo "8. Running API tester GPT-5 mini test..."
+echo "9. Running API tester GPT-5 mini test..."
 php tests/api-tester-gpt5-mini.test.php
 
 # Reasoning-first output parsing test
-echo "9. Running reasoning-first output test..."
+echo "10. Running reasoning-first output test..."
 php tests/reasoning-first-output.test.php
 
 # AJAX error handling test (PHPUnit)
-echo "10. Running AJAX error handling test..."
+echo "11. Running AJAX error handling test..."
 phpunit tests/RTBCB_AjaxGenerateComprehensiveCaseErrorTest.php
 
 # Admin AJAX report generation tests
-echo "11. Running admin AJAX report generation tests..."
+echo "12. Running admin AJAX report generation tests..."
 phpunit tests/RTBCB_AdminAjaxReportTest.php
 
 # JavaScript tests
-echo "12. Running JavaScript tests..."
+echo "13. Running JavaScript tests..."
 node tests/handle-submit-error.test.js
 node tests/render-results-no-narrative.test.js
 node tests/handle-submit-success.test.js
@@ -57,10 +61,10 @@ node tests/temperature-model.test.js
 
 # WordPress coding standards (if installed)
 if command -v phpcs &> /dev/null; then
-    echo "13. Running WordPress coding standards check..."
+    echo "14. Running WordPress coding standards check..."
     phpcs --standard=WordPress --ignore=vendor .
 else
-    echo "13. Skipping WordPress coding standards (phpcs not installed)"
+    echo "14. Skipping WordPress coding standards (phpcs not installed)"
 fi
 
 echo "================================================"
