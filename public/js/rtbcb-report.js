@@ -3,7 +3,7 @@
  */
 
 const RTBCB_GPT5_DEFAULTS = {
-    max_output_tokens: 10000,
+    max_output_tokens: 20000,
     text: { verbosity: 'medium' },
     temperature: 0.7,
     store: true,

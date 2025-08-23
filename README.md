@@ -75,6 +75,8 @@ A comprehensive WordPress plugin that helps treasury teams quantify the benefits
 
    The API tester uses this value to verify connectivity.
 
+   By default, the plugin configures `max_output_tokens` to `20000` for GPT-5 models.
+
 #### Model Temperature Support
 
 | Model | Temperature Support |
