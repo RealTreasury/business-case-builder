@@ -20,6 +20,8 @@ global.document = {
 
 global.ajaxObj = { ajax_url: '' };
 
+global.DOMPurify = { sanitize: (html) => html };
+
 global.fetch = async () => ({
     ok: false,
     status: 500,

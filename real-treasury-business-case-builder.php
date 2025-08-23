@@ -373,6 +373,15 @@ class Real_Treasury_BCB {
         );
 
         // Scripts
+        // DOMPurify ensures any injected HTML is sanitized client-side.
+        wp_enqueue_script(
+            'dompurify',
+            'https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.2/purify.min.js',
+            [],
+            '3.0.2',
+            true
+        );
+
         wp_enqueue_script(
             'rtbcb-wizard',
             RTBCB_URL . 'public/js/rtbcb-wizard.js',
@@ -384,7 +393,7 @@ class Real_Treasury_BCB {
         wp_enqueue_script(
             'rtbcb-script',
             RTBCB_URL . 'public/js/rtbcb.js',
-            [ 'jquery', 'rtbcb-wizard' ],
+            [ 'jquery', 'rtbcb-wizard', 'dompurify' ],
             RTBCB_VERSION,
             true
         );
@@ -420,7 +429,7 @@ class Real_Treasury_BCB {
         wp_enqueue_script(
             'rtbcb-report',
             RTBCB_URL . 'public/js/rtbcb-report.js',
-            [],
+            [ 'dompurify' ],
             RTBCB_VERSION,
             true
         );

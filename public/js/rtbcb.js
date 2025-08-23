@@ -106,7 +106,21 @@ async function handleSubmit(e) {
         const reportContainer = document.getElementById('rtbcb-report-container');
         if (progressContainer) progressContainer.style.display = 'none';
         if (reportContainer) {
-            reportContainer.innerHTML = result.data.report_html;
+            // Sanitize server-provided HTML before injecting to prevent XSS.
+            // Only allow expected markup needed for business case output.
+            const allowedTags = [
+                'a', 'p', 'br', 'strong', 'em', 'ul', 'ol', 'li',
+                'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span',
+                'table', 'thead', 'tbody', 'tr', 'th', 'td'
+            ];
+            const allowedAttr = { a: [ 'href', 'title', 'target', 'rel' ], '*': [ 'style' ] };
+            const sanitized = typeof DOMPurify !== 'undefined'
+                ? DOMPurify.sanitize(
+                    result.data.report_html,
+                    { ALLOWED_TAGS: allowedTags, ALLOWED_ATTR: allowedAttr }
+                )
+                : result.data.report_html;
+            reportContainer.innerHTML = sanitized;
             reportContainer.style.display = 'block';
         }
 
