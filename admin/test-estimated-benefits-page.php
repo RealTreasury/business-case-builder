@@ -10,9 +10,20 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 $categories = RTBCB_Category_Recommender::get_all_categories();
+
+$current_step = 'estimated_benefits';
+$steps        = rtbcb_get_test_steps();
+
+if ( ! rtbcb_previous_steps_complete( $current_step ) ) {
+    $first = reset( $steps );
+    echo '<div class="wrap rtbcb-admin-page"><div class="notice notice-warning"><p>' . esc_html__( 'Please complete previous steps before proceeding.', 'rtbcb' ) . '</p><p><a href="' . esc_url( admin_url( 'admin.php?page=' . $first['page'] ) ) . '">' . esc_html__( 'Return to start', 'rtbcb' ) . '</a></p></div></div>';
+    return;
+}
 ?>
 <div class="wrap rtbcb-admin-page">
     <h1><?php esc_html_e( 'Test Estimated Benefits', 'rtbcb' ); ?></h1>
+
+    <?php rtbcb_render_test_progress( $current_step ); ?>
 
     <form id="rtbcb-benefits-estimate-form">
         <table class="form-table">
@@ -62,4 +73,6 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
     </form>
 
     <div id="rtbcb-benefits-estimate-results"></div>
+
+    <?php rtbcb_render_test_navigation( $current_step ); ?>
 </div>

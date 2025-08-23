@@ -8,9 +8,27 @@
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
+
+$steps    = rtbcb_get_test_steps();
+$progress = rtbcb_get_test_progress();
 ?>
 <div class="wrap rtbcb-admin-page">
     <h1><?php esc_html_e( 'Treasury Report Section Testing Dashboard', 'rtbcb' ); ?></h1>
+
+    <div class="card">
+        <h2 class="title"><?php esc_html_e( 'Step Progress', 'rtbcb' ); ?></h2>
+        <ul>
+            <?php foreach ( $steps as $slug => $step ) : ?>
+                <?php $done = ! empty( $progress[ $slug ] ); ?>
+                <li class="<?php echo $done ? 'completed' : 'pending'; ?>">
+                    <a href="<?php echo esc_url( admin_url( 'admin.php?page=' . $step['page'] ) ); ?>">
+                        <?php echo esc_html( $step['title'] ); ?>
+                    </a>
+                    &mdash; <?php echo $done ? esc_html__( 'Complete', 'rtbcb' ) : esc_html__( 'Pending', 'rtbcb' ); ?>
+                </li>
+            <?php endforeach; ?>
+        </ul>
+    </div>
 
     <div class="card">
         <h2 class="title"><?php esc_html_e( 'Test Tools', 'rtbcb' ); ?></h2>

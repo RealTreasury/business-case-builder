@@ -691,3 +691,138 @@ function rtbcb_test_generate_complete_report( $all_inputs ) {
     return $result;
 }
 
+/**
+ * Get ordered list of test steps.
+ *
+ * @return array
+ */
+function rtbcb_get_test_steps() {
+    return [
+        'company_overview'       => [
+            'title' => __( 'Company Overview', 'rtbcb' ),
+            'page'  => 'rtbcb-test-company-overview',
+        ],
+        'treasury_tech_overview' => [
+            'title' => __( 'Treasury Tech Overview', 'rtbcb' ),
+            'page'  => 'rtbcb-test-treasury-tech-overview',
+        ],
+        'industry_overview'      => [
+            'title' => __( 'Industry Overview', 'rtbcb' ),
+            'page'  => 'rtbcb-test-industry-overview',
+        ],
+        'real_treasury_overview' => [
+            'title' => __( 'Real Treasury Overview', 'rtbcb' ),
+            'page'  => 'rtbcb-test-real-treasury-overview',
+        ],
+        'recommended_category'   => [
+            'title' => __( 'Recommended Category', 'rtbcb' ),
+            'page'  => 'rtbcb-test-recommended-category',
+        ],
+        'estimated_benefits'     => [
+            'title' => __( 'Estimated Benefits', 'rtbcb' ),
+            'page'  => 'rtbcb-test-estimated-benefits',
+        ],
+    ];
+}
+
+/**
+ * Retrieve completion state for test steps.
+ *
+ * @return array
+ */
+function rtbcb_get_test_progress() {
+    $results  = get_option( 'rtbcb_test_results', [] );
+    $progress = [];
+
+    if ( is_array( $results ) ) {
+        $steps = rtbcb_get_test_steps();
+        foreach ( $steps as $slug => $step ) {
+            foreach ( $results as $item ) {
+                if ( isset( $item['section'], $item['status'] ) && $item['section'] === $step['title'] && 'success' === $item['status'] ) {
+                    $progress[ $slug ] = true;
+                    break;
+                }
+            }
+        }
+    }
+
+    return $progress;
+}
+
+/**
+ * Render progress indicator for test steps.
+ *
+ * @param string $current Current step slug.
+ * @return void
+ */
+function rtbcb_render_test_progress( $current ) {
+    $steps    = rtbcb_get_test_steps();
+    $progress = rtbcb_get_test_progress();
+
+    echo '<ol class="rtbcb-test-progress">';
+    foreach ( $steps as $slug => $step ) {
+        $classes = [];
+        if ( ! empty( $progress[ $slug ] ) ) {
+            $classes[] = 'completed';
+        }
+        if ( $slug === $current ) {
+            $classes[] = 'current';
+        }
+        echo '<li class="' . esc_attr( implode( ' ', $classes ) ) . '">' . esc_html( $step['title'] ) . '</li>';
+    }
+    echo '</ol>';
+}
+
+/**
+ * Render previous/next navigation for test pages.
+ *
+ * @param string $current Current step slug.
+ * @return void
+ */
+function rtbcb_render_test_navigation( $current ) {
+    $steps = rtbcb_get_test_steps();
+    $keys  = array_keys( $steps );
+    $index = array_search( $current, $keys, true );
+
+    echo '<div class="rtbcb-test-nav">';
+
+    if ( false !== $index && $index > 0 ) {
+        $prev_slug = $keys[ $index - 1 ];
+        $prev_url  = admin_url( 'admin.php?page=' . $steps[ $prev_slug ]['page'] );
+        echo '<a class="button" href="' . esc_url( $prev_url ) . '">' . esc_html__( 'Previous', 'rtbcb' ) . '</a>';
+    }
+
+    if ( false !== $index && $index < count( $keys ) - 1 ) {
+        $next_slug = $keys[ $index + 1 ];
+        $next_url  = admin_url( 'admin.php?page=' . $steps[ $next_slug ]['page'] );
+        echo ' <a class="button" href="' . esc_url( $next_url ) . '">' . esc_html__( 'Next', 'rtbcb' ) . '</a>';
+    }
+
+    echo '</div>';
+}
+
+/**
+ * Determine if all previous steps have been completed.
+ *
+ * @param string $current Current step slug.
+ * @return bool
+ */
+function rtbcb_previous_steps_complete( $current ) {
+    $progress = rtbcb_get_test_progress();
+    $keys     = array_keys( rtbcb_get_test_steps() );
+    $index    = array_search( $current, $keys, true );
+
+    if ( false === $index ) {
+        return true;
+    }
+
+    for ( $i = 0; $i < $index; $i++ ) {
+        $slug = $keys[ $i ];
+        if ( empty( $progress[ $slug ] ) ) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
