@@ -6,6 +6,7 @@
  */
 
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/helpers.php';
 
 class RTBCB_LLM {
     private $api_key;
@@ -1114,16 +1115,21 @@ class RTBCB_LLM {
             return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
         }
 
-        $endpoint = 'https://api.openai.com/v1/responses'; // Correct endpoint.
-        $model_name = sanitize_text_field( $model ?: 'gpt-5-mini' );
+        $endpoint         = 'https://api.openai.com/v1/responses'; // Correct endpoint.
+        $model_name       = sanitize_text_field( $model ?: 'gpt-5-mini' );
+        $model_name       = rtbcb_normalize_model_name( $model_name );
         $max_output_tokens = max( 256, intval( $max_output_tokens ?? 4000 ) );
 
         if ( is_array( $prompt ) && isset( $prompt['input'] ) ) {
             $instructions = sanitize_textarea_field( $prompt['instructions'] ?? '' );
-            $input = sanitize_textarea_field( $prompt['input'] );
+            $input        = sanitize_textarea_field( $prompt['input'] );
         } else {
             $instructions = '';
-            $input = sanitize_textarea_field( (string) $prompt );
+            $input        = sanitize_textarea_field( (string) $prompt );
+        }
+
+        if ( '' === trim( $input ) ) {
+            return new WP_Error( 'empty_prompt', __( 'Prompt cannot be empty.', 'rtbcb' ) );
         }
 
         $body = [
