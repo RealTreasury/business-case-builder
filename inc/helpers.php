@@ -30,7 +30,8 @@ function rtbcb_clear_current_company() {
  * Determine if a model supports the temperature parameter.
  *
  * Attempts to query the OpenAI models endpoint and caches the result. Falls
- * back to a static list of unsupported models if the request fails.
+ * back to a static list of unsupported models if the request fails. Update the
+ * `$unsupported` array below when OpenAI changes model capabilities.
  *
  * @param string $model Model identifier.
  * @return bool Whether the model supports temperature.
@@ -38,6 +39,7 @@ function rtbcb_clear_current_company() {
 function rtbcb_model_supports_temperature( $model ) {
     $model = sanitize_text_field( $model );
 
+    // Add or remove models here as OpenAI updates temperature support.
     $unsupported = [ 'gpt-4.1', 'gpt-4.1-mini', 'gpt-5' ];
     if ( in_array( $model, $unsupported, true ) ) {
         return false;

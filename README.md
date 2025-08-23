@@ -64,6 +64,20 @@ A comprehensive WordPress plugin that helps treasury teams quantify the benefits
    - **Premium Model**: `gpt-5` (for complex requests)
    - **Embedding Model**: `text-embedding-3-small` (for RAG)
 
+#### Model Temperature Support
+
+| Model | Temperature Support |
+| --- | --- |
+| `gpt-4o` | Yes |
+| `gpt-4o-mini` | Yes |
+| `gpt-5` | No |
+| `gpt-5-mini` | Yes |
+| `gpt-4.1` | No |
+| `gpt-4.1-mini` | No |
+| `text-embedding-3-small` | No (embeddings) |
+
+Update the list in `inc/helpers.php` if OpenAI changes temperature capabilities.
+
 ### Step 3: Configure Database Tables
 The plugin automatically creates required database tables on activation:
 - `wp_rtbcb_leads` - Lead tracking and analytics
