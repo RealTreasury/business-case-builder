@@ -60,10 +60,22 @@
         $regenerateBtn.on('click', sendRequest);
 
         $clearBtn.on('click', function() {
-            $resultsDiv.html('');
-            $('#rtbcb-test-company-name').val('');
-            $regenerateBtn.hide();
-            $copyBtn.hide();
+            const originalClear = rtbcbTestUtils.showLoading($clearBtn, 'Clearing...');
+            $.ajax({
+                url: ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'rtbcb_clear_current_company',
+                    nonce: nonce
+                },
+                complete: function() {
+                    rtbcbTestUtils.hideLoading($clearBtn, originalClear);
+                    $resultsDiv.html('');
+                    $('#rtbcb-test-company-name').val('');
+                    $regenerateBtn.hide();
+                    $copyBtn.hide();
+                }
+            });
         });
 
         $copyBtn.on('click', function() {
