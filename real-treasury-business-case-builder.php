@@ -1324,8 +1324,9 @@ if ( ! function_exists( 'rtbcb_is_configured' ) ) {
 }
 
 
-// Add AJAX handler for company overview generation.
+// Add AJAX handlers for overview generation.
 add_action( 'wp_ajax_rtbcb_generate_company_overview', 'rtbcb_ajax_generate_company_overview' );
+add_action( 'wp_ajax_rtbcb_generate_real_treasury_overview', 'rtbcb_ajax_generate_real_treasury_overview' );
 
 /**
  * AJAX handler for generating company overview.
@@ -1377,6 +1378,62 @@ function rtbcb_ajax_generate_company_overview() {
         );
     } catch ( Exception $e ) {
         error_log( 'RTBCB Company Overview Error: ' . $e->getMessage() );
+        wp_send_json_error(
+            [
+                'message' => __( 'An error occurred while generating the overview. Please try again.', 'rtbcb' ),
+            ]
+        );
+    }
+}
+
+/**
+ * AJAX handler for generating Real Treasury platform overview.
+ *
+ * @return void
+ */
+function rtbcb_ajax_generate_real_treasury_overview() {
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'rtbcb_test_real_treasury_overview' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ] );
+        return;
+    }
+
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'rtbcb' ) ] );
+        return;
+    }
+
+    $include_portal = isset( $_POST['include_portal'] ) ? rest_sanitize_boolean( wp_unslash( $_POST['include_portal'] ) ) : false;
+    $categories     = [];
+    if ( isset( $_POST['vendor_categories'] ) ) {
+        $categories = array_filter( array_map( 'sanitize_text_field', (array) wp_unslash( $_POST['vendor_categories'] ) ) );
+    }
+
+    $start_time = microtime( true );
+
+    try {
+        $overview = rtbcb_test_generate_real_treasury_overview( $include_portal, $categories );
+
+        if ( is_wp_error( $overview ) ) {
+            wp_send_json_error( [ 'message' => sanitize_text_field( $overview->get_error_message() ) ] );
+            return;
+        }
+
+        $word_count   = str_word_count( wp_strip_all_tags( $overview ) );
+        $elapsed_time = microtime( true ) - $start_time;
+        $timestamp    = current_time( 'mysql' );
+
+        wp_send_json_success(
+            [
+                'overview'       => wp_kses_post( $overview ),
+                'include_portal' => $include_portal,
+                'categories'     => $categories,
+                'word_count'     => intval( $word_count ),
+                'elapsed_time'   => round( $elapsed_time, 2 ),
+                'generated_at'   => $timestamp,
+            ]
+        );
+    } catch ( Exception $e ) {
+        error_log( 'RTBCB Real Treasury Overview Error: ' . $e->getMessage() );
         wp_send_json_error(
             [
                 'message' => __( 'An error occurred while generating the overview. Please try again.', 'rtbcb' ),
