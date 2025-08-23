@@ -31,16 +31,20 @@ php tests/parse-comprehensive-response.test.php
 echo "7. Running mini model dynamic test..."
 php tests/mini-model-dynamic.test.php
 
+# API tester GPT-5 mini test
+echo "8. Running API tester GPT-5 mini test..."
+php tests/api-tester-gpt5-mini.test.php
+
 # AJAX error handling test (PHPUnit)
-echo "8. Running AJAX error handling test..."
+echo "9. Running AJAX error handling test..."
 phpunit tests/RTBCB_AjaxGenerateComprehensiveCaseErrorTest.php
 
 # Admin AJAX report generation tests
-echo "9. Running admin AJAX report generation tests..."
+echo "10. Running admin AJAX report generation tests..."
 phpunit tests/RTBCB_AdminAjaxReportTest.php
 
 # JavaScript tests
-echo "10. Running JavaScript tests..."
+echo "11. Running JavaScript tests..."
 node tests/handle-submit-error.test.js
 node tests/render-results-no-narrative.test.js
 node tests/handle-submit-success.test.js
@@ -49,10 +53,10 @@ node tests/temperature-model.test.js
 
 # WordPress coding standards (if installed)
 if command -v phpcs &> /dev/null; then
-    echo "11. Running WordPress coding standards check..."
+    echo "12. Running WordPress coding standards check..."
     phpcs --standard=WordPress --ignore=vendor .
 else
-    echo "11. Skipping WordPress coding standards (phpcs not installed)"
+    echo "12. Skipping WordPress coding standards (phpcs not installed)"
 fi
 
 echo "================================================"
