@@ -359,9 +359,9 @@
                 const select = document.getElementById('rtbcb-sample-select');
                 const sampleKey = select && select.value ? select.value.trim() : '';
                 if (sampleKey === '') {
-                    formData.append('action', 'rtbcb_generate_report_preview');
+                    formData.set('action', 'rtbcb_generate_report_preview');
                 } else {
-                    formData.append('action', 'rtbcb_generate_sample_report');
+                    formData.set('action', 'rtbcb_generate_sample_report');
                     formData.append('scenario_key', sampleKey);
                 }
                 const response = await fetch(rtbcbAdmin.ajax_url, { method: 'POST', body: formData });

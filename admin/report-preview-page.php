@@ -15,7 +15,8 @@ $sample_context     = $first_scenario['data'];
 ?>
 <div class="wrap rtbcb-admin-page">
     <h1><?php esc_html_e( 'Report Preview', 'rtbcb' ); ?></h1>
-    <form id="rtbcb-report-preview-form">
+    <form id="rtbcb-report-preview-form" method="post" action="<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>">
+        <input type="hidden" name="action" value="rtbcb_generate_report_preview" />
         <p>
             <label for="rtbcb-sample-select"><?php esc_html_e( 'Sample Scenarios', 'rtbcb' ); ?></label>
             <select id="rtbcb-sample-select" class="regular-text">
