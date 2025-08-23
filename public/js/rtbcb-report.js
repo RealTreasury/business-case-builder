@@ -2,8 +2,7 @@
  * Generate and display professional reports using OpenAI.
  */
 
-const RTBCB_GPT5_DEFAULTS = (typeof rtbcbReport !== 'undefined' && rtbcbReport.defaults) ? rtbcbReport.defaults : {
-    model: 'gpt-5-mini',
+const RTBCB_GPT5_DEFAULTS = {
     max_tokens: 4000,
     text: { verbosity: 'medium' },
     temperature: 0.7,
@@ -263,9 +262,13 @@ Ensure the report is:
 }
 
 async function generateProfessionalReport(businessContext) {
-    const cfg = RTBCB_GPT5_DEFAULTS;
+    const cfg = {
+        ...RTBCB_GPT5_DEFAULTS,
+        ...(typeof rtbcbReport !== 'undefined' ? rtbcbReport : {})
+    };
+    cfg.model = rtbcbReport.report_model;
     const requestBody = {
-        model: rtbcbReport.report_model || cfg.model,
+        model: cfg.model,
         input: [
             {
                 role: 'system',
