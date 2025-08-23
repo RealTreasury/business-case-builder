@@ -396,3 +396,20 @@ function rtbcb_test_generate_treasury_tech_overview( $focus_areas, $complexity )
     return $overview;
 }
 
+/**
+ * Test generating an industry overview using the LLM.
+ *
+ * @param string $industry     Industry name.
+ * @param string $company_size Company size description.
+ * @return string|WP_Error Overview text or error object.
+ */
+function rtbcb_test_generate_industry_overview( $industry, $company_size ) {
+    $industry     = sanitize_text_field( $industry );
+    $company_size = sanitize_text_field( $company_size );
+
+    $llm      = new RTBCB_LLM();
+    $overview = $llm->generate_industry_overview( $industry, $company_size );
+
+    return $overview;
+}
+
