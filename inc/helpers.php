@@ -527,19 +527,36 @@ function rtbcb_test_generate_treasury_tech_overview( $focus_areas, $complexity )
 }
 
 /**
- * Test generating an industry overview using the LLM.
+ * Test generating an industry overview using company data.
  *
- * @param string $industry     Industry name.
- * @param string $company_size Company size description.
+ * @param array $company_data Company information including industry, size,
+ *                            geography, and business model.
  * @return string|WP_Error Overview text or error object.
  */
-function rtbcb_test_generate_industry_overview( $industry, $company_size ) {
-    $industry     = sanitize_text_field( $industry );
-    $company_size = sanitize_text_field( $company_size );
+function rtbcb_test_generate_industry_overview( $company_data ) {
+    $company_data = is_array( $company_data ) ? $company_data : [];
+    $company_data = array_map( 'sanitize_text_field', $company_data );
+
+    $industry       = $company_data['industry'] ?? '';
+    $company_size   = $company_data['size'] ?? ( $company_data['company_size'] ?? '' );
+    $geography      = $company_data['geography'] ?? '';
+    $business_model = $company_data['business_model'] ?? '';
+
+    if ( empty( $industry ) || empty( $company_size ) ) {
+        return new WP_Error( 'missing_data', __( 'Industry and company size required.', 'rtbcb' ) );
+    }
+
+    $industry_context = $industry;
+    if ( ! empty( $geography ) ) {
+        $industry_context .= ' in ' . $geography;
+    }
+    if ( ! empty( $business_model ) ) {
+        $industry_context .= ' with a ' . $business_model . ' business model';
+    }
 
     try {
         $llm      = new RTBCB_LLM();
-        $overview = $llm->generate_industry_overview( $industry, $company_size );
+        $overview = $llm->generate_industry_overview( $industry_context, $company_size );
     } catch ( \Throwable $e ) {
         return new WP_Error( 'llm_exception', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
     }
