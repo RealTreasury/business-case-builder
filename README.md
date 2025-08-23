@@ -64,6 +64,17 @@ A comprehensive WordPress plugin that helps treasury teams quantify the benefits
    - **Premium Model**: `gpt-5` (for complex requests)
    - **Embedding Model**: `text-embedding-3-small` (for RAG)
 
+   **Minimum Output Tokens:** set `max_output_tokens` to at least `256` when using `gpt-5-mini`.
+
+   ```php
+   $client->chat()->create([
+       'model' => 'gpt-5-mini',
+       'max_output_tokens' => 256,
+   ]);
+   ```
+
+   The API tester uses this value to verify connectivity.
+
 #### Model Temperature Support
 
 | Model | Temperature Support |
