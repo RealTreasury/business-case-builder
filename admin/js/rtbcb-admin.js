@@ -1028,7 +1028,7 @@ function _arrayWithHoles(r) {
           loadSample.addEventListener('click', injectSample);
         }
       }
-    },
+    }
     generateReportPreview: function generateReportPreview(e) {
       try {
         var _exit9 = false;
