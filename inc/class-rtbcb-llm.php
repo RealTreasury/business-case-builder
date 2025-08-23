@@ -13,6 +13,13 @@ class RTBCB_LLM {
     private $current_inputs = [];
     private $gpt5_config;
 
+    /**
+     * Default system prompt for OpenAI conversations.
+     *
+     * @var string
+     */
+    private $default_system_prompt = 'You are a senior treasury technology consultant. Provide detailed, research-driven analysis in the exact JSON format requested. Do not include any text outside the JSON structure.';
+
     public function __construct() {
         $this->api_key = get_option( 'rtbcb_openai_api_key' );
         $this->models  = [
@@ -81,13 +88,20 @@ class RTBCB_LLM {
             $prompt .= '\nContext: ' . implode( '\n', array_map( 'sanitize_text_field', $context_chunks ) );
         }
 
-        $response = $this->call_openai_with_retry( $selected_model, $prompt );
+        $conversation   = [];
+        $conversation[] = [
+            'role'    => 'user',
+            'content' => $prompt,
+        ];
+
+        $response = $this->call_openai_with_retry( $selected_model, $conversation );
 
         if ( is_wp_error( $response ) ) {
             return new WP_Error( 'llm_failure', __( 'Unable to generate analysis at this time.', 'rtbcb' ) );
         }
 
-        $parsed = rtbcb_parse_gpt5_response( $response );
+        $parsed       = rtbcb_parse_gpt5_response( $response );
+        $conversation = array_merge( $conversation, $parsed['raw']['output'] ?? [] );
         $json   = json_decode( $parsed['output_text'], true );
 
         if ( ! is_array( $json ) ) {
@@ -133,14 +147,21 @@ class RTBCB_LLM {
         $model  = $this->models['mini'] ?? 'gpt-4o-mini';
         $prompt = 'Provide a brief treasury industry commentary for the ' . $industry . ' industry in two sentences.';
 
-        $response = $this->call_openai_with_retry( $model, $prompt );
+        $conversation   = [];
+        $conversation[] = [
+            'role'    => 'user',
+            'content' => $prompt,
+        ];
+
+        $response = $this->call_openai_with_retry( $model, $conversation );
 
         if ( is_wp_error( $response ) ) {
             return new WP_Error( 'llm_failure', __( 'Unable to generate commentary at this time.', 'rtbcb' ) );
         }
 
-        $parsed     = rtbcb_parse_gpt5_response( $response );
-        $commentary = sanitize_textarea_field( $parsed['output_text'] );
+        $parsed       = rtbcb_parse_gpt5_response( $response );
+        $conversation = array_merge( $conversation, $parsed['raw']['output'] ?? [] );
+        $commentary   = sanitize_textarea_field( $parsed['output_text'] );
 
         if ( empty( $commentary ) ) {
             return new WP_Error( 'llm_empty_response', __( 'No commentary returned.', 'rtbcb' ) );
@@ -165,14 +186,21 @@ class RTBCB_LLM {
         $model  = $this->models['mini'] ?? 'gpt-4o-mini';
         $prompt = 'Provide a concise company overview covering background, recent news, company size, financial highlights, treasury challenges or opportunities, and market position for ' . $company_name . '.';
 
-        $response = $this->call_openai_with_retry( $model, $prompt );
+        $conversation   = [];
+        $conversation[] = [
+            'role'    => 'user',
+            'content' => $prompt,
+        ];
+
+        $response = $this->call_openai_with_retry( $model, $conversation );
 
         if ( is_wp_error( $response ) ) {
             return new WP_Error( 'llm_failure', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
         }
 
-        $parsed   = rtbcb_parse_gpt5_response( $response );
-        $overview = sanitize_textarea_field( $parsed['output_text'] );
+        $parsed       = rtbcb_parse_gpt5_response( $response );
+        $conversation = array_merge( $conversation, $parsed['raw']['output'] ?? [] );
+        $overview     = sanitize_textarea_field( $parsed['output_text'] );
 
         if ( empty( $overview ) ) {
             return new WP_Error( 'llm_empty_response', __( 'No overview returned.', 'rtbcb' ) );
@@ -204,14 +232,21 @@ class RTBCB_LLM {
         $prompt = 'Provide an industry overview for ' . $industry . ' companies of size ' . $company_size .
             '. Cover treasury challenges, key regulations, seasonal patterns, industry benchmarks, common pain points, and opportunities.';
 
-        $response = $this->call_openai_with_retry( $model, $prompt );
+        $conversation   = [];
+        $conversation[] = [
+            'role'    => 'user',
+            'content' => $prompt,
+        ];
+
+        $response = $this->call_openai_with_retry( $model, $conversation );
 
         if ( is_wp_error( $response ) ) {
             return new WP_Error( 'llm_failure', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
         }
 
-        $parsed   = rtbcb_parse_gpt5_response( $response );
-        $overview = sanitize_textarea_field( $parsed['output_text'] );
+        $parsed       = rtbcb_parse_gpt5_response( $response );
+        $conversation = array_merge( $conversation, $parsed['raw']['output'] ?? [] );
+        $overview     = sanitize_textarea_field( $parsed['output_text'] );
 
         if ( empty( $overview ) ) {
             return new WP_Error( 'llm_empty_response', __( 'No overview returned.', 'rtbcb' ) );
@@ -246,14 +281,21 @@ class RTBCB_LLM {
         $model      = $this->models['mini'] ?? 'gpt-4o-mini';
         $prompt     = 'Provide a treasury technology overview for ' . $name . '. Company size: ' . $size . '. Complexity: ' . $complexity . '. Focus on: ' . $areas_list . '. Include current landscape, emerging trends, technology gaps, key vendor or solution comparisons, implementation considerations, and adoption trends.';
 
-        $response = $this->call_openai_with_retry( $model, $prompt );
+        $conversation   = [];
+        $conversation[] = [
+            'role'    => 'user',
+            'content' => $prompt,
+        ];
+
+        $response = $this->call_openai_with_retry( $model, $conversation );
 
         if ( is_wp_error( $response ) ) {
             return new WP_Error( 'llm_failure', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
         }
 
-        $parsed   = rtbcb_parse_gpt5_response( $response );
-        $overview = sanitize_textarea_field( $parsed['output_text'] );
+        $parsed       = rtbcb_parse_gpt5_response( $response );
+        $conversation = array_merge( $conversation, $parsed['raw']['output'] ?? [] );
+        $overview     = sanitize_textarea_field( $parsed['output_text'] );
 
         if ( empty( $overview ) ) {
             return new WP_Error( 'llm_empty_response', __( 'No overview returned.', 'rtbcb' ) );
@@ -304,14 +346,21 @@ class RTBCB_LLM {
 
         $prompt .= ' Provide sections for platform capabilities, portal integration benefits, vendor ecosystem overview, Real Treasury differentiators, implementation approach, and support/community aspects.';
 
-        $response = $this->call_openai_with_retry( $model, $prompt );
+        $conversation   = [];
+        $conversation[] = [
+            'role'    => 'user',
+            'content' => $prompt,
+        ];
+
+        $response = $this->call_openai_with_retry( $model, $conversation );
 
         if ( is_wp_error( $response ) ) {
             return new WP_Error( 'llm_failure', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
         }
 
-        $parsed   = rtbcb_parse_gpt5_response( $response );
-        $overview = sanitize_textarea_field( $parsed['output_text'] );
+        $parsed       = rtbcb_parse_gpt5_response( $response );
+        $conversation = array_merge( $conversation, $parsed['raw']['output'] ?? [] );
+        $overview     = sanitize_textarea_field( $parsed['output_text'] );
 
         if ( empty( $overview ) ) {
             return new WP_Error( 'llm_empty_response', __( 'No overview returned.', 'rtbcb' ) );
@@ -341,13 +390,20 @@ class RTBCB_LLM {
         $model  = $this->models['mini'] ?? 'gpt-4o-mini';
         $prompt = 'Return a JSON object with keys "roadmap" and "success_factors" describing the implementation roadmap and key success factors for adopting a ' . $info['name'] . ' solution.';
 
-        $response = $this->call_openai_with_retry( $model, $prompt );
+        $conversation   = [];
+        $conversation[] = [
+            'role'    => 'user',
+            'content' => $prompt,
+        ];
+
+        $response = $this->call_openai_with_retry( $model, $conversation );
 
         if ( is_wp_error( $response ) ) {
             return new WP_Error( 'llm_failure', __( 'Unable to generate recommendation details at this time.', 'rtbcb' ) );
         }
 
         $parsed_response = rtbcb_parse_gpt5_response( $response );
+        $conversation    = array_merge( $conversation, $parsed_response['raw']['output'] ?? [] );
         $parsed          = json_decode( $parsed_response['output_text'], true );
 
         if ( empty( $parsed ) || ! is_array( $parsed ) ) {
@@ -386,13 +442,20 @@ class RTBCB_LLM {
             . $category . ' solution. Revenue: ' . $revenue . ', Staff: ' . $staff_count . ', '
             . 'Efficiency: ' . $efficiency . '.';
 
-        $response = $this->call_openai_with_retry( $model, $prompt );
+        $conversation   = [];
+        $conversation[] = [
+            'role'    => 'user',
+            'content' => $prompt,
+        ];
+
+        $response = $this->call_openai_with_retry( $model, $conversation );
 
         if ( is_wp_error( $response ) ) {
             return new WP_Error( 'llm_failure', __( 'Unable to generate benefits estimate at this time.', 'rtbcb' ) );
         }
 
         $parsed_response = rtbcb_parse_gpt5_response( $response );
+        $conversation    = array_merge( $conversation, $parsed_response['raw']['output'] ?? [] );
         $parsed          = json_decode( $parsed_response['output_text'], true );
 
         if ( empty( $parsed ) || ! is_array( $parsed ) ) {
@@ -456,13 +519,21 @@ class RTBCB_LLM {
             $tech_landscape
         );
         
-        $response = $this->call_openai_with_retry( $model, $prompt );
+        $conversation   = [];
+        $conversation[] = [
+            'role'    => 'user',
+            'content' => $prompt,
+        ];
+
+        $response = $this->call_openai_with_retry( $model, $conversation );
 
         if ( is_wp_error( $response ) ) {
             return $response;
         }
 
-        $parsed = $this->parse_comprehensive_response( $response );
+        $parsed_response = rtbcb_parse_gpt5_response( $response );
+        $conversation    = array_merge( $conversation, $parsed_response['raw']['output'] ?? [] );
+        $parsed          = $this->parse_comprehensive_response( $response );
 
         if ( is_wp_error( $parsed ) ) {
             return $parsed;
@@ -716,12 +787,19 @@ class RTBCB_LLM {
         $model  = $this->models['mini'] ?? 'gpt-4o-mini';
         $prompt = 'Provide sector_trends, competitive_benchmarks, and regulatory_considerations for the ' . $industry . ' industry in JSON.';
 
-        $response = $this->call_openai_with_retry( $model, $prompt );
+        $conversation   = [];
+        $conversation[] = [
+            'role'    => 'user',
+            'content' => $prompt,
+        ];
+
+        $response = $this->call_openai_with_retry( $model, $conversation );
         if ( is_wp_error( $response ) ) {
             return $response;
         }
 
         $parsed_response = rtbcb_parse_gpt5_response( $response );
+        $conversation    = array_merge( $conversation, $parsed_response['raw']['output'] ?? [] );
         $json            = json_decode( $parsed_response['output_text'], true );
 
         if ( ! is_array( $json ) ) {
@@ -757,13 +835,20 @@ class RTBCB_LLM {
             $prompt .= '\nContext: ' . implode( '\n', array_map( 'sanitize_text_field', $context_chunks ) );
         }
 
-        $response = $this->call_openai_with_retry( $model, $prompt );
+        $conversation   = [];
+        $conversation[] = [
+            'role'    => 'user',
+            'content' => $prompt,
+        ];
+
+        $response = $this->call_openai_with_retry( $model, $conversation );
         if ( is_wp_error( $response ) ) {
             return $response;
         }
 
-        $parsed  = rtbcb_parse_gpt5_response( $response );
-        $summary = sanitize_textarea_field( $parsed['output_text'] );
+        $parsed       = rtbcb_parse_gpt5_response( $response );
+        $conversation = array_merge( $conversation, $parsed['raw']['output'] ?? [] );
+        $summary      = sanitize_textarea_field( $parsed['output_text'] );
 
         if ( empty( $summary ) ) {
             return new WP_Error( 'llm_empty_response', __( 'No technology research returned.', 'rtbcb' ) );
@@ -951,13 +1036,68 @@ class RTBCB_LLM {
     }
 
     /**
-     * Call OpenAI with retry logic.
+     * Build conversation context for the OpenAI Responses API.
+     *
+     * Converts a simplified history array into the structured format expected
+     * by the API and optionally prepends a system prompt.
+     *
+     * @param array       $history       Conversation history items.
+     * @param string|null $system_prompt Optional system prompt.
+     * @return array Formatted context array.
      */
-    private function call_openai_with_retry( $model, $prompt, $max_retries = null ) {
+    public function build_context_for_responses( $history, $system_prompt = null ) {
+        $context = [];
+
+        if ( null !== $system_prompt ) {
+            $context[] = [
+                'role'    => 'system',
+                'content' => [
+                    [
+                        'type' => 'text',
+                        'text' => sanitize_text_field( $system_prompt ),
+                    ],
+                ],
+            ];
+        }
+
+        foreach ( (array) $history as $item ) {
+            if ( empty( $item['role'] ) || ! isset( $item['content'] ) ) {
+                continue;
+            }
+
+            if ( is_string( $item['content'] ) ) {
+                $context[] = [
+                    'role'    => sanitize_text_field( $item['role'] ),
+                    'content' => [
+                        [
+                            'type' => 'text',
+                            'text' => sanitize_textarea_field( $item['content'] ),
+                        ],
+                    ],
+                ];
+                continue;
+            }
+
+            $context[] = $item; // Assume already formatted (e.g., previous response output).
+        }
+
+        return $context;
+    }
+
+    /**
+     * Call OpenAI with retry logic.
+     *
+     * @param string      $model         Model name.
+     * @param array       $history       Conversation history.
+     * @param string|null $system_prompt Optional system prompt.
+     * @param int|null    $max_retries   Maximum retry attempts.
+     * @return array|WP_Error Response or error object.
+     */
+    private function call_openai_with_retry( $model, $history, $system_prompt = null, $max_retries = null ) {
         $max_retries = $max_retries ?? intval( $this->gpt5_config['max_retries'] );
 
         for ( $attempt = 1; $attempt <= $max_retries; $attempt++ ) {
-            $response = $this->call_openai( $model, $prompt );
+            $response = $this->call_openai( $model, $history, $system_prompt );
 
             if ( ! is_wp_error( $response ) ) {
                 return $response;
@@ -976,12 +1116,13 @@ class RTBCB_LLM {
     /**
      * Enhanced OpenAI call with better error handling.
      *
-     * @param string $model  Model name.
-     * @param string $prompt Prompt text.
-     * @param int    $max_tokens Optional max tokens.
+     * @param string      $model         Model name.
+     * @param array       $history       Conversation history items.
+     * @param string|null $system_prompt Optional system prompt.
+     * @param int         $max_tokens    Optional max tokens.
      * @return array|WP_Error Response array or error object.
      */
-    private function call_openai( $model, $prompt, $max_tokens = null ) {
+    private function call_openai( $model, $history, $system_prompt = null, $max_tokens = null ) {
         if ( empty( $this->api_key ) ) {
             return new WP_Error( 'no_api_key', 'OpenAI API key not configured' );
         }
@@ -989,18 +1130,10 @@ class RTBCB_LLM {
         $endpoint   = 'https://api.openai.com/v1/responses';
         $model_name = sanitize_text_field( $model ?: ( $this->gpt5_config['model'] ?? '' ) );
         $max_tokens = $max_tokens ?? intval( $this->gpt5_config['max_tokens'] );
+        $context    = $this->build_context_for_responses( $history, $system_prompt ?? $this->default_system_prompt );
         $body       = [
             'model'      => $model_name,
-            'input'      => [
-                [
-                    'role'    => 'system',
-                    'content' => 'You are a senior treasury technology consultant. Provide detailed, research-driven analysis in the exact JSON format requested. Do not include any text outside the JSON structure.'
-                ],
-                [
-                    'role'    => 'user',
-                    'content' => $prompt
-                ],
-            ],
+            'input'      => $context,
             'max_tokens' => $max_tokens,
             'reasoning'  => $this->gpt5_config['reasoning'],
             'text'       => $this->gpt5_config['text'],
@@ -1023,13 +1156,13 @@ class RTBCB_LLM {
             $response = wp_remote_post( $endpoint, $args );
         } catch ( \Throwable $e ) {
             error_log( 'RTBCB: HTTP request exception: ' . $e->getMessage() );
-            $this->log_gpt5_call( $prompt, [], $e->getMessage() );
+            $this->log_gpt5_call( wp_json_encode( $context ), [], $e->getMessage() );
             return new WP_Error( 'openai_http_exception', __( 'Unable to contact OpenAI service.', 'rtbcb' ) );
         }
 
         if ( is_wp_error( $response ) ) {
             error_log( 'RTBCB: HTTP request failed: ' . $response->get_error_message() );
-            $this->log_gpt5_call( $prompt, [], $response->get_error_message() );
+            $this->log_gpt5_call( wp_json_encode( $context ), [], $response->get_error_message() );
             return $response;
         }
 
@@ -1042,7 +1175,7 @@ class RTBCB_LLM {
             $error_data    = json_decode( $response_body, true );
             $error_message = $error_data['error']['message'] ?? 'Unknown API error';
             error_log( 'RTBCB: OpenAI API error: ' . $error_message );
-            $this->log_gpt5_call( $prompt, (array) $error_data, $error_message );
+            $this->log_gpt5_call( wp_json_encode( $context ), (array) $error_data, $error_message );
             return new WP_Error( 'openai_api_error', $error_message );
         }
 
@@ -1059,16 +1192,16 @@ class RTBCB_LLM {
 
         if ( empty( $content ) ) {
             error_log( 'RTBCB: Empty content received from OpenAI.' );
-            $this->log_gpt5_call( $prompt, $decoded, 'Empty content received from OpenAI' );
+            $this->log_gpt5_call( wp_json_encode( $context ), $decoded, 'Empty content received from OpenAI' );
             if ( $max_tokens > 1000 ) {
                 error_log( 'RTBCB: Retrying with lower max_tokens.' );
-                return $this->call_openai( $model, $prompt, 1000 );
+                return $this->call_openai( $model, $history, $system_prompt, 1000 );
             }
 
             return new WP_Error( 'openai_empty_response', __( 'OpenAI returned an empty response.', 'rtbcb' ) );
         }
 
-        $this->log_gpt5_call( $prompt, $decoded );
+        $this->log_gpt5_call( wp_json_encode( $context ), $decoded );
 
         return $response;
     }
