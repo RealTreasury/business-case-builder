@@ -107,7 +107,8 @@
                             }
                         }
                     } else {
-                        alert(data.data?.message || rtbcbAdmin.strings.error);
+                        const message = data.data && data.data.message ? data.data.message : rtbcbAdmin.strings.error;
+                        alert(message);
                     }
                 } catch (err) {
                     alert(`${rtbcbAdmin.strings.error} ${err.message}`);
@@ -140,10 +141,10 @@
                     }
                     const data = await response.json();
                     if (data.success) {
-                        const text = data.data?.overview || '';
+                        const text = data.data && data.data.overview ? data.data.overview : '';
                         results.html(RTBCBAdmin.utils.buildResult(text, start, form, data.data));
                     } else {
-                        const message = data.data?.message || rtbcbAdmin.strings.error;
+                        const message = data.data && data.data.message ? data.data.message : rtbcbAdmin.strings.error;
                         results.html('<div class="notice notice-error"><p>' + message + '</p></div>');
                     }
                 } catch (err) {
@@ -185,10 +186,10 @@
                     }
                     const data = await response.json();
                     if (data.success) {
-                        const text = data.data?.overview || '';
+                        const text = data.data && data.data.overview ? data.data.overview : '';
                         results.html(RTBCBAdmin.utils.buildResult(text, start, form, data.data));
                     } else {
-                        const message = data.data?.message || rtbcbAdmin.strings.error;
+                        const message = data.data && data.data.message ? data.data.message : rtbcbAdmin.strings.error;
                         results.html('<div class="notice notice-error"><p>' + message + '</p></div>');
                     }
                 } catch (err) {
@@ -223,7 +224,7 @@
                         if (response && response.success) {
                             results.text(JSON.stringify(response.data.estimate || response.data));
                         } else {
-                            const message = response?.data?.message || rtbcbAdmin.strings.error;
+                            const message = (response && response.data && response.data.message) ? response.data.message : rtbcbAdmin.strings.error;
                             results.text(message);
                         }
                     })
@@ -306,7 +307,8 @@
                     throw new Error(`Server responded ${response.status}`);
                 }
                 const data = await response.json();
-                alert(data.success ? 'API connection successful!' : (rtbcbAdmin.strings.error + (data.data?.message || '')));
+                const errMsg = data.data && data.data.message ? data.data.message : '';
+                alert(data.success ? 'API connection successful!' : (rtbcbAdmin.strings.error + errMsg));
             } catch (err) {
                 alert(`${rtbcbAdmin.strings.error} ${err.message}`);
             }
@@ -335,7 +337,8 @@
                     alert('RAG index rebuilt successfully');
                     location.reload();
                 } else {
-                    alert(data.data?.message || rtbcbAdmin.strings.error);
+                    const message = data.data && data.data.message ? data.data.message : rtbcbAdmin.strings.error;
+                    alert(message);
                 }
             } catch (err) {
                 alert(`${rtbcbAdmin.strings.error} ${err.message}`);
@@ -380,7 +383,8 @@
                     document.body.removeChild(a);
                     URL.revokeObjectURL(url);
                 } else {
-                    alert(data.data?.message || rtbcbAdmin.strings.error);
+                    const message = data.data && data.data.message ? data.data.message : rtbcbAdmin.strings.error;
+                    alert(message);
                 }
             } catch(err) {
                 alert(`${rtbcbAdmin.strings.error} ${err.message}`);
@@ -415,7 +419,8 @@
                     alert(message);
                     console.log('Diagnostics results:', data.data);
                 } else {
-                    alert(data.data?.message || rtbcbAdmin.strings.error);
+                    const message = data.data && data.data.message ? data.data.message : rtbcbAdmin.strings.error;
+                    alert(message);
                 }
             } catch (err) {
                 console.error('Diagnostics error:', err);
@@ -441,7 +446,8 @@
                     throw new Error(`Server responded ${response.status}`);
                 }
                 const data = await response.json();
-                alert(data.data?.message || rtbcbAdmin.strings.error);
+                const message = data.data && data.data.message ? data.data.message : rtbcbAdmin.strings.error;
+                alert(message);
             } catch (err) {
                 alert(`${rtbcbAdmin.strings.error} ${err.message}`);
             }
@@ -459,7 +465,10 @@
             const form = document.getElementById('rtbcb-report-preview-form');
             if (!form) { return; }
             form.addEventListener('submit', this.generateReportPreview.bind(this));
-            document.getElementById('rtbcb-download-pdf')?.addEventListener('click', this.downloadReportPDF.bind(this));
+            const downloadBtn = document.getElementById('rtbcb-download-pdf');
+            if (downloadBtn) {
+                downloadBtn.addEventListener('click', this.downloadReportPDF.bind(this));
+            }
             const select = document.getElementById('rtbcb-sample-select');
             if (select) {
                 const injectSample = () => {
@@ -470,7 +479,10 @@
                     }
                 };
                 select.addEventListener('change', injectSample);
-                document.getElementById('rtbcb-load-sample')?.addEventListener('click', injectSample);
+                const loadSample = document.getElementById('rtbcb-load-sample');
+                if (loadSample) {
+                    loadSample.addEventListener('click', injectSample);
+                }
             }
         },
 
@@ -505,7 +517,8 @@
                     if (iframe) { iframe.srcdoc = data.data.html || data.data.report_html; }
                     document.getElementById('rtbcb-download-pdf').style.display = 'inline-block';
                 } else {
-                    alert(data.data?.message || rtbcbAdmin.strings.error);
+                    const message = data.data && data.data.message ? data.data.message : rtbcbAdmin.strings.error;
+                    alert(message);
                 }
             } catch(err) {
                 alert(`${rtbcbAdmin.strings.error} ${err.message}`);
@@ -529,7 +542,7 @@
             try {
                 const formData = new FormData();
                 const nonceField = document.getElementById('nonce');
-                const nonce = nonceField ? nonceField.value : (rtbcbAdmin?.report_preview_nonce || '');
+                const nonce = nonceField ? nonceField.value : ((rtbcbAdmin && rtbcbAdmin.report_preview_nonce) ? rtbcbAdmin.report_preview_nonce : '');
                 formData.append('action', 'rtbcb_generate_sample_report');
                 formData.append('nonce', nonce);
                 const response = await fetch(rtbcbAdmin.ajax_url, { method: 'POST', body: formData });
@@ -545,7 +558,8 @@
                     const iframe = document.getElementById('rtbcb-sample-report-frame');
                     if (iframe) { iframe.srcdoc = data.data.report_html; }
                 } else {
-                    alert(data.data?.message || rtbcbAdmin.strings.error);
+                    const message = data.data && data.data.message ? data.data.message : rtbcbAdmin.strings.error;
+                    alert(message);
                 }
             } catch(err) {
                 alert(`${rtbcbAdmin.strings.error} ${err.message}`);
@@ -594,10 +608,16 @@
             document.querySelectorAll('.rtbcb-delete-lead').forEach(btn => {
                 btn.addEventListener('click', this.deleteLead.bind(this));
             });
-            document.querySelector('.rtbcb-modal-close')?.addEventListener('click', RTBCBAdmin.closeModal.bind(RTBCBAdmin));
-            document.getElementById('rtbcb-lead-modal')?.addEventListener('click', (e)=>{
-                if (e.target.id === 'rtbcb-lead-modal') { RTBCBAdmin.closeModal(); }
-            });
+            const modalClose = document.querySelector('.rtbcb-modal-close');
+            if (modalClose) {
+                modalClose.addEventListener('click', RTBCBAdmin.closeModal.bind(RTBCBAdmin));
+            }
+            const leadModal = document.getElementById('rtbcb-lead-modal');
+            if (leadModal) {
+                leadModal.addEventListener('click', function(e){
+                    if (e.target.id === 'rtbcb-lead-modal') { RTBCBAdmin.closeModal(); }
+                });
+            }
         }
 
         toggleSelectAll(e) {
@@ -644,7 +664,8 @@
                 if (data.success) {
                     location.reload();
                 } else {
-                    alert(data.data?.message || rtbcbAdmin.strings.error);
+                    const message = data.data && data.data.message ? data.data.message : rtbcbAdmin.strings.error;
+                    alert(message);
                 }
             } catch(err){
                 alert(`${rtbcbAdmin.strings.error} ${err.message}`);
@@ -689,7 +710,8 @@
                     e.currentTarget.closest('tr').remove();
                     this.updateBulkActionButton();
                 } else {
-                    alert(data.data?.message || rtbcbAdmin.strings.error);
+                    const message = data.data && data.data.message ? data.data.message : rtbcbAdmin.strings.error;
+                    alert(message);
                 }
             } catch(err){
                 alert(`${rtbcbAdmin.strings.error} ${err.message}`);
