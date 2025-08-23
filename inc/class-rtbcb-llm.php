@@ -178,6 +178,47 @@ class RTBCB_LLM {
     }
 
     /**
+     * Generate an industry overview.
+     *
+     * @param string $industry     Industry name.
+     * @param string $company_size Company size description.
+     * @return string|WP_Error Overview text or error object.
+     */
+    public function generate_industry_overview( $industry, $company_size ) {
+        $industry     = sanitize_text_field( $industry );
+        $company_size = sanitize_text_field( $company_size );
+
+        if ( empty( $industry ) || empty( $company_size ) ) {
+            return new WP_Error( 'invalid_params', __( 'Industry and company size required.', 'rtbcb' ) );
+        }
+
+        if ( empty( $this->api_key ) ) {
+            return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
+        }
+
+        $model  = $this->models['mini'] ?? 'gpt-4o-mini';
+        $prompt = 'Provide an industry overview for ' . $industry . ' companies of size ' . $company_size .
+            '. Cover treasury challenges, key regulations, seasonal patterns, industry benchmarks, common pain points, and opportunities.';
+
+        $response = $this->call_openai_with_retry( $model, $prompt );
+
+        if ( is_wp_error( $response ) ) {
+            return new WP_Error( 'llm_failure', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
+        }
+
+        $body     = wp_remote_retrieve_body( $response );
+        $decoded  = json_decode( $body, true );
+        $content  = $decoded['choices'][0]['message']['content'] ?? '';
+        $overview = sanitize_textarea_field( $content );
+
+        if ( empty( $overview ) ) {
+            return new WP_Error( 'llm_empty_response', __( 'No overview returned.', 'rtbcb' ) );
+        }
+
+        return $overview;
+    }
+
+    /**
      * Generate a treasury technology overview.
      *
      * @param array  $focus_areas Focus areas.
