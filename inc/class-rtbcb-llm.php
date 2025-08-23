@@ -1106,7 +1106,8 @@ class RTBCB_LLM {
         $endpoint   = 'https://api.openai.com/v1/responses';
         $model_name = sanitize_text_field( $model ?: ( $this->gpt5_config['model'] ?? '' ) );
         $max_output_tokens = $max_output_tokens ?? intval( $this->gpt5_config['max_output_tokens'] );
-        $max_output_tokens = max( 16, intval( $max_output_tokens ) );
+        // gpt-5-mini requires a minimum of 256 output tokens.
+        $max_output_tokens = max( 256, intval( $max_output_tokens ) );
 
         if ( is_array( $prompt ) && isset( $prompt['input'] ) ) {
             $instructions = function_exists( 'sanitize_textarea_field' ) ? sanitize_textarea_field( $prompt['instructions'] ?? '' ) : ( $prompt['instructions'] ?? '' );
