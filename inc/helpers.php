@@ -396,3 +396,24 @@ function rtbcb_test_generate_treasury_tech_overview( $focus_areas, $complexity )
     return $overview;
 }
 
+/**
+ * Test generating a benefits estimate using the LLM.
+ *
+ * @param float  $revenue     Annual revenue.
+ * @param int    $staff_count Treasury staff count.
+ * @param float  $efficiency  Current efficiency percentage.
+ * @param string $category    Treasury technology category.
+ * @return array|WP_Error Structured benefits estimate or error object.
+ */
+function rtbcb_test_generate_benefits_estimate( $revenue, $staff_count, $efficiency, $category ) {
+    $revenue    = floatval( $revenue );
+    $staff_count = intval( $staff_count );
+    $efficiency = floatval( $efficiency );
+    $category   = sanitize_text_field( $category );
+
+    $llm      = new RTBCB_LLM();
+    $estimate = $llm->generate_benefits_estimate( $revenue, $staff_count, $efficiency, $category );
+
+    return $estimate;
+}
+
