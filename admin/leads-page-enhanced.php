@@ -12,6 +12,8 @@ $current_page = $leads_data['current_page'] ?? 1;
 $total_pages = $leads_data['total_pages'] ?? 1;
 $total_leads = $leads_data['total'] ?? 0;
 $leads = $leads_data['leads'] ?? [];
+$orderby = isset( $orderby ) ? sanitize_key( $orderby ) : 'created_at';
+$order   = isset( $order ) ? sanitize_key( $order ) : 'DESC';
 ?>
 
 <div class="wrap rtbcb-admin-page">
@@ -90,9 +92,9 @@ $leads = $leads_data['leads'] ?? [];
                             <input type="checkbox" id="rtbcb-select-all" />
                         </td>
                         <th class="manage-column column-email column-primary">
-                            <a href="<?php echo esc_url( add_query_arg( [ 'orderby' => 'email', 'order' => ( $_GET['orderby'] ?? '' ) === 'email' && ( $_GET['order'] ?? '' ) === 'ASC' ? 'DESC' : 'ASC' ] ) ); ?>">
+                            <a href="<?php echo esc_url( add_query_arg( [ 'orderby' => 'email', 'order' => ( 'email' === $orderby && 'ASC' === strtoupper( $order ) ) ? 'DESC' : 'ASC' ] ) ); ?>">
                                 <?php esc_html_e( 'Email', 'rtbcb' ); ?>
-                                <?php if ( ( $_GET['orderby'] ?? '' ) === 'email' ) : ?>
+                                <?php if ( 'email' === $orderby ) : ?>
                                     <span class="sorting-indicator"></span>
                                 <?php endif; ?>
                             </a>
@@ -101,9 +103,9 @@ $leads = $leads_data['leads'] ?? [];
                         <th class="manage-column column-category"><?php esc_html_e( 'Recommended Category', 'rtbcb' ); ?></th>
                         <th class="manage-column column-roi"><?php esc_html_e( 'Base ROI', 'rtbcb' ); ?></th>
                         <th class="manage-column column-date">
-                            <a href="<?php echo esc_url( add_query_arg( [ 'orderby' => 'created_at', 'order' => ( $_GET['orderby'] ?? '' ) === 'created_at' && ( $_GET['order'] ?? '' ) === 'ASC' ? 'DESC' : 'ASC' ] ) ); ?>">
+                            <a href="<?php echo esc_url( add_query_arg( [ 'orderby' => 'created_at', 'order' => ( 'created_at' === $orderby && 'ASC' === strtoupper( $order ) ) ? 'DESC' : 'ASC' ] ) ); ?>">
                                 <?php esc_html_e( 'Date', 'rtbcb' ); ?>
-                                <?php if ( ( $_GET['orderby'] ?? '' ) === 'created_at' || empty( $_GET['orderby'] ) ) : ?>
+                                <?php if ( 'created_at' === $orderby ) : ?>
                                     <span class="sorting-indicator"></span>
                                 <?php endif; ?>
                             </a>
