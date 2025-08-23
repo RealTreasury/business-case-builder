@@ -38,6 +38,7 @@ class RTBCB_Admin {
         add_action( 'wp_ajax_rtbcb_test_company_overview', [ $this, 'ajax_test_company_overview' ] );
         add_action( 'wp_ajax_rtbcb_test_treasury_tech_overview', [ $this, 'ajax_test_treasury_tech_overview' ] );
         add_action( 'wp_ajax_rtbcb_test_industry_overview', [ $this, 'ajax_test_industry_overview' ] );
+        add_action( 'wp_ajax_rtbcb_generate_complete_report', [ $this, 'ajax_generate_complete_report' ] );
     }
 
     /**
@@ -99,6 +100,30 @@ class RTBCB_Admin {
             'rtbcbAdmin.sampleForms = ' . wp_json_encode( $rtbcb_sample_data ) . ';',
             'after'
         );
+
+        if ( 'rtbcb-report-test' === $page ) {
+            wp_enqueue_script(
+                'rtbcb-report-test',
+                RTBCB_URL . 'admin/js/report-test.js',
+                [ 'jquery', 'rtbcb-admin' ],
+                RTBCB_VERSION,
+                true
+            );
+            wp_localize_script(
+                'rtbcb-report-test',
+                'rtbcbReportTest',
+                [
+                    'ajax_url' => admin_url( 'admin-ajax.php' ),
+                    'nonce'    => wp_create_nonce( 'rtbcb_generate_complete_report' ),
+                    'strings'  => [
+                        'generating' => __( 'Generating...', 'rtbcb' ),
+                        'error'      => __( 'An error occurred. Please try again.', 'rtbcb' ),
+                        'retry'      => __( 'Retry', 'rtbcb' ),
+                        'missing_company' => __( 'Please enter a company name.', 'rtbcb' ),
+                    ],
+                ]
+            );
+        }
     }
 
     /**
@@ -773,6 +798,57 @@ class RTBCB_Admin {
             $html = wp_kses( $html, $allowed_tags );
 
             wp_send_json_success( [ 'html' => $html ] );
+        } catch ( RTBCB_JSON_Response $e ) {
+            throw $e;
+        } catch ( \Throwable $e ) {
+            wp_send_json_error( [ 'message' => $e->getMessage() ], 500 );
+        }
+    }
+
+    /**
+     * AJAX handler to generate a complete report.
+     *
+     * @return void
+     */
+    public function ajax_generate_complete_report() {
+        check_ajax_referer( 'rtbcb_generate_complete_report', 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( __( 'Permission denied.', 'rtbcb' ), 403 );
+        }
+
+        $company_name = isset( $_POST['company_name'] ) ? sanitize_text_field( wp_unslash( $_POST['company_name'] ) ) : '';
+        $focus_raw    = isset( $_POST['focus_areas'] ) ? wp_unslash( $_POST['focus_areas'] ) : '';
+        $focus_areas  = [];
+        if ( is_array( $focus_raw ) ) {
+            $focus_areas = array_map( 'sanitize_text_field', $focus_raw );
+        } elseif ( is_string( $focus_raw ) && ! empty( $focus_raw ) ) {
+            $focus_areas = array_filter( array_map( 'sanitize_text_field', explode( ',', $focus_raw ) ) );
+        }
+        $complexity = isset( $_POST['complexity'] ) ? sanitize_text_field( wp_unslash( $_POST['complexity'] ) ) : '';
+        $roi_raw    = isset( $_POST['roi_inputs'] ) ? wp_unslash( $_POST['roi_inputs'] ) : '';
+        $roi_inputs = [];
+        if ( ! empty( $roi_raw ) ) {
+            $decoded = json_decode( $roi_raw, true );
+            if ( is_array( $decoded ) ) {
+                $roi_inputs = rtbcb_sanitize_form_data( $decoded );
+            }
+        }
+
+        if ( empty( $company_name ) ) {
+            wp_send_json_error( [ 'message' => __( 'Please enter a company name.', 'rtbcb' ) ] );
+        }
+
+        $inputs = [
+            'company_name' => $company_name,
+            'focus_areas'  => $focus_areas,
+            'complexity'   => $complexity,
+            'roi_inputs'   => $roi_inputs,
+        ];
+
+        try {
+            $report = rtbcb_test_generate_complete_report( $inputs );
+            wp_send_json_success( $report );
         } catch ( RTBCB_JSON_Response $e ) {
             throw $e;
         } catch ( \Throwable $e ) {
