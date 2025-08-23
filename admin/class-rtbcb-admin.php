@@ -48,7 +48,7 @@ class RTBCB_Admin {
             return;
         }
 
-        wp_enqueue_script( 'chart-js', 'https://cdn.jsdelivr.net/npm/chart.js', [], '3.9.1', true );
+        wp_enqueue_script( 'chart-js', RTBCB_URL . 'public/js/chart.min.js', [], '3.9.1', true );
         wp_enqueue_script( 
             'rtbcb-admin', 
             RTBCB_URL . 'admin/js/rtbcb-admin.js', 
