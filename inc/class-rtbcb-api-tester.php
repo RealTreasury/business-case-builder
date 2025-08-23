@@ -121,7 +121,7 @@ class RTBCB_API_Tester {
     private static function test_completion( $api_key ) {
         $endpoint = 'https://api.openai.com/v1/responses';
 
-        $model = sanitize_text_field( get_option( 'rtbcb_mini_model', 'gpt-4o-mini' ) );
+        $model = sanitize_text_field( get_option( 'rtbcb_mini_model', rtbcb_get_default_model( 'mini' ) ) );
         $body  = [
             'model'                 => $model,
             'input'                 => 'ping',

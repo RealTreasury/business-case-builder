@@ -50,6 +50,13 @@ if ( ! function_exists( 'sanitize_text_field' ) ) {
     }
 }
 
+if ( ! function_exists( 'sanitize_key' ) ) {
+    function sanitize_key( $key ) {
+        $key = strtolower( $key );
+        return preg_replace( '/[^a-z0-9_]/', '', $key );
+    }
+}
+
 $captured_body = null;
 if ( ! function_exists( 'wp_remote_post' ) ) {
     function wp_remote_post( $url, $args ) {
