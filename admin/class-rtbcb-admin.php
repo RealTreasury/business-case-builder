@@ -231,11 +231,23 @@ class RTBCB_Admin {
      * @return void
      */
     public function render_leads() {
-        $page = isset( $_GET['paged'] ) ? intval( $_GET['paged'] ) : 1;
+        $page = isset( $_GET['paged'] ) ? intval( wp_unslash( $_GET['paged'] ) ) : 1;
         $search = isset( $_GET['search'] ) ? sanitize_text_field( wp_unslash( $_GET['search'] ) ) : '';
         $category = isset( $_GET['category'] ) ? sanitize_text_field( wp_unslash( $_GET['category'] ) ) : '';
         $date_from = isset( $_GET['date_from'] ) ? sanitize_text_field( wp_unslash( $_GET['date_from'] ) ) : '';
         $date_to = isset( $_GET['date_to'] ) ? sanitize_text_field( wp_unslash( $_GET['date_to'] ) ) : '';
+
+        $orderby = isset( $_GET['orderby'] ) ? sanitize_key( wp_unslash( $_GET['orderby'] ) ) : 'created_at';
+        $allowed_orderby = [ 'email', 'created_at' ];
+        if ( ! in_array( $orderby, $allowed_orderby, true ) ) {
+            $orderby = 'created_at';
+        }
+
+        $order = isset( $_GET['order'] ) ? sanitize_key( wp_unslash( $_GET['order'] ) ) : 'DESC';
+        $order = strtoupper( $order );
+        if ( ! in_array( $order, [ 'ASC', 'DESC' ], true ) ) {
+            $order = 'DESC';
+        }
 
         $args = [
             'page'      => $page,
@@ -243,6 +255,8 @@ class RTBCB_Admin {
             'category'  => $category,
             'date_from' => $date_from,
             'date_to'   => $date_to,
+            'orderby'   => $orderby,
+            'order'     => $order,
         ];
 
         $leads_data = RTBCB_Leads::get_all_leads( $args );
