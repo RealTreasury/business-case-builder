@@ -22,6 +22,12 @@ if ( ! function_exists( 'is_wp_error' ) ) {
     }
 }
 
+if ( ! function_exists( '__' ) ) {
+    function __( $text ) {
+        return $text;
+    }
+}
+
 if ( ! function_exists( 'wp_json_encode' ) ) {
     function wp_json_encode( $data ) {
         return json_encode( $data );

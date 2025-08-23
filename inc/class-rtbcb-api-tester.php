@@ -121,21 +121,28 @@ class RTBCB_API_Tester {
     private static function test_completion( $api_key ) {
         $endpoint = 'https://api.openai.com/v1/chat/completions';
 
-        $body = [
-            'model'       => get_option( 'rtbcb_mini_model', 'gpt-4o-mini' ),
+        $model = sanitize_text_field( get_option( 'rtbcb_mini_model', 'gpt-4o-mini' ) );
+        $body  = [
+            'model'       => $model,
             'messages'    => [
                 [
                     'role'    => 'user',
-                    'content' => 'ping',
+                    'content' => [
+                        [
+                            'type' => 'text',
+                            'text' => 'ping',
+                        ],
+                    ],
                 ],
             ],
+            'max_tokens'  => 10,
+            'temperature' => 0,
         ];
 
-        if ( strpos( strtolower( $body['model'] ), 'gpt-5' ) !== false ) {
-            $body['max_completion_tokens'] = 10;
-        } else {
-            $body['max_tokens']  = 10;
-            $body['temperature'] = 0;
+        if ( strpos( strtolower( $model ), 'gpt-5' ) !== false ) {
+            $body['reasoning'] = [
+                'effort' => 'low',
+            ];
         }
 
         $args = [
