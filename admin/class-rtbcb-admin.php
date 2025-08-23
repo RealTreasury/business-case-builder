@@ -37,6 +37,7 @@ class RTBCB_Admin {
         add_action( 'wp_ajax_rtbcb_test_commentary', [ $this, 'ajax_test_commentary' ] );
         add_action( 'wp_ajax_rtbcb_test_company_overview', [ $this, 'ajax_test_company_overview' ] );
         add_action( 'wp_ajax_rtbcb_test_treasury_tech_overview', [ $this, 'ajax_test_treasury_tech_overview' ] );
+        add_action( 'wp_ajax_rtbcb_test_estimated_benefits', [ $this, 'ajax_test_estimated_benefits' ] );
     }
 
     /**
@@ -73,6 +74,7 @@ class RTBCB_Admin {
             'report_preview_nonce' => wp_create_nonce( 'rtbcb_generate_report_preview' ),
             'company_overview_nonce' => wp_create_nonce( 'rtbcb_test_company_overview' ),
             'treasury_tech_overview_nonce' => wp_create_nonce( 'rtbcb_test_treasury_tech_overview' ),
+            'benefits_estimate_nonce' => wp_create_nonce( 'rtbcb_test_estimated_benefits' ),
             'page'                 => $page,
             'strings'              => [
                 'confirm_delete'      => __( 'Are you sure you want to delete this lead?', 'rtbcb' ),
@@ -212,6 +214,15 @@ class RTBCB_Admin {
             'manage_options',
             'rtbcb-test-treasury-tech-overview',
             [ $this, 'render_test_treasury_tech_overview' ]
+        );
+
+        add_submenu_page(
+            'rtbcb-dashboard',
+            __( 'Test Estimated Benefits', 'rtbcb' ),
+            __( 'Test Estimated Benefits', 'rtbcb' ),
+            'manage_options',
+            'rtbcb-test-estimated-benefits',
+            [ $this, 'render_test_estimated_benefits' ]
         );
     }
 
@@ -355,6 +366,15 @@ class RTBCB_Admin {
     public function render_test_treasury_tech_overview() {
         include RTBCB_DIR . 'admin/test-treasury-tech-overview-page.php';
     }
+
+    /**
+     * Render test estimated benefits page.
+     *
+     * @return void
+     */
+     public function render_test_estimated_benefits() {
+         include RTBCB_DIR . 'admin/test-estimated-benefits-page.php';
+     }
 
     /**
      * Register plugin settings.
@@ -621,6 +641,32 @@ class RTBCB_Admin {
                 'generated'  => current_time( 'mysql' ),
             ]
         );
+    }
+
+    /**
+     * AJAX handler for estimated benefits testing.
+     *
+     * @return void
+     */
+    public function ajax_test_estimated_benefits() {
+        check_ajax_referer( 'rtbcb_test_estimated_benefits', 'nonce' );
+
+        $revenue    = isset( $_POST['revenue'] ) ? floatval( $_POST['revenue'] ) : 0;
+        $staff      = isset( $_POST['staff'] ) ? intval( $_POST['staff'] ) : 0;
+        $efficiency = isset( $_POST['efficiency'] ) ? intval( $_POST['efficiency'] ) : 0;
+        $category   = isset( $_POST['category'] ) ? sanitize_key( wp_unslash( $_POST['category'] ) ) : '';
+
+        if ( $revenue <= 0 || $staff <= 0 || $efficiency < 1 || $efficiency > 10 || empty( $category ) ) {
+            wp_send_json_error( [ 'message' => __( 'Invalid input.', 'rtbcb' ) ] );
+        }
+
+        $estimate = rtbcb_test_generate_benefits_estimate( $revenue, $staff, $efficiency, $category );
+
+        if ( is_wp_error( $estimate ) ) {
+            wp_send_json_error( [ 'message' => sanitize_text_field( $estimate->get_error_message() ) ] );
+        }
+
+        wp_send_json_success( [ 'estimate' => $estimate ] );
     }
 
     /**
