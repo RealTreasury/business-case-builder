@@ -51,6 +51,7 @@
             this.bindCommentaryTest();
             this.bindCompanyOverviewTest();
             this.bindIndustryOverviewTest();
+            this.bindBenefitsEstimateTest();
             this.bindTestDashboard();
         },
 
@@ -151,6 +152,39 @@
             };
             form.on('submit', submitHandler);
             RTBCBAdmin.utils.bindClear(clearBtn, results);
+        },
+
+        bindBenefitsEstimateTest() {
+            if (!rtbcbAdmin || rtbcbAdmin.page !== 'rtbcb-test-estimated-benefits') { return; }
+            const form = $('#rtbcb-benefits-estimate-form');
+            if (!form.length) { return; }
+            const results = $('#rtbcb-benefits-estimate-results');
+            const button = $('#rtbcb-generate-benefits-estimate');
+            form.on('submit', async function(e) {
+                e.preventDefault();
+                const original = RTBCBAdmin.utils.setLoading(button, rtbcbAdmin.strings.processing);
+                results.empty();
+                try {
+                    const formData = new FormData();
+                    formData.append('action', 'rtbcb_test_estimated_benefits');
+                    formData.append('revenue', $('#rtbcb-test-revenue').val());
+                    formData.append('staff', $('#rtbcb-test-staff-count').val());
+                    formData.append('efficiency', $('#rtbcb-test-efficiency').val());
+                    formData.append('category', $('#rtbcb-test-category').val());
+                    formData.append('nonce', rtbcbAdmin.benefits_estimate_nonce);
+                    const response = await fetch(rtbcbAdmin.ajax_url, { method: 'POST', body: formData });
+                    const data = await response.json();
+                    if (response.ok && data.success) {
+                        results.html('<pre>' + JSON.stringify(data.data) + '</pre>');
+                    } else {
+                        const message = data.data?.message || rtbcbAdmin.strings.error;
+                        results.html('<div class="notice notice-error"><p>' + message + '</p></div>');
+                    }
+                } catch (err) {
+                    results.html('<div class="notice notice-error"><p>' + rtbcbAdmin.strings.error + ' ' + err.message + '</p></div>');
+                }
+                RTBCBAdmin.utils.clearLoading(button, original);
+            });
         },
 
         bindIndustryOverviewTest() {
