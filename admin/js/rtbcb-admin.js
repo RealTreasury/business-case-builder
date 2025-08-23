@@ -13,6 +13,7 @@
             this.bindCommentaryTest();
             this.bindCompanyOverviewTest();
             this.bindIndustryOverviewTest();
+            this.bindBenefitsEstimateTest();
         },
 
         bindDashboardActions() {
@@ -208,6 +209,44 @@
             if (clearBtn.length) {
                 clearBtn.on('click', function(){ results.empty(); });
             }
+        },
+
+        bindBenefitsEstimateTest() {
+            if (!rtbcbAdmin || rtbcbAdmin.page !== 'rtbcb-test-estimated-benefits') { return; }
+            const form = $('#rtbcb-test-estimated-benefits-form');
+            if (!form.length) { return; }
+            const results = $('#rtbcb-benefits-estimate-results');
+            form.on('submit', async function(e) {
+                e.preventDefault();
+                const button = $('#rtbcb-generate-benefits-estimate');
+                const original = button.text();
+                button.prop('disabled', true).text(rtbcbAdmin.strings.processing);
+                results.empty();
+                try {
+                    const formData = new FormData();
+                    formData.append('action', 'rtbcb_test_estimated_benefits');
+                    formData.append('revenue', $('#rtbcb-test-revenue').val());
+                    formData.append('staff', $('#rtbcb-test-staff-count').val());
+                    formData.append('efficiency', $('#rtbcb-test-efficiency').val());
+                    formData.append('category', $('#rtbcb-test-category').val());
+                    formData.append('nonce', rtbcbAdmin.benefits_estimate_nonce);
+                    const response = await fetch(rtbcbAdmin.ajax_url, { method: 'POST', body: formData });
+                    if (!response.ok) {
+                        throw new Error(`Server responded ${response.status}`);
+                    }
+                    const data = await response.json();
+                    if (data.success) {
+                        const output = typeof data.data === 'string' ? data.data : JSON.stringify(data.data);
+                        results.text(output);
+                    } else {
+                        const message = data.data?.message || rtbcbAdmin.strings.error;
+                        results.text(message);
+                    }
+                } catch (err) {
+                    results.text(rtbcbAdmin.strings.error + ' ' + err.message);
+                }
+                button.prop('disabled', false).text(original);
+            });
         },
 
         async testApiConnection(e) {
