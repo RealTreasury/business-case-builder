@@ -95,8 +95,8 @@ class Real_Treasury_BCB {
         add_filter( 'plugin_action_links_' . plugin_basename( RTBCB_FILE ), [ $this, 'plugin_action_links' ] );
 
         // AJAX handlers
-        add_action( 'wp_ajax_rtbcb_generate_case', [ $this, 'ajax_generate_comprehensive_case' ] );
-        add_action( 'wp_ajax_nopriv_rtbcb_generate_case', [ $this, 'ajax_generate_comprehensive_case' ] );
+        add_action( 'wp_ajax_rtbcb_generate_case', [ $this, 'ajax_generate_comprehensive_case_debug' ] );
+        add_action( 'wp_ajax_nopriv_rtbcb_generate_case', [ $this, 'ajax_generate_comprehensive_case_debug' ] );
 
         $this->init_hooks_debug();
     }
@@ -578,7 +578,64 @@ class Real_Treasury_BCB {
         }
     }
 
-    
+
+
+    /**
+     * Debug wrapper for comprehensive case generation AJAX handler.
+     */
+    public function ajax_generate_comprehensive_case_debug() {
+        error_log( 'RTBCB: Enter ajax_generate_comprehensive_case_debug' );
+
+        if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+            ini_set( 'display_errors', '1' );
+        }
+
+        $post_keys = implode( ', ', array_keys( $_POST ) );
+        error_log( 'RTBCB: POST keys: ' . $post_keys );
+
+        $nonce_present = isset( $_POST['rtbcb_nonce'] );
+        error_log( 'RTBCB: nonce present: ' . ( $nonce_present ? 'yes' : 'no' ) );
+
+        $nonce_valid = check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false );
+        error_log( 'RTBCB: nonce verification: ' . ( $nonce_valid ? 'passed' : 'failed' ) );
+
+        if ( ! $nonce_valid ) {
+            wp_send_json_error( __( 'Security check failed.', 'rtbcb' ), 403 );
+        }
+
+        $required_classes = [ 'RTBCB_Calculator', 'RTBCB_DB' ];
+        $missing_classes  = [];
+        foreach ( $required_classes as $class ) {
+            $exists = class_exists( $class );
+            error_log( 'RTBCB: class ' . $class . ' exists: ' . ( $exists ? 'yes' : 'no' ) );
+            if ( ! $exists ) {
+                $missing_classes[] = $class;
+            }
+        }
+
+        if ( ! empty( $missing_classes ) ) {
+            wp_send_json_error( __( 'Required components missing.', 'rtbcb' ), 500 );
+        }
+
+        rtbcb_setup_ajax_logging();
+        rtbcb_increase_memory_limit();
+        if ( ! ini_get( 'safe_mode' ) ) {
+            set_time_limit( 300 );
+        }
+
+        try {
+            $this->ajax_generate_comprehensive_case();
+        } catch ( Exception $e ) {
+            error_log( 'RTBCB Exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine() );
+            wp_send_json_error( __( 'An error occurred. Please try again later.', 'rtbcb' ), 500 );
+        } catch ( Error $e ) {
+            error_log( 'RTBCB Error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine() );
+            wp_send_json_error( __( 'An error occurred. Please try again later.', 'rtbcb' ), 500 );
+        }
+
+        error_log( 'RTBCB: Exit ajax_generate_comprehensive_case_debug' );
+    }
+
 
     /**
      * Enhanced AJAX handler with memory management
