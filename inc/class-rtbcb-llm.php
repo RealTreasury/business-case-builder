@@ -109,6 +109,40 @@ class RTBCB_LLM {
     }
 
     /**
+     * Generate short commentary for a given industry.
+     *
+     * @param string $industry Industry slug.
+     * @return string|WP_Error Commentary text or error object.
+     */
+    public function generate_industry_commentary( $industry ) {
+        $industry = sanitize_text_field( $industry );
+
+        if ( empty( $this->api_key ) ) {
+            return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
+        }
+
+        $model  = $this->models['mini'] ?? 'gpt-4o-mini';
+        $prompt = 'Provide a brief treasury industry commentary for the ' . $industry . ' industry in two sentences.';
+
+        $response = $this->call_openai_with_retry( $model, $prompt );
+
+        if ( is_wp_error( $response ) ) {
+            return new WP_Error( 'llm_failure', __( 'Unable to generate commentary at this time.', 'rtbcb' ) );
+        }
+
+        $body       = wp_remote_retrieve_body( $response );
+        $decoded    = json_decode( $body, true );
+        $content    = $decoded['choices'][0]['message']['content'] ?? '';
+        $commentary = sanitize_textarea_field( $content );
+
+        if ( empty( $commentary ) ) {
+            return new WP_Error( 'llm_empty_response', __( 'No commentary returned.', 'rtbcb' ) );
+        }
+
+        return $commentary;
+    }
+
+    /**
      * Generate comprehensive business case with deep analysis.
      *
      * Returns a {@see WP_Error} when the API key is missing or when the LLM
