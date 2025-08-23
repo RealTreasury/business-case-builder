@@ -60,8 +60,8 @@ A comprehensive WordPress plugin that helps treasury teams quantify the benefits
 2. Generate an API key in your OpenAI dashboard
 3. Enter the API key in **Real Treasury → Settings**
 4. Configure your preferred models:
-   - **Mini Model**: configurable via settings (default `gpt-4o-mini` for efficiency)
-   - **Premium Model**: `gpt-4o` (for complex requests)
+   - **Mini Model**: configurable via settings (default `gpt-5-mini` for efficiency)
+   - **Premium Model**: `gpt-5` (for complex requests)
    - **Embedding Model**: `text-embedding-3-small` (for RAG)
 
 ### Step 3: Configure Database Tables
@@ -173,8 +173,8 @@ CREATE TABLE wp_rtbcb_leads (
 ### API Integration
 
 **OpenAI Models Used:**
-- **GPT-4o-mini**: Fast responses for simple categorization
-- **GPT-4o**: Complex business case generation
+- **GPT-5-mini**: Fast responses for simple categorization
+- **GPT-5**: Complex business case generation
 - **text-embedding-3-small**: RAG search and similarity matching
 
 **Intelligent Model Routing:**
