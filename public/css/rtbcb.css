@@ -1754,7 +1754,7 @@
 
 .rtbcb-results-preview h4 {
     margin: 0 0 16px 0;
-    color: #ffffff;
+    color: var(--text-primary) !important;
     font-size: 16px;
     font-weight: 600;
 }
