@@ -12,9 +12,21 @@ if ( ! defined( 'ABSPATH' ) ) {
 $rtbcb_sample_forms = rtbcb_get_sample_report_forms();
 $first_scenario     = reset( $rtbcb_sample_forms );
 $sample_context     = $first_scenario['data'];
+
+$company = rtbcb_get_current_company();
+if ( empty( $company ) ) {
+    $overview_url = admin_url( 'admin.php?page=rtbcb-test-company-overview' );
+    echo '<div class="notice notice-error"><p>' . sprintf(
+        esc_html__( 'No company data found. Please run the %s first.', 'rtbcb' ),
+        '<a href="' . esc_url( $overview_url ) . '">' . esc_html__( 'Company Overview', 'rtbcb' ) . '</a>'
+    ) . '</p></div>';
+    rtbcb_render_start_new_analysis_button();
+    return;
+}
 ?>
 <div class="wrap rtbcb-admin-page">
     <h1><?php esc_html_e( 'Report Preview', 'rtbcb' ); ?></h1>
+    <?php rtbcb_render_start_new_analysis_button(); ?>
     <form id="rtbcb-report-preview-form" method="post" action="<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>">
         <input type="hidden" name="action" value="rtbcb_generate_report_preview" />
         <p>

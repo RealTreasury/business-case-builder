@@ -12,10 +12,19 @@ if ( ! defined( 'ABSPATH' ) ) {
 if ( ! rtbcb_require_completed_steps( 'rtbcb-test-treasury-tech-overview' ) ) {
     return;
 }
-/**
- * Retrieve current company information.
- */
-$company            = rtbcb_get_current_company();
+
+
+$company = rtbcb_get_current_company();
+if ( empty( $company ) ) {
+    $overview_url = admin_url( 'admin.php?page=rtbcb-test-company-overview' );
+    echo '<div class="notice notice-error"><p>' . sprintf(
+        esc_html__( 'No company data found. Please run the %s first.', 'rtbcb' ),
+        '<a href="' . esc_url( $overview_url ) . '">' . esc_html__( 'Company Overview', 'rtbcb' ) . '</a>'
+    ) . '</p></div>';
+    rtbcb_render_start_new_analysis_button();
+    return;
+}
+
 $company_name       = isset( $company['name'] ) ? $company['name'] : '';
 $company_size       = isset( $company['size'] ) ? $company['size'] : '';
 $company_complexity = isset( $company['complexity'] ) ? $company['complexity'] : '';
@@ -41,6 +50,7 @@ if ( empty( $suggested_focus_areas ) && ! empty( $company_size ) ) {
 ?>
 <div class="wrap rtbcb-admin-page">
     <h1><?php esc_html_e( 'Test Treasury Technology Overview', 'rtbcb' ); ?></h1>
+    <?php rtbcb_render_start_new_analysis_button(); ?>
 
     <?php if ( $company_name || $company_size || $company_complexity ) : ?>
         <p><?php printf( esc_html__( 'Company: %1$s | Size: %2$s | Complexity: %3$s', 'rtbcb' ), esc_html( $company_name ), esc_html( $company_size ), esc_html( $company_complexity ) ); ?></p>

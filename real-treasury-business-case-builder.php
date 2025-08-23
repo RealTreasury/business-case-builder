@@ -603,6 +603,11 @@ class Real_Treasury_BCB {
             wp_send_json_error( __( 'Security check failed.', 'rtbcb' ), 403 );
         }
 
+        $company = rtbcb_get_current_company();
+        if ( empty( $company ) ) {
+            wp_send_json_error( __( 'No company data found. Please run the company overview first.', 'rtbcb' ), 400 );
+        }
+
         $required_classes = [ 'RTBCB_Calculator', 'RTBCB_DB' ];
         $missing_classes  = [];
         foreach ( $required_classes as $class ) {
@@ -665,6 +670,11 @@ class Real_Treasury_BCB {
             if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
                 rtbcb_log_error( 'Nonce verification failed', $_POST );
                 wp_send_json_error( __( 'Security check failed.', 'rtbcb' ), 403 );
+            }
+
+            $company = rtbcb_get_current_company();
+            if ( empty( $company ) ) {
+                wp_send_json_error( __( 'No company data found. Please run the company overview first.', 'rtbcb' ), 400 );
             }
 
             rtbcb_log_memory_usage( 'after_nonce_verification' );
@@ -1438,6 +1448,12 @@ function rtbcb_ajax_generate_real_treasury_overview() {
         return;
     }
 
+    $company = rtbcb_get_current_company();
+    if ( empty( $company ) ) {
+        wp_send_json_error( [ 'message' => __( 'No company data found. Please run the company overview first.', 'rtbcb' ) ] );
+        return;
+    }
+
     $include_portal = isset( $_POST['include_portal'] ) ? rest_sanitize_boolean( wp_unslash( $_POST['include_portal'] ) ) : false;
     $categories     = [];
     if ( isset( $_POST['vendor_categories'] ) ) {
@@ -1491,6 +1507,12 @@ function rtbcb_ajax_generate_category_recommendation() {
 
     if ( ! current_user_can( 'manage_options' ) ) {
         wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'rtbcb' ) ] );
+        return;
+    }
+
+    $company = rtbcb_get_current_company();
+    if ( empty( $company ) ) {
+        wp_send_json_error( [ 'message' => __( 'No company data found. Please run the company overview first.', 'rtbcb' ) ] );
         return;
     }
 

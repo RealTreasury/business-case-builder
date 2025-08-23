@@ -13,12 +13,24 @@ if ( ! rtbcb_require_completed_steps( 'rtbcb-test-recommended-category' ) ) {
     return;
 }
 
+$company = rtbcb_get_current_company();
+if ( empty( $company ) ) {
+    $overview_url = admin_url( 'admin.php?page=rtbcb-test-company-overview' );
+    echo '<div class="notice notice-error"><p>' . sprintf(
+        esc_html__( 'No company data found. Please run the %s first.', 'rtbcb' ),
+        '<a href="' . esc_url( $overview_url ) . '">' . esc_html__( 'Company Overview', 'rtbcb' ) . '</a>'
+    ) . '</p></div>';
+    rtbcb_render_start_new_analysis_button();
+    return;
+}
+
 $company_overview    = get_option( 'rtbcb_company_overview', '' );
 $industry_insights   = get_option( 'rtbcb_industry_insights', '' );
 $treasury_challenges = get_option( 'rtbcb_treasury_challenges', '' );
 ?>
 <div class="wrap rtbcb-admin-page">
     <h1><?php esc_html_e( 'Test Category Recommendation Generation', 'rtbcb' ); ?></h1>
+    <?php rtbcb_render_start_new_analysis_button(); ?>
 
     <form id="rtbcb-category-recommendation-form">
         <table class="form-table">

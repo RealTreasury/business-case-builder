@@ -1056,6 +1056,11 @@ class RTBCB_Admin {
             wp_send_json_error( __( 'Permission denied', 'rtbcb' ), 403 );
         }
 
+        $company = rtbcb_get_current_company();
+        if ( empty( $company ) ) {
+            wp_send_json_error( [ 'message' => __( 'No company data found. Please run the company overview first.', 'rtbcb' ) ], 400 );
+        }
+
         $context_raw  = isset( $_POST['context'] ) ? wp_unslash( $_POST['context'] ) : '';
         $template_raw = isset( $_POST['template'] ) ? wp_unslash( $_POST['template'] ) : '';
 
@@ -1110,6 +1115,11 @@ class RTBCB_Admin {
 
         if ( ! current_user_can( 'manage_options' ) ) {
             wp_send_json_error( __( 'Permission denied.', 'rtbcb' ), 403 );
+        }
+
+        $company = rtbcb_get_current_company();
+        if ( empty( $company ) ) {
+            wp_send_json_error( [ 'message' => __( 'No company data found. Please run the company overview first.', 'rtbcb' ) ], 400 );
         }
 
         $scenario_key = isset( $_POST['scenario_key'] ) ? sanitize_key( wp_unslash( $_POST['scenario_key'] ) ) : '';

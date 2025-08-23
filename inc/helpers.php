@@ -143,6 +143,39 @@ function rtbcb_render_test_navigation( $current_slug ) {
 }
 
 /**
+ * Render a button to start a new company analysis.
+ *
+ * The button clears existing company data and redirects to the Company Overview
+ * page so a new analysis can begin.
+ *
+ * @return void
+ */
+function rtbcb_render_start_new_analysis_button() {
+    $nonce        = wp_create_nonce( 'rtbcb_test_company_overview' );
+    $overview_url = admin_url( 'admin.php?page=rtbcb-test-company-overview' );
+
+    echo '<p><button type="button" class="button rtbcb-start-new-analysis" data-nonce="' . esc_attr( $nonce ) . '">' . esc_html__( 'Start New Company Analysis', 'rtbcb' ) . '</button></p>';
+    ?>
+    <script>
+    if ( typeof ajaxurl === 'undefined' ) {
+        var ajaxurl = '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>';
+    }
+    jQuery(function($){
+        $('.rtbcb-start-new-analysis').on('click', function(){
+            var nonce = $(this).data('nonce');
+            $.post(ajaxurl, {
+                action: 'rtbcb_clear_current_company',
+                nonce: nonce
+            }).done(function(){
+                window.location.href = '<?php echo esc_url( $overview_url ); ?>';
+            });
+        });
+    });
+    </script>
+    <?php
+}
+
+/**
  * Sanitize form input data
  *
  * @param array $data Raw form data
