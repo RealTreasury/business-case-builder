@@ -430,6 +430,28 @@ function rtbcb_test_generate_industry_overview( $industry, $company_size ) {
 }
 
 /**
+ * Test generating a real treasury overview using the LLM.
+ *
+ * @param bool  $include_portal Whether to include portal data.
+ * @param array $categories     Vendor categories.
+ * @return string|WP_Error Overview text or error object.
+ */
+function rtbcb_test_generate_real_treasury_overview( $include_portal, $categories ) {
+    $include_portal = (bool) $include_portal;
+    $categories     = array_map( 'sanitize_text_field', (array) $categories );
+    $categories     = array_filter( $categories );
+
+    try {
+        $llm      = new RTBCB_LLM();
+        $overview = $llm->generate_real_treasury_overview( $include_portal, $categories );
+    } catch ( \Throwable $e ) {
+        return new WP_Error( 'llm_exception', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
+    }
+
+    return $overview;
+}
+
+/**
  * Test generating a complete report with ROI calculations.
  *
  * Validates and sanitizes inputs, generates required sections, performs ROI
