@@ -429,3 +429,51 @@ function rtbcb_test_generate_industry_overview( $industry, $company_size ) {
     return $overview;
 }
 
+/**
+ * Test generating a complete report using available section generators.
+ *
+ * @param array $inputs Array of sanitized input data.
+ * @return array|WP_Error Report data or error object.
+ */
+function rtbcb_test_generate_complete_report( $inputs ) {
+    $inputs        = is_array( $inputs ) ? $inputs : [];
+    $company_name  = isset( $inputs['company_name'] ) ? sanitize_text_field( $inputs['company_name'] ) : '';
+    $industry      = isset( $inputs['industry'] ) ? sanitize_text_field( $inputs['industry'] ) : '';
+    $company_size  = isset( $inputs['company_size'] ) ? sanitize_text_field( $inputs['company_size'] ) : '';
+    $focus_areas   = isset( $inputs['focus_areas'] ) ? array_map( 'sanitize_text_field', (array) $inputs['focus_areas'] ) : [];
+    $complexity    = isset( $inputs['complexity'] ) ? sanitize_text_field( $inputs['complexity'] ) : '';
+
+    if ( empty( $company_name ) || empty( $industry ) ) {
+        return new WP_Error( 'invalid_inputs', __( 'Missing required inputs.', 'rtbcb' ) );
+    }
+
+    $company_overview = rtbcb_test_generate_company_overview( $company_name );
+    if ( is_wp_error( $company_overview ) ) {
+        return $company_overview;
+    }
+
+    $industry_overview = rtbcb_test_generate_industry_overview( $industry, $company_size );
+    if ( is_wp_error( $industry_overview ) ) {
+        return $industry_overview;
+    }
+
+    $treasury_tech_overview = rtbcb_test_generate_treasury_tech_overview( $focus_areas, $complexity );
+    if ( is_wp_error( $treasury_tech_overview ) ) {
+        return $treasury_tech_overview;
+    }
+
+    $html  = '<div class="rtbcb-report">';
+    $html .= '<section class="rtbcb-section" data-section="company_overview"><h2>' . esc_html__( 'Company Overview', 'rtbcb' ) . '</h2><p>' . esc_html( $company_overview ) . '</p></section>';
+    $html .= '<section class="rtbcb-section" data-section="industry_overview"><h2>' . esc_html__( 'Industry Overview', 'rtbcb' ) . '</h2><p>' . esc_html( $industry_overview ) . '</p></section>';
+    $html .= '<section class="rtbcb-section" data-section="treasury_tech_overview"><h2>' . esc_html__( 'Treasury Tech Overview', 'rtbcb' ) . '</h2><p>' . esc_html( $treasury_tech_overview ) . '</p></section>';
+    $html .= '</div>';
+
+    $word_count = str_word_count( wp_strip_all_tags( $html ) );
+
+    return [
+        'html'       => $html,
+        'word_count' => $word_count,
+        'generated'  => current_time( 'mysql' ),
+    ];
+}
+

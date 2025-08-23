@@ -32,6 +32,7 @@ class RTBCB_Admin {
         add_action( 'wp_ajax_rtbcb_run_diagnostics', [ $this, 'ajax_run_diagnostics' ] );
         add_action( 'wp_ajax_rtbcb_generate_report_preview', [ $this, 'ajax_generate_report_preview' ] );
         add_action( 'wp_ajax_rtbcb_generate_sample_report', [ $this, 'ajax_generate_sample_report' ] );
+        add_action( 'wp_ajax_rtbcb_test_generate_complete_report', [ $this, 'ajax_test_generate_complete_report' ] );
         add_action( 'wp_ajax_rtbcb_sync_to_local', [ $this, 'sync_to_local' ] );
         add_action( 'wp_ajax_nopriv_rtbcb_sync_to_local', [ $this, 'sync_to_local' ] );
         add_action( 'wp_ajax_rtbcb_test_commentary', [ $this, 'ajax_test_commentary' ] );
@@ -72,6 +73,7 @@ class RTBCB_Admin {
             'nonce'                => wp_create_nonce( 'rtbcb_nonce' ),
             'diagnostics_nonce'    => wp_create_nonce( 'rtbcb_diagnostics' ),
             'report_preview_nonce' => wp_create_nonce( 'rtbcb_generate_report_preview' ),
+            'complete_report_nonce' => wp_create_nonce( 'rtbcb_test_generate_complete_report' ),
             'company_overview_nonce' => wp_create_nonce( 'rtbcb_test_company_overview' ),
             'treasury_tech_overview_nonce' => wp_create_nonce( 'rtbcb_test_treasury_tech_overview' ),
             'industry_overview_nonce' => wp_create_nonce( 'rtbcb_test_industry_overview' ),
@@ -84,6 +86,7 @@ class RTBCB_Admin {
                 'testing'             => __( 'Testing...', 'rtbcb' ),
                 'generating'          => __( 'Generating...', 'rtbcb' ),
                 'copied'              => __( 'Copied to clipboard.', 'rtbcb' ),
+                'regenerate'          => __( 'Regenerate', 'rtbcb' ),
             ],
         ] );
 
@@ -99,6 +102,16 @@ class RTBCB_Admin {
             'rtbcbAdmin.sampleForms = ' . wp_json_encode( $rtbcb_sample_data ) . ';',
             'after'
         );
+
+        if ( 'rtbcb-report-test' === $page ) {
+            wp_enqueue_script(
+                'rtbcb-report-test',
+                RTBCB_URL . 'admin/js/report-test.js',
+                [ 'jquery', 'rtbcb-admin' ],
+                RTBCB_VERSION,
+                true
+            );
+        }
     }
 
     /**
@@ -815,6 +828,53 @@ class RTBCB_Admin {
             }
 
             wp_send_json_success( [ 'report_html' => $html ] );
+        } catch ( RTBCB_JSON_Response $e ) {
+            throw $e;
+        } catch ( \Throwable $e ) {
+            wp_send_json_error( [ 'message' => $e->getMessage() ], 500 );
+        }
+    }
+
+    /**
+     * AJAX handler to generate a complete sample report.
+     *
+     * @return void
+     */
+    public function ajax_test_generate_complete_report() {
+        check_ajax_referer( 'rtbcb_test_generate_complete_report', 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( __( 'Permission denied.', 'rtbcb' ), 403 );
+        }
+
+        $inputs_raw = isset( $_POST['inputs'] ) ? wp_unslash( $_POST['inputs'] ) : '';
+        $inputs     = json_decode( $inputs_raw, true );
+
+        if ( empty( $inputs ) || ! is_array( $inputs ) ) {
+            wp_send_json_error( [ 'message' => __( 'Invalid or empty inputs.', 'rtbcb' ) ], 400 );
+        }
+
+        try {
+            $report = rtbcb_test_generate_complete_report( $inputs );
+            if ( is_wp_error( $report ) ) {
+                wp_send_json_error( [ 'message' => $report->get_error_message() ], 500 );
+            }
+
+            $html       = $report['html'];
+            $word_count = isset( $report['word_count'] ) ? (int) $report['word_count'] : str_word_count( wp_strip_all_tags( $html ) );
+            $generated  = $report['generated'] ?? current_time( 'mysql' );
+
+            $allowed_tags         = wp_kses_allowed_html( 'post' );
+            $allowed_tags['style'] = [];
+            $html                  = wp_kses( $html, $allowed_tags );
+
+            wp_send_json_success(
+                [
+                    'html'       => $html,
+                    'word_count' => $word_count,
+                    'generated'  => $generated,
+                ]
+            );
         } catch ( RTBCB_JSON_Response $e ) {
             throw $e;
         } catch ( \Throwable $e ) {
