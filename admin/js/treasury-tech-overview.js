@@ -38,10 +38,11 @@
                         const container = $('<div class="notice notice-success" />');
                         container.append('<p><strong>Overview:</strong></p>');
                         container.append('<div style="background: #f9f9f9; padding: 15px; border-left: 4px solid #0073aa; margin-top: 10px;">' + text + '</div>');
-                        container.append('<p>Word count: ' + data.word_count + ' | Time: ' + data.elapsed + 's</p>');
+                        container.append('<p>Word count: ' + data.word_count + ' | Time: ' + data.elapsed + 's | Generated: ' + data.generated + '</p>');
                         const actions = $('<p />');
                         const regen = $('<button type="button" class="button" />').text('Regenerate');
                         const copy = $('<button type="button" class="button" />').text('Copy');
+                        const clear = $('<button type="button" class="button" />').text('Clear');
                         regen.on('click', function() {
                             generateBtn.trigger('click');
                         });
@@ -53,15 +54,32 @@
                                 alert('Copy failed: ' + err.message);
                             }
                         });
-                        actions.append(regen).append(' ').append(copy);
+                        clear.on('click', function() {
+                            clearBtn.trigger('click');
+                        });
+                        actions.append(regen).append(' ').append(copy).append(' ').append(clear);
                         container.append(actions);
                         resultsDiv.html(container);
                     } else {
-                        resultsDiv.html('<div class="notice notice-error"><p><strong>Error:</strong> ' + (response.data.message || 'Failed to generate overview') + '</p></div>');
+                        const container = $('<div class="notice notice-error" />');
+                        container.append('<p><strong>Error:</strong> ' + (response.data.message || 'Failed to generate overview') + '</p>');
+                        const retry = $('<button type="button" class="button" />').text('Retry');
+                        retry.on('click', function() {
+                            generateBtn.trigger('click');
+                        });
+                        container.append(retry);
+                        resultsDiv.html(container);
                     }
                 },
                 error: function() {
-                    resultsDiv.html('<div class="notice notice-error"><p><strong>Error:</strong> Request failed. Please try again.</p></div>');
+                    const container = $('<div class="notice notice-error" />');
+                    container.append('<p><strong>Error:</strong> Request failed. Please try again.</p>');
+                    const retry = $('<button type="button" class="button" />').text('Retry');
+                    retry.on('click', function() {
+                        generateBtn.trigger('click');
+                    });
+                    container.append(retry);
+                    resultsDiv.html(container);
                 },
                 complete: function() {
                     generateBtn.prop('disabled', false).text('Generate Overview');

@@ -59,7 +59,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                 <?php esc_html_e( 'Generate Overview', 'rtbcb' ); ?>
             </button>
             <button type="button" id="rtbcb-clear-treasury-tech-overview" class="button">
-                <?php esc_html_e( 'Clear Results', 'rtbcb' ); ?>
+                <?php esc_html_e( 'Clear', 'rtbcb' ); ?>
             </button>
         </p>
     </div>
