@@ -413,3 +413,66 @@ function rtbcb_test_generate_industry_overview( $industry, $company_size ) {
     return $overview;
 }
 
+/**
+ * Test category recommendation generation.
+ *
+ * Sanitizes requirement inputs, retrieves a category recommendation, and
+ * augments it with implementation guidance and success factors. Optionally
+ * calls the LLM for narrative enhancements.
+ *
+ * @param array $requirements Requirement inputs.
+ * @return array Recommendation data ready for JSON encoding.
+ */
+function rtbcb_test_generate_category_recommendation( $requirements ) {
+    $requirements = (array) $requirements;
+
+    $sanitized = [
+        'company_size'       => sanitize_text_field( $requirements['company_size'] ?? '' ),
+        'treasury_complexity'=> sanitize_text_field( $requirements['treasury_complexity'] ?? '' ),
+        'budget_range'       => sanitize_text_field( $requirements['budget_range'] ?? '' ),
+        'timeline'           => sanitize_text_field( $requirements['timeline'] ?? '' ),
+        'num_banks'          => isset( $requirements['num_banks'] ) ? intval( $requirements['num_banks'] ) : null,
+        'ftes'               => isset( $requirements['ftes'] ) ? floatval( $requirements['ftes'] ) : null,
+        'pain_points'        => array_filter( array_map( 'sanitize_text_field', (array) ( $requirements['pain_points'] ?? [] ) ) ),
+    ];
+
+    $result       = RTBCB_Category_Recommender::recommend_category( $sanitized );
+    $recommended  = $result['recommended'] ?? '';
+    $category_info = $result['category_info'] ?? [];
+
+    $roadmaps = [
+        'cash_tools' => __( '1. Assess cash workflows. 2. Select tool and connect banks. 3. Train treasury staff. 4. Iterate and optimise.', 'rtbcb' ),
+        'tms_lite'   => __( '1. Document current processes. 2. Configure mid-tier TMS modules. 3. Migrate data and integrate systems. 4. Roll out in phases.', 'rtbcb' ),
+        'trms'       => __( '1. Define global requirements. 2. Implement enterprise modules in stages. 3. Integrate ERP and banking platforms. 4. Drive continuous improvement.', 'rtbcb' ),
+    ];
+
+    $success_guidance = [
+        'cash_tools' => __( 'Dedicated owner, clean bank data, and clear KPIs ensure adoption.', 'rtbcb' ),
+        'tms_lite'   => __( 'Executive sponsorship, cross-functional team, and phased rollout are critical.', 'rtbcb' ),
+        'trms'       => __( 'Strong governance, change management, and global alignment drive success.', 'rtbcb' ),
+    ];
+
+    $roadmap        = $roadmaps[ $recommended ] ?? '';
+    $success_factors = $success_guidance[ $recommended ] ?? '';
+
+    $llm = new RTBCB_LLM();
+    if ( method_exists( $llm, 'generate_category_recommendation' ) ) {
+        $narrative = $llm->generate_category_recommendation( $recommended );
+        if ( ! is_wp_error( $narrative ) ) {
+            $roadmap         = sanitize_textarea_field( $narrative['roadmap'] ?? $roadmap );
+            $success_factors = sanitize_textarea_field( $narrative['success_factors'] ?? $success_factors );
+        }
+    }
+
+    return [
+        'recommended'            => $recommended,
+        'recommended_name'       => $category_info['name'] ?? '',
+        'reasoning'              => $result['reasoning'] ?? '',
+        'alternatives'           => $result['alternatives'] ?? [],
+        'confidence'             => $result['confidence'] ?? 0,
+        'scores'                 => $result['scores'] ?? [],
+        'implementation_roadmap' => $roadmap,
+        'success_factors'        => $success_factors,
+    ];
+}
+

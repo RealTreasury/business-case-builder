@@ -178,6 +178,49 @@ class RTBCB_LLM {
     }
 
     /**
+     * Generate implementation roadmap and success factors for a category.
+     *
+     * @param string $category_key Category identifier.
+     * @return array|WP_Error Array with roadmap and success factors or error object.
+     */
+    public function generate_category_recommendation( $category_key ) {
+        $category_key = sanitize_text_field( $category_key );
+
+        if ( empty( $this->api_key ) ) {
+            return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
+        }
+
+        $category = RTBCB_Category_Recommender::get_category_info( $category_key );
+        if ( empty( $category ) ) {
+            return new WP_Error( 'invalid_category', __( 'Unknown category.', 'rtbcb' ) );
+        }
+
+        $model  = $this->models['mini'] ?? 'gpt-4o-mini';
+        $prompt = 'Provide JSON with keys "roadmap" and "success_factors" describing implementation steps and key success '
+            . 'considerations for ' . $category['name'] . ' treasury technology.';
+
+        $response = $this->call_openai_with_retry( $model, $prompt );
+
+        if ( is_wp_error( $response ) ) {
+            return new WP_Error( 'llm_failure', __( 'Unable to generate recommendation at this time.', 'rtbcb' ) );
+        }
+
+        $body    = wp_remote_retrieve_body( $response );
+        $decoded = json_decode( $body, true );
+        $content = $decoded['choices'][0]['message']['content'] ?? '';
+        $json    = json_decode( $content, true );
+
+        if ( ! is_array( $json ) ) {
+            return new WP_Error( 'llm_parse_error', __( 'Invalid response from language model.', 'rtbcb' ) );
+        }
+
+        return [
+            'roadmap'         => sanitize_textarea_field( $json['roadmap'] ?? '' ),
+            'success_factors' => sanitize_textarea_field( $json['success_factors'] ?? '' ),
+        ];
+    }
+
+    /**
      * Generate an industry overview.
      *
      * @param string $industry     Industry name.
