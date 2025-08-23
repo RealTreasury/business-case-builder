@@ -345,17 +345,27 @@ class BusinessCaseBuilder {
             if (this.nextBtn) {
                 this.nextBtn.style.display = 'none';
             }
-
-            if (this.submitBtn) {
-                this.submitBtn.style.display = 'inline-flex';
-            }
         } else {
             if (this.nextBtn) {
                 this.nextBtn.style.display = 'inline-flex';
             }
+        }
 
-            if (this.submitBtn) {
+        if (this.submitBtn) {
+            const isLastStep = this.currentStep === this.totalSteps;
+            if (isLastStep) {
+                let stepsValid = true;
+                for (let i = 1; i < this.currentStep; i++) {
+                    if (!this.validateStep(i)) {
+                        stepsValid = false;
+                        break;
+                    }
+                }
+                this.submitBtn.style.display = stepsValid ? 'inline-flex' : 'none';
+                this.submitBtn.disabled = !stepsValid;
+            } else {
                 this.submitBtn.style.display = 'none';
+                this.submitBtn.disabled = true;
             }
         }
 
