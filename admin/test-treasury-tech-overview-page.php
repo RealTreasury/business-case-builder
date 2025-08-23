@@ -8,9 +8,39 @@
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
+/**
+ * Retrieve current company information.
+ */
+$company            = rtbcb_get_current_company();
+$company_name       = isset( $company['name'] ) ? $company['name'] : '';
+$company_size       = isset( $company['size'] ) ? $company['size'] : '';
+$company_complexity = isset( $company['complexity'] ) ? $company['complexity'] : '';
+$company_challenges = isset( $company['challenges'] ) ? (array) $company['challenges'] : [];
+
+$areas = [
+    'cash'      => __( 'Cash Management', 'rtbcb' ),
+    'payments'  => __( 'Payments', 'rtbcb' ),
+    'risk'      => __( 'Risk Management', 'rtbcb' ),
+    'liquidity' => __( 'Liquidity', 'rtbcb' ),
+    'analytics' => __( 'Analytics', 'rtbcb' ),
+];
+
+$suggested_focus_areas = array_intersect( array_keys( $areas ), array_map( 'sanitize_text_field', $company_challenges ) );
+if ( empty( $suggested_focus_areas ) && ! empty( $company_size ) ) {
+    $numeric_size = intval( preg_replace( '/[^0-9]/', '', (string) $company_size ) );
+    if ( $numeric_size > 1000 ) {
+        $suggested_focus_areas = [ 'liquidity', 'risk' ];
+    } else {
+        $suggested_focus_areas = [ 'cash' ];
+    }
+}
 ?>
 <div class="wrap rtbcb-admin-page">
     <h1><?php esc_html_e( 'Test Treasury Technology Overview', 'rtbcb' ); ?></h1>
+
+    <?php if ( $company_name || $company_size || $company_complexity ) : ?>
+        <p><?php printf( esc_html__( 'Company: %1$s | Size: %2$s | Complexity: %3$s', 'rtbcb' ), esc_html( $company_name ), esc_html( $company_size ), esc_html( $company_complexity ) ); ?></p>
+    <?php endif; ?>
 
     <div class="card">
         <h2 class="title"><?php esc_html_e( 'Generate Overview', 'rtbcb' ); ?></h2>
@@ -21,17 +51,10 @@ if ( ! defined( 'ABSPATH' ) ) {
                 <th scope="row"><?php esc_html_e( 'Focus Areas', 'rtbcb' ); ?></th>
                 <td>
                     <?php
-                    $areas = [
-                        'cash'      => __( 'Cash Management', 'rtbcb' ),
-                        'payments'  => __( 'Payments', 'rtbcb' ),
-                        'risk'      => __( 'Risk Management', 'rtbcb' ),
-                        'liquidity' => __( 'Liquidity', 'rtbcb' ),
-                        'analytics' => __( 'Analytics', 'rtbcb' ),
-                    ];
                     foreach ( $areas as $value => $label ) :
                         ?>
                         <label>
-                            <input type="checkbox" name="rtbcb_focus_areas[]" value="<?php echo esc_attr( $value ); ?>" />
+                            <input type="checkbox" name="rtbcb_focus_areas[]" value="<?php echo esc_attr( $value ); ?>" <?php checked( in_array( $value, $suggested_focus_areas, true ) ); ?> />
                             <?php echo esc_html( $label ); ?>
                         </label><br />
                         <?php
@@ -45,9 +68,9 @@ if ( ! defined( 'ABSPATH' ) ) {
                 </th>
                 <td>
                     <select id="rtbcb-company-complexity">
-                        <option value="simple"><?php esc_html_e( 'Simple', 'rtbcb' ); ?></option>
-                        <option value="moderate"><?php esc_html_e( 'Moderate', 'rtbcb' ); ?></option>
-                        <option value="complex"><?php esc_html_e( 'Complex', 'rtbcb' ); ?></option>
+                        <option value="simple" <?php selected( 'simple', $company_complexity ); ?>><?php esc_html_e( 'Simple', 'rtbcb' ); ?></option>
+                        <option value="moderate" <?php selected( 'moderate', $company_complexity ); ?>><?php esc_html_e( 'Moderate', 'rtbcb' ); ?></option>
+                        <option value="complex" <?php selected( 'complex', $company_complexity ); ?>><?php esc_html_e( 'Complex', 'rtbcb' ); ?></option>
                     </select>
                     <?php wp_nonce_field( 'rtbcb_test_treasury_tech_overview', 'rtbcb_test_treasury_tech_overview_nonce' ); ?>
                 </td>

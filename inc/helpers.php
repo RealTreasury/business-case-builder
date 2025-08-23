@@ -507,18 +507,15 @@ function rtbcb_test_generate_company_overview( $company_name ) {
 /**
  * Test generating a treasury tech overview using the LLM.
  *
- * @param array  $focus_areas Focus areas.
- * @param string $complexity  Company complexity.
+ * @param array $company_data Company data including focus areas and complexity.
  * @return string|WP_Error Overview text or error object.
  */
-function rtbcb_test_generate_treasury_tech_overview( $focus_areas, $complexity ) {
-    $focus_areas = array_map( 'sanitize_text_field', (array) $focus_areas );
-    $focus_areas = array_filter( $focus_areas );
-    $complexity  = sanitize_text_field( $complexity );
+function rtbcb_test_generate_treasury_tech_overview( $company_data ) {
+    $company_data = rtbcb_sanitize_form_data( (array) $company_data );
 
     try {
         $llm      = new RTBCB_LLM();
-        $overview = $llm->generate_treasury_tech_overview( $focus_areas, $complexity );
+        $overview = $llm->generate_treasury_tech_overview( $company_data );
     } catch ( \Throwable $e ) {
         return new WP_Error( 'llm_exception', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
     }
@@ -629,6 +626,10 @@ function rtbcb_test_generate_complete_report( $all_inputs ) {
         ? sanitize_text_field( $all_inputs['company_name'] )
         : '';
 
+    $company_size = isset( $all_inputs['company_size'] )
+        ? sanitize_text_field( $all_inputs['company_size'] )
+        : '';
+
     $focus_areas = [];
     if ( isset( $all_inputs['focus_areas'] ) ) {
         $focus_areas = array_filter( array_map( 'sanitize_text_field', (array) $all_inputs['focus_areas'] ) );
@@ -650,8 +651,14 @@ function rtbcb_test_generate_complete_report( $all_inputs ) {
     $sections['company_overview'] = rtbcb_test_generate_company_overview( $company_name );
     $timings['company_overview']  = microtime( true ) - $section_start;
 
-    $section_start                      = microtime( true );
-    $sections['treasury_tech_overview'] = rtbcb_test_generate_treasury_tech_overview( $focus_areas, $complexity );
+    $section_start = microtime( true );
+    $company_data  = [
+        'name'        => $company_name,
+        'size'        => $company_size,
+        'complexity'  => $complexity,
+        'focus_areas' => $focus_areas,
+    ];
+    $sections['treasury_tech_overview'] = rtbcb_test_generate_treasury_tech_overview( $company_data );
     $timings['treasury_tech_overview']  = microtime( true ) - $section_start;
 
     $section_start         = microtime( true );
