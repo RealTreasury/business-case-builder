@@ -18,14 +18,12 @@ const { execSync } = require('child_process');
     await generateProfessionalReport('context');
 
     assert.strictEqual(capturedBody.temperature, 0.7, 'Client request body should include temperature 0.7');
-    assert.deepStrictEqual(capturedBody.reasoning, { effort: 'medium' }, 'Client request body should include reasoning');
     assert.deepStrictEqual(capturedBody.text, { verbosity: 'medium' }, 'Client request body should include text settings');
     assert.strictEqual(capturedBody.max_tokens, 4000, 'Client request body should include max_tokens 4000');
 
     // Server-side test for call_openai
     const serverBody = JSON.parse(execSync('php tests/helpers/capture-call-openai-body.php 2>/dev/null', { encoding: 'utf8' }));
     assert.strictEqual(serverBody.temperature, 0.7, 'Server request body should include temperature 0.7');
-    assert.deepStrictEqual(serverBody.reasoning, { effort: 'medium' }, 'Server request body should include reasoning');
     assert.deepStrictEqual(serverBody.text, { verbosity: 'medium' }, 'Server request body should include text settings');
     assert.strictEqual(serverBody.max_tokens, 4000, 'Server request body should include max_tokens 4000');
 

@@ -447,7 +447,6 @@ class Real_Treasury_BCB {
         $config_localized = [
             'model'       => sanitize_text_field( $config['model'] ),
             'max_tokens'  => intval( $config['max_tokens'] ),
-            'reasoning'   => [ 'effort' => sanitize_text_field( $config['reasoning']['effort'] ?? '' ) ],
             'text'        => [ 'verbosity' => sanitize_text_field( $config['text']['verbosity'] ?? '' ) ],
             'temperature' => floatval( $config['temperature'] ),
             'store'       => (bool) $config['store'],

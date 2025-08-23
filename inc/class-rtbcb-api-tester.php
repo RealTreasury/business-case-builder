@@ -139,12 +139,6 @@ class RTBCB_API_Tester {
             'temperature' => 0,
         ];
 
-        if ( strpos( strtolower( $model ), 'gpt-5' ) !== false ) {
-            $body['reasoning'] = [
-                'effort' => 'low',
-            ];
-        }
-
         $args = [
             'headers' => [
                 'Authorization' => 'Bearer ' . $api_key,

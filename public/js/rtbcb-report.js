@@ -5,7 +5,6 @@
 const RTBCB_GPT5_DEFAULTS = (typeof rtbcbReport !== 'undefined' && rtbcbReport.defaults) ? rtbcbReport.defaults : {
     model: 'gpt-5-mini',
     max_tokens: 4000,
-    reasoning: { effort: 'medium' },
     text: { verbosity: 'medium' },
     temperature: 0.7,
     store: true,
@@ -278,7 +277,6 @@ async function generateProfessionalReport(businessContext) {
             }
         ],
         max_tokens: cfg.max_tokens,
-        reasoning: cfg.reasoning,
         text: cfg.text,
         temperature: cfg.temperature,
         store: cfg.store

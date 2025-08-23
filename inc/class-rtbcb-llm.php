@@ -1112,7 +1112,6 @@ class RTBCB_LLM {
             'model'      => $model_name,
             'input'      => $context,
             'max_tokens' => $max_tokens,
-            'reasoning'  => $this->gpt5_config['reasoning'],
             'text'       => $this->gpt5_config['text'],
             'temperature'=> floatval( $this->gpt5_config['temperature'] ),
             'store'      => (bool) $this->gpt5_config['store'],
