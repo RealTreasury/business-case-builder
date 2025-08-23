@@ -265,13 +265,13 @@ async function generateProfessionalReport(businessContext) {
                     role: 'user',
                     content: buildEnhancedPrompt(businessContext)
                 }
-            ],
-            temperature: 0.7
+            ]
         };
 
         if (rtbcbReport.report_model.startsWith('gpt-5')) {
             requestBody.max_completion_tokens = 4000;
         } else {
+            requestBody.temperature = 0.7;
             requestBody.max_tokens = 4000;
         }
 

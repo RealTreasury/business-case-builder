@@ -645,13 +645,13 @@ class RTBCB_LLM {
                     'content' => $prompt
                 ]
             ],
-            'temperature' => 0.4,
             'response_format' => [ 'type' => 'json_object' ], // Force JSON response
         ];
 
         if ( $is_gpt5_model ) {
             $body['max_completion_tokens'] = 4000;
         } else {
+            $body['temperature'] = 0.4;
             $body['max_tokens'] = 4000;
         }
 

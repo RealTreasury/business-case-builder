@@ -41,6 +41,7 @@ node tests/handle-submit-error.test.js
 node tests/render-results-no-narrative.test.js
 node tests/handle-submit-success.test.js
 node tests/handle-server-error-display.test.js
+node tests/gpt5-temperature.test.js
 
 # WordPress coding standards (if installed)
 if command -v phpcs &> /dev/null; then

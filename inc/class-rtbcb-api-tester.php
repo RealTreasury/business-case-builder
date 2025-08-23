@@ -122,19 +122,19 @@ class RTBCB_API_Tester {
         $endpoint = 'https://api.openai.com/v1/chat/completions';
 
         $body = [
-            'model'       => get_option( 'rtbcb_mini_model', 'gpt-4o-mini' ),
-            'messages'    => [
+            'model'    => get_option( 'rtbcb_mini_model', 'gpt-4o-mini' ),
+            'messages' => [
                 [
                     'role'    => 'user',
                     'content' => 'ping',
                 ],
             ],
-            'temperature' => 0,
         ];
 
         if ( strpos( strtolower( $body['model'] ), 'gpt-5' ) !== false ) {
             $body['max_completion_tokens'] = 10;
         } else {
+            $body['temperature'] = 0;
             $body['max_tokens'] = 10;
         }
 
