@@ -124,8 +124,7 @@ class RTBCB_API_Tester {
     private static function test_completion( $api_key ) {
         $endpoint = 'https://api.openai.com/v1/responses';
 
-        $model             = sanitize_text_field( get_option( 'rtbcb_mini_model', rtbcb_get_default_model( 'mini' ) ) );
-        $model             = rtbcb_normalize_model_name( $model );
+        $model             = 'gpt-5-mini';
         $config            = rtbcb_get_gpt5_config( get_option( 'rtbcb_gpt5_config', [] ) );
         $max_output_tokens = intval( $config['max_output_tokens'] ); // Sanitize token limit.
         $body              = [
@@ -136,12 +135,6 @@ class RTBCB_API_Tester {
             'reasoning'         => [ 'effort' => 'minimal' ],
             'text'              => [ 'verbosity' => 'low' ],
         ];
-
-        if ( rtbcb_model_supports_temperature( $model ) ) {
-            $body['temperature'] = 0;
-        } else {
-            error_log( 'RTBCB: Temperature not supported for model ' . $model . ', skipping parameter.' );
-        }
 
         $args = [
             'headers' => [
@@ -177,7 +170,7 @@ class RTBCB_API_Tester {
 
         $data = json_decode( $response_body, true );
 
-        if ( JSON_ERROR_NONE !== json_last_error() ) {
+        if ( JSON_ERROR_NONE !== json_last_error() || ! is_array( $data ) ) {
             return [
                 'success' => false,
                 'message' => __( 'Invalid JSON response', 'rtbcb' ),
@@ -185,43 +178,39 @@ class RTBCB_API_Tester {
             ];
         }
 
-        $status = sanitize_text_field( $data['status'] ?? '' );
-        $reason = sanitize_text_field( $data['incomplete_details']['reason'] ?? '' );
+        $text = '';
 
-        if ( 'completed' !== $status ) {
-            $message = $reason
-                ? sprintf( __( 'Output %1$s: %2$s', 'rtbcb' ), $status, $reason )
-                : sprintf( __( 'Output %s', 'rtbcb' ), $status );
-
-            return [
-                'success' => false,
-                'message' => sanitize_text_field( $message ),
-                'details' => 'Response: ' . sanitize_text_field( $response_body ),
-            ];
+        if ( isset( $data['output_text'] ) && '' !== $data['output_text'] ) {
+            $text = is_array( $data['output_text'] ) ? implode( ' ', (array) $data['output_text'] ) : (string) $data['output_text'];
         }
 
-        $content = '';
-
-        if ( isset( $data['output_text'] ) ) {
-            $content = is_array( $data['output_text'] ) ? implode( ' ', (array) $data['output_text'] ) : $data['output_text'];
-        } elseif ( isset( $data['output'][0]['content'][0]['text'] ) ) {
-            $content = $data['output'][0]['content'][0]['text'];
+        if ( '' === $text && ! empty( $data['output'] ) && is_array( $data['output'] ) ) {
+            foreach ( $data['output'] as $item ) {
+                if ( 'message' === ( $item['type'] ?? '' ) && ! empty( $item['content'] ) ) {
+                    foreach ( $item['content'] as $content_piece ) {
+                        if ( 'output_text' === ( $content_piece['type'] ?? '' ) && isset( $content_piece['text'] ) ) {
+                            $text = (string) $content_piece['text'];
+                            break 2;
+                        }
+                    }
+                }
+            }
         }
 
-        $content = trim( (string) $content );
+        $text = trim( $text );
 
-        if ( '' === $content || strlen( $content ) < 10 ) {
+        if ( '' === $text ) {
             return [
                 'success' => false,
-                'message' => __( 'Invalid or empty API response', 'rtbcb' ),
-                'details' => 'Response: ' . sanitize_text_field( $response_body ),
+                'message' => __( 'Could not extract assistant text from Responses payload', 'rtbcb' ),
+                'raw'     => sanitize_text_field( $response_body ),
             ];
         }
 
         return [
             'success'  => true,
             'message'  => __( 'API connection test successful', 'rtbcb' ),
-            'response' => sanitize_text_field( $content ),
+            'response' => sanitize_text_field( $text ),
         ];
     }
 }
