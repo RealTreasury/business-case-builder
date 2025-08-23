@@ -762,20 +762,28 @@ class RTBCB_Admin {
                 ] );
             }
 
-            $word_count   = str_word_count( wp_strip_all_tags( $overview ) );
+            $analysis        = $overview['analysis'] ?? '';
+            $recommendations = array_map( 'sanitize_text_field', $overview['recommendations'] ?? [] );
+            $references      = array_map( 'esc_url_raw', $overview['references'] ?? [] );
+
+            $word_count   = str_word_count( wp_strip_all_tags( $analysis ) );
             $elapsed_time = microtime( true ) - $start_time;
 
             update_option( 'rtbcb_current_company', [
-                'name'         => $company_name,
-                'summary'      => wp_strip_all_tags( $overview ),
-                'generated_at' => current_time( 'mysql' ),
+                'name'            => $company_name,
+                'summary'         => sanitize_textarea_field( wp_strip_all_tags( $analysis ) ),
+                'recommendations' => $recommendations,
+                'references'      => $references,
+                'generated_at'    => current_time( 'mysql' ),
             ] );
 
             wp_send_json_success( [
-                'overview'  => wp_kses_post( $overview ),
-                'word_count'=> $word_count,
-                'elapsed'   => round( $elapsed_time, 2 ),
-                'generated' => current_time( 'mysql' ),
+                'overview'        => wp_kses_post( $analysis ),
+                'word_count'      => $word_count,
+                'elapsed'         => round( $elapsed_time, 2 ),
+                'generated'       => current_time( 'mysql' ),
+                'recommendations' => $recommendations,
+                'references'      => $references,
             ] );
 
         } catch ( Exception $e ) {
@@ -926,10 +934,16 @@ class RTBCB_Admin {
             wp_send_json_error( [ 'message' => sanitize_text_field( $summary->get_error_message() ) ] );
         }
 
+        $analysis        = $summary['analysis'] ?? '';
+        $recommendations = array_map( 'sanitize_text_field', $summary['recommendations'] ?? [] );
+        $references      = array_map( 'esc_url_raw', $summary['references'] ?? [] );
+
         wp_send_json_success(
             [
-                'summary'    => sanitize_textarea_field( $summary ),
-                'challenges' => array_map( 'sanitize_text_field', $inputs['pain_points'] ?? [] ),
+                'summary'        => sanitize_textarea_field( $analysis ),
+                'recommendations'=> $recommendations,
+                'references'     => $references,
+                'challenges'     => array_map( 'sanitize_text_field', $inputs['pain_points'] ?? [] ),
             ]
         );
     }
