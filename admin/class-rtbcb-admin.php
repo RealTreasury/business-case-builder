@@ -65,17 +65,20 @@ class RTBCB_Admin {
         );
 
         wp_localize_script( 'rtbcb-admin', 'rtbcbAdmin', [
-            'ajax_url'          => admin_url( 'admin-ajax.php' ),
-            'nonce'             => wp_create_nonce( 'rtbcb_nonce' ),
-            'diagnostics_nonce' => wp_create_nonce( 'rtbcb_diagnostics' ),
+            'ajax_url'             => admin_url( 'admin-ajax.php' ),
+            'nonce'                => wp_create_nonce( 'rtbcb_nonce' ),
+            'diagnostics_nonce'    => wp_create_nonce( 'rtbcb_diagnostics' ),
             'report_preview_nonce' => wp_create_nonce( 'rtbcb_generate_report_preview' ),
-            'page'              => $page,
-            'strings'           => [
-                'confirm_delete'     => __( 'Are you sure you want to delete this lead?', 'rtbcb' ),
-                'confirm_bulk_delete'=> __( 'Are you sure you want to delete the selected leads?', 'rtbcb' ),
-                'processing'         => __( 'Processing...', 'rtbcb' ),
-                'error'              => __( 'An error occurred. Please try again.', 'rtbcb' ),
-                'testing'            => __( 'Testing...', 'rtbcb' ),
+            'company_overview_nonce' => wp_create_nonce( 'rtbcb_test_company_overview' ),
+            'page'                 => $page,
+            'strings'              => [
+                'confirm_delete'      => __( 'Are you sure you want to delete this lead?', 'rtbcb' ),
+                'confirm_bulk_delete' => __( 'Are you sure you want to delete the selected leads?', 'rtbcb' ),
+                'processing'          => __( 'Processing...', 'rtbcb' ),
+                'error'               => __( 'An error occurred. Please try again.', 'rtbcb' ),
+                'testing'             => __( 'Testing...', 'rtbcb' ),
+                'generating'          => __( 'Generating...', 'rtbcb' ),
+                'copied'              => __( 'Copied to clipboard.', 'rtbcb' ),
             ],
         ] );
 
