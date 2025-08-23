@@ -38,6 +38,7 @@ class RTBCB_Admin {
         add_action( 'wp_ajax_rtbcb_test_company_overview', [ $this, 'ajax_test_company_overview' ] );
         add_action( 'wp_ajax_rtbcb_test_treasury_tech_overview', [ $this, 'ajax_test_treasury_tech_overview' ] );
         add_action( 'wp_ajax_rtbcb_test_industry_overview', [ $this, 'ajax_test_industry_overview' ] );
+        add_action( 'wp_ajax_rtbcb_test_complete_report', [ $this, 'ajax_test_complete_report' ] );
     }
 
     /**
@@ -75,6 +76,7 @@ class RTBCB_Admin {
             'company_overview_nonce' => wp_create_nonce( 'rtbcb_test_company_overview' ),
             'treasury_tech_overview_nonce' => wp_create_nonce( 'rtbcb_test_treasury_tech_overview' ),
             'industry_overview_nonce' => wp_create_nonce( 'rtbcb_test_industry_overview' ),
+            'complete_report_nonce' => wp_create_nonce( 'rtbcb_test_complete_report' ),
             'page'                 => $page,
             'strings'              => [
                 'confirm_delete'      => __( 'Are you sure you want to delete this lead?', 'rtbcb' ),
@@ -196,6 +198,15 @@ class RTBCB_Admin {
             'manage_options',
             'rtbcb-calculations',
             [ $this, 'render_calculation_info' ]
+        );
+
+        add_submenu_page(
+            'rtbcb-dashboard',
+            __( 'Test Dashboard', 'rtbcb' ),
+            __( 'Test Dashboard', 'rtbcb' ),
+            'manage_options',
+            'rtbcb-test-dashboard',
+            [ $this, 'render_test_dashboard' ]
         );
 
         add_submenu_page(
@@ -374,6 +385,15 @@ class RTBCB_Admin {
      */
     public function render_test_industry_overview() {
         include RTBCB_DIR . 'admin/test-industry-overview-page.php';
+    }
+
+    /**
+     * Render test dashboard page.
+     *
+     * @return void
+     */
+    public function render_test_dashboard() {
+        include RTBCB_DIR . 'admin/test-dashboard-page.php';
     }
 
     /**
@@ -674,6 +694,45 @@ class RTBCB_Admin {
                 'word_count' => $word_count,
                 'elapsed'    => $elapsed,
                 'generated'  => current_time( 'mysql' ),
+            ]
+        );
+    }
+
+    /**
+     * AJAX handler for complete report testing.
+     *
+     * @return void
+     */
+    public function ajax_test_complete_report() {
+        check_ajax_referer( 'rtbcb_test_complete_report', 'nonce' );
+
+        $inputs  = rtbcb_get_sample_inputs();
+        $start   = microtime( true );
+        $result  = rtbcb_test_generate_complete_report( $inputs );
+        $elapsed = round( microtime( true ) - $start, 2 );
+
+        if ( is_wp_error( $result ) ) {
+            wp_send_json_error( [ 'message' => sanitize_text_field( $result->get_error_message() ) ] );
+        }
+
+        $sections = [];
+        foreach ( $result['sections'] as $key => $content ) {
+            if ( is_wp_error( $content ) ) {
+                $sections[ $key ] = [ 'error' => sanitize_text_field( $content->get_error_message() ) ];
+            } else {
+                $sections[ $key ] = [ 'text' => sanitize_textarea_field( $content ) ];
+            }
+        }
+
+        $word_count = str_word_count( $result['report'] );
+
+        wp_send_json_success(
+            [
+                'report'      => sanitize_textarea_field( $result['report'] ),
+                'sections'    => $sections,
+                'word_count'  => $word_count,
+                'elapsed'     => $elapsed,
+                'generated'   => current_time( 'mysql' ),
             ]
         );
     }

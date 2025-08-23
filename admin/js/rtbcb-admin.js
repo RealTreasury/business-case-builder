@@ -13,6 +13,7 @@
             this.bindCommentaryTest();
             this.bindCompanyOverviewTest();
             this.bindIndustryOverviewTest();
+            this.bindTestDashboard();
         },
 
         bindDashboardActions() {
@@ -208,6 +209,112 @@
             if (clearBtn.length) {
                 clearBtn.on('click', function(){ results.empty(); });
             }
+        },
+
+        bindTestDashboard() {
+            if (!rtbcbAdmin || rtbcbAdmin.page !== 'rtbcb-test-dashboard') { return; }
+            const runBtn = $('#rtbcb-test-all');
+            const reportWrap = $('#rtbcb-complete-report');
+            const reportText = $('#rtbcb-complete-report-text');
+            const reportMeta = $('#rtbcb-complete-report-meta');
+            const summary = $('#rtbcb-test-summary');
+            const status = {
+                company: $('#rtbcb-status-company'),
+                treasury: $('#rtbcb-status-treasury'),
+                industry: $('#rtbcb-status-industry'),
+                complete: $('#rtbcb-status-complete')
+            };
+            const original = runBtn.text();
+            const clear = () => {
+                reportText.text('');
+                reportMeta.text('');
+                reportWrap.hide();
+                summary.empty();
+                Object.values(status).forEach(el => el.text('–'));
+            };
+            const runTests = async () => {
+                runBtn.prop('disabled', true).text(rtbcbAdmin.strings.testing);
+                clear();
+                const tests = [
+                    {
+                        label: 'Company Overview',
+                        action: 'rtbcb_test_company_overview',
+                        nonce: rtbcbAdmin.company_overview_nonce,
+                        data: { company_name: 'TestCo' },
+                        el: status.company
+                    },
+                    {
+                        label: 'Treasury Tech Overview',
+                        action: 'rtbcb_test_treasury_tech_overview',
+                        nonce: rtbcbAdmin.treasury_tech_overview_nonce,
+                        data: { 'focus_areas[]': ['automation'], complexity: 'basic' },
+                        el: status.treasury
+                    },
+                    {
+                        label: 'Industry Overview',
+                        action: 'rtbcb_test_industry_overview',
+                        nonce: rtbcbAdmin.industry_overview_nonce,
+                        data: { industry: 'Finance', company_size: '100-500' },
+                        el: status.industry
+                    },
+                    {
+                        label: 'Complete Report',
+                        action: 'rtbcb_test_complete_report',
+                        nonce: rtbcbAdmin.complete_report_nonce,
+                        data: {},
+                        el: status.complete,
+                        completeReport: true
+                    }
+                ];
+                for (const t of tests) {
+                    t.el.text(rtbcbAdmin.strings.testing);
+                    const formData = new FormData();
+                    formData.append('action', t.action);
+                    formData.append('nonce', t.nonce);
+                    Object.keys(t.data).forEach(key => {
+                        const val = t.data[key];
+                        if (Array.isArray(val)) {
+                            val.forEach(v => formData.append(key, v));
+                        } else {
+                            formData.append(key, val);
+                        }
+                    });
+                    try {
+                        const response = await fetch(rtbcbAdmin.ajax_url, { method: 'POST', body: formData });
+                        const json = await response.json();
+                        if (json.success) {
+                            t.el.text('✔');
+                            if (t.completeReport) {
+                                reportWrap.show();
+                                reportText.text(json.data.report || '');
+                                const ts = new Date(json.data.generated).toLocaleTimeString();
+                                reportMeta.text('Word count: ' + json.data.word_count + ' | Duration: ' + json.data.elapsed + 's | ' + ts);
+                                summary.append($('<p />').text(t.label + ': ' + json.data.word_count + ' words'));
+                            } else {
+                                summary.append($('<p />').text(t.label + ': OK'));
+                            }
+                        } else {
+                            t.el.text('✖');
+                            summary.append($('<p />').text(t.label + ': ' + (json.data?.message || rtbcbAdmin.strings.error)));
+                        }
+                    } catch (err) {
+                        t.el.text('✖');
+                        summary.append($('<p />').text(t.label + ': ' + err.message));
+                    }
+                }
+                runBtn.prop('disabled', false).text(original);
+            };
+            runBtn.on('click', runTests);
+            $('#rtbcb-regenerate-report').on('click', runTests);
+            $('#rtbcb-clear-report').on('click', clear);
+            $('#rtbcb-copy-report').on('click', async function(){
+                try {
+                    await navigator.clipboard.writeText(reportText.text());
+                    alert(rtbcbAdmin.strings.copied);
+                } catch (err) {
+                    alert(rtbcbAdmin.strings.error + ' ' + err.message);
+                }
+            });
         },
 
         async testApiConnection(e) {

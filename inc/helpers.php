@@ -413,3 +413,59 @@ function rtbcb_test_generate_industry_overview( $industry, $company_size ) {
     return $overview;
 }
 
+/**
+ * Generate a complete report by combining all section generators.
+ *
+ * @param array $all_inputs Inputs for each section.
+ * @return array|WP_Error Array of sections and report or error on total failure.
+ */
+function rtbcb_test_generate_complete_report( $all_inputs ) {
+    $defaults = [
+        'company_name' => '',
+        'focus_areas'  => [],
+        'complexity'   => '',
+        'industry'     => '',
+        'company_size' => '',
+    ];
+
+    $inputs = wp_parse_args( $all_inputs, $defaults );
+
+    $sections     = [];
+    $report_parts = [];
+
+    $company = rtbcb_test_generate_company_overview( $inputs['company_name'] );
+    if ( is_wp_error( $company ) ) {
+        $sections['company_overview'] = $company;
+    } else {
+        $sections['company_overview'] = $company;
+        $report_parts[]                = __( 'Company Overview', 'rtbcb' ) . "\n" . $company;
+    }
+
+    $treasury = rtbcb_test_generate_treasury_tech_overview( $inputs['focus_areas'], $inputs['complexity'] );
+    if ( is_wp_error( $treasury ) ) {
+        $sections['treasury_tech_overview'] = $treasury;
+    } else {
+        $sections['treasury_tech_overview'] = $treasury;
+        $report_parts[]                     = __( 'Treasury Tech Overview', 'rtbcb' ) . "\n" . $treasury;
+    }
+
+    $industry = rtbcb_test_generate_industry_overview( $inputs['industry'], $inputs['company_size'] );
+    if ( is_wp_error( $industry ) ) {
+        $sections['industry_overview'] = $industry;
+    } else {
+        $sections['industry_overview'] = $industry;
+        $report_parts[]                = __( 'Industry Overview', 'rtbcb' ) . "\n" . $industry;
+    }
+
+    if ( empty( $report_parts ) ) {
+        return new WP_Error( 'rtbcb_no_sections', __( 'No sections generated.', 'rtbcb' ) );
+    }
+
+    $report = implode( "\n\n", $report_parts );
+
+    return [
+        'sections' => $sections,
+        'report'   => $report,
+    ];
+}
+
