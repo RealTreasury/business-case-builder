@@ -37,7 +37,6 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
         <div class="rtbcb-modal-body">
             <div class="rtbcb-form-container">
                 <form id="rtbcbForm" class="rtbcb-form rtbcb-wizard" method="post" novalidate>
-                    <?php wp_nonce_field( 'rtbcb_generate', 'rtbcb_nonce' ); ?>
 
                     <!-- Progress Indicator -->
                     <div class="rtbcb-wizard-progress">
@@ -437,6 +436,8 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                 <?php esc_html_e( 'Next', 'rtbcb' ); ?>
                 <span class="rtbcb-nav-icon">→</span>
             </button>
+
+            <?php wp_nonce_field( 'rtbcb_generate', 'rtbcb_nonce' ); ?>
 
             <button type="submit" id="rtbcb-submit-button" class="rtbcb-nav-btn rtbcb-nav-submit" style="display: none;">
                 <span class="rtbcb-nav-icon">🚀</span>
