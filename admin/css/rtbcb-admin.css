@@ -24,9 +24,52 @@
     border: 1px solid #ccd0d4;
 }
 
+.rtbcb-company-overview-results {
+    padding: 15px;
+    border: 1px solid #ccd0d4;
+    white-space: pre-wrap;
+}
+
+.rtbcb-company-overview-meta {
+    font-size: 12px;
+    color: #555d66;
+    margin-top: 10px;
+}
+
+.rtbcb-company-overview-actions {
+    margin-top: 10px;
+}
+
+.rtbcb-company-overview-actions .button {
+    margin-right: 8px;
+}
+
+.rtbcb-company-overview-actions .button:last-child {
+    margin-right: 0;
+}
+
+.rtbcb-company-overview .spinner {
+    margin-left: 5px;
+    visibility: hidden;
+}
+
+.rtbcb-company-overview .spinner.is-active {
+    visibility: visible;
+}
+
 @media (max-width: 782px) {
     .rtbcb-admin-page .rtbcb-admin-header,
     .rtbcb-admin-page .rtbcb-dashboard {
         margin-left: 0;
+    }
+
+    .rtbcb-company-overview-actions .button {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 10px;
+    }
+
+    .rtbcb-company-overview-actions .button:last-child {
+        margin-bottom: 0;
     }
 }
