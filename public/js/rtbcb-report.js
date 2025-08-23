@@ -10,7 +10,7 @@ const RTBCB_GPT5_DEFAULTS = (typeof rtbcbReport !== 'undefined' && rtbcbReport.d
     temperature: 0.7,
     store: true,
     timeout: 120,
-    max_retries: 2
+    max_retries: 3
 };
 
 function buildEnhancedPrompt(businessContext) {
@@ -263,86 +263,75 @@ Ensure the report is:
 `;
 }
 
-async function fetchWithRetry(url, options, retries, timeout) {
-    let lastError;
-    for (let attempt = 1; attempt <= retries; attempt++) {
-        const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), timeout * 1000);
-        try {
-            const response = await fetch(url, { ...options, signal: controller.signal });
-            clearTimeout(timer);
-            if (response.ok) {
-                return response;
-            }
-            lastError = new Error(`HTTP ${response.status}`);
-        } catch (error) {
-            clearTimeout(timer);
-            lastError = error;
-        }
-    }
-    throw lastError;
-}
-
 async function generateProfessionalReport(businessContext) {
-    try {
-        const cfg = RTBCB_GPT5_DEFAULTS;
-        const requestBody = {
-            model: rtbcbReport.report_model || cfg.model,
-            input: [
-                {
-                    role: 'system',
-                    content: 'You are a senior BCG consultant creating professional HTML-formatted strategic reports. Output only valid HTML code with no additional text or markdown.'
-                },
-                {
-                    role: 'user',
-                    content: buildEnhancedPrompt(businessContext)
-                }
-            ],
-            max_tokens: cfg.max_tokens,
-            reasoning: cfg.reasoning,
-            text: cfg.text,
-            temperature: cfg.temperature,
-            store: cfg.store
-        };
-
-        const response = await fetchWithRetry('https://api.openai.com/v1/responses', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${rtbcbReport.api_key}`
+    const cfg = RTBCB_GPT5_DEFAULTS;
+    const requestBody = {
+        model: rtbcbReport.report_model || cfg.model,
+        input: [
+            {
+                role: 'system',
+                content: 'You are a senior BCG consultant creating professional HTML-formatted strategic reports. Output only valid HTML code with no additional text or markdown.'
             },
-            body: JSON.stringify(requestBody)
-        }, cfg.max_retries, cfg.timeout);
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('OpenAI API error response:', errorText);
-            throw new Error(`OpenAI API error: ${response.status}`);
-        }
-
-        const data = await response.json();
-
-        if (data.error) {
-            const errorMessage = data.error.message || 'OpenAI API error';
-            const errorElement = document.getElementById('error');
-            if (errorElement) {
-                errorElement.textContent = errorMessage;
+            {
+                role: 'user',
+                content: buildEnhancedPrompt(businessContext)
             }
-            console.error('OpenAI API error details:', data.error);
-            throw new Error(errorMessage);
+        ],
+        max_tokens: cfg.max_tokens,
+        reasoning: cfg.reasoning,
+        text: cfg.text,
+        temperature: cfg.temperature,
+        store: cfg.store
+    };
+
+    const maxAttempts = cfg.max_retries || 3;
+    const baseDelay = 500;
+    let lastError;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+            const response = await fetch('https://api.openai.com/v1/responses', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${rtbcbReport.api_key}`
+                },
+                body: JSON.stringify(requestBody)
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error(`Attempt ${attempt} failed:`, errorText);
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (data.error) {
+                console.error(`Attempt ${attempt} API error details:`, data.error);
+                const errorMessage = data.error.message || 'OpenAI API error';
+                throw new Error(errorMessage);
+            }
+
+            const htmlContent = data.output_text;
+            const cleanedHTML = htmlContent
+                .replace(/```html\n?/g, '')
+                .replace(/```\n?/g, '')
+                .trim();
+
+            return cleanedHTML;
+        } catch (error) {
+            console.error(`Error generating report (attempt ${attempt}):`, error);
+            lastError = error;
+            if (attempt < maxAttempts) {
+                const delay = baseDelay * (2 ** (attempt - 1));
+                await new Promise((resolve) => setTimeout(resolve, delay));
+            }
         }
-
-        const htmlContent = data.output_text;
-        const cleanedHTML = htmlContent
-            .replace(/```html\n?/g, '')
-            .replace(/```\n?/g, '')
-            .trim();
-
-        return cleanedHTML;
-    } catch (error) {
-        console.error('Error generating report:', error);
-        throw error;
     }
+
+    console.error('All attempts to generate report failed:', lastError);
+    throw new Error('Unable to generate report at this time. Please try again later.');
 }
 
 function sanitizeReportHTML(htmlContent) {
