@@ -1274,7 +1274,7 @@
     border-radius: 50%;
     background: var(--neutral-200);
     border: 2px solid var(--primary-purple);
-    color: var(--primary-purple-light);
+    color: var(--success-green);
     position: relative;
     z-index: 1;
     display: flex;
