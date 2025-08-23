@@ -862,6 +862,115 @@ function rtbcb_test_generate_complete_report( $all_inputs ) {
 }
 
 /**
+ * Clean and prepare JSON content for parsing.
+ *
+ * @param string $content Raw content that may contain JSON.
+ * @return string Cleaned JSON string.
+ */
+function rtbcb_clean_json_content( $content ) {
+    if ( empty( $content ) ) {
+        return '';
+    }
+
+    $content = preg_replace( '/^```json\s*/', '', $content );
+    $content = preg_replace( '/```\s*$/', '', $content );
+    $content = preg_replace( '/^```\s*/', '', $content );
+    $content = trim( $content );
+
+    error_log( 'RTBCB: Cleaned JSON content length: ' . strlen( $content ) );
+    error_log( 'RTBCB: First 200 chars: ' . substr( $content, 0, 200 ) );
+
+    return $content;
+}
+
+/**
+ * Parse a GPT-5 API response into text and reasoning segments.
+ *
+ * @param array $response Raw response array from wp_remote_post().
+ * @return array Parsed response.
+ */
+function rtbcb_parse_gpt5_response( $response ) {
+    $debug_mode = defined( 'RTBCB_DEBUG' ) && RTBCB_DEBUG;
+
+    if ( $debug_mode ) {
+        error_log( 'RTBCB: Raw API response: ' . print_r( $response, true ) );
+    }
+
+    $body    = wp_remote_retrieve_body( $response );
+    $decoded = json_decode( $body, true );
+
+    $parsed = [
+        'output_text'    => '',
+        'reasoning'      => '',
+        'function_calls' => [],
+        'raw'            => $decoded,
+    ];
+
+    if ( ! is_array( $decoded ) ) {
+        return $parsed;
+    }
+
+    if ( ! empty( $decoded['output'] ) && is_array( $decoded['output'] ) ) {
+        $full_content      = '';
+        $reasoning_content = '';
+
+        foreach ( $decoded['output'] as $message ) {
+            if ( empty( $message['content'] ) || ! is_array( $message['content'] ) ) {
+                continue;
+            }
+
+            $message_content = '';
+            foreach ( $message['content'] as $content_item ) {
+                if ( ! empty( $content_item['text'] ) ) {
+                    $message_content .= $content_item['text'];
+                }
+            }
+
+            $message_type = $message['type'] ?? '';
+            $message_id   = $message['id'] ?? '';
+
+            if ( 'reasoning' === $message_type || 'reasoning' === $message_id ) {
+                $reasoning_content .= $message_content;
+            } elseif ( 'message' === $message_type || 'message' === $message_id || 'output_text' === $message_type || '' === $message_type ) {
+                $full_content .= $message_content;
+            } else {
+                $full_content .= $message_content;
+            }
+
+            if ( 'function_call' === $message_type && ! empty( $message['function_call'] ) ) {
+                $parsed['function_calls'][] = $message['function_call'];
+            }
+        }
+
+        if ( ! empty( $full_content ) ) {
+            $parsed['output_text'] = $full_content;
+        } elseif ( ! empty( $reasoning_content ) ) {
+            $parsed['output_text'] = $reasoning_content;
+        }
+
+        if ( ! empty( $reasoning_content ) ) {
+            $parsed['reasoning'] = $reasoning_content;
+        }
+    }
+
+    if ( ! empty( $parsed['output_text'] ) ) {
+        error_log( 'RTBCB: Raw output length: ' . strlen( $parsed['output_text'] ) );
+        error_log( 'RTBCB: Output preview: ' . substr( $parsed['output_text'], 0, 300 ) );
+
+        $cleaned_content = rtbcb_clean_json_content( $parsed['output_text'] );
+        if ( $cleaned_content !== $parsed['output_text'] ) {
+            $parsed['output_text'] = $cleaned_content;
+            error_log( 'RTBCB: JSON content cleaned' );
+        }
+    } else {
+        error_log( 'RTBCB: No output_text found in parsed response' );
+        error_log( 'RTBCB: Full decoded response: ' . print_r( $decoded, true ) );
+    }
+
+    return $parsed;
+}
+
+/**
  * Parse GPT-5 Responses API output with quality validation.
  *
  * @param array $response Response data from GPT-5 API.

@@ -13,7 +13,7 @@ class RTBCB_API_Tester {
      * Test OpenAI API connection.
      *
      * @param string $api_key Optional API key to test.
-     * @return array Test result.
+     * @return array|WP_Error Test result or error.
      */
     public static function test_connection( $api_key = null ) {
         $api_key = $api_key ?: get_option( 'rtbcb_openai_api_key' );
@@ -41,7 +41,7 @@ class RTBCB_API_Tester {
      * Test API with a simple completion request.
      *
      * @param string $api_key API key.
-     * @return array Test result.
+     * @return array|WP_Error Test result or error.
      */
     private static function test_completion( $api_key ) {
         $model = get_option( 'rtbcb_mini_model', rtbcb_get_default_model( 'mini' ) );
@@ -88,23 +88,22 @@ class RTBCB_API_Tester {
             ];
         }
 
-        $parsed      = rtbcb_parse_gpt5_response( $response );
-        $output_text = $parsed['output_text'];
-
-        if ( empty( $output_text ) ) {
-            return [
-                'success' => false,
-                'message' => __( 'Empty response from API.', 'rtbcb' ),
-                'details' => __( 'The API returned an empty response.', 'rtbcb' ),
-            ];
+        // Test the parsing specifically.
+        $test_result = rtbcb_parse_gpt5_response( $response );
+        if ( empty( $test_result['output_text'] ) ) {
+            return new WP_Error( 'api_test_failed', __( 'API responded but parsing failed. Check error logs.', 'rtbcb' ) );
         }
 
+        // Log the test result for debugging.
+        error_log( 'RTBCB API Test: Parsed output length: ' . strlen( $test_result['output_text'] ) );
+        error_log( 'RTBCB API Test: Output preview: ' . substr( $test_result['output_text'], 0, 200 ) );
+
         return [
-            'success' => true,
-            'message' => __( 'Connection successful.', 'rtbcb' ),
-            'response' => $output_text,
-            'details' => sprintf( __( 'Model: %s, Response length: %d characters', 'rtbcb' ),
-                $model, strlen( $output_text ) ),
+            'success'       => true,
+            'message'       => __( 'API connection successful', 'rtbcb' ),
+            'response'      => $test_result['output_text'],
+            'raw_length'    => strlen( $response['body'] ?? '' ),
+            'parsed_length' => strlen( $test_result['output_text'] ),
         ];
     }
 }
