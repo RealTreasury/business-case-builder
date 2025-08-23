@@ -1046,8 +1046,8 @@ class RTBCB_LLM {
             return new WP_Error( 'openai_api_error', $error_message );
         }
 
-        $decoded = json_decode( $response_body, true );
-        $content = '';
+        $decoded       = json_decode( $response_body, true );
+        $content       = '';
 
         if ( isset( $decoded['output_text'] ) ) {
             $content = is_array( $decoded['output_text'] ) ? implode( ' ', (array) $decoded['output_text'] ) : $decoded['output_text'];
@@ -1055,17 +1055,26 @@ class RTBCB_LLM {
             $content = $decoded['output'][0]['content'][0]['text'];
         }
 
-        error_log( 'RTBCB: OpenAI content: ' . $content );
+        // Capture the finish reason to detect length-based truncation.
+        $finish_reason = $decoded['output'][0]['finish_reason'] ?? '';
 
-        if ( empty( $content ) ) {
-            error_log( 'RTBCB: Empty content received from OpenAI.' );
-            $this->log_gpt5_call( $prompt, $decoded, 'Empty content received from OpenAI' );
-            if ( $max_tokens > 1000 ) {
-                error_log( 'RTBCB: Retrying with lower max_tokens.' );
-                return $this->call_openai( $model, $prompt, 1000 );
+        error_log( 'RTBCB: OpenAI content: ' . $content );
+        error_log( 'RTBCB: OpenAI finish_reason: ' . $finish_reason );
+
+        if ( 'length' === $finish_reason || empty( $content ) ) {
+            // Retry with more tokens if the response was truncated or empty.
+            $this->log_gpt5_call( $prompt, $decoded, 'Truncated or empty response from OpenAI' );
+            if ( $max_tokens < 8000 ) {
+                $new_max_tokens = $max_tokens + 1000;
+                error_log( 'RTBCB: Retrying with higher max_tokens: ' . $new_max_tokens );
+                return $this->call_openai( $model, $prompt, $new_max_tokens );
             }
 
-            return new WP_Error( 'openai_empty_response', __( 'OpenAI returned an empty response.', 'rtbcb' ) );
+            // Return specific error when truncation cannot be resolved by retry.
+            return new WP_Error(
+                'openai_response_truncated',
+                __( 'OpenAI response was truncated due to the max tokens limit.', 'rtbcb' )
+            );
         }
 
         $this->log_gpt5_call( $prompt, $decoded );
