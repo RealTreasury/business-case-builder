@@ -1,12 +1,43 @@
 const assert = require('assert');
 const fs = require('fs');
+const path = require('path');
 const vm = require('vm');
 const { execSync } = require('child_process');
 
 (async () => {
+    // Load test model from environment or config
+    const envPath   = path.resolve(__dirname, '..', '.env');
+    const configPath = path.join(__dirname, 'test-config.json');
+    let testModel   = process.env.RTBCB_TEST_MODEL;
+
+    if ( ! testModel && fs.existsSync( envPath ) ) {
+        const envLines = fs.readFileSync( envPath, 'utf8' ).split(/\r?\n/);
+        envLines.forEach( ( line ) => {
+            const match = line.match( /^RTBCB_TEST_MODEL=(.*)$/ );
+            if ( match ) {
+                testModel = match[1].trim();
+            }
+        } );
+    }
+
+    if ( ! testModel && fs.existsSync( configPath ) ) {
+        try {
+            const cfg = JSON.parse( fs.readFileSync( configPath, 'utf8' ) );
+            if ( cfg.model ) {
+                testModel = cfg.model;
+            }
+        } catch ( e ) {
+            // Ignore JSON parse errors and fall back to default
+        }
+    }
+
+    if ( ! testModel ) {
+        testModel = 'gpt-5-test';
+    }
+
     // Client-side test for generateProfessionalReport
     let capturedBody;
-    global.rtbcbReport = { report_model: 'gpt-5-test', api_key: 'test' };
+    global.rtbcbReport = { report_model: testModel, api_key: 'test' };
     global.fetch = async (url, options) => {
         capturedBody = JSON.parse(options.body);
         return { ok: true, json: async () => ({ output_text: '<html></html>' }) };

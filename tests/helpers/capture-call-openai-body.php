@@ -5,6 +5,10 @@ if ( ! function_exists( 'get_option' ) ) {
         if ( 'rtbcb_openai_api_key' === $name ) {
             return 'test-key';
         }
+        if ( 'rtbcb_advanced_model' === $name ) {
+            $env_model = getenv( 'RTBCB_TEST_MODEL' );
+            return false !== $env_model ? $env_model : $default;
+        }
         return $default;
     }
 }
@@ -73,7 +77,7 @@ $llm       = new RTBCB_LLM();
 $ref       = new ReflectionClass( $llm );
 $method    = $ref->getMethod( 'call_openai' );
 $method->setAccessible( true );
-$method->invoke( $llm, 'gpt-5', 'test prompt' );
+$method->invoke( $llm, get_option( 'rtbcb_advanced_model', 'gpt-5-mini' ), 'test prompt' );
 
 global $captured_body;
 echo json_encode( $captured_body );
