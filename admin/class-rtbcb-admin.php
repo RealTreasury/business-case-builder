@@ -189,6 +189,15 @@ class RTBCB_Admin {
             'rtbcb-calculations',
             [ $this, 'render_calculation_info' ]
         );
+
+        add_submenu_page(
+            'rtbcb-dashboard',
+            __( 'Test Company Overview', 'rtbcb' ),
+            __( 'Test Company Overview', 'rtbcb' ),
+            'manage_options',
+            'rtbcb-test-company-overview',
+            [ $this, 'render_test_company_overview' ]
+        );
     }
 
     /**
@@ -298,6 +307,15 @@ class RTBCB_Admin {
      */
     public function render_calculation_info() {
         include RTBCB_DIR . 'admin/calculations-page.php';
+    }
+
+    /**
+     * Render test company overview page.
+     *
+     * @return void
+     */
+    public function render_test_company_overview() {
+        include RTBCB_DIR . 'admin/test-company-overview-page.php';
     }
 
     /**
