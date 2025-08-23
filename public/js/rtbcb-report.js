@@ -253,63 +253,75 @@ Ensure the report is:
 }
 
 async function generateProfessionalReport(businessContext) {
-    try {
-        const requestBody = {
-            model: rtbcbReport.report_model,
-            input: [
-                {
-                    role: 'system',
-                    content: 'You are a senior BCG consultant creating professional HTML-formatted strategic reports. Output only valid HTML code with no additional text or markdown.'
-                },
-                {
-                    role: 'user',
-                    content: buildEnhancedPrompt(businessContext)
-                }
-            ],
-            max_tokens: 4000,
-            reasoning: { effort: 'medium' },
-            text: { verbosity: 'medium' },
-            temperature: 0.7,
-            store: true
-        };
-
-        const response = await fetch('https://api.openai.com/v1/responses', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${rtbcbReport.api_key}`
+    const requestBody = {
+        model: rtbcbReport.report_model,
+        input: [
+            {
+                role: 'system',
+                content: 'You are a senior BCG consultant creating professional HTML-formatted strategic reports. Output only valid HTML code with no additional text or markdown.'
             },
-            body: JSON.stringify(requestBody)
-        });
+            {
+                role: 'user',
+                content: buildEnhancedPrompt(businessContext)
+            }
+        ],
+        max_tokens: 4000,
+        reasoning: { effort: 'medium' },
+        text: { verbosity: 'medium' },
+        temperature: 0.7,
+        store: true
+    };
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('OpenAI API error response:', errorText);
-            throw new Error(`OpenAI API error: ${response.status}`);
-        }
+    const maxAttempts = 3;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+            const response = await fetch('https://api.openai.com/v1/responses', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${rtbcbReport.api_key}`
+                },
+                body: JSON.stringify(requestBody)
+            });
 
-        const data = await response.json();
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error(`OpenAI API error response (attempt ${attempt}):`, errorText);
+                throw new Error(`OpenAI API error: ${response.status}`);
+            }
 
-        if (data.error) {
-            const errorMessage = data.error.message || 'OpenAI API error';
+            const data = await response.json();
+
+            if (data.error) {
+                const errorMessage = data.error.message || 'OpenAI API error';
+                const errorElement = document.getElementById('error');
+                if (errorElement) {
+                    errorElement.textContent = errorMessage;
+                }
+                console.error('OpenAI API error details:', data.error);
+                throw new Error(errorMessage);
+            }
+
+            const htmlContent = data.output_text;
+            const cleanedHTML = htmlContent
+                .replace(/```html\n?/g, '')
+                .replace(/```\n?/g, '')
+                .trim();
+
+            return cleanedHTML;
+        } catch (error) {
+            console.error(`Error generating report (attempt ${attempt}):`, error);
+            if (attempt < maxAttempts) {
+                const delay = 1000 * Math.pow(2, attempt - 1);
+                await new Promise((resolve) => setTimeout(resolve, delay));
+                continue;
+            }
             const errorElement = document.getElementById('error');
             if (errorElement) {
-                errorElement.textContent = errorMessage;
+                errorElement.textContent = 'Failed to generate report. Please try again later.';
             }
-            console.error('OpenAI API error details:', data.error);
-            throw new Error(errorMessage);
+            throw error;
         }
-
-        const htmlContent = data.output_text;
-        const cleanedHTML = htmlContent
-            .replace(/```html\n?/g, '')
-            .replace(/```\n?/g, '')
-            .trim();
-
-        return cleanedHTML;
-    } catch (error) {
-        console.error('Error generating report:', error);
-        throw error;
     }
 }
 
