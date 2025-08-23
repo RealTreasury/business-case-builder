@@ -39,6 +39,8 @@ class RTBCB_Admin {
         add_action( 'wp_ajax_rtbcb_test_treasury_tech_overview', [ $this, 'ajax_test_treasury_tech_overview' ] );
         add_action( 'wp_ajax_rtbcb_test_industry_overview', [ $this, 'ajax_test_industry_overview' ] );
         add_action( 'wp_ajax_rtbcb_save_test_results', [ $this, 'save_test_results' ] );
+        add_action( 'wp_ajax_rtbcb_test_generate_complete_report', [ $this, 'ajax_test_generate_complete_report' ] );
+        add_action( 'wp_ajax_rtbcb_test_calculate_roi', [ $this, 'ajax_test_calculate_roi' ] );
     }
 
     /**
@@ -69,15 +71,17 @@ class RTBCB_Admin {
         );
 
         wp_localize_script( 'rtbcb-admin', 'rtbcbAdmin', [
-            'ajax_url'             => admin_url( 'admin-ajax.php' ),
-            'nonce'                => wp_create_nonce( 'rtbcb_nonce' ),
-            'diagnostics_nonce'    => wp_create_nonce( 'rtbcb_diagnostics' ),
-            'report_preview_nonce' => wp_create_nonce( 'rtbcb_generate_report_preview' ),
-            'company_overview_nonce' => wp_create_nonce( 'rtbcb_test_company_overview' ),
+            'ajax_url'                   => admin_url( 'admin-ajax.php' ),
+            'nonce'                      => wp_create_nonce( 'rtbcb_nonce' ),
+            'diagnostics_nonce'          => wp_create_nonce( 'rtbcb_diagnostics' ),
+            'report_preview_nonce'       => wp_create_nonce( 'rtbcb_generate_report_preview' ),
+            'company_overview_nonce'     => wp_create_nonce( 'rtbcb_test_company_overview' ),
             'treasury_tech_overview_nonce' => wp_create_nonce( 'rtbcb_test_treasury_tech_overview' ),
-            'industry_overview_nonce' => wp_create_nonce( 'rtbcb_test_industry_overview' ),
-            'page'                 => $page,
-            'strings'              => [
+            'industry_overview_nonce'    => wp_create_nonce( 'rtbcb_test_industry_overview' ),
+            'complete_report_nonce'      => wp_create_nonce( 'rtbcb_test_generate_complete_report' ),
+            'roi_nonce'                  => wp_create_nonce( 'rtbcb_test_calculate_roi' ),
+            'page'                       => $page,
+            'strings'                    => [
                 'confirm_delete'      => __( 'Are you sure you want to delete this lead?', 'rtbcb' ),
                 'confirm_bulk_delete' => __( 'Are you sure you want to delete the selected leads?', 'rtbcb' ),
                 'processing'          => __( 'Processing...', 'rtbcb' ),
@@ -85,6 +89,7 @@ class RTBCB_Admin {
                 'testing'             => __( 'Testing...', 'rtbcb' ),
                 'generating'          => __( 'Generating...', 'rtbcb' ),
                 'copied'              => __( 'Copied to clipboard.', 'rtbcb' ),
+                'retry'               => __( 'Retry', 'rtbcb' ),
             ],
         ] );
 
@@ -100,6 +105,16 @@ class RTBCB_Admin {
             'rtbcbAdmin.sampleForms = ' . wp_json_encode( $rtbcb_sample_data ) . ';',
             'after'
         );
+
+        if ( 'rtbcb-report-test' === $page ) {
+            wp_enqueue_script(
+                'rtbcb-report-test',
+                RTBCB_URL . 'admin/js/report-test.js',
+                [ 'jquery', 'rtbcb-admin' ],
+                RTBCB_VERSION,
+                true
+            );
+        }
     }
 
     /**
@@ -745,6 +760,77 @@ class RTBCB_Admin {
                 'generated'  => current_time( 'mysql' ),
             ]
         );
+    }
+
+    /**
+     * AJAX handler to calculate ROI from sample inputs.
+     *
+     * @return void
+     */
+    public function ajax_test_calculate_roi() {
+        check_ajax_referer( 'rtbcb_test_calculate_roi', 'nonce' );
+
+        $roi_inputs = isset( $_POST['roi_inputs'] ) && is_array( $_POST['roi_inputs'] )
+            ? rtbcb_sanitize_form_data( wp_unslash( $_POST['roi_inputs'] ) )
+            : rtbcb_get_sample_inputs();
+
+        $start = microtime( true );
+        $roi   = RTBCB_Calculator::calculate_roi( $roi_inputs );
+        $elapsed = round( microtime( true ) - $start, 2 );
+
+        if ( empty( $roi ) || is_wp_error( $roi ) ) {
+            wp_send_json_error( [ 'message' => __( 'Unable to calculate ROI.', 'rtbcb' ) ] );
+        }
+
+        wp_send_json_success(
+            [
+                'roi'       => $roi,
+                'word_count'=> 0,
+                'elapsed'   => $elapsed,
+                'generated' => current_time( 'mysql' ),
+            ]
+        );
+    }
+
+    /**
+     * AJAX handler to generate complete report.
+     *
+     * @return void
+     */
+    public function ajax_test_generate_complete_report() {
+        check_ajax_referer( 'rtbcb_test_generate_complete_report', 'nonce' );
+
+        $company_name = isset( $_POST['company_name'] ) ? sanitize_text_field( wp_unslash( $_POST['company_name'] ) ) : '';
+        $focus_areas  = isset( $_POST['focus_areas'] ) ? (array) wp_unslash( $_POST['focus_areas'] ) : [];
+        $focus_areas  = array_filter( array_map( 'sanitize_text_field', $focus_areas ) );
+        $complexity   = isset( $_POST['complexity'] ) ? sanitize_text_field( wp_unslash( $_POST['complexity'] ) ) : '';
+        $roi_inputs   = isset( $_POST['roi_inputs'] ) && is_array( $_POST['roi_inputs'] )
+            ? rtbcb_sanitize_form_data( wp_unslash( $_POST['roi_inputs'] ) )
+            : rtbcb_get_sample_inputs();
+
+        if ( empty( $company_name ) || empty( $focus_areas ) ) {
+            wp_send_json_error( [ 'message' => __( 'Missing required inputs.', 'rtbcb' ) ], 400 );
+        }
+
+        $result = rtbcb_test_generate_complete_report(
+            [
+                'company_name' => $company_name,
+                'focus_areas'  => $focus_areas,
+                'complexity'   => $complexity,
+                'roi_inputs'   => $roi_inputs,
+            ]
+        );
+
+        if ( is_wp_error( $result ) ) {
+            wp_send_json_error( [ 'message' => $result->get_error_message() ], 500 );
+        }
+
+        $allowed_tags          = wp_kses_allowed_html( 'post' );
+        $allowed_tags['style'] = [];
+        $allowed_tags['iframe'] = [ 'src' => [], 'style' => [] ];
+        $result['html']        = wp_kses( $result['html'], $allowed_tags );
+
+        wp_send_json_success( $result );
     }
 
     /**
