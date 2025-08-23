@@ -1776,3 +1776,286 @@ function rtbcb_enqueue_recommended_category_scripts( $hook ) {
     }
 }
 
+/**
+ * Two-phase company analysis AJAX handler.
+ */
+class RTBCB_TwoPhase_Analysis {
+
+    /**
+     * Constructor.
+     */
+    public function __construct() {
+        add_action( 'wp_ajax_rtbcb_openai_request', [ $this, 'handle_openai_request' ] );
+    }
+
+    /**
+     * Handle generic OpenAI requests for two-phase analysis.
+     */
+    public function handle_openai_request() {
+        if ( ! wp_verify_nonce( $_POST['nonce'], 'rtbcb_admin_nonce' ) ) {
+            wp_die( __( 'Security check failed', 'rtbcb' ) );
+        }
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( __( 'Insufficient permissions', 'rtbcb' ) );
+        }
+
+        $prompt      = sanitize_textarea_field( wp_unslash( $_POST['prompt'] ?? '' ) );
+        $max_tokens  = intval( $_POST['max_tokens'] ?? 800 );
+        $temperature = floatval( $_POST['temperature'] ?? 0.3 );
+
+        if ( empty( $prompt ) ) {
+            wp_send_json_error( [ 'message' => __( 'Prompt is required', 'rtbcb' ) ] );
+        }
+
+        try {
+            $response = $this->call_openai_api( $prompt, $max_tokens, $temperature );
+
+            wp_send_json_success(
+                [
+                    'response'    => $response,
+                    'tokens_used' => $max_tokens,
+                    'timestamp'   => current_time( 'mysql' ),
+                ]
+            );
+        } catch ( Exception $e ) {
+            error_log( 'RTBCB OpenAI API Error: ' . $e->getMessage() );
+            wp_send_json_error(
+                [
+                    'message' => sprintf( __( 'API request failed: %s', 'rtbcb' ), $e->getMessage() ),
+                ]
+            );
+        }
+    }
+
+    /**
+     * Make OpenAI API call.
+     *
+     * @param string $prompt      Prompt to send.
+     * @param int    $max_tokens  Maximum tokens.
+     * @param float  $temperature Temperature.
+     *
+     * @return string
+     * @throws Exception When API fails.
+     */
+    private function call_openai_api( $prompt, $max_tokens, $temperature ) {
+        $api_key = get_option( 'rtbcb_openai_api_key' );
+
+        if ( empty( $api_key ) ) {
+            throw new Exception( __( 'OpenAI API key not configured', 'rtbcb' ) );
+        }
+
+        $url  = 'https://api.openai.com/v1/chat/completions';
+        $data = [
+            'model'       => 'gpt-4',
+            'messages'    => [
+                [
+                    'role'    => 'user',
+                    'content' => $prompt,
+                ],
+            ],
+            'max_tokens'  => $max_tokens,
+            'temperature' => $temperature,
+            'timeout'     => 60,
+        ];
+
+        $args = [
+            'timeout' => 60,
+            'headers' => [
+                'Content-Type'  => 'application/json',
+                'Authorization' => 'Bearer ' . $api_key,
+            ],
+            'body'    => wp_json_encode( $data ),
+        ];
+
+        $response = wp_remote_post( $url, $args );
+
+        if ( is_wp_error( $response ) ) {
+            throw new Exception( sprintf( __( 'HTTP request failed: %s', 'rtbcb' ), $response->get_error_message() ) );
+        }
+
+        $response_code = wp_remote_retrieve_response_code( $response );
+        if ( 200 !== $response_code ) {
+            throw new Exception( sprintf( __( 'API returned error code: %s', 'rtbcb' ), $response_code ) );
+        }
+
+        $body    = wp_remote_retrieve_body( $response );
+        $decoded = json_decode( $body, true );
+
+        if ( json_last_error() !== JSON_ERROR_NONE ) {
+            throw new Exception( __( 'Invalid JSON response', 'rtbcb' ) );
+        }
+
+        if ( ! isset( $decoded['choices'][0]['message']['content'] ) ) {
+            throw new Exception( __( 'Unexpected API response structure', 'rtbcb' ) );
+        }
+
+        return $decoded['choices'][0]['message']['content'];
+    }
+
+    /**
+     * Validate JSON response from OpenAI.
+     *
+     * @param string $response Response string.
+     *
+     * @return array|false
+     */
+    private function validate_json_response( $response ) {
+        $decoded = json_decode( $response, true );
+
+        if ( json_last_error() !== JSON_ERROR_NONE ) {
+            return false;
+        }
+
+        return $decoded;
+    }
+
+    /**
+     * Log analysis attempts for debugging.
+     *
+     * @param string $company_name Company name.
+     * @param string $phase        Phase identifier.
+     * @param bool   $success      Whether phase succeeded.
+     */
+    private function log_analysis_attempt( $company_name, $phase, $success = true ) {
+        if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+            error_log(
+                sprintf(
+                    'RTBCB Analysis: Company=%s, Phase=%s, Success=%s',
+                    $company_name,
+                    $phase,
+                    $success ? 'Yes' : 'No'
+                )
+            );
+        }
+    }
+}
+
+new RTBCB_TwoPhase_Analysis();
+
+// Optional: Add settings for API configuration.
+add_action(
+    'admin_init',
+    function () {
+        register_setting( 'rtbcb_settings', 'rtbcb_openai_api_key' );
+
+        add_settings_field(
+            'rtbcb_openai_api_key',
+            __( 'OpenAI API Key', 'rtbcb' ),
+            function () {
+                $value = get_option( 'rtbcb_openai_api_key', '' );
+                echo '<input type="password" name="rtbcb_openai_api_key" value="' . esc_attr( $value ) . '" class="regular-text" />';
+                echo '<p class="description">' . esc_html__( 'Enter your OpenAI API key for company analysis.', 'rtbcb' ) . '</p>';
+            },
+            'rtbcb_settings',
+            'rtbcb_main_section'
+        );
+    }
+);
+
+/**
+ * Enhanced error handling for two-phase analysis.
+ */
+class RTBCB_Analysis_Logger {
+
+    /**
+     * Log phase start.
+     *
+     * @param string $company Company name.
+     * @param string $phase   Phase identifier.
+     */
+    public static function log_phase_start( $company, $phase ) {
+        self::log( "Started Phase {$phase} for {$company}" );
+    }
+
+    /**
+     * Log phase completion.
+     *
+     * @param string $company  Company name.
+     * @param string $phase    Phase identifier.
+     * @param int    $duration Duration in ms.
+     */
+    public static function log_phase_complete( $company, $phase, $duration ) {
+        self::log( "Completed Phase {$phase} for {$company} in {$duration}ms" );
+    }
+
+    /**
+     * Log phase error.
+     *
+     * @param string $company Company name.
+     * @param string $phase   Phase identifier.
+     * @param string $error   Error message.
+     */
+    public static function log_phase_error( $company, $phase, $error ) {
+        self::log( "Phase {$phase} failed for {$company}: {$error}", 'error' );
+    }
+
+    /**
+     * Write to debug log.
+     *
+     * @param string $message Message.
+     * @param string $level   Log level.
+     */
+    private static function log( $message, $level = 'info' ) {
+        if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+            error_log( "[RTBCB-{$level}] {$message}" );
+        }
+    }
+}
+
+/**
+ * Usage tracking for rate limiting and optimization.
+ */
+class RTBCB_Usage_Tracker {
+
+    /**
+     * Track API request usage.
+     *
+     * @param string $company     Company name.
+     * @param string $phase       Phase identifier.
+     * @param int    $tokens_used Tokens used.
+     */
+    public static function track_request( $company, $phase, $tokens_used ) {
+        $usage = get_option( 'rtbcb_api_usage', [] );
+
+        $today = date( 'Y-m-d' );
+        if ( ! isset( $usage[ $today ] ) ) {
+            $usage[ $today ] = [
+                'requests'  => 0,
+                'tokens'    => 0,
+                'companies' => [],
+            ];
+        }
+
+        $usage[ $today ]['requests']++;
+        $usage[ $today ]['tokens']      += $tokens_used;
+        $usage[ $today ]['companies'][] = $company;
+
+        $cutoff = date( 'Y-m-d', strtotime( '-30 days' ) );
+        foreach ( $usage as $date => $data ) {
+            if ( $date < $cutoff ) {
+                unset( $usage[ $date ] );
+            }
+        }
+
+        update_option( 'rtbcb_api_usage', $usage );
+    }
+
+    /**
+     * Get today's usage statistics.
+     *
+     * @return array
+     */
+    public static function get_daily_usage() {
+        $usage = get_option( 'rtbcb_api_usage', [] );
+        $today = date( 'Y-m-d' );
+
+        return isset( $usage[ $today ] ) ? $usage[ $today ] : [
+            'requests'  => 0,
+            'tokens'    => 0,
+            'companies' => [],
+        ];
+    }
+}
+
+
