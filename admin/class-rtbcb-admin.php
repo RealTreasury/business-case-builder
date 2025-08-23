@@ -71,6 +71,7 @@ class RTBCB_Admin {
             'diagnostics_nonce'    => wp_create_nonce( 'rtbcb_diagnostics' ),
             'report_preview_nonce' => wp_create_nonce( 'rtbcb_generate_report_preview' ),
             'company_overview_nonce' => wp_create_nonce( 'rtbcb_test_company_overview' ),
+            'commentary_nonce'     => wp_create_nonce( 'rtbcb_test_commentary' ),
             'page'                 => $page,
             'strings'              => [
                 'confirm_delete'      => __( 'Are you sure you want to delete this lead?', 'rtbcb' ),
@@ -80,6 +81,12 @@ class RTBCB_Admin {
                 'testing'             => __( 'Testing...', 'rtbcb' ),
                 'generating'          => __( 'Generating...', 'rtbcb' ),
                 'copied'              => __( 'Copied to clipboard.', 'rtbcb' ),
+                'copy'                => __( 'Copy Text', 'rtbcb' ),
+                'regenerate'          => __( 'Regenerate', 'rtbcb' ),
+                'clear'               => __( 'Clear', 'rtbcb' ),
+                'word_count'          => __( 'Word count:', 'rtbcb' ),
+                'elapsed'             => __( 'Elapsed:', 'rtbcb' ),
+                'generated'           => __( 'Generated:', 'rtbcb' ),
             ],
         ] );
 
@@ -509,14 +516,25 @@ class RTBCB_Admin {
             wp_send_json_error( [ 'message' => __( 'Invalid industry.', 'rtbcb' ) ] );
         }
 
+        $start      = microtime( true );
         $llm        = new RTBCB_LLM();
         $commentary = $llm->generate_industry_commentary( $industry );
+        $elapsed    = round( microtime( true ) - $start, 2 );
 
         if ( is_wp_error( $commentary ) ) {
             wp_send_json_error( [ 'message' => sanitize_text_field( $commentary->get_error_message() ) ] );
         }
 
-        wp_send_json_success( [ 'commentary' => sanitize_text_field( $commentary ) ] );
+        $word_count = str_word_count( $commentary );
+
+        wp_send_json_success(
+            [
+                'commentary' => sanitize_text_field( $commentary ),
+                'word_count' => $word_count,
+                'elapsed'    => $elapsed,
+                'generated'  => current_time( 'mysql' ),
+            ]
+        );
     }
 
     /**

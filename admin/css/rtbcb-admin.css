@@ -30,21 +30,30 @@
     white-space: pre-wrap;
 }
 
-.rtbcb-company-overview-meta {
+.rtbcb-company-overview-meta,
+.rtbcb-result-meta {
     font-size: 12px;
     color: #555d66;
     margin-top: 10px;
 }
 
-.rtbcb-company-overview-actions {
+.rtbcb-company-overview-meta span,
+.rtbcb-result-meta span {
+    margin-right: 10px;
+}
+
+.rtbcb-company-overview-actions,
+.rtbcb-result-actions {
     margin-top: 10px;
 }
 
-.rtbcb-company-overview-actions .button {
+.rtbcb-company-overview-actions .button,
+.rtbcb-result-actions .button {
     margin-right: 8px;
 }
 
-.rtbcb-company-overview-actions .button:last-child {
+.rtbcb-company-overview-actions .button:last-child,
+.rtbcb-result-actions .button:last-child {
     margin-right: 0;
 }
 
@@ -63,13 +72,15 @@
         margin-left: 0;
     }
 
-    .rtbcb-company-overview-actions .button {
+    .rtbcb-company-overview-actions .button,
+    .rtbcb-result-actions .button {
         width: 100%;
         margin-right: 0;
         margin-bottom: 10px;
     }
 
-    .rtbcb-company-overview-actions .button:last-child {
+    .rtbcb-company-overview-actions .button:last-child,
+    .rtbcb-result-actions .button:last-child {
         margin-bottom: 0;
     }
 }

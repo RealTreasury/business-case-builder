@@ -357,8 +357,16 @@ add_filter( 'rtbcb_sample_report_inputs', 'rtbcb_map_sample_report_inputs', 10, 
 function rtbcb_test_generate_company_overview( $company_name ) {
     $company_name = sanitize_text_field( $company_name );
 
-    $llm      = new RTBCB_LLM();
-    $overview = $llm->generate_company_overview( $company_name );
+    try {
+        $llm      = new RTBCB_LLM();
+        $overview = $llm->generate_company_overview( $company_name );
+    } catch ( Exception $e ) {
+        return new WP_Error( 'llm_exception', __( 'Failed to generate company overview.', 'rtbcb' ) );
+    }
+
+    if ( is_wp_error( $overview ) ) {
+        return $overview;
+    }
 
     return $overview;
 }

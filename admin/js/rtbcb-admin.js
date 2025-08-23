@@ -2,6 +2,50 @@
     'use strict';
 
     const RTBCBAdmin = {
+        utils: {
+            startLoading($button, text) {
+                const original = $button.text();
+                $button.data('rtbcb-original', original)
+                    .prop('disabled', true)
+                    .text(text);
+            },
+            stopLoading($button) {
+                const original = $button.data('rtbcb-original');
+                $button.prop('disabled', false).text(original);
+            },
+            renderResult($container, text, meta, callbacks = {}) {
+                const wrap = $('<div />');
+                wrap.append($('<p />').text(text));
+                const metaDiv = $('<div class="rtbcb-result-meta" />');
+                if (meta.word_count !== undefined) {
+                    metaDiv.append($('<span />').text(rtbcbAdmin.strings.word_count + ' ' + meta.word_count));
+                }
+                if (meta.elapsed !== undefined) {
+                    metaDiv.append($('<span />').text(rtbcbAdmin.strings.elapsed + ' ' + meta.elapsed + 's'));
+                }
+                if (meta.generated) {
+                    metaDiv.append($('<span />').text(rtbcbAdmin.strings.generated + ' ' + meta.generated));
+                }
+                wrap.append(metaDiv);
+                const actions = $('<p class="rtbcb-result-actions" />');
+                const regen = $('<button type="button" class="button" />').text(rtbcbAdmin.strings.regenerate);
+                const copy = $('<button type="button" class="button" />').text(rtbcbAdmin.strings.copy);
+                const clear = $('<button type="button" class="button" />').text(rtbcbAdmin.strings.clear);
+                regen.on('click', function(){ callbacks.regenerate && callbacks.regenerate(); });
+                copy.on('click', async function(){
+                    try {
+                        await navigator.clipboard.writeText(text);
+                        alert(rtbcbAdmin.strings.copied);
+                    } catch (err) {
+                        alert(rtbcbAdmin.strings.error + ' ' + err.message);
+                    }
+                });
+                clear.on('click', function(){ callbacks.clear && callbacks.clear(); });
+                actions.append(regen).append(' ').append(copy).append(' ').append(clear);
+                wrap.append(actions);
+                $container.html(wrap);
+            }
+        },
         init() {
             this.bindDashboardActions();
             this.bindExportButtons();
@@ -37,15 +81,15 @@
             const button = $('#rtbcb-generate-commentary');
             if (!button.length) { return; }
             const results = $('#rtbcb-commentary-results');
+            const self = this;
             button.on('click', async function (e) {
                 e.preventDefault();
+                self.utils.startLoading(button, rtbcbAdmin.strings.generating);
                 const industry = $('#rtbcb-commentary-industry').val();
-                const nonce = rtbcbAdmin.company_overview_nonce;
-                const original = button.text();
-                button.prop('disabled', true).text(rtbcbAdmin.strings.generating);
+                const nonce = rtbcbAdmin.commentary_nonce;
                 try {
                     const formData = new FormData();
-                    formData.append('action', 'rtbcb_test_company_overview');
+                    formData.append('action', 'rtbcb_test_commentary');
                     formData.append('industry', industry);
                     formData.append('nonce', nonce);
                     const response = await fetch(rtbcbAdmin.ajax_url, { method: 'POST', body: formData });
@@ -54,23 +98,17 @@
                     }
                     const data = await response.json();
                     if (data.success) {
-                        const overview = data.data.overview || '';
-                        results.text(overview);
-                        if (navigator.clipboard) {
-                            try {
-                                await navigator.clipboard.writeText(overview);
-                                alert(rtbcbAdmin.strings.copied);
-                            } catch (clipErr) {
-                                // Ignore clipboard errors.
-                            }
-                        }
+                        self.utils.renderResult(results, data.data.commentary || '', data.data, {
+                            regenerate: () => button.trigger('click'),
+                            clear: () => results.empty()
+                        });
                     } else {
                         alert(data.data?.message || rtbcbAdmin.strings.error);
                     }
                 } catch (err) {
                     alert(`${rtbcbAdmin.strings.error} ${err.message}`);
                 }
-                button.prop('disabled', false).text(original);
+                self.utils.stopLoading(button);
             });
         },
 
@@ -81,13 +119,12 @@
             const results = $('#rtbcb-company-overview-results');
             const clearBtn = $('#rtbcb-clear-results');
             const submitBtn = form.find('button[type="submit"]');
+            const self = this;
             const submitHandler = async function(e) {
                 e.preventDefault();
-                const original = submitBtn.text();
-                submitBtn.prop('disabled', true).text(rtbcbAdmin.strings.processing);
+                self.utils.startLoading(submitBtn, rtbcbAdmin.strings.processing);
                 const company = $('#rtbcb-company-name').val();
                 const nonce = form.find('[name="nonce"]').val();
-                const start = performance.now();
                 try {
                     const formData = new FormData();
                     formData.append('action', 'rtbcb_test_company_overview');
@@ -99,30 +136,10 @@
                     }
                     const data = await response.json();
                     if (data.success) {
-                        const text = data.data?.overview || '';
-                        const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
-                        const duration = ((performance.now() - start) / 1000).toFixed(2);
-                        const timestamp = new Date().toLocaleTimeString();
-                        const container = $('<div />');
-                        container.append($('<p />').text(text));
-                        container.append($('<p />').text('Word count: ' + wordCount));
-                        container.append($('<p />').text('Duration: ' + duration + 's'));
-                        container.append($('<p />').text('Timestamp: ' + timestamp));
-                        const actions = $('<p />');
-                        const regen = $('<button type="button" class="button" />').text('Regenerate');
-                        const copy = $('<button type="button" class="button" />').text('Copy Text');
-                        regen.on('click', function(){ form.trigger('submit'); });
-                        copy.on('click', async function(){
-                            try {
-                                await navigator.clipboard.writeText(text);
-                                alert(rtbcbAdmin.strings.copied);
-                            } catch (err) {
-                                alert(rtbcbAdmin.strings.error + ' ' + err.message);
-                            }
+                        self.utils.renderResult(results, data.data?.overview || '', data.data, {
+                            regenerate: () => form.trigger('submit'),
+                            clear: () => results.empty()
                         });
-                        actions.append(regen).append(' ').append(copy);
-                        container.append(actions);
-                        results.html(container);
                     } else {
                         const message = data.data?.message || rtbcbAdmin.strings.error;
                         results.html('<div class="notice notice-error"><p>' + message + '</p></div>');
@@ -130,7 +147,7 @@
                 } catch (err) {
                     results.html('<div class="notice notice-error"><p>' + rtbcbAdmin.strings.error + ' ' + err.message + '</p></div>');
                 }
-                submitBtn.prop('disabled', false).text(original);
+                self.utils.stopLoading(submitBtn);
             };
             form.on('submit', submitHandler);
             if (clearBtn.length) {
