@@ -35,28 +35,16 @@ function rtbcb_get_default_model( $tier ) {
  */
 function rtbcb_get_gpt5_config( $overrides = [] ) {
     $defaults = [
-        'model'            => rtbcb_get_default_model( 'gpt5_mini' ),
-        'max_output_tokens' => 4000,
-        'text'             => [ 'verbosity' => 'medium' ],
-        // Temperature is only applied when the selected model supports it.
-        // See rtbcb_model_supports_temperature() in helpers.php.
+        'model'            => 'gpt-5-mini',
+        'max_output_tokens' => 6000,
         'temperature'      => 0.7,
         'store'            => true,
-        'timeout'          => 120,
+        'timeout'          => 180,
         'max_retries'      => 2,
+        'reasoning_effort' => 'medium',
+        'text_verbosity'   => 'medium',
     ];
 
-    if ( isset( $overrides['max_completion_tokens'] ) && ! isset( $overrides['max_output_tokens'] ) ) {
-        $overrides['max_output_tokens'] = $overrides['max_completion_tokens'];
-        unset( $overrides['max_completion_tokens'] );
-    }
-
-    if ( is_array( $overrides ) ) {
-        $defaults = array_merge( $defaults, array_intersect_key( $overrides, $defaults ) );
-    }
-
-    $defaults['model'] = sanitize_text_field( get_option( 'rtbcb_advanced_model', rtbcb_get_default_model( 'advanced' ) ) );
-
-    return $defaults;
+    return array_merge( $defaults, array_intersect_key( $overrides, $defaults ) );
 }
 
