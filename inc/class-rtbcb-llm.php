@@ -1102,14 +1102,14 @@ class RTBCB_LLM {
         return $context;
     }
 
-    private function call_openai( $model, $prompt, $max_tokens = null ) {
+    private function call_openai( $model, $prompt, $max_completion_tokens = null ) {
         if ( empty( $this->api_key ) ) {
             return new WP_Error( 'no_api_key', 'OpenAI API key not configured' );
         }
 
         $endpoint   = 'https://api.openai.com/v1/responses';
         $model_name = sanitize_text_field( $model ?: ( $this->gpt5_config['model'] ?? '' ) );
-        $max_tokens = $max_tokens ?? intval( $this->gpt5_config['max_tokens'] );
+        $max_completion_tokens = $max_completion_tokens ?? intval( $this->gpt5_config['max_completion_tokens'] );
 
         if ( is_array( $prompt ) ) {
             $context = $prompt;
@@ -1124,12 +1124,12 @@ class RTBCB_LLM {
         }
 
         $body = [
-            'model'      => $model_name,
-            'input'      => $context,
-            'max_tokens' => $max_tokens,
-            'text'       => $this->gpt5_config['text'],
-            'temperature'=> floatval( $this->gpt5_config['temperature'] ),
-            'store'      => (bool) $this->gpt5_config['store'],
+            'model'                 => $model_name,
+            'input'                 => $context,
+            'max_completion_tokens' => $max_completion_tokens,
+            'text'                  => $this->gpt5_config['text'],
+            'temperature'           => floatval( $this->gpt5_config['temperature'] ),
+            'store'                 => (bool) $this->gpt5_config['store'],
         ];
 
         $args = [
@@ -1188,17 +1188,17 @@ class RTBCB_LLM {
         if ( 'length' === $finish_reason || empty( $content ) ) {
             // Retry with more tokens if the response was truncated or empty.
             $this->log_gpt5_call( $context, $decoded, 'Truncated or empty response from OpenAI' );
-            if ( $max_tokens < 8000 ) {
-                $new_max_tokens = $max_tokens + 1000;
-                error_log( 'RTBCB: Retrying with higher max_tokens: ' . $new_max_tokens );
+            if ( $max_completion_tokens < 8000 ) {
+                $new_max_completion_tokens = $max_completion_tokens + 1000;
+                error_log( 'RTBCB: Retrying with higher max_completion_tokens: ' . $new_max_completion_tokens );
                 $next_context = array_merge( $context, is_array( $decoded['output'] ?? null ) ? $decoded['output'] : [] );
-                return $this->call_openai( $model, $next_context, $new_max_tokens );
+                return $this->call_openai( $model, $next_context, $new_max_completion_tokens );
             }
 
             // Return specific error when truncation cannot be resolved by retry.
             return new WP_Error(
                 'openai_response_truncated',
-                __( 'OpenAI response was truncated due to the max tokens limit.', 'rtbcb' )
+                __( 'OpenAI response was truncated due to the max completion tokens limit.', 'rtbcb' )
             );
         }
 
