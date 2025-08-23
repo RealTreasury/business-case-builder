@@ -69,8 +69,9 @@ if ( ! function_exists( 'is_wp_error' ) ) {
 
 $mock_response = [
     'body' => json_encode( [
-        'status' => 'completed',
-        'output' => [
+        'status'      => 'completed',
+        'output_text' => 'This is a meaningful response message.',
+        'output'      => [
             [
                 'id'      => 'reasoning',
                 'type'    => 'reasoning',

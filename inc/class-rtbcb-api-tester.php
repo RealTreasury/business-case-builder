@@ -130,7 +130,7 @@ class RTBCB_API_Tester {
         $max_output_tokens = intval( $config['max_output_tokens'] ); // Sanitize token limit.
         $body              = [
             'model'             => $model,
-            'input'             => __( "Briefly confirm the API is wired correctly—reply with 'pong'.", 'rtbcb' ),
+            'input'             => __( "Briefly confirm the API is wired correctly. Reply with: 'API connection successful and ready for business case generation.'", 'rtbcb' ),
             // Use the configured token limit for the API test.
             'max_output_tokens' => $max_output_tokens,
             'reasoning'         => [ 'effort' => 'minimal' ],
@@ -210,17 +210,17 @@ class RTBCB_API_Tester {
 
         $content = trim( (string) $content );
 
-        if ( '' === $content ) {
+        if ( '' === $content || strlen( $content ) < 10 ) {
             return [
                 'success' => false,
-                'message' => __( 'Empty Responses API response', 'rtbcb' ),
+                'message' => __( 'Invalid or empty API response', 'rtbcb' ),
                 'details' => 'Response: ' . sanitize_text_field( $response_body ),
             ];
         }
 
         return [
             'success'  => true,
-            'message'  => __( 'Responses API ping successful', 'rtbcb' ),
+            'message'  => __( 'API connection test successful', 'rtbcb' ),
             'response' => sanitize_text_field( $content ),
         ];
     }
