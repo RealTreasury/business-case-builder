@@ -11,7 +11,6 @@ if ( ! defined( 'GPT5_CONFIG' ) ) {
         [
             'model'       => 'gpt-5-mini',
             'max_tokens'  => 4000,
-            'reasoning'   => [ 'effort' => 'medium' ],
             'text'        => [ 'verbosity' => 'medium' ],
             'temperature' => 0.7,
             'store'       => true,
