@@ -177,6 +177,163 @@ class RTBCB_LLM {
     }
 
     /**
+     * Generate company overview with current web search data.
+     *
+     * @param string $company_name Company name.
+     * @return string|WP_Error Overview text or error object.
+     */
+    public function generate_company_overview_with_web_search( $company_name ) {
+        $company_name = sanitize_text_field( $company_name );
+
+        if ( empty( $this->api_key ) ) {
+            return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
+        }
+
+        // Search for recent company information.
+        $recent_info = $this->gather_recent_company_info( $company_name );
+
+        $model        = $this->models['mini'] ?? 'gpt-4o-mini';
+        $current_date = current_time( 'F Y' );
+
+        $prompt  = "Current date: {$current_date}\n\n";
+        $prompt .= "Create a comprehensive company overview for {$company_name} that includes:\n";
+        $prompt .= "- Company background and business model\n";
+        $prompt .= "- Recent developments and news (prioritize 2024-2025 information)\n";
+        $prompt .= "- Financial highlights and company scale\n";
+        $prompt .= "- Market position and competitive landscape\n";
+        $prompt .= "- Treasury management challenges and opportunities\n\n";
+
+        if ( ! empty( $recent_info ) ) {
+            $prompt .= "Recent information gathered from web sources:\n";
+            $prompt .= implode( "\n\n", $recent_info ) . "\n\n";
+            $prompt .= 'Use this current information to provide up-to-date insights.' . "\n\n";
+        }
+
+        $prompt .= 'Provide a balanced, informative overview suitable for treasury professionals evaluating technology needs.';
+
+        $response = $this->call_openai_with_retry( $model, $prompt );
+
+        if ( is_wp_error( $response ) ) {
+            return new WP_Error( 'llm_failure', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
+        }
+
+        $body     = wp_remote_retrieve_body( $response );
+        $decoded  = json_decode( $body, true );
+        $content  = $decoded['choices'][0]['message']['content'] ?? '';
+        $overview = sanitize_textarea_field( $content );
+
+        if ( empty( $overview ) ) {
+            return new WP_Error( 'llm_empty_response', __( 'No overview returned.', 'rtbcb' ) );
+        }
+
+        return $overview;
+    }
+
+    /**
+     * Gather recent company information using web search.
+     *
+     * @param string $company_name Company name.
+     * @return array Recent information snippets.
+     */
+    private function gather_recent_company_info( $company_name ) {
+        $current_year = current_time( 'Y' );
+        $last_year    = $current_year - 1;
+
+        $search_queries = [
+            "{$company_name} news {$current_year}",
+            "{$company_name} earnings {$current_year}",
+            "{$company_name} financial results {$current_year}",
+            "{$company_name} developments {$last_year}",
+        ];
+
+        $recent_info = [];
+
+        foreach ( $search_queries as $query ) {
+            try {
+                // Use the existing web_search function from your plugin.
+                $search_results = $this->perform_web_search( $query );
+
+                if ( ! empty( $search_results ) ) {
+                    // Process and add relevant results.
+                    foreach ( array_slice( $search_results, 0, 2 ) as $result ) {
+                        if ( $this->is_recent_and_relevant( $result, $company_name ) ) {
+                            $recent_info[] = $this->format_search_result( $result );
+                        }
+                    }
+                }
+
+                // Don't overwhelm with too many searches.
+                if ( count( $recent_info ) >= 5 ) {
+                    break;
+                }
+            } catch ( Exception $e ) {
+                error_log( 'RTBCB: Web search failed for ' . $query . ': ' . $e->getMessage() );
+                continue;
+            }
+        }
+
+        return $recent_info;
+    }
+
+    /**
+     * Perform web search - wrapper for existing functionality.
+     *
+     * @param string $query Search query.
+     * @return array Search results.
+     */
+    private function perform_web_search( $query ) {
+        // This would use your existing web search functionality.
+        // You may need to adapt this based on your exact web search implementation.
+
+        if ( function_exists( 'web_search' ) ) {
+            return web_search( [ 'query' => $query ] );
+        }
+
+        // Fallback if web search not available.
+        return [];
+    }
+
+    /**
+     * Check if search result is recent and relevant.
+     *
+     * @param array  $result       Search result.
+     * @param string $company_name Company name.
+     * @return bool Whether result is recent and relevant.
+     */
+    private function is_recent_and_relevant( $result, $company_name ) {
+        // Check if result mentions the company name.
+        $title         = strtolower( $result['title'] ?? '' );
+        $snippet       = strtolower( $result['snippet'] ?? '' );
+        $company_lower = strtolower( $company_name );
+
+        if ( strpos( $title, $company_lower ) === false && strpos( $snippet, $company_lower ) === false ) {
+            return false;
+        }
+
+        // Check for recent dates (2024, 2025).
+        $current_year = current_time( 'Y' );
+        $last_year    = $current_year - 1;
+
+        $text = $title . ' ' . $snippet;
+
+        return ( strpos( $text, (string) $current_year ) !== false || strpos( $text, (string) $last_year ) !== false );
+    }
+
+    /**
+     * Format search result for inclusion in prompt.
+     *
+     * @param array $result Search result.
+     * @return string Formatted result.
+     */
+    private function format_search_result( $result ) {
+        $title   = $result['title'] ?? '';
+        $snippet = $result['snippet'] ?? '';
+        $url     = $result['url'] ?? '';
+
+        return "Source: {$title}\n{$snippet}";
+    }
+
+    /**
      * Generate comprehensive business case with deep analysis.
      *
      * Returns a {@see WP_Error} when the API key is missing or when the LLM
