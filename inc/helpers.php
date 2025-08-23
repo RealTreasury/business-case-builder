@@ -40,7 +40,7 @@ function rtbcb_model_supports_temperature( $model ) {
     $model = sanitize_text_field( $model );
 
     // Add or remove models here as OpenAI updates temperature support.
-    $unsupported = [ 'gpt-4.1', 'gpt-4.1-mini', 'gpt-5' ];
+    $unsupported = [ 'gpt-4.1', 'gpt-4.1-mini', 'gpt-5', 'gpt-5-mini' ];
     if ( in_array( $model, $unsupported, true ) ) {
         return false;
     }
