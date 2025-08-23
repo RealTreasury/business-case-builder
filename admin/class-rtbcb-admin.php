@@ -34,6 +34,7 @@ class RTBCB_Admin {
         add_action( 'wp_ajax_rtbcb_generate_sample_report', [ $this, 'ajax_generate_sample_report' ] );
         add_action( 'wp_ajax_rtbcb_sync_to_local', [ $this, 'sync_to_local' ] );
         add_action( 'wp_ajax_nopriv_rtbcb_sync_to_local', [ $this, 'sync_to_local' ] );
+        add_action( 'wp_ajax_rtbcb_test_commentary', [ $this, 'ajax_test_commentary' ] );
     }
 
     /**
@@ -68,11 +69,13 @@ class RTBCB_Admin {
             'nonce'             => wp_create_nonce( 'rtbcb_nonce' ),
             'diagnostics_nonce' => wp_create_nonce( 'rtbcb_diagnostics' ),
             'report_preview_nonce' => wp_create_nonce( 'rtbcb_generate_report_preview' ),
+            'page'              => $page,
             'strings'           => [
                 'confirm_delete'     => __( 'Are you sure you want to delete this lead?', 'rtbcb' ),
                 'confirm_bulk_delete'=> __( 'Are you sure you want to delete the selected leads?', 'rtbcb' ),
                 'processing'         => __( 'Processing...', 'rtbcb' ),
                 'error'              => __( 'An error occurred. Please try again.', 'rtbcb' ),
+                'testing'            => __( 'Testing...', 'rtbcb' ),
             ],
         ] );
 
@@ -468,6 +471,30 @@ class RTBCB_Admin {
         }
 
         wp_send_json_error( $result );
+    }
+
+    /**
+     * AJAX handler for industry commentary testing.
+     *
+     * @return void
+     */
+    public function ajax_test_commentary() {
+        check_ajax_referer( 'rtbcb_test_commentary', 'nonce' );
+
+        $industry = isset( $_POST['industry'] ) ? sanitize_text_field( wp_unslash( $_POST['industry'] ) ) : '';
+
+        if ( empty( $industry ) ) {
+            wp_send_json_error( [ 'message' => __( 'Invalid industry.', 'rtbcb' ) ] );
+        }
+
+        $llm        = new RTBCB_LLM();
+        $commentary = $llm->generate_industry_commentary( $industry );
+
+        if ( is_wp_error( $commentary ) ) {
+            wp_send_json_error( [ 'message' => sanitize_text_field( $commentary->get_error_message() ) ] );
+        }
+
+        wp_send_json_success( [ 'commentary' => sanitize_text_field( $commentary ) ] );
     }
 
     /**

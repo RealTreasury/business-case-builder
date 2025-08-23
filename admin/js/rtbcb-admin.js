@@ -6,10 +6,11 @@
             this.bindDashboardActions();
             this.bindExportButtons();
             this.initLeadsManager();
-           this.bindDiagnosticsButton();
-           this.bindReportPreview();
+            this.bindDiagnosticsButton();
+            this.bindReportPreview();
             this.bindSampleReport();
             this.bindSyncLocal();
+            this.bindCommentaryTest();
         },
 
         bindDashboardActions() {
@@ -28,6 +29,39 @@
 
         bindSyncLocal() {
             $('#rtbcb-sync-local').on('click', this.syncToLocal);
+        },
+
+        bindCommentaryTest() {
+            if (!rtbcbAdmin || rtbcbAdmin.page !== 'rtbcb-calculations') { return; }
+            const button = $('#rtbcb-generate-commentary');
+            if (!button.length) { return; }
+            const results = $('#rtbcb-commentary-results');
+            button.on('click', async function (e) {
+                e.preventDefault();
+                const industry = $('#rtbcb-commentary-industry').val();
+                const nonce = button.data('nonce');
+                const original = button.text();
+                button.prop('disabled', true).text(rtbcbAdmin.strings.testing);
+                try {
+                    const formData = new FormData();
+                    formData.append('action', 'rtbcb_test_commentary');
+                    formData.append('industry', industry);
+                    formData.append('nonce', nonce);
+                    const response = await fetch(rtbcbAdmin.ajax_url, { method: 'POST', body: formData });
+                    if (!response.ok) {
+                        throw new Error(`Server responded ${response.status}`);
+                    }
+                    const data = await response.json();
+                    if (data.success) {
+                        results.text(data.data.commentary || '');
+                    } else {
+                        alert(data.data?.message || rtbcbAdmin.strings.error);
+                    }
+                } catch (err) {
+                    alert(`${rtbcbAdmin.strings.error} ${err.message}`);
+                }
+                button.prop('disabled', false).text(original);
+            });
         },
 
         async testApiConnection(e) {

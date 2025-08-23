@@ -46,5 +46,29 @@ $bank_fee   = get_option( 'rtbcb_bank_fee_baseline', 0 );
             </tr>
         </tbody>
     </table>
+
+    <h2><?php echo esc_html__( 'Industry Commentary Test', 'rtbcb' ); ?></h2>
+    <p>
+        <label for="rtbcb-commentary-industry"><?php esc_html_e( 'Industry', 'rtbcb' ); ?></label>
+        <select id="rtbcb-commentary-industry">
+            <option value=""><?php esc_html_e( 'Select your industry...', 'rtbcb' ); ?></option>
+            <option value="manufacturing"><?php esc_html_e( 'Manufacturing', 'rtbcb' ); ?></option>
+            <option value="retail"><?php esc_html_e( 'Retail &amp; E-commerce', 'rtbcb' ); ?></option>
+            <option value="healthcare"><?php esc_html_e( 'Healthcare', 'rtbcb' ); ?></option>
+            <option value="technology"><?php esc_html_e( 'Technology', 'rtbcb' ); ?></option>
+            <option value="financial_services"><?php esc_html_e( 'Financial Services', 'rtbcb' ); ?></option>
+            <option value="energy"><?php esc_html_e( 'Energy &amp; Utilities', 'rtbcb' ); ?></option>
+            <option value="real_estate"><?php esc_html_e( 'Real Estate', 'rtbcb' ); ?></option>
+            <option value="professional_services"><?php esc_html_e( 'Professional Services', 'rtbcb' ); ?></option>
+            <option value="transportation"><?php esc_html_e( 'Transportation &amp; Logistics', 'rtbcb' ); ?></option>
+            <option value="education"><?php esc_html_e( 'Education', 'rtbcb' ); ?></option>
+            <option value="government"><?php esc_html_e( 'Government', 'rtbcb' ); ?></option>
+            <option value="other"><?php esc_html_e( 'Other', 'rtbcb' ); ?></option>
+        </select>
+        <button type="button" id="rtbcb-generate-commentary" class="button" data-nonce="<?php echo esc_attr( wp_create_nonce( 'rtbcb_test_commentary' ) ); ?>">
+            <?php esc_html_e( 'Generate Commentary', 'rtbcb' ); ?>
+        </button>
+    </p>
+    <div id="rtbcb-commentary-results"></div>
 </div>
 
