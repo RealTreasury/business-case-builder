@@ -78,6 +78,13 @@ if ( ! function_exists( 'wp_remote_retrieve_body' ) ) {
     }
 }
 
+if ( ! function_exists( 'rtbcb_model_supports_temperature' ) ) {
+    function rtbcb_model_supports_temperature( $model ) {
+        $unsupported = [ 'gpt-4.1', 'gpt-4.1-mini', 'gpt-5' ];
+        return ! in_array( $model, $unsupported, true );
+    }
+}
+
 require_once __DIR__ . '/../../inc/class-rtbcb-llm.php';
 
 $llm       = new RTBCB_LLM();

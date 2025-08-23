@@ -123,11 +123,16 @@ class RTBCB_API_Tester {
 
         $model = sanitize_text_field( get_option( 'rtbcb_mini_model', rtbcb_get_default_model( 'mini' ) ) );
         $body  = [
-            'model'                 => $model,
-            'input'                 => 'ping',
+            'model'             => $model,
+            'input'             => 'ping',
             'max_output_tokens' => 16,
-            'temperature'           => 0,
         ];
+
+        if ( rtbcb_model_supports_temperature( $model ) ) {
+            $body['temperature'] = 0;
+        } else {
+            error_log( 'RTBCB: Temperature not supported for model ' . $model . ', skipping parameter.' );
+        }
 
         $args = [
             'headers' => [
