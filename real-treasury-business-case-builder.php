@@ -445,13 +445,13 @@ class Real_Treasury_BCB {
         }
 
         $config_localized = [
-            'model'       => sanitize_text_field( $config['model'] ),
-            'max_tokens'  => intval( $config['max_tokens'] ),
-            'text'        => [ 'verbosity' => sanitize_text_field( $config['text']['verbosity'] ?? '' ) ],
-            'temperature' => floatval( $config['temperature'] ),
-            'store'       => (bool) $config['store'],
-            'timeout'     => intval( $config['timeout'] ),
-            'max_retries' => intval( $config['max_retries'] ),
+            'model'                 => sanitize_text_field( $config['model'] ),
+            'max_completion_tokens' => intval( $config['max_completion_tokens'] ),
+            'text'                  => [ 'verbosity' => sanitize_text_field( $config['text']['verbosity'] ?? '' ) ],
+            'temperature'           => floatval( $config['temperature'] ),
+            'store'                 => (bool) $config['store'],
+            'timeout'               => intval( $config['timeout'] ),
+            'max_retries'           => intval( $config['max_retries'] ),
         ];
 
         wp_localize_script(

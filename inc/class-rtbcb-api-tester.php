@@ -135,7 +135,7 @@ class RTBCB_API_Tester {
                     ],
                 ],
             ],
-            'max_tokens'  => 10,
+            'max_completion_tokens' => 10,
             'temperature' => 0,
         ];
 

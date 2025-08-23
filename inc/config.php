@@ -13,7 +13,7 @@
 function rtbcb_get_gpt5_config() {
     $defaults = [
         'model'       => 'gpt-5-mini',
-        'max_tokens'  => 4000,
+        'max_completion_tokens' => 4000,
         'text'        => [ 'verbosity' => 'medium' ],
         'temperature' => 0.7,
         'store'       => true,

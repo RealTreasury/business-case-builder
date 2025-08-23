@@ -3,7 +3,7 @@
  */
 
 const RTBCB_GPT5_DEFAULTS = {
-    max_tokens: 4000,
+    max_completion_tokens: 4000,
     text: { verbosity: 'medium' },
     temperature: 0.7,
     store: true,
@@ -279,7 +279,7 @@ async function generateProfessionalReport(businessContext) {
                 content: buildEnhancedPrompt(businessContext)
             }
         ],
-        max_tokens: cfg.max_tokens,
+        max_completion_tokens: cfg.max_completion_tokens,
         text: cfg.text,
         temperature: cfg.temperature,
         store: cfg.store
