@@ -826,40 +826,40 @@ class RTBCB_LLM {
     private function call_openai_with_retry( $model, $prompt, $max_retries = 2 ) {
         for ( $attempt = 1; $attempt <= $max_retries; $attempt++ ) {
             $response = $this->call_openai( $model, $prompt );
-            
-            if ( !is_wp_error( $response ) ) {
+
+            if ( ! is_wp_error( $response ) ) {
                 return $response;
             }
-            
+
             error_log( "RTBCB: OpenAI attempt {$attempt} failed: " . $response->get_error_message() );
-            
+
             if ( $attempt < $max_retries ) {
                 sleep( $attempt ); // Progressive backoff
             }
         }
-        
+
         return $response; // Return last error
     }
 
     /**
      * Enhanced OpenAI call with better error handling
      */
-    private function call_openai( $model, $prompt ) {
+    private function call_openai( $model, $prompt, $max_tokens = 4000 ) {
         if ( empty( $this->api_key ) ) {
             return new WP_Error( 'no_api_key', 'OpenAI API key not configured' );
         }
 
-        $endpoint = 'https://api.openai.com/v1/chat/completions';
+        $endpoint      = 'https://api.openai.com/v1/chat/completions';
         $is_gpt5_model = $this->is_gpt5_model( $model );
-        $body = [
-            'model' => $model,
-            'messages' => [
+        $body          = [
+            'model'           => $model,
+            'messages'        => [
                 [
-                    'role' => 'system',
+                    'role'    => 'system',
                     'content' => 'You are a senior treasury technology consultant. Provide detailed, research-driven analysis in the exact JSON format requested. Do not include any text outside the JSON structure.'
                 ],
                 [
-                    'role' => 'user',
+                    'role'    => 'user',
                     'content' => $prompt
                 ]
             ],
@@ -871,17 +871,17 @@ class RTBCB_LLM {
         }
 
         if ( $is_gpt5_model ) {
-            $body['max_completion_tokens'] = 4000;
+            $body['max_completion_tokens'] = $max_tokens;
         } else {
-            $body['max_tokens'] = 4000;
+            $body['max_tokens'] = $max_tokens;
         }
 
         $args = [
             'headers' => [
                 'Authorization' => 'Bearer ' . $this->api_key,
-                'Content-Type' => 'application/json',
+                'Content-Type'  => 'application/json',
             ],
-            'body' => wp_json_encode( $body ),
+            'body'    => wp_json_encode( $body ),
             'timeout' => 120, // Longer timeout for comprehensive analysis
         ];
 
@@ -899,16 +899,37 @@ class RTBCB_LLM {
             return $response;
         }
 
-        $status_code = wp_remote_retrieve_response_code( $response );
+        $status_code   = wp_remote_retrieve_response_code( $response );
         $response_body = wp_remote_retrieve_body( $response );
-        
+
         error_log( 'RTBCB: OpenAI response status: ' . $status_code );
-        
+
         if ( $status_code !== 200 ) {
-            $error_data = json_decode( $response_body, true );
+            $error_data    = json_decode( $response_body, true );
             $error_message = $error_data['error']['message'] ?? 'Unknown API error';
             error_log( 'RTBCB: OpenAI API error: ' . $error_message );
             return new WP_Error( 'openai_api_error', $error_message );
+        }
+
+        $decoded       = json_decode( $response_body, true );
+        $finish_reason = $decoded['choices'][0]['finish_reason'] ?? '';
+        $content       = $decoded['choices'][0]['message']['content'] ?? '';
+
+        if ( isset( $decoded['error'] ) ) {
+            error_log( 'RTBCB: OpenAI error field: ' . ( $decoded['error']['message'] ?? '' ) );
+        }
+
+        error_log( 'RTBCB: OpenAI finish reason: ' . $finish_reason );
+        error_log( 'RTBCB: OpenAI content: ' . $content );
+
+        if ( empty( $content ) ) {
+            error_log( 'RTBCB: Empty content received from OpenAI.' );
+            if ( $max_tokens > 1000 ) {
+                error_log( 'RTBCB: Retrying with lower max_tokens.' );
+                return $this->call_openai( $model, $prompt, 1000 );
+            }
+
+            return new WP_Error( 'openai_empty_response', __( 'OpenAI returned an empty response.', 'rtbcb' ) );
         }
 
         return $response;
