@@ -314,6 +314,19 @@ add_filter('rtbcb_category_scores', function($scores, $inputs) {
 
 ## 🧪 Testing and Quality Assurance
 
+### Transpiling & Minifying rtbcb-admin.js
+The admin dashboard script (`admin/js/rtbcb-admin.js`) is compiled with Babel for browser compatibility and compressed for production. Building requires **Node.js 18+** and **Babel CLI 7.28.3**. Babel uses `@babel/preset-env` targeting modern browsers and `@babel/plugin-transform-async-to-generator` to convert `async`/`await` syntax.
+
+Run the build and verify the output:
+
+```bash
+npm install
+npm run build -- --minified
+node --check admin/js/rtbcb-admin.js
+```
+
+The build command overwrites `admin/js/rtbcb-admin.js` with the transpiled, minified result.
+
 ### Automated Tests
 The plugin includes integration tests for all major components. These can be run from the settings page via the **Run Diagnostics** button or programmatically:
 ```php
