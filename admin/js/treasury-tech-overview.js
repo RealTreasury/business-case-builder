@@ -1,7 +1,7 @@
 (function($) {
     'use strict';
 
-    $(document).ready(function() {
+    $(function() {
         const generateBtn = $('#rtbcb-generate-treasury-tech-overview');
         const clearBtn = $('#rtbcb-clear-treasury-tech-overview');
         const resultsDiv = $('#rtbcb-treasury-tech-overview-results');
@@ -19,11 +19,12 @@
                 return;
             }
 
-            generateBtn.prop('disabled', true).text('Generating...');
+            const start = performance.now();
+            rtbcbTestUtils.showLoading(generateBtn, (window.rtbcbAdmin && rtbcbAdmin.strings.generating) || 'Generating...');
             resultsDiv.html('<p>Generating overview...</p>');
 
             $.ajax({
-                url: ajaxurl,
+                url: rtbcb_ajax.ajax_url,
                 type: 'POST',
                 data: {
                     action: 'rtbcb_test_treasury_tech_overview',
@@ -33,38 +34,22 @@
                 },
                 success: function(response) {
                     if (response.success) {
-                        const data = response.data;
-                        const text = data.overview || '';
-                        const container = $('<div class="notice notice-success" />');
-                        container.append('<p><strong>Overview:</strong></p>');
-                        container.append('<div style="background: #f9f9f9; padding: 15px; border-left: 4px solid #0073aa; margin-top: 10px;">' + text + '</div>');
-                        container.append('<p>Word count: ' + data.word_count + ' | Time: ' + data.elapsed + 's</p>');
-                        const actions = $('<p />');
-                        const regen = $('<button type="button" class="button" />').text('Regenerate');
-                        const copy = $('<button type="button" class="button" />').text('Copy');
-                        regen.on('click', function() {
+                        rtbcbTestUtils.renderSuccess(resultsDiv, response.data.overview || '', start, function() {
                             generateBtn.trigger('click');
                         });
-                        copy.on('click', async function() {
-                            try {
-                                await navigator.clipboard.writeText(text);
-                                alert('Copied to clipboard');
-                            } catch (err) {
-                                alert('Copy failed: ' + err.message);
-                            }
-                        });
-                        actions.append(regen).append(' ').append(copy);
-                        container.append(actions);
-                        resultsDiv.html(container);
                     } else {
-                        resultsDiv.html('<div class="notice notice-error"><p><strong>Error:</strong> ' + (response.data.message || 'Failed to generate overview') + '</p></div>');
+                        rtbcbTestUtils.renderError(resultsDiv, response.data.message || 'Failed to generate overview', function() {
+                            generateBtn.trigger('click');
+                        });
                     }
                 },
                 error: function() {
-                    resultsDiv.html('<div class="notice notice-error"><p><strong>Error:</strong> Request failed. Please try again.</p></div>');
+                    rtbcbTestUtils.renderError(resultsDiv, 'Request failed. Please try again.', function() {
+                        generateBtn.trigger('click');
+                    });
                 },
                 complete: function() {
-                    generateBtn.prop('disabled', false).text('Generate Overview');
+                    rtbcbTestUtils.hideLoading(generateBtn);
                 }
             });
         });

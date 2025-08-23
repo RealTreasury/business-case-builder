@@ -52,12 +52,23 @@ class RTBCB_Admin {
         }
 
         wp_enqueue_script( 'chart-js', RTBCB_URL . 'public/js/chart.min.js', [], '3.9.1', true );
-        wp_enqueue_script( 
-            'rtbcb-admin', 
-            RTBCB_URL . 'admin/js/rtbcb-admin.js', 
-            [ 'jquery', 'chart-js' ], 
-            RTBCB_VERSION, 
-            true 
+        $deps = [ 'jquery', 'chart-js' ];
+        if ( in_array( $page, [ 'rtbcb-test-company-overview', 'rtbcb-test-treasury-tech-overview', 'rtbcb-calculations' ], true ) ) {
+            wp_enqueue_script(
+                'rtbcb-test-utils',
+                RTBCB_URL . 'admin/js/rtbcb-test-utils.js',
+                [ 'jquery' ],
+                RTBCB_VERSION,
+                true
+            );
+            $deps[] = 'rtbcb-test-utils';
+        }
+        wp_enqueue_script(
+            'rtbcb-admin',
+            RTBCB_URL . 'admin/js/rtbcb-admin.js',
+            $deps,
+            RTBCB_VERSION,
+            true
         );
         wp_enqueue_style( 
             'rtbcb-admin', 

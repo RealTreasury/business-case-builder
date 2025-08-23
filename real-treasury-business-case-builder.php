@@ -1389,10 +1389,17 @@ add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_treasury_tech_overview_scrip
 function rtbcb_enqueue_company_overview_scripts( $hook ) {
     if ( strpos( $hook, 'rtbcb' ) !== false && strpos( $hook, 'company-overview' ) !== false ) {
         wp_enqueue_script(
+            'rtbcb-test-utils',
+            plugin_dir_url( __FILE__ ) . 'admin/js/rtbcb-test-utils.js',
+            [ 'jquery' ],
+            RTBCB_VERSION,
+            true
+        );
+        wp_enqueue_script(
             'rtbcb-company-overview',
             plugin_dir_url( __FILE__ ) . 'admin/js/company-overview.js',
-            [ 'jquery' ],
-            '1.0.0',
+            [ 'jquery', 'rtbcb-test-utils' ],
+            RTBCB_VERSION,
             true
         );
 
@@ -1416,10 +1423,17 @@ function rtbcb_enqueue_company_overview_scripts( $hook ) {
 function rtbcb_enqueue_treasury_tech_overview_scripts( $hook ) {
     if ( strpos( $hook, 'rtbcb' ) !== false && strpos( $hook, 'treasury-tech-overview' ) !== false ) {
         wp_enqueue_script(
+            'rtbcb-test-utils',
+            plugin_dir_url( __FILE__ ) . 'admin/js/rtbcb-test-utils.js',
+            [ 'jquery' ],
+            RTBCB_VERSION,
+            true
+        );
+        wp_enqueue_script(
             'rtbcb-treasury-tech-overview',
             plugin_dir_url( __FILE__ ) . 'admin/js/treasury-tech-overview.js',
-            [ 'jquery' ],
-            '1.0.0',
+            [ 'jquery', 'rtbcb-test-utils' ],
+            RTBCB_VERSION,
             true
         );
 
