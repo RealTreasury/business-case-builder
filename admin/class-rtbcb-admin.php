@@ -38,6 +38,7 @@ class RTBCB_Admin {
         add_action( 'wp_ajax_rtbcb_test_company_overview', [ $this, 'ajax_test_company_overview' ] );
         add_action( 'wp_ajax_rtbcb_test_treasury_tech_overview', [ $this, 'ajax_test_treasury_tech_overview' ] );
         add_action( 'wp_ajax_rtbcb_test_industry_overview', [ $this, 'ajax_test_industry_overview' ] );
+        add_action( 'wp_ajax_rtbcb_test_real_treasury_overview', [ $this, 'ajax_test_real_treasury_overview' ] );
     }
 
     /**
@@ -224,6 +225,15 @@ class RTBCB_Admin {
             'rtbcb-test-industry-overview',
             [ $this, 'render_test_industry_overview' ]
         );
+
+        add_submenu_page(
+            'rtbcb-dashboard',
+            __( 'Test Real Treasury Overview', 'rtbcb' ),
+            __( 'Test Real Treasury Overview', 'rtbcb' ),
+            'manage_options',
+            'rtbcb-test-real-treasury-overview',
+            [ $this, 'render_test_real_treasury_overview' ]
+        );
     }
 
     /**
@@ -374,6 +384,15 @@ class RTBCB_Admin {
      */
     public function render_test_industry_overview() {
         include RTBCB_DIR . 'admin/test-industry-overview-page.php';
+    }
+
+    /**
+     * Render test real treasury overview page.
+     *
+     * @return void
+     */
+    public function render_test_real_treasury_overview() {
+        include RTBCB_DIR . 'admin/test-real-treasury-overview-page.php';
     }
 
     /**
@@ -674,6 +693,33 @@ class RTBCB_Admin {
                 'word_count' => $word_count,
                 'elapsed'    => $elapsed,
                 'generated'  => current_time( 'mysql' ),
+            ]
+        );
+    }
+
+    /**
+     * AJAX handler for real treasury overview testing.
+     *
+     * @return void
+     */
+    public function ajax_test_real_treasury_overview() {
+        check_ajax_referer( 'rtbcb_test_real_treasury_overview', 'nonce' );
+
+        $include_portal = isset( $_POST['include_portal'] ) ? (bool) absint( wp_unslash( $_POST['include_portal'] ) ) : false;
+        $categories     = isset( $_POST['categories'] ) ? (array) wp_unslash( $_POST['categories'] ) : [];
+        $categories     = array_map( 'sanitize_text_field', $categories );
+        $categories     = array_filter( $categories );
+
+        $overview = rtbcb_test_generate_real_treasury_overview( $include_portal, $categories );
+
+        if ( is_wp_error( $overview ) ) {
+            wp_send_json_error( [ 'message' => sanitize_text_field( $overview->get_error_message() ) ] );
+        }
+
+        wp_send_json_success(
+            [
+                'overview'  => sanitize_textarea_field( $overview ),
+                'generated' => current_time( 'mysql' ),
             ]
         );
     }
