@@ -579,7 +579,9 @@
 
         closeModal() {
             const modal = document.getElementById('rtbcb-lead-modal');
-            if (modal) { modal.style.display = 'none'; }
+            if (modal) {
+                modal.style.display = 'none';
+            }
         }
     };
 
