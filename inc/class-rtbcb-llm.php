@@ -1130,6 +1130,16 @@ class RTBCB_LLM {
             $body['temperature'] = floatval( $this->gpt5_config['temperature'] );
         }
 
+        // Add reasoning and verbosity for GPT-5 models
+        if ( strpos( $model_name, 'gpt-5' ) === 0 ) {
+            $body['reasoning'] = [
+                'effort' => $this->get_reasoning_effort_for_task( $prompt ),
+            ];
+            $body['text'] = [
+                'verbosity' => $this->get_verbosity_for_task( $prompt ),
+            ];
+        }
+
         $args = [
             'headers' => [
                 'Authorization' => 'Bearer ' . $this->api_key,
@@ -1227,6 +1237,61 @@ class RTBCB_LLM {
         $this->log_gpt5_call( [ 'instructions' => $instructions, 'input' => $input ], $decoded );
 
         return $response;
+    }
+
+    /**
+     * Determine appropriate reasoning effort based on task complexity.
+     *
+     * @param array|string $prompt Prompt data or text.
+     * @return string Reasoning effort level.
+     */
+    private function get_reasoning_effort_for_task( $prompt ) {
+        $prompt_text = is_array( $prompt )
+            ? ( $prompt['input'] ?? '' ) . ' ' . ( $prompt['instructions'] ?? '' )
+            : (string) $prompt;
+
+        $prompt_lower = strtolower( $prompt_text );
+
+        // High effort for complex business analysis
+        if ( strpos( $prompt_lower, 'comprehensive' ) !== false ||
+            strpos( $prompt_lower, 'business case' ) !== false ||
+            strpos( $prompt_lower, 'analysis' ) !== false ||
+            strpos( $prompt_lower, 'financial' ) !== false ) {
+            return 'high';
+        }
+
+        // Medium effort for standard tasks
+        if ( strpos( $prompt_lower, 'generate' ) !== false ||
+            strpos( $prompt_lower, 'create' ) !== false ) {
+            return 'medium';
+        }
+
+        // Low effort for simple requests
+        return 'low';
+    }
+
+    /**
+     * Determine appropriate verbosity based on output requirements.
+     *
+     * @param array|string $prompt Prompt data or text.
+     * @return string Verbosity level.
+     */
+    private function get_verbosity_for_task( $prompt ) {
+        $prompt_text = is_array( $prompt )
+            ? ( $prompt['input'] ?? '' ) . ' ' . ( $prompt['instructions'] ?? '' )
+            : (string) $prompt;
+
+        $prompt_lower = strtolower( $prompt_text );
+
+        // High verbosity for detailed business cases
+        if ( strpos( $prompt_lower, 'comprehensive' ) !== false ||
+            strpos( $prompt_lower, 'detailed' ) !== false ||
+            strpos( $prompt_lower, 'analysis' ) !== false ) {
+            return 'high';
+        }
+
+        // Medium verbosity for standard generation
+        return 'medium';
     }
 
     /**
