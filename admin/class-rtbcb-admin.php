@@ -797,12 +797,23 @@ class RTBCB_Admin {
         $focus_areas = array_filter( $focus_areas );
         $complexity  = isset( $_POST['complexity'] ) ? sanitize_text_field( wp_unslash( $_POST['complexity'] ) ) : '';
 
-        if ( empty( $focus_areas ) ) {
+        $company_data = rtbcb_get_current_company();
+        if ( ! is_array( $company_data ) ) {
+            $company_data = [];
+        }
+        if ( ! empty( $focus_areas ) ) {
+            $company_data['focus_areas'] = $focus_areas;
+        }
+        if ( ! empty( $complexity ) ) {
+            $company_data['complexity'] = $complexity;
+        }
+
+        if ( empty( $company_data['focus_areas'] ) ) {
             wp_send_json_error( [ 'message' => __( 'Please select at least one focus area.', 'rtbcb' ) ] );
         }
 
         $start    = microtime( true );
-        $overview = rtbcb_test_generate_treasury_tech_overview( $focus_areas, $complexity );
+        $overview = rtbcb_test_generate_treasury_tech_overview( $company_data );
         $elapsed  = round( microtime( true ) - $start, 2 );
 
         if ( is_wp_error( $overview ) ) {

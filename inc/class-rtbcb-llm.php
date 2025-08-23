@@ -221,14 +221,16 @@ class RTBCB_LLM {
     /**
      * Generate a treasury technology overview.
      *
-     * @param array  $focus_areas Focus areas.
-     * @param string $complexity  Company complexity.
+     * @param array $company_data Company data including focus areas and complexity.
      * @return string|WP_Error Overview text or error object.
      */
-    public function generate_treasury_tech_overview( $focus_areas, $complexity ) {
-        $focus_areas = array_map( 'sanitize_text_field', (array) $focus_areas );
-        $focus_areas = array_filter( $focus_areas );
-        $complexity  = sanitize_text_field( $complexity );
+    public function generate_treasury_tech_overview( $company_data ) {
+        $company_data = rtbcb_sanitize_form_data( (array) $company_data );
+        $focus_areas  = array_map( 'sanitize_text_field', (array) ( $company_data['focus_areas'] ?? [] ) );
+        $focus_areas  = array_filter( $focus_areas );
+        $complexity   = sanitize_text_field( $company_data['complexity'] ?? '' );
+        $name         = sanitize_text_field( $company_data['name'] ?? '' );
+        $size         = sanitize_text_field( $company_data['size'] ?? '' );
 
         if ( empty( $focus_areas ) ) {
             return new WP_Error( 'no_focus_areas', __( 'No focus areas provided.', 'rtbcb' ) );
@@ -240,7 +242,7 @@ class RTBCB_LLM {
 
         $areas_list = implode( ', ', $focus_areas );
         $model      = $this->models['mini'] ?? 'gpt-4o-mini';
-        $prompt     = 'Provide a treasury technology overview covering current landscape, emerging trends, technology gaps, key vendor or solution comparisons, implementation considerations, and adoption trends. Focus on: ' . $areas_list . '. Company complexity: ' . $complexity . '.';
+        $prompt     = 'Provide a treasury technology overview for ' . $name . '. Company size: ' . $size . '. Complexity: ' . $complexity . '. Focus on: ' . $areas_list . '. Include current landscape, emerging trends, technology gaps, key vendor or solution comparisons, implementation considerations, and adoption trends.';
 
         $response = $this->call_openai_with_retry( $model, $prompt );
 
