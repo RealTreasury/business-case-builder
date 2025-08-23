@@ -886,9 +886,14 @@ class RTBCB_LLM {
         ];
 
         error_log( 'RTBCB: Making OpenAI API call with model: ' . $model );
-        
-        $response = wp_remote_post( $endpoint, $args );
-        
+
+        try {
+            $response = wp_remote_post( $endpoint, $args );
+        } catch ( \Throwable $e ) {
+            error_log( 'RTBCB: HTTP request exception: ' . $e->getMessage() );
+            return new WP_Error( 'openai_http_exception', __( 'Unable to contact OpenAI service.', 'rtbcb' ) );
+        }
+
         if ( is_wp_error( $response ) ) {
             error_log( 'RTBCB: HTTP request failed: ' . $response->get_error_message() );
             return $response;
