@@ -434,7 +434,12 @@ class BusinessCaseBuilder {
                 stack: error.stack,
                 type: error.constructor.name
             });
-            this.showError(error.message);
+
+            const displayMessage = error.name === 'TypeError'
+                ? 'Network error. Please check your connection and try again.'
+                : error.message;
+
+            this.showError(displayMessage);
         }
     }
 
