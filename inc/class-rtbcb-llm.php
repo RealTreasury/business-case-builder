@@ -9,19 +9,11 @@ require_once __DIR__ . '/config.php';
 
 class RTBCB_LLM {
     private $api_key;
-    private $models;
     private $current_inputs = [];
     private $gpt5_config;
 
     public function __construct() {
         $this->api_key = get_option( 'rtbcb_openai_api_key' );
-        $this->models  = [
-            'mini'      => get_option( 'rtbcb_mini_model', 'gpt-4o-mini' ),
-            'premium'   => get_option( 'rtbcb_premium_model', 'gpt-4o' ),
-            'advanced'  => get_option( 'rtbcb_advanced_model', 'gpt-5-mini' ),
-            'gpt5_mini' => get_option( 'rtbcb_gpt5_mini_model', 'gpt-5-mini' ),
-            'embedding' => get_option( 'rtbcb_embedding_model', 'text-embedding-3-small' ),
-        ];
 
         $defaults  = rtbcb_get_gpt5_config();
         $overrides = get_option( 'rtbcb_gpt5_config', [] );
@@ -33,6 +25,29 @@ class RTBCB_LLM {
         if ( empty( $this->api_key ) ) {
             error_log( 'RTBCB: OpenAI API key not configured' );
         }
+    }
+
+    /**
+     * Get the configured model for a given tier.
+     *
+     * Retrieves the model name from the WordPress options table and falls
+     * back to the plugin's default if the option is not set.
+     *
+     * @param string $tier Model tier identifier.
+     * @return string Sanitized model name.
+     */
+    private function get_model( $tier ) {
+        $defaults = [
+            'mini'      => 'gpt-4o-mini',
+            'premium'   => 'gpt-4o',
+            'advanced'  => 'gpt-5-mini',
+            'gpt5_mini' => 'gpt-5-mini',
+            'embedding' => 'text-embedding-3-small',
+        ];
+
+        $model = get_option( "rtbcb_{$tier}_model", $defaults[ $tier ] ?? '' );
+
+        return sanitize_text_field( $model );
     }
 
     /**
@@ -67,7 +82,7 @@ class RTBCB_LLM {
             return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
         }
 
-        $selected_model = $model ? sanitize_text_field( $model ) : ( $this->models['mini'] ?? 'gpt-4o-mini' );
+        $selected_model = $model ? sanitize_text_field( $model ) : $this->get_model( 'mini' );
         $prompt = 'Create a concise treasury technology business case in JSON with keys '
             . 'executive_summary (strategic_positioning, business_case_strength, key_value_drivers[], '
             . 'executive_recommendation), operational_analysis (current_state_assessment), '
@@ -137,7 +152,7 @@ class RTBCB_LLM {
             return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
         }
 
-        $model  = $this->models['mini'] ?? 'gpt-4o-mini';
+        $model  = $this->get_model( 'mini' );
         $prompt = 'Provide a brief treasury industry commentary for the ' . $industry . ' industry in two sentences.';
 
         $history  = [
@@ -176,7 +191,7 @@ class RTBCB_LLM {
             return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
         }
 
-        $model  = $this->models['mini'] ?? 'gpt-4o-mini';
+        $model  = $this->get_model( 'mini' );
         $prompt = 'Provide a concise company overview covering background, recent news, company size, financial highlights, treasury challenges or opportunities, and market position for ' . $company_name . '.';
 
         $history  = [
@@ -221,7 +236,7 @@ class RTBCB_LLM {
             return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
         }
 
-        $model  = $this->models['mini'] ?? 'gpt-4o-mini';
+        $model  = $this->get_model( 'mini' );
         $prompt = 'Provide an industry overview for ' . $industry . ' companies of size ' . $company_size .
             '. Cover treasury challenges, key regulations, seasonal patterns, industry benchmarks, common pain points, and opportunities.';
 
@@ -271,7 +286,7 @@ class RTBCB_LLM {
         }
 
         $areas_list = implode( ', ', $focus_areas );
-        $model      = $this->models['mini'] ?? 'gpt-4o-mini';
+        $model      = $this->get_model( 'mini' );
         $prompt     = 'Provide a treasury technology overview for ' . $name . '. Company size: ' . $size . '. Complexity: ' . $complexity . '. Focus on: ' . $areas_list . '. Include current landscape, emerging trends, technology gaps, key vendor or solution comparisons, implementation considerations, and adoption trends.';
 
         $history  = [
@@ -322,7 +337,7 @@ class RTBCB_LLM {
             return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
         }
 
-        $model  = $this->models['mini'] ?? 'gpt-4o-mini';
+        $model  = $this->get_model( 'mini' );
         $prompt = 'Provide a Real Treasury platform overview for a ' . ( $company_size ?: __( 'company', 'rtbcb' ) ) . ' in the ' . ( $industry ?: __( 'unspecified', 'rtbcb' ) ) . ' industry.';
 
         if ( ! empty( $challenges ) ) {
@@ -380,7 +395,7 @@ class RTBCB_LLM {
             return new WP_Error( 'invalid_category', __( 'Invalid category.', 'rtbcb' ) );
         }
 
-        $model  = $this->models['mini'] ?? 'gpt-4o-mini';
+        $model  = $this->get_model( 'mini' );
         $prompt = 'Return a JSON object with keys "roadmap" and "success_factors" describing the implementation roadmap and key success factors for adopting a ' . $info['name'] . ' solution.';
 
         $history  = [
@@ -428,7 +443,7 @@ class RTBCB_LLM {
             return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
         }
 
-        $model  = $this->models['mini'] ?? 'gpt-4o-mini';
+        $model  = $this->get_model( 'mini' );
         $prompt = 'Return a JSON object with keys "time_savings_hours", "cost_reduction_usd", '
             . '"efficiency_gain_percent", "roi_percent", "roi_timeline_months", '
             . '"risk_mitigation", "productivity_gain_percent" describing expected benefits for a '
@@ -776,7 +791,7 @@ class RTBCB_LLM {
             ];
         }
 
-        $model  = $this->models['mini'] ?? 'gpt-4o-mini';
+        $model  = $this->get_model( 'mini' );
         $prompt = 'Provide sector_trends, competitive_benchmarks, and regulatory_considerations for the ' . $industry . ' industry in JSON.';
 
         $history  = [
@@ -820,7 +835,7 @@ class RTBCB_LLM {
         $industry     = sanitize_text_field( $user_inputs['industry'] ?? '' );
         $company_size = sanitize_text_field( $user_inputs['company_size'] ?? '' );
 
-        $model  = $this->models['mini'] ?? 'gpt-4o-mini';
+        $model  = $this->get_model( 'mini' );
         $prompt = 'Briefly summarize treasury technology solutions relevant to a ' . $company_size . ' company in the ' . $industry . ' industry.';
 
         if ( ! empty( $context_chunks ) ) {
@@ -857,10 +872,10 @@ class RTBCB_LLM {
      * @return string Model identifier.
      */
     private function select_optimal_model( $user_inputs, $context_chunks ) {
-        $model = $this->models['advanced'] ?? 'gpt-5-mini';
+        $model = $this->get_model( 'advanced' );
 
         if ( count( $context_chunks ) < 3 ) {
-            $model = $this->models['premium'] ?? 'gpt-4o';
+            $model = $this->get_model( 'premium' );
         }
 
         return sanitize_text_field( $model );
