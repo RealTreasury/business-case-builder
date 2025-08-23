@@ -1800,7 +1800,8 @@ class RTBCB_TwoPhase_Analysis {
      * Handle generic OpenAI requests for two-phase analysis.
      */
     public function handle_openai_request() {
-        if ( ! wp_verify_nonce( $_POST['nonce'], 'rtbcb_admin_nonce' ) ) {
+        $nonce = sanitize_text_field( wp_unslash( $_POST['nonce'] ?? '' ) );
+        if ( ! wp_verify_nonce( $nonce, 'rtbcb_admin_nonce' ) ) {
             wp_die( __( 'Security check failed', 'rtbcb' ) );
         }
 
