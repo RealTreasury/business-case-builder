@@ -1000,7 +1000,16 @@ class RTBCB_LLM {
     }
 
     /**
-     * Enhanced OpenAI call with better error handling
+     * Enhanced OpenAI call with better error handling.
+     *
+     * Automatically retries with a higher token limit when the response is
+     * truncated or empty.
+     *
+     * @param string $model      Selected OpenAI model.
+     * @param string $prompt     Prompt to send to the API.
+     * @param int    $max_tokens Maximum tokens allowed for the response.
+     *
+     * @return array|WP_Error WP HTTP response or WP_Error on failure.
      */
     private function call_openai( $model, $prompt, $max_tokens = 4000 ) {
         if ( empty( $this->api_key ) ) {
@@ -1080,14 +1089,20 @@ class RTBCB_LLM {
         error_log( 'RTBCB: OpenAI finish reason: ' . $finish_reason );
         error_log( 'RTBCB: OpenAI content: ' . $content );
 
-        if ( empty( $content ) ) {
-            error_log( 'RTBCB: Empty content received from OpenAI.' );
-            if ( $max_tokens > 1000 ) {
-                error_log( 'RTBCB: Retrying with lower max_tokens.' );
-                return $this->call_openai( $model, $prompt, 1000 );
+        if ( 'length' === $finish_reason || empty( $content ) ) {
+            // If the response was truncated or empty, try again with more tokens.
+            error_log( 'RTBCB: Truncated or empty content received from OpenAI.' );
+            if ( $max_tokens < 16000 ) {
+                $increased_tokens = $max_tokens + 1000;
+                error_log( 'RTBCB: Retrying with increased max_tokens: ' . $increased_tokens );
+                return $this->call_openai( $model, $prompt, $increased_tokens );
             }
 
-            return new WP_Error( 'openai_empty_response', __( 'OpenAI returned an empty response.', 'rtbcb' ) );
+            // Bail out if increasing tokens further is not possible.
+            return new WP_Error(
+                'openai_response_truncated',
+                __( 'OpenAI response was truncated before completion.', 'rtbcb' )
+            );
         }
 
         return $response;

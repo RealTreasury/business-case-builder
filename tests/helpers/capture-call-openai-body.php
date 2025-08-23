@@ -28,6 +28,12 @@ if ( ! function_exists( 'wp_json_encode' ) ) {
     }
 }
 
+if ( ! function_exists( '__' ) ) {
+    function __( $text, $domain = 'default' ) { // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals
+        return $text;
+    }
+}
+
 $captured_body = null;
 if ( ! function_exists( 'wp_remote_post' ) ) {
     function wp_remote_post( $url, $args ) {
