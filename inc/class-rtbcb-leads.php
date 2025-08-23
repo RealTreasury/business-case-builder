@@ -461,8 +461,9 @@ class RTBCB_Leads {
         $ip_keys = [ 'HTTP_X_FORWARDED_FOR', 'HTTP_X_REAL_IP', 'HTTP_CLIENT_IP', 'REMOTE_ADDR' ];
 
         foreach ( $ip_keys as $key ) {
-            if ( ! empty( $_SERVER[ $key ] ) ) {
-                $ip = $_SERVER[ $key ];
+            $server_value = sanitize_text_field( wp_unslash( $_SERVER[ $key ] ?? '' ) );
+            if ( ! empty( $server_value ) ) {
+                $ip = $server_value;
                 if ( strpos( $ip, ',' ) !== false ) {
                     $ip = trim( explode( ',', $ip )[0] );
                 }
@@ -472,7 +473,7 @@ class RTBCB_Leads {
             }
         }
 
-        return $_SERVER['REMOTE_ADDR'] ?? '';
+        return sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ?? '' ) );
     }
 }
 
