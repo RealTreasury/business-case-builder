@@ -349,6 +349,105 @@ function rtbcb_map_sample_report_inputs( $inputs, $scenario_key ) {
 add_filter( 'rtbcb_sample_report_inputs', 'rtbcb_map_sample_report_inputs', 10, 2 );
 
 /**
+ * Generate a category recommendation with enriched context for testing.
+ *
+ * Sanitizes requirement inputs, runs the category recommender, augments the
+ * response with human readable names, reasoning, alternative categories,
+ * confidence and scoring data, and optional implementation guidance.
+ *
+ * @param array $requirements User provided requirement data.
+ * @return array Structured recommendation data.
+ */
+function rtbcb_test_generate_category_recommendation( $requirements ) {
+    $requirements = is_array( $requirements ) ? $requirements : [];
+
+    $sanitized          = [];
+    $text_fields        = [ 'company_size', 'treasury_complexity', 'budget_range', 'timeline' ];
+    $numeric_fields     = [
+        'num_banks'              => [ 'min' => 1, 'max' => 50 ],
+        'ftes'                   => [ 'min' => 0.5, 'max' => 100 ],
+        'hours_reconciliation'   => [ 'min' => 0, 'max' => 168 ],
+        'hours_cash_positioning' => [ 'min' => 0, 'max' => 168 ],
+    ];
+
+    foreach ( $text_fields as $field ) {
+        if ( isset( $requirements[ $field ] ) ) {
+            $sanitized[ $field ] = sanitize_text_field( $requirements[ $field ] );
+        }
+    }
+
+    foreach ( $numeric_fields as $field => $limits ) {
+        if ( isset( $requirements[ $field ] ) ) {
+            $value               = floatval( $requirements[ $field ] );
+            $value               = max( $limits['min'], min( $limits['max'], $value ) );
+            $sanitized[ $field ] = $value;
+        }
+    }
+
+    if ( isset( $requirements['pain_points'] ) && is_array( $requirements['pain_points'] ) ) {
+        $sanitized['pain_points'] = array_filter(
+            array_map( 'sanitize_text_field', $requirements['pain_points'] )
+        );
+    } else {
+        $sanitized['pain_points'] = [];
+    }
+
+    $recommendation = RTBCB_Category_Recommender::recommend_category( $sanitized );
+
+    $recommended_key  = $recommendation['recommended'];
+    $category_info    = $recommendation['category_info'];
+    $alternatives     = [];
+    $static_roadmaps  = [
+        'cash_tools' => __( 'Centralize bank data, introduce basic forecasting, then automate reporting.', 'rtbcb' ),
+        'tms_lite'   => __( 'Connect banks first, roll out payment automation and forecasting, then integrate ERP systems.', 'rtbcb' ),
+        'trms'       => __( 'Begin with global cash visibility, add risk modules, and complete enterprise integrations.', 'rtbcb' ),
+    ];
+    $static_success   = [
+        'cash_tools' => __( 'Accurate bank feeds and staff training are key to realizing visibility gains.', 'rtbcb' ),
+        'tms_lite'   => __( 'Cross-functional buy-in and phased deployment drive success.', 'rtbcb' ),
+        'trms'       => __( 'Strong governance and global process alignment are critical.', 'rtbcb' ),
+    ];
+
+    foreach ( $recommendation['alternatives'] as $alt ) {
+        $alternatives[] = [
+            'key'   => $alt['category'],
+            'name'  => $alt['info']['name'] ?? '',
+            'score' => $alt['score'],
+        ];
+    }
+
+    $roadmap       = $static_roadmaps[ $recommended_key ] ?? '';
+    $success_facts = $static_success[ $recommended_key ] ?? '';
+
+    try {
+        $llm = new RTBCB_LLM();
+        $llm_output = $llm->generate_category_recommendation( $recommended_key );
+        if ( ! is_wp_error( $llm_output ) && is_array( $llm_output ) ) {
+            $roadmap       = $llm_output['roadmap'] ?: $roadmap;
+            $success_facts = $llm_output['success_factors'] ?: $success_facts;
+        }
+    } catch ( \Throwable $e ) {
+        // Fall back to static guidance.
+    }
+
+    return [
+        'recommended'          => [
+            'key'         => $recommended_key,
+            'name'        => $category_info['name'] ?? '',
+            'description' => $category_info['description'] ?? '',
+            'features'    => $category_info['features'] ?? [],
+            'ideal_for'   => $category_info['ideal_for'] ?? '',
+        ],
+        'reasoning'            => $recommendation['reasoning'],
+        'alternatives'         => $alternatives,
+        'confidence'           => $recommendation['confidence'],
+        'scores'               => $recommendation['scores'],
+        'implementation_roadmap' => $roadmap,
+        'success_factors'      => $success_facts,
+    ];
+}
+
+/**
  * Test generating industry commentary using the LLM.
  *
  * @param string $industry Industry slug.
