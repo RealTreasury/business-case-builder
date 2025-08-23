@@ -15,7 +15,6 @@ $advanced_model  = get_option( 'rtbcb_advanced_model', '' );
 $embedding_model = get_option( 'rtbcb_embedding_model', '' );
 $labor_cost      = get_option( 'rtbcb_labor_cost_per_hour', '' );
 $bank_fee        = get_option( 'rtbcb_bank_fee_baseline', '' );
-$turnstile_key   = get_option( 'rtbcb_turnstile_site_key', '' );
 
 $chat_models = [
     'gpt-5'             => 'gpt-5',
@@ -45,14 +44,6 @@ $embedding_models = [
                 </th>
                 <td>
                     <input type="text" id="rtbcb_openai_api_key" name="rtbcb_openai_api_key" value="<?php echo esc_attr( $api_key ); ?>" class="regular-text" />
-                </td>
-            </tr>
-            <tr>
-                <th scope="row">
-                    <label for="rtbcb_turnstile_site_key"><?php echo esc_html__( 'Cloudflare Turnstile Site Key', 'rtbcb' ); ?></label>
-                </th>
-                <td>
-                    <input type="text" id="rtbcb_turnstile_site_key" name="rtbcb_turnstile_site_key" value="<?php echo esc_attr( $turnstile_key ); ?>" class="regular-text" />
                 </td>
             </tr>
             <tr>

@@ -403,17 +403,6 @@ class Real_Treasury_BCB {
             ]
         );
 
-        $turnstile_key = rtbcb_get_turnstile_site_key();
-        if ( $turnstile_key ) {
-            wp_enqueue_script(
-                'cf-turnstile',
-                'https://challenges.cloudflare.com/turnstile/v0/api.js',
-                [],
-                null,
-                true
-            );
-        }
-
         wp_enqueue_script(
             'rtbcb-report',
             RTBCB_URL . 'public/js/rtbcb-report.js',

@@ -405,11 +405,6 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                         </div>
                     </div>
 
-                    <?php $rtbcb_turnstile_key = rtbcb_get_turnstile_site_key(); ?>
-                    <?php if ( $rtbcb_turnstile_key ) : ?>
-                        <div class="cf-turnstile" data-sitekey="<?php echo esc_attr( $rtbcb_turnstile_key ); ?>"></div>
-                    <?php endif; ?>
-
                     <!-- What You'll Receive Preview -->
                     <div class="rtbcb-results-preview">
                         <h4><?php esc_html_e( 'What You\'ll Receive:', 'rtbcb' ); ?></h4>
