@@ -17,6 +17,7 @@ const { execSync } = require('child_process');
         return { ok: true, json: async () => ({ choices: [{ message: { content: '<html></html>' } }] }) };
     };
     global.document = { getElementById: () => null };
+    global.DOMPurify = { sanitize: (html) => html };
     const code = fs.readFileSync('public/js/rtbcb-report.js', 'utf8');
     vm.runInThisContext(code);
     await generateProfessionalReport('context');

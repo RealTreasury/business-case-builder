@@ -315,19 +315,33 @@ async function generateProfessionalReport(businessContext) {
     }
 }
 
+function sanitizeReportHTML(htmlContent) {
+    // Sanitize OpenAI-generated HTML before embedding or exporting.
+    // Explicitly whitelist tags and attributes required for reports.
+    const allowedTags = [
+        'a', 'p', 'br', 'strong', 'em', 'ul', 'ol', 'li',
+        'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span',
+        'table', 'thead', 'tbody', 'tr', 'th', 'td'
+    ];
+    const allowedAttr = { a: [ 'href', 'title', 'target', 'rel' ], '*': [ 'style' ] };
+    return typeof DOMPurify !== 'undefined'
+        ? DOMPurify.sanitize(htmlContent, { ALLOWED_TAGS: allowedTags, ALLOWED_ATTR: allowedAttr })
+        : htmlContent;
+}
+
 function displayReport(htmlContent) {
     const iframe = document.createElement('iframe');
     iframe.style.width = '100%';
     iframe.style.height = '800px';
     iframe.style.border = '1px solid #ddd';
-    iframe.srcdoc = htmlContent;
+    iframe.srcdoc = sanitizeReportHTML(htmlContent);
     document.getElementById('report-container').appendChild(iframe);
 }
 
 function exportToPDF(htmlContent) {
     const printWindow = window.open('', '_blank');
     const doc = printWindow.document;
-    doc.documentElement.innerHTML = htmlContent;
+    doc.documentElement.innerHTML = sanitizeReportHTML(htmlContent);
 
     const triggerPrint = () => {
         printWindow.focus();
@@ -357,12 +371,13 @@ async function generateAndDisplayReport(businessContext) {
             throw new Error('Invalid HTML response from API');
         }
 
-        displayReport(htmlReport);
+        const safeReport = sanitizeReportHTML(htmlReport);
+        displayReport(safeReport);
 
         const exportBtn = document.createElement('button');
         exportBtn.textContent = 'Export to PDF';
         exportBtn.className = 'export-btn';
-        exportBtn.onclick = () => exportToPDF(htmlReport);
+        exportBtn.onclick = () => exportToPDF(safeReport);
         reportContainer.appendChild(exportBtn);
 
     } catch (error) {
