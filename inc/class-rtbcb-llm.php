@@ -1223,7 +1223,7 @@ Respond with valid JSON only, following the specified schema exactly. Ensure all
         $endpoint         = 'https://api.openai.com/v1/responses'; // Correct endpoint.
         $model_name       = sanitize_text_field( $model ?: 'gpt-5-mini' );
         $model_name       = rtbcb_normalize_model_name( $model_name );
-        $max_output_tokens = max( 256, intval( $max_output_tokens ?? 10000 ) );
+        $max_output_tokens = max( 256, intval( $max_output_tokens ?? 20000 ) );
 
         if ( is_array( $prompt ) && isset( $prompt['input'] ) ) {
             $instructions = sanitize_textarea_field( $prompt['instructions'] ?? '' );

@@ -36,7 +36,7 @@ function rtbcb_get_default_model( $tier ) {
 function rtbcb_get_gpt5_config( $overrides = [] ) {
     $defaults = [
         'model'            => 'gpt-5-mini',
-        'max_output_tokens' => 6000,
+        'max_output_tokens' => 20000,
         'temperature'      => 0.7,
         'store'            => true,
         'timeout'          => 180,
