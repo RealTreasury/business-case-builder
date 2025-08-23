@@ -428,8 +428,10 @@ function _arrayWithHoles(r) {
       var results = document.getElementById('rtbcb-company-overview-results');
       var clearBtn = document.getElementById('rtbcb-clear-results');
       var submitBtn = form.querySelector('button[type="submit"]');
+      var $results = $(results);
 
-      var submitHandler = async function (e) {
+      var submitHandler = _async(function (e) {
+        var _exit = false;
         e.preventDefault();
 
         var originalText = submitBtn.textContent;
@@ -442,60 +444,56 @@ function _arrayWithHoles(r) {
 
         submitBtn.disabled = true;
 
-        try {
+        return _continue(_catch(function () {
           // Phase 1: Basic Info
           submitBtn.textContent = 'Phase 1: Gathering basic info...';
           results.innerHTML = '<div class="notice"><p>Phase 1: Gathering basic company information...</p></div>';
+          return _await(RTBCBAdmin.gatherBasicCompanyInfo(companyName), function (basicInfo) {
+            results.innerHTML = '<div class="notice notice-info"><p><strong>Phase 1 Complete:</strong> Found ' + basicInfo.company_name + ' in ' + basicInfo.industry + '</p></div>';
+            // Phase 2: Detailed Analysis
+            submitBtn.textContent = 'Phase 2: Analyzing details...';
+            return _await(RTBCBAdmin.conductDetailedAnalysis(basicInfo), function (detailedAnalysis) {
+              // Phase 3: Final Report
+              submitBtn.textContent = 'Phase 3: Compiling report...';
+              var finalReport = RTBCBAdmin.compileFinalReport(basicInfo, detailedAnalysis);
+              // Display results
+              $results.html(
+                RTBCBAdmin.utils.buildResult(
+                  finalReport.analysis,
+                  performance.now(),
+                  form,
+                  {
+                    word_count: finalReport.analysis.split(' ').length,
+                    recommendations_count: finalReport.recommendations.length,
+                    references_count: finalReport.references.length
+                  }
+                )
+              );
 
-          var basicInfo = await RTBCBAdmin.gatherBasicCompanyInfo(companyName);
-
-          results.innerHTML = '<div class="notice notice-info"><p><strong>Phase 1 Complete:</strong> Found ' + basicInfo.company_name + ' in ' + basicInfo.industry + '</p></div>';
-
-          // Phase 2: Detailed Analysis
-          submitBtn.textContent = 'Phase 2: Analyzing details...';
-
-          var detailedAnalysis = await RTBCBAdmin.conductDetailedAnalysis(basicInfo);
-
-          // Phase 3: Final Report
-          submitBtn.textContent = 'Phase 3: Compiling report...';
-
-          var finalReport = RTBCBAdmin.compileFinalReport(basicInfo, detailedAnalysis);
-
-          // Display results
-      $(results).html(
-        RTBCBAdmin.utils.buildResult(
-          finalReport.analysis,
-          performance.now(),
-          form,
-          {
-            word_count: finalReport.analysis.split(' ').length,
-            recommendations_count: finalReport.recommendations.length,
-            references_count: finalReport.references.length
-          }
-        )
-      );
-
-          // Add recommendations section
-          if (finalReport.recommendations.length > 0) {
-            var recommendationsHtml = '<div class="rtbcb-recommendations" style="margin-top: 20px;"><h4>Treasury Technology Recommendations:</h4><ul>' + finalReport.recommendations.map(function (rec) {
-              return '<li>' + rec + '</li>';
-            }).join('') + '</ul></div>';
-            results.querySelector('.rtbcb-results').insertAdjacentHTML('beforeend', recommendationsHtml);
-          }
-        } catch (error) {
+              // Add recommendations section
+              if (finalReport.recommendations.length > 0) {
+                var recommendationsHtml = '<div class="rtbcb-recommendations" style="margin-top: 20px;"><h4>Treasury Technology Recommendations:</h4><ul>' + finalReport.recommendations.map(function (rec) {
+                  return '<li>' + rec + '</li>';
+                }).join('') + '</ul></div>';
+                results.querySelector('.rtbcb-results').insertAdjacentHTML('beforeend', recommendationsHtml);
+              }
+            });
+          });
+        }, function (error) {
           console.error('Company analysis failed:', error);
           results.innerHTML = '<div class="notice notice-error"><p><strong>Analysis failed:</strong> ' + error.message + '</p></div>';
-        } finally {
+        }), function (_result) {
+          if (_exit) return _result;
           submitBtn.disabled = false;
           submitBtn.textContent = originalText;
-        }
-      };
+        });
+      });
 
       form.addEventListener('submit', submitHandler);
-      RTBCBAdmin.utils.bindClear($(clearBtn), $(results));
+      RTBCBAdmin.utils.bindClear($(clearBtn), $results);
     },
 
-    gatherBasicCompanyInfo: async function gatherBasicCompanyInfo(companyName) {
+    gatherBasicCompanyInfo: _async(function gatherBasicCompanyInfo(companyName) {
       var prompt = "Extract basic company information for " + companyName + ". Return only valid JSON:\n\n{\n  \"company_name\": \"string\",\n  \"industry\": \"string\", \n  \"primary_business\": \"string\",\n  \"annual_revenue\": \"string\",\n  \"employee_count\": \"string\",\n  \"headquarters\": \"string\",\n  \"public_private\": \"string\",\n  \"major_markets\": [\"string\"],\n  \"key_business_segments\": [\"string\"]\n}\n\nUse \"Not available\" for missing data.";
 
       var formData = new FormData();
@@ -505,25 +503,23 @@ function _arrayWithHoles(r) {
       formData.append('temperature', '0.3');
       formData.append('nonce', rtbcbAdmin.nonce);
 
-      var response = await fetch(rtbcbAdmin.ajax_url, {
+      return _await(fetch(rtbcbAdmin.ajax_url, {
         method: 'POST',
         body: formData
+      }), function (response) {
+        if (!response.ok) {
+          throw new Error('Phase 1 API call failed: ' + response.status);
+        }
+        return _await(response.json(), function (data) {
+          if (!data.success) {
+            throw new Error(data.data.message || 'Phase 1 failed');
+          }
+          return JSON.parse(data.data.response);
+        });
       });
+    }),
 
-      if (!response.ok) {
-        throw new Error('Phase 1 API call failed: ' + response.status);
-      }
-
-      var data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.data.message || 'Phase 1 failed');
-      }
-
-      return JSON.parse(data.data.response);
-    },
-
-    conductDetailedAnalysis: async function conductDetailedAnalysis(basicInfo) {
+    conductDetailedAnalysis: _async(function conductDetailedAnalysis(basicInfo) {
       var analysisSteps = {
         financial: 'Company: ' + basicInfo.company_name + ', Industry: ' + basicInfo.industry + '\n\nProvide financial treasury analysis. Return valid JSON:\n{\n  "cash_position": "string",\n  "debt_profile": "string", \n  "working_capital": "string",\n  "currency_exposure": "string"\n}',
         challenges: 'Company: ' + basicInfo.company_name + ', Industry: ' + basicInfo.industry + '\n\nIdentify treasury challenges. Return valid JSON:\n{\n  "primary_challenges": ["string"],\n  "risk_factors": ["string"],\n  "compliance_requirements": ["string"]\n}',
@@ -532,41 +528,39 @@ function _arrayWithHoles(r) {
 
       var results = {};
 
-      for (var key in analysisSteps) {
-        if (analysisSteps.hasOwnProperty(key)) {
-          var prompt = analysisSteps[key];
-          try {
-            var formData = new FormData();
-            formData.append('action', 'rtbcb_openai_request');
-            formData.append('prompt', prompt);
-            formData.append('max_tokens', '600');
-            formData.append('temperature', '0.4');
-            formData.append('nonce', rtbcbAdmin.nonce);
-
-            var response = await fetch(rtbcbAdmin.ajax_url, {
-              method: 'POST',
-              body: formData
-            });
-
+      return _await(_forOf(Object.keys(analysisSteps), function (key) {
+        var prompt = analysisSteps[key];
+        return _continue(_catch(function () {
+          var formData = new FormData();
+          formData.append('action', 'rtbcb_openai_request');
+          formData.append('prompt', prompt);
+          formData.append('max_tokens', '600');
+          formData.append('temperature', '0.4');
+          formData.append('nonce', rtbcbAdmin.nonce);
+          return _await(fetch(rtbcbAdmin.ajax_url, {
+            method: 'POST',
+            body: formData
+          }), function (response) {
             if (response.ok) {
-              var data = await response.json();
-              if (data.success) {
-                results[key] = JSON.parse(data.data.response);
-              }
+              return _await(response.json(), function (data) {
+                if (data.success) {
+                  results[key] = JSON.parse(data.data.response);
+                }
+              });
             }
-
-            await new Promise(function (resolve) {
-              return setTimeout(resolve, 500);
-            });
-          } catch (error) {
-            console.warn('Step ' + key + ' failed:', error);
-            results[key] = { error: 'Failed to analyze ' + key };
-          }
-        }
-      }
-
-      return results;
-    },
+          });
+        }, function (error) {
+          console.warn('Step ' + key + ' failed:', error);
+          results[key] = { error: 'Failed to analyze ' + key };
+        }), function () {
+          return _await(new Promise(function (resolve) {
+            return setTimeout(resolve, 500);
+          }));
+        });
+      }), function () {
+        return results;
+      });
+    }),
 
     compileFinalReport: function compileFinalReport(basicInfo, analysisResults) {
       var analysis = basicInfo.company_name + ' is a ' + basicInfo.public_private + ' company in the ' + basicInfo.industry + ' industry';
