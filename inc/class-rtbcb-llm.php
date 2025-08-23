@@ -178,6 +178,65 @@ class RTBCB_LLM {
     }
 
     /**
+     * Generate a structured benefits estimate.
+     *
+     * @param float  $revenue     Annual revenue.
+     * @param int    $staff_count Number of staff members.
+     * @param float  $efficiency  Current efficiency percentage.
+     * @param string $category    Benefit category.
+     *
+     * @return array|WP_Error Benefits estimate array or error object.
+     */
+    public function generate_benefits_estimate( $revenue, $staff_count, $efficiency, $category ) {
+        $revenue     = floatval( $revenue );
+        $staff_count = intval( $staff_count );
+        $efficiency  = floatval( $efficiency );
+        $category    = sanitize_text_field( $category );
+
+        if ( empty( $this->api_key ) ) {
+            return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
+        }
+
+        $model  = $this->models['mini'] ?? 'gpt-4o-mini';
+        $prompt = 'Given company metrics:'
+            . "\nRevenue: {$revenue}"
+            . "\nStaff Count: {$staff_count}"
+            . "\nCurrent Efficiency: {$efficiency}%"
+            . "\nCategory: {$category}"
+            . '\nProvide a JSON object with keys '
+            . 'time_savings_hours, cost_reductions_usd, efficiency_gain_percent, '
+            . 'roi_percent, roi_timeline_months, risk_mitigation, productivity_gain_percent.'
+            . '\nReturn only valid JSON.';
+
+        $response = $this->call_openai_with_retry( $model, $prompt );
+
+        if ( is_wp_error( $response ) ) {
+            return new WP_Error( 'llm_failure', __( 'Unable to generate benefits estimate at this time.', 'rtbcb' ) );
+        }
+
+        $body    = wp_remote_retrieve_body( $response );
+        $decoded = json_decode( $body, true );
+        $content = $decoded['choices'][0]['message']['content'] ?? '';
+        $json    = json_decode( $content, true );
+
+        if ( ! is_array( $json ) ) {
+            return new WP_Error( 'llm_parse_error', __( 'Invalid response from language model.', 'rtbcb' ) );
+        }
+
+        $estimate = [
+            'time_savings_hours'        => floatval( $json['time_savings_hours'] ?? 0 ),
+            'cost_reductions_usd'       => floatval( $json['cost_reductions_usd'] ?? 0 ),
+            'efficiency_gain_percent'   => floatval( $json['efficiency_gain_percent'] ?? 0 ),
+            'roi_percent'               => floatval( $json['roi_percent'] ?? 0 ),
+            'roi_timeline_months'       => floatval( $json['roi_timeline_months'] ?? 0 ),
+            'risk_mitigation'           => sanitize_textarea_field( $json['risk_mitigation'] ?? '' ),
+            'productivity_gain_percent' => floatval( $json['productivity_gain_percent'] ?? 0 ),
+        ];
+
+        return $estimate;
+    }
+
+    /**
      * Generate an industry overview.
      *
      * @param string $industry     Industry name.
