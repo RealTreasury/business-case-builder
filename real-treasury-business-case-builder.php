@@ -1375,6 +1375,56 @@ add_action( 'wp_ajax_rtbcb_generate_company_overview', 'rtbcb_ajax_generate_comp
 add_action( 'wp_ajax_rtbcb_generate_real_treasury_overview', 'rtbcb_ajax_generate_real_treasury_overview' );
 add_action( 'wp_ajax_rtbcb_generate_category_recommendation', 'rtbcb_ajax_generate_category_recommendation' );
 add_action( 'wp_ajax_rtbcb_clear_current_company', 'rtbcb_ajax_clear_current_company' );
+add_action( 'wp_ajax_rtbcb_company_overview_simple', 'rtbcb_handle_company_overview_simple' );
+
+/**
+ * Simple AJAX handler to test company overview generation.
+ *
+ * @return void
+ */
+function rtbcb_handle_company_overview_simple() {
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'rtbcb_test_company_overview' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ] );
+        return;
+    }
+
+    $company_name = isset( $_POST['company_name'] ) ? sanitize_text_field( wp_unslash( $_POST['company_name'] ) ) : '';
+
+    if ( empty( $company_name ) ) {
+        wp_send_json_error( [ 'message' => __( 'Company name required', 'rtbcb' ) ] );
+        return;
+    }
+
+    wp_send_json_success(
+        [
+            'message'         => sprintf( __( 'Processing started for %s', 'rtbcb' ), $company_name ),
+            'status'          => 'processing',
+            'simple_analysis' => rtbcb_get_simple_company_info( $company_name ),
+        ]
+    );
+}
+
+/**
+ * Provide simple placeholder analysis for testing connections.
+ *
+ * @param string $company_name Company name.
+ * @return array
+ */
+function rtbcb_get_simple_company_info( $company_name ) {
+    return [
+        'analysis'        => sprintf( __( 'Analysis requested for %s. This is a placeholder response to test the connection without LLM calls.', 'rtbcb' ), $company_name ),
+        'recommendations' => [
+            __( 'Implement treasury management system', 'rtbcb' ),
+            __( 'Automate cash forecasting', 'rtbcb' ),
+            __( 'Improve bank connectivity', 'rtbcb' ),
+        ],
+        'references'      => [
+            esc_url_raw( 'https://www.afponline.org' ),
+            esc_url_raw( 'https://www.treasury.gov' ),
+        ],
+        'generated_at'    => current_time( 'Y-m-d H:i:s' ),
+    ];
+}
 
 /**
  * AJAX handler for generating company overview.
