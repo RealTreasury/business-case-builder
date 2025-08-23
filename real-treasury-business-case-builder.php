@@ -23,11 +23,11 @@ define( 'RTBCB_DIR', plugin_dir_path( RTBCB_FILE ) );
 /**
  * Enhanced main plugin class.
  */
-class Real_Treasury_BCB {
+class RTBCB_Plugin {
     /**
      * Singleton instance.
      *
-     * @var Real_Treasury_BCB|null
+     * @var RTBCB_Plugin|null
      */
     private static $instance = null;
 
@@ -41,7 +41,7 @@ class Real_Treasury_BCB {
     /**
      * Get plugin instance.
      *
-     * @return Real_Treasury_BCB
+     * @return RTBCB_Plugin
      */
     public static function instance() {
         if ( null === self::$instance ) {
@@ -1331,7 +1331,7 @@ class Real_Treasury_BCB {
 }
 
 // Initialize the plugin
-Real_Treasury_BCB::instance();
+RTBCB_Plugin::instance();
 
 // Helper functions for use in templates and other plugins
 if ( ! function_exists( 'rtbcb_get_leads_count' ) ) {
