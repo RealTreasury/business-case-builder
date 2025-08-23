@@ -497,7 +497,7 @@ class RTBCB_Admin {
         check_ajax_referer( 'rtbcb_generate_report_preview', 'nonce' );
 
         if ( ! current_user_can( 'manage_options' ) ) {
-            wp_send_json_error( __( 'Permission denied', 'rtbcb' ) );
+            wp_send_json_error( __( 'Permission denied', 'rtbcb' ), 403 );
         }
 
         $context_raw  = isset( $_POST['context'] ) ? wp_unslash( $_POST['context'] ) : '';
@@ -505,33 +505,39 @@ class RTBCB_Admin {
 
         $context = json_decode( $context_raw, true );
         if ( ! is_array( $context ) ) {
-            wp_send_json_error( [ 'message' => __( 'Invalid context data.', 'rtbcb' ) ] );
+            wp_send_json_error( [ 'message' => __( 'Invalid context data.', 'rtbcb' ) ], 400 );
         }
 
-        $html = '';
+        try {
+            $html = '';
 
-        if ( ! empty( $template_raw ) ) {
-            $business_case_data = $context;
-            ob_start();
-            eval( '?>' . $template_raw ); // phpcs:ignore WordPress.PHP.DiscouragedFunctions.eval
-            $html = ob_get_clean();
-        } else {
-            $template_path = RTBCB_DIR . 'templates/comprehensive-report-template.php';
-            if ( ! file_exists( $template_path ) ) {
-                $template_path = RTBCB_DIR . 'templates/report-template.php';
-            }
+            if ( ! empty( $template_raw ) ) {
+                $business_case_data = $context;
+                ob_start();
+                eval( '?>' . $template_raw ); // phpcs:ignore WordPress.PHP.DiscouragedFunctions.eval
+                $html = ob_get_clean();
+            } else {
+                $template_path = RTBCB_DIR . 'templates/comprehensive-report-template.php';
+                if ( ! file_exists( $template_path ) ) {
+                    $template_path = RTBCB_DIR . 'templates/report-template.php';
+                }
 
-            if ( file_exists( $template_path ) ) {
+                if ( ! file_exists( $template_path ) ) {
+                    wp_send_json_error( [ 'message' => __( 'Report template not found.', 'rtbcb' ) ], 500 );
+                }
+
                 $business_case_data = $context;
                 ob_start();
                 include $template_path;
                 $html = ob_get_clean();
             }
+
+            $html = wp_kses_post( $html );
+
+            wp_send_json_success( [ 'html' => $html ] );
+        } catch ( \Throwable $e ) {
+            wp_send_json_error( [ 'message' => $e->getMessage() ], 500 );
         }
-
-        $html = wp_kses_post( $html );
-
-        wp_send_json_success( [ 'html' => $html ] );
     }
 
     /**
@@ -543,28 +549,35 @@ class RTBCB_Admin {
         check_ajax_referer( 'rtbcb_generate_report_preview', 'nonce' );
 
         if ( ! current_user_can( 'manage_options' ) ) {
-            wp_send_json_error( __( 'Permission denied.', 'rtbcb' ) );
+            wp_send_json_error( __( 'Permission denied.', 'rtbcb' ), 403 );
         }
 
         $scenario_key = isset( $_POST['scenario_key'] ) ? sanitize_key( wp_unslash( $_POST['scenario_key'] ) ) : '';
 
         $inputs = apply_filters( 'rtbcb_sample_report_inputs', rtbcb_get_sample_inputs(), $scenario_key );
         if ( empty( $inputs ) || ! is_array( $inputs ) ) {
-            wp_send_json_error( [ 'message' => __( 'Invalid scenario selected.', 'rtbcb' ) ] );
+            wp_send_json_error( [ 'message' => __( 'Invalid scenario selected.', 'rtbcb' ) ], 400 );
         }
 
-        $roi_data = RTBCB_Calculator::calculate_roi( $inputs );
+        try {
+            $roi_data = RTBCB_Calculator::calculate_roi( $inputs );
 
-        $llm           = new RTBCB_LLM();
-        $business_case = $llm->generate_business_case( $inputs, $roi_data );
-        if ( is_wp_error( $business_case ) ) {
-            wp_send_json_error( [ 'message' => $business_case->get_error_message() ] );
+            $llm           = new RTBCB_LLM();
+            $business_case = $llm->generate_business_case( $inputs, $roi_data );
+            if ( is_wp_error( $business_case ) ) {
+                wp_send_json_error( [ 'message' => $business_case->get_error_message() ], 500 );
+            }
+
+            $router = new RTBCB_Router();
+            $html   = $router->get_report_html( $business_case );
+            if ( empty( $html ) ) {
+                wp_send_json_error( [ 'message' => __( 'Report template not found.', 'rtbcb' ) ], 500 );
+            }
+
+            wp_send_json_success( [ 'report_html' => $html ] );
+        } catch ( \Throwable $e ) {
+            wp_send_json_error( [ 'message' => $e->getMessage() ], 500 );
         }
-
-        $router = new RTBCB_Router();
-        $html   = $router->get_report_html( $business_case );
-
-        wp_send_json_success( [ 'report_html' => $html ] );
     }
 
     /**
