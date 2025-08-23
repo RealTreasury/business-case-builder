@@ -601,7 +601,7 @@
             if (selectAll) {
                 selectAll.addEventListener('change', this.toggleSelectAll.bind(this));
             }
-            Array.from(document.querySelectorAll('.rtbcb-lead-checkbox')).forEach(cb => {
+            document.querySelectorAll('.rtbcb-lead-checkbox').forEach((cb) => {
                 cb.addEventListener('change', this.updateSelectAll.bind(this));
                 cb.addEventListener('change', this.updateBulkActionButton.bind(this));
             });
