@@ -37,6 +37,7 @@ class RTBCB_Admin {
         add_action( 'wp_ajax_rtbcb_test_commentary', [ $this, 'ajax_test_commentary' ] );
         add_action( 'wp_ajax_rtbcb_test_company_overview', [ $this, 'ajax_test_company_overview' ] );
         add_action( 'wp_ajax_rtbcb_test_treasury_tech_overview', [ $this, 'ajax_test_treasury_tech_overview' ] );
+        add_action( 'wp_ajax_rtbcb_save_test_result', [ $this, 'ajax_save_test_result' ] );
     }
 
     /**
@@ -97,6 +98,16 @@ class RTBCB_Admin {
             'rtbcbAdmin.sampleForms = ' . wp_json_encode( $rtbcb_sample_data ) . ';',
             'after'
         );
+
+        if ( 'rtbcb-test-dashboard' === $page ) {
+            wp_enqueue_script(
+                'rtbcb-test-dashboard',
+                RTBCB_URL . 'admin/js/test-dashboard.js',
+                [ 'jquery', 'rtbcb-admin' ],
+                RTBCB_VERSION,
+                true
+            );
+        }
     }
 
     /**
@@ -212,6 +223,15 @@ class RTBCB_Admin {
             'manage_options',
             'rtbcb-test-treasury-tech-overview',
             [ $this, 'render_test_treasury_tech_overview' ]
+        );
+
+        add_submenu_page(
+            'rtbcb-dashboard',
+            __( 'Testing Dashboard', 'rtbcb' ),
+            __( 'Testing Dashboard', 'rtbcb' ),
+            'manage_options',
+            'rtbcb-test-dashboard',
+            [ $this, 'render_test_dashboard' ]
         );
     }
 
@@ -354,6 +374,22 @@ class RTBCB_Admin {
      */
     public function render_test_treasury_tech_overview() {
         include RTBCB_DIR . 'admin/test-treasury-tech-overview-page.php';
+    }
+
+    /**
+     * Render testing dashboard page.
+     *
+     * @return void
+     */
+    public function render_test_dashboard() {
+        $results = get_option( 'rtbcb_test_results', [] );
+        $system_status = [
+            'openai' => ! empty( get_option( 'rtbcb_openai_api_key' ) ),
+            'portal' => $this->check_portal_integration(),
+            'rag'    => $this->check_rag_health(),
+        ];
+
+        include RTBCB_DIR . 'admin/test-dashboard-page.php';
     }
 
     /**
@@ -1027,5 +1063,42 @@ class RTBCB_Admin {
         } catch ( Error $e ) {
             wp_send_json_error( sprintf( __( 'Diagnostics failed: %s', 'rtbcb' ), $e->getMessage() ) );
         }
+    }
+
+    /**
+     * Save test result via AJAX.
+     *
+     * @return void
+     */
+    public function ajax_save_test_result() {
+        check_ajax_referer( 'rtbcb_nonce', 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( __( 'Insufficient permissions', 'rtbcb' ) );
+        }
+
+        $section = isset( $_POST['section'] ) ? sanitize_text_field( wp_unslash( $_POST['section'] ) ) : '';
+        $status  = isset( $_POST['status'] ) ? sanitize_text_field( wp_unslash( $_POST['status'] ) ) : '';
+        $message = isset( $_POST['message'] ) ? sanitize_textarea_field( wp_unslash( $_POST['message'] ) ) : '';
+
+        $results = get_option( 'rtbcb_test_results', [] );
+        if ( ! is_array( $results ) ) {
+            $results = [];
+        }
+
+        $results[] = [
+            'time'    => current_time( 'mysql' ),
+            'section' => $section,
+            'status'  => $status,
+            'message' => $message,
+        ];
+
+        if ( count( $results ) > 10 ) {
+            $results = array_slice( $results, -10 );
+        }
+
+        update_option( 'rtbcb_test_results', $results );
+
+        wp_send_json_success();
     }
 }
