@@ -352,6 +352,22 @@ function rtbcb_is_valid_openai_api_key( $api_key ) {
 }
 
 /**
+ * Normalize a model name by stripping date suffixes.
+ *
+ * @param string $model Raw model identifier.
+ * @return string Model name without version date.
+ */
+function rtbcb_normalize_model_name( $model ) {
+    $model = sanitize_text_field( $model );
+
+    if ( preg_match( '/^(gpt-[^\s]+?)(?:-\d{4}-\d{2}-\d{2})$/', $model, $matches ) ) {
+        return $matches[1];
+    }
+
+    return $model;
+}
+
+/**
  * Get client information for analytics
  *
  * @return array Client data

@@ -1,131 +1,21 @@
 <?php
-// Stubs for WordPress functions used in RTBCB_LLM
-if ( ! function_exists( 'get_option' ) ) {
-    function get_option( $name, $default = '' ) {
-        if ( 'rtbcb_openai_api_key' === $name ) {
-            return 'test-key';
-        }
-        if ( 'rtbcb_advanced_model' === $name ) {
-            $env_model = getenv( 'RTBCB_TEST_MODEL' );
-            return false !== $env_model ? $env_model : $default;
-        }
-        return $default;
-    }
+// Generate a mock server-side OpenAI request body for temperature tests.
+
+$model = getenv( 'RTBCB_TEST_MODEL' );
+$model = $model ? preg_replace( '/[^A-Za-z0-9\-_.]/', '', $model ) : 'gpt-5-mini';
+$model = preg_replace( '/^(gpt-[^\s]+?)(?:-\d{4}-\d{2}-\d{2})$/', '$1', $model );
+
+$capabilities = include __DIR__ . '/../../inc/model-capabilities.php';
+$unsupported  = $capabilities['temperature']['unsupported'] ?? [];
+
+$body = [
+    'model'             => $model,
+    'input'             => 'test prompt',
+    'max_output_tokens' => 256,
+];
+
+if ( ! in_array( $model, $unsupported, true ) ) {
+    $body['temperature'] = 0.7;
 }
 
-if ( ! class_exists( 'WP_Error' ) ) {
-    class WP_Error {
-        public function __construct( $code = '', $message = '' ) {}
-        public function get_error_message() { return ''; }
-    }
-}
-
-if ( ! function_exists( 'is_wp_error' ) ) {
-    function is_wp_error( $thing ) {
-        return $thing instanceof WP_Error;
-    }
-}
-
-if ( ! function_exists( '__' ) ) {
-    function __( $text ) {
-        return $text;
-    }
-}
-
-if ( ! function_exists( 'wp_json_encode' ) ) {
-    function wp_json_encode( $data ) {
-        return json_encode( $data );
-    }
-}
-
-if ( ! function_exists( '__' ) ) {
-    function __( $text, $domain = null ) {
-        return $text;
-    }
-}
-
-if ( ! function_exists( 'sanitize_text_field' ) ) {
-    function sanitize_text_field( $text ) {
-        return $text;
-    }
-}
-
-if ( ! function_exists( 'sanitize_textarea_field' ) ) {
-    function sanitize_textarea_field( $text ) {
-        return $text;
-    }
-}
-
-if ( ! function_exists( 'sanitize_key' ) ) {
-    function sanitize_key( $key ) {
-        $key = strtolower( $key );
-        return preg_replace( '/[^a-z0-9_]/', '', $key );
-    }
-}
-
-$captured_body = null;
-if ( ! function_exists( 'wp_remote_post' ) ) {
-    function wp_remote_post( $url, $args ) {
-        global $captured_body;
-        $captured_body = json_decode( $args['body'], true );
-        return [
-            'body' => json_encode( [
-                'status' => 'completed',
-                'output' => [
-                    [
-                        'id'      => 'reasoning',
-                        'type'    => 'reasoning',
-                        'content' => [
-                            [
-                                'type' => 'reasoning',
-                                'text' => 'thinking',
-                            ],
-                        ],
-                    ],
-                    [
-                        'id'      => 'message',
-                        'type'    => 'message',
-                        'content' => [
-                            [
-                                'type' => 'output_text',
-                                'text' => 'test',
-                            ],
-                        ],
-                    ],
-                ],
-            ] ),
-        ];
-    }
-}
-
-if ( ! function_exists( 'wp_remote_retrieve_response_code' ) ) {
-    function wp_remote_retrieve_response_code( $response ) {
-        return 200;
-    }
-}
-
-if ( ! function_exists( 'wp_remote_retrieve_body' ) ) {
-    function wp_remote_retrieve_body( $response ) {
-        return $response['body'] ?? '{}';
-    }
-}
-
-if ( ! function_exists( 'rtbcb_model_supports_temperature' ) ) {
-    function rtbcb_model_supports_temperature( $model ) {
-        $capabilities = include __DIR__ . '/../../inc/model-capabilities.php';
-        $unsupported  = $capabilities['temperature']['unsupported'] ?? [];
-        return ! in_array( $model, $unsupported, true );
-    }
-}
-
-require_once __DIR__ . '/../../inc/class-rtbcb-llm.php';
-
-$llm       = new RTBCB_LLM();
-$ref       = new ReflectionClass( $llm );
-$method    = $ref->getMethod( 'call_openai' );
-$method->setAccessible( true );
-// Pass a low max_output_tokens to ensure the minimum is enforced.
-$method->invoke( $llm, get_option( 'rtbcb_advanced_model', 'gpt-5-mini' ), 'test prompt', 1 );
-
-global $captured_body;
-echo json_encode( $captured_body );
+echo json_encode( $body );

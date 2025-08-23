@@ -9,6 +9,9 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/helpers.php';
+
 /**
  * Provides OpenAI API diagnostics.
  */
@@ -122,13 +125,16 @@ class RTBCB_API_Tester {
         $endpoint = 'https://api.openai.com/v1/responses';
 
         $model             = sanitize_text_field( get_option( 'rtbcb_mini_model', rtbcb_get_default_model( 'mini' ) ) );
+        $model             = rtbcb_normalize_model_name( $model );
         $config            = rtbcb_get_gpt5_config( get_option( 'rtbcb_gpt5_config', [] ) );
         $max_output_tokens = intval( $config['max_output_tokens'] ); // Sanitize token limit.
         $body              = [
             'model'             => $model,
-            'input'             => 'ping',
+            'input'             => __( "Briefly confirm the API is wired correctly—reply with 'pong'.", 'rtbcb' ),
             // Use the configured token limit for the API test.
             'max_output_tokens' => $max_output_tokens,
+            'reasoning'         => [ 'effort' => 'minimal' ],
+            'text'              => [ 'verbosity' => 'low' ],
         ];
 
         if ( rtbcb_model_supports_temperature( $model ) ) {

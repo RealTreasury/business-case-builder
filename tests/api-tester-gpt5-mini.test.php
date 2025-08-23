@@ -3,6 +3,14 @@ if ( ! defined( 'ABSPATH' ) ) {
     define( 'ABSPATH', __DIR__ . '/../' );
 }
 
+if ( ! function_exists( 'add_filter' ) ) {
+    function add_filter( $tag, $function_to_add, $priority = 10, $accepted_args = 1 ) {}
+}
+
+if ( ! defined( 'RTBCB_DIR' ) ) {
+    define( 'RTBCB_DIR', __DIR__ . '/../' );
+}
+
 require_once __DIR__ . '/../inc/config.php';
 require_once __DIR__ . '/../inc/class-rtbcb-api-tester.php';
 require_once __DIR__ . '/../inc/class-rtbcb-llm.php';
