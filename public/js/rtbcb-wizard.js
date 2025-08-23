@@ -10,14 +10,20 @@ window.openBusinessCaseModal = function() {
         overlay.classList.add('active');
         document.body.style.overflow = 'hidden';
 
-        // Force re-initialization
-        setTimeout(() => {
+        // Force re-initialization without blocking rendering
+        const initBuilder = () => {
             if (window.businessCaseBuilder) {
                 window.businessCaseBuilder.reinitialize();
             } else {
                 window.businessCaseBuilder = new BusinessCaseBuilder();
             }
-        }, 100);
+        };
+
+        if (window.requestAnimationFrame) {
+            window.requestAnimationFrame(initBuilder);
+        } else {
+            setTimeout(initBuilder, 0);
+        }
     }
 };
 
@@ -302,8 +308,12 @@ class BusinessCaseBuilder {
                 messageDiv.textContent = message;
                 messageDiv.style.display = 'block';
                 messageDiv.style.color = '#ef4444';
-                
-                setTimeout(() => {
+
+                if (this.messageHideTimeout) {
+                    clearTimeout(this.messageHideTimeout);
+                }
+
+                this.messageHideTimeout = setTimeout(() => {
                     messageDiv.style.display = 'none';
                 }, 5000);
             }
