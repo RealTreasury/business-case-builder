@@ -314,7 +314,7 @@ $results = RTBCB_Tests::run_integration_tests();
 A: Verify your API key is correct and has sufficient credits in your OpenAI account.
 
 **Q: Charts not displaying in analytics**
-A: Ensure Chart.js is loading properly and check browser console for JavaScript errors.
+A: The analytics dashboard relies on Chart.js for visualizations. The plugin bundles this library locally to avoid ad blockers, but strict privacy extensions may still block it. Ensure your browser allows the plugin's scripts so charts can render correctly.
 
 **Q: Lead data not saving**
 A: Check database permissions and ensure tables were created during plugin activation.

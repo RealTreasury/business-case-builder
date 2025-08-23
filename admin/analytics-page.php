@@ -299,15 +299,10 @@ async function initializeAnalyticsCharts() {
     };
 
     if (typeof Chart === 'undefined') {
-        try {
-            await import('https://cdn.jsdelivr.net/npm/chart.js');
-        } catch (error) {
-            console.error('Chart.js failed to load:', error);
-            showFallback('rtbcb-category-chart');
-            showFallback('rtbcb-size-chart');
-            showFallback('rtbcb-trends-chart');
-            return;
-        }
+        showFallback('rtbcb-category-chart');
+        showFallback('rtbcb-size-chart');
+        showFallback('rtbcb-trends-chart');
+        return;
     }
 
     // Category Distribution Chart
@@ -352,7 +347,6 @@ async function initializeAnalyticsCharts() {
                 }
             });
         } catch (error) {
-            console.error('Error rendering category chart:', error);
             showFallback('rtbcb-category-chart');
         }
     } else {
@@ -397,7 +391,6 @@ async function initializeAnalyticsCharts() {
                 }
             });
         } catch (error) {
-            console.error('Error rendering size chart:', error);
             showFallback('rtbcb-size-chart');
         }
     } else {
@@ -414,8 +407,8 @@ async function initializeAnalyticsCharts() {
     const avgROIs = trendsData.map(item => Math.round(parseFloat(item.avg_roi || 0) / 1000)); // Convert to thousands
 
     if (trendsData.length > 0) {
-        try {
-            new Chart(document.getElementById('rtbcb-trends-chart'), {
+    try {
+        new Chart(document.getElementById('rtbcb-trends-chart'), {
                 type: 'line',
                 data: {
                     labels: trendLabels,
@@ -475,10 +468,9 @@ async function initializeAnalyticsCharts() {
                     }
                 }
             });
-        } catch (error) {
-            console.error('Error rendering trends chart:', error);
-            showFallback('rtbcb-trends-chart');
-        }
+    } catch (error) {
+        showFallback('rtbcb-trends-chart');
+    }
     } else {
         showFallback('rtbcb-trends-chart');
     }
