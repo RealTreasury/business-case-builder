@@ -413,3 +413,120 @@ function rtbcb_test_generate_industry_overview( $industry, $company_size ) {
     return $overview;
 }
 
+/**
+ * Test generating a complete report with ROI calculations.
+ *
+ * Validates and sanitizes inputs, generates required sections, performs ROI
+ * calculations, routes content through the router for HTML assembly, and saves
+ * the resulting report for later download.
+ *
+ * @param array $all_inputs Section input data.
+ *
+ * @return array Structured report data including HTML, section content, word
+ *               counts, timestamps, and export information.
+ */
+function rtbcb_test_generate_complete_report( $all_inputs ) {
+    $start_time = microtime( true );
+
+    $company_name = isset( $all_inputs['company_name'] )
+        ? sanitize_text_field( $all_inputs['company_name'] )
+        : '';
+
+    $focus_areas = [];
+    if ( isset( $all_inputs['focus_areas'] ) ) {
+        $focus_areas = array_filter( array_map( 'sanitize_text_field', (array) $all_inputs['focus_areas'] ) );
+    }
+
+    $complexity = isset( $all_inputs['complexity'] )
+        ? sanitize_text_field( $all_inputs['complexity'] )
+        : '';
+
+    $roi_inputs = [];
+    if ( isset( $all_inputs['roi_inputs'] ) && is_array( $all_inputs['roi_inputs'] ) ) {
+        $roi_inputs = rtbcb_sanitize_form_data( $all_inputs['roi_inputs'] );
+    }
+
+    $sections = [];
+    $timings  = [];
+
+    $section_start               = microtime( true );
+    $sections['company_overview'] = rtbcb_test_generate_company_overview( $company_name );
+    $timings['company_overview']  = microtime( true ) - $section_start;
+
+    $section_start                      = microtime( true );
+    $sections['treasury_tech_overview'] = rtbcb_test_generate_treasury_tech_overview( $focus_areas, $complexity );
+    $timings['treasury_tech_overview']  = microtime( true ) - $section_start;
+
+    $section_start         = microtime( true );
+    $sections['roi']       = RTBCB_Calculator::calculate_roi( $roi_inputs );
+    $timings['roi']        = microtime( true ) - $section_start;
+
+    $company_text = is_wp_error( $sections['company_overview'] )
+        ? $sections['company_overview']->get_error_message()
+        : (string) $sections['company_overview'];
+
+    $tech_text = is_wp_error( $sections['treasury_tech_overview'] )
+        ? $sections['treasury_tech_overview']->get_error_message()
+        : (string) $sections['treasury_tech_overview'];
+
+    $router = new RTBCB_Router();
+    $html   = $router->get_report_html(
+        [
+            'narrative' => $company_text . '\n\n' . $tech_text,
+            'roi'       => $sections['roi'],
+        ]
+    );
+
+    $word_counts = [
+        'company_overview'       => str_word_count( wp_strip_all_tags( $company_text ) ),
+        'treasury_tech_overview' => str_word_count( wp_strip_all_tags( $tech_text ) ),
+        'combined'               => str_word_count( wp_strip_all_tags( $company_text . ' ' . $tech_text ) ),
+    ];
+
+    $end_time = microtime( true );
+
+    $result = [
+        'html'        => $html,
+        'sections'    => [
+            'company_overview'       => $company_text,
+            'treasury_tech_overview' => $tech_text,
+            'roi'                    => $sections['roi'],
+        ],
+        'word_counts' => $word_counts,
+        'timestamps'  => [
+            'start'       => $start_time,
+            'end'         => $end_time,
+            'elapsed'     => $end_time - $start_time,
+            'per_section' => $timings,
+        ],
+    ];
+
+    $upload_dir = wp_get_upload_dir();
+    if ( ! empty( $upload_dir['basedir'] ) ) {
+        $file_name = wp_unique_filename( $upload_dir['basedir'], 'rtbcb-report.html' );
+        $file_path = trailingslashit( $upload_dir['basedir'] ) . $file_name;
+
+        if ( wp_mkdir_p( dirname( $file_path ) ) ) {
+            file_put_contents( $file_path, $html );
+            $result['download_url'] = trailingslashit( $upload_dir['baseurl'] ) . $file_name;
+        }
+    }
+
+    $post_id = wp_insert_post(
+        [
+            'post_title'   => $company_name ? sprintf( __( '%s Report', 'rtbcb' ), $company_name ) : __( 'RTBCB Report', 'rtbcb' ),
+            'post_content' => $html,
+            'post_status'  => 'draft',
+            'post_type'    => 'rtbcb_report',
+        ],
+        true
+    );
+
+    if ( ! is_wp_error( $post_id ) ) {
+        update_post_meta( $post_id, '_rtbcb_report_data', $result );
+        $result['post_id'] = $post_id;
+    }
+
+    return $result;
+}
+
