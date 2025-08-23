@@ -69,9 +69,8 @@ if ( ! function_exists( 'is_wp_error' ) ) {
 
 $mock_response = [
     'body' => json_encode( [
-        'status'      => 'completed',
-        'output_text' => 'This is a meaningful response message.',
-        'output'      => [
+        'status' => 'completed',
+        'output' => [
             [
                 'id'      => 'reasoning',
                 'type'    => 'reasoning',
@@ -127,6 +126,11 @@ $result = $method->invoke( null, 'test-key' );
 
 if ( ! $result['success'] ) {
     echo "API tester did not report success\n";
+    exit( 1 );
+}
+
+if ( 'This is a meaningful response message.' !== ( $result['response'] ?? '' ) ) {
+    echo "API tester failed to extract text\n";
     exit( 1 );
 }
 
