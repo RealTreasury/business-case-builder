@@ -613,6 +613,10 @@ class Real_Treasury_BCB {
                 'budget_range'           => sanitize_text_field( $_POST['budget_range'] ?? '' ),
             ];
 
+            rtbcb_log_api_debug( 'Collected user inputs', $user_inputs );
+
+            rtbcb_log_api_debug( 'Validating user inputs' );
+
             // Validate required fields
             if ( empty( $user_inputs['email'] ) || ! is_email( $user_inputs['email'] ) ) {
                 wp_send_json_error( __( 'Please enter a valid email address.', 'rtbcb' ), 400 );
@@ -662,6 +666,7 @@ class Real_Treasury_BCB {
                 wp_send_json_error( __( 'Please select a budget range.', 'rtbcb' ), 400 );
             }
 
+            rtbcb_log_api_debug( 'Validation passed', $user_inputs );
             rtbcb_log_memory_usage( 'after_validation' );
 
             // Calculate ROI scenarios
@@ -670,7 +675,9 @@ class Real_Treasury_BCB {
                 wp_send_json_error( __( 'System error: Calculator not available.', 'rtbcb' ), 500 );
             }
 
+            rtbcb_log_api_debug( 'Starting ROI calculation' );
             $scenarios = RTBCB_Calculator::calculate_roi( $user_inputs );
+            rtbcb_log_api_debug( 'ROI scenarios calculated', $scenarios );
             rtbcb_log_memory_usage( 'after_roi_calculation' );
 
             // Get category recommendation
@@ -679,7 +686,9 @@ class Real_Treasury_BCB {
                 wp_send_json_error( __( 'System error: Recommender not available.', 'rtbcb' ), 500 );
             }
 
+            rtbcb_log_api_debug( 'Running category recommendation' );
             $recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
+            rtbcb_log_api_debug( 'Category recommendation result', $recommendation );
             rtbcb_log_memory_usage( 'after_category_recommendation' );
 
             // Get RAG context (with memory monitoring)
@@ -695,7 +704,9 @@ class Real_Treasury_BCB {
                             [ $recommendation['recommended'] ?? '' ]
                         )
                     );
+                    rtbcb_log_api_debug( 'Performing RAG search', [ 'query' => $search_query ] );
                     $rag_context = $rag->search_similar( $search_query, 3 );
+                    rtbcb_log_api_debug( 'RAG search results', $rag_context );
                     rtbcb_log_memory_usage( 'after_rag_search' );
                 } catch ( Exception $e ) {
                     error_log( 'RTBCB: RAG search failed - ' . $e->getMessage() );
@@ -714,6 +725,15 @@ class Real_Treasury_BCB {
 
                     rtbcb_log_memory_usage( 'before_llm_generation' );
 
+                    if ( empty( get_option( 'rtbcb_openai_api_key' ) ) ) {
+                        rtbcb_log_api_debug( 'OpenAI API key not configured' );
+                        wp_send_json_error(
+                            [ 'message' => __( 'OpenAI API key not configured.', 'rtbcb' ) ],
+                            500
+                        );
+                    }
+
+                    rtbcb_log_api_debug( 'Calling LLM for comprehensive business case' );
                     $llm = new RTBCB_LLM();
                     $comprehensive_analysis = $llm->generate_comprehensive_business_case(
                         $user_inputs,
@@ -724,8 +744,12 @@ class Real_Treasury_BCB {
                     rtbcb_log_memory_usage( 'after_llm_generation' );
 
                     if ( is_wp_error( $comprehensive_analysis ) ) {
-                        $error_message   = $comprehensive_analysis->get_error_message();
-                        error_log( 'RTBCB: LLM generation error - ' . $error_message );
+                        $error_message = $comprehensive_analysis->get_error_message();
+                        rtbcb_log_api_debug( 'LLM generation failed', $error_message );
+                        $error_code    = method_exists( $comprehensive_analysis, 'get_error_code' ) ? $comprehensive_analysis->get_error_code() : '';
+                        if ( 'no_api_key' === $error_code ) {
+                            wp_send_json_error( [ 'message' => $error_message ], 500 );
+                        }
                         $response_message = __( 'Failed to generate business case analysis.', 'rtbcb' );
                         if ( function_exists( 'wp_get_environment_type' ) && 'production' !== wp_get_environment_type() ) {
                             $response_message = $error_message;
@@ -734,12 +758,13 @@ class Real_Treasury_BCB {
                     }
 
                     if ( isset( $comprehensive_analysis['error'] ) ) {
-                        error_log( 'RTBCB: LLM generation error - ' . $comprehensive_analysis['error'] );
+                        rtbcb_log_api_debug( 'LLM generation returned error', $comprehensive_analysis['error'] );
                         wp_send_json_error(
                             [ 'message' => __( 'Failed to generate business case analysis.', 'rtbcb' ) ],
                             500
                         );
                     }
+                    rtbcb_log_api_debug( 'LLM generation succeeded' );
                 } catch ( Exception $e ) {
                     error_log( 'RTBCB: LLM generation failed - ' . $e->getMessage() );
                     wp_send_json_error(
