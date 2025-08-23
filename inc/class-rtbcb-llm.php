@@ -1173,17 +1173,37 @@ class RTBCB_LLM {
             return new WP_Error( 'openai_api_error', $error_message );
         }
 
-        $decoded       = json_decode( $response_body, true );
-        $content       = '';
+        $decoded = json_decode( $response_body, true );
+        $content = '';
+        $finish_reason = '';
 
-        if ( isset( $decoded['output_text'] ) ) {
-            $content = is_array( $decoded['output_text'] ) ? implode( ' ', (array) $decoded['output_text'] ) : $decoded['output_text'];
-        } elseif ( isset( $decoded['output'][0]['content'][0]['text'] ) ) {
-            $content = $decoded['output'][0]['content'][0]['text'];
+        if ( isset( $decoded['output'] ) && is_array( $decoded['output'] ) ) {
+            foreach ( $decoded['output'] as $chunk ) {
+                if ( ! is_array( $chunk ) ) {
+                    continue;
+                }
+
+                $text = '';
+                if ( isset( $chunk['content'] ) && is_array( $chunk['content'] ) ) {
+                    foreach ( $chunk['content'] as $piece ) {
+                        if ( isset( $piece['text'] ) && '' !== $piece['text'] ) {
+                            $text = $piece['text'];
+                            break;
+                        }
+                    }
+                }
+
+                if ( 'message' === ( $chunk['type'] ?? '' ) || '' !== $text ) {
+                    $content       = $text;
+                    $finish_reason = $chunk['finish_reason'] ?? '';
+                    break;
+                }
+            }
         }
 
-        // Capture the finish reason to detect length-based truncation.
-        $finish_reason = $decoded['output'][0]['finish_reason'] ?? '';
+        if ( '' === $content && isset( $decoded['output_text'] ) ) {
+            $content = is_array( $decoded['output_text'] ) ? implode( ' ', (array) $decoded['output_text'] ) : $decoded['output_text'];
+        }
 
         error_log( 'RTBCB: OpenAI content: ' . $content );
         error_log( 'RTBCB: OpenAI finish_reason: ' . $finish_reason );
@@ -1218,10 +1238,31 @@ class RTBCB_LLM {
         $total_tokens       = intval( $usage['total_tokens'] ?? 0 );
 
         $content = '';
-        if ( isset( $response['output_text'] ) ) {
+        if ( isset( $response['output'] ) && is_array( $response['output'] ) ) {
+            foreach ( $response['output'] as $chunk ) {
+                if ( ! is_array( $chunk ) ) {
+                    continue;
+                }
+
+                $text = '';
+                if ( isset( $chunk['content'] ) && is_array( $chunk['content'] ) ) {
+                    foreach ( $chunk['content'] as $piece ) {
+                        if ( isset( $piece['text'] ) && '' !== $piece['text'] ) {
+                            $text = $piece['text'];
+                            break;
+                        }
+                    }
+                }
+
+                if ( 'message' === ( $chunk['type'] ?? '' ) || '' !== $text ) {
+                    $content = $text;
+                    break;
+                }
+            }
+        }
+
+        if ( '' === $content && isset( $response['output_text'] ) ) {
             $content = is_array( $response['output_text'] ) ? implode( ' ', (array) $response['output_text'] ) : $response['output_text'];
-        } elseif ( isset( $response['output'][0]['content'][0]['text'] ) ) {
-            $content = $response['output'][0]['content'][0]['text'];
         }
 
         $response_length = strlen( $content );
@@ -1258,10 +1299,31 @@ class RTBCB_LLM {
 
         $content = '';
 
-        if ( isset( $decoded['output_text'] ) ) {
+        if ( isset( $decoded['output'] ) && is_array( $decoded['output'] ) ) {
+            foreach ( $decoded['output'] as $chunk ) {
+                if ( ! is_array( $chunk ) ) {
+                    continue;
+                }
+
+                $text = '';
+                if ( isset( $chunk['content'] ) && is_array( $chunk['content'] ) ) {
+                    foreach ( $chunk['content'] as $piece ) {
+                        if ( isset( $piece['text'] ) && '' !== $piece['text'] ) {
+                            $text = $piece['text'];
+                            break;
+                        }
+                    }
+                }
+
+                if ( 'message' === ( $chunk['type'] ?? '' ) || '' !== $text ) {
+                    $content = $text;
+                    break;
+                }
+            }
+        }
+
+        if ( '' === $content && isset( $decoded['output_text'] ) ) {
             $content = is_array( $decoded['output_text'] ) ? implode( ' ', (array) $decoded['output_text'] ) : $decoded['output_text'];
-        } elseif ( isset( $decoded['output'][0]['content'][0]['text'] ) ) {
-            $content = $decoded['output'][0]['content'][0]['text'];
         }
 
         return [ $content, $decoded ];
@@ -1393,35 +1455,41 @@ function rtbcb_parse_gpt5_response( $response ) {
         ];
     }
 
-    $output_text = '';
-
-    if ( isset( $decoded['output_text'] ) ) {
-        $output_text = is_array( $decoded['output_text'] ) ? implode( ' ', (array) $decoded['output_text'] ) : $decoded['output_text'];
-    } elseif ( isset( $decoded['output'][0]['content'][0]['text'] ) ) {
-        $output_text = $decoded['output'][0]['content'][0]['text'];
-    }
-
+    $output_text    = '';
     $reasoning      = [];
     $function_calls = [];
 
     if ( isset( $decoded['output'] ) && is_array( $decoded['output'] ) ) {
         foreach ( $decoded['output'] as $chunk ) {
-            if ( empty( $chunk['content'] ) || ! is_array( $chunk['content'] ) ) {
+            if ( ! is_array( $chunk ) ) {
                 continue;
             }
 
-            foreach ( $chunk['content'] as $piece ) {
-                if ( ! isset( $piece['type'] ) ) {
-                    continue;
-                }
+            $text = '';
+            if ( isset( $chunk['content'] ) && is_array( $chunk['content'] ) ) {
+                foreach ( $chunk['content'] as $piece ) {
+                    if ( isset( $piece['text'] ) && '' !== $piece['text'] ) {
+                        $text = $piece['text'];
+                    }
 
-                if ( 'reasoning' === $piece['type'] && ! empty( $piece['text'] ) ) {
-                    $reasoning[] = $piece['text'];
-                } elseif ( 'function_call' === $piece['type'] ) {
-                    $function_calls[] = $piece;
+                    if ( isset( $piece['type'] ) ) {
+                        if ( 'reasoning' === $piece['type'] && ! empty( $piece['text'] ) ) {
+                            $reasoning[] = $piece['text'];
+                        } elseif ( 'function_call' === $piece['type'] ) {
+                            $function_calls[] = $piece;
+                        }
+                    }
                 }
             }
+
+            if ( '' === $output_text && ( 'message' === ( $chunk['type'] ?? '' ) || '' !== $text ) ) {
+                $output_text = $text;
+            }
         }
+    }
+
+    if ( '' === $output_text && isset( $decoded['output_text'] ) ) {
+        $output_text = is_array( $decoded['output_text'] ) ? implode( ' ', (array) $decoded['output_text'] ) : $decoded['output_text'];
     }
 
     return [
