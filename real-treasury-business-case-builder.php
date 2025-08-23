@@ -1379,6 +1379,7 @@ function rtbcb_ajax_generate_company_overview() {
 // Enqueue admin scripts for company overview page.
 add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_company_overview_scripts' );
 add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_treasury_tech_overview_scripts' );
+add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_test_dashboard_scripts' );
 
 /**
  * Enqueue admin scripts for company overview page.
@@ -1429,6 +1430,33 @@ function rtbcb_enqueue_treasury_tech_overview_scripts( $hook ) {
             [
                 'ajax_url' => admin_url( 'admin-ajax.php' ),
                 'nonce'    => wp_create_nonce( 'rtbcb_test_treasury_tech_overview' ),
+            ]
+        );
+    }
+}
+
+/**
+ * Enqueue admin scripts for test dashboard page.
+ *
+ * @param string $hook Current admin page hook.
+ * @return void
+ */
+function rtbcb_enqueue_test_dashboard_scripts( $hook ) {
+    if ( strpos( $hook, 'rtbcb' ) !== false && strpos( $hook, 'test-dashboard' ) !== false ) {
+        wp_enqueue_script(
+            'rtbcb-test-dashboard',
+            plugin_dir_url( __FILE__ ) . 'admin/js/test-dashboard.js',
+            [ 'jquery', 'rtbcb-admin' ],
+            '1.0.0',
+            true
+        );
+
+        wp_localize_script(
+            'rtbcb-test-dashboard',
+            'rtbcbTestDashboard',
+            [
+                'ajax_url' => admin_url( 'admin-ajax.php' ),
+                'nonce'    => wp_create_nonce( 'rtbcb_test_dashboard' ),
             ]
         );
     }
