@@ -13,13 +13,24 @@ if ( ! $allowed ) {
     return;
 }
 
-$company       = function_exists( 'rtbcb_get_current_company' ) ? rtbcb_get_current_company() : [];
-$company_name  = isset( $company['name'] ) ? sanitize_text_field( $company['name'] ) : '';
-$company_sum   = isset( $company['summary'] ) ? sanitize_textarea_field( $company['summary'] ) : '';
-$company_ind   = isset( $company['industry'] ) ? sanitize_text_field( $company['industry'] ) : '';
+$company = rtbcb_get_current_company();
+if ( empty( $company ) ) {
+    $overview_url = admin_url( 'admin.php?page=rtbcb-test-company-overview' );
+    echo '<div class="notice notice-error"><p>' . sprintf(
+        esc_html__( 'No company data found. Please run the %s first.', 'rtbcb' ),
+        '<a href="' . esc_url( $overview_url ) . '">' . esc_html__( 'Company Overview', 'rtbcb' ) . '</a>'
+    ) . '</p></div>';
+    rtbcb_render_start_new_analysis_button();
+    return;
+}
+
+$company_name = isset( $company['name'] ) ? sanitize_text_field( $company['name'] ) : '';
+$company_sum  = isset( $company['summary'] ) ? sanitize_textarea_field( $company['summary'] ) : '';
+$company_ind  = isset( $company['industry'] ) ? sanitize_text_field( $company['industry'] ) : '';
 ?>
 <div class="wrap rtbcb-admin-page">
     <h1><?php esc_html_e( 'Test Industry Overview', 'rtbcb' ); ?></h1>
+    <?php rtbcb_render_start_new_analysis_button(); ?>
 
     <?php if ( ! empty( $company_name ) ) : ?>
         <h2><?php echo esc_html( $company_name ); ?></h2>

@@ -12,9 +12,21 @@ if ( ! defined( 'ABSPATH' ) ) {
 if ( ! rtbcb_require_completed_steps( 'rtbcb-test-real-treasury-overview' ) ) {
     return;
 }
+
+$company = rtbcb_get_current_company();
+if ( empty( $company ) ) {
+    $overview_url = admin_url( 'admin.php?page=rtbcb-test-company-overview' );
+    echo '<div class="notice notice-error"><p>' . sprintf(
+        esc_html__( 'No company data found. Please run the %s first.', 'rtbcb' ),
+        '<a href="' . esc_url( $overview_url ) . '">' . esc_html__( 'Company Overview', 'rtbcb' ) . '</a>'
+    ) . '</p></div>';
+    rtbcb_render_start_new_analysis_button();
+    return;
+}
 ?>
 <div class="wrap rtbcb-admin-page">
     <h1><?php esc_html_e( 'Test Real Treasury Overview Generation', 'rtbcb' ); ?></h1>
+    <?php rtbcb_render_start_new_analysis_button(); ?>
 
     <div class="card">
         <h2 class="title"><?php esc_html_e( 'Generate Real Treasury Overview', 'rtbcb' ); ?></h2>

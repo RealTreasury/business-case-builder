@@ -13,12 +13,24 @@ if ( ! rtbcb_require_completed_steps( 'rtbcb-test-estimated-benefits' ) ) {
     return;
 }
 
-$company_data        = get_option( 'rtbcb_company_data', [] );
+$company = rtbcb_get_current_company();
+if ( empty( $company ) ) {
+    $overview_url = admin_url( 'admin.php?page=rtbcb-test-company-overview' );
+    echo '<div class="notice notice-error"><p>' . sprintf(
+        esc_html__( 'No company data found. Please run the %s first.', 'rtbcb' ),
+        '<a href="' . esc_url( $overview_url ) . '">' . esc_html__( 'Company Overview', 'rtbcb' ) . '</a>'
+    ) . '</p></div>';
+    rtbcb_render_start_new_analysis_button();
+    return;
+}
+
+$company_data         = get_option( 'rtbcb_company_data', [] );
 $recommended_category = get_option( 'rtbcb_last_recommended_category', '' );
-$categories          = RTBCB_Category_Recommender::get_all_categories();
+$categories           = RTBCB_Category_Recommender::get_all_categories();
 ?>
 <div class="wrap rtbcb-admin-page">
     <h1><?php esc_html_e( 'Test Estimated Benefits', 'rtbcb' ); ?></h1>
+    <?php rtbcb_render_start_new_analysis_button(); ?>
 
     <form id="rtbcb-benefits-estimate-form">
         <table class="form-table">

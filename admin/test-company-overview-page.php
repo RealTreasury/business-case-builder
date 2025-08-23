@@ -15,6 +15,7 @@ if ( ! rtbcb_require_completed_steps( 'rtbcb-test-company-overview' ) ) {
 ?>
 <div class="wrap rtbcb-admin-page">
     <h1><?php esc_html_e( 'Test Company Overview', 'rtbcb' ); ?></h1>
+    <?php rtbcb_render_start_new_analysis_button(); ?>
     
     <div class="card">
         <h2 class="title"><?php esc_html_e( 'Generate Company Overview', 'rtbcb' ); ?></h2>
