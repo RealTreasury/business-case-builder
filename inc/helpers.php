@@ -363,3 +363,20 @@ function rtbcb_test_generate_company_overview( $company_name ) {
     return $overview;
 }
 
+/**
+ * Test generating a Real Treasury overview using the LLM.
+ *
+ * @param bool  $include_portal Include portal data flag.
+ * @param array $categories     Vendor categories.
+ * @return string|WP_Error Overview text or error object.
+ */
+function rtbcb_test_generate_real_treasury_overview( $include_portal, $categories ) {
+    $include_portal = (bool) $include_portal;
+    $categories     = array_map( 'sanitize_text_field', (array) $categories );
+
+    $llm      = new RTBCB_LLM();
+    $overview = $llm->generate_real_treasury_overview( $include_portal, $categories );
+
+    return $overview;
+}
+

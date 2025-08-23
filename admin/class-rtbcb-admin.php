@@ -36,6 +36,7 @@ class RTBCB_Admin {
         add_action( 'wp_ajax_nopriv_rtbcb_sync_to_local', [ $this, 'sync_to_local' ] );
         add_action( 'wp_ajax_rtbcb_test_commentary', [ $this, 'ajax_test_commentary' ] );
         add_action( 'wp_ajax_rtbcb_test_company_overview', [ $this, 'ajax_test_company_overview' ] );
+        add_action( 'wp_ajax_rtbcb_test_real_treasury_overview', [ $this, 'ajax_test_real_treasury_overview' ] );
     }
 
     /**
@@ -71,6 +72,7 @@ class RTBCB_Admin {
             'diagnostics_nonce'    => wp_create_nonce( 'rtbcb_diagnostics' ),
             'report_preview_nonce' => wp_create_nonce( 'rtbcb_generate_report_preview' ),
             'company_overview_nonce' => wp_create_nonce( 'rtbcb_test_company_overview' ),
+            'real_treasury_overview_nonce' => wp_create_nonce( 'rtbcb_test_real_treasury_overview' ),
             'page'                 => $page,
             'strings'              => [
                 'confirm_delete'      => __( 'Are you sure you want to delete this lead?', 'rtbcb' ),
@@ -202,6 +204,15 @@ class RTBCB_Admin {
             'rtbcb-test-company-overview',
             [ $this, 'render_test_company_overview' ]
         );
+
+        add_submenu_page(
+            'rtbcb-dashboard',
+            __( 'Test Real Treasury Overview', 'rtbcb' ),
+            __( 'Test Real Treasury Overview', 'rtbcb' ),
+            'manage_options',
+            'rtbcb-test-real-treasury-overview',
+            [ $this, 'render_test_real_treasury_overview' ]
+        );
     }
 
     /**
@@ -320,6 +331,15 @@ class RTBCB_Admin {
      */
     public function render_test_company_overview() {
         include RTBCB_DIR . 'admin/test-company-overview-page.php';
+    }
+
+    /**
+     * Render Real Treasury overview test page.
+     *
+     * @return void
+     */
+    public function render_test_real_treasury_overview() {
+        include RTBCB_DIR . 'admin/test-real-treasury-overview-page.php';
     }
 
     /**
@@ -549,6 +569,45 @@ class RTBCB_Admin {
                 'word_count' => $word_count,
                 'elapsed'    => $elapsed,
                 'generated'  => current_time( 'mysql' ),
+            ]
+        );
+    }
+
+    /**
+     * AJAX handler for Real Treasury overview testing.
+     *
+     * @return void
+     */
+    public function ajax_test_real_treasury_overview() {
+        check_ajax_referer( 'rtbcb_test_real_treasury_overview', 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'message' => __( 'Insufficient permissions', 'rtbcb' ) ] );
+        }
+
+        $include_portal = isset( $_POST['include_portal'] ) && '1' === sanitize_text_field( wp_unslash( $_POST['include_portal'] ) );
+        $raw_categories = isset( $_POST['categories'] ) ? (array) $_POST['categories'] : [];
+        $allowed        = array_keys( RTBCB_Category_Recommender::get_all_categories() );
+        $categories     = array_filter( array_map( 'sanitize_key', $raw_categories ), function ( $cat ) use ( $allowed ) {
+            return in_array( $cat, $allowed, true );
+        } );
+
+        $start    = microtime( true );
+        $overview = rtbcb_test_generate_real_treasury_overview( $include_portal, $categories );
+        $elapsed  = round( microtime( true ) - $start, 2 );
+
+        if ( is_wp_error( $overview ) ) {
+            wp_send_json_error( [ 'message' => sanitize_text_field( $overview->get_error_message() ) ] );
+        }
+
+        $word_count = str_word_count( $overview );
+
+        wp_send_json_success(
+            [
+                'overview'        => sanitize_textarea_field( $overview ),
+                'word_count'      => $word_count,
+                'generation_time' => $elapsed,
+                'timestamp'       => current_time( 'mysql' ),
             ]
         );
     }

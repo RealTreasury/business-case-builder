@@ -12,6 +12,7 @@
             this.bindSyncLocal();
             this.bindCommentaryTest();
             this.bindCompanyOverviewTest();
+            this.bindRealTreasuryOverviewTest();
         },
 
         bindDashboardActions() {
@@ -135,6 +136,71 @@
             form.on('submit', submitHandler);
             if (clearBtn.length) {
                 clearBtn.on('click', function(){ results.empty(); });
+            }
+        },
+
+        bindRealTreasuryOverviewTest() {
+            if (!rtbcbAdmin || rtbcbAdmin.page !== 'rtbcb-test-real-treasury-overview') { return; }
+            const generateBtn = $('#rtbcb-generate-real-treasury-overview');
+            if (!generateBtn.length) { return; }
+            const resultsDiv = $('#rtbcb-real-treasury-overview-results');
+            const clearBtn = $('#rtbcb-clear-real-treasury-overview');
+            const nonce = rtbcbAdmin.real_treasury_overview_nonce;
+            const generate = async function() {
+                const categories = $('#rtbcb-vendor-categories').val() || [];
+                const includePortal = $('#rtbcb-include-portal-data').is(':checked') ? '1' : '0';
+                const original = generateBtn.text();
+                generateBtn.prop('disabled', true).text(rtbcbAdmin.strings.generating);
+                resultsDiv.html('<p>Generating overview...</p>');
+                try {
+                    const formData = new FormData();
+                    formData.append('action', 'rtbcb_test_real_treasury_overview');
+                    formData.append('nonce', nonce);
+                    formData.append('include_portal', includePortal);
+                    categories.forEach(cat => formData.append('categories[]', cat));
+                    const response = await fetch(rtbcbAdmin.ajax_url, { method: 'POST', body: formData });
+                    if (!response.ok) {
+                        throw new Error(`Server responded ${response.status}`);
+                    }
+                    const data = await response.json();
+                    if (data.success) {
+                        const text = data.data?.overview || '';
+                        const wordCount = data.data?.word_count || 0;
+                        const duration = data.data?.generation_time || 0;
+                        const timestamp = data.data?.timestamp || '';
+                        const container = $('<div />');
+                        container.append($('<p />').text(text));
+                        container.append($('<p />').text('Word count: ' + wordCount));
+                        container.append($('<p />').text('Duration: ' + duration + 's'));
+                        container.append($('<p />').text('Timestamp: ' + timestamp));
+                        const actions = $('<p />');
+                        const regen = $('<button type="button" class="button" />').text('Regenerate');
+                        const copy = $('<button type="button" class="button" />').text('Copy Text');
+                        regen.on('click', generate);
+                        copy.on('click', async function(){
+                            try {
+                                await navigator.clipboard.writeText(text);
+                                alert(rtbcbAdmin.strings.copied);
+                            } catch (err) {
+                                alert(rtbcbAdmin.strings.error + ' ' + err.message);
+                            }
+                        });
+                        actions.append(regen).append(' ').append(copy);
+                        container.append(actions);
+                        resultsDiv.html(container);
+                    } else {
+                        const message = data.data?.message || rtbcbAdmin.strings.error;
+                        resultsDiv.html('<div class="notice notice-error"><p>' + message + '</p></div>');
+                    }
+                } catch (err) {
+                    resultsDiv.html('<div class="notice notice-error"><p>' + rtbcbAdmin.strings.error + ' ' + err.message + '</p></div>');
+                }
+                generateBtn.prop('disabled', false).text(original);
+            };
+
+            generateBtn.on('click', generate);
+            if (clearBtn.length) {
+                clearBtn.on('click', function(){ resultsDiv.empty(); });
             }
         },
 
