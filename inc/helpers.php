@@ -430,6 +430,41 @@ function rtbcb_test_generate_industry_overview( $industry, $company_size ) {
 }
 
 /**
+ * Test generating a category recommendation.
+ *
+ * @param array $inputs User input data.
+ * @return array|WP_Error Recommendation data or error.
+ */
+function rtbcb_test_generate_category_recommendation( $inputs ) {
+    $sanitized = [
+        'company_size'            => isset( $inputs['company_size'] ) ? sanitize_text_field( $inputs['company_size'] ) : '',
+        'treasury_complexity'     => isset( $inputs['treasury_complexity'] ) ? sanitize_text_field( $inputs['treasury_complexity'] ) : '',
+        'pain_points'             => isset( $inputs['pain_points'] ) ? array_map( 'sanitize_text_field', (array) $inputs['pain_points'] ) : [],
+        'budget_range'            => isset( $inputs['budget_range'] ) ? sanitize_text_field( $inputs['budget_range'] ) : '',
+        'implementation_timeline' => isset( $inputs['implementation_timeline'] ) ? sanitize_text_field( $inputs['implementation_timeline'] ) : '',
+    ];
+
+    if ( ! class_exists( 'RTBCB_Category_Recommender' ) ) {
+        return new WP_Error( 'missing_recommender', __( 'Category recommender not available.', 'rtbcb' ) );
+    }
+
+    $recommendation = RTBCB_Category_Recommender::recommend_category( $sanitized );
+
+    $recommendation['roadmap'] = [
+        __( 'Assess current treasury processes', 'rtbcb' ),
+        __( 'Evaluate vendor options', 'rtbcb' ),
+        __( 'Implement pilot program', 'rtbcb' ),
+    ];
+
+    $recommendation['success_factors'] = [
+        __( 'Executive sponsorship', 'rtbcb' ),
+        __( 'Cross-functional alignment', 'rtbcb' ),
+    ];
+
+    return $recommendation;
+}
+
+/**
  * Test generating a complete report with ROI calculations.
  *
  * Validates and sanitizes inputs, generates required sections, performs ROI
