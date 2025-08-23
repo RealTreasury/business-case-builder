@@ -51,14 +51,14 @@ const { execSync } = require('child_process');
     assert.strictEqual(capturedBody.temperature, 0.7, 'Client request body should include temperature 0.7');
     assert.deepStrictEqual(capturedBody.text, { verbosity: 'medium' }, 'Client request body should include text settings');
     assert.ok('max_output_tokens' in capturedBody, 'Client request body should include max_output_tokens');
-    assert.strictEqual(capturedBody.max_output_tokens, 4000, 'Client request body should include max_output_tokens 4000');
+    assert.strictEqual(capturedBody.max_output_tokens, 4000, 'Client request body should include max_output_tokens of 4000');
 
     // Server-side test for call_openai
     const serverBody = JSON.parse(execSync('php tests/helpers/capture-call-openai-body.php 2>/dev/null', { encoding: 'utf8' }));
     assert.strictEqual(serverBody.temperature, 0.7, 'Server request body should include temperature 0.7');
     assert.deepStrictEqual(serverBody.text, { verbosity: 'medium' }, 'Server request body should include text settings');
     assert.ok('max_output_tokens' in serverBody, 'Server request body should include max_output_tokens');
-    assert.strictEqual(serverBody.max_output_tokens, 4000, 'Server request body should include max_output_tokens 4000');
+    assert.strictEqual(serverBody.max_output_tokens, 4000, 'Server request body should include max_output_tokens of 4000');
 
     console.log('GPT-5 temperature test passed.');
 })();
