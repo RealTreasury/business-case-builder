@@ -125,7 +125,7 @@ class RTBCB_API_Tester {
         $body  = [
             'model'                 => $model,
             'input'                 => 'ping',
-            'max_completion_tokens' => 10,
+            'max_output_tokens' => 10,
             'temperature'           => 0,
         ];
 
