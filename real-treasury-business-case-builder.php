@@ -1395,11 +1395,19 @@ function rtbcb_handle_company_overview_simple() {
         return;
     }
 
+    $start_time = microtime( true );
+    error_log( sprintf( 'rtbcb_handle_company_overview_simple started for %s', $company_name ) );
+
+    $simple_info = rtbcb_get_simple_company_info( $company_name );
+
+    $elapsed = microtime( true ) - $start_time;
+    error_log( sprintf( 'rtbcb_handle_company_overview_simple completed in %.4f seconds', $elapsed ) );
+
     wp_send_json_success(
         [
             'message'         => sprintf( __( 'Processing started for %s', 'rtbcb' ), $company_name ),
             'status'          => 'processing',
-            'simple_analysis' => rtbcb_get_simple_company_info( $company_name ),
+            'simple_analysis' => $simple_info,
         ]
     );
 }

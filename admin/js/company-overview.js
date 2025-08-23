@@ -2,6 +2,7 @@
     'use strict';
 
     $(function() {
+        const __ = window.wp && wp.i18n ? wp.i18n.__ : ( s ) => s;
         const generateBtn = $('#rtbcb-generate-company-overview');
         const resultsDiv = $('#rtbcb-company-overview-results');
 
@@ -11,49 +12,53 @@
             $.ajax({
                 url: ajaxurl,
                 method: 'POST',
-                timeout: 30000,
+                timeout: 60000,
                 data: {
                     action: 'rtbcb_company_overview_simple',
                     company_name: companyName,
                     nonce: rtbcb_ajax.nonce
                 },
                 beforeSend: function() {
-                    generateBtn.prop('disabled', true).text('Testing Connection...');
+                    generateBtn.prop('disabled', true).text( __( 'Testing Connection...', 'rtbcb' ) );
                 },
                 success: function(response) {
                     console.log('AJAX Success:', response);
                     if (response.success) {
                         displaySimpleResults(response.data);
                     } else {
-                        showError('Request failed: ' + response.data.message);
+                        showError( __( 'Request failed: ', 'rtbcb' ) + response.data.message );
                     }
                 },
-                error: function(xhr, status, error) {
-                    console.log('AJAX Error:', status, error, 'Status:', xhr.status, 'Response:', xhr.responseText);
-                    let message = 'Connection failed: ' + status + ' - ' + error;
-                    if (xhr.status === 504) {
-                        message = 'Connection failed: The server took too long to respond.';
+                error: function(xhr, textStatus, error) {
+                    console.log('AJAX Error:', textStatus, error, 'Status:', xhr.status, 'Response:', xhr.responseText);
+                    let message;
+                    if (textStatus === 'timeout') {
+                        message = __( 'The request timed out. Please try again.', 'rtbcb' );
+                    } else if (xhr.status === 504) {
+                        message = __( 'Connection failed: The server took too long to respond.', 'rtbcb' );
+                    } else {
+                        message = __( 'Connection failed: ', 'rtbcb' ) + textStatus + ' - ' + error;
                     }
                     showError(message);
                 },
                 complete: function() {
-                    generateBtn.prop('disabled', false).text('Generate Overview');
+                    generateBtn.prop('disabled', false).text( __( 'Generate Overview', 'rtbcb' ) );
                 }
             });
         }
 
         function displaySimpleResults(data) {
             let html = '<div class="simple-results">';
-            html += '<h3>Connection Test Results</h3>';
-            html += '<p><strong>Status:</strong> ' + data.status + '</p>';
-            html += '<p><strong>Message:</strong> ' + data.message + '</p>';
+            html += '<h3>' + __( 'Connection Test Results', 'rtbcb' ) + '</h3>';
+            html += '<p><strong>' + __( 'Status:', 'rtbcb' ) + '</strong> ' + data.status + '</p>';
+            html += '<p><strong>' + __( 'Message:', 'rtbcb' ) + '</strong> ' + data.message + '</p>';
 
             if (data.simple_analysis) {
-                html += '<h4>Sample Analysis:</h4>';
+                html += '<h4>' + __( 'Sample Analysis:', 'rtbcb' ) + '</h4>';
                 html += '<p>' + data.simple_analysis.analysis + '</p>';
 
                 if (data.simple_analysis.recommendations) {
-                    html += '<h4>Sample Recommendations:</h4><ul>';
+                    html += '<h4>' + __( 'Sample Recommendations:', 'rtbcb' ) + '</h4><ul>';
                     data.simple_analysis.recommendations.forEach(function(rec) {
                         html += '<li>' + rec + '</li>';
                     });
@@ -73,7 +78,7 @@
             e.preventDefault();
             const companyName = $('#rtbcb-test-company-name').val().trim();
             if (!companyName) {
-                alert('Please enter a company name.');
+                alert( __( 'Please enter a company name.', 'rtbcb' ) );
                 return;
             }
             sendRequest(companyName);
