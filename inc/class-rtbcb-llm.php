@@ -1067,39 +1067,37 @@ class RTBCB_LLM {
     }
 
     /**
-     * Build a conversation context array for the Responses API.
+     * Build instructions and input for the Responses API.
      *
      * @param array       $history       Array of conversation items.
      * @param string|null $system_prompt Optional system prompt.
      *
-     * @return array Formatted context array.
+     * @return array {
+     *     @type string $instructions System prompt for the model.
+     *     @type string $input        User prompt for the model.
+     * }
      */
     private function build_context_for_responses( $history, $system_prompt = null ) {
         $default_system = 'You are a senior treasury technology consultant. Provide detailed, research-driven analysis in the exact JSON format requested. Do not include any text outside the JSON structure.';
 
-        $context = [];
-
         $system_prompt = $system_prompt ? $system_prompt : $default_system;
 
-        if ( ! empty( $system_prompt ) ) {
-            $context[] = [
-                'role'    => 'system',
-                'content' => $system_prompt,
-            ];
-        }
+        $input_parts = [];
 
         foreach ( (array) $history as $item ) {
-            if ( ! is_array( $item ) || empty( $item['role'] ) || ! isset( $item['content'] ) ) {
+            if ( ! is_array( $item ) || 'user' !== ( $item['role'] ?? '' ) || ! isset( $item['content'] ) ) {
                 continue;
             }
 
-            $context[] = [
-                'role'    => sanitize_text_field( $item['role'] ),
-                'content' => $item['content'],
-            ];
+            $input_parts[] = function_exists( 'sanitize_textarea_field' ) ? sanitize_textarea_field( $item['content'] ) : $item['content'];
         }
 
-        return $context;
+        $instructions = function_exists( 'sanitize_textarea_field' ) ? sanitize_textarea_field( $system_prompt ) : $system_prompt;
+
+        return [
+            'instructions' => $instructions,
+            'input'        => implode( "\n", $input_parts ),
+        ];
     }
 
     private function call_openai( $model, $prompt, $max_completion_tokens = null ) {
@@ -1111,21 +1109,18 @@ class RTBCB_LLM {
         $model_name = sanitize_text_field( $model ?: ( $this->gpt5_config['model'] ?? '' ) );
         $max_completion_tokens = $max_completion_tokens ?? intval( $this->gpt5_config['max_completion_tokens'] );
 
-        if ( is_array( $prompt ) ) {
-            $context = $prompt;
+        if ( is_array( $prompt ) && isset( $prompt['input'] ) ) {
+            $instructions = function_exists( 'sanitize_textarea_field' ) ? sanitize_textarea_field( $prompt['instructions'] ?? '' ) : ( $prompt['instructions'] ?? '' );
+            $input        = function_exists( 'sanitize_textarea_field' ) ? sanitize_textarea_field( $prompt['input'] ) : $prompt['input'];
         } else {
-            $history = [
-                [
-                    'role'    => 'user',
-                    'content' => $prompt,
-                ],
-            ];
-            $context = $this->build_context_for_responses( $history );
+            $instructions = '';
+            $input        = function_exists( 'sanitize_textarea_field' ) ? sanitize_textarea_field( (string) $prompt ) : (string) $prompt;
         }
 
         $body = [
             'model'                 => $model_name,
-            'input'                 => $context,
+            'input'                 => $input,
+            'instructions'          => $instructions,
             'max_completion_tokens' => $max_completion_tokens,
             'text'                  => $this->gpt5_config['text'],
             'temperature'           => floatval( $this->gpt5_config['temperature'] ),
@@ -1147,13 +1142,13 @@ class RTBCB_LLM {
             $response = wp_remote_post( $endpoint, $args );
         } catch ( \Throwable $e ) {
             error_log( 'RTBCB: HTTP request exception: ' . $e->getMessage() );
-            $this->log_gpt5_call( $context, [], $e->getMessage() );
+            $this->log_gpt5_call( [ 'instructions' => $instructions, 'input' => $input ], [], $e->getMessage() );
             return new WP_Error( 'openai_http_exception', __( 'Unable to contact OpenAI service.', 'rtbcb' ) );
         }
 
         if ( is_wp_error( $response ) ) {
             error_log( 'RTBCB: HTTP request failed: ' . $response->get_error_message() );
-            $this->log_gpt5_call( $context, [], $response->get_error_message() );
+            $this->log_gpt5_call( [ 'instructions' => $instructions, 'input' => $input ], [], $response->get_error_message() );
             return $response;
         }
 
@@ -1166,7 +1161,7 @@ class RTBCB_LLM {
             $error_data    = json_decode( $response_body, true );
             $error_message = $error_data['error']['message'] ?? 'Unknown API error';
             error_log( 'RTBCB: OpenAI API error: ' . $error_message );
-            $this->log_gpt5_call( $context, (array) $error_data, $error_message );
+            $this->log_gpt5_call( [ 'instructions' => $instructions, 'input' => $input ], (array) $error_data, $error_message );
             return new WP_Error( 'openai_api_error', $error_message );
         }
 
@@ -1187,12 +1182,11 @@ class RTBCB_LLM {
 
         if ( 'length' === $finish_reason || empty( $content ) ) {
             // Retry with more tokens if the response was truncated or empty.
-            $this->log_gpt5_call( $context, $decoded, 'Truncated or empty response from OpenAI' );
+            $this->log_gpt5_call( [ 'instructions' => $instructions, 'input' => $input ], $decoded, 'Truncated or empty response from OpenAI' );
             if ( $max_completion_tokens < 8000 ) {
                 $new_max_completion_tokens = $max_completion_tokens + 1000;
                 error_log( 'RTBCB: Retrying with higher max_completion_tokens: ' . $new_max_completion_tokens );
-                $next_context = array_merge( $context, is_array( $decoded['output'] ?? null ) ? $decoded['output'] : [] );
-                return $this->call_openai( $model, $next_context, $new_max_completion_tokens );
+                return $this->call_openai( $model, [ 'instructions' => $instructions, 'input' => $input ], $new_max_completion_tokens );
             }
 
             // Return specific error when truncation cannot be resolved by retry.
@@ -1202,7 +1196,7 @@ class RTBCB_LLM {
             );
         }
 
-        $this->log_gpt5_call( $context, $decoded );
+        $this->log_gpt5_call( [ 'instructions' => $instructions, 'input' => $input ], $decoded );
 
         return $response;
     }

@@ -543,22 +543,20 @@ function rtbcb_test_generate_category_recommendation( $analysis ) {
             return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
         }
 
-        $model  = get_option( 'rtbcb_mini_model', 'gpt-4o-mini' );
-        $prompt = 'You are a treasury technology advisor. Based on the company overview, industry insights, technology overview, '
-            . 'and treasury challenges provided, recommend the most suitable solution category (cash_tools, tms_lite, trms). '
-            . 'Return JSON with keys "recommended", "reasoning", and "alternatives" (array of objects with "category" and '
-            . '"reasoning").';
+        $model = sanitize_text_field( get_option( 'rtbcb_mini_model', 'gpt-4o-mini' ) );
 
-        $prompt .= "\n\nCompany Overview: {$payload['company_overview']}";
-        $prompt .= "\nIndustry Insights: {$payload['industry_insights']}";
-        $prompt .= "\nTechnology Overview: {$payload['treasury_tech_overview']}";
-        $prompt .= "\nTreasury Challenges: {$payload['treasury_challenges']}";
+        $system_prompt = 'You are a treasury technology advisor. Based on the company overview, industry insights, technology overview, and treasury challenges provided, recommend the most suitable solution category (cash_tools, tms_lite, trms). Return JSON with keys "recommended", "reasoning", and "alternatives" (array of objects with "category" and "reasoning").';
+
+        $input = "Company Overview: {$payload['company_overview']}";
+        $input .= "\nIndustry Insights: {$payload['industry_insights']}";
+        $input .= "\nTechnology Overview: {$payload['treasury_tech_overview']}";
+        $input .= "\nTreasury Challenges: {$payload['treasury_challenges']}";
         if ( ! empty( $payload['extra_requirements'] ) ) {
-            $prompt .= "\nExtra Requirements: {$payload['extra_requirements']}";
+            $input .= "\nExtra Requirements: {$payload['extra_requirements']}";
         }
 
         $response = wp_remote_post(
-            'https://api.openai.com/v1/chat/completions',
+            'https://api.openai.com/v1/responses',
             [
                 'headers' => [
                     'Content-Type'  => 'application/json',
@@ -566,8 +564,9 @@ function rtbcb_test_generate_category_recommendation( $analysis ) {
                 ],
                 'body'    => wp_json_encode(
                     [
-                        'model'    => $model,
-                        'messages' => [ [ 'role' => 'user', 'content' => $prompt ] ],
+                        'model'        => $model,
+                        'instructions' => $system_prompt,
+                        'input'        => $input,
                     ]
                 ),
                 'timeout' => 60,
@@ -580,9 +579,17 @@ function rtbcb_test_generate_category_recommendation( $analysis ) {
 
         $body    = wp_remote_retrieve_body( $response );
         $decoded = json_decode( $body, true );
-        $content = sanitize_textarea_field( $decoded['choices'][0]['message']['content'] ?? '' );
+        $content = '';
 
-        if ( empty( $content ) ) {
+        if ( isset( $decoded['output_text'] ) ) {
+            $content = is_array( $decoded['output_text'] ) ? implode( ' ', (array) $decoded['output_text'] ) : $decoded['output_text'];
+        } elseif ( isset( $decoded['output'][0]['content'][0]['text'] ) ) {
+            $content = $decoded['output'][0]['content'][0]['text'];
+        }
+
+        $content = sanitize_textarea_field( $content );
+
+        if ( '' === $content ) {
             return new WP_Error( 'llm_empty_response', __( 'No recommendation returned.', 'rtbcb' ) );
         }
 
