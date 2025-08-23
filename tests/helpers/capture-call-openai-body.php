@@ -28,6 +28,12 @@ if ( ! function_exists( 'wp_json_encode' ) ) {
     }
 }
 
+if ( ! function_exists( '__' ) ) {
+    function __( $text, $domain = null ) {
+        return $text;
+    }
+}
+
 $captured_body = null;
 if ( ! function_exists( 'wp_remote_post' ) ) {
     function wp_remote_post( $url, $args ) {
@@ -45,7 +51,26 @@ if ( ! function_exists( 'wp_remote_retrieve_response_code' ) ) {
 
 if ( ! function_exists( 'wp_remote_retrieve_body' ) ) {
     function wp_remote_retrieve_body( $response ) {
-        return '{}';
+        return json_encode([
+            'output'      => [
+                [
+                    'content' => [
+                        [
+                            'type' => 'output_text',
+                            'text' => 'test',
+                        ],
+                    ],
+                ],
+            ],
+            'output_text' => [ 'test' ],
+            'choices'     => [
+                [
+                    'message' => [
+                        'content' => 'test',
+                    ],
+                ],
+            ],
+        ]);
     }
 }
 
