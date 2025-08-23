@@ -1160,7 +1160,7 @@ class RTBCB_LLM {
         if ( $status_code !== 200 ) {
             $error_data    = json_decode( $response_body, true );
             $error_message = $error_data['error']['message'] ?? 'Unknown API error';
-            error_log( 'RTBCB: OpenAI API error: ' . $error_message );
+            error_log( 'RTBCB: Responses API error: ' . $error_message );
             $this->log_gpt5_call( [ 'instructions' => $instructions, 'input' => $input ], (array) $error_data, $error_message );
             return new WP_Error( 'openai_api_error', $error_message );
         }

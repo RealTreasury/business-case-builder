@@ -310,7 +310,7 @@ async function generateProfessionalReport(businessContext) {
 
             if (data.error) {
                 console.error(`Attempt ${attempt} API error details:`, data.error);
-                const errorMessage = data.error.message || 'OpenAI API error';
+                const errorMessage = data.error.message || 'Responses API error';
                 throw new Error(errorMessage);
             }
 
