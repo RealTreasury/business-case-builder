@@ -596,7 +596,7 @@
             if (selectAll) {
                 selectAll.addEventListener('change', this.toggleSelectAll.bind(this));
             }
-            document.querySelectorAll('.rtbcb-lead-checkbox').forEach(cb => {
+            Array.from(document.querySelectorAll('.rtbcb-lead-checkbox')).forEach(cb => {
                 cb.addEventListener('change', this.updateSelectAll.bind(this));
                 cb.addEventListener('change', this.updateBulkActionButton.bind(this));
             });
@@ -604,10 +604,10 @@
             if (bulkForm) {
                 bulkForm.addEventListener('submit', this.handleBulkAction.bind(this));
             }
-            document.querySelectorAll('.rtbcb-view-lead').forEach(btn => {
+            Array.from(document.querySelectorAll('.rtbcb-view-lead')).forEach(btn => {
                 btn.addEventListener('click', this.viewLeadDetails.bind(this));
             });
-            document.querySelectorAll('.rtbcb-delete-lead').forEach(btn => {
+            Array.from(document.querySelectorAll('.rtbcb-delete-lead')).forEach(btn => {
                 btn.addEventListener('click', this.deleteLead.bind(this));
             });
             const modalClose = document.querySelector('.rtbcb-modal-close');
@@ -624,7 +624,7 @@
 
         toggleSelectAll(e) {
             const checked = e.target.checked;
-            document.querySelectorAll('.rtbcb-lead-checkbox').forEach(cb => { cb.checked = checked; });
+            Array.from(document.querySelectorAll('.rtbcb-lead-checkbox')).forEach(cb => { cb.checked = checked; });
             this.updateBulkActionButton();
         }
 
