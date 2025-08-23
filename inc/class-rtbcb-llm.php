@@ -265,20 +265,34 @@ class RTBCB_LLM {
     /**
      * Generate a Real Treasury platform overview.
      *
-     * @param bool  $include_portal Include portal integration details.
-     * @param array $categories     Vendor categories.
+     * @param array $company_data {
+     *     Company context data.
+     *
+     *     @type bool   $include_portal Include portal integration details.
+     *     @type string $company_size   Company size description.
+     *     @type string $industry       Company industry.
+     *     @type array  $challenges     List of identified challenges.
+     *     @type array  $categories     Vendor categories to highlight.
+     * }
      * @return string|WP_Error Overview text or error object.
      */
-    public function generate_real_treasury_overview( $include_portal, $categories ) {
-        $include_portal = (bool) $include_portal;
-        $categories     = array_filter( array_map( 'sanitize_text_field', (array) $categories ) );
+    public function generate_real_treasury_overview( $company_data ) {
+        $include_portal = ! empty( $company_data['include_portal'] );
+        $company_size   = sanitize_text_field( $company_data['company_size'] ?? '' );
+        $industry       = sanitize_text_field( $company_data['industry'] ?? '' );
+        $challenges     = array_filter( array_map( 'sanitize_text_field', (array) ( $company_data['challenges'] ?? [] ) ) );
+        $categories     = array_filter( array_map( 'sanitize_text_field', (array) ( $company_data['categories'] ?? [] ) ) );
 
         if ( empty( $this->api_key ) ) {
             return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
         }
 
         $model  = $this->models['mini'] ?? 'gpt-4o-mini';
-        $prompt = 'Provide a Real Treasury platform overview with sections for platform capabilities, portal integration benefits, vendor ecosystem overview, Real Treasury differentiators, implementation approach, and support/community aspects.';
+        $prompt = 'Provide a Real Treasury platform overview for a ' . ( $company_size ?: __( 'company', 'rtbcb' ) ) . ' in the ' . ( $industry ?: __( 'unspecified', 'rtbcb' ) ) . ' industry.';
+
+        if ( ! empty( $challenges ) ) {
+            $prompt .= ' Address these challenges: ' . implode( ', ', $challenges ) . '.';
+        }
 
         if ( ! empty( $categories ) ) {
             $prompt .= ' Highlight vendor categories: ' . implode( ', ', $categories ) . '.';
@@ -287,6 +301,8 @@ class RTBCB_LLM {
         if ( $include_portal ) {
             $prompt .= ' Include how the Real Treasury portal complements the platform.';
         }
+
+        $prompt .= ' Provide sections for platform capabilities, portal integration benefits, vendor ecosystem overview, Real Treasury differentiators, implementation approach, and support/community aspects.';
 
         $response = $this->call_openai_with_retry( $model, $prompt );
 

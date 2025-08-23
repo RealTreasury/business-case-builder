@@ -39,6 +39,7 @@ class RTBCB_Admin {
         add_action( 'wp_ajax_rtbcb_test_treasury_tech_overview', [ $this, 'ajax_test_treasury_tech_overview' ] );
         add_action( 'wp_ajax_rtbcb_test_industry_overview', [ $this, 'ajax_test_industry_overview' ] );
         add_action( 'wp_ajax_rtbcb_test_real_treasury_overview', [ $this, 'ajax_test_real_treasury_overview' ] );
+        add_action( 'wp_ajax_rtbcb_get_company_data', [ $this, 'ajax_get_company_data' ] );
         add_action( 'wp_ajax_rtbcb_test_estimated_benefits', [ $this, 'ajax_test_estimated_benefits' ] );
         add_action( 'wp_ajax_rtbcb_save_test_results', [ $this, 'save_test_results' ] );
         add_action( 'wp_ajax_rtbcb_test_generate_complete_report', [ $this, 'ajax_test_generate_complete_report' ] );
@@ -857,11 +858,22 @@ class RTBCB_Admin {
 
         $include_portal = isset( $_POST['include_portal'] ) ? (bool) intval( wp_unslash( $_POST['include_portal'] ) ) : false;
         $categories     = isset( $_POST['categories'] ) ? (array) wp_unslash( $_POST['categories'] ) : [];
-        $categories     = array_map( 'sanitize_text_field', $categories );
-        $categories     = array_filter( $categories );
+        $categories     = array_filter( array_map( 'sanitize_text_field', $categories ) );
+
+        $inputs       = rtbcb_get_sample_inputs();
+        $company_data = [
+            'include_portal' => $include_portal,
+            'company_size'   => sanitize_text_field( $inputs['company_size'] ?? '' ),
+            'industry'       => sanitize_text_field( $inputs['industry'] ?? '' ),
+            'challenges'     => array_map( 'sanitize_text_field', $inputs['pain_points'] ?? [] ),
+        ];
+
+        if ( ! empty( $categories ) ) {
+            $company_data['categories'] = $categories;
+        }
 
         $start    = microtime( true );
-        $overview = rtbcb_test_generate_real_treasury_overview( $include_portal, $categories );
+        $overview = rtbcb_test_generate_real_treasury_overview( $company_data );
         $elapsed  = round( microtime( true ) - $start, 2 );
 
         if ( is_wp_error( $overview ) ) {
@@ -876,6 +888,28 @@ class RTBCB_Admin {
                 'word_count' => $word_count,
                 'elapsed'    => $elapsed,
                 'generated'  => current_time( 'mysql' ),
+            ]
+        );
+    }
+
+    /**
+     * AJAX handler to retrieve stored company data.
+     *
+     * @return void
+     */
+    public function ajax_get_company_data() {
+        check_ajax_referer( 'rtbcb_test_real_treasury_overview', 'nonce' );
+
+        $inputs  = rtbcb_get_sample_inputs();
+        $summary = rtbcb_test_generate_company_overview( $inputs['company_name'] );
+        if ( is_wp_error( $summary ) ) {
+            wp_send_json_error( [ 'message' => sanitize_text_field( $summary->get_error_message() ) ] );
+        }
+
+        wp_send_json_success(
+            [
+                'summary'    => sanitize_textarea_field( $summary ),
+                'challenges' => array_map( 'sanitize_text_field', $inputs['pain_points'] ?? [] ),
             ]
         );
     }
