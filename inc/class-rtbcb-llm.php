@@ -178,6 +178,46 @@ class RTBCB_LLM {
     }
 
     /**
+     * Generate an overview for a given industry and company size.
+     *
+     * Provides treasury challenges, regulations, seasonal patterns, benchmarks,
+     * pain points, and opportunities.
+     *
+     * @param string $industry     Industry name.
+     * @param string $company_size Company size.
+     * @return string|WP_Error Overview text or error object.
+     */
+    public function generate_industry_overview( $industry, $company_size ) {
+        $industry     = sanitize_text_field( $industry );
+        $company_size = sanitize_text_field( $company_size );
+
+        if ( empty( $this->api_key ) ) {
+            return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
+        }
+
+        $model  = $this->models['mini'] ?? 'gpt-4o-mini';
+        $prompt = 'Provide a concise industry overview for the ' . $industry . ' sector targeting a ' . $company_size
+            . ' company. Include treasury challenges, regulations, seasonal patterns, benchmarks, pain points, and opportunities.';
+
+        $response = $this->call_openai_with_retry( $model, $prompt );
+
+        if ( is_wp_error( $response ) ) {
+            return new WP_Error( 'llm_failure', __( 'Unable to generate industry overview at this time.', 'rtbcb' ) );
+        }
+
+        $body     = wp_remote_retrieve_body( $response );
+        $decoded  = json_decode( $body, true );
+        $content  = $decoded['choices'][0]['message']['content'] ?? '';
+        $overview = sanitize_textarea_field( $content );
+
+        if ( empty( $overview ) ) {
+            return new WP_Error( 'llm_empty_response', __( 'No overview returned.', 'rtbcb' ) );
+        }
+
+        return $overview;
+    }
+
+    /**
      * Generate comprehensive business case with deep analysis.
      *
      * Returns a {@see WP_Error} when the API key is missing or when the LLM

@@ -12,6 +12,7 @@
             this.bindSyncLocal();
             this.bindCommentaryTest();
             this.bindCompanyOverviewTest();
+            this.bindIndustryOverviewTest();
         },
 
         bindDashboardActions() {
@@ -103,6 +104,71 @@
                         const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
                         const duration = ((performance.now() - start) / 1000).toFixed(2);
                         const timestamp = new Date().toLocaleTimeString();
+                        const container = $('<div />');
+                        container.append($('<p />').text(text));
+                        container.append($('<p />').text('Word count: ' + wordCount));
+                        container.append($('<p />').text('Duration: ' + duration + 's'));
+                        container.append($('<p />').text('Timestamp: ' + timestamp));
+                        const actions = $('<p />');
+                        const regen = $('<button type="button" class="button" />').text('Regenerate');
+                        const copy = $('<button type="button" class="button" />').text('Copy Text');
+                        regen.on('click', function(){ form.trigger('submit'); });
+                        copy.on('click', async function(){
+                            try {
+                                await navigator.clipboard.writeText(text);
+                                alert(rtbcbAdmin.strings.copied);
+                            } catch (err) {
+                                alert(rtbcbAdmin.strings.error + ' ' + err.message);
+                            }
+                        });
+                        actions.append(regen).append(' ').append(copy);
+                        container.append(actions);
+                        results.html(container);
+                    } else {
+                        const message = data.data?.message || rtbcbAdmin.strings.error;
+                        results.html('<div class="notice notice-error"><p>' + message + '</p></div>');
+                    }
+                } catch (err) {
+                    results.html('<div class="notice notice-error"><p>' + rtbcbAdmin.strings.error + ' ' + err.message + '</p></div>');
+                }
+                submitBtn.prop('disabled', false).text(original);
+            };
+            form.on('submit', submitHandler);
+            if (clearBtn.length) {
+                clearBtn.on('click', function(){ results.empty(); });
+            }
+        },
+
+        bindIndustryOverviewTest() {
+            if (!rtbcbAdmin || rtbcbAdmin.page !== 'rtbcb-test-industry-overview') { return; }
+            const form = $('#rtbcb-industry-overview-form');
+            if (!form.length) { return; }
+            const results = $('#rtbcb-industry-overview-results');
+            const clearBtn = $('#rtbcb-clear-results');
+            const submitBtn = form.find('button[type="submit"]');
+            const submitHandler = async function(e) {
+                e.preventDefault();
+                const original = submitBtn.text();
+                submitBtn.prop('disabled', true).text(rtbcbAdmin.strings.processing);
+                const industry = $('#rtbcb-industry-name').val();
+                const size = $('#rtbcb-company-size').val();
+                const nonce = form.find('[name="nonce"]').val();
+                try {
+                    const formData = new FormData();
+                    formData.append('action', 'rtbcb_test_industry_overview');
+                    formData.append('industry', industry);
+                    formData.append('company_size', size);
+                    formData.append('nonce', nonce);
+                    const response = await fetch(rtbcbAdmin.ajax_url, { method: 'POST', body: formData });
+                    if (!response.ok) {
+                        throw new Error(`Server responded ${response.status}`);
+                    }
+                    const data = await response.json();
+                    if (data.success) {
+                        const text = data.data?.overview || '';
+                        const wordCount = data.data?.word_count || 0;
+                        const duration = data.data?.elapsed || 0;
+                        const timestamp = data.data?.generated || '';
                         const container = $('<div />');
                         container.append($('<p />').text(text));
                         container.append($('<p />').text('Word count: ' + wordCount));
