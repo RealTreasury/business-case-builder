@@ -1326,6 +1326,7 @@ if ( ! function_exists( 'rtbcb_is_configured' ) ) {
 
 // Add AJAX handler for company overview generation.
 add_action( 'wp_ajax_rtbcb_generate_company_overview', 'rtbcb_ajax_generate_company_overview' );
+add_action( 'wp_ajax_rtbcb_generate_real_treasury_overview', 'rtbcb_ajax_generate_real_treasury_overview' );
 
 /**
  * AJAX handler for generating company overview.
@@ -1376,9 +1377,56 @@ function rtbcb_ajax_generate_company_overview() {
     }
 }
 
+/**
+ * AJAX handler for generating real treasury overview.
+ *
+ * @return void
+ */
+function rtbcb_ajax_generate_real_treasury_overview() {
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'rtbcb_test_real_treasury_overview' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ] );
+        return;
+    }
+
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'rtbcb' ) ] );
+        return;
+    }
+
+    $include_portal = ! empty( $_POST['include_portal'] );
+    $categories     = isset( $_POST['categories'] ) ? (array) wp_unslash( $_POST['categories'] ) : [];
+    $categories     = array_map( 'sanitize_text_field', $categories );
+    $categories     = array_filter( $categories );
+
+    try {
+        $overview = rtbcb_test_generate_real_treasury_overview( $include_portal, $categories );
+
+        if ( is_wp_error( $overview ) ) {
+            wp_send_json_error( [
+                'message' => sanitize_text_field( $overview->get_error_message() ),
+            ] );
+            return;
+        }
+
+        wp_send_json_success(
+            [
+                'overview' => wp_kses_post( $overview ),
+            ]
+        );
+    } catch ( Exception $e ) {
+        error_log( 'RTBCB Real Treasury Overview Error: ' . $e->getMessage() );
+        wp_send_json_error(
+            [
+                'message' => __( 'An error occurred while generating the overview. Please try again.', 'rtbcb' ),
+            ]
+        );
+    }
+}
+
 // Enqueue admin scripts for company overview page.
 add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_company_overview_scripts' );
 add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_treasury_tech_overview_scripts' );
+add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_real_treasury_overview_scripts' );
 
 /**
  * Enqueue admin scripts for company overview page.
@@ -1429,6 +1477,33 @@ function rtbcb_enqueue_treasury_tech_overview_scripts( $hook ) {
             [
                 'ajax_url' => admin_url( 'admin-ajax.php' ),
                 'nonce'    => wp_create_nonce( 'rtbcb_test_treasury_tech_overview' ),
+            ]
+        );
+    }
+}
+
+/**
+ * Enqueue admin scripts for real treasury overview page.
+ *
+ * @param string $hook Current admin page hook.
+ * @return void
+ */
+function rtbcb_enqueue_real_treasury_overview_scripts( $hook ) {
+    if ( strpos( $hook, 'rtbcb' ) !== false && strpos( $hook, 'real-treasury-overview' ) !== false ) {
+        wp_enqueue_script(
+            'rtbcb-real-treasury-overview',
+            plugin_dir_url( __FILE__ ) . 'admin/js/real-treasury-overview.js',
+            [ 'jquery' ],
+            '1.0.0',
+            true
+        );
+
+        wp_localize_script(
+            'rtbcb-real-treasury-overview',
+            'rtbcbRealTreasuryOverview',
+            [
+                'ajax_url' => admin_url( 'admin-ajax.php' ),
+                'nonce'    => wp_create_nonce( 'rtbcb_test_real_treasury_overview' ),
             ]
         );
     }
