@@ -563,13 +563,24 @@ class RTBCB_Admin {
             wp_send_json_error( [ 'message' => __( 'Invalid industry.', 'rtbcb' ) ] );
         }
 
+        $start      = microtime( true );
         $commentary = rtbcb_test_generate_industry_commentary( $industry );
+        $elapsed    = round( microtime( true ) - $start, 2 );
 
         if ( is_wp_error( $commentary ) ) {
             wp_send_json_error( [ 'message' => sanitize_text_field( $commentary->get_error_message() ) ] );
         }
 
-        wp_send_json_success( [ 'commentary' => sanitize_text_field( $commentary ) ] );
+        $word_count = str_word_count( $commentary );
+
+        wp_send_json_success(
+            [
+                'commentary' => sanitize_textarea_field( $commentary ),
+                'word_count' => $word_count,
+                'elapsed'    => $elapsed,
+                'generated'  => current_time( 'mysql' ),
+            ]
+        );
     }
 
     /**

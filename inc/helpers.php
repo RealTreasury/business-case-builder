@@ -357,8 +357,12 @@ add_filter( 'rtbcb_sample_report_inputs', 'rtbcb_map_sample_report_inputs', 10, 
 function rtbcb_test_generate_industry_commentary( $industry ) {
     $industry = sanitize_text_field( $industry );
 
-    $llm        = new RTBCB_LLM();
-    $commentary = $llm->generate_industry_commentary( $industry );
+    try {
+        $llm        = new RTBCB_LLM();
+        $commentary = $llm->generate_industry_commentary( $industry );
+    } catch ( \Throwable $e ) {
+        return new WP_Error( 'llm_exception', __( 'Unable to generate commentary at this time.', 'rtbcb' ) );
+    }
 
     return $commentary;
 }
@@ -372,8 +376,12 @@ function rtbcb_test_generate_industry_commentary( $industry ) {
 function rtbcb_test_generate_company_overview( $company_name ) {
     $company_name = sanitize_text_field( $company_name );
 
-    $llm      = new RTBCB_LLM();
-    $overview = $llm->generate_company_overview( $company_name );
+    try {
+        $llm      = new RTBCB_LLM();
+        $overview = $llm->generate_company_overview( $company_name );
+    } catch ( \Throwable $e ) {
+        return new WP_Error( 'llm_exception', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
+    }
 
     return $overview;
 }
@@ -390,8 +398,12 @@ function rtbcb_test_generate_treasury_tech_overview( $focus_areas, $complexity )
     $focus_areas = array_filter( $focus_areas );
     $complexity  = sanitize_text_field( $complexity );
 
-    $llm      = new RTBCB_LLM();
-    $overview = $llm->generate_treasury_tech_overview( $focus_areas, $complexity );
+    try {
+        $llm      = new RTBCB_LLM();
+        $overview = $llm->generate_treasury_tech_overview( $focus_areas, $complexity );
+    } catch ( \Throwable $e ) {
+        return new WP_Error( 'llm_exception', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
+    }
 
     return $overview;
 }
@@ -407,8 +419,12 @@ function rtbcb_test_generate_industry_overview( $industry, $company_size ) {
     $industry     = sanitize_text_field( $industry );
     $company_size = sanitize_text_field( $company_size );
 
-    $llm      = new RTBCB_LLM();
-    $overview = $llm->generate_industry_overview( $industry, $company_size );
+    try {
+        $llm      = new RTBCB_LLM();
+        $overview = $llm->generate_industry_overview( $industry, $company_size );
+    } catch ( \Throwable $e ) {
+        return new WP_Error( 'llm_exception', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
+    }
 
     return $overview;
 }
