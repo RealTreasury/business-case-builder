@@ -261,7 +261,7 @@ Respond with valid JSON only, following the specified schema exactly. Ensure all
         ];
 
         $context  = $this->build_context_for_responses( $history, $system_prompt );
-        $response = $this->call_openai_with_retry( $model, $context );
+        $response = $this->call_openai_with_retry( $model, $context, 3 ); // Reduce retries
 
         if ( is_wp_error( $response ) ) {
             return new WP_Error( 'llm_failure', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
@@ -1270,7 +1270,7 @@ Respond with valid JSON only, following the specified schema exactly. Ensure all
                 'Content-Type' => 'application/json',
             ],
             'body' => wp_json_encode( $body ),
-            'timeout' => intval( $this->gpt5_config['timeout'] ?? 120 ),
+            'timeout' => 300, // 5 minutes for comprehensive analysis
         ];
 
         return wp_remote_post( $endpoint, $args );

@@ -18,13 +18,14 @@
             }
 
             const start = performance.now();
-            const originalGen = rtbcbTestUtils.showLoading($generateBtn, 'Generating...');
-            const originalRegen = rtbcbTestUtils.showLoading($regenerateBtn, 'Generating...');
+            const originalGen = rtbcbTestUtils.showLoading($generateBtn, 'Analyzing... (this may take up to 5 minutes)');
+            const originalRegen = rtbcbTestUtils.showLoading($regenerateBtn, 'Analyzing... (this may take up to 5 minutes)');
             $resultsDiv.html('<p>Generating company overview...</p>');
 
             $.ajax({
                 url: ajaxurl,
-                type: 'POST',
+                method: 'POST',
+                timeout: 300000, // 5 minutes (300,000 ms)
                 data: {
                     action: 'rtbcb_generate_company_overview',
                     company_name: companyName,
@@ -45,7 +46,12 @@
                         $regenerateBtn.show();
                     }
                 },
-                error: function() {
+                error: function( xhr, status, error ) {
+                    if ( status === 'timeout' ) {
+                        alert('Analysis is taking longer than expected. Please try again or contact support.');
+                    } else {
+                        alert('Error: ' + error);
+                    }
                     rtbcbTestUtils.renderError($resultsDiv, 'Request failed. Please try again.', sendRequest);
                     $regenerateBtn.show();
                 },
