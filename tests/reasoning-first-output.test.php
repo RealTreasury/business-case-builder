@@ -31,7 +31,7 @@ $mock_response = [
                     'content' => [
                         [
                             'type' => 'output_text',
-                            'text' => 'pong',
+                            'text' => 'This is a meaningful response message.',
                         ],
                     ],
                 ],
@@ -50,13 +50,18 @@ if ( empty( $result['output_text'] ) ) {
     exit( 1 );
 }
 
-if ( 'pong' !== $result['output_text'] ) {
+if ( 'This is a meaningful response message.' !== $result['output_text'] ) {
     echo "Unexpected output_text\n";
     exit( 1 );
 }
 
-if ( '' !== $log ) {
-    echo "Unexpected log: $log\n";
+if ( false === strpos( $log, 'Parsed response' ) ) {
+    echo "Missing parsed response log\n";
+    exit( 1 );
+}
+
+if ( false !== strpos( $log, 'Detected trivial response' ) ) {
+    echo "Unexpected trivial response log\n";
     exit( 1 );
 }
 

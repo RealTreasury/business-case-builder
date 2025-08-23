@@ -79,7 +79,7 @@ $mock_response = [
                 'content' => [
                     [
                         'type' => 'output_text',
-                        'text' => 'pong',
+                        'text' => 'This is a meaningful response message.',
                     ],
                 ],
             ],
@@ -128,7 +128,7 @@ if ( false !== strpos( $combined, 'max_output_tokens' ) ) {
 }
 
 $parsed = rtbcb_parse_gpt5_response( $mock_response );
-if ( 'pong' !== ( $parsed['output_text'] ?? '' ) ) {
+if ( 'This is a meaningful response message.' !== ( $parsed['output_text'] ?? '' ) ) {
     echo "Failed to extract message text\n";
     exit( 1 );
 }
