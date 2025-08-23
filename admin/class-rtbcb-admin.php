@@ -35,6 +35,7 @@ class RTBCB_Admin {
         add_action( 'wp_ajax_rtbcb_sync_to_local', [ $this, 'sync_to_local' ] );
         add_action( 'wp_ajax_nopriv_rtbcb_sync_to_local', [ $this, 'sync_to_local' ] );
         add_action( 'wp_ajax_rtbcb_test_commentary', [ $this, 'ajax_test_commentary' ] );
+        add_action( 'wp_ajax_rtbcb_test_company_overview', [ $this, 'ajax_test_company_overview' ] );
     }
 
     /**
@@ -513,6 +514,40 @@ class RTBCB_Admin {
         }
 
         wp_send_json_success( [ 'commentary' => sanitize_text_field( $commentary ) ] );
+    }
+
+    /**
+     * AJAX handler for company overview testing.
+     *
+     * @return void
+     */
+    public function ajax_test_company_overview() {
+        check_ajax_referer( 'rtbcb_test_company_overview', 'nonce' );
+
+        $company_name = isset( $_POST['company_name'] ) ? sanitize_text_field( wp_unslash( $_POST['company_name'] ) ) : '';
+
+        if ( empty( $company_name ) ) {
+            wp_send_json_error( [ 'message' => __( 'Invalid company name.', 'rtbcb' ) ] );
+        }
+
+        $start    = microtime( true );
+        $overview = rtbcb_test_generate_company_overview( $company_name );
+        $elapsed  = round( microtime( true ) - $start, 2 );
+
+        if ( is_wp_error( $overview ) ) {
+            wp_send_json_error( [ 'message' => sanitize_text_field( $overview->get_error_message() ) ] );
+        }
+
+        $word_count = str_word_count( $overview );
+
+        wp_send_json_success(
+            [
+                'overview'   => sanitize_textarea_field( $overview ),
+                'word_count' => $word_count,
+                'elapsed'    => $elapsed,
+                'generated'  => current_time( 'mysql' ),
+            ]
+        );
     }
 
     /**

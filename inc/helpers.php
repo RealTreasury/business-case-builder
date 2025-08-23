@@ -348,3 +348,18 @@ function rtbcb_map_sample_report_inputs( $inputs, $scenario_key ) {
 }
 add_filter( 'rtbcb_sample_report_inputs', 'rtbcb_map_sample_report_inputs', 10, 2 );
 
+/**
+ * Test generating a company overview using the LLM.
+ *
+ * @param string $company_name Company name.
+ * @return string|WP_Error Overview text or error object.
+ */
+function rtbcb_test_generate_company_overview( $company_name ) {
+    $company_name = sanitize_text_field( $company_name );
+
+    $llm      = new RTBCB_LLM();
+    $overview = $llm->generate_company_overview( $company_name );
+
+    return $overview;
+}
+
