@@ -121,11 +121,14 @@ class RTBCB_API_Tester {
     private static function test_completion( $api_key ) {
         $endpoint = 'https://api.openai.com/v1/responses';
 
-        $model = sanitize_text_field( get_option( 'rtbcb_mini_model', rtbcb_get_default_model( 'mini' ) ) );
-        $body  = [
+        $model             = sanitize_text_field( get_option( 'rtbcb_mini_model', rtbcb_get_default_model( 'mini' ) ) );
+        $config            = rtbcb_get_gpt5_config( get_option( 'rtbcb_gpt5_config', [] ) );
+        $max_output_tokens = intval( $config['max_output_tokens'] ); // Sanitize token limit.
+        $body              = [
             'model'             => $model,
             'input'             => 'ping',
-            'max_output_tokens' => 16,
+            // Use the configured token limit for the API test.
+            'max_output_tokens' => $max_output_tokens,
         ];
 
         if ( rtbcb_model_supports_temperature( $model ) ) {
