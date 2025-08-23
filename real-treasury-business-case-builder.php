@@ -1459,22 +1459,18 @@ function rtbcb_ajax_generate_category_recommendation() {
         return;
     }
 
-    $requirements = [
-        'company_size'        => isset( $_POST['company_size'] ) ? sanitize_text_field( wp_unslash( $_POST['company_size'] ) ) : '',
-        'treasury_complexity' => isset( $_POST['treasury_complexity'] ) ? sanitize_text_field( wp_unslash( $_POST['treasury_complexity'] ) ) : '',
-        'budget_range'        => isset( $_POST['budget_range'] ) ? sanitize_text_field( wp_unslash( $_POST['budget_range'] ) ) : '',
-        'timeline'            => isset( $_POST['timeline'] ) ? sanitize_text_field( wp_unslash( $_POST['timeline'] ) ) : '',
+    $extra_requirements = isset( $_POST['extra_requirements'] ) ? sanitize_textarea_field( wp_unslash( $_POST['extra_requirements'] ) ) : '';
+
+    $analysis = [
+        'company_overview'       => sanitize_textarea_field( get_option( 'rtbcb_company_overview', '' ) ),
+        'industry_insights'      => sanitize_textarea_field( get_option( 'rtbcb_industry_insights', '' ) ),
+        'treasury_tech_overview' => sanitize_textarea_field( get_option( 'rtbcb_treasury_tech_overview', '' ) ),
+        'treasury_challenges'    => sanitize_textarea_field( get_option( 'rtbcb_treasury_challenges', '' ) ),
+        'extra_requirements'     => $extra_requirements,
     ];
 
-    $pain_points = [];
-    if ( isset( $_POST['pain_points'] ) && is_array( $_POST['pain_points'] ) ) {
-        $pain_points = array_filter( array_map( 'sanitize_text_field', (array) wp_unslash( $_POST['pain_points'] ) ) );
-    }
-
-    $requirements['pain_points'] = $pain_points;
-
     try {
-        $recommendation = rtbcb_test_generate_category_recommendation( $requirements );
+        $recommendation = rtbcb_test_generate_category_recommendation( $analysis );
         wp_send_json_success( $recommendation );
     } catch ( Exception $e ) {
         wp_send_json_error( [ 'message' => __( 'An error occurred while generating the recommendation.', 'rtbcb' ) ] );
