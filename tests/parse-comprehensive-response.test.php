@@ -104,9 +104,7 @@ $valid_json = [
 
 $response = [
     'body' => json_encode( [
-        'choices' => [
-            [ 'message' => [ 'content' => json_encode( $valid_json ) ] ],
-        ],
+        'output_text' => json_encode( $valid_json ),
     ] ),
 ];
 
