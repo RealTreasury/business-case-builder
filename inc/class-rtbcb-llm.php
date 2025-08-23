@@ -261,6 +261,61 @@ class RTBCB_LLM {
     }
 
     /**
+     * Generate estimated benefits based on company metrics.
+     *
+     * @param float  $revenue     Annual revenue.
+     * @param int    $staff_count Number of staff.
+     * @param float  $efficiency  Current efficiency percentage.
+     * @param string $category    Business category.
+     * @return array|WP_Error     Structured benefits estimate or error.
+     */
+    public function generate_benefits_estimate( $revenue, $staff_count, $efficiency, $category ) {
+        $revenue     = floatval( $revenue );
+        $staff_count = intval( $staff_count );
+        $efficiency  = floatval( $efficiency );
+        $category    = sanitize_text_field( $category );
+
+        if ( empty( $this->api_key ) ) {
+            return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
+        }
+
+        $model  = $this->models['mini'] ?? 'gpt-4o-mini';
+        $prompt = 'Given a company with revenue of ' . $revenue
+            . ' USD, staff count of ' . $staff_count
+            . ', current efficiency of ' . $efficiency . '% in the ' . $category
+            . ' category, estimate treasury technology benefits in JSON with keys '
+            . 'time_savings, cost_reduction, efficiency_gain, roi_percentage, '
+            . 'roi_timeline_months, risk_mitigation, productivity_gain. Provide numeric values where appropriate.';
+
+        $response = $this->call_openai_with_retry( $model, $prompt );
+
+        if ( is_wp_error( $response ) ) {
+            return new WP_Error( 'llm_failure', __( 'Unable to generate benefits estimate at this time.', 'rtbcb' ) );
+        }
+
+        $body    = wp_remote_retrieve_body( $response );
+        $decoded = json_decode( $body, true );
+        $content = $decoded['choices'][0]['message']['content'] ?? '';
+        $json    = json_decode( $content, true );
+
+        if ( ! is_array( $json ) ) {
+            return new WP_Error( 'llm_parse_error', __( 'Invalid response from language model.', 'rtbcb' ) );
+        }
+
+        $estimate = [
+            'time_savings'        => floatval( $json['time_savings'] ?? 0 ),
+            'cost_reduction'      => floatval( $json['cost_reduction'] ?? 0 ),
+            'efficiency_gain'     => floatval( $json['efficiency_gain'] ?? 0 ),
+            'roi_percentage'      => floatval( $json['roi_percentage'] ?? 0 ),
+            'roi_timeline_months' => floatval( $json['roi_timeline_months'] ?? 0 ),
+            'risk_mitigation'     => sanitize_textarea_field( $json['risk_mitigation'] ?? '' ),
+            'productivity_gain'   => floatval( $json['productivity_gain'] ?? 0 ),
+        ];
+
+        return $estimate;
+    }
+
+    /**
      * Generate comprehensive business case with deep analysis.
      *
      * Returns a {@see WP_Error} when the API key is missing or when the LLM
