@@ -1400,6 +1400,10 @@ function rtbcb_ajax_generate_company_overview() {
         return;
     }
 
+    // Increase timeout for comprehensive analysis
+    ini_set( 'max_execution_time', 300 ); // 5 minutes
+    wp_raise_memory_limit( '512M' ); // Increase memory limit if needed
+
     $start_time = microtime( true );
 
     try {
