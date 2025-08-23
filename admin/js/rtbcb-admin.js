@@ -12,6 +12,7 @@
             this.bindSyncLocal();
             this.bindCommentaryTest();
             this.bindCompanyOverviewTest();
+            this.bindTestDashboard();
         },
 
         bindDashboardActions() {
@@ -136,6 +137,73 @@
             if (clearBtn.length) {
                 clearBtn.on('click', function(){ results.empty(); });
             }
+        },
+
+        bindTestDashboard() {
+            if (!rtbcbAdmin || rtbcbAdmin.page !== 'rtbcb-test-dashboard') { return; }
+            const runBtn = $('#rtbcb-test-all');
+            const clearBtn = $('#rtbcb-clear-all');
+            const copyBtn = $('#rtbcb-copy-report');
+            const results = $('#rtbcb-test-dashboard-results');
+            let lastReport = '';
+
+            clearBtn.on('click', function(){ results.empty(); lastReport = ''; });
+
+            copyBtn.on('click', async function(){
+                if (!lastReport) { return; }
+                try {
+                    await navigator.clipboard.writeText(lastReport);
+                    alert(rtbcbAdmin.strings.copied);
+                } catch (err) {
+                    alert(rtbcbAdmin.strings.error + ' ' + err.message);
+                }
+            });
+
+            runBtn.on('click', async function(){
+                results.empty();
+                runBtn.prop('disabled', true).text(rtbcbAdmin.strings.testing);
+                const summary = $('<div />');
+
+                // API test
+                try {
+                    const apiResp = await $.post(rtbcbAdmin.ajax_url, {
+                        action: 'rtbcb_test_api',
+                        nonce: rtbcbAdmin.test_api_nonce
+                    });
+                    summary.append($('<p />').text('API: ' + (apiResp.success ? 'OK' : 'FAIL')));
+                } catch (err) {
+                    summary.append($('<p />').text('API: FAIL'));
+                }
+
+                // Complete report test
+                try {
+                    const formData = new FormData();
+                    formData.append('action', 'rtbcb_test_complete_report');
+                    formData.append('nonce', rtbcbAdmin.complete_report_nonce);
+                    const response = await fetch(rtbcbAdmin.ajax_url, { method: 'POST', body: formData });
+                    const data = await response.json();
+                    if (data.success) {
+                        const secList = $('<ul />');
+                        Object.entries(data.data.sections).forEach(([key, val]) => {
+                            const status = val.success ? 'OK' : 'FAIL';
+                            secList.append($('<li />').text(key + ': ' + status));
+                        });
+                        summary.append(secList);
+                        summary.append($('<p />').text('Words: ' + data.data.word_count + ' | Time: ' + data.data.elapsed + 's | Generated: ' + data.data.generated));
+                        const reportDiv = $('<div class="rtbcb-test-report" />').html(data.data.report_html);
+                        results.append(summary).append(reportDiv);
+                        lastReport = reportDiv.text();
+                    } else {
+                        summary.append($('<p />').text('Report: FAIL'));
+                        results.append(summary);
+                    }
+                } catch (err) {
+                    summary.append($('<p />').text('Report: FAIL'));
+                    results.append(summary);
+                }
+
+                runBtn.prop('disabled', false).text('Test All Sections');
+            });
         },
 
         async testApiConnection(e) {

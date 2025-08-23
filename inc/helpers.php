@@ -363,3 +363,78 @@ function rtbcb_test_generate_company_overview( $company_name ) {
     return $overview;
 }
 
+/**
+ * Generate a complete test report combining all sections.
+ *
+ * Calls section generators individually and aggregates their output while
+ * collecting timing and word counts for each section.
+ *
+ * @param array $all_inputs Sanitized user inputs.
+ * @return array|WP_Error Aggregated report data or error object.
+ */
+function rtbcb_test_generate_complete_report( $all_inputs ) {
+    if ( ! is_array( $all_inputs ) ) {
+        return new WP_Error( 'invalid_inputs', __( 'Invalid input data.', 'rtbcb' ) );
+    }
+
+    $results      = [];
+    $combined     = '';
+    $start_total  = microtime( true );
+    $sections     = [ 'overview', 'analysis' ];
+
+    // Company overview section.
+    $section_start = microtime( true );
+    $overview      = rtbcb_test_generate_company_overview( $all_inputs['company_name'] ?? '' );
+    $elapsed       = round( microtime( true ) - $section_start, 2 );
+    if ( is_wp_error( $overview ) ) {
+        $results['overview'] = [
+            'success' => false,
+            'message' => $overview->get_error_message(),
+        ];
+    } else {
+        $results['overview'] = [
+            'success'   => true,
+            'content'   => sanitize_textarea_field( $overview ),
+            'word_count'=> str_word_count( $overview ),
+            'elapsed'   => $elapsed,
+            'timestamp' => current_time( 'mysql' ),
+        ];
+        $combined .= "\n\n" . $overview;
+    }
+
+    // Main analysis section using business case generator.
+    $section_start = microtime( true );
+    $roi_data      = RTBCB_Calculator::calculate_roi( $all_inputs );
+    $llm           = new RTBCB_LLM();
+    $analysis      = $llm->generate_business_case( $all_inputs, $roi_data );
+    $elapsed       = round( microtime( true ) - $section_start, 2 );
+    if ( is_wp_error( $analysis ) ) {
+        $results['analysis'] = [
+            'success' => false,
+            'message' => $analysis->get_error_message(),
+        ];
+    } else {
+        $router    = new RTBCB_Router();
+        $report    = $router->get_report_html( $analysis );
+        $wordcount = str_word_count( wp_strip_all_tags( $report ) );
+        $results['analysis'] = [
+            'success'   => true,
+            'content'   => $report,
+            'word_count'=> $wordcount,
+            'elapsed'   => $elapsed,
+            'timestamp' => current_time( 'mysql' ),
+        ];
+        $combined .= "\n\n" . $report;
+    }
+
+    $total_elapsed = round( microtime( true ) - $start_total, 2 );
+
+    return [
+        'sections'    => $results,
+        'report_html' => $combined,
+        'word_count'  => str_word_count( wp_strip_all_tags( $combined ) ),
+        'elapsed'     => $total_elapsed,
+        'generated'   => current_time( 'mysql' ),
+    ];
+}
+
