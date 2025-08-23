@@ -87,8 +87,8 @@ class RTBCB_LLM {
             return new WP_Error( 'llm_failure', __( 'Unable to generate analysis at this time.', 'rtbcb' ) );
         }
 
-        list( $content ) = $this->extract_openai_output( $response );
-        $json            = json_decode( $content, true );
+        $parsed = rtbcb_parse_gpt5_response( $response );
+        $json   = json_decode( $parsed['output_text'], true );
 
         if ( ! is_array( $json ) ) {
             return new WP_Error( 'llm_parse_error', __( 'Invalid response from language model.', 'rtbcb' ) );
@@ -139,8 +139,8 @@ class RTBCB_LLM {
             return new WP_Error( 'llm_failure', __( 'Unable to generate commentary at this time.', 'rtbcb' ) );
         }
 
-        list( $content ) = $this->extract_openai_output( $response );
-        $commentary      = sanitize_textarea_field( $content );
+        $parsed     = rtbcb_parse_gpt5_response( $response );
+        $commentary = sanitize_textarea_field( $parsed['output_text'] );
 
         if ( empty( $commentary ) ) {
             return new WP_Error( 'llm_empty_response', __( 'No commentary returned.', 'rtbcb' ) );
@@ -171,8 +171,8 @@ class RTBCB_LLM {
             return new WP_Error( 'llm_failure', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
         }
 
-        list( $content ) = $this->extract_openai_output( $response );
-        $overview        = sanitize_textarea_field( $content );
+        $parsed   = rtbcb_parse_gpt5_response( $response );
+        $overview = sanitize_textarea_field( $parsed['output_text'] );
 
         if ( empty( $overview ) ) {
             return new WP_Error( 'llm_empty_response', __( 'No overview returned.', 'rtbcb' ) );
@@ -210,8 +210,8 @@ class RTBCB_LLM {
             return new WP_Error( 'llm_failure', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
         }
 
-        list( $content ) = $this->extract_openai_output( $response );
-        $overview        = sanitize_textarea_field( $content );
+        $parsed   = rtbcb_parse_gpt5_response( $response );
+        $overview = sanitize_textarea_field( $parsed['output_text'] );
 
         if ( empty( $overview ) ) {
             return new WP_Error( 'llm_empty_response', __( 'No overview returned.', 'rtbcb' ) );
@@ -252,8 +252,8 @@ class RTBCB_LLM {
             return new WP_Error( 'llm_failure', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
         }
 
-        list( $content ) = $this->extract_openai_output( $response );
-        $overview        = sanitize_textarea_field( $content );
+        $parsed   = rtbcb_parse_gpt5_response( $response );
+        $overview = sanitize_textarea_field( $parsed['output_text'] );
 
         if ( empty( $overview ) ) {
             return new WP_Error( 'llm_empty_response', __( 'No overview returned.', 'rtbcb' ) );
@@ -310,8 +310,8 @@ class RTBCB_LLM {
             return new WP_Error( 'llm_failure', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
         }
 
-        list( $content ) = $this->extract_openai_output( $response );
-        $overview        = sanitize_textarea_field( $content );
+        $parsed   = rtbcb_parse_gpt5_response( $response );
+        $overview = sanitize_textarea_field( $parsed['output_text'] );
 
         if ( empty( $overview ) ) {
             return new WP_Error( 'llm_empty_response', __( 'No overview returned.', 'rtbcb' ) );
@@ -347,8 +347,8 @@ class RTBCB_LLM {
             return new WP_Error( 'llm_failure', __( 'Unable to generate recommendation details at this time.', 'rtbcb' ) );
         }
 
-        list( $content ) = $this->extract_openai_output( $response );
-        $parsed          = json_decode( $content, true );
+        $parsed_response = rtbcb_parse_gpt5_response( $response );
+        $parsed          = json_decode( $parsed_response['output_text'], true );
 
         if ( empty( $parsed ) || ! is_array( $parsed ) ) {
             return new WP_Error( 'llm_empty_response', __( 'No recommendation details returned.', 'rtbcb' ) );
@@ -392,8 +392,8 @@ class RTBCB_LLM {
             return new WP_Error( 'llm_failure', __( 'Unable to generate benefits estimate at this time.', 'rtbcb' ) );
         }
 
-        list( $content ) = $this->extract_openai_output( $response );
-        $parsed          = json_decode( $content, true );
+        $parsed_response = rtbcb_parse_gpt5_response( $response );
+        $parsed          = json_decode( $parsed_response['output_text'], true );
 
         if ( empty( $parsed ) || ! is_array( $parsed ) ) {
             return new WP_Error( 'llm_empty_response', __( 'No estimate returned.', 'rtbcb' ) );
@@ -483,7 +483,9 @@ class RTBCB_LLM {
      * @return array|WP_Error Structured analysis array or error object.
      */
     private function parse_comprehensive_response( $response ) {
-        list( $content, $decoded ) = $this->extract_openai_output( $response );
+        $parsed_response = rtbcb_parse_gpt5_response( $response );
+        $content         = $parsed_response['output_text'];
+        $decoded         = $parsed_response['raw'];
 
         if ( empty( $decoded ) ) {
             return new WP_Error( 'llm_response_decode_error', __( 'Failed to decode response body.', 'rtbcb' ) );
@@ -719,8 +721,8 @@ class RTBCB_LLM {
             return $response;
         }
 
-        list( $content ) = $this->extract_openai_output( $response );
-        $json            = json_decode( $content, true );
+        $parsed_response = rtbcb_parse_gpt5_response( $response );
+        $json            = json_decode( $parsed_response['output_text'], true );
 
         if ( ! is_array( $json ) ) {
             return new WP_Error( 'llm_parse_error', __( 'Invalid response from language model.', 'rtbcb' ) );
@@ -760,8 +762,8 @@ class RTBCB_LLM {
             return $response;
         }
 
-        list( $content ) = $this->extract_openai_output( $response );
-        $summary         = sanitize_textarea_field( $content );
+        $parsed  = rtbcb_parse_gpt5_response( $response );
+        $summary = sanitize_textarea_field( $parsed['output_text'] );
 
         if ( empty( $summary ) ) {
             return new WP_Error( 'llm_empty_response', __( 'No technology research returned.', 'rtbcb' ) );
@@ -1190,5 +1192,68 @@ class RTBCB_LLM {
             ]
         ];
     }
+}
+
+/**
+ * Parse a GPT-5 response and extract relevant content.
+ *
+ * @param array $response HTTP response array from wp_remote_post.
+ * @return array {
+ *     @type string $output_text    Combined output text from the response.
+ *     @type array  $reasoning      Reasoning segments provided by the model.
+ *     @type array  $function_calls Function call items returned by the model.
+ *     @type array  $raw            Raw decoded response body.
+ * }
+ */
+function rtbcb_parse_gpt5_response( $response ) {
+    $body    = wp_remote_retrieve_body( $response );
+    $decoded = json_decode( $body, true );
+
+    if ( ! is_array( $decoded ) ) {
+        return [
+            'output_text'    => '',
+            'reasoning'      => [],
+            'function_calls' => [],
+            'raw'            => [],
+        ];
+    }
+
+    $output_text = '';
+
+    if ( isset( $decoded['output_text'] ) ) {
+        $output_text = is_array( $decoded['output_text'] ) ? implode( ' ', (array) $decoded['output_text'] ) : $decoded['output_text'];
+    } elseif ( isset( $decoded['output'][0]['content'][0]['text'] ) ) {
+        $output_text = $decoded['output'][0]['content'][0]['text'];
+    }
+
+    $reasoning      = [];
+    $function_calls = [];
+
+    if ( isset( $decoded['output'] ) && is_array( $decoded['output'] ) ) {
+        foreach ( $decoded['output'] as $chunk ) {
+            if ( empty( $chunk['content'] ) || ! is_array( $chunk['content'] ) ) {
+                continue;
+            }
+
+            foreach ( $chunk['content'] as $piece ) {
+                if ( ! isset( $piece['type'] ) ) {
+                    continue;
+                }
+
+                if ( 'reasoning' === $piece['type'] && ! empty( $piece['text'] ) ) {
+                    $reasoning[] = $piece['text'];
+                } elseif ( 'function_call' === $piece['type'] ) {
+                    $function_calls[] = $piece;
+                }
+            }
+        }
+    }
+
+    return [
+        'output_text'    => $output_text,
+        'reasoning'      => $reasoning,
+        'function_calls' => $function_calls,
+        'raw'            => $decoded,
+    ];
 }
 
