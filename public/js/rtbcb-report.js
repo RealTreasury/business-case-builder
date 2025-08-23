@@ -254,27 +254,34 @@ Ensure the report is:
 
 async function generateProfessionalReport(businessContext) {
     try {
+        const requestBody = {
+            model: rtbcbReport.report_model,
+            messages: [
+                {
+                    role: 'system',
+                    content: 'You are a senior BCG consultant creating professional HTML-formatted strategic reports. Output only valid HTML code with no additional text or markdown.'
+                },
+                {
+                    role: 'user',
+                    content: buildEnhancedPrompt(businessContext)
+                }
+            ],
+            temperature: 0.7
+        };
+
+        if (rtbcbReport.report_model.startsWith('gpt-5')) {
+            requestBody.max_completion_tokens = 4000;
+        } else {
+            requestBody.max_tokens = 4000;
+        }
+
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${rtbcbReport.api_key}`
             },
-            body: JSON.stringify({
-                model: rtbcbReport.report_model,
-                messages: [
-                    {
-                        role: 'system',
-                        content: 'You are a senior BCG consultant creating professional HTML-formatted strategic reports. Output only valid HTML code with no additional text or markdown.'
-                    },
-                    {
-                        role: 'user',
-                        content: buildEnhancedPrompt(businessContext)
-                    }
-                ],
-                temperature: 0.7,
-                max_tokens: 4000
-            })
+            body: JSON.stringify(requestBody)
         });
 
         if (!response.ok) {
