@@ -174,7 +174,7 @@ class RTBCB_Router {
      *
      * @return string Report HTML.
      */
-    private function get_report_html( $business_case_data ) {
+    public function get_report_html( $business_case_data ) {
         $template_path = RTBCB_DIR . 'templates/report-template.php';
 
         if ( ! file_exists( $template_path ) ) {
