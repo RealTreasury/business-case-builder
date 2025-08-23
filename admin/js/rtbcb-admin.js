@@ -337,7 +337,10 @@
                 }
                 const response = await fetch(rtbcbAdmin.ajax_url, { method: 'POST', body: formData });
                 if (!response.ok) {
-                    throw new Error(`Server responded ${response.status}`);
+                    const text = await response.text();
+                    console.error('Report preview failed:', response.status, text);
+                    alert(`${rtbcbAdmin.strings.error} ${response.status}: ${text}`);
+                    return;
                 }
                 const data = await response.json();
                 if (data.success) {
@@ -374,7 +377,10 @@
                 formData.append('nonce', nonce);
                 const response = await fetch(rtbcbAdmin.ajax_url, { method: 'POST', body: formData });
                 if (!response.ok) {
-                    throw new Error(`Server responded ${response.status}`);
+                    const text = await response.text();
+                    console.error('Sample report failed:', response.status, text);
+                    alert(`${rtbcbAdmin.strings.error} ${response.status}: ${text}`);
+                    return;
                 }
                 const data = await response.json();
                 if (data.success) {
