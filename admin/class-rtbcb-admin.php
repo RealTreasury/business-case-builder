@@ -552,13 +552,14 @@ class RTBCB_Admin {
 
         $roi_data = RTBCB_Calculator::calculate_roi( $inputs );
 
-        $llm            = new RTBCB_LLM();
-        $business_case  = $llm->generate_business_case( $inputs, $roi_data );
+        $llm           = new RTBCB_LLM();
+        $business_case = $llm->generate_business_case( $inputs, $roi_data );
         if ( is_wp_error( $business_case ) ) {
             wp_send_json_error( [ 'message' => $business_case->get_error_message() ] );
         }
 
-        $html = RTBCB_Router::get_report_html( $business_case );
+        $router = new RTBCB_Router();
+        $html   = $router->get_report_html( $business_case );
 
         wp_send_json_success( [ 'report_html' => $html ] );
     }
