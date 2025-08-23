@@ -669,6 +669,35 @@ class Real_Treasury_BCB {
 
             rtbcb_log_memory_usage( 'after_nonce_verification' );
 
+            // Collect and validate numeric fields
+            $hours_reconciliation_raw   = wp_unslash( $_POST['hours_reconciliation'] ?? '' );
+            if ( ! is_numeric( $hours_reconciliation_raw ) ) {
+                rtbcb_log_error( 'Invalid hours_reconciliation', $_POST );
+                wp_send_json_error( __( 'Invalid bank reconciliation hours.', 'rtbcb' ), 400 );
+            }
+            $hours_reconciliation = floatval( $hours_reconciliation_raw );
+
+            $hours_cash_positioning_raw = wp_unslash( $_POST['hours_cash_positioning'] ?? '' );
+            if ( ! is_numeric( $hours_cash_positioning_raw ) ) {
+                rtbcb_log_error( 'Invalid hours_cash_positioning', $_POST );
+                wp_send_json_error( __( 'Invalid cash positioning hours.', 'rtbcb' ), 400 );
+            }
+            $hours_cash_positioning = floatval( $hours_cash_positioning_raw );
+
+            $num_banks_raw = wp_unslash( $_POST['num_banks'] ?? '' );
+            if ( ! is_numeric( $num_banks_raw ) ) {
+                rtbcb_log_error( 'Invalid num_banks', $_POST );
+                wp_send_json_error( __( 'Invalid number of banks.', 'rtbcb' ), 400 );
+            }
+            $num_banks = intval( $num_banks_raw );
+
+            $ftes_raw = wp_unslash( $_POST['ftes'] ?? '' );
+            if ( ! is_numeric( $ftes_raw ) ) {
+                rtbcb_log_error( 'Invalid ftes', $_POST );
+                wp_send_json_error( __( 'Invalid treasury team size.', 'rtbcb' ), 400 );
+            }
+            $ftes = floatval( $ftes_raw );
+
             // Collect and validate form data
             $user_inputs = [
                 'email'                  => sanitize_email( $_POST['email'] ?? '' ),
@@ -676,10 +705,10 @@ class Real_Treasury_BCB {
                 'company_size'           => sanitize_text_field( $_POST['company_size'] ?? '' ),
                 'industry'               => sanitize_text_field( $_POST['industry'] ?? '' ),
                 'job_title'              => sanitize_text_field( $_POST['job_title'] ?? '' ),
-                'hours_reconciliation'   => floatval( $_POST['hours_reconciliation'] ?? 0 ),
-                'hours_cash_positioning' => floatval( $_POST['hours_cash_positioning'] ?? 0 ),
-                'num_banks'              => intval( $_POST['num_banks'] ?? 0 ),
-                'ftes'                   => floatval( $_POST['ftes'] ?? 0 ),
+                'hours_reconciliation'   => $hours_reconciliation,
+                'hours_cash_positioning' => $hours_cash_positioning,
+                'num_banks'              => $num_banks,
+                'ftes'                   => $ftes,
                 'pain_points'            => array_map( 'sanitize_text_field', (array) ( $_POST['pain_points'] ?? [] ) ),
                 'business_objective'     => sanitize_text_field( $_POST['business_objective'] ?? '' ),
                 'implementation_timeline'=> sanitize_text_field( $_POST['implementation_timeline'] ?? '' ),
@@ -1239,8 +1268,17 @@ class Real_Treasury_BCB {
             wp_send_json_error( __( 'Security check failed.', 'rtbcb' ), 403 );
         }
 
-        $investment = floatval( wp_unslash( $_POST['investment'] ?? 0 ) );
-        $returns    = floatval( wp_unslash( $_POST['returns'] ?? 0 ) );
+        $investment_raw = wp_unslash( $_POST['investment'] ?? '' );
+        if ( ! is_numeric( $investment_raw ) ) {
+            wp_send_json_error( __( 'Invalid investment value provided.', 'rtbcb' ), 400 );
+        }
+        $investment = floatval( $investment_raw );
+
+        $returns_raw = wp_unslash( $_POST['returns'] ?? '' );
+        if ( ! is_numeric( $returns_raw ) ) {
+            wp_send_json_error( __( 'Invalid returns value provided.', 'rtbcb' ), 400 );
+        }
+        $returns = floatval( $returns_raw );
 
         if ( $investment <= 0 || $returns <= 0 ) {
             wp_send_json_error( __( 'Invalid values provided.', 'rtbcb' ), 400 );
