@@ -243,9 +243,15 @@ class RTBCB_LLM {
         
         // Industry analysis
         $industry_analysis = $this->analyze_industry_context( $user_inputs );
-        
+        if ( is_wp_error( $industry_analysis ) ) {
+            return $industry_analysis;
+        }
+
         // Technology landscape research
         $tech_landscape = $this->research_treasury_solutions( $user_inputs, $context_chunks );
+        if ( is_wp_error( $tech_landscape ) ) {
+            return $tech_landscape;
+        }
         
         // Generate comprehensive report
         $model = $this->select_optimal_model( $user_inputs, $context_chunks );
@@ -496,6 +502,106 @@ class RTBCB_LLM {
     }
 
     /**
+     * Analyze industry context using the LLM.
+     *
+     * @param array $user_inputs Sanitized user inputs.
+     * @return array|WP_Error Industry analysis or error object.
+     */
+    private function analyze_industry_context( $user_inputs ) {
+        if ( empty( $this->api_key ) ) {
+            return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
+        }
+
+        $industry = sanitize_text_field( $user_inputs['industry'] ?? '' );
+        if ( empty( $industry ) ) {
+            return [
+                'sector_trends'          => '',
+                'competitive_benchmarks' => '',
+                'regulatory_considerations' => '',
+            ];
+        }
+
+        $model  = $this->models['mini'] ?? 'gpt-4o-mini';
+        $prompt = 'Provide sector_trends, competitive_benchmarks, and regulatory_considerations for the ' . $industry . ' industry in JSON.';
+
+        $response = $this->call_openai_with_retry( $model, $prompt );
+        if ( is_wp_error( $response ) ) {
+            return $response;
+        }
+
+        $body    = wp_remote_retrieve_body( $response );
+        $decoded = json_decode( $body, true );
+        $content = $decoded['choices'][0]['message']['content'] ?? '';
+        $json    = json_decode( $content, true );
+
+        if ( ! is_array( $json ) ) {
+            return new WP_Error( 'llm_parse_error', __( 'Invalid response from language model.', 'rtbcb' ) );
+        }
+
+        return [
+            'sector_trends'          => sanitize_text_field( $json['sector_trends'] ?? '' ),
+            'competitive_benchmarks' => sanitize_text_field( $json['competitive_benchmarks'] ?? '' ),
+            'regulatory_considerations' => sanitize_text_field( $json['regulatory_considerations'] ?? '' ),
+        ];
+    }
+
+    /**
+     * Research treasury technology solutions using the LLM.
+     *
+     * @param array $user_inputs    Sanitized user inputs.
+     * @param array $context_chunks Optional context strings.
+     * @return string|WP_Error Research summary or error object.
+     */
+    private function research_treasury_solutions( $user_inputs, $context_chunks ) {
+        if ( empty( $this->api_key ) ) {
+            return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
+        }
+
+        $industry     = sanitize_text_field( $user_inputs['industry'] ?? '' );
+        $company_size = sanitize_text_field( $user_inputs['company_size'] ?? '' );
+
+        $model  = $this->models['mini'] ?? 'gpt-4o-mini';
+        $prompt = 'Briefly summarize treasury technology solutions relevant to a ' . $company_size . ' company in the ' . $industry . ' industry.';
+
+        if ( ! empty( $context_chunks ) ) {
+            $prompt .= '\nContext: ' . implode( '\n', array_map( 'sanitize_text_field', $context_chunks ) );
+        }
+
+        $response = $this->call_openai_with_retry( $model, $prompt );
+        if ( is_wp_error( $response ) ) {
+            return $response;
+        }
+
+        $body    = wp_remote_retrieve_body( $response );
+        $decoded = json_decode( $body, true );
+        $content = $decoded['choices'][0]['message']['content'] ?? '';
+        $summary = sanitize_textarea_field( $content );
+
+        if ( empty( $summary ) ) {
+            return new WP_Error( 'llm_empty_response', __( 'No technology research returned.', 'rtbcb' ) );
+        }
+
+        return $summary;
+    }
+
+    /**
+     * Select the optimal model for comprehensive analysis.
+     *
+     * @param array $user_inputs    Sanitized user inputs.
+     * @param array $context_chunks Optional context strings.
+     * @return string Model identifier.
+     */
+    private function select_optimal_model( $user_inputs, $context_chunks ) {
+        $model = $this->models['advanced'] ?? 'o1-preview';
+
+        if ( count( $context_chunks ) < 3 ) {
+            $model = $this->models['premium'] ?? 'gpt-4o';
+        }
+
+        return sanitize_text_field( $model );
+    }
+
+    /**
      * Build comprehensive prompt with research context
      */
     private function build_comprehensive_prompt( $user_inputs, $roi_data, $company_research, $industry_analysis, $tech_landscape ) {
@@ -521,7 +627,20 @@ class RTBCB_LLM {
         $prompt .= "Banking Relationships: " . ($user_inputs['num_banks'] ?? 0) . "\n";
         $prompt .= "Treasury Team Size: " . ($user_inputs['ftes'] ?? 0) . " FTEs\n";
         $prompt .= "Key Pain Points: " . implode(', ', $user_inputs['pain_points'] ?? []) . "\n\n";
-        
+
+        // Industry Context
+        if ( ! empty( $industry_analysis ) ) {
+            $prompt .= "INDUSTRY CONTEXT:\n";
+            $prompt .= 'Sector Trends: ' . ( $industry_analysis['sector_trends'] ?? '' ) . "\n";
+            $prompt .= 'Competitive Benchmarks: ' . ( $industry_analysis['competitive_benchmarks'] ?? '' ) . "\n";
+            $prompt .= 'Regulatory Considerations: ' . ( $industry_analysis['regulatory_considerations'] ?? '' ) . "\n\n";
+        }
+
+        // Treasury technology landscape
+        if ( ! empty( $tech_landscape ) ) {
+            $prompt .= "TECHNOLOGY LANDSCAPE:\n{$tech_landscape}\n\n";
+        }
+
         // ROI Analysis
         $prompt .= "PROJECTED ROI ANALYSIS:\n";
         $prompt .= "Conservative Scenario: $" . number_format($roi_data['conservative']['total_annual_benefit'] ?? 0) . "\n";
@@ -626,6 +745,22 @@ class RTBCB_LLM {
         return $prompt;
     }
 
+    /**
+     * Enhance parsed analysis with research context.
+     *
+     * @param array $analysis          Parsed analysis from LLM.
+     * @param array $company_research  Company research data.
+     * @param array $industry_analysis Industry analysis data.
+     * @return array Enhanced analysis.
+     */
+    private function enhance_with_research( $analysis, $company_research, $industry_analysis ) {
+        $analysis['research'] = [
+            'company'  => $company_research,
+            'industry' => $industry_analysis,
+        ];
+
+        return $analysis;
+    }
 
     /**
      * Check if a model is a GPT-5 model.

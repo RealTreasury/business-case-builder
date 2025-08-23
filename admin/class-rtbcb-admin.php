@@ -529,8 +529,7 @@ class RTBCB_Admin {
             wp_send_json_error( [ 'message' => __( 'Invalid industry.', 'rtbcb' ) ] );
         }
 
-        $llm        = new RTBCB_LLM();
-        $commentary = $llm->generate_industry_commentary( $industry );
+        $commentary = rtbcb_test_generate_industry_commentary( $industry );
 
         if ( is_wp_error( $commentary ) ) {
             wp_send_json_error( [ 'message' => sanitize_text_field( $commentary->get_error_message() ) ] );

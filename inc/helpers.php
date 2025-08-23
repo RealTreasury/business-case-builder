@@ -349,6 +349,21 @@ function rtbcb_map_sample_report_inputs( $inputs, $scenario_key ) {
 add_filter( 'rtbcb_sample_report_inputs', 'rtbcb_map_sample_report_inputs', 10, 2 );
 
 /**
+ * Test generating industry commentary using the LLM.
+ *
+ * @param string $industry Industry slug.
+ * @return string|WP_Error Commentary text or error object.
+ */
+function rtbcb_test_generate_industry_commentary( $industry ) {
+    $industry = sanitize_text_field( $industry );
+
+    $llm        = new RTBCB_LLM();
+    $commentary = $llm->generate_industry_commentary( $industry );
+
+    return $commentary;
+}
+
+/**
  * Test generating a company overview using the LLM.
  *
  * @param string $company_name Company name.
