@@ -51,6 +51,7 @@
             this.bindCommentaryTest();
             this.bindCompanyOverviewTest();
             this.bindIndustryOverviewTest();
+            this.bindBenefitsEstimateTest();
             this.bindTestDashboard();
         },
 
@@ -197,6 +198,34 @@
             };
             form.on('submit', submitHandler);
             RTBCBAdmin.utils.bindClear(clearBtn, results);
+        },
+
+        bindBenefitsEstimateTest() {
+            if (!rtbcbAdmin || rtbcbAdmin.page !== 'rtbcb-test-estimated-benefits') { return; }
+            const form = $('#rtbcb-test-benefits-estimate-form');
+            if (!form.length) { return; }
+            const results = $('#rtbcb-benefits-estimate-results');
+            form.on('submit', function(e) {
+                e.preventDefault();
+                results.html('<div class="notice notice-info"><p>' + rtbcbAdmin.strings.processing + '</p></div>');
+                $.post(rtbcbAdmin.ajax_url, {
+                    action: 'rtbcb_test_estimated_benefits',
+                    revenue: $('#rtbcb-test-revenue').val(),
+                    staff: $('#rtbcb-test-staff-count').val(),
+                    efficiency: $('#rtbcb-test-efficiency').val(),
+                    category: $('#rtbcb-test-category').val(),
+                    nonce: rtbcbAdmin.benefits_estimate_nonce
+                }).done(function(response) {
+                    if (response.success) {
+                        results.html('<div class="notice notice-success"><p>' + response.data.estimate + '</p></div>');
+                    } else {
+                        const message = response.data && response.data.message ? response.data.message : rtbcbAdmin.strings.error;
+                        results.html('<div class="notice notice-error"><p>' + message + '</p></div>');
+                    }
+                }).fail(function() {
+                    results.html('<div class="notice notice-error"><p>' + rtbcbAdmin.strings.error + '</p></div>');
+                });
+            });
         },
 
         bindTestDashboard() {
