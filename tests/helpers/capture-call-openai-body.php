@@ -16,6 +16,12 @@ if ( ! class_exists( 'WP_Error' ) ) {
     }
 }
 
+if ( ! function_exists( '__' ) ) {
+    function __( $text, $domain = null ) {
+        return $text;
+    }
+}
+
 if ( ! function_exists( 'is_wp_error' ) ) {
     function is_wp_error( $thing ) {
         return $thing instanceof WP_Error;
