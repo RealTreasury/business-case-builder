@@ -1482,7 +1482,9 @@ function rtbcb_parse_gpt5_response( $response ) {
                 }
             }
 
-            if ( '' === $output_text && ( 'message' === ( $chunk['type'] ?? '' ) || '' !== $text ) ) {
+            $chunk_type = $chunk['type'] ?? '';
+
+            if ( '' === $output_text && ( 'message' === $chunk_type || ( '' !== $text && 'reasoning' !== $chunk_type ) ) ) {
                 $output_text = $text;
             }
         }

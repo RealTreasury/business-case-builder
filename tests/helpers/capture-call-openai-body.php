@@ -62,7 +62,33 @@ if ( ! function_exists( 'wp_remote_post' ) ) {
     function wp_remote_post( $url, $args ) {
         global $captured_body;
         $captured_body = json_decode( $args['body'], true );
-        return [ 'body' => json_encode( [ 'output_text' => 'test' ] ) ];
+        return [
+            'body' => json_encode( [
+                'status' => 'completed',
+                'output' => [
+                    [
+                        'id'      => 'reasoning',
+                        'type'    => 'reasoning',
+                        'content' => [
+                            [
+                                'type' => 'reasoning',
+                                'text' => 'thinking',
+                            ],
+                        ],
+                    ],
+                    [
+                        'id'      => 'message',
+                        'type'    => 'message',
+                        'content' => [
+                            [
+                                'type' => 'output_text',
+                                'text' => 'test',
+                            ],
+                        ],
+                    ],
+                ],
+            ] ),
+        ];
     }
 }
 

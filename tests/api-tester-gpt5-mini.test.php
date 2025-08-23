@@ -5,6 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 require_once __DIR__ . '/../inc/config.php';
 require_once __DIR__ . '/../inc/class-rtbcb-api-tester.php';
+require_once __DIR__ . '/../inc/class-rtbcb-llm.php';
 
 if ( ! function_exists( 'get_option' ) ) {
     function get_option( $name, $default = '' ) {
@@ -58,14 +59,38 @@ if ( ! function_exists( 'is_wp_error' ) ) {
     }
 }
 
+$mock_response = [
+    'body' => json_encode( [
+        'status' => 'completed',
+        'output' => [
+            [
+                'id'      => 'reasoning',
+                'type'    => 'reasoning',
+                'content' => [
+                    [
+                        'type' => 'reasoning',
+                        'text' => 'thinking',
+                    ],
+                ],
+            ],
+            [
+                'id'      => 'message',
+                'type'    => 'message',
+                'content' => [
+                    [
+                        'type' => 'output_text',
+                        'text' => 'pong',
+                    ],
+                ],
+            ],
+        ],
+    ] ),
+];
+
 if ( ! function_exists( 'wp_remote_post' ) ) {
     function wp_remote_post( $url, $args ) {
-        return [
-            'body' => json_encode( [
-                'status'      => 'completed',
-                'output_text' => 'pong',
-            ] ),
-        ];
+        global $mock_response;
+        return $mock_response;
     }
 }
 
@@ -99,6 +124,12 @@ if ( ! $result['success'] ) {
 $combined = ( $result['message'] ?? '' ) . ' ' . ( $result['details'] ?? '' );
 if ( false !== strpos( $combined, 'max_output_tokens' ) ) {
     echo "API tester flagged max_output_tokens\n";
+    exit( 1 );
+}
+
+$parsed = rtbcb_parse_gpt5_response( $mock_response );
+if ( 'pong' !== ( $parsed['output_text'] ?? '' ) ) {
+    echo "Failed to extract message text\n";
     exit( 1 );
 }
 
