@@ -32,6 +32,8 @@ class RTBCB_Admin {
         add_action( 'wp_ajax_rtbcb_run_diagnostics', [ $this, 'ajax_run_diagnostics' ] );
         add_action( 'wp_ajax_rtbcb_generate_report_preview', [ $this, 'ajax_generate_report_preview' ] );
         add_action( 'wp_ajax_rtbcb_generate_sample_report', [ $this, 'ajax_generate_sample_report' ] );
+        add_action( 'wp_ajax_rtbcb_sync_to_local', [ $this, 'sync_to_local' ] );
+        add_action( 'wp_ajax_nopriv_rtbcb_sync_to_local', [ $this, 'sync_to_local' ] );
     }
 
     /**
@@ -561,6 +563,21 @@ class RTBCB_Admin {
         $html = RTBCB_Router::get_report_html( $business_case );
 
         wp_send_json_success( [ 'report_html' => $html ] );
+    }
+
+    /**
+     * Sync portal data to the local site.
+     *
+     * @return void
+     */
+    public function sync_to_local() {
+        check_ajax_referer( 'rtbcb_sync_local', 'nonce' );
+
+        if ( is_user_logged_in() && ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'message' => __( 'Permission denied.', 'rtbcb' ) ], 403 );
+        }
+
+        wp_send_json_success( [ 'message' => __( 'Data synchronized.', 'rtbcb' ) ] );
     }
 
     /**

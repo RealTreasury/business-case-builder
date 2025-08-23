@@ -6,9 +6,10 @@
             this.bindDashboardActions();
             this.bindExportButtons();
             this.initLeadsManager();
-            this.bindDiagnosticsButton();
-            this.bindReportPreview();
+           this.bindDiagnosticsButton();
+           this.bindReportPreview();
             this.bindSampleReport();
+            this.bindSyncLocal();
         },
 
         bindDashboardActions() {
@@ -23,6 +24,10 @@
 
         bindDiagnosticsButton() {
             $('#rtbcb-run-tests').on('click', this.runDiagnostics);
+        },
+
+        bindSyncLocal() {
+            $('#rtbcb-sync-local').on('click', this.syncToLocal);
         },
 
         async testApiConnection(e) {
@@ -163,6 +168,30 @@
             }
 
             button.prop('disabled', false);
+        },
+
+        async syncToLocal(e) {
+            e.preventDefault();
+            const button = $(this);
+            const original = button.text();
+            button.text(rtbcbAdmin.strings.processing).prop('disabled', true);
+
+            try {
+                const nonce = $('#rtbcb-sync-local-form').find('input[name="rtbcb_sync_local_nonce"]').val();
+                const formData = new FormData();
+                formData.append('action', 'rtbcb_sync_to_local');
+                formData.append('nonce', nonce);
+                const response = await fetch(rtbcbAdmin.ajax_url, { method: 'POST', body: formData });
+                if (!response.ok) {
+                    throw new Error(`Server responded ${response.status}`);
+                }
+                const data = await response.json();
+                alert(data.data?.message || rtbcbAdmin.strings.error);
+            } catch (err) {
+                alert(`${rtbcbAdmin.strings.error} ${err.message}`);
+            }
+
+            button.text(original).prop('disabled', false);
         },
 
         initLeadsManager() {
