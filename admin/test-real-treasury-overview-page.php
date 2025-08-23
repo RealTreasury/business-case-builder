@@ -8,9 +8,22 @@
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
+$current_company = rtbcb_get_current_company();
+$clear_nonce     = wp_create_nonce( 'rtbcb_clear_current_company' );
 ?>
 <div class="wrap rtbcb-admin-page">
     <h1><?php esc_html_e( 'Test Real Treasury Overview Generation', 'rtbcb' ); ?></h1>
+    <p>
+        <button type="button" id="rtbcb-start-new-analysis" class="button">
+            <?php esc_html_e( 'Start New Company Analysis', 'rtbcb' ); ?>
+        </button>
+    </p>
+
+<?php if ( empty( $current_company ) ) : ?>
+    <div class="notice notice-error">
+        <p><?php esc_html_e( 'No company selected. Please run the company overview.', 'rtbcb' ); ?></p>
+    </div>
+<?php else : ?>
 
     <div class="card">
         <h2 class="title"><?php esc_html_e( 'Generate Real Treasury Overview', 'rtbcb' ); ?></h2>
@@ -56,6 +69,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     </div>
 
     <div id="rtbcb-real-treasury-overview-results"></div>
+<?php endif; ?>
 </div>
 
 <style>
@@ -76,4 +90,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 <?php if ( ! isset( $GLOBALS['ajaxurl'] ) || empty( $GLOBALS['ajaxurl'] ) ) : ?>
 var ajaxurl = '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>';
 <?php endif; ?>
+document.getElementById('rtbcb-start-new-analysis').addEventListener('click', function () {
+    var data = new FormData();
+    data.append('action', 'rtbcb_clear_current_company');
+    data.append('nonce', '<?php echo esc_js( $clear_nonce ); ?>');
+    fetch(ajaxurl, { method: 'POST', body: data })
+        .then(function (response) { return response.json(); })
+        .then(function () { location.reload(); });
+});
 </script>

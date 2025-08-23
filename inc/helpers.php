@@ -8,6 +8,37 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
+ * Set the current company name.
+ *
+ * @param string $company Company name.
+ *
+ * @return void
+ */
+function rtbcb_set_current_company( $company ) {
+    update_option( 'rtbcb_current_company', sanitize_text_field( $company ), false );
+}
+
+/**
+ * Get the current company name.
+ *
+ * @return string Current company name or empty string.
+ */
+function rtbcb_get_current_company() {
+    $company = get_option( 'rtbcb_current_company', '' );
+
+    return is_string( $company ) ? $company : '';
+}
+
+/**
+ * Clear the current company name.
+ *
+ * @return void
+ */
+function rtbcb_clear_current_company() {
+    delete_option( 'rtbcb_current_company' );
+}
+
+/**
  * Sanitize form input data
  *
  * @param array $data Raw form data
