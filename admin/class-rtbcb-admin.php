@@ -174,15 +174,6 @@ class RTBCB_Admin {
 
         add_submenu_page(
             'rtbcb-dashboard',
-            __( 'Data Health', 'rtbcb' ),
-            __( 'Data Health', 'rtbcb' ),
-            'manage_options',
-            'rtbcb-data-health',
-            [ $this, 'render_data_health' ]
-        );
-
-        add_submenu_page(
-            'rtbcb-dashboard',
             __( 'Unified Test Dashboard', 'rtbcb' ),
             __( 'Unified Tests', 'rtbcb' ),
             'manage_options',
@@ -281,21 +272,6 @@ class RTBCB_Admin {
         
         include RTBCB_DIR . 'admin/analytics-page.php';
     }
-
-    /**
-     * Render data health page.
-     *
-     * @return void
-     */
-    public function render_data_health() {
-        $portal_active = $this->check_portal_integration();
-        $last_indexed = get_option( 'rtbcb_last_indexed', '' );
-       $vendor_count = $this->get_vendor_count();
-        $rag_health = $this->check_rag_health();
-
-        include RTBCB_DIR . 'admin/data-health-page.php';
-    }
-
 
     /**
      * Render report preview page.
@@ -792,44 +768,6 @@ class RTBCB_Admin {
         );
 
         return $results ?: [];
-    }
-
-    /**
-     * Check if Portal integration is active.
-     *
-     * @return bool
-     */
-    private function check_portal_integration() {
-        return (bool) ( has_filter( 'rt_portal_get_vendors' ) || has_filter( 'rt_portal_get_vendor_notes' ) );
-    }
-
-    /**
-     * Get vendor count from portal.
-     *
-     * @return int
-     */
-    private function get_vendor_count() {
-        $vendors = apply_filters( 'rt_portal_get_vendors', [] );
-        return is_array( $vendors ) ? count( $vendors ) : 0;
-    }
-
-    /**
-     * Check RAG index health.
-     *
-     * @return array Health status.
-     */
-    private function check_rag_health() {
-        global $wpdb;
-        $table_name = $wpdb->prefix . 'rtbcb_rag_index';
-
-        $count = $wpdb->get_var( "SELECT COUNT(*) FROM {$table_name}" );
-        $last_updated = $wpdb->get_var( "SELECT MAX(updated_at) FROM {$table_name}" );
-
-        return [
-            'indexed_items' => intval( $count ),
-            'last_updated'  => $last_updated,
-            'status'        => $count > 0 ? 'healthy' : 'needs_rebuild',
-        ];
     }
 
     /**
