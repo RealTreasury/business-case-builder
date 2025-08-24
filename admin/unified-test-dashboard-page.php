@@ -894,16 +894,100 @@ $available_models = [
         </div>
     </div>
 
-    <!-- API Health Test Section (Placeholder) -->
+    <!-- API Health Test Section -->
+    <?php
+    $api_components = [
+        'chat'      => __( 'OpenAI Chat API', 'rtbcb' ),
+        'embedding' => __( 'OpenAI Embedding API', 'rtbcb' ),
+        'portal'    => __( 'Real Treasury Portal', 'rtbcb' ),
+        'roi'       => __( 'ROI Calculator', 'rtbcb' ),
+        'rag'       => __( 'RAG Index', 'rtbcb' ),
+    ];
+    $descriptions   = [
+        'chat'      => __( 'Tests connectivity to OpenAI chat completion endpoint.', 'rtbcb' ),
+        'embedding' => __( 'Verifies embedding generation is available.', 'rtbcb' ),
+        'portal'    => __( 'Checks that vendor data can be retrieved from the portal.', 'rtbcb' ),
+        'roi'       => __( 'Runs a sample ROI calculation.', 'rtbcb' ),
+        'rag'       => __( 'Ensures the RAG index responds to search queries.', 'rtbcb' ),
+    ];
+    $last_api_test  = get_option( 'rtbcb_last_api_test', [] );
+    $last_results   = $last_api_test['results'] ?? [];
+    $last_timestamp = $last_api_test['timestamp'] ?? '';
+    ?>
     <div id="api-health" class="rtbcb-test-section" style="display: none;">
         <div class="rtbcb-test-panel">
             <div class="rtbcb-panel-header">
                 <h2><?php esc_html_e( 'API Health Testing', 'rtbcb' ); ?></h2>
                 <p><?php esc_html_e( 'Monitor API connectivity, rate limits, and error handling', 'rtbcb' ); ?></p>
             </div>
-            <div class="rtbcb-placeholder">
-                <p><?php esc_html_e( 'API Health testing interface will be implemented here.', 'rtbcb' ); ?></p>
+            <div class="rtbcb-api-controls">
+                <button type="button" id="rtbcb-run-all-api-tests" class="button button-primary">
+                    <span class="dashicons dashicons-update"></span>
+                    <?php esc_html_e( 'Run All Tests', 'rtbcb' ); ?>
+                </button>
+                <div id="rtbcb-api-health-notice" class="rtbcb-api-health-notice">
+                    <?php
+                    if ( $last_timestamp ) {
+                        printf( esc_html__( 'Last tested: %s', 'rtbcb' ), esc_html( $last_timestamp ) );
+                    } else {
+                        esc_html_e( 'No tests run yet.', 'rtbcb' );
+                    }
+                    ?>
+                </div>
             </div>
+
+            <table class="rtbcb-api-health-table wp-list-table widefat fixed striped">
+                <thead>
+                    <tr>
+                        <th><?php esc_html_e( 'Status', 'rtbcb' ); ?></th>
+                        <th><?php esc_html_e( 'Component', 'rtbcb' ); ?></th>
+                        <th><?php esc_html_e( 'Last Tested', 'rtbcb' ); ?></th>
+                        <th><?php esc_html_e( 'Response Time', 'rtbcb' ); ?></th>
+                        <th><?php esc_html_e( 'Message', 'rtbcb' ); ?></th>
+                        <th><?php esc_html_e( 'Actions', 'rtbcb' ); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ( $api_components as $key => $label ) :
+                        $result       = $last_results[ $key ] ?? [];
+                        $passed       = ! empty( $result['passed'] );
+                        $status_class = $passed ? 'status-good' : ( $result ? 'status-error' : '' );
+                        $icon         = $result ? ( $passed ? 'dashicons-yes-alt' : 'dashicons-warning' ) : 'dashicons-minus';
+                        ?>
+                        <tr id="rtbcb-api-<?php echo esc_attr( $key ); ?>" data-component="<?php echo esc_attr( $key ); ?>">
+                            <td class="rtbcb-status">
+                                <span class="rtbcb-status-indicator <?php echo esc_attr( $status_class ); ?>">
+                                    <span class="dashicons <?php echo esc_attr( $icon ); ?>"></span>
+                                </span>
+                            </td>
+                            <td class="rtbcb-component-name">
+                                <?php echo esc_html( $label ); ?>
+                                <span class="dashicons dashicons-info" title="<?php echo esc_attr( $descriptions[ $key ] ); ?>"></span>
+                            </td>
+                            <td class="rtbcb-last-tested">
+                                <?php echo isset( $result['last_tested'] ) ? esc_html( $result['last_tested'] ) : '&#8212;'; ?>
+                            </td>
+                            <td class="rtbcb-response-time">
+                                <?php echo isset( $result['response_time'] ) ? intval( $result['response_time'] ) . ' ms' : '&#8212;'; ?>
+                            </td>
+                            <td class="rtbcb-message">
+                                <?php echo isset( $result['message'] ) ? esc_html( $result['message'] ) : esc_html__( 'Not tested', 'rtbcb' ); ?>
+                            </td>
+                            <td class="rtbcb-actions">
+                                <button type="button" class="button rtbcb-retest" data-component="<?php echo esc_attr( $key ); ?>">
+                                    <?php esc_html_e( 'Retest', 'rtbcb' ); ?>
+                                </button>
+                                <button type="button" class="button rtbcb-view-details" data-component="<?php echo esc_attr( $key ); ?>">
+                                    <?php esc_html_e( 'Details', 'rtbcb' ); ?>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr class="rtbcb-test-details" id="rtbcb-details-<?php echo esc_attr( $key ); ?>" style="display: none;">
+                            <td colspan="6"><pre></pre></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
         </div>
     </div>
 </div>

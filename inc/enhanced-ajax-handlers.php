@@ -37,6 +37,8 @@ add_action( 'wp_ajax_rtbcb_test_company_overview_enhanced', 'rtbcb_ajax_test_com
 add_action( 'wp_ajax_rtbcb_calculate_roi_test', 'rtbcb_ajax_calculate_roi_test' );
 add_action( 'wp_ajax_rtbcb_evaluate_response_quality', 'rtbcb_ajax_evaluate_response_quality' );
 add_action( 'wp_ajax_rtbcb_optimize_prompt_tokens', 'rtbcb_ajax_optimize_prompt_tokens' );
+add_action( 'wp_ajax_rtbcb_run_api_health_tests', 'rtbcb_run_api_health_tests' );
+add_action( 'wp_ajax_rtbcb_run_single_api_test', 'rtbcb_run_single_api_test' );
 
 /**
  * Test individual LLM model with given prompt.
@@ -1142,5 +1144,153 @@ function rtbcb_assess_business_relevance( $text ) {
     $score = ( $found / count( $keywords ) ) * 100;
 
     return intval( max( 0, min( 100, $score ) ) );
+}
+
+/**
+ * Run all API health tests and return aggregated results.
+ *
+ * @return void
+ */
+function rtbcb_run_api_health_tests() {
+    if ( ! check_ajax_referer( 'rtbcb_api_health_tests', 'nonce', false ) ) {
+        wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
+    }
+
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'rtbcb' ) ], 403 );
+    }
+
+    $components = [
+        'chat'      => __( 'OpenAI Chat API', 'rtbcb' ),
+        'embedding' => __( 'OpenAI Embedding API', 'rtbcb' ),
+        'portal'    => __( 'Real Treasury Portal', 'rtbcb' ),
+        'roi'       => __( 'ROI Calculator', 'rtbcb' ),
+        'rag'       => __( 'RAG Index', 'rtbcb' ),
+    ];
+
+    $results = [];
+
+    $timestamp = current_time( 'mysql' );
+
+    foreach ( $components as $key => $label ) {
+        $start = microtime( true );
+
+        switch ( $key ) {
+            case 'chat':
+                $test = RTBCB_API_Tester::test_connection();
+                break;
+            case 'embedding':
+                $test = RTBCB_API_Tester::test_embedding();
+                break;
+            case 'portal':
+                $test = RTBCB_API_Tester::test_portal();
+                break;
+            case 'roi':
+                $test = RTBCB_API_Tester::test_roi_calculator();
+                break;
+            case 'rag':
+                $test = RTBCB_API_Tester::test_rag_index();
+                break;
+            default:
+                $test = [ 'success' => false, 'message' => __( 'Unknown test.', 'rtbcb' ) ];
+        }
+
+        $end = microtime( true );
+
+        $results[ $key ] = [
+            'name'          => $label,
+            'passed'        => (bool) ( $test['success'] ?? false ),
+            'response_time' => intval( ( $end - $start ) * 1000 ),
+            'message'       => sanitize_text_field( $test['message'] ?? '' ),
+            'details'       => $test,
+            'last_tested'   => $timestamp,
+        ];
+    }
+
+    $all_passed = ! array_filter( $results, function( $r ) {
+        return empty( $r['passed'] );
+    } );
+
+    update_option(
+        'rtbcb_last_api_test',
+        [
+            'timestamp' => $timestamp,
+            'results'   => $results,
+        ]
+    );
+
+    wp_send_json_success(
+        [
+            'timestamp'      => $timestamp,
+            'overall_status' => $all_passed ? 'all_passed' : 'some_failed',
+            'results'        => $results,
+        ]
+    );
+}
+
+/**
+ * Run a single API health test.
+ *
+ * @return void
+ */
+function rtbcb_run_single_api_test() {
+    if ( ! check_ajax_referer( 'rtbcb_api_health_tests', 'nonce', false ) ) {
+        wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
+    }
+
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'rtbcb' ) ], 403 );
+    }
+
+    $component = isset( $_POST['component'] ) ? sanitize_key( wp_unslash( $_POST['component'] ) ) : '';
+    $start     = microtime( true );
+
+    switch ( $component ) {
+        case 'chat':
+            $test = RTBCB_API_Tester::test_connection();
+            $name = __( 'OpenAI Chat API', 'rtbcb' );
+            break;
+        case 'embedding':
+            $test = RTBCB_API_Tester::test_embedding();
+            $name = __( 'OpenAI Embedding API', 'rtbcb' );
+            break;
+        case 'portal':
+            $test = RTBCB_API_Tester::test_portal();
+            $name = __( 'Real Treasury Portal', 'rtbcb' );
+            break;
+        case 'roi':
+            $test = RTBCB_API_Tester::test_roi_calculator();
+            $name = __( 'ROI Calculator', 'rtbcb' );
+            break;
+        case 'rag':
+            $test = RTBCB_API_Tester::test_rag_index();
+            $name = __( 'RAG Index', 'rtbcb' );
+            break;
+        default:
+            wp_send_json_error( [ 'message' => __( 'Invalid component.', 'rtbcb' ) ], 400 );
+    }
+
+    $end = microtime( true );
+
+    $result = [
+        'name'          => $name,
+        'passed'        => (bool) ( $test['success'] ?? false ),
+        'response_time' => intval( ( $end - $start ) * 1000 ),
+        'message'       => sanitize_text_field( $test['message'] ?? '' ),
+        'details'       => $test,
+    ];
+
+    $option                              = get_option( 'rtbcb_last_api_test', [ 'timestamp' => '', 'results' => [] ] );
+    $option['timestamp']                 = current_time( 'mysql' );
+    $result['last_tested']               = $option['timestamp'];
+    $option['results'][ $component ]     = $result;
+    update_option( 'rtbcb_last_api_test', $option );
+
+    wp_send_json_success(
+        [
+            'timestamp' => $option['timestamp'],
+            'result'    => $result,
+        ]
+    );
 }
 

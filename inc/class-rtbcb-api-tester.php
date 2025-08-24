@@ -57,6 +57,139 @@ class RTBCB_API_Tester {
     }
 
     /**
+     * Test OpenAI embedding API connectivity.
+     *
+     * @param string $text Sample text to embed.
+     * @return array Test result data.
+     */
+    public static function test_embedding( $text = 'test' ) {
+        $api_key = get_option( 'rtbcb_openai_api_key' );
+
+        if ( empty( $api_key ) ) {
+            return [
+                'success' => false,
+                'message' => __( 'No API key configured.', 'rtbcb' ),
+            ];
+        }
+
+        $model = get_option( 'rtbcb_embedding_model', 'text-embedding-3-small' );
+        $args  = [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $api_key,
+                'Content-Type'  => 'application/json',
+            ],
+            'body'    => wp_json_encode(
+                [
+                    'model' => $model,
+                    'input' => $text,
+                ]
+            ),
+            'timeout' => 30,
+        ];
+
+        $response = wp_remote_post( 'https://api.openai.com/v1/embeddings', $args );
+
+        if ( is_wp_error( $response ) ) {
+            return [
+                'success' => false,
+                'message' => __( 'Connection failed.', 'rtbcb' ),
+                'details' => $response->get_error_message(),
+            ];
+        }
+
+        $code = wp_remote_retrieve_response_code( $response );
+        if ( 200 !== $code ) {
+            $body    = wp_remote_retrieve_body( $response );
+            $decoded = json_decode( $body, true );
+            $error   = $decoded['error']['message'] ?? 'Unknown error';
+
+            return [
+                'success' => false,
+                'message' => sprintf( __( 'API error (%d)', 'rtbcb' ), $code ),
+                'details' => $error,
+            ];
+        }
+
+        $data   = json_decode( wp_remote_retrieve_body( $response ), true );
+        $vector = $data['data'][0]['embedding'] ?? [];
+
+        return [
+            'success'       => ! empty( $vector ),
+            'message'       => ! empty( $vector ) ? __( 'Embedding retrieved.', 'rtbcb' ) : __( 'Empty embedding response.', 'rtbcb' ),
+            'vector_length' => count( $vector ),
+        ];
+    }
+
+    /**
+     * Test portal vendor retrieval.
+     *
+     * @return array Test result data.
+     */
+    public static function test_portal() {
+        if ( ! has_filter( 'rt_portal_get_vendors' ) ) {
+            return [
+                'success' => false,
+                'message' => __( 'Portal filters not available.', 'rtbcb' ),
+            ];
+        }
+
+        $vendors = apply_filters( 'rt_portal_get_vendors', [] );
+        $count   = is_array( $vendors ) ? count( $vendors ) : 0;
+
+        return [
+            'success'     => $count > 0,
+            'message'     => $count > 0
+                ? sprintf( _n( '%d vendor retrieved.', '%d vendors retrieved.', $count, 'rtbcb' ), $count )
+                : __( 'Portal connection returned no vendors.', 'rtbcb' ),
+            'vendor_count' => $count,
+        ];
+    }
+
+    /**
+     * Test ROI calculator functionality.
+     *
+     * @return array Test result data.
+     */
+    public static function test_roi_calculator() {
+        $sample = [
+            'industry'               => 'banking',
+            'hours_reconciliation'   => 1,
+            'hours_cash_positioning' => 1,
+            'num_banks'              => 1,
+            'ftes'                   => 1,
+        ];
+
+        try {
+            $roi = RTBCB_Calculator::calculate_roi( $sample );
+        } catch ( Exception $e ) {
+            $roi = [];
+        }
+
+        return [
+            'success'   => is_array( $roi ) && ! empty( $roi ),
+            'message'   => ! empty( $roi ) ? __( 'ROI calculation successful.', 'rtbcb' ) : __( 'ROI calculation failed.', 'rtbcb' ),
+            'scenarios' => is_array( $roi ) ? array_keys( $roi ) : [],
+        ];
+    }
+
+    /**
+     * Test RAG index search capability.
+     *
+     * @return array Test result data.
+     */
+    public static function test_rag_index() {
+        $rag     = new RTBCB_RAG();
+        $results = $rag->search_similar( 'test', 1 );
+
+        return [
+            'success'      => is_array( $results ),
+            'message'      => is_array( $results ) ? __( 'RAG search executed.', 'rtbcb' ) : __( 'RAG search failed.', 'rtbcb' ),
+            'result_count' => is_array( $results ) ? count( $results ) : 0,
+            'last_indexed' => get_option( 'rtbcb_last_indexed', '' ),
+        ];
+    }
+
+    /**
      * Test API with a simple completion request.
      *
      * @param string $api_key API key.
