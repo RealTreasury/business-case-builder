@@ -489,135 +489,10 @@ function _arrayWithHoles(r) {
         });
       });
 
-      form.addEventListener('submit', submitHandler);
-      RTBCBAdmin.utils.bindClear($(clearBtn), $results);
-    },
-
-    gatherBasicCompanyInfo: _async(function gatherBasicCompanyInfo(companyName) {
-      var prompt = "Extract basic company information for " + companyName + ". Return only valid JSON:\n\n{\n  \"company_name\": \"string\",\n  \"industry\": \"string\", \n  \"primary_business\": \"string\",\n  \"annual_revenue\": \"string\",\n  \"employee_count\": \"string\",\n  \"headquarters\": \"string\",\n  \"public_private\": \"string\",\n  \"major_markets\": [\"string\"],\n  \"key_business_segments\": [\"string\"]\n}\n\nUse \"Not available\" for missing data.";
-
-      var formData = new FormData();
-      formData.append('action', 'rtbcb_openai_request');
-      formData.append('prompt', prompt);
-      formData.append('max_tokens', '800');
-      formData.append('temperature', '0.3');
-      formData.append('nonce', rtbcbAdmin.nonce);
-
-      return _await(fetch(rtbcbAdmin.ajax_url, {
-        method: 'POST',
-        body: formData
-      }), function (response) {
-        if (!response.ok) {
-          throw new Error('Phase 1 API call failed: ' + response.status);
-        }
-        return _await(response.json(), function (data) {
-          if (!data.success) {
-            throw new Error(data.data.message || 'Phase 1 failed');
-          }
-          return JSON.parse(data.data.response);
-        });
-      });
-    }),
-
-    conductDetailedAnalysis: _async(function conductDetailedAnalysis(basicInfo) {
-      var analysisSteps = {
-        financial: 'Company: ' + basicInfo.company_name + ', Industry: ' + basicInfo.industry + '\n\nProvide financial treasury analysis. Return valid JSON:\n{\n  "cash_position": "string",\n  "debt_profile": "string", \n  "working_capital": "string",\n  "currency_exposure": "string"\n}',
-        challenges: 'Company: ' + basicInfo.company_name + ', Industry: ' + basicInfo.industry + '\n\nIdentify treasury challenges. Return valid JSON:\n{\n  "primary_challenges": ["string"],\n  "risk_factors": ["string"],\n  "compliance_requirements": ["string"]\n}',
-        technology: 'Company: ' + basicInfo.company_name + ', Industry: ' + basicInfo.industry + '\n\nSuggest treasury technology solutions. Return valid JSON:\n{\n  "immediate_wins": ["string"],\n  "strategic_initiatives": ["string"],\n  "implementation_priorities": ["string"]\n}'
-      };
-
-      var results = {};
-
-      return _await(_forOf(Object.keys(analysisSteps), function (key) {
-        var prompt = analysisSteps[key];
-        return _continue(_catch(function () {
-          var formData = new FormData();
-          formData.append('action', 'rtbcb_openai_request');
-          formData.append('prompt', prompt);
-          formData.append('max_tokens', '600');
-          formData.append('temperature', '0.4');
-          formData.append('nonce', rtbcbAdmin.nonce);
-          return _await(fetch(rtbcbAdmin.ajax_url, {
-            method: 'POST',
-            body: formData
-          }), function (response) {
-            if (response.ok) {
-              return _await(response.json(), function (data) {
-                if (data.success) {
-                  results[key] = JSON.parse(data.data.response);
-                }
-              });
-            }
-          });
-        }, function (error) {
-          console.warn('Step ' + key + ' failed:', error);
-          results[key] = { error: 'Failed to analyze ' + key };
-        }), function () {
-          return _await(new Promise(function (resolve) {
-            return setTimeout(resolve, 500);
-          }));
-        });
-      }), function () {
-        return results;
-      });
-    }),
-
-    compileFinalReport: function compileFinalReport(basicInfo, analysisResults) {
-      var analysis = basicInfo.company_name + ' is a ' + basicInfo.public_private + ' company in the ' + basicInfo.industry + ' industry';
-
-      if (basicInfo.annual_revenue !== 'Not available') {
-        analysis += ' with ' + basicInfo.annual_revenue + ' in annual revenue';
-      }
-
-      if (basicInfo.employee_count !== 'Not available') {
-        analysis += ' and approximately ' + basicInfo.employee_count + ' employees';
-      }
-
-      analysis += '. The company operates primarily in ' + basicInfo.primary_business;
-
-      if (basicInfo.key_business_segments.length > 0 && basicInfo.key_business_segments[0] !== 'Not available') {
-        analysis += ' with key business segments including ' + basicInfo.key_business_segments.join(', ');
-      }
-
-      analysis += '. ';
-
-      if (analysisResults.financial && !analysisResults.financial.error) {
-        var fin = analysisResults.financial;
-        analysis += 'From a treasury perspective, the company maintains ' + fin.cash_position + ' with ' + fin.debt_profile + '. ';
-        analysis += 'Working capital management shows ' + fin.working_capital + '. ';
-        if (fin.currency_exposure) {
-          analysis += 'Currency exposure includes ' + fin.currency_exposure + '. ';
-        }
-      }
-
-      if (analysisResults.challenges && !analysisResults.challenges.error) {
-        var challenges = analysisResults.challenges;
-        if (challenges.primary_challenges.length > 0) {
-          analysis += 'Primary treasury challenges include ' + challenges.primary_challenges.join(', ') + '. ';
-        }
-      }
-
-      var recommendations = [];
-      if (analysisResults.technology && !analysisResults.technology.error) {
-        var tech = analysisResults.technology;
-        recommendations = recommendations.concat(tech.immediate_wins, tech.strategic_initiatives);
-      }
-
-      var references = [];
-      if (basicInfo.public_private === 'Public') {
-        references.push('SEC Edgar Database - ' + basicInfo.company_name);
-        references.push(basicInfo.company_name + ' Investor Relations');
-      }
-      references.push(basicInfo.industry + ' Industry Analysis');
-
-      return {
-        analysis: analysis,
-        recommendations: recommendations.filter(function (rec) {
-          return rec && rec.length > 0;
-        }),
-        references: references
-      };
-    },
+    form.addEventListener('submit', submitHandler);
+    RTBCBAdmin.utils.bindClear($(clearBtn), $results);
+  },
+  // Company analysis methods are defined after the RTBCBAdmin object
     bindIndustryOverviewTest: function bindIndustryOverviewTest() {
       if (!rtbcbAdmin || rtbcbAdmin.page !== 'rtbcb-test-industry-overview') {
         return;
@@ -1161,13 +1036,139 @@ function _arrayWithHoles(r) {
         iframe.contentWindow.print();
       }
     },
-    closeModal: function closeModal() {
-      var modal = document.getElementById('rtbcb-lead-modal');
-      if (modal) {
-        modal.style.display = 'none';
-      }
+  closeModal: function closeModal() {
+    var modal = document.getElementById('rtbcb-lead-modal');
+    if (modal) {
+      modal.style.display = 'none';
     }
+  }
+};
+
+RTBCBAdmin.gatherBasicCompanyInfo = _async(function (companyName) {
+  var prompt = "Extract basic company information for " + companyName + ". Return only valid JSON:\n\n{\n  \"company_name\": \"string\",\n  \"industry\": \"string\", \n  \"primary_business\": \"string\",\n  \"annual_revenue\": \"string\",\n  \"employee_count\": \"string\",\n  \"headquarters\": \"string\",\n  \"public_private\": \"string\",\n  \"major_markets\": [\"string\"],\n  \"key_business_segments\": [\"string\"]\n}\n\nUse \"Not available\" for missing data.";
+
+  var formData = new FormData();
+  formData.append('action', 'rtbcb_openai_request');
+  formData.append('prompt', prompt);
+  formData.append('max_tokens', '800');
+  formData.append('temperature', '0.3');
+  formData.append('nonce', rtbcbAdmin.nonce);
+
+  return _await(fetch(rtbcbAdmin.ajax_url, {
+    method: 'POST',
+    body: formData
+  }), function (response) {
+    if (!response.ok) {
+      throw new Error('Phase 1 API call failed: ' + response.status);
+    }
+    return _await(response.json(), function (data) {
+      if (!data.success) {
+        throw new Error(data.data.message || 'Phase 1 failed');
+      }
+      return JSON.parse(data.data.response);
+    });
+  });
+});
+
+RTBCBAdmin.conductDetailedAnalysis = _async(function (basicInfo) {
+  var analysisSteps = {
+    financial: 'Company: ' + basicInfo.company_name + ', Industry: ' + basicInfo.industry + '\n\nProvide financial treasury analysis. Return valid JSON:\n{\n  "cash_position": "string",\n  "debt_profile": "string", \n  "working_capital": "string",\n  "currency_exposure": "string"\n}',
+    challenges: 'Company: ' + basicInfo.company_name + ', Industry: ' + basicInfo.industry + '\n\nIdentify treasury challenges. Return valid JSON:\n{\n  "primary_challenges": ["string"],\n  "risk_factors": ["string"],\n  "compliance_requirements": ["string"]\n}',
+    technology: 'Company: ' + basicInfo.company_name + ', Industry: ' + basicInfo.industry + '\n\nSuggest treasury technology solutions. Return valid JSON:\n{\n  "immediate_wins": ["string"],\n  "strategic_initiatives": ["string"],\n  "implementation_priorities": ["string"]\n}'
   };
+
+  var results = {};
+
+  return _await(_forOf(Object.keys(analysisSteps), function (key) {
+    var prompt = analysisSteps[key];
+    return _continue(_catch(function () {
+      var formData = new FormData();
+      formData.append('action', 'rtbcb_openai_request');
+      formData.append('prompt', prompt);
+      formData.append('max_tokens', '600');
+      formData.append('temperature', '0.4');
+      formData.append('nonce', rtbcbAdmin.nonce);
+      return _await(fetch(rtbcbAdmin.ajax_url, {
+        method: 'POST',
+        body: formData
+      }), function (response) {
+        if (response.ok) {
+          return _await(response.json(), function (data) {
+            if (data.success) {
+              results[key] = JSON.parse(data.data.response);
+            }
+          });
+        }
+      });
+    }, function (error) {
+      console.warn('Step ' + key + ' failed:', error);
+      results[key] = { error: 'Failed to analyze ' + key };
+    }), function () {
+      return _await(new Promise(function (resolve) {
+        return setTimeout(resolve, 500);
+      }));
+    });
+  }), function () {
+    return results;
+  });
+});
+
+RTBCBAdmin.compileFinalReport = function (basicInfo, analysisResults) {
+  var analysis = basicInfo.company_name + ' is a ' + basicInfo.public_private + ' company in the ' + basicInfo.industry + ' industry';
+
+  if (basicInfo.annual_revenue !== 'Not available') {
+    analysis += ' with ' + basicInfo.annual_revenue + ' in annual revenue';
+  }
+
+  if (basicInfo.employee_count !== 'Not available') {
+    analysis += ' and approximately ' + basicInfo.employee_count + ' employees';
+  }
+
+  analysis += '. The company operates primarily in ' + basicInfo.primary_business;
+
+  if (basicInfo.key_business_segments.length > 0 && basicInfo.key_business_segments[0] !== 'Not available') {
+    analysis += ' with key business segments including ' + basicInfo.key_business_segments.join(', ');
+  }
+
+  analysis += '. ';
+
+  if (analysisResults.financial && !analysisResults.financial.error) {
+    var fin = analysisResults.financial;
+    analysis += 'From a treasury perspective, the company maintains ' + fin.cash_position + ' with ' + fin.debt_profile + '. ';
+    analysis += 'Working capital management shows ' + fin.working_capital + '. ';
+    if (fin.currency_exposure) {
+      analysis += 'Currency exposure includes ' + fin.currency_exposure + '. ';
+    }
+  }
+
+  if (analysisResults.challenges && !analysisResults.challenges.error) {
+    var challenges = analysisResults.challenges;
+    if (challenges.primary_challenges.length > 0) {
+      analysis += 'Primary treasury challenges include ' + challenges.primary_challenges.join(', ') + '. ';
+    }
+  }
+
+  var recommendations = [];
+  if (analysisResults.technology && !analysisResults.technology.error) {
+    var tech = analysisResults.technology;
+    recommendations = recommendations.concat(tech.immediate_wins, tech.strategic_initiatives);
+  }
+
+  var references = [];
+  if (basicInfo.public_private === 'Public') {
+    references.push('SEC Edgar Database - ' + basicInfo.company_name);
+    references.push(basicInfo.company_name + ' Investor Relations');
+  }
+  references.push(basicInfo.industry + ' Industry Analysis');
+
+  return {
+    analysis: analysis,
+    recommendations: recommendations.filter(function (rec) {
+      return rec && rec.length > 0;
+    }),
+    references: references
+  };
+};
   var RTBCBLeadsManager = /*#__PURE__*/(function () {
     function RTBCBLeadsManager() {
       _classCallCheck(this, RTBCBLeadsManager);
