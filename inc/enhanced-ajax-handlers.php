@@ -40,6 +40,185 @@ function rtbcb_prepare_enhanced_result( $overview, $debug = [] ) {
 }
 
 /**
+ * Execute LLM test matrix across multiple models.
+ *
+ * @param array $input_data Sanitized input data.
+ * @return array
+ * @throws Exception When API key not configured.
+ */
+function rtbcb_execute_llm_test_matrix( $input_data ) {
+    $results = [];
+    $api_key = get_option( 'rtbcb_openai_api_key' );
+
+    if ( empty( $api_key ) ) {
+        throw new Exception( __( 'OpenAI API key not configured.', 'rtbcb' ) );
+    }
+
+    // Model pricing per 1K tokens (input)
+    $pricing = [
+        'mini'     => 0.00015, // GPT-4O Mini
+        'premium'  => 0.005,   // GPT-4O
+        'advanced' => 0.015,   // O1-Preview
+    ];
+
+    foreach ( $input_data['modelIds'] as $model_key ) {
+        $model_name = get_option( "rtbcb_{$model_key}_model", rtbcb_get_default_model( $model_key ) );
+
+        $start_time = microtime( true );
+
+        try {
+            $messages = [
+                [ 'role' => 'user', 'content' => $input_data['promptA'] ],
+            ];
+
+            $request_data = [
+                'model'      => $model_name,
+                'messages'   => $messages,
+                'max_tokens' => $input_data['maxTokens'],
+            ];
+
+            // Add temperature if model supports it
+            if ( rtbcb_model_supports_temperature( $model_name ) ) {
+                $request_data['temperature'] = $input_data['temperature'];
+            }
+
+            $response = wp_remote_post(
+                'https://api.openai.com/v1/chat/completions',
+                [
+                    'headers' => [
+                        'Authorization' => 'Bearer ' . $api_key,
+                        'Content-Type'  => 'application/json',
+                    ],
+                    'body'    => wp_json_encode( $request_data ),
+                    'timeout' => 60,
+                ]
+            );
+
+            $end_time      = microtime( true );
+            $response_time = round( ( $end_time - $start_time ) * 1000 ); // ms
+
+            if ( is_wp_error( $response ) ) {
+                $results[ $model_key ] = [
+                    'success'       => false,
+                    'error'         => $response->get_error_message(),
+                    'response_time' => $response_time,
+                    'model_key'     => $model_key,
+                    'model_name'    => $model_name,
+                ];
+                continue;
+            }
+
+            $response_code = wp_remote_retrieve_response_code( $response );
+            $response_body = wp_remote_retrieve_body( $response );
+
+            if ( 200 !== $response_code ) {
+                $results[ $model_key ] = [
+                    'success'       => false,
+                    'error'         => sprintf( __( 'API error %d: %s', 'rtbcb' ), $response_code, $response_body ),
+                    'response_time' => $response_time,
+                    'model_key'     => $model_key,
+                    'model_name'    => $model_name,
+                ];
+                continue;
+            }
+
+            $decoded = json_decode( $response_body, true );
+
+            if ( ! isset( $decoded['choices'][0]['message']['content'] ) ) {
+                $results[ $model_key ] = [
+                    'success'       => false,
+                    'error'         => __( 'Unexpected API response format', 'rtbcb' ),
+                    'response_time' => $response_time,
+                    'model_key'     => $model_key,
+                    'model_name'    => $model_name,
+                ];
+                continue;
+            }
+
+            $content       = $decoded['choices'][0]['message']['content'];
+            $tokens_used   = $decoded['usage']['total_tokens'] ?? 0;
+            $cost_estimate = ( $tokens_used / 1000 ) * ( $pricing[ $model_key ] ?? 0.005 );
+
+            // Calculate quality metrics
+            $quality_score = rtbcb_calculate_llm_response_quality( $content, $input_data['promptA'] );
+
+            $results[ $model_key ] = [
+                'success'         => true,
+                'content'         => $content,
+                'response_time'   => $response_time,
+                'tokens_used'     => $tokens_used,
+                'cost_estimate'   => round( $cost_estimate, 6 ),
+                'quality_score'   => $quality_score,
+                'model_key'       => $model_key,
+                'model_name'      => $model_name,
+                'word_count'      => str_word_count( wp_strip_all_tags( $content ) ),
+                'character_count' => strlen( $content ),
+            ];
+
+        } catch ( Exception $e ) {
+            $end_time      = microtime( true );
+            $response_time = round( ( $end_time - $start_time ) * 1000 );
+
+            $results[ $model_key ] = [
+                'success'       => false,
+                'error'         => $e->getMessage(),
+                'response_time' => $response_time,
+                'model_key'     => $model_key,
+                'model_name'    => $model_name,
+            ];
+        }
+    }
+
+    return $results;
+}
+
+/**
+ * Calculate LLM response quality score.
+ *
+ * @param string $content Model response content.
+ * @param string $prompt  Prompt used for the request.
+ * @return int
+ */
+function rtbcb_calculate_llm_response_quality( $content, $prompt ) {
+    $score = 50; // Base score
+
+    // Length scoring
+    $word_count = str_word_count( wp_strip_all_tags( $content ) );
+    if ( $word_count >= 50 && $word_count <= 500 ) {
+        $score += 15;
+    } elseif ( $word_count > 25 ) {
+        $score += 10;
+    }
+
+    // Relevance scoring - check for business/treasury terms
+    $business_terms = [ 'treasury', 'cash', 'financial', 'business', 'ROI', 'investment', 'cost', 'benefit' ];
+    $found_terms    = 0;
+    foreach ( $business_terms as $term ) {
+        if ( false !== stripos( $content, $term ) ) {
+            $found_terms++;
+        }
+    }
+    $score += min( 20, $found_terms * 3 );
+
+    // Structure scoring
+    $sentences = substr_count( $content, '.' ) + substr_count( $content, '!' ) + substr_count( $content, '?' );
+    if ( $sentences >= 2 && $sentences <= 10 ) {
+        $score += 10;
+    }
+
+    // Coherence indicators
+    $coherence_words = [ 'however', 'therefore', 'additionally', 'furthermore', 'moreover', 'consequently' ];
+    foreach ( $coherence_words as $word ) {
+        if ( false !== stripos( $content, $word ) ) {
+            $score += 5;
+            break; // Only award once
+        }
+    }
+
+    return min( 100, max( 0, $score ) );
+}
+
+/**
  * LLM Integration Testing AJAX Handlers - Add to enhanced-ajax-handlers.php
  */
 
