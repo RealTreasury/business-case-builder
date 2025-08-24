@@ -32,6 +32,8 @@ $available_models = [
 global $wpdb;
 $last_indexed = get_option( 'rtbcb_last_indexed', '' );
 $index_size   = (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . $wpdb->prefix . 'rtbcb_rag_index' );
+$portal_active = (bool) ( has_filter( 'rt_portal_get_vendors' ) || has_filter( 'rt_portal_get_vendor_notes' ) );
+$last_index_display = $last_indexed ? $last_indexed : __( 'Never', 'rtbcb' );
 ?>
 
 <div class="wrap rtbcb-unified-test-dashboard">
@@ -76,6 +78,10 @@ $index_size   = (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . $wpdb->prefix . 
             <a href="#api-health" class="nav-tab" data-tab="api-health">
                 <span class="dashicons dashicons-cloud"></span>
                 <?php esc_html_e( 'API Health', 'rtbcb' ); ?>
+            </a>
+            <a href="#data-health" class="nav-tab" data-tab="data-health">
+                <span class="dashicons dashicons-heart"></span>
+                <?php esc_html_e( 'Data Health', 'rtbcb' ); ?>
             </a>
             <a href="#report-preview" class="nav-tab" data-tab="report-preview">
                 <span class="dashicons dashicons-media-document"></span>
@@ -1067,6 +1073,46 @@ $index_size   = (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . $wpdb->prefix . 
                             <td colspan="6"><pre></pre></td>
                         </tr>
                     <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Data Health Section -->
+    <div id="data-health" class="rtbcb-test-section" style="display: none;">
+        <div class="rtbcb-test-panel">
+            <div class="rtbcb-panel-header">
+                <h2><?php esc_html_e( 'Data Health', 'rtbcb' ); ?></h2>
+                <p><?php esc_html_e( 'Verify database, API, and file system health.', 'rtbcb' ); ?></p>
+            </div>
+            <div class="rtbcb-data-health-summary">
+                <p>
+                    <strong><?php esc_html_e( 'Portal Integration:', 'rtbcb' ); ?></strong>
+                    <?php echo $portal_active ? esc_html__( 'Active', 'rtbcb' ) : esc_html__( 'Inactive', 'rtbcb' ); ?>
+                </p>
+                <p>
+                    <strong><?php esc_html_e( 'Last RAG Index:', 'rtbcb' ); ?></strong>
+                    <?php echo esc_html( $last_index_display ); ?>
+                </p>
+            </div>
+            <div class="rtbcb-data-health-controls">
+                <button type="button" id="rtbcb-run-data-health" class="button button-primary">
+                    <span class="dashicons dashicons-update"></span>
+                    <?php esc_html_e( 'Run Checks', 'rtbcb' ); ?>
+                </button>
+            </div>
+            <table class="rtbcb-data-health-table wp-list-table widefat fixed striped">
+                <thead>
+                    <tr>
+                        <th><?php esc_html_e( 'Status', 'rtbcb' ); ?></th>
+                        <th><?php esc_html_e( 'Check', 'rtbcb' ); ?></th>
+                        <th><?php esc_html_e( 'Message', 'rtbcb' ); ?></th>
+                    </tr>
+                </thead>
+                <tbody id="rtbcb-data-health-results">
+                    <tr>
+                        <td colspan="3"><?php esc_html_e( 'No checks run yet.', 'rtbcb' ); ?></td>
+                    </tr>
                 </tbody>
             </table>
         </div>

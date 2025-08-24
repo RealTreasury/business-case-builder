@@ -56,6 +56,9 @@
                 this.toggleApiDetails(comp);
             });
 
+            // Data health controls
+            $('#rtbcb-run-data-health').on('click', this.runDataHealthChecks.bind(this));
+
             // RAG testing controls
             $('#rtbcb-run-rag-query').on('click', this.runRagQuery.bind(this));
             $('#rtbcb-rag-rebuild').on('click', this.rebuildRagIndex.bind(this));
@@ -1963,6 +1966,36 @@
                 message = rtbcbDashboard.strings.errorsDetected.replace('%d', failures);
             }
             $('#rtbcb-api-health-notice').text(message);
+        },
+
+        // Run data health checks
+        runDataHealthChecks() {
+            const button = $('#rtbcb-run-data-health').prop('disabled', true);
+            $('#rtbcb-data-health-results').html(`<tr><td colspan="3">${rtbcbDashboard.strings.running}</td></tr>`);
+
+            $.post(rtbcbDashboard.ajaxurl, {
+                action: 'rtbcb_run_data_health_checks',
+                nonce: rtbcbDashboard.nonces.dataHealth
+            }).done((response) => {
+                if (response.success) {
+                    const rows = Object.values(response.data).map(check => {
+                        const icon = check.passed ? 'dashicons-yes-alt' : 'dashicons-warning';
+                        const statusClass = check.passed ? 'status-good' : 'status-error';
+                        return `<tr>
+                            <td><span class="rtbcb-status-indicator ${statusClass}"><span class="dashicons ${icon}"></span></span></td>
+                            <td>${this.escapeHtml(check.label)}</td>
+                            <td>${this.escapeHtml(check.message || '')}</td>
+                        </tr>`;
+                    }).join('');
+                    $('#rtbcb-data-health-results').html(rows);
+                } else {
+                    $('#rtbcb-data-health-results').html(`<tr><td colspan="3">${rtbcbDashboard.strings.error}</td></tr>`);
+                }
+            }).fail(() => {
+                $('#rtbcb-data-health-results').html(`<tr><td colspan="3">${rtbcbDashboard.strings.error}</td></tr>`);
+            }).always(() => {
+                button.prop('disabled', false);
+            });
         },
 
         // Generate report preview
