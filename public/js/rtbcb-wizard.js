@@ -384,74 +384,77 @@ class BusinessCaseBuilder {
         }
     }
 
-    async handleSubmit() {
+    handleSubmit() {
         // Show loading state
         this.showProgress();
 
-        try {
-            const formData = new FormData();
-            const rawData = new FormData(this.form);
-            const numericFields = ['hours_reconciliation', 'hours_cash_positioning', 'num_banks', 'ftes'];
+        const formData = new FormData();
+        const rawData = new FormData(this.form);
+        const numericFields = ['hours_reconciliation', 'hours_cash_positioning', 'num_banks', 'ftes'];
 
-            for (const [key, value] of rawData.entries()) {
-                if (numericFields.includes(key)) {
-                    const numValue = Number(value);
-                    formData.append(key, Number.isFinite(numValue) ? numValue : 0);
-                } else {
-                    formData.append(key, value);
-                }
-            }
-            formData.append('action', 'rtbcb_generate_case');
-
-            console.log('RTBCB: Submitting form data:', Object.fromEntries(formData));
-
-            const response = await fetch(ajaxObj.ajax_url, {
-                method: 'POST',
-                body: formData
-            });
-
-            console.log('RTBCB: Response status:', response.status);
-            console.log('RTBCB: Response headers:', Object.fromEntries(response.headers));
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('RTBCB: Server error response:', errorText);
-
-                let errorMessage = `Server responded with status ${response.status}`;
-                try {
-                    const errorJson = JSON.parse(errorText);
-                    errorMessage = errorJson.data?.message || errorMessage;
-                } catch (parseError) {
-                    console.error('RTBCB: Could not parse error response as JSON:', parseError);
-                }
-
-                throw new Error(errorMessage);
-            }
-
-            const result = await response.json();
-            console.log('RTBCB: Parsed response:', result);
-
-            if (result.success) {
-                console.log('RTBCB: Business case generated successfully');
-                this.showResults(result.data);
+        rawData.forEach((value, key) => {
+            if (numericFields.includes(key)) {
+                const numValue = Number(value);
+                formData.append(key, Number.isFinite(numValue) ? numValue : 0);
             } else {
-                const errorMessage = result.data?.message || 'Failed to generate business case';
-                console.error('RTBCB: Business case generation failed:', errorMessage);
-                throw new Error(errorMessage);
+                formData.append(key, value);
             }
-        } catch (error) {
-            console.error('RTBCB: Submission error details:', {
-                message: error.message,
-                stack: error.stack,
-                type: error.constructor.name
+        });
+        formData.append('action', 'rtbcb_generate_case');
+
+        console.log('RTBCB: Submitting form data:', Object.fromEntries(formData));
+
+        return fetch(ajaxObj.ajax_url, {
+            method: 'POST',
+            body: formData
+        })
+            .then((response) => {
+                console.log('RTBCB: Response status:', response.status);
+                console.log('RTBCB: Response headers:', Object.fromEntries(response.headers));
+
+                if (!response.ok) {
+                    return response.text().then((errorText) => {
+                        console.error('RTBCB: Server error response:', errorText);
+
+                        let errorMessage = `Server responded with status ${response.status}`;
+                        try {
+                            const errorJson = JSON.parse(errorText);
+                            errorMessage = errorJson.data?.message || errorMessage;
+                        } catch (parseError) {
+                            console.error('RTBCB: Could not parse error response as JSON:', parseError);
+                        }
+
+                        throw new Error(errorMessage);
+                    });
+                }
+
+                return response.json();
+            })
+            .then((result) => {
+                console.log('RTBCB: Parsed response:', result);
+
+                if (result.success) {
+                    console.log('RTBCB: Business case generated successfully');
+                    this.showResults(result.data);
+                } else {
+                    const errorMessage = result.data?.message || 'Failed to generate business case';
+                    console.error('RTBCB: Business case generation failed:', errorMessage);
+                    throw new Error(errorMessage);
+                }
+            })
+            .catch((error) => {
+                console.error('RTBCB: Submission error details:', {
+                    message: error.message,
+                    stack: error.stack,
+                    type: error.constructor.name
+                });
+
+                const displayMessage = error.name === 'TypeError'
+                    ? 'Network error. Please check your connection and try again.'
+                    : error.message;
+
+                this.showError(displayMessage);
             });
-
-            const displayMessage = error.name === 'TypeError'
-                ? 'Network error. Please check your connection and try again.'
-                : error.message;
-
-            this.showError(displayMessage);
-        }
     }
 
     showProgress() {
