@@ -1230,7 +1230,7 @@ Respond with the JSON structure only. No additional text.";
         }
 
         $endpoint          = 'https://api.openai.com/v1/responses';
-        $model_name        = sanitize_text_field( $model ?: 'gpt-5-mini' );
+        $model_name        = sanitize_text_field( $model ?: rtbcb_get_default_model( 'gpt5_mini' ) );
         $model_name        = rtbcb_normalize_model_name( $model_name );
         $max_output_tokens = max( 256, intval( $max_output_tokens ?? 4000 ) ); // Reduced for faster response
 

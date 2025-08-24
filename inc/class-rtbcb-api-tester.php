@@ -72,7 +72,7 @@ class RTBCB_API_Tester {
             ];
         }
 
-        $model = get_option( 'rtbcb_embedding_model', 'text-embedding-3-small' );
+        $model = get_option( 'rtbcb_embedding_model', rtbcb_get_default_model( 'embedding' ) );
         $args  = [
             'headers' => [
                 'Authorization' => 'Bearer ' . $api_key,
