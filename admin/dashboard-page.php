@@ -68,7 +68,7 @@ $avg_roi = intval( $roi_stats['avg_base'] ?? 0 );
                     </div>
                 </div>
                 <?php if ( ! $api_key_valid ) : ?>
-                    <a href="<?php echo esc_url( admin_url( 'admin.php?page=rtbcb-settings' ) ); ?>" class="rtbcb-status-action">
+                    <a href="<?php echo esc_url( admin_url( 'admin.php?page=rtbcb-unified-tests#settings' ) ); ?>" class="rtbcb-status-action">
                         <?php esc_html_e( 'Configure', 'rtbcb' ); ?>
                     </a>
                 <?php endif; ?>
@@ -229,7 +229,7 @@ $avg_roi = intval( $roi_stats['avg_base'] ?? 0 );
             </div>
 
             <div class="rtbcb-quick-actions">
-                <a href="<?php echo esc_url( admin_url( 'admin.php?page=rtbcb-settings' ) ); ?>" class="rtbcb-action-card">
+                <a href="<?php echo esc_url( admin_url( 'admin.php?page=rtbcb-unified-tests#settings' ) ); ?>" class="rtbcb-action-card">
                     <div class="rtbcb-action-icon">
                         <span class="dashicons dashicons-admin-generic"></span>
                     </div>

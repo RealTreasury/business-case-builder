@@ -102,6 +102,7 @@ class RTBCB_Admin {
                         'noChecks'       => __( 'No checks run yet.', 'rtbcb' ),
                         'lastIndexed'    => __( 'Last indexed: %s', 'rtbcb' ),
                         'entries'        => __( 'Entries: %d', 'rtbcb' ),
+                        'settingsSaved'  => __( 'Settings saved.', 'rtbcb' ),
                     ],
                     'models'  => [
                         'mini'     => get_option( 'rtbcb_mini_model', 'gpt-4o-mini' ),
@@ -112,7 +113,7 @@ class RTBCB_Admin {
                         'lastResults' => get_option( 'rtbcb_last_api_test', [] ),
                     ],
                     'urls'     => [
-                        'settings' => admin_url( 'admin.php?page=rtbcb-settings' ),
+                        'settings' => admin_url( 'admin.php?page=rtbcb-unified-tests#settings' ),
                     ],
                 ]
             );

@@ -59,6 +59,10 @@
             // Data health controls
             $('#rtbcb-run-data-health').on('click', this.runDataHealthChecks.bind(this));
 
+            // Settings controls
+            $('#rtbcb-dashboard-settings-form').on('submit', this.saveDashboardSettings.bind(this));
+            $('#rtbcb-run-tests').on('click', this.runAllApiTests.bind(this));
+
             // RAG testing controls
             $('#rtbcb-run-rag-query').on('click', this.runRagQuery.bind(this));
             $('#rtbcb-rag-rebuild').on('click', this.rebuildRagIndex.bind(this));
@@ -80,8 +84,13 @@
 
         // Initialize tab system
         initializeTabs() {
-            // Set initial active tab
-            this.switchTab('company-overview');
+            const hash = window.location.hash.replace('#', '');
+            const validTabs = ['company-overview','roi-calculator','llm-tests','rag-system','api-health','data-health','report-preview','settings'];
+            if (validTabs.includes(hash)) {
+                this.switchTab(hash);
+            } else {
+                this.switchTab('company-overview');
+            }
         },
 
         // Handle tab switching
@@ -111,7 +120,7 @@
 
         // Check system status on load
         checkSystemStatus() {
-            const apiKey = $('#rtbcb_openai_api_key').length;
+            const apiKey = $('#rtbcb_openai_api_key').val().trim();
             const companyData = $('.rtbcb-status-indicator').hasClass('status-good');
 
             if (!apiKey) {
@@ -2015,6 +2024,27 @@
                 this.showNotification(rtbcbDashboard.strings.error, 'error');
             }).always(() => {
                 button.prop('disabled', false);
+            });
+        },
+
+        // Save dashboard settings
+        saveDashboardSettings(e) {
+            e.preventDefault();
+            const $form = $('#rtbcb-dashboard-settings-form');
+            let data = $form.serialize();
+            data += '&action=rtbcb_save_dashboard_settings';
+            const $button = $form.find('button[type="submit"]').prop('disabled', true);
+
+            $.post(rtbcbDashboard.ajaxurl, data).done((response) => {
+                if (response.success) {
+                    this.showNotification(rtbcbDashboard.strings.settingsSaved, 'success');
+                } else {
+                    this.showNotification(response.data?.message || rtbcbDashboard.strings.error, 'error');
+                }
+            }).fail(() => {
+                this.showNotification(rtbcbDashboard.strings.error, 'error');
+            }).always(() => {
+                $button.prop('disabled', false);
             });
         },
 
