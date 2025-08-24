@@ -102,6 +102,19 @@ if ( ! function_exists( 'wp_remote_post' ) ) {
     }
 }
 
+if ( ! function_exists( 'wp_remote_get' ) ) {
+    function wp_remote_get( $url, $args ) {
+        return [
+            'body' => json_encode([
+                'data' => [
+                    [ 'id' => 'gpt-5-mini' ],
+                    [ 'id' => 'gpt-4o' ],
+                ],
+            ]),
+        ];
+    }
+}
+
 if ( ! function_exists( 'wp_remote_retrieve_response_code' ) ) {
     function wp_remote_retrieve_response_code( $response ) {
         return 200;
@@ -114,11 +127,6 @@ if ( ! function_exists( 'wp_remote_retrieve_body' ) ) {
     }
 }
 
-if ( ! function_exists( 'rtbcb_model_supports_temperature' ) ) {
-    function rtbcb_model_supports_temperature( $model ) {
-        return true;
-    }
-}
 
 $method = new ReflectionMethod( RTBCB_API_Tester::class, 'test_completion' );
 $method->setAccessible( true );
@@ -143,6 +151,20 @@ if ( false !== strpos( $combined, 'max_output_tokens' ) ) {
 $parsed = rtbcb_parse_gpt5_response( $mock_response );
 if ( 'This is a meaningful response message.' !== ( $parsed['output_text'] ?? '' ) ) {
     echo "Failed to extract message text\n";
+    exit( 1 );
+}
+
+$connection = RTBCB_API_Tester::test_connection( 'sk-validkey123456789012345678901234' );
+if ( empty( $connection['success'] ) ) {
+    echo "API connection test failed\n";
+    exit( 1 );
+}
+if ( empty( $connection['models_available'] ) || count( $connection['models_available'] ) !== 2 ) {
+    echo "API tester did not list models\n";
+    exit( 1 );
+}
+if ( empty( $connection['details'] ) ) {
+    echo "API tester missing details\n";
     exit( 1 );
 }
 

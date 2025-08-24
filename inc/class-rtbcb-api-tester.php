@@ -34,7 +34,26 @@ class RTBCB_API_Tester {
             ];
         }
 
-        return self::test_completion( $api_key );
+        $result = self::test_completion( $api_key );
+
+        if ( is_wp_error( $result ) ) {
+            return $result;
+        }
+
+        if ( isset( $result['parsed_length'], $result['raw_length'] ) ) {
+            $result['details'] = sprintf(
+                __( 'Parsed %1$d characters from %2$d bytes.', 'rtbcb' ),
+                $result['parsed_length'],
+                $result['raw_length']
+            );
+        }
+
+        $models = self::fetch_available_models( $api_key );
+        if ( ! empty( $models ) ) {
+            $result['models_available'] = $models;
+        }
+
+        return $result;
     }
 
     /**
@@ -105,6 +124,45 @@ class RTBCB_API_Tester {
             'raw_length'    => strlen( $response['body'] ?? '' ),
             'parsed_length' => strlen( $test_result['output_text'] ),
         ];
+    }
+
+    /**
+     * Retrieve available model identifiers from the OpenAI API.
+     *
+     * @param string $api_key API key.
+     * @return string[] List of model IDs.
+     */
+    private static function fetch_available_models( $api_key ) {
+        $response = wp_remote_get(
+            'https://api.openai.com/v1/models',
+            [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $api_key,
+                    'Content-Type'  => 'application/json',
+                ],
+                'timeout' => 20,
+            ]
+        );
+
+        if ( is_wp_error( $response ) ) {
+            return [];
+        }
+
+        if ( 200 !== wp_remote_retrieve_response_code( $response ) ) {
+            return [];
+        }
+
+        $body   = json_decode( wp_remote_retrieve_body( $response ), true );
+        $models = [];
+
+        foreach ( $body['data'] ?? [] as $model ) {
+            if ( isset( $model['id'] ) ) {
+                $models[] = sanitize_text_field( $model['id'] );
+            }
+        }
+
+        sort( $models );
+        return $models;
     }
 }
 
