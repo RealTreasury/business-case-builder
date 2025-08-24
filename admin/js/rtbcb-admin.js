@@ -428,7 +428,6 @@ function _arrayWithHoles(r) {
       var results = document.getElementById('rtbcb-company-overview-results');
       var clearBtn = document.getElementById('rtbcb-clear-results');
       var submitBtn = form.querySelector('button[type="submit"]');
-      var $results = $(results);
 
       var submitHandler = _async(function (e) {
         var _exit = false;
@@ -453,22 +452,22 @@ function _arrayWithHoles(r) {
             // Phase 2: Detailed Analysis
             submitBtn.textContent = 'Phase 2: Analyzing details...';
             return _await(RTBCBAdmin.conductDetailedAnalysis(basicInfo), function (detailedAnalysis) {
-              // Phase 3: Final Report
-              submitBtn.textContent = 'Phase 3: Compiling report...';
-              var finalReport = RTBCBAdmin.compileFinalReport(basicInfo, detailedAnalysis);
-              // Display results
-              $results.html(
-                RTBCBAdmin.utils.buildResult(
-                  finalReport.analysis,
-                  performance.now(),
-                  form,
-                  {
-                    word_count: finalReport.analysis.split(' ').length,
-                    recommendations_count: finalReport.recommendations.length,
-                    references_count: finalReport.references.length
-                  }
-                )
-              );
+                // Phase 3: Final Report
+                submitBtn.textContent = 'Phase 3: Compiling report...';
+                var finalReport = RTBCBAdmin.compileFinalReport(basicInfo, detailedAnalysis);
+                // Display results
+                $(results).html(
+                  RTBCBAdmin.utils.buildResult(
+                    finalReport.analysis,
+                    performance.now(),
+                    $(form),
+                    {
+                      word_count: finalReport.analysis.split(' ').length,
+                      recommendations_count: finalReport.recommendations.length,
+                      references_count: finalReport.references.length
+                    }
+                  )
+                );
 
               // Add recommendations section
               if (finalReport.recommendations.length > 0) {
@@ -490,7 +489,7 @@ function _arrayWithHoles(r) {
       });
 
       form.addEventListener('submit', submitHandler);
-      RTBCBAdmin.utils.bindClear($(clearBtn), $results);
+      RTBCBAdmin.utils.bindClear($(clearBtn), $(results));
     },
 
     gatherBasicCompanyInfo: _async(function gatherBasicCompanyInfo(companyName) {
@@ -1023,16 +1022,15 @@ function _arrayWithHoles(r) {
         }
       }
     },
-    generateReportPreview: function generateReportPreview(e) {
-      try {
-        var _exit9 = false;
-        e.preventDefault();
-        var form = e.currentTarget;
-        var button = document.getElementById('rtbcb-generate-report');
-        var original = button.textContent;
-        button.textContent = rtbcbAdmin.strings.processing;
-        button.disabled = true;
-        return _await(_continue(_catch(function () {
+    generateReportPreview: _async(function (e) {
+      var _exit9 = false;
+      e.preventDefault();
+      var form = e.currentTarget;
+      var button = document.getElementById('rtbcb-generate-report');
+      var original = button.textContent;
+      button.textContent = rtbcbAdmin.strings.processing;
+      button.disabled = true;
+      return _await(_continue(_catch(function () {
           var formData = new FormData(form);
           var select = document.getElementById('rtbcb-sample-select');
           var sampleKey = select && select.value ? select.value.trim() : '';
@@ -1084,10 +1082,7 @@ function _arrayWithHoles(r) {
           button.textContent = original;
           button.disabled = false;
         }));
-      } catch (e) {
-        return Promise.reject(e);
-      }
-    },
+    }),
     bindSampleReport: function bindSampleReport() {
       var button = document.getElementById('rtbcb-generate-sample-report');
       if (!button) {
@@ -1095,15 +1090,14 @@ function _arrayWithHoles(r) {
       }
       button.addEventListener('click', this.generateSampleReport.bind(this));
     },
-    generateSampleReport: function generateSampleReport(e) {
-      try {
-        var _exit1 = false;
-        e.preventDefault();
-        var button = e.currentTarget;
-        var original = button.textContent;
-        button.textContent = rtbcbAdmin.strings.processing;
-        button.disabled = true;
-        return _await(_continue(_catch(function () {
+    generateSampleReport: _async(function (e) {
+      var _exit1 = false;
+      e.preventDefault();
+      var button = e.currentTarget;
+      var original = button.textContent;
+      button.textContent = rtbcbAdmin.strings.processing;
+      button.disabled = true;
+      return _await(_continue(_catch(function () {
           var formData = new FormData();
           var nonceField = document.getElementById('nonce');
           var nonce = nonceField ? nonceField.value : rtbcbAdmin && rtbcbAdmin.report_preview_nonce ? rtbcbAdmin.report_preview_nonce : '';
@@ -1149,10 +1143,7 @@ function _arrayWithHoles(r) {
           button.textContent = original;
           button.disabled = false;
         }));
-      } catch (e) {
-        return Promise.reject(e);
-      }
-    },
+    }),
     downloadReportPDF: function downloadReportPDF(e) {
       e.preventDefault();
       var iframe = document.getElementById('rtbcb-report-iframe');
