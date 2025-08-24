@@ -280,6 +280,8 @@ function rtbcb_ajax_test_company_overview_enhanced() {
             'debug'        => $debug_info,
         ];
 
+        error_log( sprintf( 'RTBCB: Company Overview Test - %s (%d words, %ss)', $company_name, $word_count, $elapsed_time ) );
+
         wp_send_json_success( $response_data );
     } catch ( Exception $e ) {
         error_log( 'RTBCB Enhanced Company Overview Error: ' . $e->getMessage() );
@@ -538,6 +540,8 @@ function rtbcb_ajax_evaluate_response_quality() {
             'recommendations'   => rtbcb_generate_improvement_recommendations( $quality_metrics ),
         ];
 
+        error_log( sprintf( 'RTBCB: Response Evaluation - Score: %d', intval( $quality_metrics['overall_score'] ) ) );
+
         wp_send_json_success( $response_data );
     } catch ( Exception $e ) {
         error_log( 'RTBCB Response Quality Evaluation Error: ' . $e->getMessage() );
@@ -586,14 +590,22 @@ function rtbcb_ajax_optimize_prompt_tokens() {
         $optimized_analysis = rtbcb_analyze_prompt_tokens( $optimized_prompt );
 
         $response_data = [
-            'original_analysis'    => $analysis,
-            'optimized_analysis'   => $optimized_analysis,
-            'optimized_prompt'     => $optimized_prompt,
+            'original_analysis'     => $analysis,
+            'optimized_analysis'    => $optimized_analysis,
+            'optimized_prompt'      => wp_kses_post( $optimized_prompt ),
             'optimizations_applied' => $optimizations,
-            'token_savings'        => $analysis['estimated_tokens'] - $optimized_analysis['estimated_tokens'],
-            'cost_savings'         => rtbcb_calculate_token_cost_savings( $analysis, $optimized_analysis ),
+            'token_savings'         => $analysis['estimated_tokens'] - $optimized_analysis['estimated_tokens'],
+            'cost_savings'          => rtbcb_calculate_token_cost_savings( $analysis, $optimized_analysis ),
             'efficiency_improvement' => round( ( ( $analysis['estimated_tokens'] - $optimized_analysis['estimated_tokens'] ) / $analysis['estimated_tokens'] ) * 100, 2 ),
         ];
+
+        error_log(
+            sprintf(
+                'RTBCB: Prompt Optimization - %d -> %d tokens',
+                intval( $analysis['estimated_tokens'] ),
+                intval( $optimized_analysis['estimated_tokens'] )
+            )
+        );
 
         wp_send_json_success( $response_data );
     } catch ( Exception $e ) {
