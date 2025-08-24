@@ -267,7 +267,7 @@ Ensure the report is:
 `;
 }
 
-async function generateProfessionalReport(businessContext) {
+function generateProfessionalReport(businessContext) {
     const cfg = {
         ...RTBCB_GPT5_DEFAULTS,
         ...(typeof rtbcbReport !== 'undefined' ? rtbcbReport : {})
@@ -296,57 +296,30 @@ async function generateProfessionalReport(businessContext) {
         requestBody.temperature = cfg.temperature;
     }
 
-    const maxAttempts = cfg.max_retries || 3;
-    const baseDelay = 500;
-    let lastError;
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', 'https://api.openai.com/v1/responses', false);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.setRequestHeader('Authorization', `Bearer ${rtbcbReport.api_key}`);
+    xhr.send(JSON.stringify(requestBody));
 
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-        try {
-            const response = await fetch('https://api.openai.com/v1/responses', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${rtbcbReport.api_key}`
-                },
-                body: JSON.stringify(requestBody)
-            });
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                if (rtbcbReport?.debug) {
-                    console.error(`Attempt ${attempt} failed:`, errorText);
-                    console.error('RTBCB request body:', requestBody);
-                }
-                throw new Error(`HTTP ${response.status}`);
-            }
-
-            const data = await response.json();
-
-            if (data.error) {
-                console.error(`Attempt ${attempt} API error details:`, data.error);
-                const errorMessage = data.error.message || 'Responses API error';
-                throw new Error(errorMessage);
-            }
-
-            const htmlContent = data.output_text;
-            const cleanedHTML = htmlContent
-                .replace(/```html\n?/g, '')
-                .replace(/```\n?/g, '')
-                .trim();
-
-            return cleanedHTML;
-        } catch (error) {
-            console.error(`Error generating report (attempt ${attempt}):`, error);
-            lastError = error;
-            if (attempt < maxAttempts) {
-                const delay = baseDelay * (2 ** (attempt - 1));
-                await new Promise((resolve) => setTimeout(resolve, delay));
-            }
-        }
+    if (xhr.status < 200 || xhr.status >= 300) {
+        throw new Error('HTTP ' + xhr.status);
     }
 
-    console.error('All attempts to generate report failed:', lastError);
-    throw new Error('Unable to generate report at this time. Please try again later.');
+    const data = JSON.parse(xhr.responseText);
+
+    if (data.error) {
+        const errorMessage = data.error.message || 'Responses API error';
+        throw new Error(errorMessage);
+    }
+
+    const htmlContent = data.output_text;
+    const cleanedHTML = htmlContent
+        .replace(/```html\n?/g, '')
+        .replace(/```\n?/g, '')
+        .trim();
+
+    return cleanedHTML;
 }
 
 function sanitizeReportHTML(htmlContent) {
@@ -389,17 +362,23 @@ function exportToPDF(htmlContent) {
     }
 }
 
-async function generateAndDisplayReport(businessContext) {
+function generateAndDisplayReport(businessContext) {
     const loadingElement = document.getElementById('loading');
     const errorElement = document.getElementById('error');
     const reportContainer = document.getElementById('report-container');
 
     try {
-        loadingElement.style.display = 'block';
-        errorElement.style.display = 'none';
-        reportContainer.innerHTML = '';
+        if (loadingElement) {
+            loadingElement.style.display = 'block';
+        }
+        if (errorElement) {
+            errorElement.style.display = 'none';
+        }
+        if (reportContainer) {
+            reportContainer.innerHTML = '';
+        }
 
-        const htmlReport = await generateProfessionalReport(businessContext);
+        const htmlReport = generateProfessionalReport(businessContext);
 
         if (!htmlReport.includes('<!DOCTYPE html>')) {
             throw new Error('Invalid HTML response from API');
@@ -415,9 +394,13 @@ async function generateAndDisplayReport(businessContext) {
         reportContainer.appendChild(exportBtn);
 
     } catch (error) {
-        errorElement.textContent = `Error: ${error.message}`;
-        errorElement.style.display = 'block';
+        if (errorElement) {
+            errorElement.textContent = `Error: ${error.message}`;
+            errorElement.style.display = 'block';
+        }
     } finally {
-        loadingElement.style.display = 'none';
+        if (loadingElement) {
+            loadingElement.style.display = 'none';
+        }
     }
 }

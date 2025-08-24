@@ -321,13 +321,6 @@ The plugin includes integration tests for all major components. These can be run
 $results = RTBCB_Tests::run_integration_tests();
 ```
 
-#### JavaScript Syntax Check
-Validate the admin dashboard script before committing:
-```bash
-node --check admin/js/rtbcb-admin.js
-```
-This command parses the file without executing it and runs automatically from `tests/run-tests.sh`.
-
 #### Configuring the Test Model
 JavaScript and PHP tests read the OpenAI model from the `RTBCB_TEST_MODEL` setting so they stay aligned with plugin configuration.
 
