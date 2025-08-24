@@ -60,83 +60,12 @@ class RTBCB_Admin {
         }
 
         wp_enqueue_script( 'chart-js', RTBCB_URL . 'public/js/chart.min.js', [], '3.9.1', true );
-        wp_enqueue_script( 
-            'rtbcb-admin', 
-            RTBCB_URL . 'admin/js/rtbcb-admin.js', 
-            [ 'jquery', 'chart-js' ], 
-            RTBCB_VERSION, 
-            true 
-        );
         wp_enqueue_style(
             'rtbcb-admin',
             RTBCB_URL . 'admin/css/rtbcb-admin.css',
             [],
             RTBCB_VERSION
         );
-
-        $company_data = [];
-        if ( function_exists( 'rtbcb_get_current_company' ) ) {
-            $raw_company = rtbcb_get_current_company();
-            if ( is_array( $raw_company ) ) {
-                $company_data = [
-                    'name'           => isset( $raw_company['name'] ) ? sanitize_text_field( $raw_company['name'] ) : '',
-                    'summary'        => isset( $raw_company['summary'] ) ? sanitize_textarea_field( $raw_company['summary'] ) : '',
-                    'industry'       => isset( $raw_company['industry'] ) ? sanitize_text_field( $raw_company['industry'] ) : '',
-                    'size'           => isset( $raw_company['size'] ) ? sanitize_text_field( $raw_company['size'] ) : '',
-                    'geography'      => isset( $raw_company['geography'] ) ? sanitize_text_field( $raw_company['geography'] ) : '',
-                    'business_model' => isset( $raw_company['business_model'] ) ? sanitize_text_field( $raw_company['business_model'] ) : '',
-                ];
-            }
-        }
-
-        wp_localize_script( 'rtbcb-admin', 'rtbcbAdmin', [
-            'ajax_url'                   => admin_url( 'admin-ajax.php' ),
-            'nonce'                      => wp_create_nonce( 'rtbcb_nonce' ),
-            'diagnostics_nonce'          => wp_create_nonce( 'rtbcb_diagnostics' ),
-            'report_preview_nonce'       => wp_create_nonce( 'rtbcb_generate_report_preview' ),
-            'company_overview_nonce'     => wp_create_nonce( 'rtbcb_test_company_overview' ),
-            'treasury_tech_overview_nonce' => wp_create_nonce( 'rtbcb_test_treasury_tech_overview' ),
-            'industry_overview_nonce'    => wp_create_nonce( 'rtbcb_test_industry_overview' ),
-            'benefits_estimate_nonce'    => wp_create_nonce( 'rtbcb_test_estimated_benefits' ),
-            'complete_report_nonce'      => wp_create_nonce( 'rtbcb_test_generate_complete_report' ),
-            'test_dashboard_nonce'       => wp_create_nonce( 'rtbcb_test_dashboard' ),
-            'roi_nonce'                  => wp_create_nonce( 'rtbcb_test_calculate_roi' ),
-            'page'                       => $page,
-            'company'                    => $company_data,
-            'strings'                    => [
-                'confirm_delete'      => __( 'Are you sure you want to delete this lead?', 'rtbcb' ),
-                'confirm_bulk_delete' => __( 'Are you sure you want to delete the selected leads?', 'rtbcb' ),
-                'processing'          => __( 'Processing...', 'rtbcb' ),
-                'error'               => __( 'An error occurred. Please try again.', 'rtbcb' ),
-                'testing'             => __( 'Testing...', 'rtbcb' ),
-                'generating'          => __( 'Generating...', 'rtbcb' ),
-                'copied'              => __( 'Copied to clipboard.', 'rtbcb' ),
-                'retry'               => __( 'Retry', 'rtbcb' ),
-            ],
-        ] );
-
-        $rtbcb_sample_forms = rtbcb_get_sample_report_forms();
-        $rtbcb_sample_data  = [];
-
-        foreach ( $rtbcb_sample_forms as $key => $scenario ) {
-            $rtbcb_sample_data[ $key ] = $scenario['data'];
-        }
-
-        wp_add_inline_script(
-            'rtbcb-admin',
-            'rtbcbAdmin.sampleForms = ' . wp_json_encode( $rtbcb_sample_data ) . ';',
-            'after'
-        );
-
-        if ( 'rtbcb-report-test' === $page ) {
-            wp_enqueue_script(
-                'rtbcb-report-test',
-                RTBCB_URL . 'admin/js/report-test.js',
-                [ 'jquery', 'rtbcb-admin' ],
-                RTBCB_VERSION,
-                true
-            );
-        }
     }
 
     /**

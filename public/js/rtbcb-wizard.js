@@ -384,7 +384,7 @@ class BusinessCaseBuilder {
         }
     }
 
-    async handleSubmit() {
+    handleSubmit() {
         // Show loading state
         this.showProgress();
 
@@ -405,21 +405,18 @@ class BusinessCaseBuilder {
 
             console.log('RTBCB: Submitting form data:', Object.fromEntries(formData));
 
-            const response = await fetch(ajaxObj.ajax_url, {
-                method: 'POST',
-                body: formData
-            });
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', ajaxObj.ajax_url, false);
+            xhr.send(formData);
 
-            console.log('RTBCB: Response status:', response.status);
-            console.log('RTBCB: Response headers:', Object.fromEntries(response.headers));
+            console.log('RTBCB: Response status:', xhr.status);
 
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('RTBCB: Server error response:', errorText);
+            if (xhr.status < 200 || xhr.status >= 300) {
+                console.error('RTBCB: Server error response:', xhr.responseText);
 
-                let errorMessage = `Server responded with status ${response.status}`;
+                let errorMessage = `Server responded with status ${xhr.status}`;
                 try {
-                    const errorJson = JSON.parse(errorText);
+                    const errorJson = JSON.parse(xhr.responseText);
                     errorMessage = errorJson.data?.message || errorMessage;
                 } catch (parseError) {
                     console.error('RTBCB: Could not parse error response as JSON:', parseError);
@@ -428,7 +425,7 @@ class BusinessCaseBuilder {
                 throw new Error(errorMessage);
             }
 
-            const result = await response.json();
+            const result = JSON.parse(xhr.responseText);
             console.log('RTBCB: Parsed response:', result);
 
             if (result.success) {

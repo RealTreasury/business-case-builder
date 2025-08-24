@@ -79,57 +79,53 @@ function handleSubmit(e) {
         progressContainer.style.display = 'block';
     }
 
-    fetch(ajaxObj.ajax_url, {
-        method: 'POST',
-        body: formData,
-    })
-        .then(function(response) {
-            if (!response.ok) {
-                return response.text().then(function(errorText) {
-                    let errorMessage = `Server responded with status ${response.status}.`;
-                    try {
-                        const errorJson = JSON.parse(errorText);
-                        errorMessage = errorJson.data.message || errorMessage;
-                    } catch (jsonError) {
-                        console.error('Could not parse error response as JSON.', jsonError);
-                        errorMessage = errorText || errorMessage;
-                    }
-                    throw new Error(errorMessage);
-                });
-            }
-            return response.json();
-        })
-        .then(function(result) {
-            if (!result.success) {
-                throw new Error(result.data.message || 'An unknown error occurred.');
-            }
+    try {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', ajaxObj.ajax_url, false);
+        xhr.send(formData);
 
-            const reportContainer = document.getElementById('rtbcb-report-container');
-            if (progressContainer) {
-                progressContainer.style.display = 'none';
+        if (xhr.status < 200 || xhr.status >= 300) {
+            let errorMessage = `Server responded with status ${xhr.status}.`;
+            try {
+                const errorJson = JSON.parse(xhr.responseText);
+                errorMessage = errorJson.data.message || errorMessage;
+            } catch (jsonError) {
+                console.error('Could not parse error response as JSON.', jsonError);
+                errorMessage = xhr.responseText || errorMessage;
             }
-            if (reportContainer) {
-                // Sanitize server-provided HTML before injecting to prevent XSS.
-                // Only allow expected markup needed for business case output.
-                const allowedTags = [
-                    'a', 'p', 'br', 'strong', 'em', 'ul', 'ol', 'li',
-                    'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span',
-                    'table', 'thead', 'tbody', 'tr', 'th', 'td'
-                ];
-                const allowedAttr = { a: [ 'href', 'title', 'target', 'rel' ], '*': [ 'style' ] };
-                const sanitized = typeof DOMPurify !== 'undefined'
-                    ? DOMPurify.sanitize(
-                        result.data.report_html,
-                        { ALLOWED_TAGS: allowedTags, ALLOWED_ATTR: allowedAttr }
-                    )
-                    : result.data.report_html;
-                reportContainer.innerHTML = sanitized;
-                reportContainer.style.display = 'block';
-            }
-        })
-        .catch(function(error) {
-            handleSubmissionError(error.message);
-        });
+            throw new Error(errorMessage);
+        }
+
+        const result = JSON.parse(xhr.responseText);
+        if (!result.success) {
+            throw new Error(result.data.message || 'An unknown error occurred.');
+        }
+
+        const reportContainer = document.getElementById('rtbcb-report-container');
+        if (progressContainer) {
+            progressContainer.style.display = 'none';
+        }
+        if (reportContainer) {
+            // Sanitize server-provided HTML before injecting to prevent XSS.
+            // Only allow expected markup needed for business case output.
+            const allowedTags = [
+                'a', 'p', 'br', 'strong', 'em', 'ul', 'ol', 'li',
+                'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span',
+                'table', 'thead', 'tbody', 'tr', 'th', 'td'
+            ];
+            const allowedAttr = { a: [ 'href', 'title', 'target', 'rel' ], '*': [ 'style' ] };
+            const sanitized = typeof DOMPurify !== 'undefined'
+                ? DOMPurify.sanitize(
+                    result.data.report_html,
+                    { ALLOWED_TAGS: allowedTags, ALLOWED_ATTR: allowedAttr }
+                )
+                : result.data.report_html;
+            reportContainer.innerHTML = sanitized;
+            reportContainer.style.display = 'block';
+        }
+    } catch (error) {
+        handleSubmissionError(error.message);
+    }
 }
 
 // Ensure the form submission is handled by our new function
