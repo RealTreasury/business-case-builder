@@ -43,6 +43,27 @@
             container.html(notice);
             return notice;
         },
+        startProgress(container, messages, interval) {
+            let index = 0;
+            if (!Array.isArray(messages) || messages.length === 0) {
+                return 0;
+            }
+            container.html('<p>' + messages[0] + '</p>');
+            const timer = setInterval(function() {
+                index++;
+                if (index < messages.length) {
+                    container.append('<p>' + messages[index] + '</p>');
+                } else {
+                    clearInterval(timer);
+                }
+            }, interval || 4000);
+            return timer;
+        },
+        stopProgress(timer) {
+            if (timer) {
+                clearInterval(timer);
+            }
+        },
         copyToClipboard(text) {
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 return navigator.clipboard.writeText(text);
