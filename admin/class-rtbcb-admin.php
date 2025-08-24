@@ -777,50 +777,429 @@ class RTBCB_Admin {
     }
 
     /**
-     * Enhanced AJAX handler for company overview generation.
+     * Enhanced AJAX handler for company overview testing with comprehensive debugging.
      *
      * @return void
      */
     public function ajax_test_company_overview_enhanced() {
+        // Verify nonce and permissions.
         check_ajax_referer( 'rtbcb_unified_test_dashboard', 'nonce' );
 
         if ( ! current_user_can( 'manage_options' ) ) {
-            wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'rtbcb' ) ] );
+            wp_send_json_error(
+                [
+                    'message' => __( 'Insufficient permissions.', 'rtbcb' ),
+                    'code'    => 'insufficient_permissions',
+                ]
+            );
         }
 
-        $company_name = isset( $_POST['company_name'] ) ? sanitize_text_field( wp_unslash( $_POST['company_name'] ) ) : '';
-        $model        = isset( $_POST['model'] ) ? sanitize_key( wp_unslash( $_POST['model'] ) ) : '';
-        $debug        = ! empty( $_POST['debug'] );
+        // Get and validate input parameters.
+        $company_name = isset( $_POST['company_name'] ) ?
+            sanitize_text_field( wp_unslash( $_POST['company_name'] ) ) : '';
+        $model       = isset( $_POST['model'] ) ?
+            sanitize_text_field( wp_unslash( $_POST['model'] ) ) : 'premium';
+        $show_debug  = isset( $_POST['show_debug'] ) ?
+            filter_var( wp_unslash( $_POST['show_debug'] ), FILTER_VALIDATE_BOOLEAN ) : false;
+        $request_id  = isset( $_POST['request_id'] ) ?
+            sanitize_text_field( wp_unslash( $_POST['request_id'] ) ) : uniqid();
 
         if ( empty( $company_name ) ) {
-            wp_send_json_error( [ 'message' => __( 'Company name is required.', 'rtbcb' ) ] );
+            wp_send_json_error(
+                [
+                    'message' => __( 'Company name is required.', 'rtbcb' ),
+                    'code'    => 'missing_company_name',
+                ]
+            );
         }
 
+        if ( strlen( $company_name ) < 2 ) {
+            wp_send_json_error(
+                [
+                    'message' => __( 'Company name must be at least 2 characters long.', 'rtbcb' ),
+                    'code'    => 'invalid_company_name',
+                ]
+            );
+        }
+
+        // Initialize response data structure.
+        $response_data = [
+            'request_id'      => $request_id,
+            'company_name'    => $company_name,
+            'model_requested' => $model,
+            'debug_enabled'   => $show_debug,
+            'started_at'      => current_time( 'mysql' ),
+            'debug'           => [],
+        ];
+
+        // Start performance tracking.
         $start_time = microtime( true );
 
-        $llm      = new RTBCB_LLM();
-        $overview = $llm->generate_company_overview( $company_name, $debug );
+        try {
+            // Validate API configuration.
+            $api_key = get_option( 'rtbcb_openai_api_key', '' );
+            if ( empty( $api_key ) ) {
+                throw new Exception( __( 'OpenAI API key is not configured.', 'rtbcb' ) );
+            }
 
-        if ( is_wp_error( $overview ) ) {
-            wp_send_json_error( [ 'message' => $overview->get_error_message() ] );
+            if ( ! rtbcb_is_valid_openai_api_key( $api_key ) ) {
+                throw new Exception( __( 'OpenAI API key format is invalid.', 'rtbcb' ) );
+            }
+
+            // Get model configuration.
+            $available_models = [
+                'mini'     => get_option( 'rtbcb_mini_model', 'gpt-4o-mini' ),
+                'premium'  => get_option( 'rtbcb_premium_model', 'gpt-4o' ),
+                'advanced' => get_option( 'rtbcb_advanced_model', 'o1-preview' ),
+            ];
+
+            $selected_model              = $available_models[ $model ] ?? $available_models['premium'];
+            $response_data['model_used'] = $selected_model;
+
+            // Build prompts for debugging.
+            $system_prompt = $this->build_company_overview_system_prompt();
+            $user_prompt   = $this->build_company_overview_user_prompt( $company_name );
+
+            if ( $show_debug ) {
+                $response_data['debug']['system_prompt'] = $system_prompt;
+                $response_data['debug']['user_prompt']   = $user_prompt;
+            }
+
+            // Prepare API request.
+            $api_request_data = [
+                'model'    => $selected_model,
+                'messages' => [
+                    [
+                        'role'    => 'system',
+                        'content' => $system_prompt,
+                    ],
+                    [
+                        'role'    => 'user',
+                        'content' => $user_prompt,
+                    ],
+                ],
+                'max_tokens'        => 2000,
+                'temperature'       => 0.7,
+                'top_p'             => 0.9,
+                'frequency_penalty' => 0.1,
+                'presence_penalty'  => 0.1,
+            ];
+
+            if ( $show_debug ) {
+                $response_data['debug']['api_request']  = $api_request_data;
+                $response_data['debug']['api_endpoint'] = 'https://api.openai.com/v1/chat/completions';
+            }
+
+            // Make API request.
+            $api_start_time = microtime( true );
+
+            $api_response = wp_remote_post(
+                'https://api.openai.com/v1/chat/completions',
+                [
+                    'timeout' => 120,
+                    'headers' => [
+                        'Authorization' => 'Bearer ' . $api_key,
+                        'Content-Type'  => 'application/json',
+                    ],
+                    'body'    => wp_json_encode( $api_request_data ),
+                ]
+            );
+
+            $api_end_time      = microtime( true );
+            $api_response_time = round( $api_end_time - $api_start_time, 3 );
+
+            if ( is_wp_error( $api_response ) ) {
+                throw new Exception(
+                    sprintf( __( 'API request failed: %s', 'rtbcb' ), $api_response->get_error_message() )
+                );
+            }
+
+            $response_code = wp_remote_retrieve_response_code( $api_response );
+            $response_body = wp_remote_retrieve_body( $api_response );
+
+            if ( $show_debug ) {
+                $response_data['debug']['api_response_code'] = $response_code;
+                $response_data['debug']['api_response_time'] = $api_response_time . 's';
+            }
+
+            if ( 200 !== $response_code ) {
+                $error_details = json_decode( $response_body, true );
+                $error_message = isset( $error_details['error']['message'] )
+                    ? $error_details['error']['message']
+                    : sprintf( __( 'API request failed with status code: %d', 'rtbcb' ), $response_code );
+
+                if ( $show_debug ) {
+                    $response_data['debug']['api_error'] = $error_details;
+                }
+
+                throw new Exception( $error_message );
+            }
+
+            // Parse API response.
+            $api_data = json_decode( $response_body, true );
+
+            if ( ! $api_data || ! isset( $api_data['choices'][0]['message']['content'] ) ) {
+                throw new Exception( __( 'Invalid API response format.', 'rtbcb' ) );
+            }
+
+            $overview_content = $api_data['choices'][0]['message']['content'];
+
+            // Extract usage information.
+            $usage_data        = $api_data['usage'] ?? [];
+            $tokens_used       = $usage_data['total_tokens'] ?? 0;
+            $prompt_tokens     = $usage_data['prompt_tokens'] ?? 0;
+            $completion_tokens = $usage_data['completion_tokens'] ?? 0;
+
+            // Calculate performance metrics.
+            $total_elapsed = microtime( true ) - $start_time;
+            $word_count    = str_word_count( $overview_content );
+
+            // Parse structured content if available.
+            $parsed_overview = $this->parse_company_overview_response( $overview_content );
+
+            // Store results for future use.
+            $company_data = [
+                'name'            => $company_name,
+                'overview'        => $overview_content,
+                'analysis'        => $parsed_overview['analysis'] ?? $overview_content,
+                'recommendations' => $parsed_overview['recommendations'] ?? [],
+                'references'      => $parsed_overview['references'] ?? [],
+                'generated_at'    => current_time( 'mysql' ),
+                'model_used'      => $selected_model,
+                'word_count'      => $word_count,
+                'generation_time' => round( $total_elapsed, 2 ),
+            ];
+
+            update_option( 'rtbcb_current_company', $company_data );
+
+            // Build final response.
+            $response_data = array_merge(
+                $response_data,
+                [
+                    'overview'          => $overview_content,
+                    'analysis'          => $parsed_overview['analysis'] ?? $overview_content,
+                    'recommendations'   => $parsed_overview['recommendations'] ?? [],
+                    'references'        => $parsed_overview['references'] ?? [],
+                    'word_count'        => $word_count,
+                    'elapsed'           => round( $total_elapsed, 2 ),
+                    'api_response_time' => $api_response_time,
+                    'generated'         => current_time( 'mysql' ),
+                    'tokens_used'       => $tokens_used,
+                    'prompt_tokens'     => $prompt_tokens,
+                    'completion_tokens' => $completion_tokens,
+                ]
+            );
+
+            // Add debug information.
+            if ( $show_debug ) {
+                $response_data['debug'] = array_merge(
+                    $response_data['debug'],
+                    [
+                        'total_elapsed_time' => round( $total_elapsed, 3 ) . 's',
+                        'word_count'         => $word_count,
+                        'tokens_used'        => $tokens_used,
+                        'prompt_tokens'      => $prompt_tokens,
+                        'completion_tokens'  => $completion_tokens,
+                        'tokens_per_second'  => $tokens_used > 0 ? round( $tokens_used / $total_elapsed, 2 ) : 0,
+                        'words_per_second'   => $word_count > 0 ? round( $word_count / $total_elapsed, 2 ) : 0,
+                        'api_cost_estimate'  => $this->estimate_api_cost( $prompt_tokens, $completion_tokens, $selected_model ),
+                        'memory_usage'       => size_format( memory_get_usage( true ) ),
+                        'peak_memory'        => size_format( memory_get_peak_usage( true ) ),
+                        'parsed_sections'    => array_keys( $parsed_overview ),
+                    ]
+                );
+            }
+
+            // Log successful generation.
+            $this->log_generation_event(
+                'company_overview_success',
+                [
+                    'company'    => $company_name,
+                    'model'      => $selected_model,
+                    'elapsed'    => $total_elapsed,
+                    'tokens'     => $tokens_used,
+                    'word_count' => $word_count,
+                ]
+            );
+
+            wp_send_json_success( $response_data );
+
+        } catch ( Exception $e ) {
+            $error_elapsed = microtime( true ) - $start_time;
+
+            // Log error event.
+            $this->log_generation_event(
+                'company_overview_error',
+                [
+                    'company' => $company_name,
+                    'error'   => $e->getMessage(),
+                    'elapsed' => $error_elapsed,
+                ]
+            );
+
+            $error_response = [
+                'message'    => $e->getMessage(),
+                'code'       => 'generation_failed',
+                'request_id' => $request_id,
+                'elapsed'    => round( $error_elapsed, 2 ),
+                'occurred_at'=> current_time( 'mysql' ),
+            ];
+
+            if ( $show_debug ) {
+                $error_response['debug'] = array_merge(
+                    $response_data['debug'] ?? [],
+                    [
+                        'error_details' => $e->getMessage(),
+                        'error_file'    => $e->getFile(),
+                        'error_line'    => $e->getLine(),
+                        'error_trace'   => $e->getTraceAsString(),
+                        'php_version'   => PHP_VERSION,
+                        'wp_version'    => get_bloginfo( 'version' ),
+                        'plugin_version'=> defined( 'RTBCB_VERSION' ) ? RTBCB_VERSION : 'unknown',
+                        'memory_usage'  => size_format( memory_get_usage( true ) ),
+                        'time_limit'    => ini_get( 'max_execution_time' ),
+                    ]
+                );
+            }
+
+            wp_send_json_error( $error_response );
+        }
+    }
+
+    /**
+     * Build system prompt for company overview generation.
+     *
+     * @return string System prompt.
+     */
+    private function build_company_overview_system_prompt() {
+        return "You are an expert business analyst specializing in treasury technology and financial operations. Your task is to generate comprehensive company overviews that help evaluate treasury technology needs.\n\nWhen analyzing a company, provide:\n1. Business model and industry context\n2. Likely treasury and financial challenges\n3. Technology maturity assessment\n4. Recommendations for treasury solutions\n\nFormat your response as structured content with clear sections. Focus on actionable insights that would help in evaluating treasury technology solutions.\n\nKeep the tone professional and analytical. Base recommendations on industry best practices and common treasury challenges.";
+    }
+
+    /**
+     * Build user prompt for specific company analysis.
+     *
+     * @param string $company_name Company name to analyze.
+     * @return string User prompt.
+     */
+    private function build_company_overview_user_prompt( $company_name ) {
+        return sprintf(
+            "Analyze %s and provide a comprehensive overview focusing on:\n\n1. **Company Analysis**: Business model, industry position, and key characteristics\n2. **Treasury Challenges**: Likely financial and treasury pain points based on company profile\n3. **Technology Assessment**: Current probable technology maturity and gaps\n4. **Strategic Recommendations**: Specific treasury technology solutions that would benefit this company\n\nPlease provide detailed, actionable insights that demonstrate understanding of both the company and treasury technology landscape.",
+            esc_html( $company_name )
+        );
+    }
+
+    /**
+     * Parse structured response from company overview generation.
+     *
+     * @param string $content Raw content from API.
+     * @return array Parsed sections.
+     */
+    private function parse_company_overview_response( $content ) {
+        $parsed = [
+            'analysis'        => $content,
+            'recommendations' => [],
+            'references'      => [],
+        ];
+
+        // Try to extract structured sections using common patterns.
+        $sections = [
+            'recommendations' => '/(?:recommendations?|suggestions?):?\s*(.*?)(?=\n\n|\n[A-Z]|$)/is',
+            'challenges'      => '/(?:challenges?|pain\s*points?):?\s*(.*?)(?=\n\n|\n[A-Z]|$)/is',
+            'solutions'       => '/(?:solutions?|technologies?):?\s*(.*?)(?=\n\n|\n[A-Z]|$)/is',
+        ];
+
+        foreach ( $sections as $key => $pattern ) {
+            if ( preg_match( $pattern, $content, $matches ) ) {
+                $section_content = trim( $matches[1] );
+                if ( ! empty( $section_content ) ) {
+                    // Split into array if it looks like a list.
+                    if ( strpos( $section_content, "\n-" ) !== false || strpos( $section_content, "\n•" ) !== false ) {
+                        $items          = preg_split( '/\n[-•]\s*/', $section_content );
+                        $parsed[ $key ] = array_filter( array_map( 'trim', $items ) );
+                    } else {
+                        $parsed[ $key ] = [ $section_content ];
+                    }
+                }
+            }
         }
 
-        $payload = rtbcb_prepare_enhanced_result( $overview, $debug ? ( $overview['debug_info'] ?? [] ) : [] );
-        $analysis = $payload['overview'];
+        return $parsed;
+    }
 
-        $payload['word_count'] = str_word_count( wp_strip_all_tags( $analysis ) );
-        $payload['elapsed']    = round( microtime( true ) - $start_time, 2 );
-        $payload['model']      = $model;
+    /**
+     * Estimate API cost based on token usage.
+     *
+     * @param int    $prompt_tokens     Prompt tokens used.
+     * @param int    $completion_tokens Completion tokens used.
+     * @param string $model             Model used.
+     * @return string Cost estimate.
+     */
+    private function estimate_api_cost( $prompt_tokens, $completion_tokens, $model ) {
+        // Simplified cost estimation - update with current OpenAI pricing.
+        $cost_per_1k_tokens = [
+            'gpt-4o-mini' => [
+                'input'  => 0.00015,
+                'output' => 0.0006,
+            ],
+            'gpt-4o'      => [
+                'input'  => 0.005,
+                'output' => 0.015,
+            ],
+            'o1-preview'  => [
+                'input'  => 0.015,
+                'output' => 0.06,
+            ],
+        ];
 
-        update_option( 'rtbcb_current_company', [
-            'name'            => $company_name,
-            'summary'         => sanitize_textarea_field( wp_strip_all_tags( $analysis ) ),
-            'recommendations' => array_map( 'sanitize_text_field', $payload['recommendations'] ),
-            'references'      => array_map( 'esc_url_raw', $payload['references'] ),
-            'generated_at'    => current_time( 'mysql' ),
-        ] );
+        $model_key = array_search(
+            $model,
+            [
+                'gpt-4o-mini' => 'gpt-4o-mini',
+                'gpt-4o'      => 'gpt-4o',
+                'o1-preview'  => 'o1-preview',
+            ]
+        );
 
-        wp_send_json_success( $payload );
+        if ( ! $model_key || ! isset( $cost_per_1k_tokens[ $model_key ] ) ) {
+            return 'Unknown';
+        }
+
+        $rates           = $cost_per_1k_tokens[ $model_key ];
+        $prompt_cost     = ( $prompt_tokens / 1000 ) * $rates['input'];
+        $completion_cost = ( $completion_tokens / 1000 ) * $rates['output'];
+        $total_cost      = $prompt_cost + $completion_cost;
+
+        return '$' . number_format( $total_cost, 4 );
+    }
+
+    /**
+     * Log generation events for monitoring and debugging.
+     *
+     * @param string $event_type Type of event.
+     * @param array  $data       Event data.
+     * @return void
+     */
+    private function log_generation_event( $event_type, $data = [] ) {
+        $log_entry = [
+            'timestamp' => current_time( 'mysql' ),
+            'event'     => $event_type,
+            'data'      => $data,
+            'user_id'   => get_current_user_id(),
+            'ip'        => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+            'user_agent'=> $_SERVER['HTTP_USER_AGENT'] ?? 'unknown',
+        ];
+
+        // Store in database or log file as needed.
+        // For now, just use error_log for debugging.
+        if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+            error_log( 'RTBCB Generation Event: ' . wp_json_encode( $log_entry ) ); // phpcs:ignore
+        }
+
+        // Optionally store in options table for dashboard display.
+        $recent_events = get_option( 'rtbcb_recent_generation_events', [] );
+        array_unshift( $recent_events, $log_entry );
+        $recent_events = array_slice( $recent_events, 0, 50 ); // Keep last 50 events.
+        update_option( 'rtbcb_recent_generation_events', $recent_events );
     }
 
     /**
