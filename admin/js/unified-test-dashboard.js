@@ -65,6 +65,9 @@
             $('#rtbcb-rag-cancel').on('click', this.cancelRagQuery.bind(this));
             $('#rtbcb-rag-use-context').on('change', (e) => { this.useRagContext = e.target.checked; });
 
+            // Report preview controls
+            $('#rtbcb-generate-preview-report').on('click', this.generatePreviewReport.bind(this));
+
             // Real-time input validation
             $('#company-name-input').on('input', this.validateInput.bind(this));
 
@@ -1960,6 +1963,26 @@
                 message = rtbcbDashboard.strings.errorsDetected.replace('%d', failures);
             }
             $('#rtbcb-api-health-notice').text(message);
+        },
+
+        // Generate report preview
+        generatePreviewReport() {
+            const button = $('#rtbcb-generate-preview-report').prop('disabled', true);
+
+            $.post(rtbcbDashboard.ajaxurl, {
+                action: 'rtbcb_generate_preview_report',
+                nonce: rtbcbDashboard.nonces.reportPreview
+            }).done((response) => {
+                if (response.success) {
+                    $('#rtbcb-report-preview-frame').attr('srcdoc', response.data.html || '');
+                } else {
+                    this.showNotification(response.data?.message || rtbcbDashboard.strings.error, 'error');
+                }
+            }).fail(() => {
+                this.showNotification(rtbcbDashboard.strings.error, 'error');
+            }).always(() => {
+                button.prop('disabled', false);
+            });
         },
 
         // Validation

@@ -41,6 +41,7 @@ add_action( 'wp_ajax_rtbcb_run_api_health_tests', 'rtbcb_run_api_health_tests' )
 add_action( 'wp_ajax_rtbcb_run_single_api_test', 'rtbcb_run_single_api_test' );
 add_action( 'wp_ajax_rtbcb_test_rag_query', 'rtbcb_test_rag_query' );
 add_action( 'wp_ajax_rtbcb_rag_rebuild_index', 'rtbcb_rag_rebuild_index' );
+add_action( 'wp_ajax_rtbcb_generate_preview_report', 'rtbcb_generate_preview_report' );
 
 /**
  * Test individual LLM model with given prompt.
@@ -1436,5 +1437,52 @@ function rtbcb_run_single_api_test() {
             'result'    => $result,
         ]
     );
+}
+
+/**
+ * Generate full HTML preview report.
+ *
+ * @return void
+ */
+function rtbcb_generate_preview_report() {
+    if ( ! check_ajax_referer( 'rtbcb_generate_preview_report', 'nonce', false ) ) {
+        wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
+    }
+
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'rtbcb' ) ], 403 );
+    }
+
+    $company = rtbcb_get_current_company();
+    if ( empty( $company ) ) {
+        wp_send_json_error( [ 'message' => __( 'No company data found. Please run the company overview first.', 'rtbcb' ) ], 400 );
+    }
+
+    $context = [
+        'company'    => $company,
+        'api_health' => get_option( 'rtbcb_last_api_test', [] ),
+    ];
+
+    $template_path = RTBCB_DIR . 'templates/comprehensive-report-template.php';
+    if ( ! file_exists( $template_path ) ) {
+        $template_path = RTBCB_DIR . 'templates/report-template.php';
+    }
+
+    if ( ! file_exists( $template_path ) ) {
+        wp_send_json_error( [ 'message' => __( 'Report template not found.', 'rtbcb' ) ], 500 );
+    }
+
+    $business_case_data = $context;
+
+    ob_start();
+    include $template_path;
+    $html = ob_get_clean();
+
+    $allowed_tags          = wp_kses_allowed_html( 'post' );
+    $allowed_tags['style'] = [];
+
+    $html = wp_kses( $html, $allowed_tags );
+
+    wp_send_json_success( [ 'html' => $html ] );
 }
 

@@ -77,6 +77,10 @@ $index_size   = (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . $wpdb->prefix . 
                 <span class="dashicons dashicons-cloud"></span>
                 <?php esc_html_e( 'API Health', 'rtbcb' ); ?>
             </a>
+            <a href="#report-preview" class="nav-tab" data-tab="report-preview">
+                <span class="dashicons dashicons-media-document"></span>
+                <?php esc_html_e( 'Report Preview', 'rtbcb' ); ?>
+            </a>
         </nav>
     </div>
 
@@ -1065,6 +1069,25 @@ $index_size   = (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . $wpdb->prefix . 
                     <?php endforeach; ?>
                 </tbody>
             </table>
+        </div>
+    </div>
+
+    <!-- Report Preview Section -->
+    <div id="report-preview" class="rtbcb-test-section" style="display: none;">
+        <div class="rtbcb-test-panel">
+            <div class="rtbcb-panel-header">
+                <h2><?php esc_html_e( 'Report Preview', 'rtbcb' ); ?></h2>
+                <p><?php esc_html_e( 'Generate a preview of the full report.', 'rtbcb' ); ?></p>
+            </div>
+            <div class="rtbcb-report-controls">
+                <button type="button" id="rtbcb-generate-preview-report" class="button button-primary">
+                    <span class="dashicons dashicons-media-document"></span>
+                    <?php esc_html_e( 'Generate Report', 'rtbcb' ); ?>
+                </button>
+            </div>
+            <div id="rtbcb-report-preview-container">
+                <iframe id="rtbcb-report-preview-frame"></iframe>
+            </div>
         </div>
     </div>
 </div>

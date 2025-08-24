@@ -80,6 +80,7 @@ class RTBCB_Admin {
                         'dashboard' => wp_create_nonce( 'rtbcb_unified_test_dashboard' ),
                         'llm'       => wp_create_nonce( 'rtbcb_llm_testing' ),
                         'apiHealth' => wp_create_nonce( 'rtbcb_api_health_tests' ),
+                        'reportPreview' => wp_create_nonce( 'rtbcb_generate_preview_report' ),
                     ],
                     'strings' => [
                         'generating'     => __( 'Generating...', 'rtbcb' ),
