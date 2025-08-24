@@ -105,9 +105,9 @@ class RTBCB_Admin {
                         'settingsSaved'  => __( 'Settings saved.', 'rtbcb' ),
                     ],
                     'models'  => [
-                        'mini'     => get_option( 'rtbcb_mini_model', 'gpt-4o-mini' ),
-                        'premium'  => get_option( 'rtbcb_premium_model', 'gpt-4o' ),
-                        'advanced' => get_option( 'rtbcb_advanced_model', 'o1-preview' ),
+                        'mini'     => get_option( 'rtbcb_mini_model', rtbcb_get_default_model( 'mini' ) ),
+                        'premium'  => get_option( 'rtbcb_premium_model', rtbcb_get_default_model( 'premium' ) ),
+                        'advanced' => get_option( 'rtbcb_advanced_model', rtbcb_get_default_model( 'advanced' ) ),
                     ],
                     'apiHealth' => [
                         'lastResults' => get_option( 'rtbcb_last_api_test', [] ),

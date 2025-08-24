@@ -294,7 +294,7 @@ class RTBCB_Plugin {
         // Add new options introduced in 2.1.0
         if ( version_compare( $from_version, '2.1.0', '<' ) ) {
             $new_options = [
-                'rtbcb_advanced_model'        => 'gpt-5-mini',
+                'rtbcb_advanced_model'        => rtbcb_get_default_model( 'advanced' ),
                 'rtbcb_comprehensive_analysis' => true,
             ];
 
@@ -438,7 +438,7 @@ class RTBCB_Plugin {
         );
 
         $api_key      = sanitize_text_field( get_option( 'rtbcb_openai_api_key', '' ) );
-        $report_model = sanitize_text_field( get_option( 'rtbcb_advanced_model', 'gpt-5-mini' ) );
+        $report_model = sanitize_text_field( get_option( 'rtbcb_advanced_model', rtbcb_get_default_model( 'advanced' ) ) );
 
         $config = rtbcb_get_gpt5_config( get_option( 'rtbcb_gpt5_config', [] ) );
 

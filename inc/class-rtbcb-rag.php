@@ -181,7 +181,7 @@ class RTBCB_RAG {
      */
     private function get_embedding( $text ) {
         $api_key = get_option( 'rtbcb_openai_api_key' );
-        $model   = get_option( 'rtbcb_embedding_model', 'text-embedding-3-small' );
+        $model   = get_option( 'rtbcb_embedding_model', rtbcb_get_default_model( 'embedding' ) );
 
         if ( empty( $api_key ) ) {
             return [];

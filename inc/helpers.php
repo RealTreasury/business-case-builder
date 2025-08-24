@@ -88,6 +88,56 @@ function rtbcb_model_supports_temperature( $model ) {
 }
 
 /**
+ * Retrieve available OpenAI models.
+ *
+ * Attempts to fetch model identifiers from the OpenAI API and caches the
+ * result for a day. Returns an empty array if no API key is configured or the
+ * request fails.
+ *
+ * @return array List of model identifiers.
+ */
+function rtbcb_get_available_models() {
+    $cached = get_transient( 'rtbcb_available_models' );
+    if ( false !== $cached ) {
+        return (array) $cached;
+    }
+
+    $api_key = get_option( 'rtbcb_openai_api_key', '' );
+    if ( empty( $api_key ) ) {
+        return [];
+    }
+
+    $response = wp_remote_get(
+        'https://api.openai.com/v1/models',
+        [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $api_key,
+                'Content-Type'  => 'application/json',
+            ],
+            'timeout' => 20,
+        ]
+    );
+
+    if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
+        return [];
+    }
+
+    $body   = json_decode( wp_remote_retrieve_body( $response ), true );
+    $models = [];
+
+    foreach ( $body['data'] ?? [] as $model ) {
+        if ( isset( $model['id'] ) ) {
+            $models[] = sanitize_text_field( $model['id'] );
+        }
+    }
+
+    sort( $models );
+    set_transient( 'rtbcb_available_models', $models, DAY_IN_SECONDS );
+
+    return $models;
+}
+
+/**
  * Get ordered list of test steps and their option keys.
  *
  * @return array[] Step data keyed by page slug.

@@ -23,9 +23,9 @@ $has_company_data = ! empty( $company_data );
 
 // Available models for testing
 $available_models = [
-    'mini'     => get_option( 'rtbcb_mini_model', 'gpt-4o-mini' ),
-    'premium'  => get_option( 'rtbcb_premium_model', 'gpt-4o' ),
-    'advanced' => get_option( 'rtbcb_advanced_model', 'o1-preview' ),
+    'mini'     => get_option( 'rtbcb_mini_model', rtbcb_get_default_model( 'mini' ) ),
+    'premium'  => get_option( 'rtbcb_premium_model', rtbcb_get_default_model( 'premium' ) ),
+    'advanced' => get_option( 'rtbcb_advanced_model', rtbcb_get_default_model( 'advanced' ) ),
 ];
 
 // Settings values
@@ -34,21 +34,29 @@ $premium_model  = $available_models['premium'];
 $advanced_model = $available_models['advanced'];
 $embedding_model = get_option( 'rtbcb_embedding_model', rtbcb_get_default_model( 'embedding' ) );
 
-$chat_models = [
-    'gpt-5'             => 'gpt-5',
-    'gpt-5-mini'        => 'gpt-5-mini',
-    'gpt-5-nano'        => 'gpt-5-nano',
-    'gpt-5-chat-latest' => 'gpt-5-chat-latest',
-    'gpt-4o-mini'       => 'gpt-4o-mini',
-    'gpt-4o'            => 'gpt-4o',
-    'o1-mini'           => 'o1-mini',
-    'o1-preview'        => 'o1-preview',
-];
+$all_models = rtbcb_get_available_models();
+$chat_models = [];
+$embedding_models = [];
 
-$embedding_models = [
-    'text-embedding-3-small' => 'text-embedding-3-small',
-    'text-embedding-3-large' => 'text-embedding-3-large',
-];
+foreach ( $all_models as $model ) {
+    if ( false !== strpos( $model, 'embedding' ) ) {
+        $embedding_models[ $model ] = $model;
+    } else {
+        $chat_models[ $model ] = $model;
+    }
+}
+
+if ( empty( $chat_models ) ) {
+    $chat_models = [
+        $mini_model     => $mini_model,
+        $premium_model  => $premium_model,
+        $advanced_model => $advanced_model,
+    ];
+}
+
+if ( empty( $embedding_models ) ) {
+    $embedding_models = [ $embedding_model => $embedding_model ];
+}
 
 // RAG index information
 global $wpdb;
@@ -618,9 +626,9 @@ $last_index_display = $last_indexed ? $last_indexed : __( 'Never', 'rtbcb' );
 
     // Get available models for testing
     $available_models = [
-        'mini'     => get_option( 'rtbcb_mini_model', 'gpt-4o-mini' ),
-        'premium'  => get_option( 'rtbcb_premium_model', 'gpt-4o' ),
-        'advanced' => get_option( 'rtbcb_advanced_model', 'o1-preview' ),
+        'mini'     => get_option( 'rtbcb_mini_model', rtbcb_get_default_model( 'mini' ) ),
+        'premium'  => get_option( 'rtbcb_premium_model', rtbcb_get_default_model( 'premium' ) ),
+        'advanced' => get_option( 'rtbcb_advanced_model', rtbcb_get_default_model( 'advanced' ) ),
     ];
 
     $model_capabilities = rtbcb_get_model_capabilities();
