@@ -239,6 +239,15 @@ $avg_roi = intval( $roi_stats['avg_base'] ?? 0 );
                     </div>
                 </a>
 
+                <button type="button" id="rtbcb-test-api" class="rtbcb-action-card">
+                    <div class="rtbcb-action-icon">
+                        <span class="dashicons dashicons-cloud"></span>
+                    </div>
+                    <div class="rtbcb-action-content">
+                        <h4><?php esc_html_e( 'Test API', 'rtbcb' ); ?></h4>
+                        <p><?php esc_html_e( 'Verify OpenAI connection', 'rtbcb' ); ?></p>
+                    </div>
+                </button>
 
                 <a href="<?php echo esc_url( admin_url( 'admin.php?page=rtbcb-analytics' ) ); ?>" class="rtbcb-action-card">
                     <div class="rtbcb-action-icon">
