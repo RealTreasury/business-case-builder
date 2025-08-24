@@ -314,7 +314,30 @@ add_filter('rtbcb_category_scores', function($scores, $inputs) {
 
 ## 🧪 Testing and Quality Assurance
 
-All plugin testing is managed through the **Unified Test Dashboard** available in the WordPress admin. This interface consolidates company overview generation, ROI analysis, model comparisons, and additional diagnostics in one place.
+### Automated Tests
+The plugin includes integration tests for all major components. These can be run from the settings page via the **Run Diagnostics** button or programmatically:
+```php
+// Run integration tests
+$results = RTBCB_Tests::run_integration_tests();
+```
+
+#### Configuring the Test Model
+JavaScript and PHP tests read the OpenAI model from the `RTBCB_TEST_MODEL` setting so they stay aligned with plugin configuration.
+
+1. **.env file** – Create a `.env` file in the project root:
+   ```
+   RTBCB_TEST_MODEL=gpt-5-mini
+   ```
+2. **CLI flag** – Prefix test commands with the variable:
+   ```
+   RTBCB_TEST_MODEL=gpt-5-mini tests/run-tests.sh
+   ```
+3. **Config file** – Alternatively, add `tests/test-config.json`:
+   ```json
+   { "model": "gpt-5-mini" }
+   ```
+
+If no configuration is provided, tests default to `gpt-5-test`.
 
 ### Runtime Debugging
 For manual verification during development, `debug_ajax_handler()` includes runtime checks for common setup issues:
