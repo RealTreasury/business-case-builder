@@ -79,17 +79,31 @@ class RTBCB_Admin {
                     'nonces'  => [
                         'dashboard' => wp_create_nonce( 'rtbcb_unified_test_dashboard' ),
                         'llm'       => wp_create_nonce( 'rtbcb_llm_testing' ),
+                        'apiHealth' => wp_create_nonce( 'rtbcb_api_health_tests' ),
                     ],
                     'strings' => [
-                        'generating'    => __( 'Generating...', 'rtbcb' ),
-                        'complete'      => __( 'Complete!', 'rtbcb' ),
-                        'error'         => __( 'Error occurred', 'rtbcb' ),
-                        'confirm_clear' => __( 'Are you sure you want to clear all results?', 'rtbcb' ),
+                        'generating'     => __( 'Generating...', 'rtbcb' ),
+                        'complete'       => __( 'Complete!', 'rtbcb' ),
+                        'error'          => __( 'Error occurred', 'rtbcb' ),
+                        'confirm_clear'  => __( 'Are you sure you want to clear all results?', 'rtbcb' ),
+                        'running'        => __( 'Running...', 'rtbcb' ),
+                        'notTested'      => __( 'Not tested', 'rtbcb' ),
+                        'allOperational' => __( 'All systems operational', 'rtbcb' ),
+                        'errorsDetected' => __( '%d errors detected', 'rtbcb' ),
+                        'passed'         => __( 'Passed', 'rtbcb' ),
+                        'failed'         => __( 'Failed', 'rtbcb' ),
+                        'settings'       => __( 'Settings', 'rtbcb' ),
                     ],
                     'models'  => [
                         'mini'     => get_option( 'rtbcb_mini_model', 'gpt-4o-mini' ),
                         'premium'  => get_option( 'rtbcb_premium_model', 'gpt-4o' ),
                         'advanced' => get_option( 'rtbcb_advanced_model', 'o1-preview' ),
+                    ],
+                    'apiHealth' => [
+                        'lastResults' => get_option( 'rtbcb_last_api_test', [] ),
+                    ],
+                    'urls'     => [
+                        'settings' => admin_url( 'admin.php?page=rtbcb-settings' ),
                     ],
                 ]
             );

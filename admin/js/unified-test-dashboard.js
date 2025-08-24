@@ -13,12 +13,14 @@
         progressTimer: null,
         startTime: null,
         currentRequest: null,
+        apiResults: {},
 
         // Initialize dashboard
         init() {
             this.bindEvents();
             this.initializeTabs();
             this.checkSystemStatus();
+            this.initApiHealth();
         },
 
         // Bind all event handlers
@@ -37,6 +39,17 @@
             // Debug controls
             $('#show-debug-info').on('change', this.toggleDebugInfo.bind(this));
             $('#toggle-debug').on('click', this.toggleDebugPanel.bind(this));
+
+            // API health controls
+            $('#rtbcb-run-all-api-tests').on('click', this.runAllApiTests.bind(this));
+            $('.rtbcb-api-health-table').on('click', '.rtbcb-retest', (e) => {
+                const comp = $(e.currentTarget).data('component');
+                this.runSingleApiTest(comp);
+            });
+            $('.rtbcb-api-health-table').on('click', '.rtbcb-view-details', (e) => {
+                const comp = $(e.currentTarget).data('component');
+                this.toggleApiDetails(comp);
+            });
 
             // Real-time input validation
             $('#company-name-input').on('input', this.validateInput.bind(this));
@@ -1654,6 +1667,104 @@
             return this.llmData.results.reduce((sum, result) => {
                 return sum + (result.result.tokens_used || 0);
             }, 0);
+        },
+
+        // API Health Methods
+        initApiHealth() {
+            this.apiResults = rtbcbDashboard.apiHealth?.lastResults?.results || {};
+            this.updateApiSummary();
+        },
+
+        runAllApiTests() {
+            $('#rtbcb-run-all-api-tests').prop('disabled', true);
+            $('#rtbcb-api-health-notice').text(rtbcbDashboard.strings.running);
+
+            $.post(rtbcbDashboard.ajaxurl, {
+                action: 'rtbcb_run_api_health_tests',
+                nonce: rtbcbDashboard.nonces.apiHealth
+            }).done((response) => {
+                if (response.success) {
+                    const data = response.data;
+                    this.apiResults = data.results;
+                    Object.keys(data.results).forEach(key => {
+                        this.updateApiRow(key, data.results[key], data.timestamp);
+                    });
+                    this.updateApiSummary();
+                } else {
+                    $('#rtbcb-api-health-notice').text(rtbcbDashboard.strings.error);
+                }
+            }).fail(() => {
+                $('#rtbcb-api-health-notice').text(rtbcbDashboard.strings.error);
+            }).always(() => {
+                $('#rtbcb-run-all-api-tests').prop('disabled', false);
+            });
+        },
+
+        runSingleApiTest(component) {
+            const button = $(`.rtbcb-retest[data-component="${component}"]`).prop('disabled', true);
+            $.post(rtbcbDashboard.ajaxurl, {
+                action: 'rtbcb_run_single_api_test',
+                nonce: rtbcbDashboard.nonces.apiHealth,
+                component
+            }).done((response) => {
+                if (response.success) {
+                    const res = response.data.result;
+                    this.apiResults[component] = res;
+                    this.updateApiRow(component, res, response.data.timestamp);
+                    this.updateApiSummary();
+                } else {
+                    $('#rtbcb-api-health-notice').text(rtbcbDashboard.strings.error);
+                }
+            }).fail(() => {
+                $('#rtbcb-api-health-notice').text(rtbcbDashboard.strings.error);
+            }).always(() => {
+                button.prop('disabled', false);
+            });
+        },
+
+        updateApiRow(component, result, timestamp) {
+            const row = $(`#rtbcb-api-${component}`);
+            const indicator = row.find('.rtbcb-status-indicator');
+            indicator.removeClass('status-good status-error');
+            indicator.find('.dashicons').removeClass('dashicons-yes-alt dashicons-warning dashicons-minus');
+
+            if (result.passed) {
+                indicator.addClass('status-good');
+                indicator.find('.dashicons').addClass('dashicons-yes-alt');
+            } else {
+                indicator.addClass('status-error');
+                indicator.find('.dashicons').addClass('dashicons-warning');
+            }
+
+            if (timestamp) {
+                result.last_tested = timestamp;
+            }
+            row.find('.rtbcb-last-tested').text(result.last_tested || '');
+            row.find('.rtbcb-response-time').text(result.response_time ? `${result.response_time} ms` : '');
+            let msg = result.message || '';
+            if (!result.passed && /API key/i.test(msg) && rtbcbDashboard.urls?.settings) {
+                msg += ` <a href="${rtbcbDashboard.urls.settings}">${rtbcbDashboard.strings.settings}</a>`;
+            }
+            row.find('.rtbcb-message').html(msg);
+            $(`#rtbcb-details-${component} pre`).text(JSON.stringify(result.details || {}, null, 2));
+        },
+
+        toggleApiDetails(component) {
+            $(`#rtbcb-details-${component}`).toggle();
+        },
+
+        updateApiSummary() {
+            const results = this.apiResults || {};
+            const failures = Object.values(results).filter(r => !r.passed).length;
+            let message;
+            if (Object.keys(results).length === 0) {
+                message = rtbcbDashboard.strings.notTested;
+            } else if (failures === 0) {
+                message = rtbcbDashboard.strings.allOperational;
+            } else {
+                message = rtbcbDashboard.strings.errorsDetected.replace('%d', failures);
+            }
+            $('#rtbcb-api-health-notice').text(message);
         },
 
         // Validation
