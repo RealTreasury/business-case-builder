@@ -428,7 +428,6 @@ function _arrayWithHoles(r) {
       var results = document.getElementById('rtbcb-company-overview-results');
       var clearBtn = document.getElementById('rtbcb-clear-results');
       var submitBtn = form.querySelector('button[type="submit"]');
-      var $results = $(results);
 
       var submitHandler = _async(function (e) {
         var _exit = false;
@@ -453,22 +452,22 @@ function _arrayWithHoles(r) {
             // Phase 2: Detailed Analysis
             submitBtn.textContent = 'Phase 2: Analyzing details...';
             return _await(RTBCBAdmin.conductDetailedAnalysis(basicInfo), function (detailedAnalysis) {
-              // Phase 3: Final Report
-              submitBtn.textContent = 'Phase 3: Compiling report...';
-              var finalReport = RTBCBAdmin.compileFinalReport(basicInfo, detailedAnalysis);
-              // Display results
-              $results.html(
-                RTBCBAdmin.utils.buildResult(
-                  finalReport.analysis,
-                  performance.now(),
-                  form,
-                  {
-                    word_count: finalReport.analysis.split(' ').length,
-                    recommendations_count: finalReport.recommendations.length,
-                    references_count: finalReport.references.length
-                  }
-                )
-              );
+                // Phase 3: Final Report
+                submitBtn.textContent = 'Phase 3: Compiling report...';
+                var finalReport = RTBCBAdmin.compileFinalReport(basicInfo, detailedAnalysis);
+                // Display results
+                $(results).html(
+                  RTBCBAdmin.utils.buildResult(
+                    finalReport.analysis,
+                    performance.now(),
+                    $(form),
+                    {
+                      word_count: finalReport.analysis.split(' ').length,
+                      recommendations_count: finalReport.recommendations.length,
+                      references_count: finalReport.references.length
+                    }
+                  )
+                );
 
               // Add recommendations section
               if (finalReport.recommendations.length > 0) {
@@ -490,7 +489,7 @@ function _arrayWithHoles(r) {
       });
 
       form.addEventListener('submit', submitHandler);
-      RTBCBAdmin.utils.bindClear($(clearBtn), $results);
+      RTBCBAdmin.utils.bindClear($(clearBtn), $(results));
     },
 
     gatherBasicCompanyInfo: _async(function gatherBasicCompanyInfo(companyName) {
