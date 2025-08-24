@@ -173,10 +173,11 @@ class RTBCB_LLM {
     /**
      * Generate a comprehensive company overview with structured analysis.
      *
-     * @param string $company_name Company name.
+     * @param string $company_name  Company name.
+     * @param bool   $include_prompt Whether to include prompt in response for debugging.
      * @return array|WP_Error Structured overview array or error object.
      */
-    public function generate_company_overview( $company_name ) {
+    public function generate_company_overview( $company_name, $include_prompt = false ) {
         $company_name = sanitize_text_field( $company_name );
 
         if ( empty( $this->api_key ) ) {
@@ -185,7 +186,7 @@ class RTBCB_LLM {
 
         $model = $this->get_model( 'mini' );
 
-        // Simplified, focused system prompt
+        // Store prompts for debugging
         $system_prompt = 'You are a treasury technology consultant. Analyze companies and respond with valid JSON only using this exact structure:
 
 {
@@ -196,7 +197,6 @@ class RTBCB_LLM {
 
 Focus on actionable insights. Keep analysis detailed but concise. Ensure recommendations are specific to the company size and industry.';
 
-        // Streamlined user prompt
         $user_prompt = "Analyze $company_name for treasury technology opportunities. Include:
 
 - Company overview (industry, size, business model)
@@ -215,6 +215,11 @@ Respond with the JSON structure only. No additional text.";
                 'content' => $user_prompt,
             ],
         ];
+
+        // Log prompt being sent
+        error_log( "RTBCB: Sending company overview request for: {$company_name}" );
+        error_log( 'RTBCB: System prompt length: ' . strlen( $system_prompt ) );
+        error_log( 'RTBCB: User prompt length: ' . strlen( $user_prompt ) );
 
         $context  = $this->build_context_for_responses( $history, $system_prompt );
         $response = $this->call_openai_with_retry( $model, $context, 2 ); // Reduce retries for faster response
@@ -246,15 +251,32 @@ Respond with the JSON structure only. No additional text.";
             return new WP_Error( 'llm_incomplete_response', __( 'Incomplete analysis received. Please try again.', 'rtbcb' ) );
         }
 
-        // Sanitize and return structured response
-        return [
-            'company_name'    => $company_name,
-            'analysis'        => sanitize_textarea_field( $json['analysis'] ),
-            'recommendations' => array_map( 'sanitize_text_field', array_filter( (array) $json['recommendations'] ) ),
-            'references'      => array_map( 'esc_url_raw', array_filter( (array) ( $json['references'] ?? [] ) ) ),
-            'generated_at'    => current_time( 'Y-m-d H:i:s' ),
-            'analysis_type'   => 'company_overview',
+        // Build response
+        $result = [
+            'company_name'   => $company_name,
+            'analysis'       => sanitize_textarea_field( $json['analysis'] ),
+            'recommendations'=> array_map( 'sanitize_text_field', array_filter( (array) $json['recommendations'] ) ),
+            'references'     => array_map( 'esc_url_raw', array_filter( (array) ( $json['references'] ?? [] ) ) ),
+            'generated_at'   => current_time( 'Y-m-d H:i:s' ),
+            'analysis_type'  => 'company_overview',
         ];
+
+        // Include prompt information for debugging if requested
+        if ( $include_prompt ) {
+            $result['prompt_sent'] = [
+                'system' => $system_prompt,
+                'user'   => $user_prompt,
+            ];
+
+            $result['debug_info'] = [
+                'model_used'       => $model,
+                'response_length'  => strlen( $content ),
+                'json_parse_error' => json_last_error_msg(),
+                'processing_time'  => $parsed['raw']['usage'] ?? null,
+            ];
+        }
+
+        return $result;
     }
 
     /**
