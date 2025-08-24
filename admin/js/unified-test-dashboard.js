@@ -520,6 +520,21 @@
             URL.revokeObjectURL(url);
         },
 
+        downloadCSV(rows, filename) {
+            if (!rows || !rows.length) return;
+            const headers = Object.keys(rows[0]);
+            const csvContent = [headers.join(',')].concat(
+                rows.map(row => headers.map(h => `"${(row[h] ?? '').toString().replace(/"/g, '""')}"`).join(','))
+            ).join("\n");
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        },
+
         showNotification(message, type = 'info') {
             // Create notification element
             const notification = $(`
@@ -590,6 +605,152 @@
             }
         }
     };
+
+    // RAG Testing Module
+    Object.assign(Dashboard, {
+        ragResults: [],
+        ragRequest: null,
+        initRAGTesting() {
+            this.bindRAGEvents();
+        },
+        bindRAGEvents() {
+            $('#rag-query').on('input', this.validateRAGInputs.bind(this));
+            $('#run-rag-query').on('click', this.runRAGQuery.bind(this));
+            $('#cancel-rag-query').on('click', this.cancelRAGQuery.bind(this));
+            $('#rebuild-rag-index').on('click', this.rebuildRAGIndex.bind(this));
+            $('#copy-rag-context').on('click', this.copyRAGContext.bind(this));
+            $('#export-rag-json').on('click', this.exportRAGJSON.bind(this));
+            $('#export-rag-csv').on('click', this.exportRAGCSV.bind(this));
+            $('#toggle-rag-debug').on('click', this.toggleRAGDebug.bind(this));
+            $('#rag-include-context').on('change', this.handleRAGContextToggle.bind(this));
+        },
+        validateRAGInputs() {
+            const query = $('#rag-query').val().trim();
+            $('#run-rag-query').prop('disabled', query.length === 0);
+        },
+        setRAGLoading(isLoading) {
+            $('#run-rag-query').prop('disabled', isLoading);
+            $('#cancel-rag-query').toggle(isLoading);
+            $('#rag-progress').toggle(isLoading);
+        },
+        runRAGQuery() {
+            const query = $('#rag-query').val().trim();
+            if (!query) {
+                this.showNotification(rtbcbDashboard.strings.no_query, 'error');
+                return;
+            }
+            const topK = parseInt($('#rag-top-k').val(), 10) || 3;
+            const type = $('#rag-result-type').val();
+            this.setRAGLoading(true);
+            this.ragRequest = $.ajax({
+                url: rtbcbDashboard.ajaxurl,
+                type: 'POST',
+                data: { action: 'rtbcb_test_rag_query', nonce: rtbcbDashboard.nonce, query, top_k: topK, type },
+                success: (response) => {
+                    if (response.success) {
+                        this.handleRAGSuccess(response.data);
+                    } else {
+                        this.showNotification(response.data.message || rtbcbDashboard.strings.error, 'error');
+                    }
+                },
+                error: (xhr, status) => {
+                    if (status !== 'abort') {
+                        this.showNotification(rtbcbDashboard.strings.error, 'error');
+                    }
+                },
+                complete: () => {
+                    this.setRAGLoading(false);
+                }
+            });
+        },
+        cancelRAGQuery() {
+            if (this.ragRequest) {
+                this.ragRequest.abort();
+                this.showNotification('Retrieval cancelled', 'info');
+                this.setRAGLoading(false);
+            }
+        },
+        handleRAGSuccess(data) {
+            this.ragResults = data.results || [];
+            this.renderRAGMetrics(data.metrics || {});
+            this.renderRAGResults(this.ragResults);
+            this.renderRAGDebug(data.debug || {});
+            $('#rag-results-container').show();
+        },
+        renderRAGMetrics(metrics) {
+            const html = `<span>Time: ${Math.round(metrics.retrieval_time || 0)} ms</span>` +
+                `<span>Results: ${metrics.result_count || 0}</span>` +
+                `<span>Avg Score: ${(metrics.average_score || 0).toFixed(2)}</span>` +
+                `<span>Embedding: ${metrics.embedding_length || 0}</span>`;
+            $('#rag-metrics').html(html);
+        },
+        renderRAGResults(results) {
+            const tbody = $('#rag-results-table tbody');
+            tbody.empty();
+            results.forEach(row => {
+                const score = parseFloat(row.score);
+                let cls = 'rtbcb-score-low';
+                if (score > 0.8) cls = 'rtbcb-score-high';
+                else if (score > 0.5) cls = 'rtbcb-score-medium';
+                const title = row.metadata && (row.metadata.title || row.metadata.description || row.metadata.name || '');
+                tbody.append(`<tr class="${cls}"><td>${this.escapeHtml(row.type)}</td><td>${this.escapeHtml(row.ref_id)}</td><td>${this.escapeHtml(title)}</td><td>${score.toFixed(2)}</td></tr>`);
+            });
+        },
+        renderRAGDebug(debug) {
+            const pre = `Embedding length: ${debug.embedding_length || 0}\n` +
+                `Embedding preview: ${(debug.embedding_preview || []).join(', ')}\n` +
+                `Scores: ${(debug.scores || []).map(s => s.toFixed(3)).join(', ')}`;
+            $('#rag-debug-content').text(pre);
+        },
+        toggleRAGDebug() {
+            $('#rag-debug-panel').toggle();
+        },
+        copyRAGContext() {
+            if (!this.ragResults.length) {
+                this.showNotification(rtbcbDashboard.strings.error, 'warning');
+                return;
+            }
+            const text = this.ragResults.map(r => r.metadata && (r.metadata.content || r.metadata.description || '')).join("\n\n");
+            navigator.clipboard.writeText(text).then(() => {
+                this.showNotification(rtbcbDashboard.strings.copy_success, 'success');
+            }).catch(() => {
+                this.showNotification(rtbcbDashboard.strings.copy_fail, 'error');
+            });
+        },
+        exportRAGJSON() {
+            if (!this.ragResults.length) {
+                this.showNotification(rtbcbDashboard.strings.error, 'warning');
+                return;
+            }
+            this.downloadJSON(this.ragResults, `rag_results_${Date.now()}.json`);
+        },
+        exportRAGCSV() {
+            if (!this.ragResults.length) {
+                this.showNotification(rtbcbDashboard.strings.error, 'warning');
+                return;
+            }
+            const rows = this.ragResults.map(r => ({ type: r.type, ref_id: r.ref_id, title: r.metadata?.title || r.metadata?.description || '', score: r.score }));
+            this.downloadCSV(rows, `rag_results_${Date.now()}.csv`);
+        },
+        rebuildRAGIndex() {
+            this.showNotification(rtbcbDashboard.strings.rebuilding, 'info');
+            $.post(rtbcbDashboard.ajaxurl, { action: 'rtbcb_rag_rebuild_index', nonce: rtbcbDashboard.nonce }, (response) => {
+                if (response.success) {
+                    $('#rag-last-indexed').text(response.data.last_indexed);
+                    $('#rag-index-status').removeClass('status-error status-warning').addClass('status-good');
+                    this.showNotification(rtbcbDashboard.strings.rebuild_done, 'success');
+                } else {
+                    this.showNotification(response.data.message || rtbcbDashboard.strings.rebuild_fail, 'error');
+                }
+            }).fail(() => {
+                this.showNotification(rtbcbDashboard.strings.rebuild_fail, 'error');
+            });
+        },
+        handleRAGContextToggle() {
+            const checked = $('#rag-include-context').is(':checked');
+            $('#llm-include-context').prop('checked', checked);
+        }
+    });
 
     // LLM Integration Testing Module
     Object.assign(Dashboard, {
@@ -1578,6 +1739,9 @@
     // Initialize when DOM is ready
     $(document).ready(() => {
         Dashboard.init();
+        if (typeof Dashboard.initRAGTesting === 'function') {
+            Dashboard.initRAGTesting();
+        }
         if (typeof Dashboard.initLLMIntegration === 'function') {
             Dashboard.initLLMIntegration();
         }

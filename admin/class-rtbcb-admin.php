@@ -82,6 +82,13 @@ class RTBCB_Admin {
                         'complete'     => __( 'Complete!', 'rtbcb' ),
                         'error'        => __( 'Error occurred', 'rtbcb' ),
                         'confirm_clear'=> __( 'Are you sure you want to clear all results?', 'rtbcb' ),
+                        'retrieving'   => __( 'Retrieving...', 'rtbcb' ),
+                        'rebuilding'   => __( 'Rebuilding index...', 'rtbcb' ),
+                        'rebuild_done' => __( 'Index rebuilt successfully', 'rtbcb' ),
+                        'rebuild_fail' => __( 'Failed to rebuild index', 'rtbcb' ),
+                        'no_query'     => __( 'Please enter a query', 'rtbcb' ),
+                        'copy_success' => __( 'Context copied to clipboard', 'rtbcb' ),
+                        'copy_fail'    => __( 'Failed to copy context', 'rtbcb' ),
                     ],
                 ]
             );

@@ -27,6 +27,20 @@ $available_models = [
     'premium'  => get_option( 'rtbcb_premium_model', 'gpt-4o' ),
     'advanced' => get_option( 'rtbcb_advanced_model', 'o1-preview' ),
 ];
+
+// RAG index information.
+$last_indexed      = get_option( 'rtbcb_last_indexed', '' );
+$last_indexed_time = $last_indexed ? strtotime( $last_indexed ) : 0;
+$index_age         = time() - $last_indexed_time;
+if ( ! $last_indexed_time ) {
+    $index_status = 'status-error';
+} elseif ( $index_age > WEEK_IN_SECONDS ) {
+    $index_status = 'status-error';
+} elseif ( $index_age > DAY_IN_SECONDS ) {
+    $index_status = 'status-warning';
+} else {
+    $index_status = 'status-good';
+}
 ?>
 
 <div class="wrap rtbcb-unified-test-dashboard">
@@ -879,15 +893,99 @@ $available_models = [
     <!-- Hidden nonce for LLM testing AJAX requests -->
     <?php wp_nonce_field( 'rtbcb_llm_testing', 'rtbcb_llm_testing_nonce' ); ?>
 
-    <!-- RAG System Test Section (Placeholder) -->
+    <!-- RAG System Test Section -->
     <div id="rag-system" class="rtbcb-test-section" style="display: none;">
         <div class="rtbcb-test-panel">
             <div class="rtbcb-panel-header">
                 <h2><?php esc_html_e( 'RAG System Testing', 'rtbcb' ); ?></h2>
                 <p><?php esc_html_e( 'Test vector search, retrieval, and context validation', 'rtbcb' ); ?></p>
             </div>
-            <div class="rtbcb-placeholder">
-                <p><?php esc_html_e( 'RAG System testing interface will be implemented here.', 'rtbcb' ); ?></p>
+
+            <!-- Index Overview -->
+            <div class="rtbcb-index-overview">
+                <div class="rtbcb-status-indicator <?php echo esc_attr( $index_status ); ?>" id="rag-index-status">
+                    <span class="dashicons <?php echo esc_attr( 'status-good' === $index_status ? 'dashicons-yes-alt' : ( 'status-warning' === $index_status ? 'dashicons-info' : 'dashicons-warning' ) ); ?>"></span>
+                    <span><?php esc_html_e( 'Index Health', 'rtbcb' ); ?></span>
+                </div>
+                <p>
+                    <?php esc_html_e( 'Last indexed:', 'rtbcb' ); ?>
+                    <span id="rag-last-indexed"><?php echo esc_html( $last_indexed ? $last_indexed : __( 'Never', 'rtbcb' ) ); ?></span>
+                </p>
+                <button type="button" id="rebuild-rag-index" class="button">
+                    <span class="dashicons dashicons-update"></span>
+                    <?php esc_html_e( 'Rebuild Index', 'rtbcb' ); ?>
+                </button>
+            </div>
+
+            <!-- Query Controls -->
+            <div class="rtbcb-test-controls">
+                <div class="rtbcb-control-group">
+                    <label for="rag-query">
+                        <?php esc_html_e( 'Test Query:', 'rtbcb' ); ?>
+                        <span class="required">*</span>
+                    </label>
+                    <input type="text" id="rag-query" class="regular-text" placeholder="<?php esc_attr_e( 'Enter search query...', 'rtbcb' ); ?>" />
+                </div>
+
+                <div class="rtbcb-control-group">
+                    <label for="rag-top-k"><?php esc_html_e( 'Top K Results:', 'rtbcb' ); ?></label>
+                    <input type="number" id="rag-top-k" min="1" max="20" value="3" />
+                </div>
+
+                <div class="rtbcb-control-group">
+                    <label for="rag-result-type"><?php esc_html_e( 'Result Type:', 'rtbcb' ); ?></label>
+                    <select id="rag-result-type">
+                        <option value="all"><?php esc_html_e( 'All', 'rtbcb' ); ?></option>
+                        <option value="vendor"><?php esc_html_e( 'Vendor', 'rtbcb' ); ?></option>
+                        <option value="note"><?php esc_html_e( 'Note', 'rtbcb' ); ?></option>
+                    </select>
+                </div>
+
+                <div class="rtbcb-action-buttons">
+                    <button type="button" id="run-rag-query" class="button button-primary" disabled>
+                        <span class="dashicons dashicons-search"></span>
+                        <?php esc_html_e( 'Run Retrieval', 'rtbcb' ); ?>
+                    </button>
+                    <button type="button" id="cancel-rag-query" class="button" style="display:none;">
+                        <?php esc_html_e( 'Cancel', 'rtbcb' ); ?>
+                    </button>
+                    <span class="spinner" id="rag-progress" style="float:none;"></span>
+                </div>
+
+                <div class="rtbcb-control-group">
+                    <label>
+                        <input type="checkbox" id="rag-include-context" />
+                        <?php esc_html_e( 'Include context in LLM tests', 'rtbcb' ); ?>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Results Display -->
+            <div id="rag-results-container" class="rtbcb-results-container" style="display:none;">
+                <div class="rtbcb-results-header">
+                    <h3><?php esc_html_e( 'Retrieval Results', 'rtbcb' ); ?></h3>
+                    <div class="rtbcb-results-actions">
+                        <button type="button" id="copy-rag-context" class="button"><?php esc_html_e( 'Copy Context', 'rtbcb' ); ?></button>
+                        <button type="button" id="export-rag-json" class="button"><?php esc_html_e( 'Export JSON', 'rtbcb' ); ?></button>
+                        <button type="button" id="export-rag-csv" class="button"><?php esc_html_e( 'Export CSV', 'rtbcb' ); ?></button>
+                        <button type="button" id="toggle-rag-debug" class="button"><?php esc_html_e( 'Toggle Debug', 'rtbcb' ); ?></button>
+                    </div>
+                </div>
+                <div id="rag-metrics" class="rtbcb-metrics-bar"></div>
+                <table id="rag-results-table" class="widefat">
+                    <thead>
+                        <tr>
+                            <th><?php esc_html_e( 'Type', 'rtbcb' ); ?></th>
+                            <th><?php esc_html_e( 'Ref ID', 'rtbcb' ); ?></th>
+                            <th><?php esc_html_e( 'Title/Description', 'rtbcb' ); ?></th>
+                            <th><?php esc_html_e( 'Score', 'rtbcb' ); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <div id="rag-debug-panel" class="rtbcb-debug-panel" style="display:none;">
+                    <pre id="rag-debug-content"></pre>
+                </div>
             </div>
         </div>
     </div>

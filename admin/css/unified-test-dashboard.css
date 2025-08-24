@@ -2022,3 +2022,15 @@
     }
 }
 
+.rtbcb-score-high {
+    background-color: #d1ffd6;
+}
+
+.rtbcb-score-medium {
+    background-color: #fff8d1;
+}
+
+.rtbcb-score-low {
+    background-color: #ffd6d6;
+}
+
