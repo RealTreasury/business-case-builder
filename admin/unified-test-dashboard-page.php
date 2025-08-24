@@ -897,11 +897,59 @@ $available_models = [
         <div class="rtbcb-test-panel">
             <div class="rtbcb-panel-header">
                 <h2><?php esc_html_e( 'API Health Testing', 'rtbcb' ); ?></h2>
-                <p><?php esc_html_e( 'Monitor API connectivity, rate limits, and error handling', 'rtbcb' ); ?></p>
+                <p><?php esc_html_e( 'Verify connectivity for all required services.', 'rtbcb' ); ?></p>
             </div>
-            <div class="rtbcb-placeholder">
-                <p><?php esc_html_e( 'API Health testing interface will be implemented here.', 'rtbcb' ); ?></p>
+
+            <div class="rtbcb-api-health-controls">
+                <button type="button" id="rtbcb-run-all-api-tests" class="button button-primary">
+                    <?php esc_html_e( 'Run All Tests', 'rtbcb' ); ?>
+                </button>
+                <span id="rtbcb-api-health-notice" class="rtbcb-status-indicator"></span>
             </div>
+
+            <table class="widefat fixed rtbcb-api-health-table" id="rtbcb-api-health-table">
+                <thead>
+                    <tr>
+                        <th><?php esc_html_e( 'Component', 'rtbcb' ); ?></th>
+                        <th><?php esc_html_e( 'Last Tested', 'rtbcb' ); ?></th>
+                        <th><?php esc_html_e( 'Response Time', 'rtbcb' ); ?></th>
+                        <th><?php esc_html_e( 'Message', 'rtbcb' ); ?></th>
+                        <th><?php esc_html_e( 'Actions', 'rtbcb' ); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    $components = [
+                        'openai_chat'      => __( 'OpenAI Chat API', 'rtbcb' ),
+                        'openai_embedding' => __( 'OpenAI Embedding API', 'rtbcb' ),
+                        'portal'           => __( 'Real Treasury Portal', 'rtbcb' ),
+                        'roi_calculator'   => __( 'ROI Calculator', 'rtbcb' ),
+                        'rag_index'        => __( 'RAG Index', 'rtbcb' ),
+                    ];
+                    foreach ( $components as $key => $label ) : ?>
+                        <tr data-component="<?php echo esc_attr( $key ); ?>">
+                            <td class="rtbcb-component">
+                                <span class="rtbcb-status-indicator status-warning"><span class="dashicons dashicons-minus"></span></span>
+                                <?php echo esc_html( $label ); ?>
+                            </td>
+                            <td class="rtbcb-last-tested">&mdash;</td>
+                            <td class="rtbcb-response-time">&mdash;</td>
+                            <td class="rtbcb-message">&mdash;</td>
+                            <td class="rtbcb-actions">
+                                <button type="button" class="button rtbcb-retest" data-component="<?php echo esc_attr( $key ); ?>">
+                                    <?php esc_html_e( 'Retest', 'rtbcb' ); ?>
+                                </button>
+                                <button type="button" class="button rtbcb-details-toggle" data-component="<?php echo esc_attr( $key ); ?>">
+                                    <?php esc_html_e( 'Details', 'rtbcb' ); ?>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr class="rtbcb-details-row" data-component="<?php echo esc_attr( $key ); ?>" style="display: none;">
+                            <td colspan="5"><pre class="rtbcb-details-content"></pre></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
         </div>
     </div>
 </div>

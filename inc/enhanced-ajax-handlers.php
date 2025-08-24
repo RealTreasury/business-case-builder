@@ -38,6 +38,8 @@ add_action( 'wp_ajax_rtbcb_calculate_roi_test', 'rtbcb_ajax_calculate_roi_test' 
 add_action( 'wp_ajax_rtbcb_evaluate_response_quality', 'rtbcb_ajax_evaluate_response_quality' );
 add_action( 'wp_ajax_rtbcb_optimize_prompt_tokens', 'rtbcb_ajax_optimize_prompt_tokens' );
 add_action( 'wp_ajax_rtbcb_sensitivity_analysis', 'rtbcb_ajax_sensitivity_analysis' );
+add_action( 'wp_ajax_rtbcb_run_api_health_tests', 'rtbcb_run_api_health_tests' );
+add_action( 'wp_ajax_rtbcb_run_single_api_test', 'rtbcb_run_single_api_test' );
 
 /**
  * Test individual LLM model with given prompt.
@@ -1250,6 +1252,210 @@ function rtbcb_analyze_structure( $text ) {
     }
 
     return intval( max( 0, min( 100, $score ) ) );
+}
+
+/**
+ * Run all API health tests and return aggregated results.
+ *
+ * @return void
+ */
+function rtbcb_run_api_health_tests() {
+    if ( ! isset( $_POST['nonce'] ) || ! check_ajax_referer( 'rtbcb_unified_test_dashboard', 'nonce', false ) ) {
+        wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
+    }
+
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'rtbcb' ) ], 403 );
+    }
+
+    $results   = [];
+    $timestamp = current_time( 'mysql' );
+
+    $start = microtime( true );
+    $chat  = RTBCB_API_Tester::test_connection();
+    $results['openai_chat'] = [
+        'name'         => __( 'OpenAI Chat', 'rtbcb' ),
+        'passed'       => ! empty( $chat['success'] ),
+        'response_time'=> round( ( microtime( true ) - $start ) * 1000 ),
+        'message'      => $chat['message'] ?? '',
+        'details'      => $chat,
+        'last_tested'  => $timestamp,
+    ];
+
+    $start     = microtime( true );
+    $embedding = RTBCB_API_Tester::test_embedding();
+    $results['openai_embedding'] = [
+        'name'         => __( 'OpenAI Embedding', 'rtbcb' ),
+        'passed'       => ! empty( $embedding['success'] ),
+        'response_time'=> round( ( microtime( true ) - $start ) * 1000 ),
+        'message'      => $embedding['message'] ?? '',
+        'details'      => $embedding,
+        'last_tested'  => $timestamp,
+    ];
+
+    $start  = microtime( true );
+    $portal = RTBCB_Tests::test_portal();
+    $results['portal'] = [
+        'name'         => __( 'Real Treasury Portal', 'rtbcb' ),
+        'passed'       => ! empty( $portal['passed'] ),
+        'response_time'=> round( ( microtime( true ) - $start ) * 1000 ),
+        'message'      => $portal['message'] ?? '',
+        'details'      => $portal['details'] ?? [],
+        'last_tested'  => $timestamp,
+    ];
+
+    $start = microtime( true );
+    $roi   = RTBCB_Tests::test_roi_calculations();
+    $results['roi_calculator'] = [
+        'name'         => __( 'ROI Calculator', 'rtbcb' ),
+        'passed'       => ! empty( $roi['passed'] ),
+        'response_time'=> round( ( microtime( true ) - $start ) * 1000 ),
+        'message'      => $roi['message'] ?? '',
+        'details'      => $roi['details'] ?? [],
+        'last_tested'  => $timestamp,
+    ];
+
+    $rag    = new RTBCB_RAG();
+    $start  = microtime( true );
+    $search = $rag->search_similar( 'test', 1 );
+    $passed = is_array( $search );
+    $results['rag_index'] = [
+        'name'         => __( 'RAG Index', 'rtbcb' ),
+        'passed'       => $passed,
+        'response_time'=> round( ( microtime( true ) - $start ) * 1000 ),
+        'message'      => $passed ? __( 'RAG index search successful.', 'rtbcb' ) : __( 'RAG index search failed.', 'rtbcb' ),
+        'details'      => [
+            'result_count' => is_array( $search ) ? count( $search ) : 0,
+            'last_indexed' => get_option( 'rtbcb_last_indexed', '' ),
+        ],
+        'last_tested'  => $timestamp,
+    ];
+
+    $overall_status = 'all_passed';
+    foreach ( $results as $res ) {
+        if ( empty( $res['passed'] ) ) {
+            $overall_status = 'any_failed';
+            break;
+        }
+    }
+
+    $data = [
+        'timestamp'      => $timestamp,
+        'overall_status' => $overall_status,
+        'results'        => $results,
+    ];
+
+    update_option( 'rtbcb_last_api_test', $data, false );
+
+    wp_send_json_success( $data );
+}
+
+/**
+ * Run a single API health test.
+ *
+ * @return void
+ */
+function rtbcb_run_single_api_test() {
+    if ( ! isset( $_POST['nonce'] ) || ! check_ajax_referer( 'rtbcb_unified_test_dashboard', 'nonce', false ) ) {
+        wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
+    }
+
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'rtbcb' ) ], 403 );
+    }
+
+    $component = isset( $_POST['component'] ) ? sanitize_text_field( wp_unslash( $_POST['component'] ) ) : '';
+    if ( empty( $component ) ) {
+        wp_send_json_error( [ 'message' => __( 'Invalid component.', 'rtbcb' ) ], 400 );
+    }
+
+    $timestamp = current_time( 'mysql' );
+    switch ( $component ) {
+        case 'openai_chat':
+            $start = microtime( true );
+            $chat  = RTBCB_API_Tester::test_connection();
+            $result = [
+                'name'         => __( 'OpenAI Chat', 'rtbcb' ),
+                'passed'       => ! empty( $chat['success'] ),
+                'response_time'=> round( ( microtime( true ) - $start ) * 1000 ),
+                'message'      => $chat['message'] ?? '',
+                'details'      => $chat,
+                'last_tested'  => $timestamp,
+            ];
+            break;
+        case 'openai_embedding':
+            $start     = microtime( true );
+            $embedding = RTBCB_API_Tester::test_embedding();
+            $result    = [
+                'name'         => __( 'OpenAI Embedding', 'rtbcb' ),
+                'passed'       => ! empty( $embedding['success'] ),
+                'response_time'=> round( ( microtime( true ) - $start ) * 1000 ),
+                'message'      => $embedding['message'] ?? '',
+                'details'      => $embedding,
+                'last_tested'  => $timestamp,
+            ];
+            break;
+        case 'portal':
+            $start  = microtime( true );
+            $portal = RTBCB_Tests::test_portal();
+            $result = [
+                'name'         => __( 'Real Treasury Portal', 'rtbcb' ),
+                'passed'       => ! empty( $portal['passed'] ),
+                'response_time'=> round( ( microtime( true ) - $start ) * 1000 ),
+                'message'      => $portal['message'] ?? '',
+                'details'      => $portal['details'] ?? [],
+                'last_tested'  => $timestamp,
+            ];
+            break;
+        case 'roi_calculator':
+            $start = microtime( true );
+            $roi   = RTBCB_Tests::test_roi_calculations();
+            $result = [
+                'name'         => __( 'ROI Calculator', 'rtbcb' ),
+                'passed'       => ! empty( $roi['passed'] ),
+                'response_time'=> round( ( microtime( true ) - $start ) * 1000 ),
+                'message'      => $roi['message'] ?? '',
+                'details'      => $roi['details'] ?? [],
+                'last_tested'  => $timestamp,
+            ];
+            break;
+        case 'rag_index':
+            $rag    = new RTBCB_RAG();
+            $start  = microtime( true );
+            $search = $rag->search_similar( 'test', 1 );
+            $passed = is_array( $search );
+            $result = [
+                'name'         => __( 'RAG Index', 'rtbcb' ),
+                'passed'       => $passed,
+                'response_time'=> round( ( microtime( true ) - $start ) * 1000 ),
+                'message'      => $passed ? __( 'RAG index search successful.', 'rtbcb' ) : __( 'RAG index search failed.', 'rtbcb' ),
+                'details'      => [
+                    'result_count' => is_array( $search ) ? count( $search ) : 0,
+                    'last_indexed' => get_option( 'rtbcb_last_indexed', '' ),
+                ],
+                'last_tested'  => $timestamp,
+            ];
+            break;
+        default:
+            wp_send_json_error( [ 'message' => __( 'Unknown component.', 'rtbcb' ) ], 400 );
+    }
+
+    $stored = get_option( 'rtbcb_last_api_test', [ 'results' => [] ] );
+    $stored['results'][ $component ] = $result;
+    $stored['timestamp']             = current_time( 'mysql' );
+
+    $overall_status = 'all_passed';
+    foreach ( $stored['results'] as $res ) {
+        if ( empty( $res['passed'] ) ) {
+            $overall_status = 'any_failed';
+            break;
+        }
+    }
+    $stored['overall_status'] = $overall_status;
+
+    update_option( 'rtbcb_last_api_test', $stored, false );
+
+    wp_send_json_success( $result );
 }
 
 /**

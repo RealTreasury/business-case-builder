@@ -57,6 +57,30 @@ class RTBCB_API_Tester {
     }
 
     /**
+     * Test the OpenAI Embedding API by generating a sample embedding.
+     *
+     * @return array Test result data.
+     */
+    public static function test_embedding() {
+        $rag       = new RTBCB_RAG();
+        $embedding = $rag->get_embedding( 'test' );
+
+        if ( empty( $embedding ) || ! is_array( $embedding ) ) {
+            return [
+                'success' => false,
+                'message' => __( 'Embedding request failed.', 'rtbcb' ),
+                'details' => __( 'No embedding returned.', 'rtbcb' ),
+            ];
+        }
+
+        return [
+            'success'    => true,
+            'message'    => __( 'Embedding API reachable.', 'rtbcb' ),
+            'dimensions' => count( $embedding ),
+        ];
+    }
+
+    /**
      * Test API with a simple completion request.
      *
      * @param string $api_key API key.

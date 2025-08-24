@@ -82,7 +82,21 @@ class RTBCB_Admin {
                         'complete'     => __( 'Complete!', 'rtbcb' ),
                         'error'        => __( 'Error occurred', 'rtbcb' ),
                         'confirm_clear'=> __( 'Are you sure you want to clear all results?', 'rtbcb' ),
+                        'passed'       => __( 'Passed', 'rtbcb' ),
+                        'failed'       => __( 'Failed', 'rtbcb' ),
+                        'warning'      => __( 'Warning', 'rtbcb' ),
+                        'running'      => __( 'Running...', 'rtbcb' ),
+                        'all_ok'       => __( 'All systems operational', 'rtbcb' ),
+                        'errors_found' => __( '%d errors detected', 'rtbcb' ),
                     ],
+                    'apiTests' => [
+                        'openai_chat'      => __( 'OpenAI Chat API', 'rtbcb' ),
+                        'openai_embedding' => __( 'OpenAI Embedding API', 'rtbcb' ),
+                        'portal'           => __( 'Real Treasury Portal', 'rtbcb' ),
+                        'roi_calculator'   => __( 'ROI Calculator', 'rtbcb' ),
+                        'rag_index'        => __( 'RAG Index', 'rtbcb' ),
+                    ],
+                    'lastApiTest' => get_option( 'rtbcb_last_api_test', [] ),
                 ]
             );
         }
