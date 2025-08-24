@@ -36,6 +36,7 @@ class RTBCB_Admin {
         add_action( 'wp_ajax_nopriv_rtbcb_sync_to_local', [ $this, 'sync_to_local' ] );
         add_action( 'wp_ajax_rtbcb_test_commentary', [ $this, 'ajax_test_commentary' ] );
         add_action( 'wp_ajax_rtbcb_test_company_overview', [ $this, 'ajax_test_company_overview' ] );
+        add_action( 'wp_ajax_rtbcb_test_company_overview_enhanced', [ $this, 'ajax_test_company_overview_enhanced' ] );
         add_action( 'wp_ajax_rtbcb_test_treasury_tech_overview', [ $this, 'ajax_test_treasury_tech_overview' ] );
         add_action( 'wp_ajax_rtbcb_test_industry_overview', [ $this, 'ajax_test_industry_overview' ] );
         add_action( 'wp_ajax_rtbcb_test_real_treasury_overview', [ $this, 'ajax_test_real_treasury_overview' ] );
@@ -66,6 +67,40 @@ class RTBCB_Admin {
             [],
             RTBCB_VERSION
         );
+
+        $page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
+
+        if ( 'rtbcb-unified-tests' === $page ) {
+            wp_enqueue_style(
+                'rtbcb-unified-dashboard',
+                RTBCB_URL . 'admin/css/unified-test-dashboard.css',
+                [],
+                RTBCB_VERSION
+            );
+
+            wp_enqueue_script(
+                'rtbcb-unified-dashboard',
+                RTBCB_URL . 'admin/js/unified-test-dashboard.js',
+                [ 'jquery' ],
+                RTBCB_VERSION,
+                true
+            );
+
+            wp_localize_script(
+                'rtbcb-unified-dashboard',
+                'rtbcbDashboard',
+                [
+                    'ajaxurl' => admin_url( 'admin-ajax.php' ),
+                    'nonce'   => wp_create_nonce( 'rtbcb_unified_test_dashboard' ),
+                    'strings' => [
+                        'generating'   => __( 'Generating...', 'rtbcb' ),
+                        'complete'     => __( 'Complete!', 'rtbcb' ),
+                        'error'        => __( 'Error occurred', 'rtbcb' ),
+                        'confirm_clear'=> __( 'Are you sure you want to clear all results?', 'rtbcb' ),
+                    ],
+                ]
+            );
+        }
     }
 
     /**
@@ -136,6 +171,15 @@ class RTBCB_Admin {
             'manage_options',
             'rtbcb-api-test',
             [ $this, 'render_api_test' ]
+        );
+
+        add_submenu_page(
+            'rtbcb-dashboard',
+            __( 'Unified Test Dashboard', 'rtbcb' ),
+            __( 'Unified Tests', 'rtbcb' ),
+            'manage_options',
+            'rtbcb-unified-tests',
+            [ $this, 'render_unified_test_dashboard' ]
         );
 
         add_submenu_page(
@@ -419,6 +463,15 @@ class RTBCB_Admin {
      */
     public function render_test_estimated_benefits() {
         include RTBCB_DIR . 'admin/test-estimated-benefits-page.php';
+    }
+
+    /**
+     * Render unified test dashboard page.
+     *
+     * @return void
+     */
+    public function render_unified_test_dashboard() {
+        include RTBCB_DIR . 'admin/unified-test-dashboard-page.php';
     }
 
     /**
@@ -721,6 +774,53 @@ class RTBCB_Admin {
                 'message' => __( 'An error occurred while generating the overview.', 'rtbcb' ),
             ] );
         }
+    }
+
+    /**
+     * Enhanced AJAX handler for company overview generation.
+     *
+     * @return void
+     */
+    public function ajax_test_company_overview_enhanced() {
+        check_ajax_referer( 'rtbcb_unified_test_dashboard', 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'rtbcb' ) ] );
+        }
+
+        $company_name = isset( $_POST['company_name'] ) ? sanitize_text_field( wp_unslash( $_POST['company_name'] ) ) : '';
+        $model        = isset( $_POST['model'] ) ? sanitize_key( wp_unslash( $_POST['model'] ) ) : '';
+        $debug        = ! empty( $_POST['debug'] );
+
+        if ( empty( $company_name ) ) {
+            wp_send_json_error( [ 'message' => __( 'Company name is required.', 'rtbcb' ) ] );
+        }
+
+        $start_time = microtime( true );
+
+        $llm      = new RTBCB_LLM();
+        $overview = $llm->generate_company_overview( $company_name, $debug );
+
+        if ( is_wp_error( $overview ) ) {
+            wp_send_json_error( [ 'message' => $overview->get_error_message() ] );
+        }
+
+        $payload = rtbcb_prepare_enhanced_result( $overview, $debug ? ( $overview['debug_info'] ?? [] ) : [] );
+        $analysis = $payload['overview'];
+
+        $payload['word_count'] = str_word_count( wp_strip_all_tags( $analysis ) );
+        $payload['elapsed']    = round( microtime( true ) - $start_time, 2 );
+        $payload['model']      = $model;
+
+        update_option( 'rtbcb_current_company', [
+            'name'            => $company_name,
+            'summary'         => sanitize_textarea_field( wp_strip_all_tags( $analysis ) ),
+            'recommendations' => array_map( 'sanitize_text_field', $payload['recommendations'] ),
+            'references'      => array_map( 'esc_url_raw', $payload['references'] ),
+            'generated_at'    => current_time( 'mysql' ),
+        ] );
+
+        wp_send_json_success( $payload );
     }
 
     /**

@@ -1,0 +1,13 @@
+/* Unified Test Dashboard styling */
+.rtbcb-test-section {
+    margin-top: 20px;
+}
+
+#rtbcb-overview-output {
+    background: #fff;
+    padding: 15px;
+    border: 1px solid #ccd0d4;
+    max-height: 400px;
+    overflow: auto;
+    white-space: pre-wrap;
+}

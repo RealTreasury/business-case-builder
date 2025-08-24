@@ -10,10 +10,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Retrieve current company data.
  *
- * @return array Current company data.
+ * @return array|null Current company data or null if not set.
  */
 function rtbcb_get_current_company() {
-    return get_option( 'rtbcb_current_company', [] );
+    return get_option( 'rtbcb_current_company', null );
 }
 
 /**
@@ -27,6 +27,40 @@ function rtbcb_clear_current_company() {
     delete_option( 'rtbcb_industry_insights' );
     delete_option( 'rtbcb_treasury_tech_overview' );
     delete_option( 'rtbcb_treasury_challenges' );
+}
+
+/**
+ * Validate OpenAI API key format.
+ *
+ * @param string $api_key API key to validate.
+ * @return bool True if valid format.
+ */
+function rtbcb_is_valid_openai_api_key( $api_key ) {
+    $api_key = sanitize_text_field( $api_key );
+    return (bool) preg_match( '/^sk-[a-zA-Z0-9]{48}$/', $api_key ) ||
+        (bool) preg_match( '/^sk-proj-[a-zA-Z0-9]{48}$/', $api_key );
+}
+
+/**
+ * Get sample inputs for testing.
+ *
+ * @return array Sample input data.
+ */
+function rtbcb_get_sample_inputs() {
+    return [
+        'company_name' => 'Acme Corporation',
+        'company_size' => '1000-5000 employees',
+        'industry'     => 'Manufacturing',
+        'revenue'      => 500000000,
+        'staff_count'  => 15,
+        'efficiency'   => 6,
+        'pain_points'  => [
+            'Manual cash reconciliation',
+            'Multiple banking platforms',
+            'Limited visibility into cash position',
+            'Time-consuming reporting',
+        ],
+    ];
 }
 
 /**
@@ -271,20 +305,6 @@ function rtbcb_is_business_email( $email ) {
 }
 
 /**
- * Validate OpenAI API key format.
- *
- * Accepts standard and project-scoped keys which start with "sk-" and may
- * include letters, numbers, hyphens, colons, and underscores and are at
- * least 32 characters long after the prefix.
- *
- * @param string $api_key API key.
- * @return bool Whether the format is valid.
- */
-function rtbcb_is_valid_openai_api_key( $api_key ) {
-    return (bool) preg_match( '/^sk-[A-Za-z0-9:_-]{32,}$/', $api_key );
-}
-
-/**
  * Normalize a model name by stripping date suffixes.
  *
  * @param string $model Raw model identifier.
@@ -403,31 +423,6 @@ function rtbcb_get_memory_status() {
         'current' => memory_get_usage( true ),
         'peak'    => memory_get_peak_usage( true ),
         'limit'   => wp_convert_hr_to_bytes( ini_get( 'memory_limit' ) ),
-    ];
-}
-
-/**
- * Retrieve sample user inputs for testing purposes.
- *
- * @return array Sample user inputs.
- */
-function rtbcb_get_sample_inputs() {
-    return [
-        'company_name'           => 'Acme Manufacturing Corp',
-        'company_size'           => '$500M-$2B',
-        'industry'               => 'Manufacturing',
-        'hours_reconciliation'   => 15,
-        'hours_cash_positioning' => 10,
-        'num_banks'              => 5,
-        'ftes'                   => 3,
-        'pain_points'            => [
-            'manual_processes',
-            'poor_visibility',
-            'forecast_accuracy'
-        ],
-        'business_objective'     => 'reduce_costs',
-        'implementation_timeline'=> '6_months',
-        'budget_range'           => '100k_500k',
     ];
 }
 
