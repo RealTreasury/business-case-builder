@@ -21,7 +21,11 @@
 
             const start = performance.now();
             const original = rtbcbTestUtils.showLoading(generateBtn, 'Generating...');
-            resultsDiv.html('<p>Generating overview...</p>');
+            const progress = rtbcbTestUtils.startProgress(resultsDiv, [
+                'Generating overview...',
+                'Model is analyzing data...',
+                'Finalizing response...'
+            ]);
 
             $.ajax({
                 url: ajaxurl,
@@ -72,6 +76,7 @@
                     });
                 },
                 complete: function() {
+                    rtbcbTestUtils.stopProgress(progress);
                     rtbcbTestUtils.hideLoading(generateBtn, original);
                 }
             });

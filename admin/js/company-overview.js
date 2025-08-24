@@ -9,6 +9,8 @@
         function sendRequest(companyName) {
             console.log('Starting simple company overview request');
 
+            let progress;
+
             $.ajax({
                 url: ajaxurl,
                 method: 'POST',
@@ -20,6 +22,11 @@
                 },
                 beforeSend: function() {
                     generateBtn.prop('disabled', true).text( __( 'Testing Connection...', 'rtbcb' ) );
+                    progress = rtbcbTestUtils.startProgress(resultsDiv, [
+                        __( 'Generating overview...', 'rtbcb' ),
+                        __( 'Model is analyzing data...', 'rtbcb' ),
+                        __( 'Finalizing response...', 'rtbcb' )
+                    ]);
                 },
                 success: function(response) {
                     console.log('AJAX Success:', response);
@@ -42,6 +49,7 @@
                     showError(message);
                 },
                 complete: function() {
+                    rtbcbTestUtils.stopProgress(progress);
                     generateBtn.prop('disabled', false).text( __( 'Generate Overview', 'rtbcb' ) );
                 }
             });
