@@ -43,6 +43,7 @@ add_action( 'wp_ajax_rtbcb_run_data_health_checks', 'rtbcb_run_data_health_check
 add_action( 'wp_ajax_rtbcb_test_rag_query', 'rtbcb_test_rag_query' );
 add_action( 'wp_ajax_rtbcb_rag_rebuild_index', 'rtbcb_rag_rebuild_index' );
 add_action( 'wp_ajax_rtbcb_generate_preview_report', 'rtbcb_generate_preview_report' );
+add_action( 'wp_ajax_rtbcb_save_dashboard_settings', 'rtbcb_save_dashboard_settings' );
 
 /**
  * Test individual LLM model with given prompt.
@@ -1556,5 +1557,37 @@ function rtbcb_generate_preview_report() {
     $html = wp_kses( $html, $allowed_tags );
 
     wp_send_json_success( [ 'html' => $html ] );
+}
+
+/**
+ * Save dashboard settings.
+ *
+ * @return void
+ */
+function rtbcb_save_dashboard_settings() {
+    if ( ! check_ajax_referer( 'rtbcb_save_dashboard_settings', 'nonce', false ) ) {
+        wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
+    }
+
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'rtbcb' ) ], 403 );
+    }
+
+    $fields = [
+        'rtbcb_openai_api_key'      => 'sanitize_text_field',
+        'rtbcb_mini_model'          => 'sanitize_text_field',
+        'rtbcb_premium_model'       => 'sanitize_text_field',
+        'rtbcb_advanced_model'      => 'sanitize_text_field',
+        'rtbcb_embedding_model'     => 'sanitize_text_field',
+        'rtbcb_labor_cost_per_hour' => 'floatval',
+        'rtbcb_bank_fee_baseline'   => 'floatval',
+    ];
+
+    foreach ( $fields as $option => $sanitize ) {
+        $value = isset( $_POST[ $option ] ) ? call_user_func( $sanitize, wp_unslash( $_POST[ $option ] ) ) : '';
+        update_option( $option, $value );
+    }
+
+    wp_send_json_success( [ 'message' => __( 'Settings saved.', 'rtbcb' ) ] );
 }
 

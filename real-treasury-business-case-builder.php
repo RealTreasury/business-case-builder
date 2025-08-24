@@ -1086,7 +1086,7 @@ class RTBCB_Plugin {
     public function admin_notices() {
         // Check if API key is configured
         if ( current_user_can( 'manage_options' ) && empty( get_option( 'rtbcb_openai_api_key' ) ) ) {
-            $settings_url = admin_url( 'admin.php?page=rtbcb-settings' );
+            $settings_url = admin_url( 'admin.php?page=rtbcb-unified-tests#settings' );
             echo '<div class="notice notice-warning is-dismissible">';
             echo '<p>';
             printf(
@@ -1124,7 +1124,7 @@ class RTBCB_Plugin {
         $custom_links = [
             'settings' => sprintf(
                 '<a href="%s">%s</a>',
-                admin_url( 'admin.php?page=rtbcb-settings' ),
+                admin_url( 'admin.php?page=rtbcb-unified-tests#settings' ),
                 __( 'Settings', 'rtbcb' )
             ),
             'dashboard' => sprintf(
