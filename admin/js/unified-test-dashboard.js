@@ -20,12 +20,51 @@
         ragRequest: null,
 
         // Initialize dashboard
-        init() {
+        init: function() {
             this.bindEvents();
             this.initializeTabs();
             this.checkSystemStatus();
             this.initApiHealth();
             this.initRagModule();
+            this.initLLMModule();
+            this.setupCharts();
+
+            // Store default button text for state management
+            $('[data-action]').each(function() {
+                $(this).data('default-text', $(this).html());
+            });
+
+            // Re-init after tab switches
+            $(document).on('rtbcb:tab-switched', this.reinitializeCurrentTab.bind(this));
+        },
+
+        reinitializeCurrentTab: function() {
+            // Rebind any dynamic content in the active tab
+            const activeTab = this.currentTab;
+
+            switch(activeTab) {
+                case 'llm-tests':
+                    this.initLLMModule();
+                    break;
+                case 'rag-system':
+                    this.initRagModule();
+                    break;
+                case 'api-health':
+                    this.initApiHealth();
+                    break;
+            }
+        },
+
+        initLLMModule: function() {
+            if (typeof this.initLLMIntegration === 'function') {
+                this.initLLMIntegration();
+            }
+        },
+
+        setupCharts: function() {
+            if (typeof this.setupLLMCharts === 'function') {
+                this.setupLLMCharts();
+            }
         },
 
         // Bind all event handlers
@@ -33,10 +72,15 @@
             // Tab navigation
             $('.rtbcb-test-tabs .nav-tab').on('click', this.handleTabClick.bind(this));
 
+            // Delegated action handlers
+            $(document).on('click', '[data-action="run-company-overview"]', this.generateCompanyOverview.bind(this));
+            $(document).on('click', '[data-action="run-llm-test"]', this.runLLMTest.bind(this));
+            $(document).on('click', '[data-action="run-rag-test"]', this.runRAGTest.bind(this));
+            $(document).on('click', '[data-action="api-health-ping"]', this.runAPIHealthPing.bind(this));
+            $(document).on('click', '[data-action="export-results"]', this.exportResults.bind(this));
+
             // Company overview controls
-            $('#generate-company-overview').on('click', this.generateCompanyOverview.bind(this));
             $('#clear-results').on('click', this.clearResults.bind(this));
-            $('#export-results').on('click', this.exportResults.bind(this));
             $('#copy-results').on('click', this.copyResults.bind(this));
             $('#regenerate-results').on('click', this.regenerateResults.bind(this));
             $('#retry-request').on('click', this.retryRequest.bind(this));
@@ -46,7 +90,6 @@
             $('#toggle-debug').on('click', this.toggleDebugPanel.bind(this));
 
             // API health controls
-            $('#rtbcb-run-all-api-tests').on('click', this.runAllApiTests.bind(this));
             $('.rtbcb-api-health-table').on('click', '.rtbcb-retest', (e) => {
                 const comp = $(e.currentTarget).data('component');
                 this.runSingleApiTest(comp);
@@ -61,10 +104,8 @@
 
             // Settings controls
             $('#rtbcb-dashboard-settings-form').on('submit', this.saveDashboardSettings.bind(this));
-            $('#rtbcb-run-tests').on('click', this.runAllApiTests.bind(this));
 
             // RAG testing controls
-            $('#rtbcb-run-rag-query').on('click', this.runRagQuery.bind(this));
             $('#rtbcb-rag-rebuild').on('click', this.rebuildRagIndex.bind(this));
             $('#rtbcb-rag-query').on('input', this.validateRagQuery.bind(this));
             $('#rtbcb-copy-rag-context').on('click', this.copyRagContext.bind(this));
@@ -116,6 +157,7 @@
             $(`#${tabName}`).addClass('active').show();
 
             this.currentTab = tabName;
+            $(document).trigger('rtbcb:tab-switched', [tabName]);
         },
 
         // Check system status on load
@@ -125,7 +167,7 @@
 
             if (!apiKey) {
                 this.showNotification('OpenAI API key is not configured. Please configure it in Settings.', 'error');
-                $('#generate-company-overview').prop('disabled', true);
+                $('[data-action="run-company-overview"]').prop('disabled', true);
             }
         },
 
@@ -134,13 +176,140 @@
             const companyName = $('#company-name-input').val().trim();
             const isValid = companyName.length >= 2;
 
-            $('#generate-company-overview').prop('disabled', !isValid || this.isGenerating);
+            $('[data-action="run-company-overview"]').prop('disabled', !isValid || this.isGenerating);
 
             if (companyName.length > 0 && companyName.length < 2) {
                 $('#company-name-input').addClass('error');
             } else {
                 $('#company-name-input').removeClass('error');
             }
+        },
+
+        // Standardized button state management
+        setButtonState: function(selector, state, text) {
+            const $button = $(selector);
+
+            switch(state) {
+                case 'loading':
+                    $button.prop('disabled', true)
+                           .attr('aria-busy', 'true')
+                           .addClass('rtbcb-loading')
+                           .html(`<span class="dashicons dashicons-update rtbcb-spin"></span> ${text || 'Loading...'}`);
+                    break;
+
+                case 'success':
+                    $button.prop('disabled', false)
+                           .attr('aria-busy', 'false')
+                           .removeClass('rtbcb-loading')
+                           .addClass('rtbcb-success')
+                           .html(`<span class="dashicons dashicons-yes-alt"></span> ${text || 'Complete'}`);
+                    setTimeout(() => $button.removeClass('rtbcb-success'), 3000);
+                    break;
+
+                case 'error':
+                    $button.prop('disabled', false)
+                           .attr('aria-busy', 'false')
+                           .removeClass('rtbcb-loading')
+                           .addClass('rtbcb-error')
+                           .html(`<span class="dashicons dashicons-warning"></span> ${text || 'Error'}`);
+                    setTimeout(() => $button.removeClass('rtbcb-error'), 5000);
+                    break;
+
+                case 'ready':
+                default:
+                    $button.prop('disabled', false)
+                           .attr('aria-busy', 'false')
+                           .removeClass('rtbcb-loading rtbcb-success rtbcb-error')
+                           .html(text || $button.data('default-text') || 'Run Test');
+                    break;
+            }
+        },
+
+        // Centralized AJAX request handler with retry logic
+        request: function(action, data = {}, options = {}) {
+            const defaults = {
+                retries: 3,
+                backoffMs: 1000,
+                validateResponse: true
+            };
+
+            const config = Object.assign({}, defaults, options);
+
+            return new Promise((resolve, reject) => {
+                const attemptRequest = (attemptNum) => {
+                    // Ensure nonce is present
+                    if (!rtbcbDashboard.nonces[action]) {
+                        reject(new Error(`Missing nonce for action: ${action}`));
+                        return;
+                    }
+
+                    const requestData = Object.assign({
+                        action: `rtbcb_${action}`,
+                        nonce: rtbcbDashboard.nonces[action]
+                    }, data);
+
+                    $.ajax({
+                        url: rtbcbDashboard.ajaxurl,
+                        type: 'POST',
+                        data: requestData,
+                        timeout: 60000,
+
+                        success: (response) => {
+                            if (config.validateResponse && (!response || !response.hasOwnProperty('success'))) {
+                                reject(new Error('Invalid response format'));
+                                return;
+                            }
+
+                            if (response.success) {
+                                resolve(response.data || response);
+                            } else {
+                                reject(new Error(response.data?.message || 'Request failed'));
+                            }
+                        },
+
+                        error: (xhr, status, error) => {
+                            if (xhr.status === 429 && attemptNum < config.retries) {
+                                // Rate limited - retry with exponential backoff
+                                const delay = config.backoffMs * Math.pow(2, attemptNum - 1);
+                                setTimeout(() => attemptRequest(attemptNum + 1), delay);
+                                return;
+                            }
+
+                            if (attemptNum < config.retries) {
+                                setTimeout(() => attemptRequest(attemptNum + 1), config.backoffMs);
+                                return;
+                            }
+
+                            reject(new Error(`${status}: ${error}`));
+                        }
+                    });
+                };
+
+                attemptRequest(1);
+            });
+        },
+
+        // Chart.js Memory Management
+        destroyChart: function(chartId) {
+            if (this.charts && this.charts[chartId]) {
+                this.charts[chartId].destroy();
+                delete this.charts[chartId];
+            }
+        },
+
+        createChart: function(chartId, config) {
+            this.destroyChart(chartId);
+
+            if (!this.charts) this.charts = {};
+
+            const ctx = document.getElementById(chartId);
+            if (!ctx) {
+                console.warn(`Chart canvas ${chartId} not found`);
+                return null;
+            }
+
+            this.charts[chartId] = new Chart(ctx, config);
+            return this.charts[chartId];
         },
 
         // Generate company overview with comprehensive tracking
@@ -157,6 +326,18 @@
             }
 
             this.startGeneration(companyName, model, showDebug);
+        },
+
+        runLLMTest: function(e) {
+            this.runModelComparison(e);
+        },
+
+        runRAGTest: function(e) {
+            this.runRagQuery(e);
+        },
+
+        runAPIHealthPing: function(e) {
+            this.runAllApiTests(e);
         },
 
         // Start the generation process
@@ -269,7 +450,7 @@
 
             // Show container and enable actions
             resultsContainer.show().addClass('rtbcb-fade-in');
-            $('#export-results, #copy-results, #regenerate-results').prop('disabled', false);
+            $('[data-action="export-results"], #copy-results, #regenerate-results').prop('disabled', false);
 
             // Hide progress
             this.hideProgressContainer();
@@ -396,16 +577,15 @@
         },
 
         // UI state management
-        setLoadingState(loading, buttonSelector = '#generate-company-overview', text = loading ? 'Generating...' : 'Generate Overview') {
+        setLoadingState(loading, buttonSelector = '[data-action="run-company-overview"]', text = loading ? 'Generating...' : 'Generate Overview') {
             const container = $('.rtbcb-test-panel');
-            const button = $(buttonSelector);
 
             if (loading) {
                 container.addClass('rtbcb-loading');
-                button.prop('disabled', true).html('<span class="dashicons dashicons-update rtbcb-pulse"></span> ' + text);
+                this.setButtonState(buttonSelector, 'loading', text);
             } else {
                 container.removeClass('rtbcb-loading');
-                button.prop('disabled', false).html('<span class="dashicons dashicons-update"></span> ' + text);
+                this.setButtonState(buttonSelector, 'ready', text);
             }
         },
 
@@ -466,7 +646,7 @@
             this.hideContainers(['results', 'error', 'progress']);
             this.hideDebugPanel();
             $('#company-name-input').val('').focus();
-            $('#export-results, #copy-results, #regenerate-results').prop('disabled', true);
+            $('[data-action="export-results"], #copy-results, #regenerate-results').prop('disabled', true);
             this.showNotification('Results cleared', 'info');
         },
 
@@ -674,7 +854,6 @@
             // Model comparison controls
             $('#llm-test-scenario').on('change', this.handleScenarioChange.bind(this));
             $('#llm-temperature').on('input', this.updateTemperatureDisplay.bind(this));
-            $('#run-model-comparison').on('click', this.runModelComparison.bind(this));
             $('#load-prompt-template').on('click', this.loadPromptTemplate.bind(this));
             $('#save-prompt-template').on('click', this.savePromptTemplate.bind(this));
             $('#export-llm-comparison').on('click', this.exportLLMResults.bind(this));
@@ -805,7 +984,7 @@
         // Start model comparison process
         startModelComparison(config) {
             this.llmTestInProgress = true;
-            this.setLoadingState(true, '#run-model-comparison', 'Testing Models...');
+            this.setLoadingState(true, '[data-action="run-llm-test"]', 'Testing Models...');
             this.hideContainers(['model-comparison-results']);
 
             // Show progress for each model
@@ -892,7 +1071,7 @@
         // Complete model comparison
         completeModelComparison(results, config) {
             this.llmTestInProgress = false;
-            this.setLoadingState(false, '#run-model-comparison', 'Run Model Comparison');
+            this.setLoadingState(false, '[data-action="run-llm-test"]', 'Run Model Comparison');
 
             const successfulResults = results.filter(r => r.value.success);
             const failedResults = results.filter(r => r.value.success === false);
@@ -980,20 +1159,11 @@
 
         // Create model performance chart
         createModelPerformanceChart(results) {
-            const ctx = document.getElementById('model-performance-chart');
-            if (!ctx) return;
-
-            // Destroy existing chart
-            if (this.llmCharts.performance) {
-                this.llmCharts.performance.destroy();
-            }
-
             const models = results.map(r => this.getModelDisplayName(r.modelKey));
             const responseTimes = results.map(r => r.result.response_time || 0);
-            const tokensUsed = results.map(r => r.result.tokens_used || 0);
             const qualityScores = results.map(r => this.calculateModelPerformance(r.result).score);
 
-            this.llmCharts.performance = new Chart(ctx, {
+            this.llmCharts.performance = this.createChart('model-performance-chart', {
                 type: 'bar',
                 data: {
                     labels: models,
@@ -1711,7 +1881,7 @@
         validateRagQuery() {
             const query = $('#rtbcb-rag-query').val().trim();
             const disabled = query.length === 0 || this.ragRequest !== null;
-            $('#rtbcb-run-rag-query').prop('disabled', disabled);
+            $('[data-action="run-rag-test"]').prop('disabled', disabled);
         },
 
         runRagQuery() {
@@ -1886,7 +2056,7 @@
         },
 
         runAllApiTests() {
-            $('#rtbcb-run-all-api-tests').prop('disabled', true);
+            $('[data-action="api-health-ping"]').prop('disabled', true);
             $('#rtbcb-api-health-notice').text(rtbcbDashboard.strings.running);
 
             $.post(rtbcbDashboard.ajaxurl, {
@@ -1906,7 +2076,7 @@
             }).fail(() => {
                 $('#rtbcb-api-health-notice').text(rtbcbDashboard.strings.error);
             }).always(() => {
-                $('#rtbcb-run-all-api-tests').prop('disabled', false);
+                $('[data-action="api-health-ping"]').prop('disabled', false);
             });
         },
 
@@ -2061,7 +2231,7 @@
             const selectedModels = $('input[name="llm-models[]"]:checked').length;
 
             const isValid = userPrompt.length > 0 && selectedModels > 0;
-            $('#run-model-comparison').prop('disabled', !isValid || this.llmTestInProgress);
+            $('[data-action="run-llm-test"]').prop('disabled', !isValid || this.llmTestInProgress);
         },
 
         // Setup Charts
