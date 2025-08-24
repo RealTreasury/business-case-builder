@@ -39,6 +39,7 @@ add_action( 'wp_ajax_rtbcb_evaluate_response_quality', 'rtbcb_ajax_evaluate_resp
 add_action( 'wp_ajax_rtbcb_optimize_prompt_tokens', 'rtbcb_ajax_optimize_prompt_tokens' );
 add_action( 'wp_ajax_rtbcb_run_api_health_tests', 'rtbcb_run_api_health_tests' );
 add_action( 'wp_ajax_rtbcb_run_single_api_test', 'rtbcb_run_single_api_test' );
+add_action( 'wp_ajax_rtbcb_run_data_health_checks', 'rtbcb_run_data_health_checks' );
 add_action( 'wp_ajax_rtbcb_test_rag_query', 'rtbcb_test_rag_query' );
 add_action( 'wp_ajax_rtbcb_rag_rebuild_index', 'rtbcb_rag_rebuild_index' );
 add_action( 'wp_ajax_rtbcb_generate_preview_report', 'rtbcb_generate_preview_report' );
@@ -1371,6 +1372,77 @@ function rtbcb_run_api_health_tests() {
             'results'        => $results,
         ]
     );
+}
+
+/**
+ * Run data health checks.
+ *
+ * @return void
+ */
+function rtbcb_run_data_health_checks() {
+    if ( ! check_ajax_referer( 'rtbcb_data_health_checks', 'nonce', false ) ) {
+        wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
+    }
+
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'rtbcb' ) ], 403 );
+    }
+
+    global $wpdb;
+
+    $results = [];
+
+    // Database check.
+    $db_ok = $wpdb->get_var( 'SELECT 1' );
+    $results['database'] = [
+        'label'   => __( 'Database', 'rtbcb' ),
+        'passed'  => ( null !== $db_ok ),
+        'message' => ( null !== $db_ok ) ? __( 'Database connection is healthy.', 'rtbcb' ) : __( 'Database query failed.', 'rtbcb' ),
+    ];
+
+    // API connectivity check.
+    $api_key = get_option( 'rtbcb_openai_api_key', '' );
+    if ( empty( $api_key ) ) {
+        $results['api'] = [
+            'label'   => __( 'API Connectivity', 'rtbcb' ),
+            'passed'  => false,
+            'message' => __( 'OpenAI API key not configured.', 'rtbcb' ),
+        ];
+    } else {
+        $response = wp_remote_get(
+            'https://api.openai.com/v1/models',
+            [
+                'headers' => [ 'Authorization' => 'Bearer ' . $api_key ],
+                'timeout' => 10,
+            ]
+        );
+
+        if ( is_wp_error( $response ) ) {
+            $results['api'] = [
+                'label'   => __( 'API Connectivity', 'rtbcb' ),
+                'passed'  => false,
+                'message' => sanitize_text_field( $response->get_error_message() ),
+            ];
+        } else {
+            $code            = wp_remote_retrieve_response_code( $response );
+            $results['api'] = [
+                'label'   => __( 'API Connectivity', 'rtbcb' ),
+                'passed'  => ( 200 === $code ),
+                'message' => ( 200 === $code ) ? __( 'API reachable.', 'rtbcb' ) : sprintf( __( 'Unexpected response code: %d', 'rtbcb' ), $code ),
+            ];
+        }
+    }
+
+    // File permission check.
+    $upload_dir = wp_upload_dir();
+    $writable   = is_writable( $upload_dir['basedir'] );
+    $results['files'] = [
+        'label'   => __( 'File Permissions', 'rtbcb' ),
+        'passed'  => $writable,
+        'message' => $writable ? __( 'Upload directory is writable.', 'rtbcb' ) : __( 'Upload directory is not writable.', 'rtbcb' ),
+    ];
+
+    wp_send_json_success( $results );
 }
 
 /**

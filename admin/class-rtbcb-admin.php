@@ -81,6 +81,7 @@ class RTBCB_Admin {
                         'llm'       => wp_create_nonce( 'rtbcb_llm_testing' ),
                         'apiHealth' => wp_create_nonce( 'rtbcb_api_health_tests' ),
                         'reportPreview' => wp_create_nonce( 'rtbcb_generate_preview_report' ),
+                        'dataHealth' => wp_create_nonce( 'rtbcb_data_health_checks' ),
                     ],
                     'strings' => [
                         'generating'     => __( 'Generating...', 'rtbcb' ),
@@ -98,6 +99,7 @@ class RTBCB_Admin {
                         'noResults'      => __( 'No results found', 'rtbcb' ),
                         'indexRebuilt'   => __( 'Index rebuilt successfully.', 'rtbcb' ),
                         'rebuildFailed'  => __( 'Index rebuild failed.', 'rtbcb' ),
+                        'noChecks'       => __( 'No checks run yet.', 'rtbcb' ),
                         'lastIndexed'    => __( 'Last indexed: %s', 'rtbcb' ),
                         'entries'        => __( 'Entries: %d', 'rtbcb' ),
                     ],
