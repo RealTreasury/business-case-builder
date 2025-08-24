@@ -202,11 +202,18 @@ function rtbcb_sanitize_form_data( $data ) {
     }
     
     // Text fields
-    $text_fields = [ 'company_size', 'industry' ];
+    $text_fields = [ 'company_size', 'industry', 'name', 'size', 'complexity' ];
     foreach ( $text_fields as $field ) {
         if ( isset( $data[ $field ] ) ) {
             $sanitized[ $field ] = sanitize_text_field( $data[ $field ] );
         }
+    }
+
+    // Focus areas array
+    if ( isset( $data['focus_areas'] ) && is_array( $data['focus_areas'] ) ) {
+        $sanitized['focus_areas'] = array_filter(
+            array_map( 'sanitize_text_field', $data['focus_areas'] )
+        );
     }
     
     // Numeric fields
