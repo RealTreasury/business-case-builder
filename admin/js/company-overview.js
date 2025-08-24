@@ -7,44 +7,55 @@
         const resultsDiv = $('#rtbcb-company-overview-results');
 
         function sendRequest(companyName) {
-            console.log('Starting simple company overview request');
+            console.log('Starting company overview request for:', companyName);
 
             let progress;
+            let startTime = Date.now();
 
             $.ajax({
                 url: ajaxurl,
                 method: 'POST',
-                timeout: 60000,
+                timeout: 180000, // Increase to 3 minutes
                 data: {
                     action: 'rtbcb_company_overview_simple',
                     company_name: companyName,
                     nonce: rtbcb_ajax.nonce
                 },
                 beforeSend: function() {
-                    generateBtn.prop('disabled', true).text( __( 'Testing Connection...', 'rtbcb' ) );
+                    generateBtn.prop('disabled', true).text( __( 'Connecting...', 'rtbcb' ) );
                     progress = rtbcbTestUtils.startProgress(resultsDiv, [
-                        __( 'Generating overview...', 'rtbcb' ),
-                        __( 'Model is analyzing data...', 'rtbcb' ),
-                        __( 'Finalizing response...', 'rtbcb' )
+                        __( 'Connecting to AI service...', 'rtbcb' ),
+                        __( 'Analyzing company data...', 'rtbcb' ),
+                        __( 'Generating treasury insights...', 'rtbcb' ),
+                        __( 'Compiling recommendations...', 'rtbcb' ),
+                        __( 'Finalizing analysis...', 'rtbcb' )
                     ]);
                 },
                 success: function(response) {
-                    console.log('AJAX Success:', response);
+                    const duration = ( ( Date.now() - startTime ) / 1000 ).toFixed( 1 );
+                    console.log(`Request completed in ${duration}s:`, response);
+
                     if (response.success) {
                         displaySimpleResults(response.data);
                     } else {
-                        showError( __( 'Request failed: ', 'rtbcb' ) + response.data.message );
+                        showError( __( 'Analysis failed: ', 'rtbcb' ) + ( response.data?.message || 'Unknown error' ) );
                     }
                 },
                 error: function(xhr, textStatus, error) {
-                    console.log('AJAX Error:', textStatus, error, 'Status:', xhr.status, 'Response:', xhr.responseText);
+                    const duration = ( ( Date.now() - startTime ) / 1000 ).toFixed( 1 );
+                    console.log(`Request failed after ${duration}s:`, textStatus, error, 'Status:', xhr.status);
+
                     let message;
                     if (textStatus === 'timeout') {
-                        message = __( 'The request timed out. Please try again.', 'rtbcb' );
+                        message = __( 'The analysis is taking longer than expected. This may be due to high demand. Please try again in a few minutes.', 'rtbcb' );
                     } else if (xhr.status === 504) {
-                        message = __( 'Connection failed: The server took too long to respond.', 'rtbcb' );
+                        message = __( 'Gateway timeout - the server is temporarily overloaded. Please try again in a moment.', 'rtbcb' );
+                    } else if (xhr.status === 502) {
+                        message = __( 'Service temporarily unavailable. Please try again shortly.', 'rtbcb' );
+                    } else if (xhr.status === 0) {
+                        message = __( 'Connection lost. Please check your internet connection and try again.', 'rtbcb' );
                     } else {
-                        message = __( 'Connection failed: ', 'rtbcb' ) + textStatus + ' - ' + error;
+                        message = __( 'Connection error: ', 'rtbcb' ) + textStatus + ( error ? ' - ' + error : '' );
                     }
                     showError(message);
                 },
@@ -78,8 +89,22 @@
             resultsDiv.html(html);
         }
 
+        // Add retry functionality
         function showError(message) {
-            resultsDiv.html('<div class="error-message" style="color: red; padding: 10px; border: 1px solid red;">' + message + '</div>');
+            const retryButton = '<button type="button" id="rtbcb-retry-overview" class="button button-secondary" style="margin-left: 10px;">' +
+                __( 'Try Again', 'rtbcb' ) + '</button>';
+
+            const errorHtml = '<div class="error-message" style="color: red; padding: 10px; border: 1px solid red; margin: 10px 0;">' +
+                message + retryButton + '</div>';
+
+            resultsDiv.html(errorHtml);
+
+            $('#rtbcb-retry-overview').on('click', function() {
+                const companyName = $('#rtbcb-test-company-name').val().trim();
+                if (companyName) {
+                    sendRequest(companyName);
+                }
+            });
         }
 
         generateBtn.on('click', function(e) {
