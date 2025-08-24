@@ -705,301 +705,105 @@ $last_index_display = $last_indexed ? $last_indexed : __( 'Never', 'rtbcb' );
         'premium'  => get_option( 'rtbcb_premium_model', rtbcb_get_default_model( 'premium' ) ),
         'advanced' => get_option( 'rtbcb_advanced_model', rtbcb_get_default_model( 'advanced' ) ),
     ];
-
-    $model_capabilities = rtbcb_get_model_capabilities();
     ?>
 
     <!-- LLM Tests Section -->
     <div id="llm-tests" class="rtbcb-test-section" style="display: none;">
         <div class="rtbcb-test-panel">
             <div class="rtbcb-panel-header">
-                <h2><?php esc_html_e( 'LLM Integration Testing', 'rtbcb' ); ?></h2>
-                <p><?php esc_html_e( 'Test different models, compare responses, optimize prompts, and evaluate AI performance', 'rtbcb' ); ?></p>
+                <h2><?php esc_html_e('LLM Integration Testing', 'rtbcb'); ?></h2>
+                <p><?php esc_html_e('Test different models, compare responses, and optimize performance', 'rtbcb'); ?></p>
             </div>
 
-            <!-- Test Mode Tabs -->
-            <div class="rtbcb-llm-test-modes">
-                <div class="rtbcb-mode-tabs">
-                    <button type="button" class="rtbcb-mode-tab active" data-mode="model-comparison">
+            <!-- Test Configuration -->
+            <div class="rtbcb-test-controls">
+                <div class="rtbcb-llm-config-grid">
+                    <div class="rtbcb-config-section">
+                        <h4><?php esc_html_e('Test Configuration', 'rtbcb'); ?></h4>
+
+                        <div class="rtbcb-control-group">
+                            <label for="llm-test-prompt"><?php esc_html_e('Test Prompt:', 'rtbcb'); ?></label>
+                            <textarea id="llm-test-prompt" rows="4" placeholder="<?php esc_attr_e('Enter your test prompt...', 'rtbcb'); ?>"></textarea>
+                        </div>
+
+                        <div class="rtbcb-control-group">
+                            <label><?php esc_html_e('Models to Test:', 'rtbcb'); ?></label>
+                            <div class="rtbcb-model-checkboxes">
+                                <?php foreach ($available_models as $key => $model): ?>
+                                    <label class="rtbcb-checkbox-label">
+                                        <input type="checkbox" name="test-models[]" value="<?php echo esc_attr($key); ?>" 
+                                               data-model-name="<?php echo esc_attr($model); ?>" checked>
+                                        <span><?php echo esc_html(ucfirst($key) . ' (' . $model . ')'); ?></span>
+                                    </label>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+
+                        <div class="rtbcb-control-row">
+                            <div class="rtbcb-control-group">
+                                <label for="llm-max-tokens"><?php esc_html_e('Max Tokens:', 'rtbcb'); ?></label>
+                                <input type="number" id="llm-max-tokens" min="100" max="4000" value="1000">
+                            </div>
+
+                            <div class="rtbcb-control-group">
+                                <label for="llm-temperature"><?php esc_html_e('Temperature:', 'rtbcb'); ?></label>
+                                <input type="range" id="llm-temperature" min="0" max="2" step="0.1" value="0.3">
+                                <span id="llm-temperature-value">0.3</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="rtbcb-action-buttons">
+                    <button type="button" id="run-llm-matrix-test" class="button button-primary" 
+                            data-action="run-llm-test" data-default-text="Run Model Matrix Test">
                         <span class="dashicons dashicons-networking"></span>
-                        <?php esc_html_e( 'Model Comparison', 'rtbcb' ); ?>
+                        <?php esc_html_e('Run Model Matrix Test', 'rtbcb'); ?>
                     </button>
-                    <button type="button" class="rtbcb-mode-tab" data-mode="prompt-engineering">
-                        <span class="dashicons dashicons-edit"></span>
-                        <?php esc_html_e( 'Prompt Engineering', 'rtbcb' ); ?>
-                    </button>
-                    <button type="button" class="rtbcb-mode-tab" data-mode="response-evaluation">
-                        <span class="dashicons dashicons-analytics"></span>
-                        <?php esc_html_e( 'Response Evaluation', 'rtbcb' ); ?>
-                    </button>
-                    <button type="button" class="rtbcb-mode-tab" data-mode="token-optimization">
-                        <span class="dashicons dashicons-performance"></span>
-                        <?php esc_html_e( 'Token Optimization', 'rtbcb' ); ?>
+
+                    <button type="button" id="export-llm-results" class="button" disabled
+                            data-action="export-results" data-export-type="llm">
+                        <span class="dashicons dashicons-download"></span>
+                        <?php esc_html_e('Export Results', 'rtbcb'); ?>
                     </button>
                 </div>
             </div>
 
-            <!-- Model Comparison Mode -->
-            <div id="model-comparison-mode" class="rtbcb-llm-mode-content active">
-                <div class="rtbcb-test-controls">
-                    <div class="rtbcb-llm-input-grid">
-                        <!-- Test Configuration -->
-                        <div class="rtbcb-input-section">
-                            <h4><?php esc_html_e( 'Test Configuration', 'rtbcb' ); ?></h4>
-
-                            <div class="rtbcb-control-group">
-                                <label for="llm-test-scenario"><?php esc_html_e( 'Test Scenario:', 'rtbcb' ); ?></label>
-                                <select id="llm-test-scenario">
-                                    <option value="custom"><?php esc_html_e( 'Custom Prompt', 'rtbcb' ); ?></option>
-                                    <option value="company-analysis"><?php esc_html_e( 'Company Analysis', 'rtbcb' ); ?></option>
-                                    <option value="business-case"><?php esc_html_e( 'Business Case Generation', 'rtbcb' ); ?></option>
-                                    <option value="roi-explanation"><?php esc_html_e( 'ROI Explanation', 'rtbcb' ); ?></option>
-                                    <option value="industry-insights"><?php esc_html_e( 'Industry Insights', 'rtbcb' ); ?></option>
-                                </select>
-                            </div>
-
-                            <div class="rtbcb-control-group">
-                                <label for="llm-models-to-test"><?php esc_html_e( 'Models to Test:', 'rtbcb' ); ?></label>
-                                <div class="rtbcb-checkbox-group">
-                                    <?php foreach ( $available_models as $key => $model ) : ?>
-                                        <label class="rtbcb-checkbox-label">
-                                            <input type="checkbox" name="llm-models[]" value="<?php echo esc_attr( $key ); ?>" <?php checked( true ); ?> />
-                                            <span><?php echo esc_html( ucfirst( $key ) . ' (' . $model . ')' ); ?></span>
-                                        </label>
-                                    <?php endforeach; ?>
-                                </div>
-                            </div>
-
-                            <div class="rtbcb-control-group">
-                                <label for="llm-max-tokens"><?php esc_html_e( 'Max Tokens:', 'rtbcb' ); ?></label>
-                                <input type="number" id="llm-max-tokens" min="100" max="4000" step="100" value="1000" />
-                                <span class="rtbcb-input-helper"><?php esc_html_e( 'Recommended: 500-2000', 'rtbcb' ); ?></span>
-                            </div>
-
-                            <div class="rtbcb-control-group">
-                                <label for="llm-temperature"><?php esc_html_e( 'Temperature:', 'rtbcb' ); ?></label>
-                                <input type="range" id="llm-temperature" min="0" max="2" step="0.1" value="0.3" />
-                                <span class="rtbcb-input-helper" id="temperature-value">0.3</span>
-                            </div>
-                        </div>
-
-                        <!-- Prompt Input -->
-                        <div class="rtbcb-input-section">
-                            <h4><?php esc_html_e( 'System Prompt', 'rtbcb' ); ?></h4>
-
-                            <div class="rtbcb-control-group">
-                                <label for="llm-system-prompt"><?php esc_html_e( 'System Message:', 'rtbcb' ); ?></label>
-                                <textarea id="llm-system-prompt" rows="4" placeholder="<?php esc_attr_e( 'Enter system prompt (optional)...', 'rtbcb' ); ?>"></textarea>
-                            </div>
-
-                            <div class="rtbcb-control-group">
-                                <label for="llm-user-prompt"><?php esc_html_e( 'User Prompt:', 'rtbcb' ); ?> <span class="required">*</span></label>
-                                <textarea id="llm-user-prompt" rows="6" placeholder="<?php esc_attr_e( 'Enter your test prompt...', 'rtbcb' ); ?>"></textarea>
-                            </div>
-
-                            <div class="rtbcb-control-group">
-                                <label>
-                                    <input type="checkbox" id="llm-include-context" />
-                                    <?php esc_html_e( 'Include sample context data', 'rtbcb' ); ?>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="rtbcb-action-buttons">
-                        <button type="button" id="run-model-comparison" class="button button-primary">
-                            <span class="dashicons dashicons-networking"></span>
-                            <?php esc_html_e( 'Run Model Comparison', 'rtbcb' ); ?>
-                        </button>
-                        <button type="button" id="load-prompt-template" class="button">
-                            <span class="dashicons dashicons-text-page"></span>
-                            <?php esc_html_e( 'Load Template', 'rtbcb' ); ?>
-                        </button>
-                        <button type="button" id="save-prompt-template" class="button">
-                            <span class="dashicons dashicons-download"></span>
-                            <?php esc_html_e( 'Save Template', 'rtbcb' ); ?>
-                        </button>
-                        <button type="button" id="export-llm-comparison" class="button" disabled>
-                            <span class="dashicons dashicons-download"></span>
-                            <?php esc_html_e( 'Export Results', 'rtbcb' ); ?>
-                        </button>
-                    </div>
+            <!-- Results Display -->
+            <div id="llm-test-results" class="rtbcb-results-container" style="display: none;">
+                <div class="rtbcb-results-header">
+                    <h3><?php esc_html_e('LLM Test Results', 'rtbcb'); ?></h3>
+                    <div class="rtbcb-results-meta" id="llm-results-meta"></div>
                 </div>
 
-                <!-- Model Comparison Results -->
-                <div id="model-comparison-results" class="rtbcb-results-container" style="display: none;">
-                    <div class="rtbcb-results-header">
-                        <h3><?php esc_html_e( 'Model Comparison Results', 'rtbcb' ); ?></h3>
-                        <div class="rtbcb-results-actions">
-                            <button type="button" id="toggle-comparison-details" class="button button-small">
-                                <span class="dashicons dashicons-visibility"></span>
-                                <?php esc_html_e( 'Show Details', 'rtbcb' ); ?>
-                            </button>
-                            <button type="button" id="rate-responses" class="button button-small">
-                                <span class="dashicons dashicons-star-filled"></span>
-                                <?php esc_html_e( 'Rate Responses', 'rtbcb' ); ?>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Comparison Summary -->
-                    <div class="rtbcb-comparison-summary">
-                        <div class="rtbcb-summary-cards" id="model-summary-cards">
-                            <!-- Populated via JavaScript -->
-                        </div>
-                    </div>
-
-                    <!-- Comparison Charts -->
-                    <div class="rtbcb-comparison-charts">
-                        <div class="rtbcb-chart-container">
-                            <h4><?php esc_html_e( 'Performance Comparison', 'rtbcb' ); ?></h4>
-                            <canvas id="model-performance-chart" width="800" height="400"></canvas>
-                        </div>
-                    </div>
-
-                    <!-- Response Details -->
-                    <div id="response-details" class="rtbcb-response-details" style="display: none;">
-                        <div class="rtbcb-response-grid" id="model-response-grid">
-                            <!-- Populated via JavaScript -->
-                        </div>
-                    </div>
-
-                    <!-- Quality Analysis -->
-                    <div class="rtbcb-quality-analysis">
-                        <h4><?php esc_html_e( 'Quality Analysis', 'rtbcb' ); ?></h4>
-                        <div class="rtbcb-quality-metrics" id="quality-metrics">
-                            <!-- Populated via JavaScript -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Prompt Engineering Mode -->
-            <div id="prompt-engineering-mode" class="rtbcb-llm-mode-content" style="display: none;">
-                <div class="rtbcb-test-controls">
-                    <div class="rtbcb-prompt-variants">
-                        <h4><?php esc_html_e( 'Prompt Variants', 'rtbcb' ); ?></h4>
-                        <div class="rtbcb-variants-container">
-                            <div class="rtbcb-variant-item" data-variant="1">
-                                <div class="rtbcb-variant-header">
-                                    <h5><?php esc_html_e( 'Variant A', 'rtbcb' ); ?></h5>
-                                    <button type="button" class="rtbcb-remove-variant" style="display: none;">×</button>
-                                </div>
-                                <textarea class="rtbcb-variant-prompt" placeholder="<?php esc_attr_e( 'Enter prompt variant...', 'rtbcb' ); ?>"></textarea>
-                                <div class="rtbcb-variant-settings">
-                                    <label><?php esc_html_e( 'Temperature:', 'rtbcb' ); ?></label>
-                                    <input type="range" class="rtbcb-variant-temperature" min="0" max="2" step="0.1" value="0.3" />
-                                    <span class="temperature-display">0.3</span>
-                                </div>
-                            </div>
-                            <div class="rtbcb-variant-item" data-variant="2">
-                                <div class="rtbcb-variant-header">
-                                    <h5><?php esc_html_e( 'Variant B', 'rtbcb' ); ?></h5>
-                                    <button type="button" class="rtbcb-remove-variant" style="display: none;">×</button>
-                                </div>
-                                <textarea class="rtbcb-variant-prompt" placeholder="<?php esc_attr_e( 'Enter prompt variant...', 'rtbcb' ); ?>"></textarea>
-                                <div class="rtbcb-variant-settings">
-                                    <label><?php esc_html_e( 'Temperature:', 'rtbcb' ); ?></label>
-                                    <input type="range" class="rtbcb-variant-temperature" min="0" max="2" step="0.1" value="0.7" />
-                                    <span class="temperature-display">0.7</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="rtbcb-variant-actions">
-                            <button type="button" id="add-prompt-variant" class="button">
-                                <span class="dashicons dashicons-plus-alt"></span>
-                                <?php esc_html_e( 'Add Variant', 'rtbcb' ); ?>
-                            </button>
-                            <button type="button" id="test-prompt-variants" class="button button-primary">
-                                <span class="dashicons dashicons-admin-generic"></span>
-                                <?php esc_html_e( 'Test All Variants', 'rtbcb' ); ?>
-                            </button>
-                        </div>
-                    </div>
+                <!-- Performance Summary -->
+                <div class="rtbcb-performance-summary" id="llm-performance-summary">
+                    <!-- Populated by JavaScript -->
                 </div>
 
-                <!-- Prompt Engineering Results -->
-                <div id="prompt-engineering-results" class="rtbcb-results-container" style="display: none;">
-                    <div class="rtbcb-results-header">
-                        <h3><?php esc_html_e( 'Prompt Engineering Results', 'rtbcb' ); ?></h3>
-                    </div>
-
-                    <div class="rtbcb-variant-comparison" id="variant-comparison">
-                        <!-- Populated via JavaScript -->
-                    </div>
+                <!-- Response Comparison Table -->
+                <div class="rtbcb-comparison-table-container">
+                    <table class="wp-list-table widefat fixed striped" id="llm-comparison-table">
+                        <thead>
+                            <tr>
+                                <th><?php esc_html_e('Model', 'rtbcb'); ?></th>
+                                <th><?php esc_html_e('Response Time', 'rtbcb'); ?></th>
+                                <th><?php esc_html_e('Tokens Used', 'rtbcb'); ?></th>
+                                <th><?php esc_html_e('Cost Est.', 'rtbcb'); ?></th>
+                                <th><?php esc_html_e('Quality Score', 'rtbcb'); ?></th>
+                                <th><?php esc_html_e('Response Preview', 'rtbcb'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody id="llm-comparison-tbody">
+                            <!-- Populated by JavaScript -->
+                        </tbody>
+                    </table>
                 </div>
-            </div>
 
-            <!-- Response Evaluation Mode -->
-            <div id="response-evaluation-mode" class="rtbcb-llm-mode-content" style="display: none;">
-                <div class="rtbcb-evaluation-tools">
-                    <h4><?php esc_html_e( 'Response Evaluation Tools', 'rtbcb' ); ?></h4>
-
-                    <div class="rtbcb-evaluation-grid">
-                        <div class="rtbcb-evaluation-section">
-                            <h5><?php esc_html_e( 'Response Input', 'rtbcb' ); ?></h5>
-                            <textarea id="response-to-evaluate" rows="10" placeholder="<?php esc_attr_e( 'Paste response to evaluate...', 'rtbcb' ); ?>"></textarea>
-
-                            <div class="rtbcb-control-group">
-                                <label for="reference-response"><?php esc_html_e( 'Reference Text (optional):', 'rtbcb' ); ?></label>
-                                <textarea id="reference-response" rows="6" placeholder="<?php esc_attr_e( 'Enter reference text to compare...', 'rtbcb' ); ?>"></textarea>
-                            </div>
-
-                            <div class="rtbcb-evaluation-actions">
-                                <button type="button" id="evaluate-response" class="button button-primary">
-                                    <?php esc_html_e( 'Evaluate Response', 'rtbcb' ); ?>
-                                </button>
-                                <button type="button" id="compare-with-reference" class="button">
-                                    <?php esc_html_e( 'Compare with Reference', 'rtbcb' ); ?>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="rtbcb-evaluation-section">
-                            <h5><?php esc_html_e( 'Quality Metrics', 'rtbcb' ); ?></h5>
-                            <div id="quality-score-display" class="rtbcb-quality-display">
-                                <!-- Populated via JavaScript -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Token Optimization Mode -->
-            <div id="token-optimization-mode" class="rtbcb-llm-mode-content" style="display: none;">
-                <div class="rtbcb-optimization-tools">
-                    <h4><?php esc_html_e( 'Token Optimization Tools', 'rtbcb' ); ?></h4>
-
-                    <div class="rtbcb-optimization-grid">
-                        <div class="rtbcb-optimization-section">
-                            <h5><?php esc_html_e( 'Prompt Analysis', 'rtbcb' ); ?></h5>
-                            <textarea id="prompt-to-optimize" rows="8" placeholder="<?php esc_attr_e( 'Enter prompt to analyze and optimize...', 'rtbcb' ); ?>"></textarea>
-
-                            <div class="rtbcb-optimization-actions">
-                                <button type="button" id="analyze-tokens" class="button button-primary">
-                                    <?php esc_html_e( 'Analyze Tokens', 'rtbcb' ); ?>
-                                </button>
-                                <button type="button" id="optimize-prompt" class="button">
-                                    <?php esc_html_e( 'Suggest Optimizations', 'rtbcb' ); ?>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="rtbcb-optimization-section">
-                            <h5><?php esc_html_e( 'Token Analysis', 'rtbcb' ); ?></h5>
-                            <div id="token-analysis-display" class="rtbcb-token-display">
-                                <!-- Populated via JavaScript -->
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="rtbcb-cost-calculator">
-                        <h5><?php esc_html_e( 'Cost Calculator', 'rtbcb' ); ?></h5>
-                        <div class="rtbcb-cost-grid" id="cost-calculator">
-                            <!-- Populated via JavaScript -->
-                        </div>
-                    </div>
+                <!-- Performance Chart -->
+                <div class="rtbcb-chart-container">
+                    <h4><?php esc_html_e('Performance Comparison', 'rtbcb'); ?></h4>
+                    <canvas id="llm-performance-chart" width="800" height="400"></canvas>
                 </div>
             </div>
         </div>
