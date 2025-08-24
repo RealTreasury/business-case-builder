@@ -14,6 +14,10 @@
         startTime: null,
         currentRequest: null,
         apiResults: {},
+        ragResults: [],
+        ragContextText: '',
+        useRagContext: false,
+        ragRequest: null,
 
         // Initialize dashboard
         init() {
@@ -21,6 +25,7 @@
             this.initializeTabs();
             this.checkSystemStatus();
             this.initApiHealth();
+            this.initRagModule();
         },
 
         // Bind all event handlers
@@ -50,6 +55,15 @@
                 const comp = $(e.currentTarget).data('component');
                 this.toggleApiDetails(comp);
             });
+
+            // RAG testing controls
+            $('#rtbcb-run-rag-query').on('click', this.runRagQuery.bind(this));
+            $('#rtbcb-rag-rebuild').on('click', this.rebuildRagIndex.bind(this));
+            $('#rtbcb-rag-query').on('input', this.validateRagQuery.bind(this));
+            $('#rtbcb-copy-rag-context').on('click', this.copyRagContext.bind(this));
+            $('#rtbcb-export-rag-results').on('click', this.exportRagResults.bind(this));
+            $('#rtbcb-rag-cancel').on('click', this.cancelRagQuery.bind(this));
+            $('#rtbcb-rag-use-context').on('change', (e) => { this.useRagContext = e.target.checked; });
 
             // Real-time input validation
             $('#company-name-input').on('input', this.validateInput.bind(this));
@@ -758,9 +772,14 @@
                 return;
             }
 
+            let finalPrompt = userPrompt;
+            if (this.useRagContext && this.ragContextText) {
+                finalPrompt = `${this.ragContextText}\n\n${userPrompt}`;
+            }
+
             this.startModelComparison({
                 systemPrompt,
-                userPrompt,
+                userPrompt: finalPrompt,
                 selectedModels,
                 maxTokens,
                 temperature,
@@ -1667,6 +1686,182 @@
             return this.llmData.results.reduce((sum, result) => {
                 return sum + (result.result.tokens_used || 0);
             }, 0);
+        },
+
+        // RAG testing methods
+        initRagModule() {
+            this.validateRagQuery();
+        },
+
+        validateRagQuery() {
+            const query = $('#rtbcb-rag-query').val().trim();
+            const disabled = query.length === 0 || this.ragRequest !== null;
+            $('#rtbcb-run-rag-query').prop('disabled', disabled);
+        },
+
+        runRagQuery() {
+            if (this.ragRequest) return;
+
+            const query = $('#rtbcb-rag-query').val().trim();
+            const topK = parseInt($('#rtbcb-rag-top-k').val(), 10) || 3;
+            const type = $('#rtbcb-rag-type').val();
+            if (!query) {
+                this.showNotification('Please enter a query', 'error');
+                return;
+            }
+
+            this.ragRequest = $.ajax({
+                url: rtbcbDashboard.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'rtbcb_test_rag_query',
+                    nonce: rtbcbDashboard.nonces.dashboard,
+                    query,
+                    top_k: topK,
+                    type
+                }
+            });
+
+            $('#rtbcb-rag-progress').text(rtbcbDashboard.strings.retrieving).show();
+            $('#rtbcb-rag-cancel').show();
+            this.validateRagQuery();
+
+            this.ragRequest.done((res) => {
+                if (res.success) {
+                    this.displayRagResults(res.data);
+                    this.showNotification('Retrieval complete', 'success');
+                } else {
+                    this.showNotification(res.data?.message || rtbcbDashboard.strings.error, 'error');
+                }
+            }).fail(() => {
+                this.showNotification(rtbcbDashboard.strings.error, 'error');
+            }).always(() => {
+                this.ragRequest = null;
+                $('#rtbcb-rag-progress').hide();
+                $('#rtbcb-rag-cancel').hide();
+                this.validateRagQuery();
+            });
+        },
+
+        cancelRagQuery() {
+            if (this.ragRequest) {
+                this.ragRequest.abort();
+                this.ragRequest = null;
+                $('#rtbcb-rag-progress').hide();
+                $('#rtbcb-rag-cancel').hide();
+                this.validateRagQuery();
+                this.showNotification('Retrieval cancelled', 'info');
+            }
+        },
+
+        displayRagResults(data) {
+            this.ragResults = data.results || [];
+            this.ragContextText = this.ragResults.map(r => {
+                const md = r.metadata || {};
+                return md.description || md.content || md.name || '';
+            }).join("\n");
+
+            const metrics = data.metrics || {};
+            $('#rtbcb-rag-metrics').text(
+                `Time: ${metrics.retrieval_time || 0} ms | Results: ${metrics.result_count || 0} | Avg score: ${(metrics.average_score || 0).toFixed(3)}`
+            );
+
+            const tbody = $('#rtbcb-rag-results-table tbody').empty();
+            this.ragResults.forEach(row => {
+                const score = parseFloat(row.score || 0);
+                let title = row.metadata?.name || row.metadata?.title || row.metadata?.description || row.metadata?.content || '';
+                const cls = score >= 0.8 ? 'status-good' : (score >= 0.5 ? 'status-warning' : 'status-error');
+                const tr = $('<tr>').addClass(cls)
+                    .append(`<td>${this.escapeHtml(row.type)}</td>`)
+                    .append(`<td>${this.escapeHtml(row.ref_id)}</td>`)
+                    .append(`<td>${this.escapeHtml(title)}</td>`)
+                    .append(`<td>${score.toFixed(3)}</td>`);
+                tbody.append(tr);
+            });
+
+            if (this.ragResults.length) {
+                $('#rtbcb-rag-results').show();
+                $('#rtbcb-copy-rag-context, #rtbcb-export-rag-results').prop('disabled', false);
+            } else {
+                $('#rtbcb-rag-results').hide();
+                $('#rtbcb-copy-rag-context, #rtbcb-export-rag-results').prop('disabled', true);
+                this.showNotification(rtbcbDashboard.strings.noResults, 'warning');
+            }
+
+            const debug = data.debug || {};
+            $('#rtbcb-rag-debug pre').text(JSON.stringify(debug, null, 2));
+
+            if (data.index_info) {
+                if (data.index_info.last_indexed) {
+                    $('#rtbcb-rag-last-indexed').text(
+                        rtbcbDashboard.strings.lastIndexed.replace('%s', data.index_info.last_indexed)
+                    );
+                }
+                if (typeof data.index_info.index_size !== 'undefined') {
+                    $('#rtbcb-rag-index-size').text(
+                        rtbcbDashboard.strings.entries.replace('%d', data.index_info.index_size)
+                    );
+                }
+            }
+        },
+
+        copyRagContext() {
+            if (!this.ragContextText) {
+                this.showNotification('No results to copy', 'warning');
+                return;
+            }
+            navigator.clipboard.writeText(this.ragContextText).then(() => {
+                this.showNotification('Context copied', 'success');
+            }).catch(() => {
+                this.showNotification('Failed to copy', 'error');
+            });
+        },
+
+        exportRagResults() {
+            if (!this.ragResults.length) {
+                this.showNotification('No results to export', 'warning');
+                return;
+            }
+            const blob = new Blob([JSON.stringify(this.ragResults, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'rag-results.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            this.showNotification('Results exported', 'success');
+        },
+
+        rebuildRagIndex() {
+            const btn = $('#rtbcb-rag-rebuild').prop('disabled', true);
+            $('#rtbcb-rag-index-notice').text(rtbcbDashboard.strings.retrieving);
+            $.post(rtbcbDashboard.ajaxurl, {
+                action: 'rtbcb_rag_rebuild_index',
+                nonce: rtbcbDashboard.nonces.dashboard
+            }).done((res) => {
+                if (res.success) {
+                    $('#rtbcb-rag-index-notice').text(rtbcbDashboard.strings.indexRebuilt);
+                    if (res.data.last_indexed) {
+                        $('#rtbcb-rag-last-indexed').text(
+                            rtbcbDashboard.strings.lastIndexed.replace('%s', res.data.last_indexed)
+                        );
+                    }
+                    if (typeof res.data.index_size !== 'undefined') {
+                        $('#rtbcb-rag-index-size').text(
+                            rtbcbDashboard.strings.entries.replace('%d', res.data.index_size)
+                        );
+                    }
+                    $('#rtbcb-rag-index-status').removeClass('status-warning').addClass('status-good');
+                } else {
+                    $('#rtbcb-rag-index-notice').text(res.data?.message || rtbcbDashboard.strings.rebuildFailed);
+                }
+            }).fail(() => {
+                $('#rtbcb-rag-index-notice').text(rtbcbDashboard.strings.rebuildFailed);
+            }).always(() => {
+                btn.prop('disabled', false);
+            });
         },
 
         // API Health Methods

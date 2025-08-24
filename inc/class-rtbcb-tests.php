@@ -77,6 +77,22 @@ class RTBCB_Tests {
     }
 
     /**
+     * Perform a simple RAG search.
+     *
+     * @return bool True on success, false on failure.
+     */
+    public static function test_rag_search() {
+        if ( ! class_exists( 'RTBCB_RAG' ) ) {
+            return false;
+        }
+
+        $rag     = new RTBCB_RAG();
+        $results = $rag->search_similar( 'test', 1 );
+
+        return is_array( $results );
+    }
+
+    /**
      * Ensure ROI calculator returns data.
      *
      * @return array{

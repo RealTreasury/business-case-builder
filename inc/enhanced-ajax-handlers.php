@@ -39,6 +39,8 @@ add_action( 'wp_ajax_rtbcb_evaluate_response_quality', 'rtbcb_ajax_evaluate_resp
 add_action( 'wp_ajax_rtbcb_optimize_prompt_tokens', 'rtbcb_ajax_optimize_prompt_tokens' );
 add_action( 'wp_ajax_rtbcb_run_api_health_tests', 'rtbcb_run_api_health_tests' );
 add_action( 'wp_ajax_rtbcb_run_single_api_test', 'rtbcb_run_single_api_test' );
+add_action( 'wp_ajax_rtbcb_test_rag_query', 'rtbcb_test_rag_query' );
+add_action( 'wp_ajax_rtbcb_rag_rebuild_index', 'rtbcb_rag_rebuild_index' );
 
 /**
  * Test individual LLM model with given prompt.
@@ -1144,6 +1146,148 @@ function rtbcb_assess_business_relevance( $text ) {
     $score = ( $found / count( $keywords ) ) * 100;
 
     return intval( max( 0, min( 100, $score ) ) );
+}
+
+/**
+ * Execute a RAG search query for testing purposes.
+ *
+ * @return void
+ */
+function rtbcb_test_rag_query() {
+    if ( ! check_ajax_referer( 'rtbcb_unified_test_dashboard', 'nonce', false ) ) {
+        wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
+    }
+
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'rtbcb' ) ], 403 );
+    }
+
+    $query = isset( $_POST['query'] ) ? sanitize_text_field( wp_unslash( $_POST['query'] ) ) : '';
+    $top_k = isset( $_POST['top_k'] ) ? intval( wp_unslash( $_POST['top_k'] ) ) : 3;
+    $type  = isset( $_POST['type'] ) ? sanitize_key( wp_unslash( $_POST['type'] ) ) : 'all';
+
+    if ( '' === $query ) {
+        wp_send_json_error( [ 'message' => __( 'Query is required.', 'rtbcb' ) ], 400 );
+    }
+
+    if ( ! class_exists( 'RTBCB_RAG' ) ) {
+        wp_send_json_error( [ 'message' => __( 'RAG class missing.', 'rtbcb' ) ], 500 );
+    }
+
+    $api_key = get_option( 'rtbcb_openai_api_key' );
+    if ( empty( $api_key ) ) {
+        wp_send_json_error( [ 'message' => __( 'No API key configured.', 'rtbcb' ) ], 500 );
+    }
+
+    try {
+        $rag = new RTBCB_RAG();
+
+        $embed_method = new ReflectionMethod( RTBCB_RAG::class, 'get_embedding' );
+        $embed_method->setAccessible( true );
+        $embedding         = $embed_method->invoke( $rag, $query );
+        $embedding_length  = count( $embedding );
+        $embedding_preview = array_slice( $embedding, 0, 5 );
+
+        $start   = microtime( true );
+        $results = $rag->search_similar( $query, $top_k );
+        $elapsed = intval( ( microtime( true ) - $start ) * 1000 );
+
+        if ( 'all' !== $type ) {
+            $results = array_values( array_filter( $results, function( $r ) use ( $type ) {
+                return isset( $r['type'] ) && $r['type'] === $type;
+            } ) );
+        }
+
+        $scores = wp_list_pluck( $results, 'score' );
+        $avg    = $scores ? array_sum( $scores ) / count( $scores ) : 0;
+
+        $sanitized = [];
+        foreach ( $results as $row ) {
+            $metadata = [];
+            if ( isset( $row['metadata'] ) && is_array( $row['metadata'] ) ) {
+                foreach ( $row['metadata'] as $k => $v ) {
+                    if ( is_scalar( $v ) ) {
+                        $metadata[ sanitize_key( $k ) ] = sanitize_text_field( (string) $v );
+                    }
+                }
+            }
+
+            $sanitized[] = [
+                'type'     => sanitize_key( $row['type'] ?? '' ),
+                'ref_id'   => sanitize_text_field( $row['ref_id'] ?? '' ),
+                'metadata' => $metadata,
+                'score'    => isset( $row['score'] ) ? floatval( $row['score'] ) : 0,
+            ];
+        }
+
+        global $wpdb;
+        $index_info = [
+            'last_indexed' => get_option( 'rtbcb_last_indexed', '' ),
+            'index_size'   => (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . $wpdb->prefix . 'rtbcb_rag_index' ),
+        ];
+
+        $response = [
+            'query'   => $query,
+            'top_k'   => $top_k,
+            'results' => $sanitized,
+            'metrics' => [
+                'retrieval_time' => $elapsed,
+                'result_count'   => count( $sanitized ),
+                'average_score'  => $avg,
+            ],
+            'index_info' => $index_info,
+        ];
+
+        if ( WP_DEBUG ) {
+            $response['debug'] = [
+                'embedding_length' => $embedding_length,
+                'embedding_preview' => $embedding_preview,
+                'scores'            => $scores,
+            ];
+        }
+
+        wp_send_json_success( $response );
+    } catch ( Exception $e ) {
+        error_log( 'RTBCB RAG Query Error: ' . $e->getMessage() );
+        wp_send_json_error( [ 'message' => __( 'RAG search failed.', 'rtbcb' ) ], 500 );
+    }
+}
+
+/**
+ * Rebuild the RAG index.
+ *
+ * @return void
+ */
+function rtbcb_rag_rebuild_index() {
+    if ( ! check_ajax_referer( 'rtbcb_unified_test_dashboard', 'nonce', false ) ) {
+        wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
+    }
+
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'rtbcb' ) ], 403 );
+    }
+
+    if ( ! class_exists( 'RTBCB_RAG' ) ) {
+        wp_send_json_error( [ 'message' => __( 'RAG class missing.', 'rtbcb' ) ], 500 );
+    }
+
+    try {
+        $rag = new RTBCB_RAG();
+        $rag->rebuild_index();
+
+        global $wpdb;
+        $index_size = (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . $wpdb->prefix . 'rtbcb_rag_index' );
+
+        wp_send_json_success(
+            [
+                'last_indexed' => get_option( 'rtbcb_last_indexed', '' ),
+                'index_size'   => $index_size,
+            ]
+        );
+    } catch ( Exception $e ) {
+        error_log( 'RTBCB RAG Rebuild Error: ' . $e->getMessage() );
+        wp_send_json_error( [ 'message' => __( 'Failed to rebuild index.', 'rtbcb' ) ], 500 );
+    }
 }
 
 /**
