@@ -879,15 +879,118 @@ $available_models = [
     <!-- Hidden nonce for LLM testing AJAX requests -->
     <?php wp_nonce_field( 'rtbcb_llm_testing', 'rtbcb_llm_testing_nonce' ); ?>
 
-    <!-- RAG System Test Section (Placeholder) -->
+    <!-- RAG System Test Section -->
+    <?php
+    $last_indexed = get_option( 'rtbcb_last_indexed', '' );
+    $index_health = 'status-error';
+    $last_index_display = __( 'Never', 'rtbcb' );
+
+    if ( ! empty( $last_indexed ) ) {
+        $timestamp          = strtotime( $last_indexed );
+        $last_index_display = esc_html( $last_indexed );
+        if ( $timestamp && ( time() - $timestamp ) < WEEK_IN_SECONDS ) {
+            $index_health = 'status-good';
+        } else {
+            $index_health = 'status-warning';
+        }
+    }
+    ?>
     <div id="rag-system" class="rtbcb-test-section" style="display: none;">
         <div class="rtbcb-test-panel">
             <div class="rtbcb-panel-header">
                 <h2><?php esc_html_e( 'RAG System Testing', 'rtbcb' ); ?></h2>
                 <p><?php esc_html_e( 'Test vector search, retrieval, and context validation', 'rtbcb' ); ?></p>
             </div>
-            <div class="rtbcb-placeholder">
-                <p><?php esc_html_e( 'RAG System testing interface will be implemented here.', 'rtbcb' ); ?></p>
+
+            <div class="rtbcb-rag-overview">
+                <div class="rtbcb-status-indicator <?php echo esc_attr( $index_health ); ?>">
+                    <span class="dashicons dashicons-database"></span>
+                    <span><?php esc_html_e( 'Index Health', 'rtbcb' ); ?></span>
+                </div>
+                <div class="rtbcb-last-indexed">
+                    <strong><?php esc_html_e( 'Last Indexed:', 'rtbcb' ); ?></strong>
+                    <span id="rag-last-indexed"><?php echo esc_html( $last_index_display ); ?></span>
+                </div>
+                <button type="button" id="rag-rebuild-index" class="button">
+                    <span class="dashicons dashicons-update"></span>
+                    <?php esc_html_e( 'Rebuild Index', 'rtbcb' ); ?>
+                </button>
+            </div>
+
+            <div class="rtbcb-rag-query-form">
+                <div class="rtbcb-control-group">
+                    <label for="rag-query">
+                        <?php esc_html_e( 'Test Query:', 'rtbcb' ); ?>
+                        <span class="required">*</span>
+                    </label>
+                    <input type="text" id="rag-query" class="regular-text" placeholder="<?php esc_attr_e( 'Enter search query...', 'rtbcb' ); ?>" />
+                </div>
+
+                <div class="rtbcb-control-group">
+                    <label for="rag-top-k"><?php esc_html_e( 'Top K Results:', 'rtbcb' ); ?></label>
+                    <input type="number" id="rag-top-k" min="1" max="10" value="3" />
+                </div>
+
+                <div class="rtbcb-control-group">
+                    <label for="rag-type"><?php esc_html_e( 'Result Type:', 'rtbcb' ); ?></label>
+                    <select id="rag-type">
+                        <option value="all"><?php esc_html_e( 'All', 'rtbcb' ); ?></option>
+                        <option value="vendor"><?php esc_html_e( 'Vendor', 'rtbcb' ); ?></option>
+                        <option value="note"><?php esc_html_e( 'Note', 'rtbcb' ); ?></option>
+                    </select>
+                </div>
+
+                <div class="rtbcb-action-buttons">
+                    <button type="button" id="rag-run-query" class="button button-primary" disabled>
+                        <span class="dashicons dashicons-search"></span>
+                        <?php esc_html_e( 'Run Retrieval', 'rtbcb' ); ?>
+                    </button>
+                    <button type="button" id="rag-cancel-query" class="button" style="display:none;">
+                        <?php esc_html_e( 'Cancel', 'rtbcb' ); ?>
+                    </button>
+                </div>
+            </div>
+
+            <div id="rag-progress" class="rtbcb-progress" style="display:none;">
+                <span class="dashicons dashicons-update spin"></span>
+                <span><?php esc_html_e( 'Running retrieval...', 'rtbcb' ); ?></span>
+            </div>
+
+            <div id="rag-results" class="rtbcb-results-container" style="display:none;">
+                <div class="rtbcb-results-header">
+                    <h3><?php esc_html_e( 'Retrieval Results', 'rtbcb' ); ?></h3>
+                    <div class="rtbcb-results-actions">
+                        <button type="button" id="rag-copy-context" class="button">
+                            <?php esc_html_e( 'Copy Context', 'rtbcb' ); ?>
+                        </button>
+                        <button type="button" id="rag-export-results" class="button">
+                            <?php esc_html_e( 'Export', 'rtbcb' ); ?>
+                        </button>
+                        <label for="rag-include-context" class="rtbcb-inline-checkbox">
+                            <input type="checkbox" id="rag-include-context" />
+                            <?php esc_html_e( 'Use in LLM tests', 'rtbcb' ); ?>
+                        </label>
+                        <button type="button" id="rag-debug-toggle" class="button"><?php esc_html_e( 'Debug', 'rtbcb' ); ?></button>
+                    </div>
+                </div>
+
+                <div id="rag-metrics" class="rtbcb-metrics"></div>
+
+                <table id="rag-results-table" class="widefat fixed striped">
+                    <thead>
+                        <tr>
+                            <th><?php esc_html_e( 'Type', 'rtbcb' ); ?></th>
+                            <th><?php esc_html_e( 'Ref ID', 'rtbcb' ); ?></th>
+                            <th><?php esc_html_e( 'Title / Description', 'rtbcb' ); ?></th>
+                            <th><?php esc_html_e( 'Score', 'rtbcb' ); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+
+                <div id="rag-debug-panel" class="rtbcb-debug-panel" style="display:none;">
+                    <pre id="rag-debug-content"></pre>
+                </div>
             </div>
         </div>
     </div>

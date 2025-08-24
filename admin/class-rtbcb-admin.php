@@ -82,6 +82,18 @@ class RTBCB_Admin {
                         'complete'     => __( 'Complete!', 'rtbcb' ),
                         'error'        => __( 'Error occurred', 'rtbcb' ),
                         'confirm_clear'=> __( 'Are you sure you want to clear all results?', 'rtbcb' ),
+                        'retrieval_failed'   => __( 'Retrieval failed', 'rtbcb' ),
+                        'request_failed'     => __( 'Request failed', 'rtbcb' ),
+                        'retrieval_cancelled' => __( 'Retrieval cancelled', 'rtbcb' ),
+                        'index_rebuilt'      => __( 'Index rebuilt', 'rtbcb' ),
+                        'index_failed'       => __( 'Failed to rebuild index', 'rtbcb' ),
+                        'no_context'         => __( 'No context to copy', 'rtbcb' ),
+                        'context_copied'     => __( 'Context copied', 'rtbcb' ),
+                        'no_results'         => __( 'No results to export', 'rtbcb' ),
+                        'results_exported'   => __( 'Results exported', 'rtbcb' ),
+                        'time'               => __( 'Time', 'rtbcb' ),
+                        'total'              => __( 'Total', 'rtbcb' ),
+                        'avg'                => __( 'Avg Score', 'rtbcb' ),
                     ],
                 ]
             );

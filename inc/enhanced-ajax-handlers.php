@@ -37,6 +37,8 @@ add_action( 'wp_ajax_rtbcb_test_company_overview_enhanced', 'rtbcb_ajax_test_com
 add_action( 'wp_ajax_rtbcb_calculate_roi_test', 'rtbcb_ajax_calculate_roi_test' );
 add_action( 'wp_ajax_rtbcb_evaluate_response_quality', 'rtbcb_ajax_evaluate_response_quality' );
 add_action( 'wp_ajax_rtbcb_optimize_prompt_tokens', 'rtbcb_ajax_optimize_prompt_tokens' );
+add_action( 'wp_ajax_rtbcb_test_rag_query', 'rtbcb_ajax_test_rag_query' );
+add_action( 'wp_ajax_rtbcb_rag_rebuild_index', 'rtbcb_ajax_rag_rebuild_index' );
 
 /**
  * Test individual LLM model with given prompt.
@@ -461,6 +463,143 @@ function rtbcb_ajax_optimize_prompt_tokens() {
         wp_send_json_error(
             [
                 'message' => __( 'An error occurred while optimizing the prompt.', 'rtbcb' ),
+                'debug'   => WP_DEBUG ? $e->getMessage() : null,
+            ],
+            500
+        );
+    }
+}
+
+/**
+ * Run RAG query for testing.
+ *
+ * @return void
+ */
+function rtbcb_ajax_test_rag_query() {
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'rtbcb_unified_test_dashboard' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
+    }
+
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'rtbcb' ) ], 403 );
+    }
+
+    $query = isset( $_POST['query'] ) ? sanitize_text_field( wp_unslash( $_POST['query'] ) ) : '';
+    $top_k = isset( $_POST['top_k'] ) ? intval( wp_unslash( $_POST['top_k'] ) ) : 3;
+    $type  = isset( $_POST['type'] ) ? sanitize_key( wp_unslash( $_POST['type'] ) ) : 'all';
+
+    if ( empty( $query ) ) {
+        wp_send_json_error( [ 'message' => __( 'Query is required.', 'rtbcb' ) ], 400 );
+    }
+
+    if ( ! class_exists( 'RTBCB_RAG' ) ) {
+        wp_send_json_error( [ 'message' => __( 'RAG class missing.', 'rtbcb' ) ], 500 );
+    }
+
+    $rag = new RTBCB_RAG();
+
+    $embedding = [];
+    if ( WP_DEBUG ) {
+        try {
+            $reflection = new ReflectionClass( $rag );
+            $method     = $reflection->getMethod( 'get_embedding' );
+            $method->setAccessible( true );
+            $embedding = $method->invoke( $rag, $query );
+        } catch ( Exception $e ) {
+            $embedding = [];
+        }
+    }
+
+    $start_time = microtime( true );
+    $results    = $rag->search_similar( $query, $top_k );
+    $end_time   = microtime( true );
+
+    if ( empty( $results ) ) {
+        wp_send_json_error( [ 'message' => __( 'No results found or embeddings unavailable.', 'rtbcb' ) ] );
+    }
+
+    if ( 'all' !== $type ) {
+        $results = array_values(
+            array_filter(
+                $results,
+                static function ( $row ) use ( $type ) {
+                    return isset( $row['type'] ) && $row['type'] === $type;
+                }
+            )
+        );
+    }
+
+    $scores       = wp_list_pluck( $results, 'score' );
+    $average      = $scores ? array_sum( $scores ) / count( $scores ) : 0;
+    $last_indexed = get_option( 'rtbcb_last_indexed', '' );
+
+    $response = [
+        'query'   => $query,
+        'top_k'   => $top_k,
+        'results' => array_map(
+            static function ( $row ) {
+                return [
+                    'type'     => sanitize_text_field( $row['type'] ?? '' ),
+                    'ref_id'   => sanitize_text_field( $row['ref_id'] ?? '' ),
+                    'metadata' => array_map( 'sanitize_text_field', (array) ( $row['metadata'] ?? [] ) ),
+                    'score'    => floatval( $row['score'] ?? 0 ),
+                ];
+            },
+            $results
+        ),
+        'metrics' => [
+            'retrieval_time' => intval( ( $end_time - $start_time ) * 1000 ),
+            'result_count'   => count( $results ),
+            'average_score'  => floatval( $average ),
+        ],
+        'index_info' => [
+            'last_indexed' => $last_indexed,
+        ],
+        'debug' => WP_DEBUG ? [
+            'embedding_length' => count( $embedding ),
+            'embedding_preview' => array_slice( $embedding, 0, 5 ),
+            'scores'           => $scores,
+        ] : [],
+    ];
+
+    wp_send_json_success( $response );
+}
+
+/**
+ * Rebuild the RAG index.
+ *
+ * @return void
+ */
+function rtbcb_ajax_rag_rebuild_index() {
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'rtbcb_unified_test_dashboard' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
+    }
+
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'rtbcb' ) ], 403 );
+    }
+
+    if ( ! class_exists( 'RTBCB_RAG' ) ) {
+        wp_send_json_error( [ 'message' => __( 'RAG class missing.', 'rtbcb' ) ], 500 );
+    }
+
+    $rag = new RTBCB_RAG();
+
+    try {
+        $rag->rebuild_index();
+        $last_indexed = get_option( 'rtbcb_last_indexed', '' );
+
+        wp_send_json_success(
+            [
+                'message'      => __( 'Index rebuilt', 'rtbcb' ),
+                'last_indexed' => $last_indexed,
+            ]
+        );
+    } catch ( Exception $e ) {
+        error_log( 'RTBCB RAG Rebuild Error: ' . $e->getMessage() );
+        wp_send_json_error(
+            [
+                'message' => __( 'Failed to rebuild index.', 'rtbcb' ),
                 'debug'   => WP_DEBUG ? $e->getMessage() : null,
             ],
             500
