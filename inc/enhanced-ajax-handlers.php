@@ -9,6 +9,8 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+require_once __DIR__ . '/class-rtbcb-tests.php';
+
 /**
  * Prepare enhanced result payload for unified dashboard responses.
  *
@@ -39,6 +41,8 @@ add_action( 'wp_ajax_rtbcb_evaluate_response_quality', 'rtbcb_ajax_evaluate_resp
 add_action( 'wp_ajax_rtbcb_optimize_prompt_tokens', 'rtbcb_ajax_optimize_prompt_tokens' );
 add_action( 'wp_ajax_rtbcb_run_api_health_tests', 'rtbcb_run_api_health_tests' );
 add_action( 'wp_ajax_rtbcb_run_single_api_test', 'rtbcb_run_single_api_test' );
+add_action( 'wp_ajax_rtbcb_test_rag_query', 'rtbcb_test_rag_query' );
+add_action( 'wp_ajax_rtbcb_rag_rebuild_index', 'rtbcb_rag_rebuild_index' );
 
 /**
  * Test individual LLM model with given prompt.
@@ -1147,6 +1151,133 @@ function rtbcb_assess_business_relevance( $text ) {
 }
 
 /**
+ * Handle RAG query testing.
+ *
+ * @return void
+ */
+function rtbcb_test_rag_query() {
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'rtbcb_rag_testing' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
+    }
+
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'rtbcb' ) ], 403 );
+    }
+
+    $query = isset( $_POST['query'] ) ? sanitize_text_field( wp_unslash( $_POST['query'] ) ) : '';
+    $top_k = isset( $_POST['top_k'] ) ? intval( wp_unslash( $_POST['top_k'] ) ) : 3;
+    $type  = isset( $_POST['type'] ) ? sanitize_key( wp_unslash( $_POST['type'] ) ) : 'all';
+
+    if ( '' === $query ) {
+        wp_send_json_error( [ 'message' => __( 'Query is required.', 'rtbcb' ) ], 400 );
+    }
+
+    if ( ! class_exists( 'RTBCB_RAG' ) ) {
+        wp_send_json_error( [ 'message' => __( 'RAG class missing.', 'rtbcb' ) ], 500 );
+    }
+
+    $rag = new RTBCB_RAG();
+
+    // Generate embedding for debug information using reflection.
+    $embedding = [];
+    try {
+        $ref       = new ReflectionClass( $rag );
+        $method    = $ref->getMethod( 'get_embedding' );
+        $method->setAccessible( true );
+        $embedding = $method->invoke( $rag, $query );
+    } catch ( Exception $e ) {
+        error_log( 'RTBCB RAG embedding error: ' . $e->getMessage() );
+    }
+
+    if ( empty( $embedding ) ) {
+        wp_send_json_error( [ 'message' => __( 'No API key configured.', 'rtbcb' ) ], 500 );
+    }
+
+    $start   = microtime( true );
+    $results = $rag->search_similar( $query, $top_k );
+    $end     = microtime( true );
+
+    $filtered = [];
+    $scores   = [];
+    foreach ( $results as $row ) {
+        $row_type = sanitize_key( $row['type'] ?? '' );
+        if ( 'all' !== $type && $row_type !== $type ) {
+            continue;
+        }
+
+        $metadata = [];
+        if ( isset( $row['metadata'] ) && is_array( $row['metadata'] ) ) {
+            foreach ( $row['metadata'] as $m_key => $m_value ) {
+                if ( is_scalar( $m_value ) ) {
+                    $metadata[ sanitize_key( $m_key ) ] = sanitize_text_field( $m_value );
+                }
+            }
+        }
+
+        $score       = floatval( $row['score'] ?? 0 );
+        $scores[]    = $score;
+        $filtered[]  = [
+            'type'     => $row_type,
+            'ref_id'   => sanitize_text_field( $row['ref_id'] ?? '' ),
+            'metadata' => $metadata,
+            'score'    => $score,
+        ];
+    }
+
+    $retrieval_time = round( ( $end - $start ) * 1000 );
+    $avg_score      = empty( $scores ) ? 0 : array_sum( $scores ) / count( $scores );
+
+    $response = [
+        'query'   => $query,
+        'top_k'   => $top_k,
+        'results' => $filtered,
+        'metrics' => [
+            'retrieval_time' => intval( $retrieval_time ),
+            'result_count'   => count( $filtered ),
+            'average_score'  => $avg_score,
+            'embedding_length' => count( $embedding ),
+        ],
+        'index_info' => [
+            'last_indexed' => get_option( 'rtbcb_last_indexed', '' ),
+        ],
+        'debug' => [
+            'embedding_preview' => array_slice( $embedding, 0, 8 ),
+            'scores'            => $scores,
+        ],
+    ];
+
+    wp_send_json_success( $response );
+}
+
+/**
+ * Rebuild the RAG index via AJAX.
+ *
+ * @return void
+ */
+function rtbcb_rag_rebuild_index() {
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'rtbcb_rag_testing' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
+    }
+
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'rtbcb' ) ], 403 );
+    }
+
+    if ( ! class_exists( 'RTBCB_RAG' ) ) {
+        wp_send_json_error( [ 'message' => __( 'RAG class missing.', 'rtbcb' ) ], 500 );
+    }
+
+    try {
+        $rag = new RTBCB_RAG();
+        $rag->rebuild_index();
+        wp_send_json_success( [ 'message' => __( 'Index rebuilt successfully.', 'rtbcb' ), 'last_indexed' => get_option( 'rtbcb_last_indexed', '' ) ] );
+    } catch ( Exception $e ) {
+        error_log( 'RTBCB RAG rebuild error: ' . $e->getMessage() );
+        wp_send_json_error( [ 'message' => __( 'Failed to rebuild index.', 'rtbcb' ) ], 500 );
+    }
+}
+
+/**
  * Run all API health tests and return aggregated results.
  *
  * @return void
@@ -1189,7 +1320,7 @@ function rtbcb_run_api_health_tests() {
                 $test = RTBCB_API_Tester::test_roi_calculator();
                 break;
             case 'rag':
-                $test = RTBCB_API_Tester::test_rag_index();
+                $test = RTBCB_Tests::test_rag_search();
                 break;
             default:
                 $test = [ 'success' => false, 'message' => __( 'Unknown test.', 'rtbcb' ) ];
@@ -1263,7 +1394,7 @@ function rtbcb_run_single_api_test() {
             $name = __( 'ROI Calculator', 'rtbcb' );
             break;
         case 'rag':
-            $test = RTBCB_API_Tester::test_rag_index();
+            $test = RTBCB_Tests::test_rag_search();
             $name = __( 'RAG Index', 'rtbcb' );
             break;
         default:
