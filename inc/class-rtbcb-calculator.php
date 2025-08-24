@@ -12,13 +12,31 @@
  */
 class RTBCB_Calculator {
     /**
+     * Default calculation settings.
+     *
+     * @var array
+     */
+    private const DEFAULTS = [
+        'labor_cost_per_hour' => 100,
+        'bank_fee_baseline'   => 15000,
+    ];
+
+    /**
+     * Retrieve calculator settings from options.
+     *
+     * @return array
+     */
+    private static function get_settings() {
+        return get_option( 'rtbcb_settings', self::DEFAULTS );
+    }
+    /**
      * Calculate ROI scenarios for given inputs.
      *
      * @param array $user_inputs User provided inputs.
      * @return array
      */
     public static function calculate_roi( $user_inputs ) {
-        $settings       = RTBCB_Settings::get_all();
+        $settings       = self::get_settings();
         $recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
         $category       = $recommendation['category_info'];
         $industry_mult  = self::get_industry_benchmark( $user_inputs['industry'] ?? '' );

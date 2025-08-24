@@ -121,7 +121,6 @@ class RTBCB_Plugin {
     private function includes() {
         // Core classes
         require_once RTBCB_DIR . 'inc/config.php';
-        require_once RTBCB_DIR . 'inc/class-rtbcb-settings.php';
         require_once RTBCB_DIR . 'inc/class-rtbcb-calculator.php';
         require_once RTBCB_DIR . 'inc/class-rtbcb-router.php';
         require_once RTBCB_DIR . 'inc/class-rtbcb-llm.php';
