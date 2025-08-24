@@ -1231,16 +1231,25 @@ Respond with valid JSON only, following the specified schema exactly. Ensure all
      * @param int|null     $max_output_tokens Maximum output tokens.
      * @return array|WP_Error HTTP response array or WP_Error on failure.
      */
+    /**
+     * Call the OpenAI API with optimized settings for company overview.
+     *
+     * @param string       $model             Model name.
+     * @param array|string $prompt            Prompt array or string.
+     * @param int|null     $max_output_tokens Maximum output tokens.
+     * @return array|WP_Error HTTP response array or WP_Error on failure.
+     */
     private function call_openai( $model, $prompt, $max_output_tokens = null ) {
         if ( empty( $this->api_key ) ) {
             return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
         }
 
-        $endpoint         = 'https://api.openai.com/v1/responses'; // Correct endpoint.
-        $model_name       = sanitize_text_field( $model ?: 'gpt-5-mini' );
-        $model_name       = rtbcb_normalize_model_name( $model_name );
-        $max_output_tokens = max( 256, intval( $max_output_tokens ?? 20000 ) );
+        $endpoint          = 'https://api.openai.com/v1/responses';
+        $model_name        = sanitize_text_field( $model ?: 'gpt-5-mini' );
+        $model_name        = rtbcb_normalize_model_name( $model_name );
+        $max_output_tokens = max( 256, intval( $max_output_tokens ?? 4000 ) ); // Reduced for faster response
 
+        // Build request body
         if ( is_array( $prompt ) && isset( $prompt['input'] ) ) {
             $instructions = sanitize_textarea_field( $prompt['instructions'] ?? '' );
             $input        = sanitize_textarea_field( $prompt['input'] );
@@ -1254,42 +1263,44 @@ Respond with valid JSON only, following the specified schema exactly. Ensure all
         }
 
         $body = [
-            'model' => $model_name,
-            'input' => $input,
-            'max_output_tokens' => $max_output_tokens,
+            'model'            => $model_name,
+            'input'            => $input,
+            'max_output_tokens'=> $max_output_tokens,
+            'temperature'      => 0.3, // Lower temperature for more focused responses
         ];
 
         if ( ! empty( $instructions ) ) {
             $body['instructions'] = $instructions;
         }
 
+        // Optimized settings for company overview
         if ( strpos( $model_name, 'gpt-5' ) === 0 ) {
             $body['reasoning'] = [
-                'effort' => $this->get_reasoning_effort_for_task( $prompt ),
+                'effort' => 'medium', // Reduced from high for faster response
             ];
             $body['text'] = [
-                'verbosity' => $this->get_verbosity_for_task( $prompt ),
+                'verbosity' => 'medium',
             ];
-        }
-
-        if ( rtbcb_model_supports_temperature( $model_name ) ) {
-            $body['temperature'] = floatval( $this->gpt5_config['temperature'] ?? 0.7 );
-        }
-
-        if ( isset( $this->gpt5_config['store'] ) ) {
-            $body['store'] = (bool) $this->gpt5_config['store'];
         }
 
         $args = [
             'headers' => [
                 'Authorization' => 'Bearer ' . $this->api_key,
-                'Content-Type' => 'application/json',
+                'Content-Type'  => 'application/json',
             ],
-            'body' => wp_json_encode( $body ),
-            'timeout' => 300, // 5 minutes for comprehensive analysis
+            'body'    => wp_json_encode( $body ),
+            'timeout' => 120, // Reduced from 300 to 2 minutes
         ];
 
-        return wp_remote_post( $endpoint, $args );
+        $response = wp_remote_post( $endpoint, $args );
+
+        // Log timing information
+        if ( ! is_wp_error( $response ) ) {
+            $response_code = wp_remote_retrieve_response_code( $response );
+            error_log( "RTBCB: OpenAI API response code: {$response_code}" );
+        }
+
+        return $response;
     }
 
     /**

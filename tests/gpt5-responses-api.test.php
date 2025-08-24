@@ -36,7 +36,7 @@ class RTBCB_GPT5_Integration_Test extends WP_UnitTestCase {
         // Verify GPT-5 specific parameters
         $this->assertArrayHasKey( 'reasoning', $captured_body );
         $this->assertArrayHasKey( 'text', $captured_body );
-        $this->assertEquals( 'high', $captured_body['reasoning']['effort'] ); // Should be high for business case
+        $this->assertEquals( 'medium', $captured_body['reasoning']['effort'] ); // Reduced effort for faster responses
         
         remove_all_filters( 'pre_http_request' );
     }
