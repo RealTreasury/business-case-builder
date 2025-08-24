@@ -315,7 +315,19 @@ add_filter('rtbcb_category_scores', function($scores, $inputs) {
 ## 🧪 Testing and Quality Assurance
 
 ### Automated Tests
-The plugin includes tools within the Unified Test Dashboard for validating key functionality.
+The plugin includes integration tests for all major components. These can be run from the settings page via the **Run Diagnostics** button or programmatically:
+```php
+// Run integration tests
+$results = RTBCB_Tests::run_integration_tests();
+```
+
+#### Configuring the Test Model
+JavaScript and PHP tests read the OpenAI model from the `RTBCB_TEST_MODEL` setting so they stay aligned with plugin configuration.
+
+1. **.env file** – Create a `.env` file in the project root:
+   ```
+   RTBCB_TEST_MODEL=gpt-5-mini
+   ```
 2. **CLI flag** – Prefix test commands with the variable:
    ```
    RTBCB_TEST_MODEL=gpt-5-mini tests/run-tests.sh

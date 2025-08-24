@@ -22,14 +22,32 @@ class RTBCB_Admin {
         add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );
         
         // AJAX handlers
+        add_action( 'wp_ajax_rtbcb_test_connection', [ $this, 'test_api_connection' ] );
         add_action( 'wp_ajax_rtbcb_rebuild_index', [ $this, 'rebuild_rag_index' ] );
         add_action( 'wp_ajax_rtbcb_export_leads', [ $this, 'export_leads_csv' ] );
         add_action( 'wp_ajax_rtbcb_delete_lead', [ $this, 'delete_lead' ] );
         add_action( 'wp_ajax_rtbcb_bulk_action_leads', [ $this, 'bulk_action_leads' ] );
+        add_action( 'wp_ajax_rtbcb_run_tests', [ $this, 'run_integration_tests' ] );
+        add_action( 'wp_ajax_rtbcb_test_api', [ $this, 'ajax_test_api' ] );
+        add_action( 'wp_ajax_rtbcb_run_diagnostics', [ $this, 'ajax_run_diagnostics' ] );
         add_action( 'wp_ajax_rtbcb_generate_report_preview', [ $this, 'ajax_generate_report_preview' ] );
         add_action( 'wp_ajax_rtbcb_generate_sample_report', [ $this, 'ajax_generate_sample_report' ] );
         add_action( 'wp_ajax_rtbcb_sync_to_local', [ $this, 'sync_to_local' ] );
         add_action( 'wp_ajax_nopriv_rtbcb_sync_to_local', [ $this, 'sync_to_local' ] );
+        add_action( 'wp_ajax_rtbcb_test_commentary', [ $this, 'ajax_test_commentary' ] );
+        add_action( 'wp_ajax_rtbcb_test_company_overview', [ $this, 'ajax_test_company_overview' ] );
+        add_action( 'wp_ajax_rtbcb_test_company_overview_enhanced', [ $this, 'ajax_test_company_overview_enhanced' ] );
+        add_action( 'wp_ajax_rtbcb_test_treasury_tech_overview', [ $this, 'ajax_test_treasury_tech_overview' ] );
+        add_action( 'wp_ajax_rtbcb_test_industry_overview', [ $this, 'ajax_test_industry_overview' ] );
+        add_action( 'wp_ajax_rtbcb_test_real_treasury_overview', [ $this, 'ajax_test_real_treasury_overview' ] );
+        add_action( 'wp_ajax_rtbcb_get_company_data', [ $this, 'ajax_get_company_data' ] );
+        add_action( 'wp_ajax_rtbcb_test_estimated_benefits', [ $this, 'ajax_test_estimated_benefits' ] );
+        add_action( 'wp_ajax_rtbcb_save_test_results', [ $this, 'save_test_results' ] );
+        add_action( 'wp_ajax_rtbcb_test_generate_complete_report', [ $this, 'ajax_test_generate_complete_report' ] );
+        add_action( 'wp_ajax_rtbcb_test_complete_report', [ $this, 'ajax_test_generate_complete_report' ] );
+        add_action( 'wp_ajax_rtbcb_test_calculate_roi', [ $this, 'ajax_test_calculate_roi' ] );
+        add_action( 'wp_ajax_rtbcb_calculate_roi_test', [ $this, 'ajax_calculate_roi_test' ] );
+        add_action( 'wp_ajax_rtbcb_sensitivity_analysis', [ $this, 'ajax_sensitivity_analysis' ] );
     }
 
     /**
@@ -150,6 +168,15 @@ class RTBCB_Admin {
 
         add_submenu_page(
             'rtbcb-dashboard',
+            __( 'API Test', 'rtbcb' ),
+            __( 'API Test', 'rtbcb' ),
+            'manage_options',
+            'rtbcb-api-test',
+            [ $this, 'render_api_test' ]
+        );
+
+        add_submenu_page(
+            'rtbcb-dashboard',
             __( 'Unified Test Dashboard', 'rtbcb' ),
             __( 'Unified Tests', 'rtbcb' ),
             'manage_options',
@@ -168,11 +195,83 @@ class RTBCB_Admin {
 
         add_submenu_page(
             'rtbcb-dashboard',
+            __( 'Report Test', 'rtbcb' ),
+            __( 'Report Test', 'rtbcb' ),
+            'manage_options',
+            'rtbcb-report-test',
+            [ $this, 'render_report_test' ]
+        );
+
+        add_submenu_page(
+            'rtbcb-dashboard',
             __( 'Calculation Info', 'rtbcb' ),
             __( 'Calculation Info', 'rtbcb' ),
             'manage_options',
             'rtbcb-calculations',
             [ $this, 'render_calculation_info' ]
+        );
+
+        add_submenu_page(
+            'rtbcb-dashboard',
+            __( 'Test Dashboard', 'rtbcb' ),
+            __( 'Test Dashboard', 'rtbcb' ),
+            'manage_options',
+            'rtbcb-test-dashboard',
+            [ $this, 'render_test_dashboard' ]
+        );
+
+        add_submenu_page(
+            'rtbcb-dashboard',
+            __( 'Test Company Overview', 'rtbcb' ),
+            __( 'Test Company Overview', 'rtbcb' ),
+            'manage_options',
+            'rtbcb-test-company-overview',
+            [ $this, 'render_test_company_overview' ]
+        );
+
+        add_submenu_page(
+            'rtbcb-dashboard',
+            __( 'Test Treasury Tech Overview', 'rtbcb' ),
+            __( 'Test Treasury Tech Overview', 'rtbcb' ),
+            'manage_options',
+            'rtbcb-test-treasury-tech-overview',
+            [ $this, 'render_test_treasury_tech_overview' ]
+        );
+
+        add_submenu_page(
+            'rtbcb-dashboard',
+            __( 'Test Industry Overview', 'rtbcb' ),
+            __( 'Test Industry Overview', 'rtbcb' ),
+            'manage_options',
+            'rtbcb-test-industry-overview',
+            [ $this, 'render_test_industry_overview' ]
+        );
+
+        add_submenu_page(
+            'rtbcb-dashboard',
+            __( 'Test Real Treasury Overview', 'rtbcb' ),
+            __( 'Test Real Treasury Overview', 'rtbcb' ),
+            'manage_options',
+            'rtbcb-test-real-treasury-overview',
+            [ $this, 'render_test_real_treasury_overview' ]
+        );
+
+        add_submenu_page(
+            'rtbcb-dashboard',
+            __( 'Test Category Recommendation', 'rtbcb' ),
+            __( 'Test Category Recommendation', 'rtbcb' ),
+            'manage_options',
+            'rtbcb-test-recommended-category',
+            [ $this, 'render_test_recommended_category' ]
+        );
+
+        add_submenu_page(
+            'rtbcb-dashboard',
+            __( 'Test Estimated Benefits', 'rtbcb' ),
+            __( 'Test Estimated Benefits', 'rtbcb' ),
+            'manage_options',
+            'rtbcb-test-estimated-benefits',
+            [ $this, 'render_test_estimated_benefits' ]
         );
     }
 
