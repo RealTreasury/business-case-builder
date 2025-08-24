@@ -222,6 +222,46 @@ function rtbcb_check_database_health() {
 }
 
 /**
+ * Check basic API connectivity.
+ *
+ * @return array Results including success state and HTTP code.
+ */
+function rtbcb_check_api_connectivity() {
+    $response = wp_remote_get( 'https://api.wordpress.org/' );
+
+    if ( is_wp_error( $response ) ) {
+        return [
+            'reachable' => false,
+            'code'      => 0,
+            'message'   => $response->get_error_message(),
+        ];
+    }
+
+    $code = wp_remote_retrieve_response_code( $response );
+
+    return [
+        'reachable' => 200 === $code,
+        'code'      => $code,
+        'message'   => '',
+    ];
+}
+
+/**
+ * Verify file system write permissions.
+ *
+ * @return array Results including path checked and writability.
+ */
+function rtbcb_check_file_permissions() {
+    $upload_dir = wp_upload_dir();
+    $path       = $upload_dir['basedir'];
+
+    return [
+        'path'     => $path,
+        'writable' => is_writable( $path ),
+    ];
+}
+
+/**
  * Sanitize form input data
  *
  * @param array $data Raw form data

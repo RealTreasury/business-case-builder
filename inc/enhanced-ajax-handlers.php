@@ -39,6 +39,7 @@ add_action( 'wp_ajax_rtbcb_evaluate_response_quality', 'rtbcb_ajax_evaluate_resp
 add_action( 'wp_ajax_rtbcb_optimize_prompt_tokens', 'rtbcb_ajax_optimize_prompt_tokens' );
 add_action( 'wp_ajax_rtbcb_run_api_health_tests', 'rtbcb_run_api_health_tests' );
 add_action( 'wp_ajax_rtbcb_run_single_api_test', 'rtbcb_run_single_api_test' );
+add_action( 'wp_ajax_rtbcb_run_data_health_checks', 'rtbcb_run_data_health_checks' );
 
 /**
  * Test individual LLM model with given prompt.
@@ -1290,6 +1291,70 @@ function rtbcb_run_single_api_test() {
         [
             'timestamp' => $option['timestamp'],
             'result'    => $result,
+        ]
+    );
+}
+
+/**
+ * Run data health checks and return results.
+ *
+ * @return void
+ */
+function rtbcb_run_data_health_checks() {
+    if ( ! check_ajax_referer( 'rtbcb_data_health_checks', 'nonce', false ) ) {
+        wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
+    }
+
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'rtbcb' ) ], 403 );
+    }
+
+    $timestamp = current_time( 'mysql' );
+
+    $db_status = rtbcb_check_database_health();
+    $missing   = [];
+    foreach ( $db_status as $table ) {
+        if ( empty( $table['exists'] ) ) {
+            $missing[] = $table['name'];
+        }
+    }
+    $db_passed  = empty( $missing );
+    $db_message = $db_passed ? __( 'All required tables exist.', 'rtbcb' ) : sprintf( __( 'Missing tables: %s', 'rtbcb' ), implode( ', ', $missing ) );
+
+    $api_status = rtbcb_check_api_connectivity();
+    $api_passed = ! empty( $api_status['reachable'] );
+    $api_message = $api_passed ? __( 'API reachable.', 'rtbcb' ) : __( 'API unreachable.', 'rtbcb' );
+
+    $file_status = rtbcb_check_file_permissions();
+    $file_passed = ! empty( $file_status['writable'] );
+    $file_message = $file_passed
+        ? __( 'Upload directory is writable.', 'rtbcb' )
+        : sprintf( __( 'Upload directory not writable: %s', 'rtbcb' ), $file_status['path'] );
+
+    $results = [
+        'database' => [
+            'passed'  => $db_passed,
+            'message' => $db_message,
+        ],
+        'api'      => [
+            'passed'  => $api_passed,
+            'message' => $api_message,
+        ],
+        'files'    => [
+            'passed'  => $file_passed,
+            'message' => $file_message,
+        ],
+    ];
+
+    update_option( 'rtbcb_last_data_health_test', [
+        'timestamp' => $timestamp,
+        'results'   => $results,
+    ] );
+
+    wp_send_json_success(
+        [
+            'timestamp' => $timestamp,
+            'results'   => $results,
         ]
     );
 }

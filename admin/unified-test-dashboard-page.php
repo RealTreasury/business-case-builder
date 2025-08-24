@@ -72,6 +72,10 @@ $available_models = [
                 <span class="dashicons dashicons-cloud"></span>
                 <?php esc_html_e( 'API Health', 'rtbcb' ); ?>
             </a>
+            <a href="#data-health" class="nav-tab" data-tab="data-health">
+                <span class="dashicons dashicons-database"></span>
+                <?php esc_html_e( 'Data Health', 'rtbcb' ); ?>
+            </a>
         </nav>
     </div>
 
@@ -523,9 +527,10 @@ $available_models = [
                         <tbody id="sensitivity-table-body">
                             <!-- Populated via JavaScript -->
                         </tbody>
-                    </table>
-                </div>
-            </div>
+        </table>
+    </div>
+</div>
+<\/div>
 
             <!-- Scenario Comparison Container -->
             <div id="scenario-comparison-container" class="rtbcb-results-container" style="display: none;">
@@ -988,7 +993,69 @@ $available_models = [
                     <?php endforeach; ?>
                 </tbody>
             </table>
-        </div>
     </div>
 </div>
 
+<?php
+$data_health_option   = get_option( 'rtbcb_last_data_health_test', [] );
+$data_health_results  = $data_health_option['results'] ?? [];
+$data_health_timestamp = $data_health_option['timestamp'] ?? '';
+$data_checks          = [
+    'database' => __( 'Database', 'rtbcb' ),
+    'api'      => __( 'API Connectivity', 'rtbcb' ),
+    'files'    => __( 'File Permissions', 'rtbcb' ),
+];
+?>
+<div id="data-health" class="rtbcb-test-section" style="display: none;">
+    <div class="rtbcb-test-panel">
+        <div class="rtbcb-panel-header">
+            <h2><?php esc_html_e( 'Data Health Checks', 'rtbcb' ); ?></h2>
+            <p><?php esc_html_e( 'Verify system data integrity and environment configuration.', 'rtbcb' ); ?></p>
+        </div>
+        <div class="rtbcb-api-controls">
+            <button type="button" id="rtbcb-run-data-health-checks" class="button button-primary">
+                <span class="dashicons dashicons-update"></span>
+                <?php esc_html_e( 'Run Checks', 'rtbcb' ); ?>
+            </button>
+            <div id="rtbcb-data-health-notice" class="rtbcb-api-health-notice">
+                <?php
+                if ( $data_health_timestamp ) {
+                    printf( esc_html__( 'Last checked: %s', 'rtbcb' ), esc_html( $data_health_timestamp ) );
+                } else {
+                    esc_html_e( 'No checks run yet.', 'rtbcb' );
+                }
+                ?>
+            </div>
+        </div>
+        <table class="rtbcb-data-health-table wp-list-table widefat fixed striped">
+            <thead>
+                <tr>
+                    <th><?php esc_html_e( 'Check', 'rtbcb' ); ?></th>
+                    <th><?php esc_html_e( 'Status', 'rtbcb' ); ?></th>
+                    <th><?php esc_html_e( 'Message', 'rtbcb' ); ?></th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ( $data_checks as $key => $label ) :
+                    $result       = $data_health_results[ $key ] ?? [];
+                    $passed       = ! empty( $result['passed'] );
+                    $status_class = $passed ? 'status-good' : ( $result ? 'status-error' : '' );
+                    $icon         = $result ? ( $passed ? 'dashicons-yes-alt' : 'dashicons-warning' ) : 'dashicons-minus';
+                    ?>
+                    <tr id="rtbcb-data-<?php echo esc_attr( $key ); ?>" data-check="<?php echo esc_attr( $key ); ?>">
+                        <td class="rtbcb-component-name"><?php echo esc_html( $label ); ?></td>
+                        <td class="rtbcb-status">
+                            <span class="rtbcb-status-indicator <?php echo esc_attr( $status_class ); ?>">
+                                <span class="dashicons <?php echo esc_attr( $icon ); ?>"></span>
+                            </span>
+                        </td>
+                        <td class="rtbcb-message">
+                            <?php echo isset( $result['message'] ) ? esc_html( $result['message'] ) : esc_html__( 'Not checked', 'rtbcb' ); ?>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+    </div>
+</div>

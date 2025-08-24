@@ -14,6 +14,7 @@
         startTime: null,
         currentRequest: null,
         apiResults: {},
+        dataHealthResults: {},
 
         // Initialize dashboard
         init() {
@@ -21,6 +22,7 @@
             this.initializeTabs();
             this.checkSystemStatus();
             this.initApiHealth();
+            this.initDataHealth();
         },
 
         // Bind all event handlers
@@ -50,6 +52,9 @@
                 const comp = $(e.currentTarget).data('component');
                 this.toggleApiDetails(comp);
             });
+
+            // Data health controls
+            $('#rtbcb-run-data-health-checks').on('click', this.runDataHealthChecks.bind(this));
 
             // Real-time input validation
             $('#company-name-input').on('input', this.validateInput.bind(this));
@@ -1765,6 +1770,55 @@
                 message = rtbcbDashboard.strings.errorsDetected.replace('%d', failures);
             }
             $('#rtbcb-api-health-notice').text(message);
+        },
+
+        // Data Health Methods
+        initDataHealth() {
+            this.dataHealthResults = rtbcbDashboard.dataHealth?.lastResults?.results || {};
+        },
+
+        runDataHealthChecks() {
+            $('#rtbcb-run-data-health-checks').prop('disabled', true);
+            $('#rtbcb-data-health-notice').text(rtbcbDashboard.strings.running);
+
+            $.post(rtbcbDashboard.ajaxurl, {
+                action: 'rtbcb_run_data_health_checks',
+                nonce: rtbcbDashboard.nonces.dataHealth
+            }).done((response) => {
+                if (response.success) {
+                    const data = response.data;
+                    this.dataHealthResults = data.results;
+                    Object.keys(data.results).forEach(key => {
+                        this.updateDataHealthRow(key, data.results[key]);
+                    });
+                    $('#rtbcb-data-health-notice').text(
+                        rtbcbDashboard.strings.lastChecked.replace('%s', data.timestamp)
+                    );
+                } else {
+                    $('#rtbcb-data-health-notice').text(rtbcbDashboard.strings.error);
+                }
+            }).fail(() => {
+                $('#rtbcb-data-health-notice').text(rtbcbDashboard.strings.error);
+            }).always(() => {
+                $('#rtbcb-run-data-health-checks').prop('disabled', false);
+            });
+        },
+
+        updateDataHealthRow(key, result) {
+            const row = $(`#rtbcb-data-${key}`);
+            const indicator = row.find('.rtbcb-status-indicator');
+            indicator.removeClass('status-good status-error');
+            indicator.find('.dashicons').removeClass('dashicons-yes-alt dashicons-warning dashicons-minus');
+
+            if (result.passed) {
+                indicator.addClass('status-good');
+                indicator.find('.dashicons').addClass('dashicons-yes-alt');
+            } else {
+                indicator.addClass('status-error');
+                indicator.find('.dashicons').addClass('dashicons-warning');
+            }
+
+            row.find('.rtbcb-message').text(result.message || rtbcbDashboard.strings.error);
         },
 
         // Validation

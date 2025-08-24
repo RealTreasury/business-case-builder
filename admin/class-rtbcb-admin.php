@@ -80,6 +80,7 @@ class RTBCB_Admin {
                         'dashboard' => wp_create_nonce( 'rtbcb_unified_test_dashboard' ),
                         'llm'       => wp_create_nonce( 'rtbcb_llm_testing' ),
                         'apiHealth' => wp_create_nonce( 'rtbcb_api_health_tests' ),
+                        'dataHealth' => wp_create_nonce( 'rtbcb_data_health_checks' ),
                     ],
                     'strings' => [
                         'generating'     => __( 'Generating...', 'rtbcb' ),
@@ -93,6 +94,7 @@ class RTBCB_Admin {
                         'passed'         => __( 'Passed', 'rtbcb' ),
                         'failed'         => __( 'Failed', 'rtbcb' ),
                         'settings'       => __( 'Settings', 'rtbcb' ),
+                        'lastChecked'    => __( 'Last checked: %s', 'rtbcb' ),
                     ],
                     'models'  => [
                         'mini'     => get_option( 'rtbcb_mini_model', 'gpt-4o-mini' ),
@@ -101,6 +103,9 @@ class RTBCB_Admin {
                     ],
                     'apiHealth' => [
                         'lastResults' => get_option( 'rtbcb_last_api_test', [] ),
+                    ],
+                    'dataHealth' => [
+                        'lastResults' => get_option( 'rtbcb_last_data_health_test', [] ),
                     ],
                     'urls'     => [
                         'settings' => admin_url( 'admin.php?page=rtbcb-settings' ),
