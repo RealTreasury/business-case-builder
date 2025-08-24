@@ -1579,8 +1579,6 @@ function rtbcb_save_dashboard_settings() {
         'rtbcb_premium_model'       => 'sanitize_text_field',
         'rtbcb_advanced_model'      => 'sanitize_text_field',
         'rtbcb_embedding_model'     => 'sanitize_text_field',
-        'rtbcb_labor_cost_per_hour' => 'floatval',
-        'rtbcb_bank_fee_baseline'   => 'floatval',
     ];
 
     foreach ( $fields as $option => $sanitize ) {

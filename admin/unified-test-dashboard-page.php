@@ -33,8 +33,6 @@ $mini_model     = $available_models['mini'];
 $premium_model  = $available_models['premium'];
 $advanced_model = $available_models['advanced'];
 $embedding_model = get_option( 'rtbcb_embedding_model', rtbcb_get_default_model( 'embedding' ) );
-$labor_cost      = get_option( 'rtbcb_labor_cost_per_hour', '' );
-$bank_fee        = get_option( 'rtbcb_bank_fee_baseline', '' );
 
 $chat_models = [
     'gpt-5'             => 'gpt-5',
@@ -1238,22 +1236,6 @@ $last_index_display = $last_indexed ? $last_indexed : __( 'Never', 'rtbcb' );
                                     <option value="<?php echo esc_attr( $value ); ?>" <?php selected( $embedding_model, $value ); ?>><?php echo esc_html( $label ); ?></option>
                                 <?php endforeach; ?>
                             </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row">
-                            <label for="rtbcb_labor_cost_per_hour"><?php esc_html_e( 'Labor Cost Per Hour', 'rtbcb' ); ?></label>
-                        </th>
-                        <td>
-                            <input type="number" step="0.01" id="rtbcb_labor_cost_per_hour" name="rtbcb_labor_cost_per_hour" value="<?php echo esc_attr( $labor_cost ); ?>" class="regular-text" />
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row">
-                            <label for="rtbcb_bank_fee_baseline"><?php esc_html_e( 'Bank Fee Baseline', 'rtbcb' ); ?></label>
-                        </th>
-                        <td>
-                            <input type="number" step="0.01" id="rtbcb_bank_fee_baseline" name="rtbcb_bank_fee_baseline" value="<?php echo esc_attr( $bank_fee ); ?>" class="regular-text" />
                         </td>
                     </tr>
                 </table>
