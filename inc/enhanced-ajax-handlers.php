@@ -39,6 +39,7 @@ add_action( 'wp_ajax_rtbcb_evaluate_response_quality', 'rtbcb_ajax_evaluate_resp
 add_action( 'wp_ajax_rtbcb_optimize_prompt_tokens', 'rtbcb_ajax_optimize_prompt_tokens' );
 add_action( 'wp_ajax_rtbcb_run_api_health_tests', 'rtbcb_run_api_health_tests' );
 add_action( 'wp_ajax_rtbcb_run_single_api_test', 'rtbcb_run_single_api_test' );
+add_action( 'wp_ajax_rtbcb_save_dashboard_settings', 'rtbcb_save_dashboard_settings' );
 
 /**
  * Test individual LLM model with given prompt.
@@ -1292,5 +1293,46 @@ function rtbcb_run_single_api_test() {
             'result'    => $result,
         ]
     );
+}
+
+/**
+ * Save dashboard settings via AJAX.
+ *
+ * @return void
+ */
+function rtbcb_save_dashboard_settings() {
+    if ( ! check_ajax_referer( 'rtbcb_save_dashboard_settings', 'nonce', false ) ) {
+        wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
+    }
+
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'rtbcb' ) ], 403 );
+    }
+
+    $settings = isset( $_POST['settings'] ) ? (array) wp_unslash( $_POST['settings'] ) : [];
+
+    $sanitized = [
+        'rtbcb_openai_api_key'      => sanitize_text_field( $settings['rtbcb_openai_api_key'] ?? '' ),
+        'rtbcb_mini_model'          => sanitize_text_field( $settings['rtbcb_mini_model'] ?? '' ),
+        'rtbcb_premium_model'       => sanitize_text_field( $settings['rtbcb_premium_model'] ?? '' ),
+        'rtbcb_advanced_model'      => sanitize_text_field( $settings['rtbcb_advanced_model'] ?? '' ),
+        'rtbcb_embedding_model'     => sanitize_text_field( $settings['rtbcb_embedding_model'] ?? '' ),
+        'rtbcb_labor_cost_per_hour' => isset( $settings['rtbcb_labor_cost_per_hour'] ) ? floatval( $settings['rtbcb_labor_cost_per_hour'] ) : '',
+        'rtbcb_bank_fee_baseline'   => isset( $settings['rtbcb_bank_fee_baseline'] ) ? floatval( $settings['rtbcb_bank_fee_baseline'] ) : '',
+    ];
+
+    register_setting( 'rtbcb_settings', 'rtbcb_openai_api_key', [ 'sanitize_callback' => 'sanitize_text_field' ] );
+    register_setting( 'rtbcb_settings', 'rtbcb_mini_model', [ 'sanitize_callback' => 'sanitize_text_field' ] );
+    register_setting( 'rtbcb_settings', 'rtbcb_premium_model', [ 'sanitize_callback' => 'sanitize_text_field' ] );
+    register_setting( 'rtbcb_settings', 'rtbcb_advanced_model', [ 'sanitize_callback' => 'sanitize_text_field' ] );
+    register_setting( 'rtbcb_settings', 'rtbcb_embedding_model', [ 'sanitize_callback' => 'sanitize_text_field' ] );
+    register_setting( 'rtbcb_settings', 'rtbcb_labor_cost_per_hour', [ 'sanitize_callback' => 'floatval' ] );
+    register_setting( 'rtbcb_settings', 'rtbcb_bank_fee_baseline', [ 'sanitize_callback' => 'floatval' ] );
+
+    foreach ( $sanitized as $option => $value ) {
+        update_option( $option, $value );
+    }
+
+    wp_send_json_success( [ 'message' => __( 'Settings saved.', 'rtbcb' ) ] );
 }
 

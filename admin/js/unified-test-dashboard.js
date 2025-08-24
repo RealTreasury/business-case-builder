@@ -54,6 +54,9 @@
             // Real-time input validation
             $('#company-name-input').on('input', this.validateInput.bind(this));
 
+            // Settings form
+            $('#rtbcb-settings-form').on('submit', this.saveSettings.bind(this));
+
             // Keyboard shortcuts
             $(document).on('keydown', this.handleKeyboardShortcuts.bind(this));
         },
@@ -112,6 +115,42 @@
             } else {
                 $('#company-name-input').removeClass('error');
             }
+        },
+
+        // Save settings via AJAX
+        saveSettings(e) {
+            e.preventDefault();
+
+            const data = {
+                action: 'rtbcb_save_dashboard_settings',
+                nonce: $('#rtbcb_settings_nonce').val(),
+                settings: {
+                    rtbcb_openai_api_key: $('#rtbcb_openai_api_key').val(),
+                    rtbcb_mini_model: $('#rtbcb_mini_model').val(),
+                    rtbcb_premium_model: $('#rtbcb_premium_model').val(),
+                    rtbcb_advanced_model: $('#rtbcb_advanced_model').val(),
+                    rtbcb_embedding_model: $('#rtbcb_embedding_model').val(),
+                    rtbcb_labor_cost_per_hour: $('#rtbcb_labor_cost_per_hour').val(),
+                    rtbcb_bank_fee_baseline: $('#rtbcb_bank_fee_baseline').val()
+                }
+            };
+
+            this.setLoadingState(true, '#rtbcb-save-settings', rtbcbDashboard.strings.saving);
+
+            $.post(rtbcbDashboard.ajaxurl, data)
+                .done((response) => {
+                    if (response.success) {
+                        this.showNotification(rtbcbDashboard.strings.settingsSaved, 'success');
+                    } else {
+                        this.showNotification(response.data?.message || rtbcbDashboard.strings.settingsError, 'error');
+                    }
+                })
+                .fail(() => {
+                    this.showNotification(rtbcbDashboard.strings.settingsError, 'error');
+                })
+                .always(() => {
+                    this.setLoadingState(false, '#rtbcb-save-settings', rtbcbDashboard.strings.saveSettings);
+                });
         },
 
         // Generate company overview with comprehensive tracking

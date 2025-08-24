@@ -15,17 +15,39 @@ if ( ! current_user_can( 'manage_options' ) ) {
 }
 
 // Get current system status
-$api_key       = get_option( 'rtbcb_openai_api_key', '' );
-$api_configured = ! empty( $api_key );
-$api_valid     = $api_configured && rtbcb_is_valid_openai_api_key( $api_key );
-$company_data  = rtbcb_get_current_company();
+$api_key         = get_option( 'rtbcb_openai_api_key', '' );
+$mini_model      = get_option( 'rtbcb_mini_model', rtbcb_get_default_model( 'mini' ) );
+$premium_model   = get_option( 'rtbcb_premium_model', rtbcb_get_default_model( 'premium' ) );
+$advanced_model  = get_option( 'rtbcb_advanced_model', rtbcb_get_default_model( 'advanced' ) );
+$embedding_model = get_option( 'rtbcb_embedding_model', rtbcb_get_default_model( 'embedding' ) );
+$labor_cost      = get_option( 'rtbcb_labor_cost_per_hour', '' );
+$bank_fee        = get_option( 'rtbcb_bank_fee_baseline', '' );
+$api_configured  = ! empty( $api_key );
+$api_valid       = $api_configured && rtbcb_is_valid_openai_api_key( $api_key );
+$company_data    = rtbcb_get_current_company();
 $has_company_data = ! empty( $company_data );
 
 // Available models for testing
 $available_models = [
-    'mini'     => get_option( 'rtbcb_mini_model', 'gpt-4o-mini' ),
-    'premium'  => get_option( 'rtbcb_premium_model', 'gpt-4o' ),
-    'advanced' => get_option( 'rtbcb_advanced_model', 'o1-preview' ),
+    'mini'     => $mini_model,
+    'premium'  => $premium_model,
+    'advanced' => $advanced_model,
+];
+
+$chat_models = [
+    'gpt-5'             => 'gpt-5',
+    'gpt-5-mini'        => 'gpt-5-mini',
+    'gpt-5-nano'        => 'gpt-5-nano',
+    'gpt-5-chat-latest' => 'gpt-5-chat-latest',
+    'gpt-4o-mini'       => 'gpt-4o-mini',
+    'gpt-4o'            => 'gpt-4o',
+    'o1-mini'           => 'o1-mini',
+    'o1-preview'        => 'o1-preview',
+];
+
+$embedding_models = [
+    'text-embedding-3-small' => 'text-embedding-3-small',
+    'text-embedding-3-large' => 'text-embedding-3-large',
 ];
 ?>
 
@@ -71,6 +93,10 @@ $available_models = [
             <a href="#api-health" class="nav-tab" data-tab="api-health">
                 <span class="dashicons dashicons-cloud"></span>
                 <?php esc_html_e( 'API Health', 'rtbcb' ); ?>
+            </a>
+            <a href="#settings" class="nav-tab" data-tab="settings">
+                <span class="dashicons dashicons-admin-generic"></span>
+                <?php esc_html_e( 'Settings', 'rtbcb' ); ?>
             </a>
         </nav>
     </div>
@@ -988,6 +1014,104 @@ $available_models = [
                     <?php endforeach; ?>
                 </tbody>
             </table>
+        </div>
+    </div>
+    <!-- Settings Section -->
+    <div id="settings" class="rtbcb-test-section" style="display: none;">
+        <div class="rtbcb-test-panel">
+            <div class="rtbcb-panel-header">
+                <h2><?php esc_html_e( 'Plugin Settings', 'rtbcb' ); ?></h2>
+                <p><?php esc_html_e( 'Configure API keys and defaults.', 'rtbcb' ); ?></p>
+            </div>
+            <form id="rtbcb-settings-form">
+                <table class="form-table" role="presentation">
+                    <tr>
+                        <th scope="row">
+                            <label for="rtbcb_openai_api_key"><?php esc_html_e( 'OpenAI API Key', 'rtbcb' ); ?></label>
+                        </th>
+                        <td>
+                            <input type="text" id="rtbcb_openai_api_key" name="rtbcb_openai_api_key" value="<?php echo esc_attr( $api_key ); ?>" class="regular-text" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label><?php esc_html_e( 'Diagnostics', 'rtbcb' ); ?></label>
+                        </th>
+                        <td>
+                            <button type="button" class="button" id="rtbcb-run-tests"><?php esc_html_e( 'Run Diagnostics', 'rtbcb' ); ?></button>
+                            <p class="description"><?php esc_html_e( 'Verify integration and system health.', 'rtbcb' ); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="rtbcb_mini_model"><?php esc_html_e( 'Mini Model', 'rtbcb' ); ?></label>
+                        </th>
+                        <td>
+                            <select id="rtbcb_mini_model" name="rtbcb_mini_model">
+                                <?php foreach ( $chat_models as $value => $label ) : ?>
+                                    <option value="<?php echo esc_attr( $value ); ?>" <?php selected( $mini_model, $value ); ?>><?php echo esc_html( $label ); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="rtbcb_premium_model"><?php esc_html_e( 'Premium Model', 'rtbcb' ); ?></label>
+                        </th>
+                        <td>
+                            <select id="rtbcb_premium_model" name="rtbcb_premium_model">
+                                <?php foreach ( $chat_models as $value => $label ) : ?>
+                                    <option value="<?php echo esc_attr( $value ); ?>" <?php selected( $premium_model, $value ); ?>><?php echo esc_html( $label ); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="rtbcb_advanced_model"><?php esc_html_e( 'Advanced Model', 'rtbcb' ); ?></label>
+                        </th>
+                        <td>
+                            <select id="rtbcb_advanced_model" name="rtbcb_advanced_model">
+                                <?php foreach ( $chat_models as $value => $label ) : ?>
+                                    <option value="<?php echo esc_attr( $value ); ?>" <?php selected( $advanced_model, $value ); ?>><?php echo esc_html( $label ); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="rtbcb_embedding_model"><?php esc_html_e( 'Embedding Model', 'rtbcb' ); ?></label>
+                        </th>
+                        <td>
+                            <select id="rtbcb_embedding_model" name="rtbcb_embedding_model">
+                                <?php foreach ( $embedding_models as $value => $label ) : ?>
+                                    <option value="<?php echo esc_attr( $value ); ?>" <?php selected( $embedding_model, $value ); ?>><?php echo esc_html( $label ); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="rtbcb_labor_cost_per_hour"><?php esc_html_e( 'Labor Cost Per Hour', 'rtbcb' ); ?></label>
+                        </th>
+                        <td>
+                            <input type="number" step="0.01" id="rtbcb_labor_cost_per_hour" name="rtbcb_labor_cost_per_hour" value="<?php echo esc_attr( $labor_cost ); ?>" class="regular-text" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="rtbcb_bank_fee_baseline"><?php esc_html_e( 'Bank Fee Baseline', 'rtbcb' ); ?></label>
+                        </th>
+                        <td>
+                            <input type="number" step="0.01" id="rtbcb_bank_fee_baseline" name="rtbcb_bank_fee_baseline" value="<?php echo esc_attr( $bank_fee ); ?>" class="regular-text" />
+                        </td>
+                    </tr>
+                </table>
+                <?php wp_nonce_field( 'rtbcb_save_dashboard_settings', 'rtbcb_settings_nonce' ); ?>
+                <p>
+                    <button type="submit" class="button button-primary" id="rtbcb-save-settings"><?php esc_html_e( 'Save Settings', 'rtbcb' ); ?></button>
+                </p>
+            </form>
         </div>
     </div>
 </div>

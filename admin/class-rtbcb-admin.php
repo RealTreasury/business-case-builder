@@ -93,6 +93,10 @@ class RTBCB_Admin {
                         'passed'         => __( 'Passed', 'rtbcb' ),
                         'failed'         => __( 'Failed', 'rtbcb' ),
                         'settings'       => __( 'Settings', 'rtbcb' ),
+                        'saving'         => __( 'Saving...', 'rtbcb' ),
+                        'saveSettings'   => __( 'Save Settings', 'rtbcb' ),
+                        'settingsSaved'  => __( 'Settings saved successfully', 'rtbcb' ),
+                        'settingsError'  => __( 'Error saving settings', 'rtbcb' ),
                     ],
                     'models'  => [
                         'mini'     => get_option( 'rtbcb_mini_model', 'gpt-4o-mini' ),
