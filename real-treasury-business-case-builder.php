@@ -1378,60 +1378,54 @@ add_action( 'wp_ajax_rtbcb_company_overview_simple', 'rtbcb_handle_company_overv
 add_action( 'wp_ajax_rtbcb_company_overview_progress', 'rtbcb_check_overview_progress' );
 
 /**
- * Simple AJAX handler to test company overview generation.
+ * Handle AJAX request for company overview generation.
  *
  * @return void
  */
 function rtbcb_handle_company_overview_simple() {
-    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'rtbcb_test_company_overview' ) ) {
-        wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ] );
-        return;
+    check_ajax_referer( 'rtbcb_ajax_nonce', 'nonce' );
+
+    $company_name   = isset( $_POST['company_name'] ) ? sanitize_text_field( wp_unslash( $_POST['company_name'] ) ) : '';
+    $include_prompt = ! empty( $_POST['include_prompt'] );
+
+    if ( '' === $company_name ) {
+        wp_send_json_error(
+            [
+                'message' => __( 'Company name is required.', 'rtbcb' ),
+            ]
+        );
     }
 
-    $company_name = isset( $_POST['company_name'] ) ? sanitize_text_field( wp_unslash( $_POST['company_name'] ) ) : '';
-
-    if ( empty( $company_name ) ) {
-        wp_send_json_error( [ 'message' => __( 'Company name required', 'rtbcb' ) ] );
-        return;
-    }
-
+    error_log( sprintf( 'RTBCB: Starting company overview for: %s', $company_name ) );
     $start_time = microtime( true );
-    error_log( sprintf( 'rtbcb_handle_company_overview_simple started for %s', $company_name ) );
 
-    $simple_info = rtbcb_get_simple_company_info( $company_name );
+    $llm    = new RTBCB_LLM();
+    $result = $llm->generate_company_overview( $company_name, $include_prompt );
 
-    $elapsed = microtime( true ) - $start_time;
-    error_log( sprintf( 'rtbcb_handle_company_overview_simple completed in %.4f seconds', $elapsed ) );
+    $processing_time = round( ( microtime( true ) - $start_time ) * 1000 ); // milliseconds.
+
+    if ( is_wp_error( $result ) ) {
+        error_log( sprintf( 'RTBCB: Company overview failed after %dms: %s', $processing_time, $result->get_error_message() ) );
+        wp_send_json_error(
+            [
+                'message'         => $result->get_error_message(),
+                'processing_time' => $processing_time,
+            ]
+        );
+    }
+
+    error_log( sprintf( 'RTBCB: Company overview completed in %dms', $processing_time ) );
 
     wp_send_json_success(
         [
-            'message'         => sprintf( __( 'Processing started for %s', 'rtbcb' ), $company_name ),
-            'status'          => 'processing',
-            'simple_analysis' => $simple_info,
+            'status'          => __( 'Analysis completed successfully', 'rtbcb' ),
+            'message'         => sprintf( __( 'Generated analysis for %s', 'rtbcb' ), $company_name ),
+            'simple_analysis' => $result,
+            'prompt_sent'     => $result['prompt_sent'] ?? null,
+            'debug_info'      => $result['debug_info'] ?? null,
+            'processing_time' => $processing_time,
         ]
     );
-}
-
-/**
- * Provide simple placeholder analysis for testing connections.
- *
- * @param string $company_name Company name.
- * @return array
- */
-function rtbcb_get_simple_company_info( $company_name ) {
-    return [
-        'analysis'        => sprintf( __( 'Analysis requested for %s. This is a placeholder response to test the connection without LLM calls.', 'rtbcb' ), $company_name ),
-        'recommendations' => [
-            __( 'Implement treasury management system', 'rtbcb' ),
-            __( 'Automate cash forecasting', 'rtbcb' ),
-            __( 'Improve bank connectivity', 'rtbcb' ),
-        ],
-        'references'      => [
-            esc_url_raw( 'https://www.afponline.org' ),
-            esc_url_raw( 'https://www.treasury.gov' ),
-        ],
-        'generated_at'    => current_time( 'Y-m-d H:i:s' ),
-    ];
 }
 
 /**
