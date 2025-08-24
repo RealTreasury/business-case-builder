@@ -46,6 +46,8 @@ class RTBCB_Admin {
         add_action( 'wp_ajax_rtbcb_test_generate_complete_report', [ $this, 'ajax_test_generate_complete_report' ] );
         add_action( 'wp_ajax_rtbcb_test_complete_report', [ $this, 'ajax_test_generate_complete_report' ] );
         add_action( 'wp_ajax_rtbcb_test_calculate_roi', [ $this, 'ajax_test_calculate_roi' ] );
+        add_action( 'wp_ajax_rtbcb_calculate_roi_test', [ $this, 'ajax_calculate_roi_test' ] );
+        add_action( 'wp_ajax_rtbcb_sensitivity_analysis', [ $this, 'ajax_sensitivity_analysis' ] );
     }
 
     /**
@@ -1669,6 +1671,457 @@ class RTBCB_Admin {
             'last_updated'  => $last_updated,
             'status'        => $count > 0 ? 'healthy' : 'needs_rebuild',
         ];
+    }
+
+    /**
+     * AJAX handler for ROI calculation testing.
+     *
+     * @return void
+     */
+    public function ajax_calculate_roi_test() {
+        check_ajax_referer( 'rtbcb_roi_calculator_test', 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error(
+                [
+                    'message' => __( 'Insufficient permissions.', 'rtbcb' ),
+                    'code'    => 'insufficient_permissions',
+                ]
+            );
+        }
+
+        $roi_data = isset( $_POST['roi_data'] ) ? wp_unslash( $_POST['roi_data'] ) : [];
+
+        if ( empty( $roi_data ) || ! is_array( $roi_data ) ) {
+            wp_send_json_error(
+                [
+                    'message' => __( 'Invalid ROI data provided.', 'rtbcb' ),
+                    'code'    => 'invalid_data',
+                ]
+            );
+        }
+
+        $start_time = microtime( true );
+
+        try {
+            // Convert form data to calculator format.
+            $calculator_inputs = $this->convert_form_data_to_calculator_inputs( $roi_data );
+
+            // Validate required fields.
+            $validation_result = $this->validate_roi_inputs( $calculator_inputs );
+            if ( is_wp_error( $validation_result ) ) {
+                throw new Exception( $validation_result->get_error_message() );
+            }
+
+            // Calculate ROI for all scenarios.
+            $scenarios = [ 'conservative', 'realistic', 'optimistic' ];
+            $results   = [];
+
+            foreach ( $scenarios as $scenario ) {
+                $scenario_inputs = $this->adjust_inputs_for_scenario( $calculator_inputs, $scenario );
+                $roi_result      = RTBCB_Calculator::calculate_roi( $scenario_inputs );
+
+                if ( is_wp_error( $roi_result ) ) {
+                    throw new Exception(
+                        sprintf(
+                            /* translators: %s: Scenario name. */
+                            __( 'ROI calculation failed for %s scenario: %s', 'rtbcb' ),
+                            $scenario,
+                            $roi_result->get_error_message()
+                        )
+                    );
+                }
+
+                $results[ $scenario ] = $this->format_roi_result( $roi_result, $scenario );
+            }
+
+            // Calculate detailed breakdown for realistic scenario.
+            $results['realistic']['breakdown']   = $this->calculate_detailed_breakdown( $calculator_inputs );
+            $results['realistic']['assumptions'] = $this->generate_roi_assumptions( $calculator_inputs );
+
+            $elapsed_time = microtime( true ) - $start_time;
+
+            // Store results for future reference.
+            update_option(
+                'rtbcb_last_roi_calculation',
+                [
+                    'results'       => $results,
+                    'inputs'        => $calculator_inputs,
+                    'calculated_at' => current_time( 'mysql' ),
+                    'elapsed_time'  => $elapsed_time,
+                ]
+            );
+
+            wp_send_json_success( $results );
+
+        } catch ( Exception $e ) {
+            $elapsed_time = microtime( true ) - $start_time;
+
+            error_log( 'RTBCB ROI Calculation Error: ' . $e->getMessage() );
+
+            wp_send_json_error(
+                [
+                    'message'      => $e->getMessage(),
+                    'code'         => 'calculation_failed',
+                    'elapsed_time' => $elapsed_time,
+                    'debug'        => [
+                        'error_file'      => $e->getFile(),
+                        'error_line'      => $e->getLine(),
+                        'inputs_provided' => ! empty( $roi_data ),
+                        'memory_usage'    => size_format( memory_get_usage( true ) ),
+                    ],
+                ]
+            );
+        }
+    }
+
+    /**
+     * AJAX handler for sensitivity analysis.
+     *
+     * @return void
+     */
+    public function ajax_sensitivity_analysis() {
+        check_ajax_referer( 'rtbcb_roi_calculator_test', 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error(
+                [
+                    'message' => __( 'Insufficient permissions.', 'rtbcb' ),
+                ]
+            );
+        }
+
+        $roi_data = isset( $_POST['roi_data'] ) ? wp_unslash( $_POST['roi_data'] ) : [];
+        $base_roi = isset( $_POST['base_roi'] ) ? wp_unslash( $_POST['base_roi'] ) : [];
+
+        if ( empty( $roi_data ) || empty( $base_roi ) ) {
+            wp_send_json_error(
+                [
+                    'message' => __( 'Missing data for sensitivity analysis.', 'rtbcb' ),
+                ]
+            );
+        }
+
+        try {
+            $calculator_inputs   = $this->convert_form_data_to_calculator_inputs( $roi_data );
+            $sensitivity_results = $this->perform_sensitivity_analysis( $calculator_inputs, $base_roi );
+
+            wp_send_json_success( $sensitivity_results );
+
+        } catch ( Exception $e ) {
+            wp_send_json_error(
+                [
+                    'message' => $e->getMessage(),
+                    'code'    => 'sensitivity_analysis_failed',
+                ]
+            );
+        }
+    }
+
+    /**
+     * Convert form data to calculator input format.
+     *
+     * @param array $form_data Form data from frontend.
+     * @return array Calculator inputs.
+     */
+    private function convert_form_data_to_calculator_inputs( $form_data ) {
+        $inputs = [
+            // Company information.
+            'company_size'         => isset( $form_data['roi-company-size'] ) ? sanitize_text_field( $form_data['roi-company-size'] ) : 'medium',
+            'industry'             => isset( $form_data['roi-industry'] ) ? sanitize_text_field( $form_data['roi-industry'] ) : 'manufacturing',
+            'annual_revenue'       => floatval( $form_data['roi-annual-revenue'] ?? 0 ),
+
+            // Treasury operations.
+            'treasury_staff_count' => intval( $form_data['roi-treasury-staff'] ?? 0 ),
+            'average_salary'       => floatval( $form_data['roi-avg-salary'] ?? 0 ),
+            'hours_reconciliation' => floatval( $form_data['roi-hours-reconciliation'] ?? 0 ),
+            'hours_reporting'      => floatval( $form_data['roi-hours-reporting'] ?? 0 ),
+            'hours_analysis'       => floatval( $form_data['roi-hours-analysis'] ?? 0 ),
+
+            // Banking and fees.
+            'num_banks'            => intval( $form_data['roi-num-banks'] ?? 0 ),
+            'monthly_bank_fees'    => floatval( $form_data['roi-monthly-bank-fees'] ?? 0 ),
+            'wire_transfer_volume' => intval( $form_data['roi-wire-transfer-volume'] ?? 0 ),
+            'avg_wire_fee'         => floatval( $form_data['roi-avg-wire-fee'] ?? 0 ),
+
+            // Risk and efficiency.
+            'error_frequency'      => intval( $form_data['roi-error-frequency'] ?? 0 ),
+            'avg_error_cost'       => floatval( $form_data['roi-avg-error-cost'] ?? 0 ),
+            'compliance_hours'     => floatval( $form_data['roi-compliance-hours'] ?? 0 ),
+            'system_integration'   => isset( $form_data['roi-system-integration'] ) ? sanitize_text_field( $form_data['roi-system-integration'] ) : 'partial',
+
+            // Calculated fields.
+            'total_daily_hours'    => floatval( $form_data['roi-hours-reconciliation'] ?? 0 ) +
+                floatval( $form_data['roi-hours-reporting'] ?? 0 ) +
+                floatval( $form_data['roi-hours-analysis'] ?? 0 ),
+            'annual_wire_fees'     => floatval( $form_data['roi-wire-transfer-volume'] ?? 0 ) *
+                floatval( $form_data['roi-avg-wire-fee'] ?? 0 ) * 12,
+            'annual_error_cost'    => floatval( $form_data['roi-error-frequency'] ?? 0 ) *
+                floatval( $form_data['roi-avg-error-cost'] ?? 0 ) * 52,
+        ];
+
+        return $inputs;
+    }
+
+    /**
+     * Validate ROI calculation inputs.
+     *
+     * @param array $inputs Calculator inputs.
+     * @return true|WP_Error True if valid, WP_Error if invalid.
+     */
+    private function validate_roi_inputs( $inputs ) {
+        $required_fields = [
+            'annual_revenue'       => __( 'Annual revenue is required', 'rtbcb' ),
+            'treasury_staff_count' => __( 'Treasury staff count is required', 'rtbcb' ),
+            'average_salary'       => __( 'Average salary is required', 'rtbcb' ),
+            'hours_reconciliation' => __( 'Reconciliation hours are required', 'rtbcb' ),
+        ];
+
+        foreach ( $required_fields as $field => $message ) {
+            if ( ! isset( $inputs[ $field ] ) || $inputs[ $field ] <= 0 ) {
+                return new WP_Error( 'invalid_input', $message );
+            }
+        }
+
+        // Validate reasonable ranges.
+        if ( $inputs['annual_revenue'] > 100000000000 ) { // $100B limit.
+            return new WP_Error( 'invalid_input', __( 'Annual revenue seems unreasonably high', 'rtbcb' ) );
+        }
+
+        if ( $inputs['treasury_staff_count'] > 1000 ) {
+            return new WP_Error( 'invalid_input', __( 'Treasury staff count seems unreasonably high', 'rtbcb' ) );
+        }
+
+        if ( $inputs['total_daily_hours'] > 24 ) {
+            return new WP_Error( 'invalid_input', __( 'Total daily hours cannot exceed 24', 'rtbcb' ) );
+        }
+
+        return true;
+    }
+
+    /**
+     * Adjust inputs for different scenarios (conservative, realistic, optimistic).
+     *
+     * @param array  $base_inputs Base calculator inputs.
+     * @param string $scenario    Scenario name.
+     * @return array Adjusted inputs.
+     */
+    private function adjust_inputs_for_scenario( $base_inputs, $scenario ) {
+        $adjustments = [
+            'conservative' => [
+                'efficiency_improvement'  => 0.15,
+                'error_reduction'         => 0.30,
+                'fee_optimization'        => 0.10,
+                'time_savings_multiplier' => 0.8,
+            ],
+            'realistic'    => [
+                'efficiency_improvement'  => 0.25,
+                'error_reduction'         => 0.50,
+                'fee_optimization'        => 0.15,
+                'time_savings_multiplier' => 1.0,
+            ],
+            'optimistic'   => [
+                'efficiency_improvement'  => 0.40,
+                'error_reduction'         => 0.70,
+                'fee_optimization'        => 0.25,
+                'time_savings_multiplier' => 1.2,
+            ],
+        ];
+
+        $scenario_adjustments = $adjustments[ $scenario ] ?? $adjustments['realistic'];
+
+        return array_merge( $base_inputs, $scenario_adjustments );
+    }
+
+    /**
+     * Format ROI calculation result for frontend consumption.
+     *
+     * @param array  $roi_result Raw ROI calculation result.
+     * @param string $scenario   Scenario name.
+     * @return array Formatted result.
+     */
+    private function format_roi_result( $roi_result, $scenario ) {
+        return [
+            'scenario'       => $scenario,
+            'roi_percentage' => round( $roi_result['roi_percentage'] ?? 0, 1 ),
+            'annual_benefit' => round( $roi_result['annual_benefit'] ?? 0, 0 ),
+            'annual_cost'    => round( $roi_result['annual_cost'] ?? 0, 0 ),
+            'net_benefit'    => round( ( $roi_result['annual_benefit'] ?? 0 ) - ( $roi_result['annual_cost'] ?? 0 ), 0 ),
+            'payback_months' => round( $roi_result['payback_months'] ?? 0, 1 ),
+            'npv_3_years'    => round( $roi_result['npv_3_years'] ?? 0, 0 ),
+            'irr'            => round( $roi_result['irr'] ?? 0, 1 ),
+        ];
+    }
+
+    /**
+     * Calculate detailed cost-benefit breakdown.
+     *
+     * @param array $inputs Calculator inputs.
+     * @return array Detailed breakdown.
+     */
+    private function calculate_detailed_breakdown( $inputs ) {
+        // Calculate annual labor cost.
+        $annual_labor_cost = $inputs['treasury_staff_count'] * $inputs['average_salary'];
+        $daily_labor_cost  = $annual_labor_cost / 365;
+        $hourly_labor_cost = $daily_labor_cost / 8; // Assume 8-hour workday.
+
+        // Benefits calculations.
+        $labor_savings    = $inputs['total_daily_hours'] * $hourly_labor_cost * 365 * 0.25; // 25% time savings.
+        $fee_savings      = ( $inputs['monthly_bank_fees'] * 12 + $inputs['annual_wire_fees'] ) * 0.15; // 15% fee reduction.
+        $error_reduction  = $inputs['annual_error_cost'] * 0.50; // 50% error reduction.
+        $efficiency_gains = $annual_labor_cost * 0.05; // 5% overall efficiency gain.
+
+        // Costs calculations (example pricing).
+        $company_size_multiplier = $this->get_company_size_multiplier( $inputs['company_size'] );
+        $software_cost           = 50000 * $company_size_multiplier; // Base software cost.
+        $implementation_cost     = $software_cost * 0.5; // 50% of software cost for implementation.
+        $training_cost           = $inputs['treasury_staff_count'] * 2000; // $2k per person for training.
+        $maintenance_cost        = $software_cost * 0.20; // 20% of software cost annually.
+
+        return [
+            'labor_savings'      => round( $labor_savings, 0 ),
+            'fee_savings'        => round( $fee_savings, 0 ),
+            'error_reduction'    => round( $error_reduction, 0 ),
+            'efficiency_gains'   => round( $efficiency_gains, 0 ),
+            'total_benefits'     => round( $labor_savings + $fee_savings + $error_reduction + $efficiency_gains, 0 ),
+            'software_cost'      => round( $software_cost, 0 ),
+            'implementation_cost'=> round( $implementation_cost, 0 ),
+            'training_cost'      => round( $training_cost, 0 ),
+            'maintenance_cost'   => round( $maintenance_cost, 0 ),
+            'total_costs'        => round( $software_cost + $implementation_cost + $training_cost + $maintenance_cost, 0 ),
+        ];
+    }
+
+    /**
+     * Generate ROI assumptions based on inputs.
+     *
+     * @param array $inputs Calculator inputs.
+     * @return array List of assumptions.
+     */
+    private function generate_roi_assumptions( $inputs ) {
+        $assumptions = [
+            sprintf(
+                __( 'Treasury staff will save %d hours per day through automation', 'rtbcb' ),
+                round( $inputs['total_daily_hours'] * 0.25, 1 )
+            ),
+            sprintf(
+                __( 'Banking fees will be reduced by 15%% through optimization (current: %s)', 'rtbcb' ),
+                '$' . number_format( $inputs['monthly_bank_fees'] * 12 )
+            ),
+            sprintf(
+                __( 'Error frequency will be reduced by 50%% (current: %d per week)', 'rtbcb' ),
+                $inputs['error_frequency']
+            ),
+            __( 'Implementation will be completed within 6 months', 'rtbcb' ),
+            __( 'Staff utilization efficiency will improve by 5%', 'rtbcb' ),
+        ];
+
+        switch ( $inputs['industry'] ) {
+            case 'manufacturing':
+                $assumptions[] = __( 'Working capital optimization will improve cash flow by 2%', 'rtbcb' );
+                break;
+            case 'technology':
+                $assumptions[] = __( 'Rapid scaling will require automated treasury processes', 'rtbcb' );
+                break;
+            case 'financial-services':
+                $assumptions[] = __( 'Regulatory compliance will be streamlined through automation', 'rtbcb' );
+                break;
+        }
+
+        return $assumptions;
+    }
+
+    /**
+     * Perform sensitivity analysis on key variables.
+     *
+     * @param array $base_inputs Base calculator inputs.
+     * @param array $base_roi    Base ROI results.
+     * @return array Sensitivity analysis results.
+     */
+    private function perform_sensitivity_analysis( $base_inputs, $base_roi ) {
+        $sensitive_variables = [
+            'treasury_staff_count' => 'Treasury Staff Count',
+            'average_salary'       => 'Average Salary',
+            'hours_reconciliation' => 'Reconciliation Hours',
+            'monthly_bank_fees'    => 'Monthly Bank Fees',
+            'error_frequency'      => 'Error Frequency',
+            'avg_error_cost'       => 'Average Error Cost',
+        ];
+
+        $base_roi_percentage = $base_roi['realistic']['roi_percentage'] ?? 0;
+        $variations          = [ -0.2, -0.1, 0.1, 0.2 ];
+
+        $sensitivity_results = [
+            'base_roi'   => $base_roi_percentage,
+            'sensitivity'=> [],
+        ];
+
+        foreach ( $sensitive_variables as $variable => $label ) {
+            $base_value       = $base_inputs[ $variable ];
+            $variable_results = [
+                'base_value' => $base_value,
+                'base'       => $base_roi_percentage,
+                'sensitivity'=> 0,
+            ];
+
+            $roi_changes = [];
+
+            foreach ( $variations as $variation ) {
+                $modified_inputs               = $base_inputs;
+                $modified_inputs[ $variable ] = $base_value * ( 1 + $variation );
+
+                // Quick ROI calculation for sensitivity.
+                $quick_roi     = $this->quick_roi_calculation( $modified_inputs );
+                $variation_key = ( $variation > 0 ? '+' : '' ) . ( $variation * 100 ) . '%';
+                $variable_results[ $variation_key ] = round( $quick_roi, 1 );
+                $roi_changes[] = abs( $quick_roi - $base_roi_percentage ) / abs( $variation * 100 );
+            }
+
+            // Calculate sensitivity (average change in ROI per 1% change in variable).
+            $variable_results['sensitivity'] = round( array_sum( $roi_changes ) / count( $roi_changes ), 2 );
+
+            $sensitivity_results['sensitivity'][ $variable ] = $variable_results;
+        }
+
+        return $sensitivity_results;
+    }
+
+    /**
+     * Quick ROI calculation for sensitivity analysis.
+     *
+     * @param array $inputs Modified inputs.
+     * @return float ROI percentage.
+     */
+    private function quick_roi_calculation( $inputs ) {
+        // Simplified ROI calculation for speed.
+        $annual_labor_cost = $inputs['treasury_staff_count'] * $inputs['average_salary'];
+        $hourly_labor_cost = $annual_labor_cost / ( 365 * 8 );
+
+        $benefits = $inputs['total_daily_hours'] * $hourly_labor_cost * 365 * 0.25 +
+            ( $inputs['monthly_bank_fees'] * 12 ) * 0.15 +
+            $inputs['error_frequency'] * $inputs['avg_error_cost'] * 52 * 0.50;
+
+        $costs = 50000 * $this->get_company_size_multiplier( $inputs['company_size'] ) * 1.9; // Total annual cost.
+
+        return $costs > 0 ? ( $benefits / $costs ) * 100 : 0;
+    }
+
+    /**
+     * Get company size multiplier for pricing.
+     *
+     * @param string $company_size Company size category.
+     * @return float Multiplier.
+     */
+    private function get_company_size_multiplier( $company_size ) {
+        $multipliers = [
+            'startup'    => 0.5,
+            'small'      => 0.8,
+            'medium'     => 1.0,
+            'large'      => 1.5,
+            'enterprise' => 2.5,
+        ];
+
+        return $multipliers[ $company_size ] ?? 1.0;
     }
 
     /**
