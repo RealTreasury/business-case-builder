@@ -72,6 +72,10 @@ $available_models = [
                 <span class="dashicons dashicons-cloud"></span>
                 <?php esc_html_e( 'API Health', 'rtbcb' ); ?>
             </a>
+            <a href="#report-preview" class="nav-tab" data-tab="report-preview">
+                <span class="dashicons dashicons-media-document"></span>
+                <?php esc_html_e( 'Report Preview', 'rtbcb' ); ?>
+            </a>
         </nav>
     </div>
 
@@ -988,6 +992,26 @@ $available_models = [
                     <?php endforeach; ?>
                 </tbody>
             </table>
+        </div>
+    </div>
+
+    <div id="report-preview" class="rtbcb-test-section" style="display: none;">
+        <div class="rtbcb-test-panel">
+            <div class="rtbcb-panel-header">
+                <h2><?php esc_html_e( 'Report Preview', 'rtbcb' ); ?></h2>
+                <p><?php esc_html_e( 'Generate a preview of the comprehensive report', 'rtbcb' ); ?></p>
+            </div>
+
+            <form id="rtbcb-report-preview-form">
+                <?php wp_nonce_field( 'rtbcb_generate_preview_report', 'rtbcb_generate_preview_report_nonce' ); ?>
+                <p>
+                    <button type="submit" id="rtbcb-generate-report-preview" class="button button-primary">
+                        <?php esc_html_e( 'Generate Report', 'rtbcb' ); ?>
+                    </button>
+                </p>
+            </form>
+
+            <iframe id="rtbcb-report-preview-frame" class="rtbcb-report-preview-frame" style="width: 100%; height: 600px; border: 1px solid #ddd;"></iframe>
         </div>
     </div>
 </div>

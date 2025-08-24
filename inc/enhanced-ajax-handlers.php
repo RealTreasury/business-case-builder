@@ -39,6 +39,7 @@ add_action( 'wp_ajax_rtbcb_evaluate_response_quality', 'rtbcb_ajax_evaluate_resp
 add_action( 'wp_ajax_rtbcb_optimize_prompt_tokens', 'rtbcb_ajax_optimize_prompt_tokens' );
 add_action( 'wp_ajax_rtbcb_run_api_health_tests', 'rtbcb_run_api_health_tests' );
 add_action( 'wp_ajax_rtbcb_run_single_api_test', 'rtbcb_run_single_api_test' );
+add_action( 'wp_ajax_rtbcb_generate_preview_report', 'rtbcb_generate_preview_report' );
 
 /**
  * Test individual LLM model with given prompt.
@@ -1292,5 +1293,65 @@ function rtbcb_run_single_api_test() {
             'result'    => $result,
         ]
     );
+}
+
+/**
+ * Generate preview report HTML.
+ *
+ * @return void
+ */
+function rtbcb_generate_preview_report() {
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'rtbcb_generate_preview_report' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
+    }
+
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'rtbcb' ) ], 403 );
+    }
+
+    $company_overview = isset( $_POST['company_overview'] ) ? wp_kses_post( wp_unslash( $_POST['company_overview'] ) ) : '';
+    $api_results_raw  = isset( $_POST['api_results'] ) ? wp_unslash( $_POST['api_results'] ) : '';
+    $api_results      = json_decode( $api_results_raw, true );
+    if ( ! is_array( $api_results ) ) {
+        $api_results = [];
+    }
+
+    ob_start();
+    ?>
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title><?php esc_html_e( 'Report Preview', 'rtbcb' ); ?></title>
+        <style>body{font-family:Arial,sans-serif;margin:20px;}table{border-collapse:collapse;width:100%;}th,td{border:1px solid #ccc;padding:8px;text-align:left;}</style>
+    </head>
+    <body>
+        <h1><?php esc_html_e( 'Company Overview', 'rtbcb' ); ?></h1>
+        <div><?php echo wp_kses_post( $company_overview ); ?></div>
+        <?php if ( ! empty( $api_results ) ) : ?>
+        <h2><?php esc_html_e( 'API Health', 'rtbcb' ); ?></h2>
+        <table>
+            <thead>
+                <tr>
+                    <th><?php esc_html_e( 'Component', 'rtbcb' ); ?></th>
+                    <th><?php esc_html_e( 'Status', 'rtbcb' ); ?></th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ( $api_results as $component => $result ) : ?>
+                    <tr>
+                        <td><?php echo esc_html( ucfirst( str_replace( '_', ' ', $component ) ) ); ?></td>
+                        <td><?php echo esc_html( ! empty( $result['passed'] ) ? __( 'Passed', 'rtbcb' ) : __( 'Failed', 'rtbcb' ) ); ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+        <?php endif; ?>
+    </body>
+    </html>
+    <?php
+    $html = ob_get_clean();
+
+    wp_send_json_success( [ 'html' => $html ] );
 }
 

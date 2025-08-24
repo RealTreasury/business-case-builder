@@ -51,6 +51,12 @@
                 this.toggleApiDetails(comp);
             });
 
+            // Report preview controls
+            $('#rtbcb-report-preview-form').on('submit', (e) => {
+                e.preventDefault();
+                this.generateReportPreview();
+            });
+
             // Real-time input validation
             $('#company-name-input').on('input', this.validateInput.bind(this));
 
@@ -491,6 +497,34 @@
                 .catch(() => {
                     this.showNotification('Failed to copy to clipboard', 'error');
                 });
+        },
+
+        generateReportPreview() {
+            const nonce = $('#rtbcb_generate_preview_report_nonce').val();
+            const companyOverview = $('#results-content').html() || '';
+            const apiResults = this.apiResults || {};
+
+            $.ajax({
+                url: rtbcbDashboard.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'rtbcb_generate_preview_report',
+                    nonce: nonce,
+                    company_overview: companyOverview,
+                    api_results: JSON.stringify(apiResults)
+                },
+                success: (response) => {
+                    if (response.success && response.data?.html) {
+                        $('#rtbcb-report-preview-frame').attr('srcdoc', response.data.html);
+                        this.showNotification('Report generated', 'success');
+                    } else {
+                        this.showNotification(response.data?.message || 'Failed to generate report', 'error');
+                    }
+                },
+                error: () => {
+                    this.showNotification('Failed to generate report', 'error');
+                }
+            });
         },
 
         // Utility methods
