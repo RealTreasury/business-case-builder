@@ -2088,5 +2088,46 @@
     // Expose Dashboard object for debugging
     window.RTBCBDashboard = Dashboard;
 
+    // Add this debug helper
+    window.DashboardDiag = {
+        assertNonce: function(action) {
+            const nonces = rtbcbDashboard?.nonces || {};
+            console.log(`[DIAG] Nonce check for ${action}:`, nonces[action] ? 'FOUND' : 'MISSING');
+            return !!nonces[action];
+        },
+
+        assertTabVisibility: function() {
+            const activeTab = $('.rtbcb-test-section.active');
+            console.log('[DIAG] Active tab:', activeTab.attr('id'), 'Visible:', activeTab.is(':visible'));
+            return activeTab.length > 0 && activeTab.is(':visible');
+        },
+
+        countHandlers: function(selector) {
+            const events = $._data($(selector)[0], 'events') || {};
+            const count = Object.keys(events).length;
+            console.log(`[DIAG] Event handlers on ${selector}:`, count, events);
+            return count;
+        },
+
+        checkOverlays: function() {
+            const overlays = $('.rtbcb-loading, .rtbcb-overlay, .rtbcb-modal').filter(':visible');
+            console.log('[DIAG] Visible overlays:', overlays.length);
+            overlays.each(function() {
+                const zIndex = $(this).css('z-index');
+                const pointerEvents = $(this).css('pointer-events');
+                console.log(`[DIAG] Overlay ${this.className}: z-index=${zIndex}, pointer-events=${pointerEvents}`);
+            });
+            return overlays.length;
+        }
+    };
+
+    // Bind diagnostic to button clicks
+    $(document).on('click', '[data-action]', function(e) {
+        const action = $(this).data('action');
+        console.log(`[DIAG] Button click: ${action}, disabled=${$(this).prop('disabled')}, preventDefault called`);
+        window.DashboardDiag.assertNonce(action.replace('run-', '').replace('-test', ''));
+        window.DashboardDiag.checkOverlays();
+    });
+
 })(jQuery);
 

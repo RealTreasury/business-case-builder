@@ -1257,6 +1257,17 @@
     }
 }
 
+/* Temporary diagnostic styles */
+.rtbcb-debug-outline * {
+    outline: 1px solid red !important;
+}
+
+.rtbcb-debug-z-index {
+    position: relative !important;
+    z-index: 999999 !important;
+    pointer-events: auto !important;
+}
+
 /* LLM Integration Testing Module Styles - Add to unified-test-dashboard.css */
 
 /* LLM Test Mode Navigation */
@@ -2031,5 +2042,16 @@
     .rtbcb-comparison-charts canvas {
         max-height: 300px;
     }
+}
+
+/* Temporary diagnostic styles */
+.rtbcb-debug-outline * {
+    outline: 1px solid red !important;
+}
+
+.rtbcb-debug-z-index {
+    position: relative !important;
+    z-index: 999999 !important;
+    pointer-events: auto !important;
 }
 
