@@ -1375,6 +1375,7 @@ add_action( 'wp_ajax_rtbcb_generate_real_treasury_overview', 'rtbcb_ajax_generat
 add_action( 'wp_ajax_rtbcb_generate_category_recommendation', 'rtbcb_ajax_generate_category_recommendation' );
 add_action( 'wp_ajax_rtbcb_clear_current_company', 'rtbcb_ajax_clear_current_company' );
 add_action( 'wp_ajax_rtbcb_company_overview_simple', 'rtbcb_handle_company_overview_simple' );
+add_action( 'wp_ajax_rtbcb_company_overview_progress', 'rtbcb_check_overview_progress' );
 
 /**
  * Simple AJAX handler to test company overview generation.
@@ -1431,6 +1432,25 @@ function rtbcb_get_simple_company_info( $company_name ) {
         ],
         'generated_at'    => current_time( 'Y-m-d H:i:s' ),
     ];
+}
+
+/**
+ * Check progress of company overview generation.
+ *
+ * @return void
+ */
+function rtbcb_check_overview_progress() {
+    check_ajax_referer( 'rtbcb_ajax_nonce', 'nonce' );
+
+    $request_id = isset( $_POST['request_id'] ) ? sanitize_text_field( wp_unslash( $_POST['request_id'] ) ) : '';
+    $progress   = absint( get_transient( "rtbcb_progress_{$request_id}" ) );
+
+    wp_send_json_success(
+        [
+            'progress' => $progress,
+            'status'   => $progress >= 100 ? 'complete' : 'processing',
+        ]
+    );
 }
 
 /**
