@@ -137,7 +137,7 @@
             // Prepare request data
             const requestData = {
                 action: 'rtbcb_test_company_overview_enhanced',
-                nonce: $('#rtbcb_unified_test_nonce').val(),
+                nonce: rtbcbDashboard.nonces.dashboard,
                 company_name: companyName,
                 model: model,
                 show_debug: showDebug,
@@ -146,7 +146,7 @@
 
             // Make AJAX request
             this.currentRequest = $.ajax({
-                url: $('#ajaxurl').val(),
+                url: rtbcbDashboard.ajaxurl,
                 type: 'POST',
                 data: requestData,
                 timeout: 120000, // 2 minutes timeout
@@ -781,11 +781,11 @@
                 this.updateModelProgress(modelKey, 'in-progress', 'Testing...');
 
                 $.ajax({
-                    url: $('#ajaxurl').val(),
+                    url: rtbcbDashboard.ajaxurl,
                     type: 'POST',
                     data: {
                         action: 'rtbcb_test_llm_model',
-                        nonce: $('#rtbcb_llm_testing_nonce').val(),
+                        nonce: rtbcbDashboard.nonces.llm,
                         model_key: modelKey,
                         system_prompt: config.systemPrompt,
                         user_prompt: config.userPrompt,
@@ -1160,15 +1160,41 @@
 
         evaluateResponse() {
             const response = $('#response-to-evaluate').val().trim();
+            const reference = $('#reference-response').val().trim();
 
             if (!response) {
                 this.showNotification('Please enter a response to evaluate', 'error');
                 return;
             }
 
-            // Calculate quality metrics
-            const metrics = this.calculateResponseQuality(response);
-            this.displayQualityMetrics(metrics);
+            this.llmTestInProgress = true;
+            this.setLoadingState(true, '#evaluate-response', 'Evaluating...');
+
+            $.ajax({
+                url: rtbcbDashboard.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'rtbcb_evaluate_response_quality',
+                    nonce: rtbcbDashboard.nonces.llm,
+                    response_text: response,
+                    reference_text: reference
+                },
+                success: (res) => {
+                    if (res.success) {
+                        this.displayQualityMetrics(res.data);
+                        this.showNotification('Response evaluated successfully', 'success');
+                    } else {
+                        this.showNotification(res.data?.message || 'Evaluation failed', 'error');
+                    }
+                },
+                error: (xhr, status, error) => {
+                    this.showNotification('Evaluation request failed: ' + error, 'error');
+                },
+                complete: () => {
+                    this.llmTestInProgress = false;
+                    this.setLoadingState(false, '#evaluate-response', 'Evaluate Response');
+                }
+            });
         },
 
         calculateResponseQuality(response) {
@@ -1200,31 +1226,34 @@
             };
         },
 
-        displayQualityMetrics(metrics) {
+        displayQualityMetrics(data) {
+            const metrics = data.quality_metrics || data;
+            const details = data.detailed_analysis || {};
+
             const metricsHtml = `
                 <div class="rtbcb-quality-score-display">
                     <div class="rtbcb-score-main">
                         <h4>Overall Quality Score</h4>
-                        <div class="rtbcb-score-circle ${this.getScoreClass(metrics.score)}">
-                            ${metrics.score}/100
+                        <div class="rtbcb-score-circle ${this.getScoreClass(metrics.overall_score || 0)}">
+                            ${metrics.overall_score || 0}/100
                         </div>
                     </div>
                     <div class="rtbcb-score-details">
                         <div class="rtbcb-score-item">
                             <span class="label">Word Count:</span>
-                            <span class="value">${metrics.wordCount}</span>
+                            <span class="value">${metrics.word_count || 0}</span>
+                        </div>
+                        <div class="rtbcb-score-item">
+                            <span class="label">Characters:</span>
+                            <span class="value">${metrics.character_count || 0}</span>
                         </div>
                         <div class="rtbcb-score-item">
                             <span class="label">Sentences:</span>
-                            <span class="value">${metrics.sentenceCount}</span>
-                        </div>
-                        <div class="rtbcb-score-item">
-                            <span class="label">Avg Words/Sentence:</span>
-                            <span class="value">${metrics.avgWordsPerSentence}</span>
+                            <span class="value">${metrics.sentence_count || 0}</span>
                         </div>
                         <div class="rtbcb-score-item">
                             <span class="label">Readability:</span>
-                            <span class="value">${metrics.readabilityScore}</span>
+                            <span class="value">${metrics.readability || details.readability || ''}</span>
                         </div>
                     </div>
                 </div>
@@ -1321,18 +1350,92 @@
             $('#cost-calculator').html(costs);
         },
 
+        displayOptimizationResult(data) {
+            $('#prompt-to-optimize').val(data.optimized_prompt);
+
+            const analysisHtml = `
+                <div class="rtbcb-token-analysis">
+                    <h4>Optimization Results</h4>
+                    <div class="rtbcb-analysis-grid">
+                        <div class="rtbcb-analysis-item">
+                            <span class="label">Original Tokens:</span>
+                            <span class="value">${data.original_analysis.estimated_tokens}</span>
+                        </div>
+                        <div class="rtbcb-analysis-item">
+                            <span class="label">Optimized Tokens:</span>
+                            <span class="value">${data.optimized_analysis.estimated_tokens}</span>
+                        </div>
+                        <div class="rtbcb-analysis-item">
+                            <span class="label">Token Savings:</span>
+                            <span class="value">${data.token_savings}</span>
+                        </div>
+                        <div class="rtbcb-analysis-item">
+                            <span class="label">Efficiency Improvement:</span>
+                            <span class="value">${data.efficiency_improvement}%</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            $('#token-analysis-display').html(analysisHtml);
+
+            const savingsHtml = Object.keys(data.cost_savings).map(model => {
+                const saving = Number(data.cost_savings[model]).toFixed(6);
+                return `
+                    <div class="rtbcb-cost-item">
+                        <h6>${this.getModelDisplayName(model)}</h6>
+                        <div class="rtbcb-cost-value">-$${saving}</div>
+                    </div>
+                `;
+            }).join('');
+
+            $('#cost-calculator').html(savingsHtml);
+        },
+
         optimizePrompt() {
-            this.showNotification('Prompt optimization feature coming soon!', 'info');
+            const prompt = $('#prompt-to-optimize').val().trim();
+
+            if (!prompt) {
+                this.showNotification('Please enter a prompt to optimize', 'error');
+                return;
+            }
+
+            this.llmTestInProgress = true;
+            this.setLoadingState(true, '#optimize-prompt', 'Optimizing...');
+
+            $.ajax({
+                url: rtbcbDashboard.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'rtbcb_optimize_prompt_tokens',
+                    nonce: rtbcbDashboard.nonces.llm,
+                    prompt: prompt
+                },
+                success: (res) => {
+                    if (res.success) {
+                        this.displayOptimizationResult(res.data);
+                        this.showNotification('Prompt optimized successfully', 'success');
+                    } else {
+                        this.showNotification(res.data?.message || 'Optimization failed', 'error');
+                    }
+                },
+                error: (xhr, status, error) => {
+                    this.showNotification('Optimization request failed: ' + error, 'error');
+                },
+                complete: () => {
+                    this.llmTestInProgress = false;
+                    this.setLoadingState(false, '#optimize-prompt', 'Optimize Prompt');
+                }
+            });
         },
 
         // Utility Functions
         getModelDisplayName(modelKey) {
-            const names = {
-                mini: 'GPT-4O Mini',
-                premium: 'GPT-4O',
-                advanced: 'O1-Preview'
-            };
-            return names[modelKey] || modelKey;
+            if (rtbcbDashboard.models && rtbcbDashboard.models[modelKey]) {
+                const modelName = rtbcbDashboard.models[modelKey];
+                return `${modelKey.charAt(0).toUpperCase() + modelKey.slice(1)} (${modelName})`;
+            }
+            return modelKey;
         },
 
         calculateModelPerformance(result) {

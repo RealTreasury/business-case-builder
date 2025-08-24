@@ -76,12 +76,20 @@ class RTBCB_Admin {
                 'rtbcbDashboard',
                 [
                     'ajaxurl' => admin_url( 'admin-ajax.php' ),
-                    'nonce'   => wp_create_nonce( 'rtbcb_unified_test_dashboard' ),
+                    'nonces'  => [
+                        'dashboard' => wp_create_nonce( 'rtbcb_unified_test_dashboard' ),
+                        'llm'       => wp_create_nonce( 'rtbcb_llm_testing' ),
+                    ],
                     'strings' => [
-                        'generating'   => __( 'Generating...', 'rtbcb' ),
-                        'complete'     => __( 'Complete!', 'rtbcb' ),
-                        'error'        => __( 'Error occurred', 'rtbcb' ),
-                        'confirm_clear'=> __( 'Are you sure you want to clear all results?', 'rtbcb' ),
+                        'generating'    => __( 'Generating...', 'rtbcb' ),
+                        'complete'      => __( 'Complete!', 'rtbcb' ),
+                        'error'         => __( 'Error occurred', 'rtbcb' ),
+                        'confirm_clear' => __( 'Are you sure you want to clear all results?', 'rtbcb' ),
+                    ],
+                    'models'  => [
+                        'mini'     => get_option( 'rtbcb_mini_model', 'gpt-4o-mini' ),
+                        'premium'  => get_option( 'rtbcb_premium_model', 'gpt-4o' ),
+                        'advanced' => get_option( 'rtbcb_advanced_model', 'o1-preview' ),
                     ],
                 ]
             );

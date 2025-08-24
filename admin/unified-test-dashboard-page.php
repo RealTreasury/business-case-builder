@@ -60,9 +60,9 @@ $available_models = [
                 <span class="dashicons dashicons-calculator"></span>
                 <?php esc_html_e( 'ROI Calculator', 'rtbcb' ); ?>
             </a>
-            <a href="#llm-integration" class="nav-tab" data-tab="llm-integration">
+            <a href="#llm-tests" class="nav-tab" data-tab="llm-tests">
                 <span class="dashicons dashicons-admin-network"></span>
-                <?php esc_html_e( 'LLM Integration', 'rtbcb' ); ?>
+                <?php esc_html_e( 'LLM Tests', 'rtbcb' ); ?>
             </a>
             <a href="#rag-system" class="nav-tab" data-tab="rag-system">
                 <span class="dashicons dashicons-search"></span>
@@ -573,7 +573,7 @@ $available_models = [
     <?php wp_nonce_field( 'rtbcb_roi_calculator_test', 'rtbcb_roi_calculator_nonce' ); ?>
 
     <?php
-    // LLM Integration Test Section - Replace the placeholder in unified-test-dashboard-page.php
+    // LLM Tests Section
 
     // Get available models for testing
     $available_models = [
@@ -585,8 +585,8 @@ $available_models = [
     $model_capabilities = rtbcb_get_model_capabilities();
     ?>
 
-    <!-- LLM Integration Test Section -->
-    <div id="llm-integration" class="rtbcb-test-section" style="display: none;">
+    <!-- LLM Tests Section -->
+    <div id="llm-tests" class="rtbcb-test-section" style="display: none;">
         <div class="rtbcb-test-panel">
             <div class="rtbcb-panel-header">
                 <h2><?php esc_html_e( 'LLM Integration Testing', 'rtbcb' ); ?></h2>
@@ -817,6 +817,11 @@ $available_models = [
                             <h5><?php esc_html_e( 'Response Input', 'rtbcb' ); ?></h5>
                             <textarea id="response-to-evaluate" rows="10" placeholder="<?php esc_attr_e( 'Paste response to evaluate...', 'rtbcb' ); ?>"></textarea>
 
+                            <div class="rtbcb-control-group">
+                                <label for="reference-response"><?php esc_html_e( 'Reference Text (optional):', 'rtbcb' ); ?></label>
+                                <textarea id="reference-response" rows="6" placeholder="<?php esc_attr_e( 'Enter reference text to compare...', 'rtbcb' ); ?>"></textarea>
+                            </div>
+
                             <div class="rtbcb-evaluation-actions">
                                 <button type="button" id="evaluate-response" class="button button-primary">
                                     <?php esc_html_e( 'Evaluate Response', 'rtbcb' ); ?>
@@ -876,9 +881,6 @@ $available_models = [
         </div>
     </div>
 
-    <!-- Hidden nonce for LLM testing AJAX requests -->
-    <?php wp_nonce_field( 'rtbcb_llm_testing', 'rtbcb_llm_testing_nonce' ); ?>
-
     <!-- RAG System Test Section (Placeholder) -->
     <div id="rag-system" class="rtbcb-test-section" style="display: none;">
         <div class="rtbcb-test-panel">
@@ -906,6 +908,3 @@ $available_models = [
     </div>
 </div>
 
-<!-- Hidden elements for nonce and AJAX -->
-<?php wp_nonce_field( 'rtbcb_unified_test_dashboard', 'rtbcb_unified_test_nonce' ); ?>
-<input type="hidden" id="ajaxurl" value="<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>" />
