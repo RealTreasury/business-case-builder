@@ -2031,8 +2031,15 @@
         saveDashboardSettings(e) {
             e.preventDefault();
             const $form = $('#rtbcb-dashboard-settings-form');
-            let data = $form.serialize();
-            data += '&action=rtbcb_save_dashboard_settings';
+            const data = {
+                action: 'rtbcb_save_dashboard_settings',
+                nonce: $form.find('[name="nonce"]').val(),
+                rtbcb_openai_api_key: $('#rtbcb_openai_api_key').val(),
+                rtbcb_mini_model: $('#rtbcb_mini_model').val(),
+                rtbcb_premium_model: $('#rtbcb_premium_model').val(),
+                rtbcb_advanced_model: $('#rtbcb_advanced_model').val(),
+                rtbcb_embedding_model: $('#rtbcb_embedding_model').val()
+            };
             const $button = $form.find('button[type="submit"]').prop('disabled', true);
 
             $.post(rtbcbDashboard.ajaxurl, data).done((response) => {
