@@ -354,16 +354,16 @@
         },
 
         // UI state management
-        setLoadingState(loading) {
+        setLoadingState(loading, buttonSelector = '#generate-company-overview', text = loading ? 'Generating...' : 'Generate Overview') {
             const container = $('.rtbcb-test-panel');
-            const button = $('#generate-company-overview');
+            const button = $(buttonSelector);
 
             if (loading) {
                 container.addClass('rtbcb-loading');
-                button.html('<span class="dashicons dashicons-update rtbcb-pulse"></span> Generating...');
+                button.prop('disabled', true).html('<span class="dashicons dashicons-update rtbcb-pulse"></span> ' + text);
             } else {
                 container.removeClass('rtbcb-loading');
-                button.html('<span class="dashicons dashicons-update"></span> Generate Overview');
+                button.prop('disabled', false).html('<span class="dashicons dashicons-update"></span> ' + text);
             }
         },
 
