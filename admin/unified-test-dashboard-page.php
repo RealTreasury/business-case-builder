@@ -136,6 +136,26 @@ $last_index_display = $last_indexed ? $last_indexed : __( 'Never', 'rtbcb' );
 ?>
 
 <div class="wrap rtbcb-unified-test-dashboard">
+    <?php
+    $settings_status = isset( $_GET['settings-status'] ) ? sanitize_key( wp_unslash( $_GET['settings-status'] ) ) : '';
+    if ( 'success' === $settings_status ) :
+        ?>
+        <div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Settings saved.', 'rtbcb' ); ?></p></div>
+        <?php
+    elseif ( 'invalid_nonce' === $settings_status ) :
+        ?>
+        <div class="notice notice-error is-dismissible"><p><?php esc_html_e( 'Security check failed.', 'rtbcb' ); ?></p></div>
+        <?php
+    elseif ( 'no_permission' === $settings_status ) :
+        ?>
+        <div class="notice notice-error is-dismissible"><p><?php esc_html_e( 'Insufficient permissions.', 'rtbcb' ); ?></p></div>
+        <?php
+    elseif ( 'invalid_api_key' === $settings_status ) :
+        ?>
+        <div class="notice notice-error is-dismissible"><p><?php esc_html_e( 'Invalid OpenAI API key format.', 'rtbcb' ); ?></p></div>
+        <?php
+    endif;
+    ?>
     <div class="rtbcb-dashboard-header">
         <h1><?php esc_html_e( 'Unified Test Dashboard', 'rtbcb' ); ?></h1>
         <p class="rtbcb-dashboard-subtitle">
@@ -1073,7 +1093,8 @@ $last_index_display = $last_indexed ? $last_indexed : __( 'Never', 'rtbcb' );
                 <h2><?php esc_html_e( 'Settings', 'rtbcb' ); ?></h2>
                 <p><?php esc_html_e( 'Configure plugin options.', 'rtbcb' ); ?></p>
             </div>
-            <form id="rtbcb-dashboard-settings-form" method="post">
+            <form id="rtbcb-dashboard-settings-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+                <input type="hidden" name="action" value="rtbcb-dashboard-settings-form" />
                 <?php wp_nonce_field( 'rtbcb_save_dashboard_settings', 'nonce' ); ?>
                 <table class="form-table" role="presentation">
                     <tr>

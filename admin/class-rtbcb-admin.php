@@ -19,6 +19,7 @@ class RTBCB_Admin {
     public function __construct() {
         add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
         add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );
+        add_action( 'admin_post_rtbcb-dashboard-settings-form', [ $this, 'handle_dashboard_settings_form' ] );
 
         // AJAX handlers
         add_action( 'wp_ajax_rtbcb_export_leads', [ $this, 'export_leads_csv' ] );
@@ -238,6 +239,53 @@ class RTBCB_Admin {
      */
     public function render_unified_test_dashboard() {
         include RTBCB_DIR . 'admin/unified-test-dashboard-page.php';
+    }
+
+    /**
+     * Handle dashboard settings form submission.
+     *
+     * @return void
+     */
+    public function handle_dashboard_settings_form() {
+        if ( ! check_admin_referer( 'rtbcb_save_dashboard_settings', 'nonce' ) ) {
+            wp_safe_redirect( add_query_arg( 'settings-status', 'invalid_nonce', wp_get_referer() ) );
+            exit;
+        }
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_safe_redirect( add_query_arg( 'settings-status', 'no_permission', wp_get_referer() ) );
+            exit;
+        }
+
+        $openai_key = isset( $_POST['rtbcb_openai_api_key'] ) ? sanitize_text_field( wp_unslash( $_POST['rtbcb_openai_api_key'] ) ) : '';
+
+        if ( $openai_key && ! rtbcb_is_valid_openai_api_key( $openai_key ) ) {
+            wp_safe_redirect( add_query_arg( 'settings-status', 'invalid_api_key', wp_get_referer() ) );
+            exit;
+        }
+
+        update_option( 'rtbcb_openai_api_key', $openai_key );
+
+        $fields = [
+            'rtbcb_mini_model'      => 'sanitize_text_field',
+            'rtbcb_premium_model'   => 'sanitize_text_field',
+            'rtbcb_advanced_model'  => 'sanitize_text_field',
+            'rtbcb_embedding_model' => 'sanitize_text_field',
+        ];
+
+        foreach ( $fields as $option => $sanitize ) {
+            $value = isset( $_POST[ $option ] ) ? call_user_func( $sanitize, wp_unslash( $_POST[ $option ] ) ) : '';
+            update_option( $option, $value );
+        }
+
+        wp_safe_redirect(
+            add_query_arg(
+                'settings-status',
+                'success',
+                admin_url( 'admin.php?page=rtbcb-unified-tests' )
+            )
+        );
+        exit;
     }
 
     /**
