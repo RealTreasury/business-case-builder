@@ -2044,18 +2044,40 @@ function rtbcb_generate_preview_report() {
  * @return void
  */
 function rtbcb_save_dashboard_settings() {
+    error_log( 'rtbcb_save_dashboard_settings request: ' . wp_json_encode( array_map( 'sanitize_text_field', wp_unslash( $_POST ) ) ) );
+
     if ( ! check_ajax_referer( 'rtbcb_save_dashboard_settings', 'nonce', false ) ) {
-        wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
+        error_log( 'rtbcb_save_dashboard_settings: nonce verification failed' );
+        wp_send_json_error(
+            [
+                'message' => __( 'Security check failed.', 'rtbcb' ),
+                'code'    => 'invalid_nonce',
+            ],
+            403
+        );
     }
 
     if ( ! current_user_can( 'manage_options' ) ) {
-        wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'rtbcb' ) ], 403 );
+        error_log( 'rtbcb_save_dashboard_settings: insufficient permissions for user ' . get_current_user_id() );
+        wp_send_json_error(
+            [
+                'message' => __( 'Insufficient permissions.', 'rtbcb' ),
+                'code'    => 'insufficient_permissions',
+            ],
+            403
+        );
     }
 
     $openai_key = isset( $_POST['rtbcb_openai_api_key'] ) ? sanitize_text_field( wp_unslash( $_POST['rtbcb_openai_api_key'] ) ) : '';
 
     if ( $openai_key && ! rtbcb_is_valid_openai_api_key( $openai_key ) ) {
-        wp_send_json_error( [ 'message' => __( 'Invalid OpenAI API key format.', 'rtbcb' ) ] );
+        error_log( 'rtbcb_save_dashboard_settings: invalid API key format' );
+        wp_send_json_error(
+            [
+                'message' => __( 'Invalid OpenAI API key format.', 'rtbcb' ),
+                'code'    => 'invalid_api_key',
+            ]
+        );
     }
 
     update_option( 'rtbcb_openai_api_key', $openai_key );
@@ -2071,6 +2093,8 @@ function rtbcb_save_dashboard_settings() {
         $value = isset( $_POST[ $option ] ) ? call_user_func( $sanitize, wp_unslash( $_POST[ $option ] ) ) : '';
         update_option( $option, $value );
     }
+
+    error_log( 'rtbcb_save_dashboard_settings: settings saved' );
 
     wp_send_json_success( [ 'message' => __( 'Settings saved.', 'rtbcb' ) ] );
 }
