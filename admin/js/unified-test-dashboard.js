@@ -19,6 +19,7 @@
         useRagContext: false,
         ragRequest: null,
         llmTestResults: null,
+        charts: {},
 
         // Initialize dashboard
         init: function() {
@@ -40,10 +41,18 @@
         },
 
         reinitializeCurrentTab: function() {
+            // Destroy charts in hidden tabs to prevent memory leaks
+            Object.keys(this.charts).forEach(chartId => {
+                const chartElement = document.getElementById(chartId);
+                if (chartElement && !$(chartElement).is(':visible')) {
+                    this.destroyChart(chartId);
+                }
+            });
+
             // Rebind any dynamic content in the active tab
             const activeTab = this.currentTab;
 
-            switch(activeTab) {
+            switch (activeTab) {
                 case 'llm-tests':
                     this.initLLMModule();
                     break;
@@ -67,60 +76,36 @@
             }
         },
 
-        // Bind all event handlers
+        // Bind all event handlers using delegated pattern
         bindEvents() {
-            // Tab navigation
-            $('.rtbcb-test-tabs .nav-tab').on('click', this.handleTabClick.bind(this));
-
-            // Delegated action handlers
-            $(document).on('click', '[data-action="run-company-overview"]', this.generateCompanyOverview.bind(this));
-            $(document).on('click', '[data-action="run-llm-test"]', this.runLLMTest.bind(this));
-            $(document).on('click', '[data-action="run-rag-test"]', this.runRAGTest.bind(this));
-            $(document).on('click', '[data-action="api-health-ping"]', this.runAPIHealthPing.bind(this));
-            $(document).on('click', '[data-action="export-results"]', this.exportResults.bind(this));
-
-            // Company overview controls
-            $('#clear-results').on('click', this.clearResults.bind(this));
-            $('#copy-results').on('click', this.copyResults.bind(this));
-            $('#regenerate-results').on('click', this.regenerateResults.bind(this));
-            $('#retry-request').on('click', this.retryRequest.bind(this));
-
-            // Debug controls
-            $('#show-debug-info').on('change', this.toggleDebugInfo.bind(this));
-            $('#toggle-debug').on('click', this.toggleDebugPanel.bind(this));
-
-            // API health controls
-            $('.rtbcb-api-health-table').on('click', '.rtbcb-retest', (e) => {
-                const comp = $(e.currentTarget).data('component');
-                this.runSingleApiTest(comp);
-            });
-            $('.rtbcb-api-health-table').on('click', '.rtbcb-view-details', (e) => {
-                const comp = $(e.currentTarget).data('component');
-                this.toggleApiDetails(comp);
+            // Use delegated handlers for dynamic content
+            $(document).off('.rtbcb').on('click.rtbcb', '[data-action="run-company-overview"]', (e) => {
+                e.preventDefault();
+                this.generateCompanyOverview();
             });
 
-            // Data health controls
-            $('#rtbcb-run-data-health').on('click', this.runDataHealthChecks.bind(this));
+            $(document).on('click.rtbcb', '[data-action="run-llm-test"]', (e) => {
+                e.preventDefault();
+                this.runModelComparison();
+            });
 
-            // Settings controls
-            $('#rtbcb-dashboard-settings-form').on('submit', this.saveDashboardSettings.bind(this));
+            $(document).on('click.rtbcb', '[data-action="run-rag-test"]', (e) => {
+                e.preventDefault();
+                this.runRagQuery();
+            });
 
-            // RAG testing controls
-            $('#rtbcb-rag-rebuild').on('click', this.rebuildRagIndex.bind(this));
-            $('#rtbcb-rag-query').on('input', this.validateRagQuery.bind(this));
-            $('#rtbcb-copy-rag-context').on('click', this.copyRagContext.bind(this));
-            $('#rtbcb-export-rag-results').on('click', this.exportRagResults.bind(this));
-            $('#rtbcb-rag-cancel').on('click', this.cancelRagQuery.bind(this));
-            $('#rtbcb-rag-use-context').on('change', (e) => { this.useRagContext = e.target.checked; });
+            $(document).on('click.rtbcb', '[data-action="api-health-ping"]', (e) => {
+                e.preventDefault();
+                this.runAllApiTests();
+            });
 
-            // Report preview controls
-            $('#rtbcb-generate-preview-report').on('click', this.generatePreviewReport.bind(this));
+            $(document).on('click.rtbcb', '[data-action="export-results"]', (e) => {
+                e.preventDefault();
+                this.exportResults();
+            });
 
-            // Real-time input validation
-            $('#company-name-input').on('input', this.validateInput.bind(this));
-
-            // Keyboard shortcuts
-            $(document).on('keydown', this.handleKeyboardShortcuts.bind(this));
+            // Rebind after tab switches
+            $('.rtbcb-test-tabs .nav-tab').on('click.rtbcb', this.handleTabClick.bind(this));
         },
 
         // Initialize tab system
@@ -188,8 +173,11 @@
         // Standardized button state management
         setButtonState: function(selector, state, text) {
             const $button = $(selector);
+            const defaultText = $button.data('default-text') || $button.text();
 
-            switch(state) {
+            $button.removeClass('rtbcb-loading rtbcb-success rtbcb-error');
+
+            switch (state) {
                 case 'loading':
                     $button.prop('disabled', true)
                            .attr('aria-busy', 'true')
@@ -200,36 +188,34 @@
                 case 'success':
                     $button.prop('disabled', false)
                            .attr('aria-busy', 'false')
-                           .removeClass('rtbcb-loading')
                            .addClass('rtbcb-success')
                            .html(`<span class="dashicons dashicons-yes-alt"></span> ${text || 'Complete'}`);
-                    setTimeout(() => $button.removeClass('rtbcb-success'), 3000);
+                    setTimeout(() => $button.removeClass('rtbcb-success').html(defaultText), 3000);
                     break;
 
                 case 'error':
                     $button.prop('disabled', false)
                            .attr('aria-busy', 'false')
-                           .removeClass('rtbcb-loading')
                            .addClass('rtbcb-error')
                            .html(`<span class="dashicons dashicons-warning"></span> ${text || 'Error'}`);
-                    setTimeout(() => $button.removeClass('rtbcb-error'), 5000);
+                    setTimeout(() => $button.removeClass('rtbcb-error').html(defaultText), 5000);
                     break;
 
                 case 'ready':
                 default:
                     $button.prop('disabled', false)
                            .attr('aria-busy', 'false')
-                           .removeClass('rtbcb-loading rtbcb-success rtbcb-error')
-                           .html(text || $button.data('default-text') || 'Run Test');
+                           .html(text || defaultText);
                     break;
             }
         },
 
-        // Centralized AJAX request handler with retry logic
+        // Promise-based request wrapper with retry logic
         request: function(action, data = {}, options = {}) {
             const defaults = {
                 retries: 3,
                 backoffMs: 1000,
+                timeout: 60000,
                 validateResponse: true
             };
 
@@ -237,25 +223,26 @@
 
             return new Promise((resolve, reject) => {
                 const attemptRequest = (attemptNum) => {
-                    // Ensure nonce is present
-                    if (!rtbcbDashboard.nonces[action]) {
-                        reject(new Error(`Missing nonce for action: ${action}`));
+                    // Verify nonce exists
+                    const nonceKey = this.getNonceKeyForAction(action);
+                    if (!rtbcbDashboard.nonces[nonceKey]) {
+                        reject(new Error(`Missing nonce for action: ${action} (key: ${nonceKey})`));
                         return;
                     }
 
                     const requestData = Object.assign({
                         action: `rtbcb_${action}`,
-                        nonce: rtbcbDashboard.nonces[action]
+                        nonce: rtbcbDashboard.nonces[nonceKey]
                     }, data);
 
                     $.ajax({
                         url: rtbcbDashboard.ajaxurl,
                         type: 'POST',
                         data: requestData,
-                        timeout: 60000,
+                        timeout: config.timeout,
 
                         success: (response) => {
-                            if (config.validateResponse && (!response || !response.hasOwnProperty('success'))) {
+                            if (config.validateResponse && (!response || typeof response.success === 'undefined')) {
                                 reject(new Error('Invalid response format'));
                                 return;
                             }
@@ -263,24 +250,28 @@
                             if (response.success) {
                                 resolve(response.data || response);
                             } else {
-                                reject(new Error(response.data?.message || 'Request failed'));
+                                const errorMsg = response.data?.message || 'Request failed';
+                                const errorCode = response.data?.code || 'unknown';
+                                reject(new Error(`${errorCode}: ${errorMsg}`));
                             }
                         },
 
                         error: (xhr, status, error) => {
-                            if (xhr.status === 429 && attemptNum < config.retries) {
-                                // Rate limited - retry with exponential backoff
-                                const delay = config.backoffMs * Math.pow(2, attemptNum - 1);
+                            const isRateLimit = xhr.status === 429;
+                            const shouldRetry = attemptNum < config.retries && (isRateLimit || status === 'timeout');
+
+                            if (shouldRetry) {
+                                const delay = isRateLimit ?
+                                    config.backoffMs * Math.pow(2, attemptNum - 1) :
+                                    config.backoffMs;
                                 setTimeout(() => attemptRequest(attemptNum + 1), delay);
                                 return;
                             }
 
-                            if (attemptNum < config.retries) {
-                                setTimeout(() => attemptRequest(attemptNum + 1), config.backoffMs);
-                                return;
-                            }
-
-                            reject(new Error(`${status}: ${error}`));
+                            const retryAfter = xhr.getResponseHeader('Retry-After');
+                            const errorObj = new Error(`${status}: ${error}`);
+                            errorObj.retryAfter = retryAfter;
+                            reject(errorObj);
                         }
                     });
                 };
@@ -289,9 +280,22 @@
             });
         },
 
+        getNonceKeyForAction: function(action) {
+            const actionNonceMap = {
+                'test_company_overview_enhanced': 'dashboard',
+                'test_llm_model': 'llm',
+                'run_llm_test': 'llm',
+                'test_rag_query': 'dashboard',
+                'run_rag_test': 'ragTesting',
+                'run_api_health_tests': 'apiHealth',
+                'api_health_ping': 'apiHealth'
+            };
+            return actionNonceMap[action] || 'dashboard';
+        },
+
         // Chart.js Memory Management
         destroyChart: function(chartId) {
-            if (this.charts && this.charts[chartId]) {
+            if (this.charts[chartId]) {
                 this.charts[chartId].destroy();
                 delete this.charts[chartId];
             }
@@ -299,8 +303,6 @@
 
         createChart: function(chartId, config) {
             this.destroyChart(chartId);
-
-            if (!this.charts) this.charts = {};
 
             const ctx = document.getElementById(chartId);
             if (!ctx) {
@@ -328,9 +330,7 @@
             this.startGeneration(companyName, model, showDebug);
         },
 
-        runLLMTest: function(e) {
-            e.preventDefault();
-
+        runModelComparison: function() {
             if (this.isGenerating) return;
 
             const prompt = $('#llm-test-prompt').val().trim();
@@ -373,14 +373,6 @@
                         this.setButtonState('#run-llm-matrix-test', 'ready');
                     }, 3000);
                 });
-        },
-
-        runRAGTest: function(e) {
-            this.runRagQuery(e);
-        },
-
-        runAPIHealthPing: function(e) {
-            this.runAllApiTests(e);
         },
 
         // LLM Integration Testing Methods
@@ -875,8 +867,9 @@
             this.generateCompanyOverview();
         },
 
-        exportResults(e) {
-            const exportType = $(e.currentTarget).data('export-type') || 'overview';
+        exportResults() {
+            const $trigger = $(document.activeElement);
+            const exportType = $trigger.data('export-type') || 'overview';
 
             if (exportType === 'llm') {
                 if (!this.llmTestResults) {
@@ -1035,9 +1028,9 @@
                 }
             }
         }
-    };
+    ,
 
-    // RAG testing methods
+        // RAG testing methods
         initRagModule() {
             this.validateRagQuery();
         },
@@ -1395,7 +1388,7 @@
             div.textContent = text;
             return div.innerHTML;
         }
-    });
+    };
 
     // Initialize when DOM is ready
     $(document).ready(() => {
