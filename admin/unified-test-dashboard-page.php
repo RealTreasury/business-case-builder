@@ -19,7 +19,6 @@ function rtbcb_enqueue_dashboard_assets() {
     $css_file = RTBCB_URL . 'admin/css/unified-test-dashboard.css';
     $js_file  = RTBCB_URL . 'admin/js/unified-test-dashboard.js';
 
-    // Enqueue CSS with versioning
     wp_enqueue_style(
         'rtbcb-unified-dashboard',
         $css_file,
@@ -27,53 +26,58 @@ function rtbcb_enqueue_dashboard_assets() {
         filemtime( RTBCB_DIR . 'admin/css/unified-test-dashboard.css' )
     );
 
-    // Enqueue main dashboard script
+    wp_enqueue_script(
+        'chart-js',
+        'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js',
+        [],
+        '3.9.1',
+        true
+    );
+
     wp_enqueue_script(
         'rtbcb-unified-dashboard',
         $js_file,
-        [ 'jquery' ],
+        [ 'jquery', 'chart-js' ],
         filemtime( RTBCB_DIR . 'admin/js/unified-test-dashboard.js' ),
         true
     );
 
-    // Localization with complete payload
-    wp_localize_script(
-        'rtbcb-unified-dashboard',
-        'rtbcbDashboard',
-        [
-            'ajaxurl' => admin_url( 'admin-ajax.php' ),
-            'nonces'  => [
-                'dashboard'     => wp_create_nonce( 'rtbcb_unified_test_dashboard' ),
-                'llm'           => wp_create_nonce( 'rtbcb_llm_testing' ),
-                'apiHealth'     => wp_create_nonce( 'rtbcb_api_health_tests' ),
-                'reportPreview' => wp_create_nonce( 'rtbcb_generate_preview_report' ),
-                'dataHealth'    => wp_create_nonce( 'rtbcb_data_health_checks' ),
-                'ragTesting'    => wp_create_nonce( 'rtbcb_rag_testing' ),
-            ],
-            'models'  => [
-                'mini'     => get_option( 'rtbcb_mini_model', rtbcb_get_default_model( 'mini' ) ),
-                'premium'  => get_option( 'rtbcb_premium_model', rtbcb_get_default_model( 'premium' ) ),
-                'advanced' => get_option( 'rtbcb_advanced_model', rtbcb_get_default_model( 'advanced' ) ),
-            ],
-            'features' => [
-                'debugMode'                  => defined( 'WP_DEBUG' ) && WP_DEBUG,
-                'lastSuccessfulOpenAIPingAt' => get_option( 'rtbcb_openai_last_ok', 0 ),
-                'apiHealthEnabled'           => true,
-            ],
-            'strings' => [
-                'generating'    => __( 'Generating...', 'rtbcb' ),
-                'complete'      => __( 'Complete!', 'rtbcb' ),
-                'error'         => __( 'Error occurred', 'rtbcb' ),
-                'running'       => __( 'Running...', 'rtbcb' ),
-                'settingsSaved' => __( 'Settings saved successfully', 'rtbcb' ),
-                'serviceUnavailable' => __( 'Service temporarily unavailable. Please try again later.', 'rtbcb' ),
-            ],
-            'urls'    => [
-                'settings'    => admin_url( 'admin.php?page=rtbcb-unified-tests#settings' ),
-                'chartJsUrl'  => esc_url( 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js' ),
-            ],
-        ]
-    );
+    wp_localize_script( 'rtbcb-unified-dashboard', 'rtbcbDashboard', [
+        'ajaxurl' => admin_url( 'admin-ajax.php' ),
+        'nonces'  => [
+            'dashboard'     => wp_create_nonce( 'rtbcb_unified_test_dashboard' ),
+            'llm'           => wp_create_nonce( 'rtbcb_llm_testing' ),
+            'apiHealth'     => wp_create_nonce( 'rtbcb_api_health_tests' ),
+            'reportPreview' => wp_create_nonce( 'rtbcb_generate_preview_report' ),
+            'dataHealth'    => wp_create_nonce( 'rtbcb_data_health_checks' ),
+            'ragTesting'    => wp_create_nonce( 'rtbcb_rag_testing' ),
+        ],
+        'models'  => [
+            'mini'     => get_option( 'rtbcb_mini_model', rtbcb_get_default_model( 'mini' ) ),
+            'premium'  => get_option( 'rtbcb_premium_model', rtbcb_get_default_model( 'premium' ) ),
+            'advanced' => get_option( 'rtbcb_advanced_model', rtbcb_get_default_model( 'advanced' ) ),
+        ],
+        'features' => [
+            'debugMode'                  => defined( 'WP_DEBUG' ) && WP_DEBUG,
+            'lastSuccessfulOpenAIPingAt' => get_option( 'rtbcb_openai_last_ok', 0 ),
+        ],
+        'strings' => [
+            'generating'    => __( 'Generating...', 'rtbcb' ),
+            'complete'      => __( 'Complete!', 'rtbcb' ),
+            'error'         => __( 'Error occurred', 'rtbcb' ),
+            'settingsSaved' => __( 'Settings saved successfully', 'rtbcb' ),
+            'running'       => __( 'Running...', 'rtbcb' ),
+            'retrieving'    => __( 'Retrieving...', 'rtbcb' ),
+            'noResults'     => __( 'No results found', 'rtbcb' ),
+            'lastIndexed'   => __( 'Last indexed: %s', 'rtbcb' ),
+            'entries'       => __( 'Entries: %d', 'rtbcb' ),
+            'indexRebuilt'  => __( 'Index rebuilt successfully', 'rtbcb' ),
+            'rebuildFailed' => __( 'Index rebuild failed', 'rtbcb' ),
+            'notTested'     => __( 'Not tested', 'rtbcb' ),
+            'allOperational'=> __( 'All systems operational', 'rtbcb' ),
+            'errorsDetected'=> __( 'Errors detected: %d', 'rtbcb' ),
+        ],
+    ] );
 }
 
 rtbcb_enqueue_dashboard_assets();
