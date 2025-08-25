@@ -1,10 +1,17 @@
 <?php
 require_once __DIR__ . '/../inc/class-rtbcb-llm.php';
 
+$api_key = getenv( 'OPENAI_API_KEY' );
+if ( empty( $api_key ) ) {
+    echo "mini-model-dynamic.test.php skipped: missing OPENAI_API_KEY\n";
+    exit( 0 );
+}
+
 if ( ! function_exists( 'get_option' ) ) {
     function get_option( $name, $default = '' ) {
+        global $api_key;
         if ( 'rtbcb_openai_api_key' === $name ) {
-            return 'test-key';
+            return $api_key;
         }
         if ( 'rtbcb_mini_model' === $name ) {
             return 'dynamic-mini';

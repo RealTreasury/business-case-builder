@@ -3,6 +3,11 @@
 echo "Running Real Treasury Business Case Builder Tests..."
 echo "================================================"
 
+# OPENAI_API_KEY is required for tests that make live API calls.
+if [ -z "$OPENAI_API_KEY" ]; then
+    echo "Warning: OPENAI_API_KEY not set. OpenAI-dependent tests will be skipped."
+fi
+
 # PHP Lint
 echo "1. Running PHP syntax check..."
 find . -name "*.php" -not -path "./vendor/*" -print0 | xargs -0 -n1 php -l
