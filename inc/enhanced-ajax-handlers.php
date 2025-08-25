@@ -2052,12 +2052,19 @@ function rtbcb_save_dashboard_settings() {
         wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'rtbcb' ) ], 403 );
     }
 
+    $openai_key = isset( $_POST['rtbcb_openai_api_key'] ) ? sanitize_text_field( wp_unslash( $_POST['rtbcb_openai_api_key'] ) ) : '';
+
+    if ( $openai_key && ! rtbcb_is_valid_openai_api_key( $openai_key ) ) {
+        wp_send_json_error( [ 'message' => __( 'Invalid OpenAI API key format.', 'rtbcb' ) ] );
+    }
+
+    update_option( 'rtbcb_openai_api_key', $openai_key );
+
     $fields = [
-        'rtbcb_openai_api_key'      => 'sanitize_text_field',
-        'rtbcb_mini_model'          => 'sanitize_text_field',
-        'rtbcb_premium_model'       => 'sanitize_text_field',
-        'rtbcb_advanced_model'      => 'sanitize_text_field',
-        'rtbcb_embedding_model'     => 'sanitize_text_field',
+        'rtbcb_mini_model'      => 'sanitize_text_field',
+        'rtbcb_premium_model'   => 'sanitize_text_field',
+        'rtbcb_advanced_model'  => 'sanitize_text_field',
+        'rtbcb_embedding_model' => 'sanitize_text_field',
     ];
 
     foreach ( $fields as $option => $sanitize ) {
