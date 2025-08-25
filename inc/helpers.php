@@ -800,18 +800,17 @@ function rtbcb_track_api_rate_limits( $response_headers ) {
         'reset_tokens'       => $response_headers['x-ratelimit-reset-tokens'] ?? null,
     ];
 
-    $history   = get_option( 'rtbcb_rate_limit_history', [] );
+    // Store recent rate limit data (keep last 50 entries)
+    $history = get_option( 'rtbcb_rate_limit_history', [] );
     $history[] = $rate_limit_data;
-    $history   = array_slice( $history, -50 );
+    $history = array_slice( $history, -50 ); // Keep last 50
     update_option( 'rtbcb_rate_limit_history', $history );
 
-    $recent                  = array_slice( $history, -10 );
-    $remaining_requests_vals = array_filter( array_column( $recent, 'remaining_requests' ) );
+    // Calculate moving averages
+    $recent_data            = array_slice( $history, -10 ); // Last 10 requests
+    $avg_remaining_requests = array_sum( array_filter( array_column( $recent_data, 'remaining_requests' ) ) ) / count( array_filter( array_column( $recent_data, 'remaining_requests' ) ) );
 
-    if ( ! empty( $remaining_requests_vals ) ) {
-        $avg = array_sum( $remaining_requests_vals ) / count( $remaining_requests_vals );
-        update_option( 'rtbcb_avg_remaining_requests', $avg );
-    }
+    update_option( 'rtbcb_avg_remaining_requests', $avg_remaining_requests );
 
     return $rate_limit_data;
 }
@@ -824,13 +823,14 @@ function rtbcb_track_api_rate_limits( $response_headers ) {
  * @return array Error classification data.
  */
 function rtbcb_classify_api_errors() {
-    $error_history  = get_option( 'rtbcb_api_error_history', [] );
+    $error_history = get_option( 'rtbcb_api_error_history', [] );
     $classification = [];
 
     foreach ( $error_history as $error ) {
         $code        = $error['code'] ?? 'unknown';
-        $http_status = (int) ( $error['http_status'] ?? 0 );
-        $key         = $code . '_' . $http_status;
+        $http_status = $error['http_status'] ?? 0;
+
+        $key = "{$code}_{$http_status}";
 
         if ( ! isset( $classification[ $key ] ) ) {
             $classification[ $key ] = [
