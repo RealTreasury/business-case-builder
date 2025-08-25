@@ -35,8 +35,12 @@ php tests/mini-model-dynamic.test.php
 echo "8. Running API tester GPT-5 mini test..."
 php tests/api-tester-gpt5-mini.test.php
 
+# Live GPT-5 response test
+echo "9. Running live GPT-5 response test..."
+php tests/gpt5-responses-live.test.php
+
 # Reasoning-first output parsing test
-echo "9. Running reasoning-first output test..."
+echo "10. Running reasoning-first output test..."
 php tests/reasoning-first-output.test.php
 
 # OpenAI error handling test
