@@ -11,6 +11,135 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
+ * OpenAI API connection tester.
+ */
+class RTBCB_API_Tester {
+
+    /**
+     * Test OpenAI API connection using the models endpoint.
+     *
+     * @param string $api_key Optional API key.
+     * @return array
+     */
+    public static function test_connection( $api_key = null ) {
+        $api_key = $api_key ?: get_option( 'rtbcb_openai_api_key' );
+
+        if ( empty( $api_key ) ) {
+            return [
+                'success' => false,
+                'message' => __( 'API key not configured', 'rtbcb' ),
+                'details' => [ 'error' => 'missing_api_key' ],
+            ];
+        }
+
+        $response = wp_remote_get(
+            'https://api.openai.com/v1/models',
+            [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $api_key,
+                    'Content-Type'  => 'application/json',
+                ],
+                'timeout' => 10,
+            ]
+        );
+
+        if ( is_wp_error( $response ) ) {
+            return [
+                'success' => false,
+                'message' => $response->get_error_message(),
+                'details' => [
+                    'error'      => $response->get_error_code(),
+                    'connection' => 'failed',
+                ],
+            ];
+        }
+
+        $status_code = wp_remote_retrieve_response_code( $response );
+        $headers     = wp_remote_retrieve_headers( $response );
+
+        $rate_limit_info = [
+            'requests_remaining' => $headers['x-ratelimit-remaining-requests'] ?? null,
+            'tokens_remaining'   => $headers['x-ratelimit-remaining-tokens'] ?? null,
+            'reset_requests'     => $headers['x-ratelimit-reset-requests'] ?? null,
+            'reset_tokens'       => $headers['x-ratelimit-reset-tokens'] ?? null,
+        ];
+
+        switch ( $status_code ) {
+            case 200:
+                $body        = json_decode( wp_remote_retrieve_body( $response ), true );
+                $model_count = isset( $body['data'] ) ? count( $body['data'] ) : 0;
+
+                update_option( 'rtbcb_openai_last_ok', time() );
+                delete_transient( 'rtbcb_openai_error' );
+
+                return [
+                    'success' => true,
+                    'message' => sprintf( __( 'API connection healthy (%d models available)', 'rtbcb' ), $model_count ),
+                    'details' => [
+                        'status_code' => $status_code,
+                        'model_count' => $model_count,
+                        'rate_limits' => $rate_limit_info,
+                    ],
+                ];
+
+            case 401:
+                self::store_error_info( 'unauthorized', $status_code, 'Invalid API key' );
+                return [
+                    'success' => false,
+                    'message' => __( 'Invalid API key', 'rtbcb' ),
+                    'details' => [ 'error' => 'unauthorized', 'status_code' => $status_code ],
+                ];
+
+            case 429:
+                self::store_error_info( 'rate_limited', $status_code, 'Rate limit exceeded' );
+                return [
+                    'success' => false,
+                    'message' => __( 'Rate limit exceeded', 'rtbcb' ),
+                    'details' => [
+                        'error'       => 'rate_limited',
+                        'status_code' => $status_code,
+                        'rate_limits' => $rate_limit_info,
+                    ],
+                ];
+
+            default:
+                self::store_error_info( 'api_error', $status_code, wp_remote_retrieve_body( $response ) );
+                return [
+                    'success' => false,
+                    'message' => sprintf( __( 'API error (HTTP %d)', 'rtbcb' ), $status_code ),
+                    'details' => [
+                        'error'       => 'api_error',
+                        'status_code' => $status_code,
+                        'body'        => substr( wp_remote_retrieve_body( $response ), 0, 200 ),
+                    ],
+                ];
+        }
+    }
+
+    /**
+     * Store error details for admin notice display.
+     *
+     * @param string $code        Error code.
+     * @param int    $http_status HTTP status code.
+     * @param string $body        Response body.
+     * @return void
+     */
+    private static function store_error_info( $code, $http_status, $body ) {
+        update_option( 'rtbcb_openai_last_error_at', time() );
+        set_transient(
+            'rtbcb_openai_error',
+            [
+                'code'       => $code,
+                'httpStatus' => $http_status,
+                'body'       => substr( $body, 0, 200 ),
+                'timestamp'  => time(),
+            ],
+            600
+        );
+    }
+}
+
+/**
  * Prepare enhanced result payload for unified dashboard responses.
  *
  * @param array $overview Overview data.
@@ -1492,11 +1621,7 @@ function rtbcb_run_api_health_tests() {
     }
 
     $components = [
-        'chat'      => __( 'OpenAI Chat API', 'rtbcb' ),
-        'embedding' => __( 'OpenAI Embedding API', 'rtbcb' ),
-        'portal'    => __( 'Real Treasury Portal', 'rtbcb' ),
-        'roi'       => __( 'ROI Calculator', 'rtbcb' ),
-        'rag'       => __( 'RAG Index', 'rtbcb' ),
+        'chat' => __( 'OpenAI Chat API', 'rtbcb' ),
     ];
 
     $results = [];
@@ -1506,25 +1631,7 @@ function rtbcb_run_api_health_tests() {
     foreach ( $components as $key => $label ) {
         $start = microtime( true );
 
-        switch ( $key ) {
-            case 'chat':
-                $test = RTBCB_API_Tester::test_connection();
-                break;
-            case 'embedding':
-                $test = RTBCB_API_Tester::test_embedding();
-                break;
-            case 'portal':
-                $test = RTBCB_API_Tester::test_portal();
-                break;
-            case 'roi':
-                $test = RTBCB_API_Tester::test_roi_calculator();
-                break;
-            case 'rag':
-                $test = RTBCB_API_Tester::test_rag_index();
-                break;
-            default:
-                $test = [ 'success' => false, 'message' => __( 'Unknown test.', 'rtbcb' ) ];
-        }
+        $test = RTBCB_API_Tester::test_connection();
 
         $end = microtime( true );
 
@@ -1647,30 +1754,12 @@ function rtbcb_run_single_api_test() {
     $component = isset( $_POST['component'] ) ? sanitize_key( wp_unslash( $_POST['component'] ) ) : '';
     $start     = microtime( true );
 
-    switch ( $component ) {
-        case 'chat':
-            $test = RTBCB_API_Tester::test_connection();
-            $name = __( 'OpenAI Chat API', 'rtbcb' );
-            break;
-        case 'embedding':
-            $test = RTBCB_API_Tester::test_embedding();
-            $name = __( 'OpenAI Embedding API', 'rtbcb' );
-            break;
-        case 'portal':
-            $test = RTBCB_API_Tester::test_portal();
-            $name = __( 'Real Treasury Portal', 'rtbcb' );
-            break;
-        case 'roi':
-            $test = RTBCB_API_Tester::test_roi_calculator();
-            $name = __( 'ROI Calculator', 'rtbcb' );
-            break;
-        case 'rag':
-            $test = RTBCB_API_Tester::test_rag_index();
-            $name = __( 'RAG Index', 'rtbcb' );
-            break;
-        default:
-            wp_send_json_error( [ 'message' => __( 'Invalid component.', 'rtbcb' ) ], 400 );
+    if ( 'chat' !== $component ) {
+        wp_send_json_error( [ 'message' => __( 'Invalid component.', 'rtbcb' ) ], 400 );
     }
+
+    $test = RTBCB_API_Tester::test_connection();
+    $name = __( 'OpenAI Chat API', 'rtbcb' );
 
     $end = microtime( true );
 

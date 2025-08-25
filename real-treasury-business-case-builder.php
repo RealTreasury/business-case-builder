@@ -129,10 +129,8 @@ class RTBCB_Plugin {
         require_once RTBCB_DIR . 'inc/class-rtbcb-db.php';
         require_once RTBCB_DIR . 'inc/class-rtbcb-category-recommender.php';
         require_once RTBCB_DIR . 'inc/class-rtbcb-validator.php';
-        require_once RTBCB_DIR . 'inc/class-rtbcb-api-tester.php';
         require_once RTBCB_DIR . 'inc/helpers.php';
         require_once RTBCB_DIR . 'inc/enhanced-ajax-handlers.php';
-        require_once RTBCB_DIR . 'inc/admin-notices.php';
 
         // Admin functionality
         if ( is_admin() ) {
@@ -1728,6 +1726,73 @@ class RTBCB_Usage_Tracker {
             'companies' => [],
         ];
     }
+}
+
+add_action( 'admin_notices', 'rtbcb_show_api_health_notice' );
+
+/**
+ * Display OpenAI API health notices.
+ */
+function rtbcb_show_api_health_notice() {
+    $screen = get_current_screen();
+    if ( ! $screen || strpos( $screen->id, 'rtbcb' ) === false ) {
+        return;
+    }
+
+    $last_ok      = get_option( 'rtbcb_openai_last_ok', 0 );
+    $last_error   = get_option( 'rtbcb_openai_last_error_at', 0 );
+    $error_info   = get_transient( 'rtbcb_openai_error' );
+    $now          = time();
+
+    if ( $last_ok && ( $now - $last_ok ) < 180 ) {
+        echo '<div class="notice notice-success"><p>';
+        echo '<strong>' . esc_html__( 'OpenAI API:', 'rtbcb' ) . '</strong> ';
+        echo esc_html__( 'Connection healthy', 'rtbcb' );
+        echo '</p></div>';
+        return;
+    }
+
+    if ( $error_info && $last_error && ( $now - $last_error ) < 600 && ( ! $last_ok || ( $now - $last_ok ) > 600 ) ) {
+        $message = rtbcb_get_error_message_for_code( $error_info['code'], $error_info['httpStatus'] );
+
+        echo '<div class="notice notice-error"><p>';
+        echo '<strong>' . esc_html__( 'OpenAI API Error:', 'rtbcb' ) . '</strong> ';
+        echo esc_html( $message );
+
+        if ( 'unauthorized' === $error_info['code'] ) {
+            $settings_url = admin_url( 'admin.php?page=rtbcb-unified-tests#settings' );
+            echo ' <a href="' . esc_url( $settings_url ) . '">' . esc_html__( 'Check Settings', 'rtbcb' ) . '</a>';
+        }
+
+        echo '</p></div>';
+        return;
+    }
+
+    if ( $error_info && 'rate_limited' === $error_info['code'] ) {
+        echo '<div class="notice notice-warning"><p>';
+        echo '<strong>' . esc_html__( 'OpenAI API:', 'rtbcb' ) . '</strong> ';
+        echo esc_html__( 'Rate limit exceeded. Please wait before retrying.', 'rtbcb' );
+        echo '</p></div>';
+    }
+}
+
+/**
+ * Get error message for a given error code.
+ *
+ * @param string $code       Error code.
+ * @param int    $httpStatus HTTP status code.
+ * @return string
+ */
+function rtbcb_get_error_message_for_code( $code, $httpStatus ) {
+    $messages = [
+        'unauthorized'     => __( 'Invalid API key. Please check your OpenAI API key configuration.', 'rtbcb' ),
+        'rate_limited'     => __( 'Rate limit exceeded. Please wait before making more requests.', 'rtbcb' ),
+        'api_error'        => sprintf( __( 'API error (HTTP %d). Please try again later.', 'rtbcb' ), $httpStatus ),
+        'missing_api_key'  => __( 'No API key configured. Please add your OpenAI API key.', 'rtbcb' ),
+        'connection_failed'=> __( 'Unable to connect to OpenAI API. Please check your internet connection.', 'rtbcb' ),
+    ];
+
+    return $messages[ $code ] ?? __( 'Unknown API error occurred.', 'rtbcb' );
 }
 
 
