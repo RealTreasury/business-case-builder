@@ -1369,15 +1369,24 @@
                 }
             }).fail((jqXHR, textStatus, errorThrown) => {
                 circuitBreaker.recordFailure();
-                const detail = jqXHR?.responseJSON?.data?.detail || errorThrown || textStatus;
+
+                console.error('[API Health] Request error during API tests - status:', jqXHR.status);
+                console.error('[API Health] Request error during API tests - statusText:', jqXHR.statusText);
+                console.error('[API Health] Request error during API tests - responseText:', jqXHR.responseText);
+                console.error('[API Health] Request error during API tests - textStatus:', textStatus);
+                console.error('[API Health] Request error during API tests - errorThrown:', errorThrown);
+
+                let parsedMessage = '';
+                try {
+                    const parsed = JSON.parse(jqXHR.responseText || '{}');
+                    parsedMessage = parsed?.data?.detail || parsed?.message || jqXHR.responseText;
+                } catch (e) {
+                    parsedMessage = (jqXHR.responseText || '').trim();
+                }
+                const detail = parsedMessage || errorThrown || textStatus;
                 const msg = `${rtbcbDashboard.strings.error}: ${detail}`;
+
                 this.showNotification(msg, 'error');
-                console.error('[API Health] Request error during API tests:', {
-                    status: jqXHR.status,
-                    textStatus: textStatus,
-                    errorThrown: errorThrown,
-                    responseText: jqXHR.responseText
-                });
                 $('#rtbcb-api-health-notice').text(msg);
             }).always(() => {
                 $('[data-action="api-health-ping"]').prop('disabled', false);
@@ -1418,10 +1427,24 @@
                 }
             }).fail((jqXHR, textStatus, errorThrown) => {
                 circuitBreaker.recordFailure();
-                const detail = jqXHR?.responseJSON?.data?.detail || errorThrown || textStatus;
+
+                console.error(`[API Health] Request error during API test for ${component} - status:`, jqXHR.status);
+                console.error(`[API Health] Request error during API test for ${component} - statusText:`, jqXHR.statusText);
+                console.error(`[API Health] Request error during API test for ${component} - responseText:`, jqXHR.responseText);
+                console.error(`[API Health] Request error during API test for ${component} - textStatus:`, textStatus);
+                console.error(`[API Health] Request error during API test for ${component} - errorThrown:`, errorThrown);
+
+                let parsedMessage = '';
+                try {
+                    const parsed = JSON.parse(jqXHR.responseText || '{}');
+                    parsedMessage = parsed?.data?.detail || parsed?.message || jqXHR.responseText;
+                } catch (e) {
+                    parsedMessage = (jqXHR.responseText || '').trim();
+                }
+                const detail = parsedMessage || errorThrown || textStatus;
                 const msg = `${rtbcbDashboard.strings.error}: ${detail}`;
+
                 this.showNotification(msg, 'error');
-                console.error(`[API Health] Request error during API test for ${component}:`, textStatus, errorThrown, jqXHR.responseText);
                 $('#rtbcb-api-health-notice').text(msg);
             }).always(() => {
                 button.prop('disabled', false);
