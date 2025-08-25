@@ -6,9 +6,16 @@
 (function($) {
     'use strict';
 
-    if ( typeof rtbcbDashboard === 'undefined' ) {
+    const rtbcbDashboard = window.rtbcbDashboard || {
+        ajaxurl: '',
+        nonces: {},
+        models: {},
+        features: {},
+        strings: {}
+    };
+
+    if ( ! window.rtbcbDashboard ) {
         console.error( 'rtbcbDashboard is not defined' );
-        return;
     }
 
     console.log( 'Test dashboard script loaded' );
