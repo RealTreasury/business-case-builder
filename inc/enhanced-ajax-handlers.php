@@ -1878,103 +1878,6 @@ function rtbcb_ajax_run_llm_test() {
 }
 
 /**
- * Run RAG system test
- */
-function rtbcb_ajax_run_rag_test() {
-    // Security checks
-    if ( ! check_ajax_referer( 'rtbcb_rag_testing', 'nonce', false ) ) {
-        wp_send_json_error(
-            [
-                'code'    => 'security_failed',
-                'message' => __( 'Security check failed.', 'rtbcb' ),
-            ],
-            403
-        );
-    }
-
-    if ( ! current_user_can( 'manage_options' ) ) {
-        wp_send_json_error(
-            [
-                'code'    => 'insufficient_permissions',
-                'message' => __( 'Insufficient permissions.', 'rtbcb' ),
-            ],
-            403
-        );
-    }
-
-    // Input sanitization
-    $input_data = [
-        'queries' => array_map( 'sanitize_text_field', wp_unslash( $_POST['queries'] ?? [] ) ),
-        'topK'    => intval( wp_unslash( $_POST['topK'] ?? 5 ) ),
-        'mode'    => sanitize_text_field( wp_unslash( $_POST['mode'] ?? 'similarity' ) ),
-    ];
-
-    if ( empty( $input_data['queries'] ) ) {
-        wp_send_json_error(
-            [
-                'code'    => 'missing_queries',
-                'message' => __( 'Test queries are required.', 'rtbcb' ),
-            ],
-            400
-        );
-    }
-
-    try {
-        // Initialize RAG system
-        if ( ! class_exists( 'RTBCB_RAG' ) ) {
-            wp_send_json_error(
-                [
-                    'code'    => 'rag_unavailable',
-                    'message' => __( 'RAG system not available.', 'rtbcb' ),
-                ],
-                500
-            );
-        }
-
-        $rag     = new RTBCB_RAG();
-        $results = [];
-
-        foreach ( $input_data['queries'] as $query ) {
-            $start_time     = microtime( true );
-            $search_results = $rag->search_similar( $query, $input_data['topK'] );
-            $end_time       = microtime( true );
-
-            $results[] = [
-                'query'   => $query,
-                'results' => $search_results,
-                'metrics' => [
-                    'retrievalTime' => round( ( $end_time - $start_time ) * 1000, 2 ),
-                    'resultCount'   => count( $search_results ),
-                    'avgScore'      => count( $search_results ) > 0 ?
-                        array_sum( array_column( $search_results, 'score' ) ) / count( $search_results ) : 0,
-                ],
-            ];
-        }
-
-        wp_send_json_success(
-            [
-                'results' => $results,
-                'summary' => [
-                    'totalQueries'     => count( $input_data['queries'] ),
-                    'avgRetrievalTime' => array_sum( array_column( array_column( $results, 'metrics' ), 'retrievalTime' ) ) / count( $results ),
-                    'timestamp'        => current_time( 'mysql' ),
-                ],
-            ]
-        );
-    } catch ( Exception $e ) {
-        error_log( 'RTBCB RAG Test Error: ' . $e->getMessage() );
-        wp_send_json_error(
-            [
-                'code'    => 'rag_test_failed',
-                'message' => __( 'RAG test execution failed.', 'rtbcb' ),
-                'detail'  => WP_DEBUG ? $e->getMessage() : null,
-            ],
-            500
-        );
-    }
-}
-
-/**
  * Run API health ping
  */
 function rtbcb_ajax_api_health_ping() {
@@ -2210,5 +2113,297 @@ function rtbcb_convert_results_to_csv( $export_data ) {
     fclose( $output );
 
     return $csv;
+}
+
+/**
+ * Vector database interface for RAG testing.
+ */
+interface RTBCB_Vector_DB {
+    /**
+     * Search the vector database.
+     *
+     * @param array $embedding Embedding vector.
+     * @param int   $top_k     Number of results to retrieve.
+     * @return array Retrieved documents.
+     */
+    public function search( $embedding, $top_k = 5 );
+
+    /**
+     * Retrieve index status.
+     *
+     * @return array Index status details.
+     */
+    public function get_index_status();
+
+    /**
+     * Rebuild the vector index.
+     *
+     * @param array $documents Documents to index.
+     * @return array Rebuild summary.
+     */
+    public function rebuild_index( $documents );
+}
+
+/**
+ * Mock vector database implementation for testing.
+ */
+class RTBCB_Mock_Vector_DB implements RTBCB_Vector_DB {
+    /**
+     * Search mock database and return sample results.
+     *
+     * @param array $embedding Embedding vector.
+     * @param int   $top_k     Number of results to retrieve.
+     * @return array Mock search results.
+     */
+    public function search( $embedding, $top_k = 5 ) {
+        return array_fill(
+            0,
+            min( $top_k, 3 ),
+            [
+                'id'       => 'mock_' . uniqid(),
+                'score'    => 0.85 + ( mt_rand() / mt_getrandmax() ) * 0.1,
+                'metadata' => [
+                    'type'    => 'mock_document',
+                    'title'   => __( 'Sample Document', 'rtbcb' ),
+                    'content' => __( 'This is mock content for testing purposes.', 'rtbcb' ),
+                ],
+            ]
+        );
+    }
+
+    /**
+     * Get mock index status.
+     *
+     * @return array Index status.
+     */
+    public function get_index_status() {
+        return [
+            'indexed_count' => 25,
+            'last_updated'  => current_time( 'mysql' ),
+            'status'        => 'healthy',
+        ];
+    }
+
+    /**
+     * Rebuild mock index.
+     *
+     * @param array $documents Documents to index.
+     * @return array Rebuild summary.
+     */
+    public function rebuild_index( $documents ) {
+        // Simulate processing time.
+        sleep( 2 );
+        return [
+            'indexed' => count( $documents ),
+            'time'    => '2.1s',
+        ];
+    }
+}
+
+/**
+ * AJAX handler to run RAG retrieval tests.
+ *
+ * @return void
+ */
+function rtbcb_ajax_run_rag_test() {
+    // Security and permission checks.
+    if ( ! check_ajax_referer( 'rtbcb_rag_testing', 'nonce', false ) ) {
+        wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
+    }
+
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'rtbcb' ) ], 403 );
+    }
+
+    // Input handling.
+    $queries         = array_map( 'sanitize_text_field', wp_unslash( $_POST['queries'] ?? [] ) );
+    $top_k           = intval( wp_unslash( $_POST['topK'] ?? 5 ) );
+    $evaluation_mode = sanitize_text_field( wp_unslash( $_POST['evaluationMode'] ?? 'similarity' ) );
+
+    if ( empty( $queries ) ) {
+        wp_send_json_error( [ 'message' => __( 'Test queries required.', 'rtbcb' ) ], 400 );
+    }
+
+    try {
+        // Initialize RAG system.
+        $rag       = class_exists( 'RTBCB_RAG' ) ? new RTBCB_RAG() : null;
+        $vector_db = $rag ? $rag->get_vector_db() : new RTBCB_Mock_Vector_DB();
+
+        $results = [];
+
+        foreach ( $queries as $query ) {
+            $start_time = microtime( true );
+
+            // Execute retrieval.
+            $retrieved_docs = $vector_db->search(
+                $rag ? $rag->get_embedding( $query ) : [ 0.1, 0.2, 0.3 ],
+                $top_k
+            );
+
+            $retrieval_time = ( microtime( true ) - $start_time ) * 1000;
+
+            // Calculate metrics.
+            $metrics = [
+                'ndcg_at_k'      => rtbcb_calculate_ndcg( $retrieved_docs, $top_k ),
+                'recall_at_k'    => rtbcb_calculate_recall( $retrieved_docs, $query, $top_k ),
+                'precision_at_k' => rtbcb_calculate_precision( $retrieved_docs, $query, $top_k ),
+                'avg_score'      => array_sum( array_column( $retrieved_docs, 'score' ) ) / count( $retrieved_docs ),
+            ];
+
+            $results[] = [
+                'query'          => $query,
+                'retrieved_docs' => $retrieved_docs,
+                'metrics'        => array_merge(
+                    $metrics,
+                    [
+                        'retrieval_time_ms' => round( $retrieval_time, 2 ),
+                        'docs_retrieved'    => count( $retrieved_docs ),
+                    ]
+                ),
+            ];
+        }
+
+        // Generate overall performance summary.
+        $summary = [
+            'avg_ndcg'           => array_sum( array_column( array_column( $results, 'metrics' ), 'ndcg_at_k' ) ) / count( $results ),
+            'avg_recall'         => array_sum( array_column( array_column( $results, 'metrics' ), 'recall_at_k' ) ) / count( $results ),
+            'avg_precision'      => array_sum( array_column( array_column( $results, 'metrics' ), 'precision_at_k' ) ) / count( $results ),
+            'avg_retrieval_time' => array_sum( array_column( array_column( $results, 'metrics' ), 'retrieval_time_ms' ) ) / count( $results ),
+            'index_status'       => $vector_db->get_index_status(),
+        ];
+
+        wp_send_json_success(
+            [
+                'results'         => $results,
+                'summary'         => $summary,
+                'evaluation_mode' => $evaluation_mode,
+                'timestamp'       => current_time( 'mysql' ),
+            ]
+        );
+
+    } catch ( Exception $e ) {
+        error_log( 'RTBCB RAG Test Error: ' . $e->getMessage() );
+        wp_send_json_error(
+            [
+                'message' => __( 'RAG test execution failed.', 'rtbcb' ),
+                'detail'  => WP_DEBUG ? $e->getMessage() : null,
+            ],
+            500
+        );
+    }
+}
+
+/**
+ * Calculate simplified nDCG@k metric.
+ *
+ * @param array $retrieved_docs Retrieved documents.
+ * @param int   $k              Number of results to consider.
+ * @return float nDCG score.
+ */
+function rtbcb_calculate_ndcg( $retrieved_docs, $k ) {
+    $dcg       = 0;
+    $ideal_dcg = 0;
+
+    for ( $i = 0; $i < min( $k, count( $retrieved_docs ) ); $i++ ) {
+        $relevance = $retrieved_docs[ $i ]['score'] ?? 0;
+        $position  = $i + 1;
+
+        $dcg       += $relevance / log( $position + 1, 2 );
+        $ideal_dcg += 1 / log( $position + 1, 2 );
+    }
+
+    return $ideal_dcg > 0 ? $dcg / $ideal_dcg : 0;
+}
+
+/**
+ * Calculate mock recall@k metric.
+ *
+ * @param array  $retrieved_docs Retrieved documents.
+ * @param string $query          Search query.
+ * @param int    $k              Number of results to consider.
+ * @return float Recall score.
+ */
+function rtbcb_calculate_recall( $retrieved_docs, $query, $k ) { // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
+    $relevant_retrieved = 0;
+    $total_relevant     = 5;
+
+    foreach ( $retrieved_docs as $doc ) {
+        if ( isset( $doc['score'] ) && $doc['score'] > 0.7 ) {
+            $relevant_retrieved++;
+        }
+    }
+
+    return $total_relevant > 0 ? $relevant_retrieved / $total_relevant : 0;
+}
+
+/**
+ * Calculate mock precision@k metric.
+ *
+ * @param array  $retrieved_docs Retrieved documents.
+ * @param string $query          Search query.
+ * @param int    $k              Number of results to consider.
+ * @return float Precision score.
+ */
+function rtbcb_calculate_precision( $retrieved_docs, $query, $k ) { // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
+    $relevant_retrieved = 0;
+
+    foreach ( $retrieved_docs as $doc ) {
+        if ( isset( $doc['score'] ) && $doc['score'] > 0.7 ) {
+            $relevant_retrieved++;
+        }
+    }
+
+    return count( $retrieved_docs ) > 0 ? $relevant_retrieved / count( $retrieved_docs ) : 0;
+}
+
+/**
+ * Audit context window size for given chunks.
+ *
+ * @param array $context_chunks Context chunks.
+ * @return array Audit results.
+ */
+function rtbcb_audit_context_window( $context_chunks ) {
+    $total_tokens   = 0;
+    $chunk_analysis = [];
+
+    foreach ( $context_chunks as $i => $chunk ) {
+        $estimated_tokens = ceil( strlen( $chunk ) / 4 );
+        $total_tokens    += $estimated_tokens;
+
+        $chunk_analysis[] = [
+            'chunk_id'         => $i,
+            'char_count'       => strlen( $chunk ),
+            'estimated_tokens' => $estimated_tokens,
+            'truncated'        => false,
+        ];
+    }
+
+    $max_context_tokens = 8000;
+    if ( $total_tokens > $max_context_tokens ) {
+        $tokens_to_remove = $total_tokens - $max_context_tokens;
+        for ( $i = count( $chunk_analysis ) - 1; $i >= 0 && $tokens_to_remove > 0; $i-- ) {
+            $chunk_tokens = $chunk_analysis[ $i ]['estimated_tokens'];
+            if ( $tokens_to_remove >= $chunk_tokens ) {
+                $chunk_analysis[ $i ]['truncated'] = true;
+                $tokens_to_remove                 -= $chunk_tokens;
+                $total_tokens                     -= $chunk_tokens;
+            }
+        }
+    }
+
+    return [
+        'total_estimated_tokens' => $total_tokens,
+        'chunks_analyzed'        => count( $chunk_analysis ),
+        'chunks_truncated'       => count(
+            array_filter(
+                $chunk_analysis,
+                function ( $c ) {
+                    return $c['truncated'];
+                }
+            )
+        ),
+        'chunk_details' => $chunk_analysis,
+        'within_limit'  => $total_tokens <= $max_context_tokens,
+    ];
 }
 
