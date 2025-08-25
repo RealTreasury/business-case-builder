@@ -1645,7 +1645,11 @@
             'test_rag_query': 'dashboard',
             'run_rag_test': 'ragTesting',
             'run_api_health_tests': 'apiHealth',
-            'api_health_ping': 'apiHealth'
+            'api_health_ping': 'apiHealth',
+            'calculate_roi_test': 'roiCalculator',
+            'run_data_health_checks': 'dataHealth',
+            'generate_preview_report': 'reportPreview',
+            'save_dashboard_settings': 'saveSettings'
         };
         return actionNonceMap[action] || 'dashboard';
     };

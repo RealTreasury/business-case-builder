@@ -75,7 +75,10 @@ class RTBCB_Admin {
                         'llm'       => wp_create_nonce( 'rtbcb_llm_testing' ),
                         'apiHealth' => wp_create_nonce( 'rtbcb_api_health_tests' ),
                         'reportPreview' => wp_create_nonce( 'rtbcb_generate_preview_report' ),
-                        'dataHealth' => wp_create_nonce( 'rtbcb_data_health_checks' ),
+                        'dataHealth'   => wp_create_nonce( 'rtbcb_data_health_checks' ),
+                        'ragTesting'   => wp_create_nonce( 'rtbcb_rag_testing' ),
+                        'saveSettings' => wp_create_nonce( 'rtbcb_save_dashboard_settings' ),
+                        'roiCalculator' => wp_create_nonce( 'rtbcb_roi_calculator_test' ),
                     ],
                     'strings' => [
                         'generating'     => __( 'Generating...', 'rtbcb' ),
