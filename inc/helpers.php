@@ -784,6 +784,93 @@ function rtbcb_test_generate_complete_report( $all_inputs ) {
 }
 
 /**
+ * Track API rate limit information from response headers.
+ *
+ * Stores recent history and calculates moving averages for remaining requests.
+ *
+ * @param array $response_headers HTTP response headers.
+ * @return array Recorded rate limit data.
+ */
+function rtbcb_track_api_rate_limits( $response_headers ) {
+    $rate_limit_data = [
+        'timestamp'          => time(),
+        'remaining_requests' => $response_headers['x-ratelimit-remaining-requests'] ?? null,
+        'remaining_tokens'   => $response_headers['x-ratelimit-remaining-tokens'] ?? null,
+        'reset_requests'     => $response_headers['x-ratelimit-reset-requests'] ?? null,
+        'reset_tokens'       => $response_headers['x-ratelimit-reset-tokens'] ?? null,
+    ];
+
+    $history   = get_option( 'rtbcb_rate_limit_history', [] );
+    $history[] = $rate_limit_data;
+    $history   = array_slice( $history, -50 );
+    update_option( 'rtbcb_rate_limit_history', $history );
+
+    $recent                  = array_slice( $history, -10 );
+    $remaining_requests_vals = array_filter( array_column( $recent, 'remaining_requests' ) );
+
+    if ( ! empty( $remaining_requests_vals ) ) {
+        $avg = array_sum( $remaining_requests_vals ) / count( $remaining_requests_vals );
+        update_option( 'rtbcb_avg_remaining_requests', $avg );
+    }
+
+    return $rate_limit_data;
+}
+
+/**
+ * Classify stored API errors for reporting.
+ *
+ * Groups errors by code and HTTP status, providing counts and remediation advice.
+ *
+ * @return array Error classification data.
+ */
+function rtbcb_classify_api_errors() {
+    $error_history  = get_option( 'rtbcb_api_error_history', [] );
+    $classification = [];
+
+    foreach ( $error_history as $error ) {
+        $code        = $error['code'] ?? 'unknown';
+        $http_status = (int) ( $error['http_status'] ?? 0 );
+        $key         = $code . '_' . $http_status;
+
+        if ( ! isset( $classification[ $key ] ) ) {
+            $classification[ $key ] = [
+                'code'            => $code,
+                'http_status'     => $http_status,
+                'count'           => 0,
+                'last_occurrence' => '',
+                'remediation'     => rtbcb_get_error_remediation( $code, $http_status ),
+            ];
+        }
+
+        $classification[ $key ]['count']++;
+        $classification[ $key ]['last_occurrence'] = $error['timestamp'] ?? '';
+    }
+
+    return $classification;
+}
+
+/**
+ * Provide remediation guidance for common API error types.
+ *
+ * @param string $code        Error code identifier.
+ * @param int    $http_status HTTP status code.
+ * @return string Recommended remediation steps.
+ */
+function rtbcb_get_error_remediation( $code, $http_status ) {
+    $remediations = [
+        'unauthorized_401'   => 'Check API key validity and permissions',
+        'rate_limited_429'   => 'Implement exponential backoff, reduce request frequency',
+        'api_error_500'      => 'OpenAI server error - retry with exponential backoff',
+        'api_error_503'      => 'Service temporarily unavailable - wait and retry',
+        'connection_failed_0' => 'Check internet connection and firewall settings',
+        'timeout_0'          => 'Increase timeout settings or retry during off-peak hours',
+    ];
+
+    $key = $code . '_' . $http_status;
+    return $remediations[ $key ] ?? 'Contact support if error persists';
+}
+
+/**
  * Clean and prepare JSON content for parsing.
  *
  * @param string $content Raw content that may contain JSON.
