@@ -9,6 +9,7 @@ add_action( 'wp_ajax_rtbcb_run_llm_test', 'rtbcb_ajax_run_llm_test' );
 add_action( 'wp_ajax_rtbcb_run_rag_test', 'rtbcb_ajax_run_rag_test' );
 add_action( 'wp_ajax_rtbcb_api_health_ping', 'rtbcb_ajax_api_health_ping' );
 add_action( 'wp_ajax_rtbcb_export_results', 'rtbcb_ajax_export_results' );
+add_action( 'wp_ajax_rtbcb_debug_api_key', 'rtbcb_debug_api_key' );
 add_action( 'init', 'rtbcb_log_ajax_handler_registration' );
 add_action( 'wp_loaded', 'rtbcb_log_health_test_hook_presence' );
 
@@ -47,6 +48,36 @@ function rtbcb_log_health_test_hook_presence() {
 
         error_log( '[RTBCB] wp_ajax_rtbcb_run_api_health_tests exists: ' . ( $hook_exists ? 'yes' : 'no' ) );
     }
+}
+
+/**
+ * Debug API key status.
+ *
+ * Returns information about the stored OpenAI API key, including whether it
+ * is configured, its length, a partial preview, and whether it appears
+ * to be in a valid format.
+ *
+ * @return void
+ */
+function rtbcb_debug_api_key() {
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_die( __( 'Unauthorized', 'rtbcb' ) );
+    }
+
+    $api_key     = sanitize_text_field( get_option( 'rtbcb_openai_api_key' ) );
+    $key_length  = strlen( $api_key );
+    $key_preview = $key_length > 10
+        ? substr( $api_key, 0, 8 ) . '...' . substr( $api_key, -4 )
+        : 'too_short';
+
+    wp_send_json_success(
+        [
+            'configured'   => ! empty( $api_key ),
+            'length'       => $key_length,
+            'preview'      => $key_preview,
+            'valid_format' => rtbcb_is_valid_openai_api_key( $api_key ),
+        ]
+    );
 }
 
 /**

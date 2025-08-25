@@ -32,16 +32,28 @@ function rtbcb_clear_current_company() {
 /**
  * Validate OpenAI API key format.
  *
- * Provides a simple check that the key is non-empty and uses the `sk-` prefix.
+ * Checks that the key uses the `sk-` prefix and meets a minimum length.
  * The value is sanitized before validation.
  *
  * @param string $api_key API key to validate.
- * @return bool True if the key appears valid.
+ * @return bool Whether the key appears valid.
  */
 function rtbcb_is_valid_openai_api_key( $api_key ) {
     $api_key = sanitize_text_field( $api_key );
 
-    return ( '' !== $api_key ) && ( 0 === strpos( $api_key, 'sk-' ) );
+    if ( empty( $api_key ) ) {
+        return false;
+    }
+
+    if ( ! str_starts_with( $api_key, 'sk-' ) ) {
+        return false;
+    }
+
+    if ( strlen( $api_key ) < 20 ) {
+        return false;
+    }
+
+    return true;
 }
 
 /**
