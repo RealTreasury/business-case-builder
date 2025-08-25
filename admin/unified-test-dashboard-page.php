@@ -77,6 +77,8 @@ function rtbcb_enqueue_dashboard_assets() {
             'notTested'     => __( 'Not tested', 'rtbcb' ),
             'allOperational'=> __( 'All systems operational', 'rtbcb' ),
             'errorsDetected'=> __( 'Errors detected: %d', 'rtbcb' ),
+            'show'          => __( 'Show', 'rtbcb' ),
+            'hide'          => __( 'Hide', 'rtbcb' ),
         ],
     ] );
 }
@@ -1102,7 +1104,8 @@ $last_index_display = $last_indexed ? $last_indexed : __( 'Never', 'rtbcb' );
                             <label for="rtbcb_openai_api_key"><?php esc_html_e( 'OpenAI API Key', 'rtbcb' ); ?></label>
                         </th>
                         <td>
-                            <input type="text" id="rtbcb_openai_api_key" name="rtbcb_openai_api_key" value="<?php echo esc_attr( $api_key ); ?>" class="regular-text" />
+                            <input type="password" id="rtbcb_openai_api_key" name="rtbcb_openai_api_key" value="<?php echo esc_attr( $api_key ); ?>" class="regular-text" autocomplete="off" />
+                            <button type="button" id="rtbcb-toggle-api-key" class="button button-secondary"><?php esc_html_e( 'Show', 'rtbcb' ); ?></button>
                         </td>
                     </tr>
                     <tr>
