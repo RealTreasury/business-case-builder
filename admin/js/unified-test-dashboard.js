@@ -495,17 +495,31 @@
             }
 
             this.makeRequest(requestData)
-                .then(response => {
-                    if (response.api_valid) {
-                        this.showNotification(rtbcbDashboard.strings?.validApiKeySaved || 'Valid API key saved', 'success');
-                    } else {
-                        this.showError(rtbcbDashboard.strings?.apiKeyValidationFailed || 'API key validation failed');
+                .then((response) => {
+                    if (response.reload) {
+                        window.location.reload();
+                        return;
                     }
-                    this.updateApiKeyStatus(!!response.api_valid);
+
+                    const isValid = !!response.api_valid;
+                    rtbcbDashboard.api_valid = isValid;
+                    this.updateApiKeyStatus(isValid);
+                    $('[data-action="run-company-overview"]').prop('disabled', !isValid);
+
+                    if (isValid) {
+                        this.showNotification(
+                            response.message || rtbcbDashboard.strings?.validApiKeySaved || 'Valid API key saved',
+                            'success'
+                        );
+                    } else {
+                        this.showError(
+                            response.message || rtbcbDashboard.strings?.apiKeyValidationFailed || 'API key validation failed'
+                        );
+                    }
                 })
-                .catch(error => {
+                .catch((error) => {
                     console.error('Settings save error:', error);
-                    this.showError(error.message || 'Failed to save settings');
+                    this.showError(error.message || rtbcbDashboard.strings?.settingsSaveFailed || 'Failed to save settings');
                 });
         },
 
