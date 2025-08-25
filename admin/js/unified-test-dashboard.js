@@ -11,6 +11,11 @@
         return;
     }
 
+    if (typeof jQuery === 'undefined') {
+        console.error('jQuery is not available');
+        return;
+    }
+
     console.log('Test dashboard script loaded');
 
     // Utility functions
@@ -333,10 +338,16 @@
                 return;
             }
 
+            if (!circuitBreaker.canExecute()) {
+                this.showNotification('Too many failures. Please wait before trying again.', 'warning');
+                return;
+            }
+
             console.log('Running LLM test...', { prompt, models: selectedModels });
 
             this.isGenerating = true;
             this.setButtonState('[data-action="run-llm-test"]', 'loading');
+            this.startProgress();
 
             const requestData = {
                 action: 'rtbcb_run_llm_test',
@@ -350,29 +361,40 @@
 
             this.makeRequest(requestData)
                 .then(response => {
+                    circuitBreaker.recordSuccess();
                     this.displayLLMResults(response);
                     this.setButtonState('[data-action="run-llm-test"]', 'success');
                 })
                 .catch(error => {
+                    circuitBreaker.recordFailure();
                     console.error('LLM test error:', error);
                     this.showError(error.message || 'LLM test failed');
                     this.setButtonState('[data-action="run-llm-test"]', 'error');
                 })
                 .finally(() => {
                     this.isGenerating = false;
+                    this.stopProgress();
                 });
         },
 
         // RAG System functionality
         runRagTest() {
+            if (this.isGenerating) return;
+
             const query = $('#rtbcb-rag-query').val().trim();
             if (!query) {
                 this.showNotification('Please enter a query', 'error');
                 return;
             }
 
+            if (!circuitBreaker.canExecute()) {
+                this.showNotification('Too many failures. Please wait before trying again.', 'warning');
+                return;
+            }
+
             console.log('Running RAG test...', { query });
 
+            this.isGenerating = true;
             this.setButtonState('[data-action="run-rag-test"]', 'loading');
 
             const requestData = {
@@ -385,19 +407,32 @@
 
             this.makeRequest(requestData)
                 .then(response => {
+                    circuitBreaker.recordSuccess();
                     this.displayRagResults(response);
                     this.setButtonState('[data-action="run-rag-test"]', 'success');
                 })
                 .catch(error => {
+                    circuitBreaker.recordFailure();
                     console.error('RAG test error:', error);
                     this.showError(error.message || 'RAG test failed');
                     this.setButtonState('[data-action="run-rag-test"]', 'error');
+                })
+                .finally(() => {
+                    this.isGenerating = false;
                 });
         },
 
         rebuildRagIndex() {
+            if (this.isGenerating) return;
+
+            if (!circuitBreaker.canExecute()) {
+                this.showNotification('Too many failures. Please wait before trying again.', 'warning');
+                return;
+            }
+
             console.log('Rebuilding RAG index...');
 
+            this.isGenerating = true;
             this.setButtonState('[data-action="rebuild-rag-index"]', 'loading');
 
             const requestData = {
@@ -407,6 +442,7 @@
 
             this.makeRequest(requestData)
                 .then(response => {
+                    circuitBreaker.recordSuccess();
                     this.showNotification('RAG index rebuilt successfully', 'success');
                     this.setButtonState('[data-action="rebuild-rag-index"]', 'success');
                     // Update index info
@@ -418,16 +454,28 @@
                     }
                 })
                 .catch(error => {
+                    circuitBreaker.recordFailure();
                     console.error('RAG rebuild error:', error);
                     this.showError(error.message || 'RAG index rebuild failed');
                     this.setButtonState('[data-action="rebuild-rag-index"]', 'error');
+                })
+                .finally(() => {
+                    this.isGenerating = false;
                 });
         },
 
         // API Health functionality
         runAllApiTests() {
+            if (this.isGenerating) return;
+
+            if (!circuitBreaker.canExecute()) {
+                this.showNotification('Too many failures. Please wait before trying again.', 'warning');
+                return;
+            }
+
             console.log('Running API health tests...');
 
+            this.isGenerating = true;
             this.setButtonState('[data-action="api-health-ping"]', 'loading');
             $('#rtbcb-api-health-notice').text('Running comprehensive API tests...');
 
@@ -438,21 +486,30 @@
 
             this.makeRequest(requestData)
                 .then(response => {
+                    circuitBreaker.recordSuccess();
                     this.updateApiHealthResults(response);
                     this.setButtonState('[data-action="api-health-ping"]', 'success');
                     this.showNotification('API health tests completed', 'success');
                 })
                 .catch(error => {
+                    circuitBreaker.recordFailure();
                     console.error('API health test error:', error);
                     this.showError(error.message || 'API health tests failed');
                     this.setButtonState('[data-action="api-health-ping"]', 'error');
+                    $('#rtbcb-api-health-notice').text('API tests failed');
+                })
+                .finally(() => {
+                    this.isGenerating = false;
                 });
         },
 
         // ROI Calculator functionality
         calculateROI() {
+            if (this.isGenerating) return;
+
             console.log('Calculating ROI...');
 
+            this.isGenerating = true;
             this.setButtonState('[data-action="calculate-roi"]', 'loading');
 
             // Collect ROI form data
@@ -479,6 +536,9 @@
                     console.error('ROI calculation error:', error);
                     this.showError(error.message || 'ROI calculation failed');
                     this.setButtonState('[data-action="calculate-roi"]', 'error');
+                })
+                .finally(() => {
+                    this.isGenerating = false;
                 });
         },
 
@@ -695,23 +755,49 @@
         updateApiHealthResults(data) {
             console.log('Updating API health results:', data);
             
-            $('#rtbcb-api-health-notice').text(
-                data.overall_status === 'all_passed' ? 'All systems operational' : 'Some issues detected'
-            );
+            const $notice = $('#rtbcb-api-health-notice');
             
-            if (data.results) {
+            if (data.overall_status === 'all_passed') {
+                $notice.text('All systems operational').removeClass('error').addClass('success');
+            } else {
+                $notice.text('Some issues detected').removeClass('success').addClass('error');
+            }
+            
+            if (data.results && typeof data.results === 'object') {
                 Object.keys(data.results).forEach(component => {
                     const result = data.results[component];
                     const $row = $(`#rtbcb-api-${component}`);
-                    const $indicator = $row.find('.rtbcb-status-indicator');
                     
-                    $indicator.removeClass('status-good status-error')
-                              .addClass(result.passed ? 'status-good' : 'status-error');
-                    
-                    $row.find('.rtbcb-last-tested').text(result.last_tested || '');
-                    $row.find('.rtbcb-response-time').text(result.response_time ? `${result.response_time}ms` : '');
-                    $row.find('.rtbcb-message').text(result.message || '');
+                    if ($row.length) {
+                        const $indicator = $row.find('.rtbcb-status-indicator');
+                        
+                        // Update status indicator
+                        $indicator.removeClass('status-good status-error status-warning')
+                                  .addClass(result.passed ? 'status-good' : 'status-error');
+                        
+                        // Update individual fields with fallbacks
+                        const $lastTested = $row.find('.rtbcb-last-tested');
+                        if ($lastTested.length) {
+                            $lastTested.text(result.last_tested || new Date().toLocaleTimeString());
+                        }
+                        
+                        const $responseTime = $row.find('.rtbcb-response-time');
+                        if ($responseTime.length && result.response_time) {
+                            $responseTime.text(`${result.response_time}ms`);
+                        }
+                        
+                        const $message = $row.find('.rtbcb-message');
+                        if ($message.length) {
+                            $message.text(result.message || (result.passed ? 'OK' : 'Failed'));
+                        }
+                    }
                 });
+            }
+            
+            // Update last check timestamp
+            const $lastCheck = $('#rtbcb-api-health-last-check');
+            if ($lastCheck.length) {
+                $lastCheck.text(`Last checked: ${new Date().toLocaleString()}`);
             }
         },
 
@@ -723,12 +809,20 @@
         },
 
         showError(message) {
+            // Dismiss any existing notifications first
+            this.dismissNotifications();
+            
             const $container = $('#error-container');
             const $content = $('#error-content');
             
             $content.html(`<strong>Error:</strong> ${this.escapeHtml(message)}`);
             $container.show();
             $('#results-container').hide();
+            
+            // Auto-dismiss error after 10 seconds
+            setTimeout(() => {
+                $container.fadeOut();
+            }, 10000);
         },
 
         formatContent(content) {
@@ -778,6 +872,7 @@
 
         // Progress management
         startProgress() {
+            this.clearProgress();
             this.startTime = Date.now();
             $('#progress-container').show();
             $('#progress-fill').css('width', '0%');
@@ -794,27 +889,41 @@
         },
 
         stopProgress() {
-            if (this.progressTimer) {
-                clearInterval(this.progressTimer);
-                this.progressTimer = null;
-            }
+            this.clearProgress();
             $('#progress-fill').css('width', '100%');
             $('#progress-status').text('Complete!');
             
             setTimeout(() => {
                 $('#progress-container').hide();
+                $('#progress-fill').css('width', '0%');
+                $('#progress-status').text('');
+                $('#progress-timer').text('0:00');
             }, 1000);
+        },
+
+        clearProgress() {
+            if (this.progressTimer) {
+                clearInterval(this.progressTimer);
+                this.progressTimer = null;
+            }
         },
 
         // AJAX request handling
         makeRequest(data) {
+            // Abort any existing request
+            if (this.currentRequest) {
+                this.currentRequest.abort();
+                this.currentRequest = null;
+            }
+            
             return new Promise((resolve, reject) => {
-                $.ajax({
+                this.currentRequest = $.ajax({
                     url: rtbcbDashboard.ajaxurl,
                     type: 'POST',
                     data: data,
                     timeout: 120000,
                     success: (response) => {
+                        this.currentRequest = null;
                         if (response.success) {
                             resolve(response.data);
                         } else {
@@ -822,6 +931,14 @@
                         }
                     },
                     error: (xhr, status, error) => {
+                        this.currentRequest = null;
+                        
+                        // Don't reject if request was aborted
+                        if (status === 'abort') {
+                            console.log('Request aborted');
+                            return;
+                        }
+                        
                         let message = 'Request failed';
                         
                         if (status === 'timeout') {
@@ -870,6 +987,9 @@
 
         // Notifications
         showNotification(message, type = 'info') {
+            // Dismiss existing notifications first
+            this.dismissNotifications();
+            
             const notification = $(`
                 <div class="notice notice-${type} is-dismissible rtbcb-notification">
                     <p>${this.escapeHtml(message)}</p>
@@ -889,18 +1009,55 @@
             });
         },
 
+        dismissNotifications() {
+            $('.rtbcb-notification').fadeOut(() => {
+                $('.rtbcb-notification').remove();
+            });
+        },
+
         updateApiHealthStatus() {
             // Update API health status if on that tab
             const lastTest = rtbcbDashboard.apiHealth?.lastResults;
             if (lastTest) {
                 this.updateApiHealthResults(lastTest);
             }
+        },
+
+        // Cleanup method
+        cleanup() {
+            // Abort any pending request
+            if (this.currentRequest) {
+                this.currentRequest.abort();
+                this.currentRequest = null;
+            }
+            
+            // Clear progress timer
+            this.clearProgress();
+            
+            // Clear any timeouts
+            if (this.progressTimer) {
+                clearInterval(this.progressTimer);
+                this.progressTimer = null;
+            }
+            
+            // Remove event handlers
+            $(document).off('.rtbcb-dashboard');
+            
+            // Dismiss notifications
+            this.dismissNotifications();
+            
+            console.log('Dashboard cleanup completed');
         }
     };
 
     // Initialize when DOM is ready
     $(document).ready(() => {
         Dashboard.init();
+    });
+
+    // Cleanup on page unload
+    $(window).on('beforeunload', () => {
+        Dashboard.cleanup();
     });
 
     // Expose for debugging
