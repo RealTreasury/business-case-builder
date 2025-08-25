@@ -1,455 +1,85 @@
-# Real Treasury Business Case Builder - Enhanced Version 2.0
-
-A comprehensive WordPress plugin that helps treasury teams quantify the benefits of modern treasury tools, generate professional business case reports, and track lead engagement with advanced analytics.
-
-## 🚀 What's New in Version 2.0
-
-### ✨ Major Enhancements
-
-**📊 Smart Categorization System**
-- Automatically recommends **Cash Tools**, **TMS-Lite**, or **TRMS** based on company profile
-- Intelligent scoring algorithm considers company size, complexity, and pain points
-- Detailed reasoning provided for each recommendation
-
-**📄 HTML Reports**
-- Generates comprehensive business case reports as HTML with charts and visualizations
-- Executive summary, ROI analysis, and implementation roadmap
-- Responsive formatting ready for stakeholder presentations
-- Report HTML returned via AJAX for immediate viewing
-
-**📈 Advanced Analytics Dashboard**
-- Real-time lead tracking with detailed metrics
-- Interactive charts showing category distribution and trends
-- Company size analysis and ROI benchmarking
-- Monthly lead generation trends with Chart.js visualizations
-
-**🗃️ Complete Lead Management**
-- Full database tracking of all form submissions
-- Advanced filtering and search capabilities
-- CSV export functionality for lead data
-- Individual lead detail views with action history
-
-**🎯 Enhanced User Experience**
-- Multi-step form with progress indicators
-- Real-time form validation and error handling
-- Interactive pain point selection with visual cards
-- Immediate report rendering via a single AJAX request—no polling needed
-- Responsive design optimized for all devices
-
-**🔍 Improved ROI Calculations**
-- More sophisticated calculation methodology
-- Industry-specific benchmarks and assumptions
-- Three scenario modeling (Conservative, Base, Optimistic)
-- Detailed benefit breakdown with visualizations
-
-## 📋 Installation & Setup
-
-### Prerequisites
-- WordPress 5.0 or higher
-- PHP 7.4 or higher
-- MySQL 5.6 or higher
-- OpenAI API key (for business case generation)
-
-### Step 1: Plugin Installation
-1. Upload the plugin to `/wp-content/plugins/real-treasury-business-case-builder/`
-2. Activate the plugin through the WordPress admin
-3. Navigate to **Real Treasury → Settings** in your admin dashboard
-
-### Step 2: Configure OpenAI Integration
-1. Sign up for an OpenAI API account at [platform.openai.com](https://platform.openai.com)
-2. Generate an API key in your OpenAI dashboard
-3. Enter the API key in **Real Treasury → Settings**
-4. Configure your preferred models:
-   - **Mini Model**: configurable via settings (default `gpt-5-mini` for efficiency)
-   - **Premium Model**: `gpt-5` (for complex requests)
-   - **Embedding Model**: `text-embedding-3-small` (for RAG)
-
-   **Minimum Output Tokens:** set `max_output_tokens` to at least `256` when using `gpt-5-mini`.
-
-   ```php
-   $client->chat()->create([
-       'model' => 'gpt-5-mini',
-       'max_output_tokens' => 256,
-   ]);
-   ```
-
-   The API tester uses this value to verify connectivity.
-
-   By default, the plugin configures `max_output_tokens` to `20000` for GPT-5 models.
-
-#### Model Temperature Support
-
-| Model | Temperature Support |
-| --- | --- |
-| `gpt-4o` | Yes |
-| `gpt-4o-mini` | Yes |
-| `gpt-5` | No |
-| `gpt-5-mini` | Yes |
-| `gpt-4.1` | No |
-| `gpt-4.1-mini` | No |
-| `text-embedding-3-small` | No (embeddings) |
-
-Update the list in `inc/helpers.php` if OpenAI changes temperature capabilities.
-
-### Step 3: Configure Database Tables
-The plugin automatically creates required database tables on activation:
-- `wp_rtbcb_leads` - Lead tracking and analytics
-- `wp_rtbcb_rag_index` - Retrieval-augmented generation index
-
-### Step 4: Display the Form
-Add the shortcode to any page or post:
-```
-[rt_business_case_builder]
-```
-
-**Advanced Shortcode Options:**
-```
-[rt_business_case_builder
-   title="Custom Title"
-   subtitle="Custom Description"
-   style="modern"]
-```
-
-## 📄 HTML Reports
-
-- Reports are rendered server-side using `templates/report-template.php`.
-- After form submission, `RTBCB_Router` returns the report HTML via AJAX as `report_html`.
-- `public/js/rtbcb.js` injects this HTML into `#rtbcb-report-container` for immediate viewing.
-- Reports are not saved as files; only lead metadata is stored in the database.
-- Users can save or print the report directly from their browser if needed.
-
-## 🎛️ Admin Dashboard Features
-
-### Main Dashboard
-- **System Status**: OpenAI API (configuration and key format), Portal Integration, RAG Index health
-- **Key Metrics**: Total leads, recent activity, average ROI
-- **Recent Leads**: Latest form submissions with quick actions
-- **Quick Actions**: Test API, export data, rebuild index
-
-### Leads Management
-- **Advanced Filtering**: Search by email, category, date range, company size
-- **Bulk Actions**: Delete multiple leads, export filtered data
-- **Individual Views**: Detailed lead information with submission history
-- **Export Options**: CSV download with customizable date ranges
-
-### Analytics & Reporting
-- **Lead Generation Trends**: Monthly charts with volume and ROI data
-- **Category Distribution**: Visual breakdown of recommended solutions
-- **Company Size Analysis**: Market segment insights
-- **ROI Benchmarking**: Average projections across all leads
-
-### Settings & Configuration
-- **API Configuration**: OpenAI models and authentication
-- **ROI Assumptions**: Labor costs, efficiency rates, fee baselines
-- **Portal Integration**: Real Treasury portal connectivity
-
-## 🔧 Technical Architecture
-
-### Core Components
-
-**Category Recommendation Engine (`RTBCB_Category_Recommender`)**
-- Multi-factor scoring algorithm
-- Company size, complexity, and pain point analysis
-- Confidence scoring and alternative suggestions
-
-**HTML Report Rendering (`RTBCB_Router`)**
-- Uses `templates/report-template.php` for dynamic reports
-- Returns sanitized HTML for inline display
-- No external rendering dependencies
-
-**Lead Tracking System (`RTBCB_Leads`)**
-- Complete audit trail of user interactions
-- UTM tracking for marketing attribution
-- Advanced querying and analytics capabilities
-
-**Enhanced LLM Integration (`RTBCB_LLM`)**
-- Intelligent model routing based on complexity
-- RAG integration for contextual responses
-- Structured output formatting for consistency
-
-### Database Schema
-
-**Leads Table Structure:**
-```sql
-CREATE TABLE wp_rtbcb_leads (
-    id mediumint(9) NOT NULL AUTO_INCREMENT,
-    email varchar(255) NOT NULL,
-    company_size varchar(50),
-    industry varchar(50),
-    hours_reconciliation decimal(5,2),
-    hours_cash_positioning decimal(5,2),
-    num_banks int(3),
-    ftes decimal(4,1),
-    pain_points longtext,
-    recommended_category varchar(50),
-    roi_low decimal(12,2),
-    roi_base decimal(12,2),
-    roi_high decimal(12,2),
-    ip_address varchar(45),
-    user_agent text,
-    utm_source varchar(100),
-    utm_medium varchar(100),
-    utm_campaign varchar(100),
-    created_at datetime DEFAULT CURRENT_TIMESTAMP,
-    updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (id),
-    UNIQUE KEY email_unique (email)
-);
-```
-
-### API Integration
-
-**OpenAI Models Used:**
-- **GPT-5-mini**: Fast responses for simple categorization
-- **GPT-5**: Complex business case generation
-- **text-embedding-3-small**: RAG search and similarity matching
-
-**Intelligent Model Routing:**
-The system automatically selects the appropriate model based on:
-- Request complexity (number of pain points, company size)
-- Context requirements (amount of RAG data needed)
-- Performance requirements (speed vs. quality trade-offs)
-
-## 📊 ROI Calculation Methodology
-
-### Core Assumptions
-- **Labor Cost**: $100/hour (fully loaded)
-- **Efficiency Gains**: 20-40% reduction in manual tasks
-- **Error Reduction**: 20-30% decrease in costly mistakes
-- **Bank Fee Optimization**: 5-12% reduction through better positioning
-
-### Calculation Components
-
-**1. Labor Cost Savings**
-```
-Annual Savings = (Weekly Hours Saved × 52 weeks × $100/hour)
-Efficiency Rate = 30% ± 6% (scenario dependent)
-```
-
-**2. Bank Fee Reduction**
-```
-Annual Savings = (Number of Banks × $15,000 baseline × 8% reduction rate)
-```
-
-**3. Error Prevention Value**
-```
-Annual Value = Company Size Factor × Error Cost Baseline × 25% reduction
-Size Factors: <$50M=$25k, $50M-$500M=$75k, $500M-$2B=$200k, >$2B=$500k
-```
-
-### Scenario Modeling
-- **Conservative (80% confidence)**: 80% of base case assumptions
-- **Base Case (100% confidence)**: Industry benchmark assumptions
-- **Optimistic (120% confidence)**: 120% of base case assumptions
-
-## 🎨 Customization Options
-
-### Styling and Branding
-The plugin includes CSS custom properties for easy theming:
-```css
-:root {
-    --primary-purple: #7216f4;
-    --primary-purple-light: #a78bfa;
-    --secondary-purple: #8f47f6;
-    --light-purple: #c77dff;
-    --dark-text: #281345;
-    --gray-text: #4b5563;
-    --neutral-200: #e5e7eb;
-    --success-green: #10b981;
-}
-```
-
-### Custom Templates
-Override templates by creating files in your theme:
-```
-/wp-content/themes/your-theme/rtbcb/business-case-form.php
-/wp-content/themes/your-theme/rtbcb/report-template.php
-```
-
-### Hooks and Filters
-```php
-// Modify ROI assumptions
-add_filter('rtbcb_roi_assumptions', function($assumptions) {
-    $assumptions['labor_cost_per_hour'] = 120;
-    return $assumptions;
-});
-
-// Customize category scoring
-add_filter('rtbcb_category_scores', function($scores, $inputs) {
-    // Custom scoring logic
-    return $scores;
-}, 10, 2);
-
-```
-
-## 📈 Analytics and Reporting
-
-### Key Metrics Tracked
-- **Lead Volume**: Daily, weekly, monthly submissions
-- **Category Distribution**: Which solutions are most commonly recommended
-- **Company Segmentation**: Enterprise vs. SMB lead breakdown
-- **ROI Trends**: Average projected returns over time
-- **Geographic Analysis**: Lead sources by location (IP-based)
-- **Conversion Funnels**: Form completion rates by step
-
-### Export Capabilities
-- **CSV Export**: Complete lead data with filters
-- **Date Range Filtering**: Custom time periods
-- **UTM Attribution**: Marketing campaign performance
-- **ROI Benchmarking**: Industry comparison data
-
-## 🔒 Security and Privacy
-
-### Data Protection
-- **Email Encryption**: Sensitive data stored with encryption
-- **GDPR Compliance**: Built-in consent mechanisms
-- **Data Retention**: Configurable retention policies
-- **Access Controls**: Role-based permissions
-
-### Security Features
-- **Nonce Verification**: All AJAX requests protected
-- **Input Sanitization**: Comprehensive data validation
-- **SQL Injection Protection**: Prepared statements throughout
-- **XSS Prevention**: All output properly escaped
-
-## 🧪 Testing and Quality Assurance
-
-### Automated Tests
-The `tests` directory contains PHP and JavaScript unit tests.
-An additional Cypress-style acceptance test suite (`tests/acceptance.cy.js`) verifies
-dashboard interactions, API health notices, model comparisons, RAG metrics, and
-API health monitoring.
-
-#### Configuring the Test Model
-JavaScript and PHP tests read the OpenAI model from the `RTBCB_TEST_MODEL` setting so they stay aligned with plugin configuration.
-
-1. **.env file** – Create a `.env` file in the project root:
-   ```
-   RTBCB_TEST_MODEL=gpt-5-mini
-   ```
-2. **CLI flag** – Prefix test commands with the variable:
-   ```
-   RTBCB_TEST_MODEL=gpt-5-mini tests/run-tests.sh
-   ```
-3. **Config file** – Alternatively, add `tests/test-config.json`:
-   ```json
-   { "model": "gpt-5-mini" }
-   ```
-
-If no configuration is provided, tests default to `gpt-5-test`.
-
-### Runtime Debugging
-For manual verification during development, `debug_ajax_handler()` includes runtime checks for common setup issues:
-
-- **Leads Table Test**
-  ```php
-  global $wpdb;
-  $wpdb->get_results( "SHOW TABLES LIKE '{$wpdb->prefix}rtbcb_leads'" );
+# Real Treasury Business Case Builder
+
+## 1. Project Summary
+- **Plugin Name:** Real Treasury – Business Case Builder (Enhanced Pro)
+- **Purpose:** Multi-step wizard that gathers company profile and treasury operations data, performs ROI calculations, and invokes a Large Language Model (LLM) to produce a customized business case report for prospective customers of Real Treasury.
+- **Primary Audience:**
+  - **End Users:** Prospective customers evaluating treasury technology.
+  - **Administrators:** Real Treasury marketing and sales teams managing leads and analytics.
+
+## 2. System Architecture & Code Structure
+### Root Directory
+- [`real-treasury-business-case-builder.php`](real-treasury-business-case-builder.php): Main plugin bootstrap that defines constants, registers hooks, loads classes, and exposes the shortcode that launches the wizard【F:real-treasury-business-case-builder.php†L2-L24】
+
+### Core Logic (`/inc/`)
+- [`class-rtbcb-calculator.php`](inc/class-rtbcb-calculator.php): Provides static utilities for computing ROI scenarios from user inputs【F:inc/class-rtbcb-calculator.php†L1-L12】
+- [`class-rtbcb-llm.php`](inc/class-rtbcb-llm.php): Builds prompts and communicates with OpenAI GPT models to generate narrative analysis【F:inc/class-rtbcb-llm.php†L1-L58】
+- [`class-rtbcb-rag.php`](inc/class-rtbcb-rag.php): Implements Retrieval-Augmented Generation by indexing vendor data and retrieving relevant context for LLM calls【F:inc/class-rtbcb-rag.php†L1-L52】
+- [`class-rtbcb-router.php`](inc/class-rtbcb-router.php): Coordinates validation, selects LLM models, invokes calculations, and assembles report HTML【F:inc/class-rtbcb-router.php†L1-L76】
+- [`enhanced-ajax-handlers.php`](inc/enhanced-ajax-handlers.php): Contains server-side handlers for AJAX requests and utilities such as API connectivity tests【F:inc/enhanced-ajax-handlers.php†L3-L34】
+
+### Frontend (`/public/`)
+- [`js/rtbcb-wizard.js`](public/js/rtbcb-wizard.js): Controls the multi-step form, validates input, and submits data via AJAX【F:public/js/rtbcb-wizard.js†L1-L38】
+- [`js/rtbcb-report.js`](public/js/rtbcb-report.js): Renders the returned report HTML and initializes Chart.js visualizations【F:public/js/rtbcb-report.js†L1-L34】
+
+### Admin Interface (`/admin/`)
+- [`class-rtbcb-admin.php`](admin/class-rtbcb-admin.php): Registers dashboard menus, enqueues assets, and wires admin AJAX actions【F:admin/class-rtbcb-admin.php†L1-L28】
+- [`leads-page-enhanced.php`](admin/leads-page-enhanced.php): Displays captured submissions with filtering, export, and bulk actions【F:admin/leads-page-enhanced.php†L1-L29】
+- [`analytics-page.php`](admin/analytics-page.php): Presents usage metrics and charts for lead activity【F:admin/analytics-page.php†L1-L40】
+
+### Templates (`/templates/`)
+- [`business-case-form.php`](templates/business-case-form.php): HTML template for the user-facing wizard and modal interface【F:templates/business-case-form.php†L1-L24】
+- [`report-template.php`](templates/report-template.php): Basic report layout populated with LLM output【F:templates/report-template.php†L1-L26】
+- [`comprehensive-report-template.php`](templates/comprehensive-report-template.php): Extended report with executive summary, operational analysis, and financial details【F:templates/comprehensive-report-template.php†L1-L37】
+
+## 3. Execution Flow & Data Lifecycle
+1. **User Interaction:** The shortcode renders `templates/business-case-form.php`, and `public/js/rtbcb-wizard.js` guides the user through a multi-step wizard.
+2. **AJAX Request:** On submission, the wizard sends collected data to the WordPress AJAX action `rtbcb_generate_case`.
+3. **Backend Handling:** `inc/enhanced-ajax-handlers.php` receives the request and delegates to `RTBCB_Router`.
+4. **Data Processing:** The router validates input, runs `RTBCB_Calculator` for ROI figures, and fetches contextual data through `RTBCB_RAG`.
+5. **LLM Interaction:** `RTBCB_LLM` formats the prompt with calculations and context, then calls the configured OpenAI model.
+6. **Response Parsing:** The JSON reply is parsed into structured fields.
+7. **AJAX Response:** Processed numbers and narrative text are returned as JSON, including rendered report HTML.
+8. **Report Rendering:** `public/js/rtbcb-report.js` injects the HTML into `templates/report-template.php` (or the comprehensive template) and draws charts.
+
+## 4. Key API Endpoints
+| Action | Purpose | Expects | Returns |
+| ------ | ------- | ------- | ------- |
+| `rtbcb_generate_case` | Generate business case from wizard data | Company profile, operations metrics, pain points | `report_html`, `report_id`, status message |
+| `rtbcb_run_llm_test` | Compare multiple LLM models for diagnostics | `modelIds`, `promptA/B`, `maxTokens`, `temperature` | Array of model responses with latency and token metrics |
+| `rtbcb_run_rag_test` | Evaluate retrieval quality of the RAG index | `queries`, `topK`, `evaluationMode` | Retrieval results and scoring metrics |
+| `rtbcb_api_health_ping` | Check OpenAI API connectivity and rate limits | None beyond nonce | Health status and rate-limit headers |
+| `rtbcb_generate_preview_report` | Build a full HTML report in the admin test dashboard | Authenticated request, nonce | Sanitized report HTML |
+
+## 5. Installation & Setup
+1. Upload the plugin directory to `wp-content/plugins/` or install the ZIP via the WordPress admin panel, then activate it.
+2. Run `composer install` in the plugin folder to fetch PHP dependencies.
+3. In the WordPress dashboard, navigate to **Real Treasury → Settings** and enter an OpenAI API key to enable LLM features.
+
+## 6. Testing
+- Run all automated checks with:
+  ```bash
+  bash tests/run-tests.sh
   ```
-  Use this query to confirm the `rtbcb_leads` table exists.
+  The script executes PHP linting, unit tests, integration tests, and JavaScript tests【F:tests/run-tests.sh†L1-L80】
+- End-to-end coverage is provided via Cypress tests in [`tests/acceptance.cy.js`](tests/acceptance.cy.js)【F:tests/acceptance.cy.js†L1-L32】
 
-- **Missing API Key Logging**
-  ```php
-  if ( '' === get_option( 'rtbcb_openai_api_key' ) ) {
-      error_log( 'rtbcb_openai_api_key option is empty' );
-  }
-  ```
-  This logs a warning when the OpenAI API key is not set.
-
-`debug_ajax_handler()` executes these checks automatically for runtime verification.
-
-### Performance Monitoring
-- **Database Query Optimization**: Indexed tables for fast searches
-- **Caching Integration**: Compatible with WordPress caching plugins
-- **Asset Optimization**: Minified CSS/JS for production
-- **Lazy Loading**: Assets only loaded when shortcode is present
-
-## 🧪 AJAX Test Dashboard
-
-The plugin now includes a unified test dashboard with several AJAX actions for validating OpenAI and RAG integrations:
-
-- `wp_ajax_rtbcb_run_llm_test` – Execute LLM model comparison tests
-- `wp_ajax_rtbcb_run_rag_test` – Run RAG system similarity search tests
-- `wp_ajax_rtbcb_api_health_ping` – Ping OpenAI API for health status
-- `wp_ajax_rtbcb_export_results` – Export test dashboard results
-
-### Setup Instructions
-
-- Ensure OpenAI API key is configured in the Settings tab
-- Minimum required models: `gpt-4o-mini` (mini) and `gpt-4o` (premium)
-- RAG system requires database table: `wp_rtbcb_rag_index`
-- For staging environments, disable health notices: `define( 'RTBCB_DISABLE_API_NOTICES', true );`
-
-### Performance Notes
-
-- Chart.js is loaded from a CDN for better caching
-- AJAX requests use exponential backoff on rate limits
-- Result data persists in browser `localStorage`
-- Heavy operations use `requestIdleCallback` when available
-
-### Security Features
-
-- All AJAX endpoints require the `manage_options` capability
-- Comprehensive input sanitization and output escaping
-- Nonce verification on all requests
-- No API keys exposed to frontend JavaScript
-
-## 📞 Support and Documentation
-
-### Getting Help
-1. **Plugin Documentation**: Complete feature documentation in `/docs/`
-2. **WordPress Support Forums**: Community support and troubleshooting
-3. **GitHub Issues**: Bug reports and feature requests
-4. **Real Treasury Support**: Priority support for enterprise users
-
-### Common Issues
-
-**Q: OpenAI API calls return authentication errors**
-A: Verify your API key is correct and has sufficient credits in your OpenAI account.
-
-**Q: Charts not displaying in analytics**
-A: The analytics dashboard relies on Chart.js for visualizations. The library now loads from a CDN for improved caching, but strict privacy extensions or network restrictions may still block it. Ensure your browser allows assets from the CDN so charts can render correctly.
-
-**Q: Lead data not saving**
-A: Check database permissions and ensure tables were created during plugin activation.
-
-### Troubleshooting
-
-If you encounter `Unchecked runtime.lastError` messages, they typically originate from WordPress.com scripts or browser extensions. Allow third-party cookies or disable the offending extension to resolve the issue.
-
-### Performance Optimization
-- **Caching**: Use object caching for repeated calculations
-- **CDN Integration**: Host assets on CDN for faster loading
-- **Database Optimization**: Regular cleanup of old lead data
-- **API Rate Limiting**: Built-in throttling for OpenAI requests
-
-## 🛣️ Roadmap and Future Features
-
-### Version 2.2 (Coming Soon)
-- **Multi-language Support**: Internationalization for global users
-- **Advanced Integrations**: Salesforce, HubSpot, and CRM connectivity
-- **White-label Options**: Complete branding customization
-- **API Endpoints**: REST API for external integrations
-
-### Version 2.3 (Planned)
-- **Machine Learning**: Improved recommendation accuracy
-- **A/B Testing**: Form optimization capabilities
-- **Advanced Reporting**: Executive dashboard templates
-- **Mobile App**: Companion mobile application
-
-## 📄 License and Credits
-
-**License**: GPL v2 or later
-**Author**: Real Treasury Team
-**Contributors**: Treasury technology experts and WordPress developers
-
-### Third-party Libraries
-- **Chart.js**: Data visualization (MIT License)
-- **WordPress**: Core framework (GPL License)
-
----
-
-**Ready to transform your treasury technology evaluation process?** Install the Real Treasury Business Case Builder today and start generating data-driven business cases that drive real results.
-
-For enterprise features, custom development, or priority support, contact the Real Treasury team at [contact@realtreasury.com](mailto:contact@realtreasury.com).
-
+## 7. Visual Architecture Diagram
+```mermaid
+flowchart TD
+    A[User] --> B[rtbcb-wizard.js]
+    B --> C[AJAX rtbcb_generate_case]
+    C --> D[enhanced-ajax-handlers.php]
+    D --> E[RTBCB_Router]
+    E --> F[RTBCB_Calculator]
+    E --> G[RTBCB_RAG]
+    E --> H[RTBCB_LLM]
+    H --> I[(OpenAI API)]
+    F --> J[Report Data]
+    G --> J
+    I --> J
+    J --> K[AJAX Response]
+    K --> L[rtbcb-report.js]
+    L --> M[report-template.php]
+    M --> N[User Report]
+```
