@@ -9,6 +9,8 @@ add_action( 'wp_ajax_rtbcb_run_llm_test', 'rtbcb_ajax_run_llm_test' );
 add_action( 'wp_ajax_rtbcb_run_rag_test', 'rtbcb_ajax_run_rag_test' );
 add_action( 'wp_ajax_rtbcb_api_health_ping', 'rtbcb_ajax_api_health_ping' );
 add_action( 'wp_ajax_rtbcb_export_results', 'rtbcb_ajax_export_results' );
+add_action( 'init', 'rtbcb_log_ajax_handler_registration' );
+add_action( 'wp_loaded', 'rtbcb_log_health_test_hook_presence' );
 
 /**
  * Enhanced AJAX helper functions.
@@ -18,6 +20,33 @@ add_action( 'wp_ajax_rtbcb_export_results', 'rtbcb_ajax_export_results' );
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
+}
+
+/**
+ * Log that AJAX handlers are being registered.
+ *
+ * @return void
+ */
+function rtbcb_log_ajax_handler_registration() {
+    if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+        error_log( '[RTBCB] Registering AJAX handlers' );
+    }
+}
+
+/**
+ * Log whether the API health test AJAX hook is present.
+ *
+ * @return void
+ */
+function rtbcb_log_health_test_hook_presence() {
+    if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+        global $wp_filter;
+
+        $hook_exists = isset( $wp_filter['wp_ajax_rtbcb_run_api_health_tests'] )
+            && ! empty( $wp_filter['wp_ajax_rtbcb_run_api_health_tests']->callbacks );
+
+        error_log( '[RTBCB] wp_ajax_rtbcb_run_api_health_tests exists: ' . ( $hook_exists ? 'yes' : 'no' ) );
+    }
 }
 
 /**
