@@ -27,20 +27,11 @@ function rtbcb_enqueue_dashboard_assets() {
         filemtime( RTBCB_DIR . 'admin/css/unified-test-dashboard.css' )
     );
 
-    // Enqueue Chart.js before our script
-    wp_enqueue_script(
-        'chart-js',
-        'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js',
-        [],
-        '3.9.1',
-        true
-    );
-
     // Enqueue main dashboard script
     wp_enqueue_script(
         'rtbcb-unified-dashboard',
         $js_file,
-        [ 'jquery', 'chart-js' ],
+        [ 'jquery' ],
         filemtime( RTBCB_DIR . 'admin/js/unified-test-dashboard.js' ),
         true
     );
@@ -75,9 +66,11 @@ function rtbcb_enqueue_dashboard_assets() {
                 'error'         => __( 'Error occurred', 'rtbcb' ),
                 'running'       => __( 'Running...', 'rtbcb' ),
                 'settingsSaved' => __( 'Settings saved successfully', 'rtbcb' ),
+                'serviceUnavailable' => __( 'Service temporarily unavailable. Please try again later.', 'rtbcb' ),
             ],
             'urls'    => [
-                'settings' => admin_url( 'admin.php?page=rtbcb-unified-tests#settings' ),
+                'settings'    => admin_url( 'admin.php?page=rtbcb-unified-tests#settings' ),
+                'chartJsUrl'  => esc_url( 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js' ),
             ],
         ]
     );
