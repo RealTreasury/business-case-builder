@@ -15,14 +15,18 @@ add_action( 'wp_ajax_rtbcb_debug_api_key', 'rtbcb_debug_api_key' );
 add_action(
     'init',
     function () {
-        error_log( '[RTBCB] Registering AJAX handlers' );
+        if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+            error_log( '[RTBCB] Registering AJAX handlers' );
+        }
 
         // API Health handlers.
         add_action( 'wp_ajax_rtbcb_run_api_health_tests', 'rtbcb_run_api_health_tests' );
         add_action( 'wp_ajax_rtbcb_run_single_api_test', 'rtbcb_run_single_api_test' );
 
         // Verify handlers are registered.
-        error_log( '[RTBCB] API health handlers registered' );
+        if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+            error_log( '[RTBCB] API health handlers registered' );
+        }
     }
 );
 
