@@ -1771,7 +1771,8 @@ function rtbcb_rag_rebuild_index() {
  * @return void
  */
 function rtbcb_run_api_health_tests() {
-    error_log( 'rtbcb_run_api_health_tests action: ' . print_r( $_POST, true ) );
+    error_log( 'AJAX handler called: rtbcb_run_api_health_tests' );
+    error_log( 'Request data: ' . print_r( $_POST, true ) );
 
     if ( ! check_ajax_referer( 'rtbcb_api_health_tests', 'nonce', false ) ) {
         rtbcb_send_json_error( 'security_check_failed', __( 'Security check failed.', 'rtbcb' ), 403 );
@@ -1925,6 +1926,8 @@ function rtbcb_run_data_health_checks() {
  * @return void
  */
 function rtbcb_run_single_api_test() {
+    error_log( 'AJAX handler called: rtbcb_run_single_api_test' );
+    error_log( 'Request data: ' . print_r( $_POST, true ) );
     if ( ! check_ajax_referer( 'rtbcb_api_health_tests', 'nonce', false ) ) {
         rtbcb_send_json_error( 'security_check_failed', __( 'Security check failed.', 'rtbcb' ), 403 );
     }
@@ -2072,6 +2075,8 @@ function rtbcb_save_dashboard_settings() {
  * @return void
  */
 function rtbcb_ajax_run_llm_test() {
+    error_log( 'AJAX handler called: rtbcb_ajax_run_llm_test' );
+    error_log( 'Request data: ' . print_r( $_POST, true ) );
     if ( ! check_ajax_referer( 'rtbcb_llm_testing', 'nonce', false ) ) {
         rtbcb_send_json_error( 'security_check_failed', __( 'Security check failed.', 'rtbcb' ), 403 );
     }
@@ -2300,6 +2305,8 @@ class RTBCB_Mock_Vector_DB implements RTBCB_Vector_DB {
  * @return void
  */
 function rtbcb_ajax_run_rag_test() {
+    error_log( 'AJAX handler called: rtbcb_ajax_run_rag_test' );
+    error_log( 'Request data: ' . print_r( $_POST, true ) );
     // Security and permission checks.
     if ( ! check_ajax_referer( 'rtbcb_rag_testing', 'nonce', false ) ) {
         rtbcb_send_json_error( 'security_check_failed', __( 'Security check failed.', 'rtbcb' ), 403 );
@@ -2500,7 +2507,8 @@ function rtbcb_audit_context_window( $context_chunks ) {
  * @return void
  */
 function rtbcb_ajax_api_health_ping() {
-    error_log( 'rtbcb_ajax_api_health_ping action: ' . print_r( $_POST, true ) );
+    error_log( 'AJAX handler called: rtbcb_ajax_api_health_ping' );
+    error_log( 'Request data: ' . print_r( $_POST, true ) );
 
     if ( ! check_ajax_referer( 'rtbcb_api_health_tests', 'nonce', false ) ) {
         rtbcb_send_json_error( 'security_failed', __( 'Security check failed.', 'rtbcb' ), 403, '', [ 'requestId' => uniqid( 'req_' ) ] );
