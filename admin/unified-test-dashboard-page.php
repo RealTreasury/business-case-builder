@@ -51,6 +51,7 @@ function rtbcb_enqueue_dashboard_assets() {
             'reportPreview' => wp_create_nonce( 'rtbcb_generate_preview_report' ),
             'dataHealth'    => wp_create_nonce( 'rtbcb_data_health_checks' ),
             'ragTesting'    => wp_create_nonce( 'rtbcb_rag_testing' ),
+            'saveSettings'  => wp_create_nonce( 'rtbcb_save_dashboard_settings' ),
         ],
         'models'  => [
             'mini'     => get_option( 'rtbcb_mini_model', rtbcb_get_default_model( 'mini' ) ),

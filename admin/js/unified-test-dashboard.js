@@ -1442,22 +1442,27 @@
             const $form = $('#rtbcb-dashboard-settings-form');
             const data = {
                 action: 'rtbcb_save_dashboard_settings',
-                nonce: $form.find('[name="nonce"]').val(),
+                nonce: rtbcbDashboard.nonces.saveSettings || $form.find('[name="nonce"]').val(),
                 rtbcb_openai_api_key: $('#rtbcb_openai_api_key').val(),
                 rtbcb_mini_model: $('#rtbcb_mini_model').val(),
                 rtbcb_premium_model: $('#rtbcb_premium_model').val(),
                 rtbcb_advanced_model: $('#rtbcb_advanced_model').val(),
                 rtbcb_embedding_model: $('#rtbcb_embedding_model').val()
             };
+
+            console.log('[RTBCB] Saving dashboard settings', data);
+
             const $button = $form.find('button[type="submit"]').prop('disabled', true);
 
             $.post(rtbcbDashboard.ajaxurl, data).done((response) => {
+                console.log('[RTBCB] Save settings response', response);
                 if (response.success) {
                     this.showNotification(rtbcbDashboard.strings.settingsSaved, 'success');
                 } else {
                     this.showNotification(response.data?.message || rtbcbDashboard.strings.error, 'error');
                 }
-            }).fail(() => {
+            }).fail((jqXHR, textStatus) => {
+                console.error('[RTBCB] Save settings AJAX error', textStatus);
                 this.showNotification(rtbcbDashboard.strings.error, 'error');
             }).always(() => {
                 $button.prop('disabled', false);
