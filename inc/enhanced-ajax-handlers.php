@@ -1,15 +1,4 @@
 <?php
-// Temporary AJAX flow tracing
-add_action( 'wp_ajax_rtbcb_test_company_overview_enhanced', function() {
-    error_log( '[DIAG] AJAX Handler Entry: rtbcb_test_company_overview_enhanced' );
-    error_log( '[DIAG] POST data keys: ' . implode( ', ', array_keys( $_POST ) ) );
-    error_log( '[DIAG] Current user can manage_options: ' . ( current_user_can( 'manage_options' ) ? 'YES' : 'NO' ) );
-    // Continue to actual handler...
-}, 5 );
-
-add_action( 'wp_ajax_rtbcb_run_llm_test', function() {
-    error_log( '[DIAG] AJAX Handler Entry: rtbcb_run_llm_test - Handler ' . ( has_action( 'wp_ajax_rtbcb_run_llm_test' ) ? 'EXISTS' : 'MISSING' ) );
-}, 5 );
 
 /**
  * Enhanced AJAX helper functions.
@@ -235,7 +224,6 @@ add_action( 'wp_ajax_rtbcb_test_rag_query', 'rtbcb_test_rag_query' );
 add_action( 'wp_ajax_rtbcb_rag_rebuild_index', 'rtbcb_rag_rebuild_index' );
 add_action( 'wp_ajax_rtbcb_generate_preview_report', 'rtbcb_generate_preview_report' );
 add_action( 'wp_ajax_rtbcb_save_dashboard_settings', 'rtbcb_save_dashboard_settings' );
-// Missing AJAX action hooks
 add_action( 'wp_ajax_rtbcb_run_llm_test', 'rtbcb_ajax_run_llm_test' );
 add_action( 'wp_ajax_rtbcb_run_rag_test', 'rtbcb_ajax_run_rag_test' );
 add_action( 'wp_ajax_rtbcb_api_health_ping', 'rtbcb_ajax_api_health_ping' );
@@ -1786,15 +1774,17 @@ function rtbcb_save_dashboard_settings() {
 }
 
 /**
- * Run LLM integration test
+ * Run LLM integration test.
+ *
+ * @return void
  */
 function rtbcb_ajax_run_llm_test() {
-    // Security checks
     if ( ! check_ajax_referer( 'rtbcb_llm_testing', 'nonce', false ) ) {
         wp_send_json_error(
             [
                 'code'      => 'security_failed',
                 'message'   => __( 'Security check failed.', 'rtbcb' ),
+                'detail'    => null,
                 'requestId' => uniqid( 'req_' ),
             ],
             403
@@ -1806,29 +1796,30 @@ function rtbcb_ajax_run_llm_test() {
             [
                 'code'      => 'insufficient_permissions',
                 'message'   => __( 'Insufficient permissions.', 'rtbcb' ),
+                'detail'    => null,
                 'requestId' => uniqid( 'req_' ),
             ],
             403
         );
     }
 
-    // Input sanitization
     $input_data = [
-        'modelIds'   => array_map( 'sanitize_text_field', wp_unslash( $_POST['modelIds'] ?? [] ) ),
-        'promptA'    => sanitize_textarea_field( wp_unslash( $_POST['promptA'] ?? '' ) ),
-        'promptB'    => sanitize_textarea_field( wp_unslash( $_POST['promptB'] ?? '' ) ),
-        'inputs'     => array_map( 'sanitize_text_field', wp_unslash( $_POST['inputs'] ?? [] ) ),
-        'runMode'    => sanitize_text_field( wp_unslash( $_POST['runMode'] ?? 'single' ) ),
-        'maxTokens'  => intval( wp_unslash( $_POST['maxTokens'] ?? 1000 ) ),
-        'temperature'=> floatval( wp_unslash( $_POST['temperature'] ?? 0.3 ) ),
+        'modelIds'    => array_map( 'sanitize_text_field', wp_unslash( $_POST['modelIds'] ?? [] ) ),
+        'promptA'     => sanitize_textarea_field( wp_unslash( $_POST['promptA'] ?? '' ) ),
+        'promptB'     => sanitize_textarea_field( wp_unslash( $_POST['promptB'] ?? '' ) ),
+        'inputs'      => array_map( 'sanitize_text_field', wp_unslash( $_POST['inputs'] ?? [] ) ),
+        'runMode'     => sanitize_text_field( wp_unslash( $_POST['runMode'] ?? 'single' ) ),
+        'maxTokens'   => intval( wp_unslash( $_POST['maxTokens'] ?? 1000 ) ),
+        'temperature' => floatval( wp_unslash( $_POST['temperature'] ?? 0.3 ) ),
     ];
 
-    // Validation
     if ( empty( $input_data['modelIds'] ) ) {
         wp_send_json_error(
             [
-                'code'    => 'missing_models',
-                'message' => __( 'No models specified.', 'rtbcb' ),
+                'code'      => 'missing_models',
+                'message'   => __( 'No models specified.', 'rtbcb' ),
+                'detail'    => null,
+                'requestId' => uniqid( 'req_' ),
             ],
             400
         );
@@ -1837,8 +1828,10 @@ function rtbcb_ajax_run_llm_test() {
     if ( empty( $input_data['promptA'] ) ) {
         wp_send_json_error(
             [
-                'code'    => 'missing_prompt',
-                'message' => __( 'Prompt is required.', 'rtbcb' ),
+                'code'      => 'missing_prompt',
+                'message'   => __( 'Prompt is required.', 'rtbcb' ),
+                'detail'    => null,
+                'requestId' => uniqid( 'req_' ),
             ],
             400
         );
@@ -1846,20 +1839,21 @@ function rtbcb_ajax_run_llm_test() {
 
     try {
         $start_time = microtime( true );
+        $results    = rtbcb_execute_llm_test_matrix( $input_data );
+        $end_time   = microtime( true );
 
-        // Run LLM tests
-        $results = rtbcb_execute_llm_test_matrix( $input_data );
-
-        $end_time = microtime( true );
+        $result = [
+            'results'  => $results,
+            'metadata' => [
+                'totalTime'   => round( ( $end_time - $start_time ), 2 ),
+                'modelsCount' => count( $input_data['modelIds'] ),
+            ],
+        ];
 
         wp_send_json_success(
             [
-                'results'  => $results,
-                'metadata' => [
-                    'totalTime'  => round( ( $end_time - $start_time ), 2 ),
-                    'modelsCount'=> count( $input_data['modelIds'] ),
-                    'timestamp'  => current_time( 'mysql' ),
-                ],
+                'data'      => $result,
+                'timestamp' => current_time( 'mysql' ),
                 'requestId' => uniqid( 'req_' ),
             ]
         );
@@ -1878,15 +1872,18 @@ function rtbcb_ajax_run_llm_test() {
 }
 
 /**
- * Run RAG system test
+ * Run RAG system test.
+ *
+ * @return void
  */
 function rtbcb_ajax_run_rag_test() {
-    // Security checks
     if ( ! check_ajax_referer( 'rtbcb_rag_testing', 'nonce', false ) ) {
         wp_send_json_error(
             [
-                'code'    => 'security_failed',
-                'message' => __( 'Security check failed.', 'rtbcb' ),
+                'code'      => 'security_failed',
+                'message'   => __( 'Security check failed.', 'rtbcb' ),
+                'detail'    => null,
+                'requestId' => uniqid( 'req_' ),
             ],
             403
         );
@@ -1895,14 +1892,15 @@ function rtbcb_ajax_run_rag_test() {
     if ( ! current_user_can( 'manage_options' ) ) {
         wp_send_json_error(
             [
-                'code'    => 'insufficient_permissions',
-                'message' => __( 'Insufficient permissions.', 'rtbcb' ),
+                'code'      => 'insufficient_permissions',
+                'message'   => __( 'Insufficient permissions.', 'rtbcb' ),
+                'detail'    => null,
+                'requestId' => uniqid( 'req_' ),
             ],
             403
         );
     }
 
-    // Input sanitization
     $input_data = [
         'queries' => array_map( 'sanitize_text_field', wp_unslash( $_POST['queries'] ?? [] ) ),
         'topK'    => intval( wp_unslash( $_POST['topK'] ?? 5 ) ),
@@ -1912,20 +1910,23 @@ function rtbcb_ajax_run_rag_test() {
     if ( empty( $input_data['queries'] ) ) {
         wp_send_json_error(
             [
-                'code'    => 'missing_queries',
-                'message' => __( 'Test queries are required.', 'rtbcb' ),
+                'code'      => 'missing_queries',
+                'message'   => __( 'Test queries are required.', 'rtbcb' ),
+                'detail'    => null,
+                'requestId' => uniqid( 'req_' ),
             ],
             400
         );
     }
 
     try {
-        // Initialize RAG system
         if ( ! class_exists( 'RTBCB_RAG' ) ) {
             wp_send_json_error(
                 [
-                    'code'    => 'rag_unavailable',
-                    'message' => __( 'RAG system not available.', 'rtbcb' ),
+                    'code'      => 'rag_unavailable',
+                    'message'   => __( 'RAG system not available.', 'rtbcb' ),
+                    'detail'    => null,
+                    'requestId' => uniqid( 'req_' ),
                 ],
                 500
             );
@@ -1951,23 +1952,30 @@ function rtbcb_ajax_run_rag_test() {
             ];
         }
 
+        $result = [
+            'results' => $results,
+            'summary' => [
+                'totalQueries'     => count( $input_data['queries'] ),
+                'avgRetrievalTime' => array_sum( array_column( array_column( $results, 'metrics' ), 'retrievalTime' ) ) / count( $results ),
+                'timestamp'        => current_time( 'mysql' ),
+            ],
+        ];
+
         wp_send_json_success(
             [
-                'results' => $results,
-                'summary' => [
-                    'totalQueries'     => count( $input_data['queries'] ),
-                    'avgRetrievalTime' => array_sum( array_column( array_column( $results, 'metrics' ), 'retrievalTime' ) ) / count( $results ),
-                    'timestamp'        => current_time( 'mysql' ),
-                ],
+                'data'      => $result,
+                'timestamp' => current_time( 'mysql' ),
+                'requestId' => uniqid( 'req_' ),
             ]
         );
     } catch ( Exception $e ) {
         error_log( 'RTBCB RAG Test Error: ' . $e->getMessage() );
         wp_send_json_error(
             [
-                'code'    => 'rag_test_failed',
-                'message' => __( 'RAG test execution failed.', 'rtbcb' ),
-                'detail'  => WP_DEBUG ? $e->getMessage() : null,
+                'code'      => 'execution_failed',
+                'message'   => __( 'RAG test execution failed.', 'rtbcb' ),
+                'detail'    => WP_DEBUG ? $e->getMessage() : null,
+                'requestId' => uniqid( 'req_' ),
             ],
             500
         );
@@ -1975,14 +1983,18 @@ function rtbcb_ajax_run_rag_test() {
 }
 
 /**
- * Run API health ping
+ * Run API health ping.
+ *
+ * @return void
  */
 function rtbcb_ajax_api_health_ping() {
     if ( ! check_ajax_referer( 'rtbcb_api_health_tests', 'nonce', false ) ) {
         wp_send_json_error(
             [
-                'code'    => 'security_failed',
-                'message' => __( 'Security check failed.', 'rtbcb' ),
+                'code'      => 'security_failed',
+                'message'   => __( 'Security check failed.', 'rtbcb' ),
+                'detail'    => null,
+                'requestId' => uniqid( 'req_' ),
             ],
             403
         );
@@ -1991,42 +2003,52 @@ function rtbcb_ajax_api_health_ping() {
     if ( ! current_user_can( 'manage_options' ) ) {
         wp_send_json_error(
             [
-                'code'    => 'insufficient_permissions',
-                'message' => __( 'Insufficient permissions.', 'rtbcb' ),
+                'code'      => 'insufficient_permissions',
+                'message'   => __( 'Insufficient permissions.', 'rtbcb' ),
+                'detail'    => null,
+                'requestId' => uniqid( 'req_' ),
             ],
             403
         );
     }
 
+    $input_data = [];
+
     try {
         $ping_result = rtbcb_execute_openai_health_ping();
 
         if ( $ping_result['success'] ) {
-            // Update last successful ping
             update_option( 'rtbcb_openai_last_ok', time() );
             delete_transient( 'rtbcb_openai_error' );
         } else {
-            // Store error info
             update_option( 'rtbcb_openai_last_error_at', time() );
             set_transient(
                 'rtbcb_openai_error',
                 [
-                    'code'      => $ping_result['code'] ?? 'unknown',
-                    'httpStatus'=> $ping_result['httpStatus'] ?? 0,
-                    'body'      => substr( $ping_result['body'] ?? '', 0, 200 ),
-                    'timestamp' => time(),
+                    'code'       => $ping_result['code'] ?? 'unknown',
+                    'httpStatus' => $ping_result['httpStatus'] ?? 0,
+                    'body'       => substr( $ping_result['body'] ?? '', 0, 200 ),
+                    'timestamp'  => time(),
                 ],
                 600
-            ); // 10 minutes
+            );
         }
 
-        wp_send_json_success( $ping_result );
+        wp_send_json_success(
+            [
+                'data'      => $ping_result,
+                'timestamp' => current_time( 'mysql' ),
+                'requestId' => uniqid( 'req_' ),
+            ]
+        );
     } catch ( Exception $e ) {
         error_log( 'RTBCB API Health Ping Error: ' . $e->getMessage() );
         wp_send_json_error(
             [
-                'code'       => 'ping_failed',
+                'code'       => 'execution_failed',
                 'message'    => __( 'Health ping failed.', 'rtbcb' ),
+                'detail'     => WP_DEBUG ? $e->getMessage() : null,
+                'requestId'  => uniqid( 'req_' ),
                 'retryAfter' => 30,
             ],
             500
@@ -2108,14 +2130,18 @@ function rtbcb_execute_openai_health_ping() {
 }
 
 /**
- * Export test results
+ * Export test results.
+ *
+ * @return void
  */
 function rtbcb_ajax_export_results() {
     if ( ! check_ajax_referer( 'rtbcb_unified_test_dashboard', 'nonce', false ) ) {
         wp_send_json_error(
             [
-                'code'    => 'security_failed',
-                'message' => __( 'Security check failed.', 'rtbcb' ),
+                'code'      => 'security_failed',
+                'message'   => __( 'Security check failed.', 'rtbcb' ),
+                'detail'    => null,
+                'requestId' => uniqid( 'req_' ),
             ],
             403
         );
@@ -2124,21 +2150,27 @@ function rtbcb_ajax_export_results() {
     if ( ! current_user_can( 'manage_options' ) ) {
         wp_send_json_error(
             [
-                'code'    => 'insufficient_permissions',
-                'message' => __( 'Insufficient permissions.', 'rtbcb' ),
+                'code'      => 'insufficient_permissions',
+                'message'   => __( 'Insufficient permissions.', 'rtbcb' ),
+                'detail'    => null,
+                'requestId' => uniqid( 'req_' ),
             ],
             403
         );
     }
 
-    $export_type = sanitize_text_field( wp_unslash( $_POST['exportType'] ?? 'json' ) );
-    $test_data   = isset( $_POST['testData'] ) ? wp_unslash( $_POST['testData'] ) : [];
+    $input_data = [
+        'exportType' => sanitize_text_field( wp_unslash( $_POST['exportType'] ?? 'json' ) ),
+        'testData'   => isset( $_POST['testData'] ) ? wp_unslash( $_POST['testData'] ) : [],
+    ];
 
-    if ( empty( $test_data ) ) {
+    if ( empty( $input_data['testData'] ) ) {
         wp_send_json_error(
             [
-                'code'    => 'no_data',
-                'message' => __( 'No test data to export.', 'rtbcb' ),
+                'code'      => 'no_data',
+                'message'   => __( 'No test data to export.', 'rtbcb' ),
+                'detail'    => null,
+                'requestId' => uniqid( 'req_' ),
             ],
             400
         );
@@ -2147,38 +2179,44 @@ function rtbcb_ajax_export_results() {
     try {
         $export_data = [
             'metadata' => [
-                'exportTime'   => current_time( 'c' ),
-                'plugin'       => 'Real Treasury Business Case Builder',
-                'version'      => defined( 'RTBCB_VERSION' ) ? RTBCB_VERSION : '2.0.0',
-                'testDashboard'=> 'unified-test-dashboard',
+                'exportTime'    => current_time( 'c' ),
+                'plugin'        => 'Real Treasury Business Case Builder',
+                'version'       => defined( 'RTBCB_VERSION' ) ? RTBCB_VERSION : '2.0.0',
+                'testDashboard' => 'unified-test-dashboard',
             ],
-            'results'  => $test_data,
+            'results'  => $input_data['testData'],
         ];
 
-        if ( 'csv' === $export_type ) {
+        if ( 'csv' === $input_data['exportType'] ) {
             $csv_content = rtbcb_convert_results_to_csv( $export_data );
-            wp_send_json_success(
-                [
-                    'content'     => $csv_content,
-                    'filename'    => 'rtbcb-test-results-' . date( 'Y-m-d-H-i-s' ) . '.csv',
-                    'contentType' => 'text/csv',
-                ]
-            );
+            $result      = [
+                'content'     => $csv_content,
+                'filename'    => 'rtbcb-test-results-' . date( 'Y-m-d-H-i-s' ) . '.csv',
+                'contentType' => 'text/csv',
+            ];
         } else {
-            wp_send_json_success(
-                [
-                    'content'     => wp_json_encode( $export_data, JSON_PRETTY_PRINT ),
-                    'filename'    => 'rtbcb-test-results-' . date( 'Y-m-d-H-i-s' ) . '.json',
-                    'contentType' => 'application/json',
-                ]
-            );
+            $result = [
+                'content'     => wp_json_encode( $export_data, JSON_PRETTY_PRINT ),
+                'filename'    => 'rtbcb-test-results-' . date( 'Y-m-d-H-i-s' ) . '.json',
+                'contentType' => 'application/json',
+            ];
         }
+
+        wp_send_json_success(
+            [
+                'data'      => $result,
+                'timestamp' => current_time( 'mysql' ),
+                'requestId' => uniqid( 'req_' ),
+            ]
+        );
     } catch ( Exception $e ) {
         error_log( 'RTBCB Export Results Error: ' . $e->getMessage() );
         wp_send_json_error(
             [
-                'code'    => 'export_failed',
-                'message' => __( 'Export generation failed.', 'rtbcb' ),
+                'code'      => 'execution_failed',
+                'message'   => __( 'Export generation failed.', 'rtbcb' ),
+                'detail'    => WP_DEBUG ? $e->getMessage() : null,
+                'requestId' => uniqid( 'req_' ),
             ],
             500
         );
