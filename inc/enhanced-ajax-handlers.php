@@ -2025,8 +2025,10 @@ function rtbcb_run_data_health_checks() {
  * @return void
  */
 function rtbcb_run_single_api_test() {
-    error_log( 'AJAX handler called: rtbcb_run_single_api_test' );
-    error_log( 'Request data: ' . print_r( $_POST, true ) );
+    if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+        error_log( 'AJAX handler called: rtbcb_run_single_api_test' );
+        error_log( 'Request data: ' . print_r( $_POST, true ) );
+    }
     if ( ! check_ajax_referer( 'rtbcb_api_health_tests', 'nonce', false ) ) {
         rtbcb_send_json_error( 'security_check_failed', __( 'Security check failed.', 'rtbcb' ), 403 );
     }
