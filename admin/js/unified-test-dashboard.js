@@ -152,6 +152,11 @@
                 this.runAllApiTests();
             });
 
+            $(document).on('click.rtbcb', '.rtbcb-retest', (e) => {
+                e.preventDefault();
+                this.runSingleApiTest($(e.currentTarget).data('component'));
+            });
+
             $(document).on('click.rtbcb', '[data-action="export-results"]', (e) => {
                 e.preventDefault();
                 this.exportResults();
