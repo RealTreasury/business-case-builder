@@ -81,6 +81,12 @@ function rtbcb_enqueue_dashboard_assets() {
             'hide'          => __( 'Hide', 'rtbcb' ),
         ],
     ] );
+
+    if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+        echo "<!-- Debugging output -->\n";
+        echo '<script>console.log( "rtbcbDashboard", { ajaxurl: rtbcbDashboard.ajaxurl, nonces: rtbcbDashboard.nonces } );</script>' . "\n";
+        echo "<!-- End debugging output -->\n";
+    }
 }
 
 rtbcb_enqueue_dashboard_assets();
