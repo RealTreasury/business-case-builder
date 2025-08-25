@@ -1,5 +1,10 @@
 <?php
 
+// Add immediate debug hook
+add_action( 'wp_ajax_rtbcb_test_company_overview_enhanced', function() {
+    error_log( '[DIAG] AJAX Entry: company_overview, User: ' . get_current_user_id() . ', Nonce: ' . ( $_POST['nonce'] ?? 'missing' ) );
+}, 1 );
+
 /**
  * Enhanced AJAX helper functions.
  *
