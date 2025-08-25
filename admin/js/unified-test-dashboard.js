@@ -1342,17 +1342,32 @@
         },
 
         runAllApiTests() {
-            console.log('[API Health] === runAllApiTests start: running all API tests ===');
-            console.log('[API Health] rtbcbDashboard:', rtbcbDashboard);
-            console.log('[API Health] ajaxurl:', rtbcbDashboard.ajaxurl);
-            console.log('[API Health] nonce:', rtbcbDashboard?.nonces?.apiHealth);
-            if (!circuitBreaker.canExecute()) {
-                console.error('[API Health] Circuit breaker open. Aborting all API tests.');
-                this.showNotification(rtbcbDashboard.strings.error, 'error');
+            console.log('[API Health] === runAllApiTests start ===');
+
+            // Check prerequisites
+            if (!rtbcbDashboard.ajaxurl) {
+                console.error('[API Health] AJAX URL not available');
+                this.showNotification('System configuration error: AJAX URL missing', 'error');
                 return;
             }
-            $('[data-action="api-health-ping"]').prop('disabled', true);
-            $('#rtbcb-api-health-notice').text(rtbcbDashboard.strings.running);
+
+            if (!rtbcbDashboard.nonces || !rtbcbDashboard.nonces.apiHealth) {
+                console.error('[API Health] Security nonce not available');
+                this.showNotification('System configuration error: Security nonce missing', 'error');
+                return;
+            }
+
+            // Check circuit breaker
+            if (!circuitBreaker.canExecute()) {
+                console.error('[API Health] Circuit breaker open. Failures:', circuitBreaker.failures);
+                this.showNotification('Too many recent failures. Please wait before retrying.', 'warning');
+                return;
+            }
+
+            const $button = $('[data-action="api-health-ping"]').prop('disabled', true);
+            $('#rtbcb-api-health-notice').text('Running comprehensive API health tests...');
+
+            console.log('[API Health] Making AJAX request...');
 
             $.ajax({
                 url: rtbcbDashboard.ajaxurl,
@@ -1361,50 +1376,60 @@
                     action: 'rtbcb_run_api_health_tests',
                     nonce: rtbcbDashboard.nonces.apiHealth
                 },
-                timeout: 60000,
-                beforeSend: () => {
-                    console.log('[API Health] Request dispatched to API health endpoint');
+                timeout: 120000, // 2 minutes
+
+                beforeSend: function(xhr) {
+                    console.log('[API Health] Request initiated');
                 }
             }).done((response) => {
-                console.log('[API Health] Success payload:', response);
+                console.log('[API Health] Request completed successfully', response);
+
                 if (response.success) {
                     circuitBreaker.recordSuccess();
-                    console.log('[API Health] All API tests succeeded', response.data);
                     const data = response.data;
                     this.apiResults = data.results;
+
                     Object.keys(data.results).forEach(key => {
                         this.updateApiRow(key, data.results[key], data.timestamp);
                     });
+
                     this.updateApiSummary();
+                    this.showNotification('API health tests completed successfully', 'success');
                 } else {
                     circuitBreaker.recordFailure();
-                    const errMsg = response?.data?.message || rtbcbDashboard.strings.error;
-                    console.error('[API Health] API tests failed:', errMsg, response);
-                    $('#rtbcb-api-health-notice').text(rtbcbDashboard.strings.error);
+                    const errMsg = response?.data?.message || 'API tests failed';
+                    console.error('[API Health] Server returned error:', errMsg, response);
+                    $('#rtbcb-api-health-notice').text(errMsg);
+                    this.showNotification(errMsg, 'error');
                 }
             }).fail((jqXHR, textStatus, errorThrown) => {
                 circuitBreaker.recordFailure();
 
-                console.error('[API Health] Request error during API tests - status:', jqXHR.status);
-                console.error('[API Health] Request error during API tests - statusText:', jqXHR.statusText);
-                console.error('[API Health] Request error during API tests - responseText:', jqXHR.responseText);
-                console.error('[API Health] Request error during API tests - textStatus:', textStatus);
-                console.error('[API Health] Request error during API tests - errorThrown:', errorThrown);
+                console.error('[API Health] AJAX request failed:');
+                console.error('Status:', jqXHR.status);
+                console.error('Status Text:', jqXHR.statusText);
+                console.error('Response Text:', jqXHR.responseText);
+                console.error('Text Status:', textStatus);
+                console.error('Error Thrown:', errorThrown);
 
-                let parsedMessage = '';
-                try {
-                    const parsed = JSON.parse(jqXHR.responseText || '{}');
-                    parsedMessage = parsed?.data?.detail || parsed?.message || jqXHR.responseText;
-                } catch (e) {
-                    parsedMessage = (jqXHR.responseText || '').trim();
+                let errorMessage = 'API health test request failed';
+
+                if (jqXHR.status === 0) {
+                    errorMessage = 'Network connection error - check internet connectivity';
+                } else if (jqXHR.status === 403) {
+                    errorMessage = 'Permission denied - security check failed';
+                } else if (jqXHR.status === 500) {
+                    errorMessage = 'Server error - check PHP error logs';
+                } else if (textStatus === 'timeout') {
+                    errorMessage = 'Request timed out - server may be overloaded';
+                } else {
+                    errorMessage = `Request failed (${jqXHR.status}: ${errorThrown})`;
                 }
-                const detail = parsedMessage || errorThrown || textStatus;
-                const msg = `${rtbcbDashboard.strings.error}: ${detail}`;
 
-                this.showNotification(msg, 'error');
-                $('#rtbcb-api-health-notice').text(msg);
+                $('#rtbcb-api-health-notice').text(errorMessage);
+                this.showNotification(errorMessage, 'error');
             }).always(() => {
-                $('[data-action="api-health-ping"]').prop('disabled', false);
+                $button.prop('disabled', false);
                 console.log('[API Health] === runAllApiTests complete ===');
             });
         },
