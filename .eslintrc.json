@@ -1,0 +1,58 @@
+{
+    "extends": [
+        "@wordpress/eslint-plugin/recommended"
+    ],
+    "parserOptions": {
+        "ecmaVersion": 2020,
+        "sourceType": "module"
+    },
+    "env": {
+        "browser": true,
+        "node": true,
+        "es6": true,
+        "jquery": true
+    },
+    "globals": {
+        "wp": "readonly",
+        "ajaxurl": "readonly",
+        "jQuery": "readonly",
+        "$": "readonly"
+    },
+    "rules": {
+        // WordPress specific rules
+        "@wordpress/no-unused-vars-before-return": "error",
+        "@wordpress/dependency-group": "error",
+        
+        // General JavaScript quality rules
+        "no-console": ["warn", { "allow": ["warn", "error"] }],
+        "no-debugger": "error",
+        "no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
+        "prefer-const": "error",
+        "no-var": "error",
+        
+        // WordPress.com specific: Avoid potential security issues
+        "no-eval": "error",
+        "no-implied-eval": "error",
+        "no-script-url": "error",
+        
+        // Code style for consistency
+        "indent": ["error", 4],
+        "quotes": ["error", "single"],
+        "semi": ["error", "always"]
+    },
+    "overrides": [
+        {
+            "files": ["tests/**/*.js"],
+            "env": {
+                "jest": true,
+                "cypress/globals": true
+            },
+            "extends": [
+                "plugin:cypress/recommended"
+            ],
+            "rules": {
+                "no-console": "off"
+            }
+        }
+    ]
+}

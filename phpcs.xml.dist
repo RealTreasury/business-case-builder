@@ -1,0 +1,104 @@
+<?xml version="1.0"?>
+<ruleset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    name="Real Treasury Business Case Builder"
+    xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/squizlabs/PHP_CodeSniffer/master/phpcs.xsd">
+
+    <description>WordPress Coding Standards for Real Treasury Business Case Builder</description>
+
+    <!-- What to scan -->
+    <file>.</file>
+
+    <!-- Exclude directories -->
+    <exclude-pattern>/vendor/*</exclude-pattern>
+    <exclude-pattern>/node_modules/*</exclude-pattern>
+    <exclude-pattern>/tests/cypress/*</exclude-pattern>
+    <exclude-pattern>/coverage/*</exclude-pattern>
+    <exclude-pattern>/build/*</exclude-pattern>
+    <exclude-pattern>/tmp/*</exclude-pattern>
+
+    <!-- How to scan -->
+    <arg value="sp"/> <!-- Show sniff and progress -->
+    <arg name="basepath" value="./"/> <!-- Strip the file paths down to the relevant bit -->
+    <arg name="colors"/>
+    <arg name="extensions" value="php"/>
+    <arg name="parallel" value="8"/> <!-- Enable parallel processing for faster scanning -->
+
+    <!-- Rules: WordPress Coding Standards -->
+    <rule ref="WordPress">
+        <!-- Allow array short syntax -->
+        <exclude name="Generic.Arrays.DisallowShortArraySyntax"/>
+        
+        <!-- Allow WordPress.com compatible function usage -->
+        <exclude name="WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents"/>
+        
+        <!-- WordPress.com allows some functions we need -->
+        <exclude name="WordPress.PHP.DiscouragedPHPFunctions.system_calls_exec"/>
+    </rule>
+
+    <!-- Rules: WordPress VIP Coding Standards for WordPress.com compatibility -->
+    <rule ref="WordPress-VIP-Go">
+        <!-- Exclude some VIP rules that don't apply to regular WordPress.com -->
+        <exclude name="WordPressVIPMinimum.Functions.RestrictedFunctions.wp_remote_get_wp_remote_get"/>
+        <exclude name="WordPressVIPMinimum.Performance.FetchingRemoteData.FileGetContentsUnknown"/>
+    </rule>
+
+    <!-- Check for PHP cross-version compatibility. -->
+    <config name="testVersion" value="7.4-"/>
+    <rule ref="PHPCompatibility">
+        <!-- Exclude WordPress core backcompat issues -->
+        <exclude name="PHPCompatibility.FunctionUse.NewFunctions.hash_equalsFound"/>
+    </rule>
+
+    <!-- WordPress.com specific rules -->
+    <rule ref="WordPress.Security.EscapeOutput"/>
+    <rule ref="WordPress.Security.NonceVerification"/>
+    <rule ref="WordPress.Security.ValidatedSanitizedInput"/>
+
+    <!-- Additional WordPress.com security rules -->
+    <rule ref="WordPress.Security.PluginMenuSlug"/>
+    <rule ref="WordPress.Security.SafeRedirect"/>
+
+    <!-- WordPress.com performance rules -->
+    <rule ref="WordPress.DB.DirectDatabaseQuery">
+        <type>warning</type>
+    </rule>
+    <rule ref="WordPress.DB.SlowDBQuery">
+        <type>warning</type>
+    </rule>
+
+    <!-- Text Domain check for internationalization -->
+    <rule ref="WordPress.WP.I18n">
+        <properties>
+            <property name="text_domain" type="array">
+                <element value="rtbcb"/>
+            </property>
+        </properties>
+    </rule>
+
+    <!-- File naming conventions -->
+    <rule ref="WordPress.Files.FileName">
+        <properties>
+            <property name="strict_class_file_names" value="false"/>
+        </properties>
+    </rule>
+
+    <!-- WordPress.com hosting specific exclusions -->
+    <rule ref="WordPress.WP.AlternativeFunctions">
+        <!-- WordPress.com allows curl when wp_remote_* is not sufficient -->
+        <exclude name="WordPress.WP.AlternativeFunctions.curl_curl_init"/>
+    </rule>
+
+    <!-- Exclude specific files from certain rules -->
+    <rule ref="WordPress.Files.FileName.InvalidClassFileName">
+        <exclude-pattern>*/tests/*</exclude-pattern>
+    </rule>
+
+    <rule ref="WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase">
+        <exclude-pattern>*/tests/*</exclude-pattern>
+    </rule>
+
+    <!-- WordPress.com memory and performance considerations -->
+    <rule ref="WordPress.PHP.DontExtract"/>
+    <rule ref="WordPress.PHP.DisallowShortTernary"/>
+    
+</ruleset>

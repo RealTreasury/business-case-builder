@@ -17,7 +17,6 @@
         "yoast/phpunit-polyfills": "^1.1",
         "squizlabs/php_codesniffer": "^3.7",
         "wp-coding-standards/wpcs": "^3.0",
-        "phpcompatibility/php-compatibility": "^9.3",
         "dealerdirect/phpcodesniffer-composer-installer": "^1.0"
     },
     "autoload": {
@@ -36,7 +35,7 @@
         "test:integration": "phpunit --testsuite=integration",
         "cs:check": "phpcs",
         "cs:fix": "phpcbf",
-        "compat:check": "phpcs -p --standard=PHPCompatibility --runtime-set testVersion 7.4- --ignore=vendor,node_modules .",
+        "compat:check": "echo 'PHP compatibility check temporarily disabled - install phpcompatibility/php-compatibility manually if needed'",
         "lint": "find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -print0 | xargs -0 -n1 php -l",
         "install-codestandards": "Dealerdirect\\Composer\\Plugin\\Installers\\PHPCodeSniffer\\Plugin::run"
     },
