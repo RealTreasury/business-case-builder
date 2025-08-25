@@ -936,10 +936,18 @@ class RTBCB_Plugin {
                 } catch ( Exception $e ) {
                     rtbcb_log_memory_usage( 'exception_occurred' );
                     rtbcb_log_error( 'LLM generation failed', $e->getMessage() );
+                    // Clean up memory before error response
+                    if ( function_exists( 'gc_collect_cycles' ) ) {
+                        gc_collect_cycles();
+                    }
                     rtbcb_send_json_error( 'llm_generation_exception', __( 'Failed to generate business case analysis.', 'rtbcb' ), 500 );
                 } catch ( Error $e ) {
                     rtbcb_log_memory_usage( 'fatal_error_occurred' );
                     rtbcb_log_error( 'LLM generation fatal error', $e->getMessage() );
+                    // Clean up memory before error response
+                    if ( function_exists( 'gc_collect_cycles' ) ) {
+                        gc_collect_cycles();
+                    }
                     rtbcb_send_json_error( 'llm_generation_error', __( 'Failed to generate business case analysis.', 'rtbcb' ), 500 );
                 }
             }
@@ -947,6 +955,10 @@ class RTBCB_Plugin {
             if ( empty( $comprehensive_analysis ) ) {
                 rtbcb_log_memory_usage( 'empty_analysis' );
                 rtbcb_log_error( 'LLM returned empty analysis', $user_inputs );
+                // Clean up memory before error response
+                if ( function_exists( 'gc_collect_cycles' ) ) {
+                    gc_collect_cycles();
+                }
                 rtbcb_send_json_error( 'empty_analysis', __( 'Failed to generate business case analysis.', 'rtbcb' ), 500 );
             }
 
@@ -1047,6 +1059,11 @@ class RTBCB_Plugin {
             rtbcb_log_memory_usage( 'before_response' );
 
             wp_send_json_success( $response_data );
+            
+            // Clean up memory after successful response (note: this may not execute if connection is closed)
+            if ( function_exists( 'gc_collect_cycles' ) ) {
+                gc_collect_cycles();
+            }
 
         } catch ( Exception $e ) {
             rtbcb_log_memory_usage( 'exception_occurred' );
@@ -1054,6 +1071,10 @@ class RTBCB_Plugin {
                 'Ajax exception',
                 $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine()
             );
+            // Clean up memory before error response
+            if ( function_exists( 'gc_collect_cycles' ) ) {
+                gc_collect_cycles();
+            }
             rtbcb_send_json_error(
                 'ajax_exception',
                 __( 'An error occurred while generating your business case. Please try again.', 'rtbcb' ),
@@ -1065,6 +1086,10 @@ class RTBCB_Plugin {
                 'Ajax fatal error',
                 $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine()
             );
+            // Clean up memory before error response
+            if ( function_exists( 'gc_collect_cycles' ) ) {
+                gc_collect_cycles();
+            }
             rtbcb_send_json_error(
                 'ajax_fatal_error',
                 __( 'A system error occurred. Please contact support.', 'rtbcb' ),
