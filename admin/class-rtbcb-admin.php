@@ -78,6 +78,7 @@ class RTBCB_Admin {
                         'dataHealth'    => wp_create_nonce( 'rtbcb_data_health_checks' ),
                         'ragTesting'    => wp_create_nonce( 'rtbcb_rag_testing' ),
                         'saveSettings'  => wp_create_nonce( 'rtbcb_save_dashboard_settings' ),
+                        'roiCalculator' => wp_create_nonce( 'rtbcb_roi_calculator_test' ),
                     ],
                     'strings' => [
                         'generating'       => __( 'Generating...', 'rtbcb' ),

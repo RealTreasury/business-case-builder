@@ -166,9 +166,18 @@
             $(document).on('click.rtbcb', '[data-action="run-rag-test"]', function(e) {
                 e.preventDefault();
                 try {
-                    Dashboard.runRagQuery();
+                    Dashboard.runRagTest();
                 } catch (err) {
                     console.error('Error running RAG test:', err);
+                }
+            });
+
+            $(document).on('click.rtbcb', '#calculate-roi', function(e) {
+                e.preventDefault();
+                try {
+                    Dashboard.calculateRoiTest();
+                } catch (err) {
+                    console.error('Error calculating ROI:', err);
                 }
             });
 
@@ -1214,6 +1223,37 @@
             });
         },
 
+        runRagTest() {
+            const query = $('#rtbcb-rag-query').val().trim();
+            const topK = parseInt($('#rtbcb-rag-top-k').val(), 10) || 5;
+            if (!query) {
+                this.showNotification('Please enter a query', 'error');
+                return;
+            }
+
+            const button = $('[data-action="run-rag-test"]').prop('disabled', true);
+            $.post(rtbcbDashboard.ajaxurl, {
+                action: 'rtbcb_run_rag_test',
+                nonce: rtbcbDashboard.nonces.ragTesting,
+                queries: [query],
+                topK: topK,
+                evaluationMode: 'similarity'
+            }).done((response) => {
+                if (response.success) {
+                    this.showNotification('RAG test completed', 'success');
+                } else {
+                    this.showNotification(response.data?.message || rtbcbDashboard.strings.error, 'error');
+                }
+            }).fail((jqXHR, textStatus, errorThrown) => {
+                const detail = jqXHR?.responseJSON?.data?.detail || errorThrown || textStatus;
+                const msg = `${rtbcbDashboard.strings.error}: ${detail}`;
+                console.error('[RAG Test] AJAX error:', textStatus, errorThrown, jqXHR?.responseText);
+                this.showNotification(msg, 'error');
+            }).always(() => {
+                button.prop('disabled', false);
+            });
+        },
+
         cancelRagQuery() {
             if (this.ragRequest) {
                 this.ragRequest.abort();
@@ -1336,6 +1376,34 @@
                 console.error('[RAG] Index rebuild error:', textStatus, errorThrown, jqXHR?.responseText);
             }).always(() => {
                 btn.prop('disabled', false);
+            });
+        },
+
+        // ROI Calculator test
+        calculateRoiTest() {
+            const button = $('#calculate-roi').prop('disabled', true);
+            const roiData = {};
+            $('#roi-calculator').find('input, select').each(function() {
+                roiData[this.id] = $(this).val();
+            });
+
+            $.post(rtbcbDashboard.ajaxurl, {
+                action: 'rtbcb_calculate_roi_test',
+                nonce: rtbcbDashboard.nonces.roiCalculator,
+                roi_data: roiData
+            }).done((response) => {
+                if (response.success) {
+                    this.showNotification('ROI calculated', 'success');
+                } else {
+                    this.showNotification(response.data?.message || rtbcbDashboard.strings.error, 'error');
+                }
+            }).fail((jqXHR, textStatus, errorThrown) => {
+                const detail = jqXHR?.responseJSON?.data?.detail || errorThrown || textStatus;
+                const msg = `${rtbcbDashboard.strings.error}: ${detail}`;
+                console.error('[ROI Test] AJAX error:', textStatus, errorThrown, jqXHR?.responseText);
+                this.showNotification(msg, 'error');
+            }).always(() => {
+                button.prop('disabled', false);
             });
         },
 
@@ -1645,7 +1713,11 @@
             'test_rag_query': 'dashboard',
             'run_rag_test': 'ragTesting',
             'run_api_health_tests': 'apiHealth',
-            'api_health_ping': 'apiHealth'
+            'api_health_ping': 'apiHealth',
+            'calculate_roi_test': 'roiCalculator',
+            'run_data_health_checks': 'dataHealth',
+            'generate_preview_report': 'reportPreview',
+            'save_dashboard_settings': 'saveSettings'
         };
         return actionNonceMap[action] || 'dashboard';
     };
