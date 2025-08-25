@@ -776,10 +776,11 @@
             const errorContent = $('#error-content');
             const errorDebug = $('#error-debug');
 
-            errorContent.html(`<strong>Error:</strong> ${message}`);
+            const safeMessage = $('<div/>').text(message).html();
+            errorContent.html(`<strong>Error:</strong> ${safeMessage}`);
 
             if (Object.keys(debugInfo).length > 0) {
-                errorDebug.html(JSON.stringify(debugInfo, null, 2)).show();
+                errorDebug.text(JSON.stringify(debugInfo, null, 2)).show();
             } else {
                 errorDebug.hide();
             }
@@ -1070,11 +1071,15 @@
         },
 
         showNotification(message, type = 'info') {
+            const allowedTypes = ['success', 'error', 'warning', 'info'];
+            const safeType = allowedTypes.includes(type) ? type : 'info';
+            const safeMessage = $('<div/>').text(message).html();
+
             // Create notification element
             const notification = $(`
-                <div class="rtbcb-notification rtbcb-${type}">
-                    <span class="dashicons dashicons-${this.getNotificationIcon(type)}"></span>
-                    <span class="message">${message}</span>
+                <div class="rtbcb-notification rtbcb-${safeType}">
+                    <span class="dashicons dashicons-${this.getNotificationIcon(safeType)}"></span>
+                    <span class="message">${safeMessage}</span>
                     <button class="dismiss">&times;</button>
                 </div>
             `);
@@ -1481,7 +1486,7 @@
             row.find('.rtbcb-last-tested').text(result.last_tested || '');
             row.find('.rtbcb-response-time').text(result.response_time ? `${result.response_time} ms` : '');
             const msg = result.message || '';
-            row.find('.rtbcb-message').html(msg);
+            row.find('.rtbcb-message').text(msg);
             $(`#rtbcb-details-${component} pre`).text(JSON.stringify(result.details || {}, null, 2));
         },
 
@@ -1529,7 +1534,8 @@
             }).fail((jqXHR, textStatus, errorThrown) => {
                 const detail = jqXHR?.responseJSON?.data?.detail || errorThrown || textStatus;
                 const msg = `${rtbcbDashboard.strings.error}: ${detail}`;
-                $('#rtbcb-data-health-results').html(`<tr><td colspan="3">${msg}</td></tr>`);
+                const safeMsg = $('<div/>').text(msg).html();
+                $('#rtbcb-data-health-results').html(`<tr><td colspan="3">${safeMsg}</td></tr>`);
                 this.showNotification(msg, 'error');
                 console.error('[Data Health] Request error:', textStatus, errorThrown, jqXHR?.responseText);
             }).always(() => {
