@@ -63,6 +63,10 @@ class RTBCB_Admin {
                 RTBCB_VERSION
             );
 
+            // Remove any legacy dashboard scripts to prevent conflicts.
+            wp_dequeue_script( 'rtbcb-dashboard' );
+            wp_deregister_script( 'rtbcb-dashboard' );
+
             wp_register_script(
                 'rtbcb-unified-dashboard',
                 RTBCB_URL . 'admin/js/unified-test-dashboard.js',
