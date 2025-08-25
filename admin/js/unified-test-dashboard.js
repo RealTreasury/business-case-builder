@@ -496,7 +496,12 @@
 
             this.makeRequest(requestData)
                 .then(response => {
-                    this.showNotification('Settings saved successfully', 'success');
+                    if (response.api_valid) {
+                        this.showNotification(rtbcbDashboard.strings?.validApiKeySaved || 'Valid API key saved', 'success');
+                    } else {
+                        this.showError(rtbcbDashboard.strings?.apiKeyValidationFailed || 'API key validation failed');
+                    }
+                    this.updateApiKeyStatus(!!response.api_valid);
                 })
                 .catch(error => {
                     console.error('Settings save error:', error);
@@ -515,6 +520,19 @@
                 $input.attr('type', 'password');
                 $button.text('Show');
             }
+        },
+
+        updateApiKeyStatus(isValid) {
+            const $status = $('#rtbcb-api-key-status');
+            $status.toggleClass('status-good', isValid);
+            $status.toggleClass('status-error', !isValid);
+            $status.find('.dashicons')
+                .toggleClass('dashicons-yes-alt', isValid)
+                .toggleClass('dashicons-warning', !isValid);
+            $status.find('.status-text').text(isValid ?
+                (rtbcbDashboard.strings?.valid || 'Valid') :
+                (rtbcbDashboard.strings?.invalid || 'Invalid')
+            );
         },
 
         // Validation methods

@@ -2170,9 +2170,20 @@ function rtbcb_save_dashboard_settings() {
         update_option( $option, $value );
     }
 
+    $api_valid = false;
+    if ( $openai_key ) {
+        $test      = RTBCB_API_Tester::test_connection( $openai_key );
+        $api_valid = ! empty( $test['success'] );
+    }
+
     error_log( 'rtbcb_save_dashboard_settings: settings saved' );
 
-    wp_send_json_success( [ 'message' => __( 'Settings saved.', 'rtbcb' ) ] );
+    wp_send_json_success(
+        [
+            'message'   => __( 'Settings saved.', 'rtbcb' ),
+            'api_valid' => $api_valid,
+        ]
+    );
 }
 
 /**

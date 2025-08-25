@@ -1041,6 +1041,10 @@ $last_index_display = $last_indexed ? $last_indexed : __( 'Never', 'rtbcb' );
                         <td>
                             <input type="password" id="rtbcb_openai_api_key" name="rtbcb_openai_api_key" value="<?php echo esc_attr( $api_key ); ?>" class="regular-text" autocomplete="off" />
                             <button type="button" class="button button-secondary" data-action="toggle-api-key"><?php esc_html_e( 'Show', 'rtbcb' ); ?></button>
+                            <span id="rtbcb-api-key-status" class="rtbcb-status-indicator rtbcb-api-key-status <?php echo esc_attr( $api_valid ? 'status-good' : 'status-error' ); ?>">
+                                <span class="dashicons <?php echo esc_attr( $api_valid ? 'dashicons-yes-alt' : 'dashicons-warning' ); ?>"></span>
+                                <span class="status-text"><?php echo esc_html( $api_valid ? __( 'Valid', 'rtbcb' ) : __( 'Invalid', 'rtbcb' ) ); ?></span>
+                            </span>
                         </td>
                     </tr>
                     <tr>
