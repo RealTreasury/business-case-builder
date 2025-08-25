@@ -165,8 +165,14 @@
             // Toggle API key visibility
             $(document).on('click.rtbcb', '#rtbcb-toggle-api-key', function() {
                 const $input = $('#rtbcb_openai_api_key');
-                const isPassword = $input.attr('type') === 'password';
-                $input.attr('type', isPassword ? 'text' : 'password');
+                const input = $input[0];
+                const currentValue = $input.val();
+                const isPassword = input.type === 'password';
+
+                // Toggle using DOM property to ensure value persists
+                input.type = isPassword ? 'text' : 'password';
+                $input.val(currentValue);
+
                 $(this).text(isPassword ? rtbcbDashboard.strings.hide : rtbcbDashboard.strings.show);
             });
         },
