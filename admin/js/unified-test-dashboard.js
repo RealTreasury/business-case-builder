@@ -94,84 +94,87 @@
             // Remove any existing handlers to prevent duplicates
             $(document).off('.rtbcb-dashboard');
             
+            // Store reference to Dashboard object for event handlers
+            const self = this;
+            
             // Tab navigation
-            $(document).on('click.rtbcb-dashboard', '.rtbcb-test-tabs .nav-tab', (e) => {
+            $(document).on('click.rtbcb-dashboard', '.rtbcb-test-tabs .nav-tab', function(e) {
                 e.preventDefault();
                 const tab = $(e.currentTarget).data('tab');
                 if (tab) {
-                    this.switchTab(tab);
+                    self.switchTab(tab);
                 }
             });
 
             // Company Overview actions
-            $(document).on('click.rtbcb-dashboard', '[data-action="run-company-overview"]', (e) => {
+            $(document).on('click.rtbcb-dashboard', '[data-action="run-company-overview"]', function(e) {
                 e.preventDefault();
-                this.generateCompanyOverview();
+                self.generateCompanyOverview();
             });
 
-            $(document).on('click.rtbcb-dashboard', '[data-action="clear-results"]', (e) => {
+            $(document).on('click.rtbcb-dashboard', '[data-action="clear-results"]', function(e) {
                 e.preventDefault();
-                this.clearResults();
+                self.clearResults();
             });
 
             // LLM Test actions
-            $(document).on('click.rtbcb-dashboard', '[data-action="run-llm-test"]', (e) => {
+            $(document).on('click.rtbcb-dashboard', '[data-action="run-llm-test"]', function(e) {
                 e.preventDefault();
-                this.runLLMTest();
+                self.runLLMTest();
             });
 
             // RAG System actions
-            $(document).on('click.rtbcb-dashboard', '[data-action="run-rag-test"]', (e) => {
+            $(document).on('click.rtbcb-dashboard', '[data-action="run-rag-test"]', function(e) {
                 e.preventDefault();
-                this.runRagTest();
+                self.runRagTest();
             });
 
-            $(document).on('click.rtbcb-dashboard', '[data-action="rebuild-rag-index"]', (e) => {
+            $(document).on('click.rtbcb-dashboard', '[data-action="rebuild-rag-index"]', function(e) {
                 e.preventDefault();
-                this.rebuildRagIndex();
+                self.rebuildRagIndex();
             });
 
             // API Health actions
-            $(document).on('click.rtbcb-dashboard', '[data-action="api-health-ping"]', (e) => {
+            $(document).on('click.rtbcb-dashboard', '[data-action="api-health-ping"]', function(e) {
                 e.preventDefault();
-                this.runAllApiTests();
+                self.runAllApiTests();
             });
 
             // ROI Calculator actions
-            $(document).on('click.rtbcb-dashboard', '[data-action="calculate-roi"]', (e) => {
+            $(document).on('click.rtbcb-dashboard', '[data-action="calculate-roi"]', function(e) {
                 e.preventDefault();
-                this.calculateROI();
+                self.calculateROI();
             });
 
             // Settings actions
-            $(document).on('submit.rtbcb-dashboard', '#rtbcb-dashboard-settings-form', (e) => {
+            $(document).on('submit.rtbcb-dashboard', '#rtbcb-dashboard-settings-form', function(e) {
                 e.preventDefault();
-                this.saveSettings();
+                self.saveSettings();
             });
 
-            $(document).on('click.rtbcb-dashboard', '[data-action="toggle-api-key"]', (e) => {
+            $(document).on('click.rtbcb-dashboard', '[data-action="toggle-api-key"]', function(e) {
                 e.preventDefault();
-                this.toggleApiKeyVisibility();
+                self.toggleApiKeyVisibility();
             });
 
             // Input validation
-            $(document).on('input.rtbcb-dashboard', '#company-name-input', debounce(() => {
-                this.validateCompanyInput();
+            $(document).on('input.rtbcb-dashboard', '#company-name-input', debounce(function() {
+                self.validateCompanyInput();
             }, 300));
 
             // Temperature slider
-            $(document).on('input.rtbcb-dashboard', '#llm-temperature', (e) => {
+            $(document).on('input.rtbcb-dashboard', '#llm-temperature', function(e) {
                 $('#llm-temperature-value').text($(e.target).val());
             });
 
             // Model selection
-            $(document).on('change.rtbcb-dashboard', 'input[name="test-models[]"]', () => {
-                this.validateLLMInputs();
+            $(document).on('change.rtbcb-dashboard', 'input[name="test-models[]"]', function() {
+                self.validateLLMInputs();
             });
 
             // RAG query input
-            $(document).on('input.rtbcb-dashboard', '#rtbcb-rag-query', debounce(() => {
-                this.validateRagQuery();
+            $(document).on('input.rtbcb-dashboard', '#rtbcb-rag-query', debounce(function() {
+                self.validateRagQuery();
             }, 300));
 
             console.log('Events bound successfully');
