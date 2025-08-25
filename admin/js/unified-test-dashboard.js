@@ -64,12 +64,14 @@
         startTime: null,
         currentRequest: null,
         charts: {},
+        apiKeyValid: false,
 
         // Initialize dashboard
         init() {
             console.log('Dashboard initializing...');
-            
+
             try {
+                this.apiKeyValid = $('#rtbcb_openai_api_key').val().trim().length > 0;
                 this.bindEvents();
                 this.initializeTabs();
                 this.setupValidation();
@@ -496,10 +498,14 @@
 
             this.makeRequest(requestData)
                 .then(response => {
-                    this.showNotification('Settings saved successfully', 'success');
+                    this.showNotification(response?.message || 'Settings saved successfully', 'success');
+                    this.apiKeyValid = $('#rtbcb_openai_api_key').val().trim().length > 0;
+                    this.validateCompanyInput();
                 })
                 .catch(error => {
                     console.error('Settings save error:', error);
+                    this.apiKeyValid = false;
+                    $('[data-action="run-company-overview"]').prop('disabled', true);
                     this.showError(error.message || 'Failed to save settings');
                 });
         },
@@ -520,8 +526,8 @@
         // Validation methods
         validateCompanyInput() {
             const companyName = $('#company-name-input').val().trim();
-            const isValid = companyName.length >= 2;
-            
+            const isValid = companyName.length >= 2 && this.apiKeyValid;
+
             $('[data-action="run-company-overview"]').prop('disabled', !isValid || this.isGenerating);
             
             if (companyName.length > 0 && companyName.length < 2) {
