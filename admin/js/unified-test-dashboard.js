@@ -1154,9 +1154,11 @@
                     circuitBreaker.recordFailure();
                     this.showNotification(res.data?.message || rtbcbDashboard.strings.error, 'error');
                 }
-            }).fail(() => {
+            }).fail((jqXHR, textStatus, errorThrown) => {
                 circuitBreaker.recordFailure();
-                this.showNotification(rtbcbDashboard.strings.error, 'error');
+                const detail = jqXHR?.responseJSON?.data?.detail || errorThrown || textStatus;
+                this.showNotification(`${rtbcbDashboard.strings.error}: ${detail}`, 'error');
+                console.error('[RAG] Retrieval error:', textStatus, errorThrown, jqXHR?.responseText);
             }).always(() => {
                 this.ragRequest = null;
                 $('#rtbcb-rag-progress').hide();
@@ -1279,8 +1281,12 @@
                 } else {
                     $('#rtbcb-rag-index-notice').text(res.data?.message || rtbcbDashboard.strings.rebuildFailed);
                 }
-            }).fail(() => {
-                $('#rtbcb-rag-index-notice').text(rtbcbDashboard.strings.rebuildFailed);
+            }).fail((jqXHR, textStatus, errorThrown) => {
+                const detail = jqXHR?.responseJSON?.data?.detail || errorThrown || textStatus;
+                const msg = `${rtbcbDashboard.strings.rebuildFailed}: ${detail}`;
+                $('#rtbcb-rag-index-notice').text(msg);
+                this.showNotification(msg, 'error');
+                console.error('[RAG] Index rebuild error:', textStatus, errorThrown, jqXHR?.responseText);
             }).always(() => {
                 btn.prop('disabled', false);
             });
@@ -1328,8 +1334,11 @@
                 }
             }).fail((jqXHR, textStatus, errorThrown) => {
                 circuitBreaker.recordFailure();
+                const detail = jqXHR?.responseJSON?.data?.detail || errorThrown || textStatus;
+                const msg = `${rtbcbDashboard.strings.error}: ${detail}`;
+                this.showNotification(msg, 'error');
                 console.error('[API Health] Request error during API tests:', textStatus, errorThrown, jqXHR.responseText);
-                $('#rtbcb-api-health-notice').text(rtbcbDashboard.strings.error);
+                $('#rtbcb-api-health-notice').text(msg);
             }).always(() => {
                 $('[data-action="api-health-ping"]').prop('disabled', false);
             });
@@ -1368,8 +1377,11 @@
                 }
             }).fail((jqXHR, textStatus, errorThrown) => {
                 circuitBreaker.recordFailure();
+                const detail = jqXHR?.responseJSON?.data?.detail || errorThrown || textStatus;
+                const msg = `${rtbcbDashboard.strings.error}: ${detail}`;
+                this.showNotification(msg, 'error');
                 console.error(`[API Health] Request error during API test for ${component}:`, textStatus, errorThrown, jqXHR.responseText);
-                $('#rtbcb-api-health-notice').text(rtbcbDashboard.strings.error);
+                $('#rtbcb-api-health-notice').text(msg);
             }).always(() => {
                 button.prop('disabled', false);
             });
@@ -1440,8 +1452,12 @@
                 } else {
                     $('#rtbcb-data-health-results').html(`<tr><td colspan="3">${rtbcbDashboard.strings.error}</td></tr>`);
                 }
-            }).fail(() => {
-                $('#rtbcb-data-health-results').html(`<tr><td colspan="3">${rtbcbDashboard.strings.error}</td></tr>`);
+            }).fail((jqXHR, textStatus, errorThrown) => {
+                const detail = jqXHR?.responseJSON?.data?.detail || errorThrown || textStatus;
+                const msg = `${rtbcbDashboard.strings.error}: ${detail}`;
+                $('#rtbcb-data-health-results').html(`<tr><td colspan="3">${msg}</td></tr>`);
+                this.showNotification(msg, 'error');
+                console.error('[Data Health] Request error:', textStatus, errorThrown, jqXHR?.responseText);
             }).always(() => {
                 button.prop('disabled', false);
             });
@@ -1460,8 +1476,11 @@
                 } else {
                     this.showNotification(response.data?.message || rtbcbDashboard.strings.error, 'error');
                 }
-            }).fail(() => {
-                this.showNotification(rtbcbDashboard.strings.error, 'error');
+            }).fail((jqXHR, textStatus, errorThrown) => {
+                const detail = jqXHR?.responseJSON?.data?.detail || errorThrown || textStatus;
+                const msg = `${rtbcbDashboard.strings.error}: ${detail}`;
+                this.showNotification(msg, 'error');
+                console.error('[Report Preview] AJAX error:', textStatus, errorThrown, jqXHR?.responseText);
             }).always(() => {
                 button.prop('disabled', false);
             });
@@ -1492,9 +1511,11 @@
                 } else {
                     this.showNotification(response.data?.message || rtbcbDashboard.strings.error, 'error');
                 }
-            }).fail((jqXHR, textStatus) => {
-                console.error('[RTBCB] Save settings AJAX error', textStatus);
-                this.showNotification(rtbcbDashboard.strings.error, 'error');
+            }).fail((jqXHR, textStatus, errorThrown) => {
+                const detail = jqXHR?.responseJSON?.data?.detail || errorThrown || textStatus;
+                const msg = `${rtbcbDashboard.strings.error}: ${detail}`;
+                console.error('[RTBCB] Save settings AJAX error', textStatus, errorThrown, jqXHR?.responseText);
+                this.showNotification(msg, 'error');
             }).always(() => {
                 $button.prop('disabled', false);
             });
