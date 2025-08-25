@@ -1288,7 +1288,9 @@
         },
 
         runAllApiTests() {
+            console.log('[API Health] Initiating all API tests');
             if (!circuitBreaker.canExecute()) {
+                console.error('[API Health] Circuit breaker open. Aborting all API tests.');
                 this.showNotification(rtbcbDashboard.strings.error, 'error');
                 return;
             }
@@ -1306,6 +1308,7 @@
             }).done((response) => {
                 if (response.success) {
                     circuitBreaker.recordSuccess();
+                    console.log('[API Health] All API tests succeeded', response.data);
                     const data = response.data;
                     this.apiResults = data.results;
                     Object.keys(data.results).forEach(key => {
@@ -1314,10 +1317,13 @@
                     this.updateApiSummary();
                 } else {
                     circuitBreaker.recordFailure();
+                    const errMsg = response?.data?.message || rtbcbDashboard.strings.error;
+                    console.error('[API Health] API tests failed:', errMsg, response);
                     $('#rtbcb-api-health-notice').text(rtbcbDashboard.strings.error);
                 }
-            }).fail(() => {
+            }).fail((jqXHR, textStatus, errorThrown) => {
                 circuitBreaker.recordFailure();
+                console.error('[API Health] Request error during API tests:', textStatus, errorThrown, jqXHR.responseText);
                 $('#rtbcb-api-health-notice').text(rtbcbDashboard.strings.error);
             }).always(() => {
                 $('[data-action="api-health-ping"]').prop('disabled', false);
@@ -1325,7 +1331,9 @@
         },
 
         runSingleApiTest(component) {
+            console.log(`[API Health] Initiating API test for ${component}`);
             if (!circuitBreaker.canExecute()) {
+                console.error('[API Health] Circuit breaker open. Aborting API test for', component);
                 this.showNotification(rtbcbDashboard.strings.error, 'error');
                 return;
             }
@@ -1342,16 +1350,20 @@
             }).done((response) => {
                 if (response.success) {
                     circuitBreaker.recordSuccess();
+                    console.log(`[API Health] API test for ${component} succeeded`, response.data);
                     const res = response.data.result;
                     this.apiResults[component] = res;
                     this.updateApiRow(component, res, response.data.timestamp);
                     this.updateApiSummary();
                 } else {
                     circuitBreaker.recordFailure();
+                    const errMsg = response?.data?.message || rtbcbDashboard.strings.error;
+                    console.error(`[API Health] API test for ${component} failed:`, errMsg, response);
                     $('#rtbcb-api-health-notice').text(rtbcbDashboard.strings.error);
                 }
-            }).fail(() => {
+            }).fail((jqXHR, textStatus, errorThrown) => {
                 circuitBreaker.recordFailure();
+                console.error(`[API Health] Request error during API test for ${component}:`, textStatus, errorThrown, jqXHR.responseText);
                 $('#rtbcb-api-health-notice').text(rtbcbDashboard.strings.error);
             }).always(() => {
                 button.prop('disabled', false);
