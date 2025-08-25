@@ -9,6 +9,10 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+if ( ! defined( 'RTBCB_UNIFIED_TESTS_SLUG' ) ) {
+    define( 'RTBCB_UNIFIED_TESTS_SLUG', 'rtbcb-unified-tests' );
+}
+
 /**
  * Enhanced admin class with full feature integration.
  */
@@ -46,10 +50,7 @@ class RTBCB_Admin {
             [],
             RTBCB_VERSION
         );
-
-        $page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
-
-        if ( 'rtbcb-unified-tests' === $page ) {
+        if ( false !== strpos( $hook, RTBCB_UNIFIED_TESTS_SLUG ) || RTBCB_UNIFIED_TESTS_SLUG === $page ) {
             wp_enqueue_style(
                 'rtbcb-unified-dashboard',
                 RTBCB_URL . 'admin/css/unified-test-dashboard.css',
@@ -57,7 +58,7 @@ class RTBCB_Admin {
                 RTBCB_VERSION
             );
 
-            wp_enqueue_script(
+            wp_register_script(
                 'rtbcb-unified-dashboard',
                 RTBCB_URL . 'admin/js/unified-test-dashboard.js',
                 [ 'jquery', 'chart-js' ],
@@ -117,10 +118,12 @@ class RTBCB_Admin {
                         'lastResults' => get_option( 'rtbcb_last_api_test', [] ),
                     ],
                     'urls'     => [
-                        'settings' => admin_url( 'admin.php?page=rtbcb-unified-tests#settings' ),
+                        'settings' => admin_url( 'admin.php?page=' . RTBCB_UNIFIED_TESTS_SLUG . '#settings' ),
                     ],
                 ]
             );
+
+            wp_enqueue_script( 'rtbcb-unified-dashboard' );
         }
     }
 
@@ -172,7 +175,7 @@ class RTBCB_Admin {
             __( 'Unified Test Dashboard', 'rtbcb' ),
             __( 'Unified Tests', 'rtbcb' ),
             'manage_options',
-            'rtbcb-unified-tests',
+            RTBCB_UNIFIED_TESTS_SLUG,
             [ $this, 'render_unified_test_dashboard' ]
         );
 
@@ -292,7 +295,7 @@ class RTBCB_Admin {
             add_query_arg(
                 'settings-status',
                 'success',
-                admin_url( 'admin.php?page=rtbcb-unified-tests' )
+                admin_url( 'admin.php?page=' . RTBCB_UNIFIED_TESTS_SLUG )
             )
         );
         exit;
