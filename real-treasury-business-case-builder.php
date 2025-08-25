@@ -530,7 +530,23 @@ class RTBCB_Plugin {
             extract( $args );
             include $template_path;
         } else {
-            echo '<div class="rtbcb-error">' . esc_html__( 'Template not found.', 'rtbcb' ) . '</div>';
+            // Log the missing template for debugging
+            rtbcb_log_error( 'Template not found', [
+                'template' => $template,
+                'path' => $template_path,
+                'requested_args' => array_keys( $args )
+            ] );
+            
+            // Provide a more helpful error message
+            if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+                echo '<div class="rtbcb-error">' . 
+                     esc_html( sprintf( __( 'Template not found: %s', 'rtbcb' ), $template ) ) . 
+                     '</div>';
+            } else {
+                echo '<div class="rtbcb-error">' . 
+                     esc_html__( 'A display error occurred. Please contact support.', 'rtbcb' ) . 
+                     '</div>';
+            }
         }
     }
 
@@ -1066,12 +1082,20 @@ class RTBCB_Plugin {
         
         // Fall back to basic template if comprehensive template doesn't exist
         if ( ! file_exists( $template_path ) ) {
+            rtbcb_log_error( 'Comprehensive report template not found, falling back to basic template', [
+                'missing_path' => $template_path
+            ] );
             $template_path = RTBCB_DIR . 'templates/report-template.php';
         }
 
         if ( ! file_exists( $template_path ) ) {
-            error_log( 'RTBCB: No report template found at: ' . $template_path );
-            return '';
+            rtbcb_log_error( 'No report template found', [
+                'comprehensive_path' => RTBCB_DIR . 'templates/comprehensive-report-template.php',
+                'basic_path' => $template_path
+            ] );
+            return '<div class="rtbcb-error">' . 
+                   esc_html__( 'Report template not available. Please contact support.', 'rtbcb' ) . 
+                   '</div>';
         }
 
         $business_case_data = is_array( $business_case_data ) ? $business_case_data : [];

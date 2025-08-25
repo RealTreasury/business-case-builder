@@ -419,14 +419,18 @@ class BusinessCaseBuilder {
                 console.error('RTBCB: Server error response:', errorText);
 
                 let errorMessage = `Server responded with status ${response.status}`;
+                let errorCode = '';
                 try {
                     const errorJson = JSON.parse(errorText);
                     errorMessage = errorJson.data?.message || errorMessage;
+                    errorCode = errorJson.data?.code || '';
                 } catch (parseError) {
                     console.error('RTBCB: Could not parse error response as JSON:', parseError);
                 }
 
-                throw new Error(errorMessage);
+                const error = new Error(errorMessage);
+                error.code = errorCode;
+                throw error;
             }
 
             const result = await response.json();
@@ -437,21 +441,26 @@ class BusinessCaseBuilder {
                 this.showResults(result.data);
             } else {
                 const errorMessage = result.data?.message || 'Failed to generate business case';
+                const errorCode = result.data?.code || '';
                 console.error('RTBCB: Business case generation failed:', errorMessage);
-                throw new Error(errorMessage);
+                const error = new Error(errorMessage);
+                error.code = errorCode;
+                throw error;
             }
         } catch (error) {
             console.error('RTBCB: Submission error details:', {
                 message: error.message,
+                code: error.code,
                 stack: error.stack,
                 type: error.constructor.name
             });
 
-            const displayMessage = error.name === 'TypeError'
-                ? 'Network error. Please check your connection and try again.'
-                : error.message;
+            let displayMessage = error.message;
+            if (error.name === 'TypeError') {
+                displayMessage = 'Network error. Please check your connection and try again.';
+            }
 
-            this.showError(displayMessage);
+            this.showError(displayMessage, error.code);
         }
     }
 
@@ -735,28 +744,70 @@ class BusinessCaseBuilder {
         `;
     }
 
-    showError(message) {
+    showError(message, errorCode = '') {
         // Clear progress
         const progressOverlay = document.querySelector('.rtbcb-progress-overlay');
         if (progressOverlay) {
             progressOverlay.remove();
         }
 
+        // Determine user-friendly message and action based on error
+        let displayMessage = message;
+        let actionText = 'Try Again';
+        let actionHandler = () => location.reload();
+
+        if (errorCode === 'no_api_key' || message.includes('API key')) {
+            displayMessage = 'OpenAI API key is not configured. Please contact your administrator to set up the API key.';
+            actionText = 'Contact Administrator';
+            actionHandler = () => window.open('mailto:admin@yourcompany.com?subject=BCB API Key Configuration', '_blank');
+        } else if (errorCode === 'llm_generation_failed' || message.includes('Failed to generate')) {
+            displayMessage = 'We encountered an issue generating your business case. This might be due to high demand or a temporary service issue.';
+            actionText = 'Try Again';
+            actionHandler = () => {
+                // Reset the form instead of reloading
+                const formContainer = this.form.closest('.rtbcb-form-container');
+                const modalBody = this.form.closest('.rtbcb-modal-body');
+                if (formContainer && modalBody) {
+                    modalBody.innerHTML = '';
+                    modalBody.appendChild(formContainer);
+                    formContainer.style.display = 'block';
+                    this.reinitialize();
+                }
+            };
+        } else if (message.includes('Security check failed')) {
+            displayMessage = 'Your session has expired. Please refresh the page and try again.';
+            actionText = 'Refresh Page';
+            actionHandler = () => location.reload();
+        } else if (message.includes('server') || message.includes('500')) {
+            displayMessage = 'A temporary server issue occurred. Please try again in a few moments.';
+        }
+
         // Show error in modal
         const modalBody = this.form.closest('.rtbcb-modal-body');
         if (modalBody) {
-            const safeMessage = this.escapeHTML(message);
+            const safeMessage = this.escapeHTML(displayMessage);
             const errorHTML = `
                 <div class="rtbcb-error-container" style="padding: 40px; text-align: center;">
                     <div class="rtbcb-error-icon" style="font-size: 48px; color: #ef4444; margin-bottom: 20px;">⚠️</div>
                     <h3 style="color: #ef4444; margin-bottom: 16px;">Unable to Generate Business Case</h3>
-                    <p style="color: #4b5563; margin-bottom: 24px;">${safeMessage}</p>
-                    <button type="button" class="rtbcb-action-btn rtbcb-btn-primary" onclick="location.reload()">
-                        Try Again
-                    </button>
+                    <p style="color: #4b5563; margin-bottom: 24px; line-height: 1.5;">${safeMessage}</p>
+                    <div class="rtbcb-error-actions">
+                        <button type="button" class="rtbcb-action-btn rtbcb-btn-primary" style="margin-right: 10px;">
+                            ${this.escapeHTML(actionText)}
+                        </button>
+                        <button type="button" class="rtbcb-action-btn rtbcb-btn-secondary" onclick="window.closeBusinessCaseModal()">
+                            Close
+                        </button>
+                    </div>
                 </div>
             `;
             modalBody.innerHTML = errorHTML;
+            
+            // Add event listener to the action button
+            const actionButton = modalBody.querySelector('.rtbcb-btn-primary');
+            if (actionButton) {
+                actionButton.addEventListener('click', actionHandler);
+            }
         }
     }
 
