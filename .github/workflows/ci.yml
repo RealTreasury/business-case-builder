@@ -258,6 +258,8 @@ jobs:
     needs: [php-quality, phpunit-tests, javascript-quality, wordpress-com-compatibility]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
     
     steps:
     - name: Checkout code
