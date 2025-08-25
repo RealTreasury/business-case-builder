@@ -161,6 +161,14 @@
 
             // Tab navigation
             $('.rtbcb-test-tabs .nav-tab').on('click.rtbcb', this.handleTabClick.bind(this));
+
+            // Toggle API key visibility
+            $(document).on('click.rtbcb', '#rtbcb-toggle-api-key', function() {
+                const $input = $('#rtbcb_openai_api_key');
+                const isPassword = $input.attr('type') === 'password';
+                $input.attr('type', isPassword ? 'text' : 'password');
+                $(this).text(isPassword ? rtbcbDashboard.strings.hide : rtbcbDashboard.strings.show);
+            });
         },
 
         // Initialize tab system
