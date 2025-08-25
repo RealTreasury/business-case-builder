@@ -14,7 +14,7 @@ jobs:
     strategy:
       matrix:
         php-version: ['7.4', '8.0', '8.1', '8.2', '8.3']
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -258,8 +258,6 @@ jobs:
     needs: [php-quality, phpunit-tests, javascript-quality, wordpress-com-compatibility]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    permissions:
-      contents: read
     
     steps:
     - name: Checkout code
@@ -306,4 +304,5 @@ jobs:
 env:
   # WordPress.com optimization flags
   WP_ENVIRONMENT_TYPE: production
+
   WP_DEBUG: false

@@ -12,14 +12,25 @@
 ### Directory Overview
 ```
 real-treasury-business-case-builder/
+├── .editorconfig
+├── .eslintrc.json
 ├── .gitignore
 ├── .htaccess
+├── .wp-env.json
 ├── AGENTS.md
+├── DEPLOYMENT.md
 ├── README.md
 ├── readme.txt
 ├── composer.json
 ├── composer.lock
+├── cypress.config.js
+├── package.json
+├── phpcs.xml.dist
+├── phpunit.xml.dist
 ├── real-treasury-business-case-builder.php
+├── .github/
+│   └── workflows/
+│       └── ci.yml
 ├── admin/
 │   ├── AGENTS.md
 │   ├── analytics-page.php
@@ -32,9 +43,24 @@ real-treasury-business-case-builder/
 │   │   └── unified-test-dashboard.css
 │   └── js/
 │       └── unified-test-dashboard.js
+├── bin/
+│   └── install-wp-tests.sh
 ├── inc/
 │   ├── AGENTS.md
 │   ├── class-rtbcb-calculator.php
+│   ├── class-rtbcb-category-recommender.php
+│   ├── class-rtbcb-db.php
+│   ├── class-rtbcb-leads.php
+│   ├── class-rtbcb-llm.php
+│   ├── class-rtbcb-rag.php
+│   ├── class-rtbcb-router.php
+│   ├── class-rtbcb-validator.php
+│   ├── config.php
+│   ├── enhanced-ajax-handlers.php
+│   ├── helpers.php
+│   └── model-capabilities.php
+├── public/
+│   ├── AGENTS.md
 │   ├── class-rtbcb-category-recommender.php
 │   ├── class-rtbcb-db.php
 │   ├── class-rtbcb-leads.php
@@ -57,11 +83,25 @@ real-treasury-business-case-builder/
 │       ├── rtbcb.js
 │       ├── rtbcb-wizard.js
 │       └── rtbcb-report.js
+├── scripts/
+│   └── build-plugin-zip.js
 ├── templates/
 │   ├── AGENTS.md
 │   ├── business-case-form.php
 │   ├── comprehensive-report-template.php
 │   └── report-template.php
+├── tests/
+│   ├── bootstrap.php
+│   ├── run-js-tests.js
+│   ├── run-tests.sh
+│   ├── cypress/
+│   │   └── support/
+│   │       ├── commands.js
+│   │       └── e2e.js
+│   ├── unit/
+│   │   └── OpenAIErrorHandlingTest.php
+│   ├── integration/
+│   └── [existing test files...]
 ├── tests/
 │   ├── RTBCB_AjaxGenerateComprehensiveCaseErrorTest.php
 │   ├── acceptance.cy.js
@@ -191,17 +231,71 @@ Navigate to **Real Treasury → Unified Tests** in the WordPress admin to run LL
 | `rtbcb_generate_preview_report` | Build a full HTML report in the Unified Test Dashboard | Authenticated request, nonce | Sanitized report HTML |
 
 ## 5. Installation & Setup
-1. Upload the plugin directory to `wp-content/plugins/` or install the ZIP via the WordPress admin panel, then activate it.
-2. Run `composer install` in the plugin folder to fetch PHP dependencies.
-3. In the WordPress dashboard, navigate to **Real Treasury → Settings** and enter an OpenAI API key to enable LLM features.
 
-## 6. Testing
-- Run all automated checks with:
-  ```bash
-  bash tests/run-tests.sh
-  ```
-  The script executes PHP linting, unit tests, integration tests, and JavaScript tests【F:tests/run-tests.sh†L1-L80】
-- End-to-end coverage is provided via Cypress tests in [`tests/acceptance.cy.js`](tests/acceptance.cy.js)【F:tests/acceptance.cy.js†L1-L32】
+### Production Installation (WordPress.com)
+1. Download the latest release ZIP from the [releases page](https://github.com/RealTreasury/business-case-builder/releases)
+2. Upload via WordPress admin: **Plugins → Add New → Upload Plugin**
+3. Activate the plugin
+4. Navigate to **Real Treasury → Settings** and enter your OpenAI API key
+
+### Local Development Setup
+1. **Prerequisites**: Node.js 16+, PHP 7.4+, Composer
+2. **Clone and setup**:
+   ```bash
+   git clone https://github.com/RealTreasury/business-case-builder.git
+   cd business-case-builder
+   npm run setup
+   ```
+3. **Start WordPress development environment**:
+   ```bash
+   npm run wp-env:start
+   ```
+4. **Access local site**: http://localhost:8888 (admin: admin/password)
+
+## 6. Development Workflow
+
+### Quick Start Commands
+```bash
+# Setup development environment
+npm run setup
+
+# Start WordPress environment
+npm run wp-env:start
+
+# Run all tests
+npm run test
+
+# Code quality checks
+npm run lint
+
+# Build production package
+npm run build
+```
+
+### Testing Framework
+- **PHP Unit Tests**: `composer test` or `npm run test:php`
+  - PHPUnit 9.6 with WordPress test suite
+  - Coverage reporting included
+  - WordPress.com compatibility verified
+- **JavaScript Tests**: `npm run test:js`
+  - Custom test runner for existing JS tests
+- **End-to-End Tests**: `npm run test:e2e`
+  - Cypress with WordPress.com optimizations
+  - Custom commands for WordPress testing
+- **Code Quality**: 
+  - WordPress Coding Standards via `npm run lint:php`
+  - ESLint for JavaScript via `npm run lint:js`
+  - PHP compatibility checking
+
+### WordPress.com Deployment
+```bash
+# Build WordPress.com compatible package
+npm run build
+
+# Generated ZIP ready for upload in build/ directory
+```
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed WordPress.com deployment instructions.
 
 ## 7. Visual Architecture Diagram
 ```mermaid
