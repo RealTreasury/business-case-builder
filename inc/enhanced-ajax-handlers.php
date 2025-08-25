@@ -2163,6 +2163,21 @@ function rtbcb_ajax_run_llm_test() {
     }
 }
 
+/**
+ * Test a single language model with a given prompt.
+ *
+ * @param string $model_key Model identifier.
+ * @param string $prompt    Prompt content to send.
+ * @param array  $config    Configuration options.
+ *
+ * @return array {
+ *     @type string $content     Generated response text.
+ *     @type int    $tokens_used Number of tokens consumed.
+ *     @type string $model_used  Name of the model that handled the request.
+ * }
+ *
+ * @throws Exception If the API request fails or returns an invalid response.
+ */
 function rtbcb_test_single_model( $model_key, $prompt, $config ) {
     $llm = new RTBCB_LLM();
 
