@@ -181,14 +181,14 @@ $last_index_display = $last_indexed ? $last_indexed : __( 'Never', 'rtbcb' );
                 </div>
 
                 <div class="rtbcb-action-buttons">
-                    <button type="button" id="generate-company-overview" class="button button-primary" <?php disabled( ! $api_valid ); ?>>
+                    <button type="button" class="button button-primary" data-action="run-company-overview" <?php disabled( ! $api_valid ); ?>>
                         <span class="dashicons dashicons-update"></span>
                         <?php esc_html_e( 'Generate Overview', 'rtbcb' ); ?>
                     </button>
-                    <button type="button" id="clear-results" class="button">
+                    <button type="button" class="button" data-action="clear-results">
                         <?php esc_html_e( 'Clear Results', 'rtbcb' ); ?>
                     </button>
-                    <button type="button" id="export-results" class="button" disabled>
+                    <button type="button" class="button" data-action="export-results" disabled>
                         <?php esc_html_e( 'Export Results', 'rtbcb' ); ?>
                     </button>
                 </div>
@@ -212,7 +212,7 @@ $last_index_display = $last_indexed ? $last_indexed : __( 'Never', 'rtbcb' );
             <div id="debug-panel" class="rtbcb-debug-panel" style="display: none;">
                 <div class="rtbcb-debug-header">
                     <h3><?php esc_html_e( 'Debug Information', 'rtbcb' ); ?></h3>
-                    <button type="button" id="toggle-debug" class="button button-small">
+                    <button type="button" class="button button-small" data-action="toggle-debug">
                         <?php esc_html_e( 'Toggle', 'rtbcb' ); ?>
                     </button>
                 </div>
@@ -254,11 +254,11 @@ $last_index_display = $last_indexed ? $last_indexed : __( 'Never', 'rtbcb' );
                 <div class="rtbcb-results-header">
                     <h3><?php esc_html_e( 'Analysis Results', 'rtbcb' ); ?></h3>
                     <div class="rtbcb-results-actions">
-                        <button type="button" id="copy-results" class="button button-small">
+                        <button type="button" class="button button-small" data-action="copy-results">
                             <span class="dashicons dashicons-admin-page"></span>
                             <?php esc_html_e( 'Copy', 'rtbcb' ); ?>
                         </button>
-                        <button type="button" id="regenerate-results" class="button button-small">
+                        <button type="button" class="button button-small" data-action="regenerate-results">
                             <span class="dashicons dashicons-update"></span>
                             <?php esc_html_e( 'Regenerate', 'rtbcb' ); ?>
                         </button>
@@ -272,7 +272,7 @@ $last_index_display = $last_indexed ? $last_indexed : __( 'Never', 'rtbcb' );
             <div id="error-container" class="rtbcb-error-container" style="display: none;">
                 <div class="rtbcb-error-header">
                     <h3><?php esc_html_e( 'Error Details', 'rtbcb' ); ?></h3>
-                    <button type="button" id="retry-request" class="button button-primary">
+                    <button type="button" class="button button-primary" data-action="retry-request">
                         <?php esc_html_e( 'Retry', 'rtbcb' ); ?>
                     </button>
                 </div>
@@ -432,19 +432,19 @@ $last_index_display = $last_indexed ? $last_indexed : __( 'Never', 'rtbcb' );
                 </div>
 
                 <div class="rtbcb-action-buttons">
-                    <button type="button" id="calculate-roi" class="button button-primary">
+                    <button type="button" class="button button-primary" data-action="calculate-roi">
                         <span class="dashicons dashicons-calculator"></span>
                         <?php esc_html_e( 'Calculate ROI', 'rtbcb' ); ?>
                     </button>
-                    <button type="button" id="run-sensitivity-analysis" class="button">
+                    <button type="button" class="button" data-action="run-sensitivity-analysis">
                         <span class="dashicons dashicons-chart-line"></span>
                         <?php esc_html_e( 'Sensitivity Analysis', 'rtbcb' ); ?>
                     </button>
-                    <button type="button" id="compare-scenarios" class="button">
+                    <button type="button" class="button" data-action="compare-scenarios">
                         <span class="dashicons dashicons-slides"></span>
                         <?php esc_html_e( 'Compare Scenarios', 'rtbcb' ); ?>
                     </button>
-                    <button type="button" id="export-roi-results" class="button" disabled>
+                    <button type="button" class="button" data-action="export-roi-results" disabled>
                         <span class="dashicons dashicons-download"></span>
                         <?php esc_html_e( 'Export Results', 'rtbcb' ); ?>
                     </button>
@@ -456,11 +456,11 @@ $last_index_display = $last_indexed ? $last_indexed : __( 'Never', 'rtbcb' );
                 <div class="rtbcb-results-header">
                     <h3><?php esc_html_e( 'ROI Calculation Results', 'rtbcb' ); ?></h3>
                     <div class="rtbcb-results-actions">
-                        <button type="button" id="toggle-roi-details" class="button button-small">
+                        <button type="button" class="button button-small" data-action="toggle-roi-details">
                             <span class="dashicons dashicons-visibility"></span>
                             <?php esc_html_e( 'Show Details', 'rtbcb' ); ?>
                         </button>
-                        <button type="button" id="copy-roi-summary" class="button button-small">
+                        <button type="button" class="button button-small" data-action="copy-roi-summary">
                             <span class="dashicons dashicons-admin-page"></span>
                             <?php esc_html_e( 'Copy Summary', 'rtbcb' ); ?>
                         </button>
@@ -722,14 +722,12 @@ $last_index_display = $last_indexed ? $last_indexed : __( 'Never', 'rtbcb' );
                 </div>
 
                 <div class="rtbcb-action-buttons">
-                    <button type="button" id="run-llm-matrix-test" class="button button-primary" 
-                            data-action="run-llm-test" data-default-text="Run Model Matrix Test">
+                    <button type="button" class="button button-primary" data-action="run-llm-test" data-default-text="Run Model Matrix Test">
                         <span class="dashicons dashicons-networking"></span>
                         <?php esc_html_e('Run Model Matrix Test', 'rtbcb'); ?>
                     </button>
 
-                    <button type="button" id="export-llm-results" class="button" disabled
-                            data-action="export-results" data-export-type="llm">
+                    <button type="button" class="button" data-action="export-results" data-export-type="llm" disabled>
                         <span class="dashicons dashicons-download"></span>
                         <?php esc_html_e('Export Results', 'rtbcb'); ?>
                     </button>
@@ -797,7 +795,7 @@ $last_index_display = $last_indexed ? $last_indexed : __( 'Never', 'rtbcb' );
                     </span>
                     <span id="rtbcb-rag-index-size"><?php printf( esc_html__( 'Entries: %d', 'rtbcb' ), intval( $index_size ) ); ?></span>
                 </div>
-                <button type="button" id="rtbcb-rag-rebuild" class="button"><?php esc_html_e( 'Rebuild Index', 'rtbcb' ); ?></button>
+                <button type="button" class="button" data-action="rebuild-rag-index"><?php esc_html_e( 'Rebuild Index', 'rtbcb' ); ?></button>
                 <div id="rtbcb-rag-index-notice" class="rtbcb-index-notice"></div>
             </div>
 
@@ -825,11 +823,11 @@ $last_index_display = $last_indexed ? $last_indexed : __( 'Never', 'rtbcb' );
                     </label>
                 </div>
                 <div class="rtbcb-action-buttons">
-                    <button type="button" id="rtbcb-run-rag-query" class="button button-primary" disabled>
+                    <button type="button" class="button button-primary" data-action="run-rag-test" disabled>
                         <span class="dashicons dashicons-search"></span>
                         <?php esc_html_e( 'Run Retrieval', 'rtbcb' ); ?>
                     </button>
-                    <button type="button" id="rtbcb-rag-cancel" class="button" style="display: none;">
+                    <button type="button" class="button" data-action="cancel-rag-test" style="display: none;">
                         <?php esc_html_e( 'Cancel', 'rtbcb' ); ?>
                     </button>
                 </div>
@@ -850,8 +848,8 @@ $last_index_display = $last_indexed ? $last_indexed : __( 'Never', 'rtbcb' );
                     <tbody></tbody>
                 </table>
                 <div class="rtbcb-action-buttons">
-                    <button type="button" id="rtbcb-copy-rag-context" class="button" disabled><?php esc_html_e( 'Copy Context', 'rtbcb' ); ?></button>
-                    <button type="button" id="rtbcb-export-rag-results" class="button" disabled><?php esc_html_e( 'Export Results', 'rtbcb' ); ?></button>
+                    <button type="button" class="button" data-action="copy-rag-context" disabled><?php esc_html_e( 'Copy Context', 'rtbcb' ); ?></button>
+                    <button type="button" class="button" data-action="export-rag-results" disabled><?php esc_html_e( 'Export Results', 'rtbcb' ); ?></button>
                 </div>
                 <details id="rtbcb-rag-debug" class="rtbcb-debug-panel">
                     <summary><?php esc_html_e( 'Debug Info', 'rtbcb' ); ?></summary>
@@ -888,7 +886,7 @@ $last_index_display = $last_indexed ? $last_indexed : __( 'Never', 'rtbcb' );
                 <p><?php esc_html_e( 'Monitor API connectivity, rate limits, and error handling', 'rtbcb' ); ?></p>
             </div>
             <div class="rtbcb-api-controls">
-                <button type="button" id="rtbcb-run-all-api-tests" class="button button-primary" data-action="api-health-ping">
+                <button type="button" class="button button-primary" data-action="api-health-ping">
                     <span class="dashicons dashicons-update"></span>
                     <?php esc_html_e( 'Run All Tests', 'rtbcb' ); ?>
                 </button>
@@ -941,10 +939,10 @@ $last_index_display = $last_indexed ? $last_indexed : __( 'Never', 'rtbcb' );
                                 <?php echo isset( $result['message'] ) ? esc_html( $result['message'] ) : esc_html__( 'Not tested', 'rtbcb' ); ?>
                             </td>
                             <td class="rtbcb-actions">
-                                <button type="button" class="button rtbcb-retest" data-component="<?php echo esc_attr( $key ); ?>">
+                                <button type="button" class="button" data-action="api-health-retest" data-component="<?php echo esc_attr( $key ); ?>">
                                     <?php esc_html_e( 'Retest', 'rtbcb' ); ?>
                                 </button>
-                                <button type="button" class="button rtbcb-view-details" data-component="<?php echo esc_attr( $key ); ?>">
+                                <button type="button" class="button" data-action="api-health-details" data-component="<?php echo esc_attr( $key ); ?>">
                                     <?php esc_html_e( 'Details', 'rtbcb' ); ?>
                                 </button>
                             </td>
@@ -976,7 +974,7 @@ $last_index_display = $last_indexed ? $last_indexed : __( 'Never', 'rtbcb' );
                 </p>
             </div>
             <div class="rtbcb-data-health-controls">
-                <button type="button" id="rtbcb-run-data-health" class="button button-primary">
+                <button type="button" class="button button-primary" data-action="run-data-health">
                     <span class="dashicons dashicons-update"></span>
                     <?php esc_html_e( 'Run Checks', 'rtbcb' ); ?>
                 </button>
@@ -1006,7 +1004,7 @@ $last_index_display = $last_indexed ? $last_indexed : __( 'Never', 'rtbcb' );
                 <p><?php esc_html_e( 'Generate a preview of the full report.', 'rtbcb' ); ?></p>
             </div>
             <div class="rtbcb-report-controls">
-                <button type="button" id="rtbcb-generate-preview-report" class="button button-primary">
+                <button type="button" class="button button-primary" data-action="generate-preview-report">
                     <span class="dashicons dashicons-media-document"></span>
                     <?php esc_html_e( 'Generate Report', 'rtbcb' ); ?>
                 </button>
@@ -1034,7 +1032,7 @@ $last_index_display = $last_indexed ? $last_indexed : __( 'Never', 'rtbcb' );
                         </th>
                         <td>
                             <input type="password" id="rtbcb_openai_api_key" name="rtbcb_openai_api_key" value="<?php echo esc_attr( $api_key ); ?>" class="regular-text" autocomplete="off" />
-                            <button type="button" id="rtbcb-toggle-api-key" class="button button-secondary"><?php esc_html_e( 'Show', 'rtbcb' ); ?></button>
+                            <button type="button" class="button button-secondary" data-action="toggle-api-key"><?php esc_html_e( 'Show', 'rtbcb' ); ?></button>
                         </td>
                     </tr>
                     <tr>
@@ -1042,7 +1040,7 @@ $last_index_display = $last_indexed ? $last_indexed : __( 'Never', 'rtbcb' );
                             <label><?php esc_html_e( 'Diagnostics', 'rtbcb' ); ?></label>
                         </th>
                         <td>
-                            <button type="button" class="button" id="rtbcb-run-tests" data-nonce="<?php echo esc_attr( wp_create_nonce( 'rtbcb_nonce' ) ); ?>"><?php esc_html_e( 'Run Diagnostics', 'rtbcb' ); ?></button>
+                            <button type="button" class="button" data-action="run-diagnostics" data-nonce="<?php echo esc_attr( wp_create_nonce( 'rtbcb_nonce' ) ); ?>"><?php esc_html_e( 'Run Diagnostics', 'rtbcb' ); ?></button>
                             <p class="description"><?php esc_html_e( 'Verify integration and system health.', 'rtbcb' ); ?></p>
                         </td>
                     </tr>

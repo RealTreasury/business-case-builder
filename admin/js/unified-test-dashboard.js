@@ -211,6 +211,60 @@
                 }
             });
 
+            $(document).on('click.rtbcb', '[data-action="clear-results"]', function(e) {
+                e.preventDefault();
+                try {
+                    Dashboard.clearResults();
+                } catch (err) {
+                    console.error('Error clearing results:', err);
+                }
+            });
+
+            $(document).on('click.rtbcb', '[data-action="export-results"]', function(e) {
+                e.preventDefault();
+                try {
+                    Dashboard.exportResults();
+                } catch (err) {
+                    console.error('Error exporting results:', err);
+                }
+            });
+
+            $(document).on('click.rtbcb', '[data-action="copy-results"]', function(e) {
+                e.preventDefault();
+                try {
+                    Dashboard.copyResults();
+                } catch (err) {
+                    console.error('Error copying results:', err);
+                }
+            });
+
+            $(document).on('click.rtbcb', '[data-action="regenerate-results"]', function(e) {
+                e.preventDefault();
+                try {
+                    Dashboard.regenerateResults();
+                } catch (err) {
+                    console.error('Error regenerating results:', err);
+                }
+            });
+
+            $(document).on('click.rtbcb', '[data-action="toggle-debug"]', function(e) {
+                e.preventDefault();
+                try {
+                    Dashboard.toggleDebugPanel();
+                } catch (err) {
+                    console.error('Error toggling debug panel:', err);
+                }
+            });
+
+            $(document).on('click.rtbcb', '[data-action="retry-request"]', function(e) {
+                e.preventDefault();
+                try {
+                    Dashboard.retryRequest();
+                } catch (err) {
+                    console.error('Error retrying request:', err);
+                }
+            });
+
             $(document).on('click.rtbcb', '[data-action="run-llm-test"]', function(e) {
                 e.preventDefault();
                 try {
@@ -229,7 +283,43 @@
                 }
             });
 
-            $(document).on('click.rtbcb', '#calculate-roi', function(e) {
+            $(document).on('click.rtbcb', '[data-action="rebuild-rag-index"]', function(e) {
+                e.preventDefault();
+                try {
+                    Dashboard.rebuildRagIndex();
+                } catch (err) {
+                    console.error('Error rebuilding RAG index:', err);
+                }
+            });
+
+            $(document).on('click.rtbcb', '[data-action="cancel-rag-test"]', function(e) {
+                e.preventDefault();
+                try {
+                    Dashboard.cancelRagQuery();
+                } catch (err) {
+                    console.error('Error cancelling RAG query:', err);
+                }
+            });
+
+            $(document).on('click.rtbcb', '[data-action="copy-rag-context"]', function(e) {
+                e.preventDefault();
+                try {
+                    Dashboard.copyRagContext();
+                } catch (err) {
+                    console.error('Error copying RAG context:', err);
+                }
+            });
+
+            $(document).on('click.rtbcb', '[data-action="export-rag-results"]', function(e) {
+                e.preventDefault();
+                try {
+                    Dashboard.exportRagResults();
+                } catch (err) {
+                    console.error('Error exporting RAG results:', err);
+                }
+            });
+
+            $(document).on('click.rtbcb', '[data-action="calculate-roi"]', function(e) {
                 e.preventDefault();
                 try {
                     Dashboard.calculateRoiTest();
@@ -250,7 +340,7 @@
                 }
             });
 
-            $(document).on('click.rtbcb', '#export-roi-results', function(e) {
+            $(document).on('click.rtbcb', '[data-action="export-roi-results"]', function(e) {
                 e.preventDefault();
                 try {
                     Dashboard.exportRoiResults();
@@ -268,7 +358,7 @@
                 }
             });
 
-            $(document).on('click.rtbcb', '.rtbcb-retest', function(e) {
+            $(document).on('click.rtbcb', '[data-action="api-health-retest"]', function(e) {
                 e.preventDefault();
                 try {
                     Dashboard.runSingleApiTest($(e.currentTarget).data('component'));
@@ -277,22 +367,25 @@
                 }
             });
 
-            $(document).on('click.rtbcb', '[data-action="export-results"]', function(e) {
+            $(document).on('click.rtbcb', '[data-action="run-data-health"]', function(e) {
                 e.preventDefault();
                 try {
-                    Dashboard.exportResults();
+                    Dashboard.runDataHealthChecks();
                 } catch (err) {
-                    console.error('Error exporting results:', err);
+                    console.error('Error running data health checks:', err);
                 }
             });
 
-            $(document).on('submit.rtbcb', '#rtbcb-dashboard-settings-form', this.saveDashboardSettings.bind(this));
+            $(document).on('click.rtbcb', '[data-action="generate-preview-report"]', function(e) {
+                e.preventDefault();
+                try {
+                    Dashboard.generatePreviewReport();
+                } catch (err) {
+                    console.error('Error generating preview report:', err);
+                }
+            });
 
-            // Tab navigation
-            $('.rtbcb-test-tabs .nav-tab').on('click.rtbcb', this.handleTabClick.bind(this));
-
-            // Toggle API key visibility
-            $(document).on('click.rtbcb', '#rtbcb-toggle-api-key', function() {
+            $(document).on('click.rtbcb', '[data-action="toggle-api-key"]', function() {
                 const $input = $('#rtbcb_openai_api_key');
                 const input = $input[0];
                 const currentValue = $input.val();
@@ -304,6 +397,11 @@
 
                 $(this).text(isPassword ? rtbcbDashboard.strings.hide : rtbcbDashboard.strings.show);
             });
+
+            $(document).on('submit.rtbcb', '#rtbcb-dashboard-settings-form', this.saveDashboardSettings.bind(this));
+
+            // Tab navigation
+            $('.rtbcb-test-tabs .nav-tab').on('click.rtbcb', this.handleTabClick.bind(this));
         },
 
         // Initialize tab system
@@ -525,7 +623,7 @@
             }
 
             this.isGenerating = true;
-            this.setButtonState('#run-llm-matrix-test', 'loading', 'Testing Models...');
+            this.setButtonState('[data-action="run-llm-test"]', 'loading', 'Testing Models...');
             this.hideContainers(['llm-test-results']);
 
             const requestData = {
@@ -539,17 +637,17 @@
             this.request('run_llm_test', requestData)
                 .then((data) => {
                     this.displayLLMResults(data);
-                    this.setButtonState('#run-llm-matrix-test', 'success', 'Tests Complete');
+                    this.setButtonState('[data-action="run-llm-test"]', 'success', 'Tests Complete');
                     this.showNotification(`LLM tests completed for ${selectedModels.length} models`, 'success');
                 })
                 .catch((error) => {
-                    this.setButtonState('#run-llm-matrix-test', 'error', 'Test Failed');
+                    this.setButtonState('[data-action="run-llm-test"]', 'error', 'Test Failed');
                     this.showNotification('LLM test failed: ' + error.message, 'error');
                 })
                 .finally(() => {
                     this.isGenerating = false;
                     setTimeout(() => {
-                        this.setButtonState('#run-llm-matrix-test', 'ready');
+                        this.setButtonState('[data-action="run-llm-test"]', 'ready');
                     }, 3000);
                 });
         },
@@ -573,7 +671,7 @@
             const selectedModels = $('input[name="test-models[]"]:checked').length;
 
             const isValid = prompt.length > 0 && selectedModels > 0;
-            $('#run-llm-matrix-test').prop('disabled', !isValid);
+            $('[data-action="run-llm-test"]').prop('disabled', !isValid);
         },
 
         displayLLMResults: function(data) {
@@ -599,7 +697,7 @@
 
                 // Store results for export
                 this.llmTestResults = data;
-                $('#export-llm-results').prop('disabled', false);
+                $('[data-action="export-results"][data-export-type="llm"]').prop('disabled', false);
 
                 // Show results container
                 $('#llm-test-results').show().addClass('rtbcb-fade-in');
@@ -855,7 +953,7 @@
 
             // Show container and enable actions
             resultsContainer.show().addClass('rtbcb-fade-in');
-            $('[data-action="export-results"], #copy-results, #regenerate-results').prop('disabled', false);
+            $('[data-action="export-results"], [data-action="copy-results"], [data-action="regenerate-results"]').prop('disabled', false);
 
             // Hide progress
             this.hideProgressContainer();
@@ -1052,7 +1150,7 @@
             this.hideContainers(['results', 'error', 'progress']);
             this.hideDebugPanel();
             $('#company-name-input').val('').focus();
-            $('[data-action="export-results"], #copy-results, #regenerate-results').prop('disabled', true);
+            $('[data-action="export-results"], [data-action="copy-results"], [data-action="regenerate-results"]').prop('disabled', true);
             this.showNotification('Results cleared', 'info');
         },
 
@@ -1276,7 +1374,7 @@
             });
 
             $('#rtbcb-rag-progress').text(rtbcbDashboard.strings.retrieving).show();
-            $('#rtbcb-rag-cancel').show();
+            $('[data-action="cancel-rag-test"]').show();
             this.validateRagQuery();
 
             this.ragRequest.done((res) => {
@@ -1296,7 +1394,7 @@
             }).always(() => {
                 this.ragRequest = null;
                 $('#rtbcb-rag-progress').hide();
-                $('#rtbcb-rag-cancel').hide();
+                $('[data-action="cancel-rag-test"]').hide();
                 this.validateRagQuery();
             });
         },
@@ -1337,7 +1435,7 @@
                 this.ragRequest.abort();
                 this.ragRequest = null;
                 $('#rtbcb-rag-progress').hide();
-                $('#rtbcb-rag-cancel').hide();
+                $('[data-action="cancel-rag-test"]').hide();
                 this.validateRagQuery();
                 this.showNotification('Retrieval cancelled', 'info');
             }
@@ -1370,10 +1468,10 @@
 
             if (this.ragResults.length) {
                 $('#rtbcb-rag-results').show();
-                $('#rtbcb-copy-rag-context, #rtbcb-export-rag-results').prop('disabled', false);
+                $('[data-action="copy-rag-context"], [data-action="export-rag-results"]').prop('disabled', false);
             } else {
                 $('#rtbcb-rag-results').hide();
-                $('#rtbcb-copy-rag-context, #rtbcb-export-rag-results').prop('disabled', true);
+                $('[data-action="copy-rag-context"], [data-action="export-rag-results"]').prop('disabled', true);
                 this.showNotification(rtbcbDashboard.strings.noResults, 'warning');
             }
 
@@ -1424,7 +1522,7 @@
         },
 
         rebuildRagIndex() {
-            const btn = $('#rtbcb-rag-rebuild').prop('disabled', true);
+            const btn = $('[data-action="rebuild-rag-index"]').prop('disabled', true);
             $('#rtbcb-rag-index-notice').text(rtbcbDashboard.strings.retrieving);
             $.post(rtbcbDashboard.ajaxurl, {
                 action: 'rtbcb_rag_rebuild_index',
@@ -1473,7 +1571,7 @@
         },
 
         calculateRoiTest() {
-            const button = $('#calculate-roi').prop('disabled', true);
+            const button = $('[data-action="calculate-roi"]').prop('disabled', true);
             const roiData = {};
             $('#roi-calculator').find('input, select').each(function() {
                 roiData[this.id] = $(this).val();
@@ -1570,7 +1668,7 @@
             };
 
             $('#roi-results-container').show();
-            $('#export-roi-results').prop('disabled', false);
+            $('[data-action="export-roi-results"]').prop('disabled', false);
         },
 
         exportRoiResults() {
@@ -1783,7 +1881,7 @@
 
         // Run data health checks
         runDataHealthChecks() {
-            const button = $('#rtbcb-run-data-health').prop('disabled', true);
+            const button = $('[data-action="run-data-health"]').prop('disabled', true);
             $('#rtbcb-data-health-results').html(`<tr><td colspan="3">${rtbcbDashboard.strings.running}</td></tr>`);
 
             $.post(rtbcbDashboard.ajaxurl, {
@@ -1818,7 +1916,7 @@
 
         // Generate report preview
         generatePreviewReport() {
-            const button = $('#rtbcb-generate-preview-report').prop('disabled', true);
+            const button = $('[data-action="generate-preview-report"]').prop('disabled', true);
 
             $.post(rtbcbDashboard.ajaxurl, {
                 action: 'rtbcb_generate_preview_report',
