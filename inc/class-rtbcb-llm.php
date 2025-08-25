@@ -1306,10 +1306,59 @@ Respond with the JSON structure only. No additional text.";
         error_log( "RTBCB: OpenAI API response code: {$response_code}" );
 
         if ( 200 !== $response_code ) {
-            $body_snippet = substr( wp_remote_retrieve_body( $response ), 0, 200 );
+            $body_content = wp_remote_retrieve_body( $response );
+            $error_data = json_decode( $body_content, true );
+            
+            // Extract error details if available
+            $error_message = '';
+            $error_code_specific = 'api_error';
+            
+            if ( is_array( $error_data ) && isset( $error_data['error'] ) ) {
+                $error_info = $error_data['error'];
+                $error_message = $error_info['message'] ?? 'Unknown API error';
+                
+                // Map specific OpenAI error types to our error codes
+                switch ( $error_info['type'] ?? '' ) {
+                    case 'invalid_request_error':
+                        $error_code_specific = 'invalid_request';
+                        break;
+                    case 'authentication_error':
+                        $error_code_specific = 'no_api_key';
+                        break;
+                    case 'permission_error':
+                        $error_code_specific = 'api_permission_denied';
+                        break;
+                    case 'rate_limit_error':
+                        $error_code_specific = 'api_rate_limited';
+                        break;
+                    case 'tokens':
+                        $error_code_specific = 'api_token_limit';
+                        break;
+                    case 'server_error':
+                    case 'service_unavailable':
+                        $error_code_specific = 'api_server_error';
+                        break;
+                    default:
+                        $error_code_specific = 'api_error';
+                        break;
+                }
+            } else {
+                $error_message = sprintf( 'API request failed with status %d', $response_code );
+            }
+            
+            // Provide user-friendly messages based on status codes
+            if ( 401 === $response_code ) {
+                $error_code_specific = 'no_api_key';
+            } elseif ( 429 === $response_code ) {
+                $error_code_specific = 'api_rate_limited';
+            } elseif ( $response_code >= 500 ) {
+                $error_code_specific = 'api_server_error';
+            }
+            
             return new WP_Error(
-                'api_error',
-                sprintf( __( 'API request failed with status %d: %s', 'rtbcb' ), $response_code, $body_snippet )
+                $error_code_specific,
+                $error_message,
+                [ 'status' => $response_code, 'response_body' => substr( $body_content, 0, 200 ) ]
             );
         }
 

@@ -394,6 +394,11 @@ function rtbcb_increase_memory_limit() {
 }
 
 function rtbcb_log_memory_usage( $stage ) {
+    // Only log memory usage in non-production environments to optimize performance
+    if ( function_exists( 'wp_get_environment_type' ) && 'production' === wp_get_environment_type() ) {
+        return;
+    }
+    
     $usage = memory_get_usage( true );
     $peak  = memory_get_peak_usage( true );
     error_log( sprintf( 'RTBCB Memory [%s]: Current: %s, Peak: %s',
@@ -406,6 +411,68 @@ function rtbcb_get_memory_status() {
         'peak'    => memory_get_peak_usage( true ),
         'limit'   => wp_convert_hr_to_bytes( ini_get( 'memory_limit' ) ),
     ];
+}
+
+/**
+ * Send standardized AJAX error response with environment-aware messaging.
+ *
+ * @param string $error_code    Machine-readable error code.
+ * @param string $user_message  User-friendly error message.
+ * @param int    $status        HTTP status code.
+ * @param string $debug_info    Debug information (only shown in non-production).
+ * @param array  $extra_data    Additional data to include in response.
+ * @return void
+ */
+function rtbcb_send_standardized_error( $error_code, $user_message, $status = 500, $debug_info = '', $extra_data = [] ) {
+    // Log the error with full context for debugging
+    rtbcb_log_error( 
+        sprintf( 'AJAX Error [%s]: %s', $error_code, $user_message ),
+        array_merge( [ 'status' => $status, 'debug' => $debug_info ], $extra_data )
+    );
+    
+    $response_data = [
+        'code'    => sanitize_key( $error_code ),
+        'message' => sanitize_text_field( $user_message ),
+    ];
+    
+    // Include debug information only in non-production environments
+    if ( function_exists( 'wp_get_environment_type' ) && 'production' !== wp_get_environment_type() && ! empty( $debug_info ) ) {
+        $response_data['debug'] = sanitize_text_field( $debug_info );
+    }
+    
+    // Add any extra data
+    if ( ! empty( $extra_data ) ) {
+        $response_data = array_merge( $response_data, $extra_data );
+    }
+    
+    wp_send_json_error( $response_data, $status );
+}
+
+/**
+ * Get user-friendly error message for common error scenarios.
+ *
+ * @param string $error_code Error code.
+ * @param string $fallback   Fallback message if code not found.
+ * @return string
+ */
+function rtbcb_get_user_friendly_error( $error_code, $fallback = '' ) {
+    $error_messages = [
+        'security_check_failed'   => __( 'Security verification failed. Please refresh the page and try again.', 'rtbcb' ),
+        'insufficient_permissions'=> __( 'You do not have permission to perform this action.', 'rtbcb' ),
+        'no_api_key'             => __( 'API configuration is missing. Please contact support.', 'rtbcb' ),
+        'api_rate_limited'       => __( 'Service is temporarily busy. Please try again in a few minutes.', 'rtbcb' ),
+        'api_error'              => __( 'External service error. Please try again later.', 'rtbcb' ),
+        'api_server_error'       => __( 'External service is temporarily unavailable. Please try again later.', 'rtbcb' ),
+        'api_permission_denied'  => __( 'API access denied. Please contact support.', 'rtbcb' ),
+        'api_token_limit'        => __( 'Request too large. Please try with shorter input.', 'rtbcb' ),
+        'invalid_request'        => __( 'Invalid request format. Please contact support.', 'rtbcb' ),
+        'template_not_found'     => __( 'Report template is missing. Please contact support.', 'rtbcb' ),
+        'validation_failed'      => __( 'Please check your input and try again.', 'rtbcb' ),
+        'generation_failed'      => __( 'Failed to generate business case. Please try again.', 'rtbcb' ),
+        'system_error'           => __( 'A system error occurred. Please contact support if this persists.', 'rtbcb' ),
+    ];
+    
+    return $error_messages[ $error_code ] ?? ( $fallback ?: __( 'An unexpected error occurred.', 'rtbcb' ) );
 }
 
 /**
