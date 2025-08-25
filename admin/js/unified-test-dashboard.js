@@ -25,8 +25,8 @@
 
     const circuitBreaker = {
         failures: 0,
-        threshold: 5, // Increased from 3
-        resetTime: 60000, // Reduced from 300000 (1 minute)
+        threshold: parseInt(rtbcbDashboard.circuitBreaker.threshold, 10) || 5,
+        resetTime: parseInt(rtbcbDashboard.circuitBreaker.resetTime, 10) || 60000,
 
         canExecute() {
             return this.failures < this.threshold;
