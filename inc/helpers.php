@@ -152,6 +152,36 @@ function rtbcb_get_available_models() {
     return $models;
 }
 
+/**
+ * Retrieve API health test components.
+ *
+ * @return array Map of component identifiers to labels and callbacks.
+ */
+function rtbcb_get_api_health_components() {
+    return [
+        'chat'      => [
+            'label' => __( 'OpenAI Chat API', 'rtbcb' ),
+            'test'  => [ 'RTBCB_API_Tester', 'test_connection' ],
+        ],
+        'embedding' => [
+            'label' => __( 'OpenAI Embedding API', 'rtbcb' ),
+            'test'  => [ 'RTBCB_API_Tester', 'test_embedding' ],
+        ],
+        'portal'    => [
+            'label' => __( 'Real Treasury Portal', 'rtbcb' ),
+            'test'  => [ 'RTBCB_API_Tester', 'test_portal' ],
+        ],
+        'roi'       => [
+            'label' => __( 'ROI Calculator', 'rtbcb' ),
+            'test'  => [ 'RTBCB_API_Tester', 'test_roi_calculator' ],
+        ],
+        'rag'       => [
+            'label' => __( 'RAG Index', 'rtbcb' ),
+            'test'  => [ 'RTBCB_API_Tester', 'test_rag_index' ],
+        ],
+    ];
+}
+
 function rtbcb_check_database_health() {
     global $wpdb;
 
