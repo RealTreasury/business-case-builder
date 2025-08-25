@@ -32,16 +32,16 @@ function rtbcb_clear_current_company() {
 /**
  * Validate OpenAI API key format.
  *
+ * Provides a simple check that the key is non-empty and uses the `sk-` prefix.
+ * The value is sanitized before validation.
+ *
  * @param string $api_key API key to validate.
- * @return bool True if valid format.
+ * @return bool True if the key appears valid.
  */
 function rtbcb_is_valid_openai_api_key( $api_key ) {
     $api_key = sanitize_text_field( $api_key );
-    // OpenAI API keys use the `sk-` prefix and may contain hyphens or underscores
-    // with varying lengths. This provides a permissive check while still
-    // preventing obviously invalid values. See
-    // https://platform.openai.com/docs/guides/authentication
-    return (bool) preg_match( '/^sk-[A-Za-z0-9_-]{20,}$/', $api_key );
+
+    return ( '' !== $api_key ) && ( 0 === strpos( $api_key, 'sk-' ) );
 }
 
 /**
