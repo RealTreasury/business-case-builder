@@ -95,6 +95,7 @@ class RTBCB_Admin {
                         'generateOverview' => __( 'Generate Overview', 'rtbcb' ),
                         'complete'         => __( 'Complete!', 'rtbcb' ),
                         'error'            => __( 'Error occurred', 'rtbcb' ),
+                        'tooManyFailures'  => __( 'Too many recent failures. Please wait before retrying.', 'rtbcb' ),
                         'confirm_clear'    => __( 'Are you sure you want to clear all results?', 'rtbcb' ),
                         'running'          => __( 'Running...', 'rtbcb' ),
                         'retrieving'       => __( 'Retrieving...', 'rtbcb' ),

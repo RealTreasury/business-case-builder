@@ -837,7 +837,7 @@
         // Start the generation process
         startGeneration(companyName, model, showDebug) {
             if (!circuitBreaker.canExecute()) {
-                this.showNotification(rtbcbDashboard.strings.error, 'error');
+                this.showNotification(rtbcbDashboard.strings.tooManyFailures, 'warning');
                 return;
             }
 
@@ -1396,7 +1396,7 @@
         runRagQuery() {
             if (this.ragRequest) return;
             if (!circuitBreaker.canExecute()) {
-                this.showNotification(rtbcbDashboard.strings.error, 'error');
+                this.showNotification(rtbcbDashboard.strings.tooManyFailures, 'warning');
                 return;
             }
 
@@ -1774,7 +1774,7 @@
             // Check circuit breaker
             if (!circuitBreaker.canExecute()) {
                 console.error('[API Health] Circuit breaker open. Failures:', circuitBreaker.failures);
-                this.showNotification('Too many recent failures. Please wait before retrying.', 'warning');
+                this.showNotification(rtbcbDashboard.strings.tooManyFailures, 'warning');
                 return;
             }
 
