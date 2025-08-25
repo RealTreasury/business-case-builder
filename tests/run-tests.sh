@@ -49,31 +49,36 @@ echo "10. Running reasoning-first output test..."
 php tests/reasoning-first-output.test.php
 
 # OpenAI error handling test
-echo "10. Running OpenAI error handling test..."
+echo "11. Running OpenAI error handling test..."
 php tests/openai-error-handling.test.php
 
+# Dashboard API key save test
+echo "12. Running dashboard API key save test..."
+php tests/dashboard-api-key.test.php
+
 # AJAX error handling test (PHPUnit)
-echo "11. Running AJAX error handling test..."
+echo "13. Running AJAX error handling test..."
 phpunit tests/RTBCB_AjaxGenerateComprehensiveCaseErrorTest.php
 
 # Admin AJAX report generation tests
-echo "12. Running admin AJAX report generation tests..."
+echo "14. Running admin AJAX report generation tests..."
 phpunit tests/RTBCB_AdminAjaxReportTest.php
 
 # JavaScript tests
-echo "13. Running JavaScript tests..."
+echo "15. Running JavaScript tests..."
 node tests/handle-submit-error.test.js
 node tests/render-results-no-narrative.test.js
 node tests/handle-submit-success.test.js
 node tests/handle-server-error-display.test.js
 node tests/temperature-model.test.js
+node tests/dashboard-api-key-button.test.js
 
 # WordPress coding standards (if installed)
 if command -v phpcs &> /dev/null; then
-    echo "14. Running WordPress coding standards check..."
+    echo "16. Running WordPress coding standards check..."
     phpcs --standard=WordPress --ignore=vendor .
 else
-    echo "14. Skipping WordPress coding standards (phpcs not installed)"
+    echo "16. Skipping WordPress coding standards (phpcs not installed)"
 fi
 
 echo "================================================"
