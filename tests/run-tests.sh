@@ -3,6 +3,11 @@
 echo "Running Real Treasury Business Case Builder Tests..."
 echo "================================================"
 
+if [ -z "$OPENAI_API_KEY" ]; then
+    echo "OPENAI_API_KEY not set. API connection test will be skipped."
+    echo "Set OPENAI_API_KEY to run API-related tests."
+fi
+
 # PHP Lint
 echo "1. Running PHP syntax check..."
 find . -name "*.php" -not -path "./vendor/*" -print0 | xargs -0 -n1 php -l

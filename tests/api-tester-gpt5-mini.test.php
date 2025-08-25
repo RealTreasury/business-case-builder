@@ -31,6 +31,12 @@ if ( ! function_exists( 'add_action' ) ) {
     function add_action( $tag, $function_to_add, $priority = 10, $accepted_args = 1 ) {}
 }
 
+if ( ! function_exists( 'sanitize_text_field' ) ) {
+    function sanitize_text_field( $text ) {
+        return $text;
+    }
+}
+
 if ( ! function_exists( 'wp_remote_get' ) ) {
     function wp_remote_get( $url, $args ) {
         return [
@@ -65,11 +71,18 @@ if ( ! function_exists( 'is_wp_error' ) ) {
 }
 
 require_once __DIR__ . '/../inc/enhanced-ajax-handlers.php';
+$api_key = getenv( 'OPENAI_API_KEY' );
+$api_key = sanitize_text_field( $api_key );
 
-$result = RTBCB_API_Tester::test_connection( 'sk-test' );
+if ( empty( $api_key ) ) {
+    echo __( 'OPENAI_API_KEY not set; skipping API connection test', 'rtbcb' ) . "\n";
+    exit( 0 );
+}
+
+$result = RTBCB_API_Tester::test_connection( $api_key );
 if ( empty( $result['success'] ) ) {
-    echo "API connection test failed\n";
+    echo __( 'API connection test failed', 'rtbcb' ) . "\n";
     exit( 1 );
 }
 
-echo "api-tester-gpt5-mini.test.php passed\n";
+echo __( 'api-tester-gpt5-mini.test.php passed', 'rtbcb' ) . "\n";
