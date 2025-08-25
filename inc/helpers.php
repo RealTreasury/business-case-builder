@@ -38,8 +38,9 @@ function rtbcb_clear_current_company() {
 function rtbcb_is_valid_openai_api_key( $api_key ) {
     $api_key = sanitize_text_field( $api_key );
     // OpenAI API keys can have `sk-` or `sk-proj-` prefixes with variable-length
-    // alphanumeric strings. See https://platform.openai.com/docs/guides/authentication
-    return (bool) preg_match( '/^sk-(?:proj-)?[a-zA-Z0-9]{32,}$/', $api_key );
+    // alphanumeric strings and underscores. See
+    // https://platform.openai.com/docs/guides/authentication
+    return (bool) preg_match( '/^sk-(?:proj-)?[A-Za-z0-9_]{32,}$/', $api_key );
 }
 
 /**
