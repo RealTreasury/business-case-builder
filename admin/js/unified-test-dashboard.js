@@ -358,6 +358,15 @@
                 }
             });
 
+            $(document).on('click.rtbcb', '[data-action="debug-api-key"]', function(e) {
+                e.preventDefault();
+                try {
+                    Dashboard.debugApiKey();
+                } catch (err) {
+                    console.error('Error debugging API key:', err);
+                }
+            });
+
             $(document).on('click.rtbcb', '[data-action="api-health-retest"]', function(e) {
                 e.preventDefault();
                 try {
@@ -1854,6 +1863,36 @@
             }).always(() => {
                 $button.prop('disabled', false);
                 console.log('[API Health] === runAllApiTests complete ===');
+            });
+        },
+
+        debugApiKey() {
+            const nonce = rtbcbDashboard.nonces?.debugApiKey;
+            if (!nonce) {
+                this.showNotification(rtbcbDashboard.strings.error, 'error');
+                return;
+            }
+
+            $.post(rtbcbDashboard.ajaxurl, {
+                action: 'rtbcb_debug_api_key',
+                nonce: nonce
+            }).done((response) => {
+                if (!response.success) {
+                    this.showNotification(response.data?.message || rtbcbDashboard.strings.error, 'error');
+                    return;
+                }
+
+                const data = response.data;
+                const message =
+                    `${rtbcbDashboard.strings.configured}: ${data.configured ? rtbcbDashboard.strings.yes : rtbcbDashboard.strings.no}\n` +
+                    `${rtbcbDashboard.strings.length}: ${data.length}\n` +
+                    `${rtbcbDashboard.strings.preview}: ${data.preview}\n` +
+                    `${rtbcbDashboard.strings.formatValid}: ${data.valid_format ? rtbcbDashboard.strings.yes : rtbcbDashboard.strings.no}`;
+
+                alert(`${rtbcbDashboard.strings.apiKeyDebugInfo}\n\n${message}`);
+            }).fail((jqXHR) => {
+                const msg = jqXHR.responseJSON?.data?.message || rtbcbDashboard.strings.error;
+                this.showNotification(msg, 'error');
             });
         },
 

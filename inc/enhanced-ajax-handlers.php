@@ -76,8 +76,12 @@ function rtbcb_send_json_error( $code, $message, $status = 400, $debug = '', $ex
  * @return void
  */
 function rtbcb_debug_api_key() {
+    if ( ! check_ajax_referer( 'rtbcb_debug_api_key', 'nonce', false ) ) {
+        rtbcb_send_json_error( 'security_check_failed', __( 'Security check failed.', 'rtbcb' ), 403 );
+    }
+
     if ( ! current_user_can( 'manage_options' ) ) {
-        wp_die( esc_html__( 'Unauthorized', 'rtbcb' ) );
+        rtbcb_send_json_error( 'insufficient_permissions', __( 'Insufficient permissions.', 'rtbcb' ), 403 );
     }
 
     $api_key    = sanitize_text_field( get_option( 'rtbcb_openai_api_key' ) );
