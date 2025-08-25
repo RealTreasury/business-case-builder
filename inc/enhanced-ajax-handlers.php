@@ -458,6 +458,7 @@ add_action( 'wp_ajax_rtbcb_run_llm_test', 'rtbcb_ajax_run_llm_test' );
 add_action( 'wp_ajax_rtbcb_run_rag_test', 'rtbcb_ajax_run_rag_test' );
 add_action( 'wp_ajax_rtbcb_api_health_ping', 'rtbcb_ajax_api_health_ping' );
 add_action( 'wp_ajax_rtbcb_export_results', 'rtbcb_ajax_export_results' );
+add_action( 'wp_ajax_rtbcb_export_dashboard_results', 'rtbcb_export_dashboard_results' );
 
 /**
  * Test individual LLM model with given prompt.
@@ -2758,5 +2759,126 @@ function rtbcb_convert_results_to_csv( $export_data ) {
     fclose( $output );
 
     return $csv;
+}
+
+
+/**
+ * Export dashboard test results.
+ *
+ * @return void
+ */
+function rtbcb_export_dashboard_results() {
+    if ( ! check_ajax_referer( 'rtbcb_unified_test_dashboard', 'nonce', false ) ) {
+        wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
+    }
+
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'rtbcb' ) ], 403 );
+    }
+
+    $export_format = sanitize_text_field( wp_unslash( $_POST['format'] ?? 'json' ) );
+    $date_range    = sanitize_text_field( wp_unslash( $_POST['date_range'] ?? '7_days' ) );
+    $modules       = array_map( 'sanitize_text_field', wp_unslash( $_POST['modules'] ?? [] ) );
+
+    try {
+        global $wpdb;
+
+        // Build date filter
+        $date_filter = '';
+        switch ( $date_range ) {
+            case '24_hours':
+                $date_filter = 'AND created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)';
+                break;
+            case '7_days':
+                $date_filter = 'AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)';
+                break;
+            case '30_days':
+                $date_filter = 'AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)';
+                break;
+        }
+
+        $results = [
+            'company_overview' => get_option( 'rtbcb_recent_company_tests', [] ),
+            'llm_tests'        => get_option( 'rtbcb_recent_llm_tests', [] ),
+            'rag_tests'        => get_option( 'rtbcb_recent_rag_tests', [] ),
+            'api_health'       => get_option( 'rtbcb_last_api_test', [] ),
+        ];
+
+        if ( ! empty( $modules ) ) {
+            $results = array_intersect_key( $results, array_flip( $modules ) );
+        }
+
+        $export_data = [
+            'metadata' => [
+                'export_time'     => current_time( 'c' ),
+                'plugin_version'  => defined( 'RTBCB_VERSION' ) ? RTBCB_VERSION : '2.0.0',
+                'export_format'   => $export_format,
+                'date_range'      => $date_range,
+                'modules_included' => array_keys( $results ),
+            ],
+            'results'  => $results,
+            'summary'  => rtbcb_generate_export_summary( $results ),
+        ];
+
+        if ( 'csv' === $export_format ) {
+            $csv_content = rtbcb_convert_results_to_csv( $export_data );
+
+            header( 'Content-Type: text/csv' );
+            header( 'Content-Disposition: attachment; filename="rtbcb-dashboard-export-' . date( 'Y-m-d-H-i-s' ) . '.csv"' );
+
+            wp_send_json_success(
+                [
+                    'content'      => $csv_content,
+                    'filename'     => 'rtbcb-dashboard-export-' . date( 'Y-m-d-H-i-s' ) . '.csv',
+                    'content_type' => 'text/csv',
+                ]
+            );
+        } else {
+            wp_send_json_success(
+                [
+                    'content'      => wp_json_encode( $export_data, JSON_PRETTY_PRINT ),
+                    'filename'     => 'rtbcb-dashboard-export-' . date( 'Y-m-d-H-i-s' ) . '.json',
+                    'content_type' => 'application/json',
+                ]
+            );
+        }
+    } catch ( Exception $e ) {
+        error_log( 'RTBCB Export Error: ' . $e->getMessage() );
+        wp_send_json_error(
+            [
+                'message' => __( 'Export generation failed.', 'rtbcb' ),
+                'detail'  => WP_DEBUG ? $e->getMessage() : null,
+            ],
+            500
+        );
+    }
+}
+
+/**
+ * Generate export summary statistics.
+ *
+ * @param array $results Results data.
+ * @return array Summary data.
+ */
+function rtbcb_generate_export_summary( $results ) {
+    $summary = [
+        'total_modules'   => count( $results ),
+        'total_tests'     => 0,
+        'generation_time' => current_time( 'mysql' ),
+        'module_summaries' => [],
+    ];
+
+    foreach ( $results as $module => $data ) {
+        if ( is_array( $data ) ) {
+            $test_count = isset( $data['results'] ) ? count( $data['results'] ) : count( $data );
+            $summary['total_tests'] += $test_count;
+            $summary['module_summaries'][ $module ] = [
+                'test_count'   => $test_count,
+                'last_updated' => $data['timestamp'] ?? 'unknown',
+            ];
+        }
+    }
+
+    return $summary;
 }
 

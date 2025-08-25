@@ -1403,6 +1403,162 @@
         }
     };
 
+    // Unified Result Store
+    Dashboard.ResultStore = {
+        data: {},
+
+        // Store result with standardized schema
+        store: function(moduleType, testId, resultData) {
+            if (!this.data[moduleType]) {
+                this.data[moduleType] = {};
+            }
+
+            this.data[moduleType][testId] = {
+                ...resultData,
+                metadata: {
+                    moduleType: moduleType,
+                    testId: testId,
+                    timestamp: new Date().toISOString(),
+                    version: '1.0',
+                    ...resultData.metadata
+                }
+            };
+
+            this.persistToStorage();
+            $(document).trigger('rtbcb:result-stored', [moduleType, testId, resultData]);
+        },
+
+        // Get all results or filter by module
+        getResults: function(moduleType = null) {
+            if (moduleType) {
+                return this.data[moduleType] || {};
+            }
+            return this.data;
+        },
+
+        // Export to JSON
+        exportJSON: function() {
+            const exportData = {
+                exportMetadata: {
+                    timestamp: new Date().toISOString(),
+                    plugin: 'Real Treasury Business Case Builder',
+                    version: '2.0.0',
+                    dashboard: 'unified-test-dashboard'
+                },
+                results: this.data,
+                summary: this.generateSummary()
+            };
+
+            return JSON.stringify(exportData, null, 2);
+        },
+
+        // Export to CSV
+        exportCSV: function() {
+            const rows = [];
+            const headers = ['Module', 'Test ID', 'Timestamp', 'Status', 'Duration', 'Tokens Used', 'Cost', 'Quality Score', 'Details'];
+            rows.push(headers);
+
+            Object.keys(this.data).forEach(moduleType => {
+                Object.keys(this.data[moduleType]).forEach(testId => {
+                    const result = this.data[moduleType][testId];
+                    const row = [
+                        moduleType,
+                        testId,
+                        result.metadata.timestamp,
+                        result.status || 'completed',
+                        result.duration || '',
+                        result.tokens_used || '',
+                        result.cost_estimate || '',
+                        result.quality_score || '',
+                        JSON.stringify(result.summary || {})
+                    ];
+                    rows.push(row);
+                });
+            });
+
+            return rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+        },
+
+        // Generate summary statistics
+        generateSummary: function() {
+            const summary = {
+                modules_tested: Object.keys(this.data).length,
+                total_tests: 0,
+                total_cost: 0,
+                total_tokens: 0,
+                avg_quality: 0,
+                test_counts_by_module: {}
+            };
+
+            let qualitySum = 0;
+            let qualityCount = 0;
+
+            Object.keys(this.data).forEach(moduleType => {
+                const moduleResults = this.data[moduleType];
+                const moduleTestCount = Object.keys(moduleResults).length;
+                summary.total_tests += moduleTestCount;
+                summary.test_counts_by_module[moduleType] = moduleTestCount;
+
+                Object.values(moduleResults).forEach(result => {
+                    if (result.cost_estimate) summary.total_cost += parseFloat(result.cost_estimate);
+                    if (result.tokens_used) summary.total_tokens += parseInt(result.tokens_used);
+                    if (result.quality_score) {
+                        qualitySum += parseFloat(result.quality_score);
+                        qualityCount++;
+                    }
+                });
+            });
+
+            summary.avg_quality = qualityCount > 0 ? (qualitySum / qualityCount).toFixed(1) : 0;
+            summary.total_cost = summary.total_cost.toFixed(4);
+
+            return summary;
+        },
+
+        // Persist to localStorage
+        persistToStorage: function() {
+            try {
+                localStorage.setItem('rtbcb_test_results', JSON.stringify(this.data));
+            } catch (e) {
+                console.warn('Failed to persist results to storage:', e);
+            }
+        },
+
+        // Load from localStorage
+        loadFromStorage: function() {
+            try {
+                const stored = localStorage.getItem('rtbcb_test_results');
+                if (stored) {
+                    this.data = JSON.parse(stored);
+                }
+            } catch (e) {
+                console.warn('Failed to load results from storage:', e);
+                this.data = {};
+            }
+        },
+
+        // Clear all results
+        clear: function() {
+            this.data = {};
+            this.persistToStorage();
+            $(document).trigger('rtbcb:results-cleared');
+        }
+    };
+
+    // Initialize result store
+    Dashboard.ResultStore.loadFromStorage();
+
+    // Example usage in test completion handlers:
+    // Dashboard.ResultStore.store('llm', 'model_comparison_' + Date.now(), {
+    //     results: results,
+    //     summary: summary,
+    //     status: 'completed',
+    //     duration: totalTime,
+    //     tokens_used: totalTokens,
+    //     cost_estimate: totalCost,
+    //     quality_score: avgQuality
+    // });
+
     // Initialize when DOM is ready
     $(document).ready(() => {
         Dashboard.init();
