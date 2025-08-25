@@ -157,6 +157,8 @@
                 this.exportResults();
             });
 
+            $(document).on('submit.rtbcb', '#rtbcb-dashboard-settings-form', this.saveDashboardSettings.bind(this));
+
             // Tab navigation
             $('.rtbcb-test-tabs .nav-tab').on('click.rtbcb', this.handleTabClick.bind(this));
         },
