@@ -891,7 +891,7 @@
         },
 
         // UI state management
-        setLoadingState(loading, buttonSelector = '[data-action="run-company-overview"]', text = loading ? 'Generating...' : 'Generate Overview') {
+        setLoadingState(loading, buttonSelector = '[data-action="run-company-overview"]', text = loading ? rtbcbDashboard.strings.generating : rtbcbDashboard.strings.generateOverview) {
             const container = $('.rtbcb-test-panel');
 
             if (loading) {
