@@ -3,6 +3,12 @@ if ( ! defined( 'ABSPATH' ) ) {
     define( 'ABSPATH', __DIR__ . '/../' );
 }
 
+$api_key = getenv( 'OPENAI_API_KEY' );
+if ( empty( $api_key ) ) {
+    echo "openai-error-handling.test.php skipped: missing OPENAI_API_KEY\n";
+    exit( 0 );
+}
+
 if ( ! class_exists( 'WP_Error' ) ) {
     class WP_Error {
         private $code;
@@ -34,8 +40,9 @@ if ( ! function_exists( '__' ) ) {
 
 if ( ! function_exists( 'get_option' ) ) {
     function get_option( $name, $default = '' ) {
+        global $api_key;
         if ( 'rtbcb_openai_api_key' === $name ) {
-            return 'test-key';
+            return $api_key;
         }
         return $default;
     }
