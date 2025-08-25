@@ -104,6 +104,7 @@ class RTBCB_Admin {
                         'settingsSaved'    => __( 'Settings saved.', 'rtbcb' ),
                         'show'             => __( 'Show', 'rtbcb' ),
                         'hide'             => __( 'Hide', 'rtbcb' ),
+                        'apiKeyRequired'   => __( 'Please save a valid OpenAI API key in the Settings tab before running tests.', 'rtbcb' ),
                     ],
                     'models'  => [
                         'mini'     => get_option( 'rtbcb_mini_model', rtbcb_get_default_model( 'mini' ) ),
