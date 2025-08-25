@@ -1786,95 +1786,160 @@ function rtbcb_save_dashboard_settings() {
 }
 
 /**
- * Run LLM integration test
+ * Run LLM integration tests.
+ *
+ * @return void
  */
 function rtbcb_ajax_run_llm_test() {
-    // Security checks
     if ( ! check_ajax_referer( 'rtbcb_llm_testing', 'nonce', false ) ) {
-        wp_send_json_error(
-            [
-                'code'      => 'security_failed',
-                'message'   => __( 'Security check failed.', 'rtbcb' ),
-                'requestId' => uniqid( 'req_' ),
-            ],
-            403
-        );
+        wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
     }
 
     if ( ! current_user_can( 'manage_options' ) ) {
-        wp_send_json_error(
-            [
-                'code'      => 'insufficient_permissions',
-                'message'   => __( 'Insufficient permissions.', 'rtbcb' ),
-                'requestId' => uniqid( 'req_' ),
-            ],
-            403
-        );
+        wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'rtbcb' ) ], 403 );
     }
 
-    // Input sanitization
     $input_data = [
-        'modelIds'   => array_map( 'sanitize_text_field', wp_unslash( $_POST['modelIds'] ?? [] ) ),
-        'promptA'    => sanitize_textarea_field( wp_unslash( $_POST['promptA'] ?? '' ) ),
-        'promptB'    => sanitize_textarea_field( wp_unslash( $_POST['promptB'] ?? '' ) ),
-        'inputs'     => array_map( 'sanitize_text_field', wp_unslash( $_POST['inputs'] ?? [] ) ),
-        'runMode'    => sanitize_text_field( wp_unslash( $_POST['runMode'] ?? 'single' ) ),
-        'maxTokens'  => intval( wp_unslash( $_POST['maxTokens'] ?? 1000 ) ),
-        'temperature'=> floatval( wp_unslash( $_POST['temperature'] ?? 0.3 ) ),
+        'modelIds'    => array_map( 'sanitize_text_field', wp_unslash( $_POST['modelIds'] ?? [] ) ),
+        'promptA'     => sanitize_textarea_field( wp_unslash( $_POST['promptA'] ?? '' ) ),
+        'promptB'     => sanitize_textarea_field( wp_unslash( $_POST['promptB'] ?? '' ) ),
+        'runMode'     => sanitize_text_field( wp_unslash( $_POST['runMode'] ?? 'single' ) ),
+        'maxTokens'   => intval( wp_unslash( $_POST['maxTokens'] ?? 1000 ) ),
+        'temperature' => floatval( wp_unslash( $_POST['temperature'] ?? 0.3 ) ),
     ];
 
-    // Validation
     if ( empty( $input_data['modelIds'] ) ) {
-        wp_send_json_error(
-            [
-                'code'    => 'missing_models',
-                'message' => __( 'No models specified.', 'rtbcb' ),
-            ],
-            400
-        );
+        wp_send_json_error( [ 'message' => __( 'No models selected.', 'rtbcb' ) ], 400 );
     }
 
     if ( empty( $input_data['promptA'] ) ) {
-        wp_send_json_error(
-            [
-                'code'    => 'missing_prompt',
-                'message' => __( 'Prompt is required.', 'rtbcb' ),
-            ],
-            400
-        );
+        wp_send_json_error( [ 'message' => __( 'Prompt A is required.', 'rtbcb' ) ], 400 );
     }
 
     try {
+        $results    = [];
         $start_time = microtime( true );
 
-        // Run LLM tests
-        $results = rtbcb_execute_llm_test_matrix( $input_data );
+        foreach ( $input_data['modelIds'] as $model_key ) {
+            $model_start = microtime( true );
 
-        $end_time = microtime( true );
+            $result_a  = rtbcb_test_single_model( $model_key, $input_data['promptA'], $input_data );
+            $model_end = microtime( true );
+
+            $results[] = [
+                'model_key'     => $model_key,
+                'model_name'    => rtbcb_get_model_display_name( $model_key ),
+                'prompt'        => 'A',
+                'response'      => $result_a['content'],
+                'latency'       => round( ( $model_end - $model_start ) * 1000, 2 ),
+                'tokens_used'   => $result_a['tokens_used'],
+                'cost_estimate' => rtbcb_calculate_model_cost( $result_a['tokens_used'], $model_key ),
+                'quality_score' => rtbcb_assess_response_quality( $result_a['content'] ),
+            ];
+
+            if ( ! empty( $input_data['promptB'] ) ) {
+                $model_start = microtime( true );
+                $result_b    = rtbcb_test_single_model( $model_key, $input_data['promptB'], $input_data );
+                $model_end   = microtime( true );
+
+                $results[] = [
+                    'model_key'     => $model_key,
+                    'model_name'    => rtbcb_get_model_display_name( $model_key ),
+                    'prompt'        => 'B',
+                    'response'      => $result_b['content'],
+                    'latency'       => round( ( $model_end - $model_start ) * 1000, 2 ),
+                    'tokens_used'   => $result_b['tokens_used'],
+                    'cost_estimate' => rtbcb_calculate_model_cost( $result_b['tokens_used'], $model_key ),
+                    'quality_score' => rtbcb_assess_response_quality( $result_b['content'] ),
+                ];
+            }
+        }
+
+        $total_time = round( ( microtime( true ) - $start_time ), 2 );
+
+        $summary = [
+            'total_tests'  => count( $results ),
+            'total_time'   => $total_time,
+            'avg_latency'  => array_sum( array_column( $results, 'latency' ) ) / count( $results ),
+            'total_tokens' => array_sum( array_column( $results, 'tokens_used' ) ),
+            'total_cost'   => array_sum( array_column( $results, 'cost_estimate' ) ),
+            'best_performer' => rtbcb_find_best_performing_result( $results ),
+        ];
 
         wp_send_json_success(
             [
-                'results'  => $results,
-                'metadata' => [
-                    'totalTime'  => round( ( $end_time - $start_time ), 2 ),
-                    'modelsCount'=> count( $input_data['modelIds'] ),
-                    'timestamp'  => current_time( 'mysql' ),
-                ],
-                'requestId' => uniqid( 'req_' ),
+                'results'   => $results,
+                'summary'   => $summary,
+                'timestamp' => current_time( 'mysql' ),
             ]
         );
     } catch ( Exception $e ) {
         error_log( 'RTBCB LLM Test Error: ' . $e->getMessage() );
         wp_send_json_error(
             [
-                'code'      => 'execution_failed',
-                'message'   => __( 'LLM test execution failed.', 'rtbcb' ),
-                'detail'    => WP_DEBUG ? $e->getMessage() : null,
-                'requestId' => uniqid( 'req_' ),
+                'message' => __( 'LLM test execution failed.', 'rtbcb' ),
+                'detail'  => WP_DEBUG ? $e->getMessage() : null,
             ],
             500
         );
     }
+}
+
+/**
+ * Test a single LLM model with the given prompt.
+ *
+ * @param string $model_key Model key identifier.
+ * @param string $prompt    Prompt text.
+ * @param array  $config    Configuration data.
+ *
+ * @return array Response data.
+ * @throws Exception When the API request fails.
+ */
+function rtbcb_test_single_model( $model_key, $prompt, $config ) {
+    $llm = new RTBCB_LLM();
+
+    $model_map = [
+        'mini'     => get_option( 'rtbcb_mini_model', 'gpt-4o-mini' ),
+        'premium'  => get_option( 'rtbcb_premium_model', 'gpt-4o' ),
+        'advanced' => get_option( 'rtbcb_advanced_model', 'o1-preview' ),
+    ];
+
+    $model_name = $model_map[ $model_key ] ?? 'gpt-4o-mini';
+
+    $response = wp_remote_post(
+        'https://api.openai.com/v1/chat/completions',
+        [
+            'headers' => [
+                'Authorization' => 'Bearer ' . get_option( 'rtbcb_openai_api_key' ),
+                'Content-Type'  => 'application/json',
+            ],
+            'body'    => wp_json_encode(
+                [
+                    'model'      => $model_name,
+                    'messages'   => [ [ 'role' => 'user', 'content' => $prompt ] ],
+                    'max_tokens' => $config['maxTokens'],
+                    'temperature' => rtbcb_model_supports_temperature( $model_name ) ? $config['temperature'] : null,
+                ]
+            ),
+            'timeout' => 60,
+        ]
+    );
+
+    if ( is_wp_error( $response ) ) {
+        throw new Exception( $response->get_error_message() );
+    }
+
+    $body = json_decode( wp_remote_retrieve_body( $response ), true );
+
+    if ( ! isset( $body['choices'][0]['message']['content'] ) ) {
+        throw new Exception( 'Invalid API response structure' );
+    }
+
+    return [
+        'content'     => $body['choices'][0]['message']['content'],
+        'tokens_used' => $body['usage']['total_tokens'] ?? 0,
+        'model_used'  => $body['model'] ?? $model_name,
+    ];
 }
 
 /**

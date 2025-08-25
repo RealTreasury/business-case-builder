@@ -88,6 +88,47 @@ function rtbcb_model_supports_temperature( $model ) {
 }
 
 /**
+ * Get a human-friendly display name for a model key.
+ *
+ * @param string $model_key Model key identifier.
+ * @return string Display name.
+ */
+function rtbcb_get_model_display_name( $model_key ) {
+    $map = [
+        'mini'     => __( 'GPT-4O Mini', 'rtbcb' ),
+        'premium'  => __( 'GPT-4O', 'rtbcb' ),
+        'advanced' => __( 'O1-Preview', 'rtbcb' ),
+    ];
+
+    return $map[ $model_key ] ?? ucfirst( $model_key );
+}
+
+/**
+ * Find the best performing result by quality score.
+ *
+ * @param array $results Test results.
+ * @return array Best performer data.
+ */
+function rtbcb_find_best_performing_result( $results ) {
+    $best = null;
+    foreach ( $results as $result ) {
+        if ( null === $best || $result['quality_score'] > $best['quality_score'] ) {
+            $best = $result;
+        }
+    }
+
+    if ( null === $best ) {
+        return [];
+    }
+
+    return [
+        'model_key' => $best['model_key'],
+        'score'     => $best['quality_score'],
+        'reason'    => 'highest_quality',
+    ];
+}
+
+/**
  * Retrieve available OpenAI models.
  *
  * Attempts to fetch model identifiers from the OpenAI API and caches the

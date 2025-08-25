@@ -719,36 +719,52 @@ $last_index_display = $last_indexed ? $last_indexed : __( 'Never', 'rtbcb' );
             <div class="rtbcb-test-controls">
                 <div class="rtbcb-llm-config-grid">
                     <div class="rtbcb-config-section">
-                        <h4><?php esc_html_e('Test Configuration', 'rtbcb'); ?></h4>
+                        <h4><?php esc_html_e( 'Test Configuration', 'rtbcb' ); ?></h4>
 
-                        <div class="rtbcb-control-group">
-                            <label for="llm-test-prompt"><?php esc_html_e('Test Prompt:', 'rtbcb'); ?></label>
-                            <textarea id="llm-test-prompt" rows="4" placeholder="<?php esc_attr_e('Enter your test prompt...', 'rtbcb'); ?>"></textarea>
-                        </div>
-
-                        <div class="rtbcb-control-group">
-                            <label><?php esc_html_e('Models to Test:', 'rtbcb'); ?></label>
-                            <div class="rtbcb-model-checkboxes">
-                                <?php foreach ($available_models as $key => $model): ?>
-                                    <label class="rtbcb-checkbox-label">
-                                        <input type="checkbox" name="test-models[]" value="<?php echo esc_attr($key); ?>" 
-                                               data-model-name="<?php echo esc_attr($model); ?>" checked>
-                                        <span><?php echo esc_html(ucfirst($key) . ' (' . $model . ')'); ?></span>
+                        <!-- Model Selection Controls -->
+                        <div class="rtbcb-model-matrix">
+                            <h4><?php esc_html_e( 'Model Comparison Matrix', 'rtbcb' ); ?></h4>
+                            <div class="rtbcb-model-grid">
+                                <?php foreach ( $available_models as $key => $model ) : ?>
+                                    <label class="rtbcb-model-option">
+                                        <input type="checkbox" name="llm-models[]" value="<?php echo esc_attr( $key ); ?>" checked />
+                                        <span class="rtbcb-model-info">
+                                            <strong><?php echo esc_html( ucfirst( $key ) ); ?></strong>
+                                            <small><?php echo esc_html( $model ); ?></small>
+                                            <span class="rtbcb-cost-estimate" data-model="<?php echo esc_attr( $key ); ?>">~$0.00</span>
+                                        </span>
                                     </label>
                                 <?php endforeach; ?>
                             </div>
                         </div>
 
+                        <!-- Prompt Engineering Section -->
+                        <div class="rtbcb-prompt-variants">
+                            <h4><?php esc_html_e( 'A/B Prompt Testing', 'rtbcb' ); ?></h4>
+                            <div class="rtbcb-variant-container">
+                                <div class="rtbcb-variant-item" data-variant="A">
+                                    <label><?php esc_html_e( 'Prompt A:', 'rtbcb' ); ?></label>
+                                    <textarea id="llm-prompt-a" rows="4" placeholder="<?php esc_attr_e( 'Enter first prompt variant...', 'rtbcb' ); ?>"></textarea>
+                                    <div class="rtbcb-variant-controls">
+                                        <label><?php esc_html_e( 'Temperature:', 'rtbcb' ); ?> <input type="range" min="0" max="2" step="0.1" value="0.3" /></label>
+                                        <span class="temperature-display">0.3</span>
+                                    </div>
+                                </div>
+                                <div class="rtbcb-variant-item" data-variant="B">
+                                    <label><?php esc_html_e( 'Prompt B (Optional):', 'rtbcb' ); ?></label>
+                                    <textarea id="llm-prompt-b" rows="4" placeholder="<?php esc_attr_e( 'Enter second prompt variant...', 'rtbcb' ); ?>"></textarea>
+                                    <div class="rtbcb-variant-controls">
+                                        <label><?php esc_html_e( 'Temperature:', 'rtbcb' ); ?> <input type="range" min="0" max="2" step="0.1" value="0.7" /></label>
+                                        <span class="temperature-display">0.7</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="rtbcb-control-row">
                             <div class="rtbcb-control-group">
-                                <label for="llm-max-tokens"><?php esc_html_e('Max Tokens:', 'rtbcb'); ?></label>
+                                <label for="llm-max-tokens"><?php esc_html_e( 'Max Tokens:', 'rtbcb' ); ?></label>
                                 <input type="number" id="llm-max-tokens" min="100" max="4000" value="1000">
-                            </div>
-
-                            <div class="rtbcb-control-group">
-                                <label for="llm-temperature"><?php esc_html_e('Temperature:', 'rtbcb'); ?></label>
-                                <input type="range" id="llm-temperature" min="0" max="2" step="0.1" value="0.3">
-                                <span id="llm-temperature-value">0.3</span>
                             </div>
                         </div>
                     </div>
