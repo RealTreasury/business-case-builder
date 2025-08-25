@@ -725,6 +725,11 @@
 
             if (status === 'timeout') {
                 errorMessage = 'Request timed out. The generation is taking too long.';
+            } else if (status === 'parsererror') {
+                errorMessage = 'Received invalid response from server.';
+                if (xhr && xhr.responseText) {
+                    console.error('Server response:', xhr.responseText);
+                }
             } else if (xhr && xhr.responseJSON) {
                 errorMessage = xhr.responseJSON.data?.message || errorMessage;
                 debugInfo = xhr.responseJSON.data?.debug || {};
