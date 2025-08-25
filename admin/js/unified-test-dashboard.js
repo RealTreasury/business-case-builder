@@ -501,7 +501,10 @@
             const model = $('#model-selection').val();
             const showDebug = $('#show-debug-info').is(':checked');
 
+            this.debugLog('Generate Company Overview button clicked', { companyName, model, showDebug });
+
             if (!companyName) {
+                this.debugLog('Company overview aborted: missing company name', null, 'error');
                 this.showNotification('Please enter a company name', 'error');
                 return;
             }
@@ -765,6 +768,8 @@
                 request_id: this.generateRequestId()
             };
 
+            this.debugLog('Company overview request payload', requestData);
+
             // Make AJAX request
             this.currentRequest = $.ajax({
                 url: rtbcbDashboard.ajaxurl,
@@ -772,13 +777,25 @@
                 data: requestData,
                 timeout: 60000,
 
-                success: (response) => {
+                success: (response, textStatus, xhr) => {
                     circuitBreaker.recordSuccess();
+                    const logData = { status: xhr.status, response };
+                    if (response.success) {
+                        this.debugLog('Company overview response success', logData);
+                    } else {
+                        this.debugLog('Company overview response failure', logData, 'error');
+                    }
                     this.handleGenerationSuccess(response);
                 },
 
                 error: (xhr, status, error) => {
                     circuitBreaker.recordFailure();
+                    this.debugLog('Company overview request failed', {
+                        status: xhr ? xhr.status : 0,
+                        statusText: status,
+                        error: error,
+                        response: xhr ? xhr.responseText : null
+                    }, 'error');
                     this.handleGenerationError(xhr, status, error);
                 },
 
@@ -835,6 +852,7 @@
 
             this.showError(errorMessage, debugInfo);
             this.showNotification(errorMessage, 'error');
+            this.showDebugPanel();
         },
 
         // Complete generation process
@@ -1166,6 +1184,31 @@
             URL.revokeObjectURL(url);
         },
 
+        debugLog(message, data = null, type = 'info') {
+            const timestamp = new Date().toISOString();
+            const entry = data ? { timestamp, message, data } : { timestamp, message };
+
+            if (type === 'error') {
+                console.error(message, data);
+                this.showDebugPanel();
+            } else {
+                console.log(message, data);
+            }
+
+            let container = $('#rtbcb-debug-log');
+            if (!container.length) {
+                $('.rtbcb-debug-content').append(`
+                    <div class="rtbcb-debug-section">
+                        <h4>Logs</h4>
+                        <pre id="rtbcb-debug-log" class="rtbcb-code-block"></pre>
+                    </div>
+                `);
+                container = $('#rtbcb-debug-log');
+            }
+
+            container.append(document.createTextNode(JSON.stringify(entry) + '\n'));
+        },
+
         showNotification(message, type = 'info') {
             const allowedTypes = ['success', 'error', 'warning', 'info'];
             const safeType = allowedTypes.includes(type) ? type : 'info';
@@ -1263,6 +1306,7 @@
             const topK = parseInt($('#rtbcb-rag-top-k').val(), 10) || 3;
             const type = $('#rtbcb-rag-type').val();
             if (!query) {
+                this.debugLog('RAG test aborted: empty query', null, 'error');
                 this.showNotification('Please enter a query', 'error');
                 return;
             }
@@ -1309,32 +1353,51 @@
         runRagTest() {
             const query = $('#rtbcb-rag-query').val().trim();
             const topK = parseInt($('#rtbcb-rag-top-k').val(), 10) || 5;
+
+            this.debugLog('Run RAG Test button clicked', { query, topK });
+
             if (!query) {
+                this.debugLog('RAG test aborted: empty query', null, 'error');
                 this.showNotification('Please enter a query', 'error');
                 return;
             }
 
             const button = $('[data-action="run-rag-test"]').prop('disabled', true);
-            $.post(rtbcbDashboard.ajaxurl, {
+            const payload = {
                 action: 'rtbcb_run_rag_test',
                 nonce: rtbcbDashboard.nonces.ragTesting,
                 queries: [query],
                 topK: topK,
                 evaluationMode: 'similarity'
-            }).done((response) => {
-                if (response.success) {
-                    this.showNotification('RAG test completed', 'success');
-                } else {
-                    this.showNotification(response.data?.message || rtbcbDashboard.strings.error, 'error');
-                }
-            }).fail((jqXHR, textStatus, errorThrown) => {
-                const detail = jqXHR?.responseJSON?.data?.detail || errorThrown || textStatus;
-                const msg = `${rtbcbDashboard.strings.error}: ${detail}`;
-                console.error('[RAG Test] AJAX error:', textStatus, errorThrown, jqXHR?.responseText);
-                this.showNotification(msg, 'error');
-            }).always(() => {
-                button.prop('disabled', false);
-            });
+            };
+
+            this.debugLog('RAG test payload', payload);
+
+            $.post(rtbcbDashboard.ajaxurl, payload)
+                .done((response, textStatus, jqXHR) => {
+                    const logData = { status: jqXHR.status, response };
+                    if (response.success) {
+                        this.debugLog('RAG test success', logData);
+                        this.showNotification('RAG test completed', 'success');
+                    } else {
+                        this.debugLog('RAG test failure response', logData, 'error');
+                        this.showNotification(response.data?.message || rtbcbDashboard.strings.error, 'error');
+                    }
+                })
+                .fail((jqXHR, textStatus, errorThrown) => {
+                    const detail = jqXHR?.responseJSON?.data?.detail || errorThrown || textStatus;
+                    const msg = `${rtbcbDashboard.strings.error}: ${detail}`;
+                    this.debugLog('RAG test AJAX error', {
+                        status: jqXHR.status,
+                        statusText: textStatus,
+                        error: errorThrown,
+                        response: jqXHR.responseText
+                    }, 'error');
+                    this.showNotification(msg, 'error');
+                })
+                .always(() => {
+                    button.prop('disabled', false);
+                });
         },
 
         cancelRagQuery() {
