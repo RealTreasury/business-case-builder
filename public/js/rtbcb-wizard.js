@@ -384,39 +384,43 @@ class BusinessCaseBuilder {
         }
     }
 
-    handleSubmit() {
+    async handleSubmit() {
         // Show loading state
         this.showProgress();
 
         try {
-            const formData = new FormData();
-            const rawData = new FormData(this.form);
+            const nonce = this.form.querySelector('[name="rtbcb_nonce"]').value;
+            const formData = new FormData(this.form);
             const numericFields = ['hours_reconciliation', 'hours_cash_positioning', 'num_banks', 'ftes'];
 
-            for (const [key, value] of rawData.entries()) {
-                if (numericFields.includes(key)) {
+            numericFields.forEach(field => {
+                const value = formData.get(field);
+                if (value !== null) {
                     const numValue = Number(value);
-                    formData.append(key, Number.isFinite(numValue) ? numValue : 0);
-                } else {
-                    formData.append(key, value);
+                    formData.set(field, Number.isFinite(numValue) ? numValue : 0);
                 }
-            }
+            });
+
             formData.append('action', 'rtbcb_generate_case');
+            formData.append('rtbcb_nonce', nonce);
 
             console.log('RTBCB: Submitting form data:', Object.fromEntries(formData));
 
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', ajaxObj.ajax_url, false);
-            xhr.send(formData);
+            const response = await fetch(ajaxObj.ajax_url, {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin'
+            });
 
-            console.log('RTBCB: Response status:', xhr.status);
+            console.log('RTBCB: Response status:', response.status);
 
-            if (xhr.status < 200 || xhr.status >= 300) {
-                console.error('RTBCB: Server error response:', xhr.responseText);
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('RTBCB: Server error response:', errorText);
 
-                let errorMessage = `Server responded with status ${xhr.status}`;
+                let errorMessage = `Server responded with status ${response.status}`;
                 try {
-                    const errorJson = JSON.parse(xhr.responseText);
+                    const errorJson = JSON.parse(errorText);
                     errorMessage = errorJson.data?.message || errorMessage;
                 } catch (parseError) {
                     console.error('RTBCB: Could not parse error response as JSON:', parseError);
@@ -425,7 +429,7 @@ class BusinessCaseBuilder {
                 throw new Error(errorMessage);
             }
 
-            const result = JSON.parse(xhr.responseText);
+            const result = await response.json();
             console.log('RTBCB: Parsed response:', result);
 
             if (result.success) {
