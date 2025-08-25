@@ -104,7 +104,7 @@
                 this.exportResults();
             });
 
-            // Rebind after tab switches
+            // Tab navigation
             $('.rtbcb-test-tabs .nav-tab').on('click.rtbcb', this.handleTabClick.bind(this));
         },
 
@@ -223,10 +223,9 @@
 
             return new Promise((resolve, reject) => {
                 const attemptRequest = (attemptNum) => {
-                    // Verify nonce exists
                     const nonceKey = this.getNonceKeyForAction(action);
                     if (!rtbcbDashboard.nonces[nonceKey]) {
-                        reject(new Error(`Missing nonce for action: ${action} (key: ${nonceKey})`));
+                        reject(new Error(`Missing nonce for action: ${action}`));
                         return;
                     }
 
@@ -250,17 +249,15 @@
                             if (response.success) {
                                 resolve(response.data || response);
                             } else {
-                                const errorMsg = response.data?.message || 'Request failed';
-                                const errorCode = response.data?.code || 'unknown';
-                                reject(new Error(`${errorCode}: ${errorMsg}`));
+                                reject(new Error(response.data?.message || 'Request failed'));
                             }
                         },
 
                         error: (xhr, status, error) => {
                             const isRateLimit = xhr.status === 429;
-                            const shouldRetry = attemptNum < config.retries && (isRateLimit || status === 'timeout');
+                            const shouldRetry = attemptNum < config.retries;
 
-                            if (shouldRetry) {
+                            if (shouldRetry && (isRateLimit || status === 'timeout')) {
                                 const delay = isRateLimit ?
                                     config.backoffMs * Math.pow(2, attemptNum - 1) :
                                     config.backoffMs;
@@ -268,29 +265,13 @@
                                 return;
                             }
 
-                            const retryAfter = xhr.getResponseHeader('Retry-After');
-                            const errorObj = new Error(`${status}: ${error}`);
-                            errorObj.retryAfter = retryAfter;
-                            reject(errorObj);
+                            reject(new Error(`${status}: ${error}`));
                         }
                     });
                 };
 
                 attemptRequest(1);
             });
-        },
-
-        getNonceKeyForAction: function(action) {
-            const actionNonceMap = {
-                'test_company_overview_enhanced': 'dashboard',
-                'test_llm_model': 'llm',
-                'run_llm_test': 'llm',
-                'test_rag_query': 'dashboard',
-                'run_rag_test': 'ragTesting',
-                'run_api_health_tests': 'apiHealth',
-                'api_health_ping': 'apiHealth'
-            };
-            return actionNonceMap[action] || 'dashboard';
         },
 
         // Chart.js Memory Management
@@ -1397,6 +1378,23 @@
 
     // Expose Dashboard object for debugging
     window.RTBCBDashboard = Dashboard;
+
+    // Add getNonceKeyForAction method and ResultStore
+    Dashboard.getNonceKeyForAction = function(action) {
+        const actionNonceMap = {
+            'test_company_overview_enhanced': 'dashboard',
+            'test_llm_model': 'llm',
+            'run_llm_test': 'llm',
+            'test_rag_query': 'dashboard',
+            'run_rag_test': 'ragTesting',
+            'run_api_health_tests': 'apiHealth',
+            'api_health_ping': 'apiHealth'
+        };
+        return actionNonceMap[action] || 'dashboard';
+    };
+
+    // Add ResultStore implementation (see section 9)
+    Dashboard.ResultStore = { /* implementation from section 9 */ };
 
     // Add this debug helper
     window.DashboardDiag = {

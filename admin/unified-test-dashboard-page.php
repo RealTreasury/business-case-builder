@@ -19,7 +19,6 @@ function rtbcb_enqueue_dashboard_assets() {
     $css_file = RTBCB_URL . 'admin/css/unified-test-dashboard.css';
     $js_file  = RTBCB_URL . 'admin/js/unified-test-dashboard.js';
 
-    // Enqueue CSS with versioning
     wp_enqueue_style(
         'rtbcb-unified-dashboard',
         $css_file,
@@ -27,7 +26,6 @@ function rtbcb_enqueue_dashboard_assets() {
         filemtime( RTBCB_DIR . 'admin/css/unified-test-dashboard.css' )
     );
 
-    // Enqueue Chart.js before our script
     wp_enqueue_script(
         'chart-js',
         'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js',
@@ -36,7 +34,6 @@ function rtbcb_enqueue_dashboard_assets() {
         true
     );
 
-    // Enqueue main dashboard script
     wp_enqueue_script(
         'rtbcb-unified-dashboard',
         $js_file,
@@ -45,7 +42,6 @@ function rtbcb_enqueue_dashboard_assets() {
         true
     );
 
-    // Localization with complete payload
     wp_localize_script(
         'rtbcb-unified-dashboard',
         'rtbcbDashboard',
@@ -67,17 +63,12 @@ function rtbcb_enqueue_dashboard_assets() {
             'features' => [
                 'debugMode'                  => defined( 'WP_DEBUG' ) && WP_DEBUG,
                 'lastSuccessfulOpenAIPingAt' => get_option( 'rtbcb_openai_last_ok', 0 ),
-                'apiHealthEnabled'           => true,
             ],
             'strings' => [
                 'generating'    => __( 'Generating...', 'rtbcb' ),
                 'complete'      => __( 'Complete!', 'rtbcb' ),
                 'error'         => __( 'Error occurred', 'rtbcb' ),
-                'running'       => __( 'Running...', 'rtbcb' ),
                 'settingsSaved' => __( 'Settings saved successfully', 'rtbcb' ),
-            ],
-            'urls'    => [
-                'settings' => admin_url( 'admin.php?page=rtbcb-unified-tests#settings' ),
             ],
         ]
     );

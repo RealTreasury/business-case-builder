@@ -10,6 +10,12 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+// Add missing AJAX action hooks
+add_action( 'wp_ajax_rtbcb_run_llm_test', 'rtbcb_ajax_run_llm_test' );
+add_action( 'wp_ajax_rtbcb_run_rag_test', 'rtbcb_ajax_run_rag_test' );
+add_action( 'wp_ajax_rtbcb_api_health_ping', 'rtbcb_ajax_api_health_ping' );
+add_action( 'wp_ajax_rtbcb_export_results', 'rtbcb_ajax_export_results' );
+
 /**
  * OpenAI API connection tester.
  */
@@ -220,10 +226,6 @@ add_action( 'wp_ajax_rtbcb_test_rag_query', 'rtbcb_test_rag_query' );
 add_action( 'wp_ajax_rtbcb_rag_rebuild_index', 'rtbcb_rag_rebuild_index' );
 add_action( 'wp_ajax_rtbcb_generate_preview_report', 'rtbcb_generate_preview_report' );
 add_action( 'wp_ajax_rtbcb_save_dashboard_settings', 'rtbcb_save_dashboard_settings' );
-add_action( 'wp_ajax_rtbcb_run_llm_test', 'rtbcb_ajax_run_llm_test' );
-add_action( 'wp_ajax_rtbcb_run_rag_test', 'rtbcb_ajax_run_rag_test' );
-add_action( 'wp_ajax_rtbcb_api_health_ping', 'rtbcb_ajax_api_health_ping' );
-add_action( 'wp_ajax_rtbcb_export_results', 'rtbcb_ajax_export_results' );
 
 /**
  * Test individual LLM model with given prompt.
