@@ -66,6 +66,63 @@
         ragRequest: null,
         llmTestResults: null,
         charts: {},
+        roiPresets: {
+            'small-company': {
+                'roi-company-size': 'small',
+                'roi-annual-revenue': 20000000,
+                'roi-industry': 'technology',
+                'roi-treasury-staff': 2,
+                'roi-avg-salary': 65000,
+                'roi-hours-reconciliation': 1,
+                'roi-hours-reporting': 1,
+                'roi-hours-analysis': 1,
+                'roi-num-banks': 2,
+                'roi-monthly-bank-fees': 3000,
+                'roi-wire-transfer-volume': 40,
+                'roi-avg-wire-fee': 20,
+                'roi-error-frequency': 1,
+                'roi-avg-error-cost': 1000,
+                'roi-compliance-hours': 10,
+                'roi-system-integration': 'manual'
+            },
+            'medium-company': {
+                'roi-company-size': 'medium',
+                'roi-annual-revenue': 50000000,
+                'roi-industry': 'manufacturing',
+                'roi-treasury-staff': 5,
+                'roi-avg-salary': 85000,
+                'roi-hours-reconciliation': 4,
+                'roi-hours-reporting': 2,
+                'roi-hours-analysis': 3,
+                'roi-num-banks': 8,
+                'roi-monthly-bank-fees': 15000,
+                'roi-wire-transfer-volume': 150,
+                'roi-avg-wire-fee': 25,
+                'roi-error-frequency': 3,
+                'roi-avg-error-cost': 2500,
+                'roi-compliance-hours': 40,
+                'roi-system-integration': 'partial'
+            },
+            'large-company': {
+                'roi-company-size': 'large',
+                'roi-annual-revenue': 300000000,
+                'roi-industry': 'financial-services',
+                'roi-treasury-staff': 20,
+                'roi-avg-salary': 110000,
+                'roi-hours-reconciliation': 6,
+                'roi-hours-reporting': 4,
+                'roi-hours-analysis': 5,
+                'roi-num-banks': 20,
+                'roi-monthly-bank-fees': 60000,
+                'roi-wire-transfer-volume': 1000,
+                'roi-avg-wire-fee': 30,
+                'roi-error-frequency': 10,
+                'roi-avg-error-cost': 5000,
+                'roi-compliance-hours': 200,
+                'roi-system-integration': 'integrated'
+            }
+        },
+        lastRoiResults: null,
 
         // Initialize dashboard
         init: function() {
@@ -178,6 +235,27 @@
                     Dashboard.calculateRoiTest();
                 } catch (err) {
                     console.error('Error calculating ROI:', err);
+                }
+            });
+
+            $(document).on('click.rtbcb', '.rtbcb-scenario-tab', function(e) {
+                e.preventDefault();
+                const scenario = $(this).data('scenario');
+                $('.rtbcb-scenario-tab').removeClass('active');
+                $(this).addClass('active');
+                try {
+                    Dashboard.loadRoiScenario(scenario);
+                } catch (err) {
+                    console.error('Error loading ROI scenario:', err);
+                }
+            });
+
+            $(document).on('click.rtbcb', '#export-roi-results', function(e) {
+                e.preventDefault();
+                try {
+                    Dashboard.exportRoiResults();
+                } catch (err) {
+                    console.error('Error exporting ROI results:', err);
                 }
             });
 
@@ -1379,7 +1457,21 @@
             });
         },
 
-        // ROI Calculator test
+        // ROI Calculator helpers
+        loadRoiScenario(scenario) {
+            const preset = this.roiPresets[scenario];
+            if (!preset) {
+                return;
+            }
+            Object.keys(preset).forEach(id => {
+                const value = preset[id];
+                const el = document.getElementById(id);
+                if (el) {
+                    $(el).val(value);
+                }
+            });
+        },
+
         calculateRoiTest() {
             const button = $('#calculate-roi').prop('disabled', true);
             const roiData = {};
@@ -1387,24 +1479,108 @@
                 roiData[this.id] = $(this).val();
             });
 
-            $.post(rtbcbDashboard.ajaxurl, {
-                action: 'rtbcb_calculate_roi_test',
-                nonce: rtbcbDashboard.nonces.roiCalculator,
-                roi_data: roiData
-            }).done((response) => {
-                if (response.success) {
+            this.request('calculate_roi_test', { roi_data: roiData })
+                .then(data => {
+                    this.renderRoiResults(data);
                     this.showNotification('ROI calculated', 'success');
-                } else {
-                    this.showNotification(response.data?.message || rtbcbDashboard.strings.error, 'error');
+                })
+                .catch(err => {
+                    console.error('[ROI Test] error:', err);
+                    this.showNotification(err.message || rtbcbDashboard.strings.error, 'error');
+                })
+                .finally(() => {
+                    button.prop('disabled', false);
+                });
+        },
+
+        renderRoiResults(data) {
+            const scenarios = {
+                conservative: data.conservative || {},
+                base: data.base || {},
+                optimistic: data.optimistic || {}
+            };
+
+            const formatCurrency = val => '$' + Number(val || 0).toLocaleString();
+            const formatPercent = val => (Number(val || 0)).toFixed(1) + '%';
+
+            $('#roi-conservative-percent').text(formatPercent(scenarios.conservative.roi_percentage));
+            $('#roi-conservative-amount').text(formatCurrency(scenarios.conservative.total_annual_benefit));
+
+            $('#roi-realistic-percent').text(formatPercent(scenarios.base.roi_percentage));
+            $('#roi-realistic-amount').text(formatCurrency(scenarios.base.total_annual_benefit));
+
+            $('#roi-optimistic-percent').text(formatPercent(scenarios.optimistic.roi_percentage));
+            $('#roi-optimistic-amount').text(formatCurrency(scenarios.optimistic.total_annual_benefit));
+
+            const labels = ['Conservative', 'Realistic', 'Optimistic'];
+            const roiValues = [
+                scenarios.conservative.roi_percentage,
+                scenarios.base.roi_percentage,
+                scenarios.optimistic.roi_percentage
+            ];
+
+            this.createChart('roi-comparison-chart', {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'ROI %',
+                        data: roiValues,
+                        backgroundColor: ['#d63638', '#007cba', '#2ecc71']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { callback: value => value + '%' } }
+                    }
                 }
-            }).fail((jqXHR, textStatus, errorThrown) => {
-                const detail = jqXHR?.responseJSON?.data?.detail || errorThrown || textStatus;
-                const msg = `${rtbcbDashboard.strings.error}: ${detail}`;
-                console.error('[ROI Test] AJAX error:', textStatus, errorThrown, jqXHR?.responseText);
-                this.showNotification(msg, 'error');
-            }).always(() => {
-                button.prop('disabled', false);
             });
+
+            const breakdown = [
+                scenarios.base.labor_savings,
+                scenarios.base.fee_savings,
+                scenarios.base.error_reduction
+            ];
+
+            this.createChart('roi-breakdown-chart', {
+                type: 'pie',
+                data: {
+                    labels: ['Labor', 'Fees', 'Errors'],
+                    datasets: [{
+                        data: breakdown,
+                        backgroundColor: ['#007cba', '#00a0d2', '#46b450']
+                    }]
+                },
+                options: { responsive: true }
+            });
+
+            const analysis = data.analysis || {};
+            const analysisText = `Recommendation: ${analysis.recommendation || 'n/a'} (Confidence: ${analysis.confidence || 'n/a'})`;
+            if (!$('#roi-analysis-summary').length) {
+                $('#roi-results-container .rtbcb-results-header').append('<p id="roi-analysis-summary"></p>');
+            }
+            $('#roi-analysis-summary').text(analysisText);
+
+            this.lastRoiResults = {
+                scenarios: scenarios,
+                analysis: analysis,
+                input_summary: data.input_summary || {}
+            };
+
+            $('#roi-results-container').show();
+            $('#export-roi-results').prop('disabled', false);
+        },
+
+        exportRoiResults() {
+            if (!this.lastRoiResults) {
+                this.showNotification('No ROI results to export', 'warning');
+                return;
+            }
+
+            this.downloadJSON(this.lastRoiResults, `roi_results_${Date.now()}.json`);
+            this.showNotification('ROI results exported', 'success');
         },
 
         // API Health Methods
