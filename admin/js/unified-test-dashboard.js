@@ -1924,7 +1924,7 @@
             }
             row.find('.rtbcb-last-tested').text(result.last_tested || '');
             row.find('.rtbcb-response-time').text(result.response_time ? `${result.response_time} ms` : '');
-            const msg = result.message || '';
+            const msg = result.message || result.details?.message || '';
             row.find('.rtbcb-message').text(msg);
             $(`#rtbcb-details-${component} pre`).text(JSON.stringify(result.details || {}, null, 2));
         },
@@ -1935,14 +1935,20 @@
 
         updateApiSummary() {
             const results = this.apiResults || {};
-            const failures = Object.values(results).filter(r => !r.passed).length;
+            const failures = Object.values(results).filter(r => !r.passed);
             let message;
             if (Object.keys(results).length === 0) {
                 message = rtbcbDashboard.strings.notTested;
-            } else if (failures === 0) {
+            } else if (failures.length === 0) {
                 message = rtbcbDashboard.strings.allOperational;
             } else {
-                message = rtbcbDashboard.strings.errorsDetected.replace('%d', failures);
+                const failureMessages = failures
+                    .map(r => r.message || r.details?.message)
+                    .filter(Boolean);
+                message = rtbcbDashboard.strings.errorsDetected.replace('%d', failures.length);
+                if (failureMessages.length) {
+                    message += ': ' + failureMessages.join('; ');
+                }
             }
             $('#rtbcb-api-health-notice').text(message);
         },
