@@ -874,8 +874,8 @@ class RTBCB_Plugin {
                     if ( empty( get_option( 'rtbcb_openai_api_key' ) ) ) {
                         rtbcb_log_api_debug( 'OpenAI API key not configured' );
                         wp_send_json_error(
-                            [ 'message' => __( 'OpenAI API key not configured.', 'rtbcb' ) ],
-                            500
+                            [ 'message' => esc_html__( 'OpenAI API key not configured.', 'rtbcb' ) ],
+                            400
                         );
                     }
 
@@ -891,16 +891,31 @@ class RTBCB_Plugin {
 
                     if ( is_wp_error( $comprehensive_analysis ) ) {
                         $error_message = $comprehensive_analysis->get_error_message();
-                        rtbcb_log_api_debug( 'LLM generation failed', $error_message );
                         $error_code    = method_exists( $comprehensive_analysis, 'get_error_code' ) ? $comprehensive_analysis->get_error_code() : '';
+                        $error_data    = method_exists( $comprehensive_analysis, 'get_error_data' ) ? $comprehensive_analysis->get_error_data( $error_code ) : null;
+
+                        rtbcb_log_error(
+                            'LLM generation failed',
+                            [
+                                'code'    => $error_code,
+                                'message' => $error_message,
+                                'data'    => $error_data,
+                            ]
+                        );
+
                         if ( 'no_api_key' === $error_code ) {
-                            wp_send_json_error( [ 'message' => $error_message ], 500 );
+                            wp_send_json_error(
+                                [ 'message' => esc_html__( 'OpenAI API key not configured.', 'rtbcb' ) ],
+                                400
+                            );
                         }
+
                         $response_message = __( 'Failed to generate business case analysis.', 'rtbcb' );
                         if ( function_exists( 'wp_get_environment_type' ) && 'production' !== wp_get_environment_type() ) {
                             $response_message = $error_message;
                         }
-                        wp_send_json_error( [ 'message' => $response_message ], 500 );
+
+                        wp_send_json_error( [ 'message' => esc_html( $response_message ) ], 500 );
                     }
 
                     if ( isset( $comprehensive_analysis['error'] ) ) {

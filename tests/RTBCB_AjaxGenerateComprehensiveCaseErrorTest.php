@@ -68,6 +68,10 @@ if ( ! function_exists( 'rtbcb_log_memory_usage' ) ) {
     function rtbcb_log_memory_usage( $stage ) {}
 }
 
+if ( ! function_exists( 'rtbcb_log_error' ) ) {
+    function rtbcb_log_error( $message, $context = null ) {}
+}
+
 if ( ! class_exists( 'RTBCB_LLM' ) ) {
     class RTBCB_LLM {
         public static $mode = 'generic';
@@ -112,8 +116,22 @@ if ( ! class_exists( 'RTBCB_Plugin' ) ) {
             if ( is_wp_error( $comprehensive_analysis ) ) {
                 $error_message = $comprehensive_analysis->get_error_message();
                 $error_code    = $comprehensive_analysis->get_error_code();
+                $error_data    = null;
+
+                rtbcb_log_error(
+                    'LLM generation failed',
+                    [
+                        'code'    => $error_code,
+                        'message' => $error_message,
+                        'data'    => $error_data,
+                    ]
+                );
+
                 if ( 'no_api_key' === $error_code ) {
-                    wp_send_json_error( [ 'message' => $error_message ], 500 );
+                    wp_send_json_error(
+                        [ 'message' => 'OpenAI API key not configured.' ],
+                        400
+                    );
                 }
                 $response_message = __( 'Failed to generate business case analysis.', 'rtbcb' );
                 if ( function_exists( 'wp_get_environment_type' ) && 'production' !== wp_get_environment_type() ) {
@@ -151,7 +169,7 @@ final class RTBCB_AjaxGenerateComprehensiveCaseErrorTest extends TestCase {
             $plugin->ajax_generate_comprehensive_case();
             $this->fail( 'Expected RTBCB_JSON_Error was not thrown.' );
         } catch ( RTBCB_JSON_Error $e ) {
-            $this->assertSame( 500, $e->status );
+            $this->assertSame( 400, $e->status );
             $this->assertSame(
                 [
                     'success' => false,

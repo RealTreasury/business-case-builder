@@ -412,9 +412,9 @@ class BusinessCaseBuilder {
             console.log('RTBCB: Response status:', xhr.status);
 
             if (xhr.status < 200 || xhr.status >= 300) {
-                console.error('RTBCB: Server error response:', xhr.responseText);
+                console.error('RTBCB: Server error response:', xhr.status, xhr.responseText);
 
-                let errorMessage = `Server responded with status ${xhr.status}`;
+                let errorMessage = 'Failed to generate business case analysis.';
                 try {
                     const errorJson = JSON.parse(xhr.responseText);
                     errorMessage = errorJson.data?.message || errorMessage;
@@ -432,7 +432,7 @@ class BusinessCaseBuilder {
                 console.log('RTBCB: Business case generated successfully');
                 this.showResults(result.data);
             } else {
-                const errorMessage = result.data?.message || 'Failed to generate business case';
+                const errorMessage = result.data?.message || 'Failed to generate business case analysis.';
                 console.error('RTBCB: Business case generation failed:', errorMessage);
                 throw new Error(errorMessage);
             }
