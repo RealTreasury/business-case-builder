@@ -12,14 +12,15 @@ const supportedModels = ['gpt-4o', 'gpt-4.1-preview'];
 
 for (const model of [...unsupportedModels, ...supportedModels]) {
     let capturedBody;
-    global.rtbcbReport = { report_model: model, api_key: 'test', model_capabilities: capabilities };
+    global.rtbcbReport = { report_model: model, model_capabilities: capabilities, ajax_url: '/fake', nonce: 'nonce' };
     global.XMLHttpRequest = function () {
         this.open = function () {};
         this.setRequestHeader = function () {};
         this.send = function (body) {
-            capturedBody = JSON.parse(body);
+            const params = new URLSearchParams(body);
+            capturedBody = JSON.parse(params.get('request'));
             this.status = 200;
-            this.responseText = JSON.stringify({ output_text: '<html></html>' });
+            this.responseText = JSON.stringify({ success: true, data: { html: '<html></html>' } });
         };
     };
     global.document = { getElementById: () => null };

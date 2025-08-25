@@ -297,10 +297,14 @@ function generateProfessionalReport(businessContext) {
     }
 
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', 'https://api.openai.com/v1/responses', false);
-    xhr.setRequestHeader('Content-Type', 'application/json');
-    xhr.setRequestHeader('Authorization', `Bearer ${rtbcbReport.api_key}`);
-    xhr.send(JSON.stringify(requestBody));
+    xhr.open('POST', rtbcbReport.ajax_url, false);
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+    const params = new URLSearchParams({
+        action: 'rtbcb_generate_report',
+        nonce: rtbcbReport.nonce,
+        request: JSON.stringify(requestBody)
+    });
+    xhr.send(params.toString());
 
     if (xhr.status < 200 || xhr.status >= 300) {
         throw new Error('HTTP ' + xhr.status);
@@ -308,12 +312,12 @@ function generateProfessionalReport(businessContext) {
 
     const data = JSON.parse(xhr.responseText);
 
-    if (data.error) {
-        const errorMessage = data.error.message || 'Responses API error';
+    if (!data.success) {
+        const errorMessage = (data.data && data.data.message) ? data.data.message : 'Server error';
         throw new Error(errorMessage);
     }
 
-    const htmlContent = data.output_text;
+    const htmlContent = data.data.html;
     const cleanedHTML = htmlContent
         .replace(/```html\n?/g, '')
         .replace(/```\n?/g, '')
