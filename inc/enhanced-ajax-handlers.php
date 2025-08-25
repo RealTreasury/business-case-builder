@@ -1,10 +1,5 @@
 <?php
 
-// Add immediate debug hook
-add_action( 'wp_ajax_rtbcb_test_company_overview_enhanced', function() {
-    error_log( '[DIAG] AJAX Entry: company_overview, User: ' . get_current_user_id() . ', Nonce: ' . ( $_POST['nonce'] ?? 'missing' ) );
-}, 1 );
-
 add_action( 'wp_ajax_rtbcb_run_llm_test', 'rtbcb_ajax_run_llm_test' );
 add_action( 'wp_ajax_rtbcb_run_rag_test', 'rtbcb_ajax_run_rag_test' );
 add_action( 'wp_ajax_rtbcb_api_health_ping', 'rtbcb_ajax_api_health_ping' );
@@ -681,6 +676,11 @@ function rtbcb_ajax_test_llm_model() {
  * @return void
  */
 function rtbcb_ajax_test_company_overview_enhanced() {
+    if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+        $nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['nonce'] ) ) : 'missing';
+        error_log( '[RTBCB] AJAX Entry: company_overview, User: ' . get_current_user_id() . ', Nonce: ' . $nonce );
+    }
+
     // Verify nonce and permissions
     if ( ! check_ajax_referer( 'rtbcb_unified_test_dashboard', 'nonce', false ) ) {
         rtbcb_send_json_error( 'security_check_failed', __( 'Security check failed.', 'rtbcb' ), 403, 'Invalid or missing nonce.' );
