@@ -85,7 +85,7 @@ $last_index_display = $last_indexed ? $last_indexed : __( 'Never', 'rtbcb' );
         <?php
     elseif ( 'invalid_api_key' === $settings_status ) :
         ?>
-        <div class="notice notice-error is-dismissible"><p><?php esc_html_e( 'Invalid OpenAI API key format.', 'rtbcb' ); ?></p></div>
+        <div class="notice notice-error is-dismissible"><p><?php esc_html_e( 'Invalid OpenAI API key format. Please ensure the key begins with "sk-".', 'rtbcb' ); ?></p></div>
         <?php
     endif;
     ?>

@@ -296,7 +296,12 @@ class RTBCB_Admin {
         $openai_key = isset( $_POST['rtbcb_openai_api_key'] ) ? sanitize_text_field( wp_unslash( $_POST['rtbcb_openai_api_key'] ) ) : '';
 
         if ( $openai_key && ! rtbcb_is_valid_openai_api_key( $openai_key ) ) {
-            wp_safe_redirect( add_query_arg( 'settings-status', 'invalid_api_key', wp_get_referer() ) );
+            $redirect_url = add_query_arg(
+                'settings-status',
+                'invalid_api_key',
+                admin_url( 'admin.php?page=' . RTBCB_UNIFIED_TESTS_SLUG )
+            );
+            wp_safe_redirect( $redirect_url );
             exit;
         }
 
