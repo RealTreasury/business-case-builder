@@ -554,17 +554,19 @@ function rtbcb_test_generate_category_recommendation( $analysis ) {
  * Test generating a company overview using the LLM.
  *
  * @param string $company_name Company name.
+ * @param string $model_key    Model key to use for the analysis.
  * @return array|WP_Error Structured overview array or error object.
- */
-function rtbcb_test_generate_company_overview( $company_name ) {
+*/
+function rtbcb_test_generate_company_overview( $company_name, $model_key = 'mini' ) {
     if ( ! class_exists( 'RTBCB_LLM' ) ) {
         return new WP_Error( 'missing_class', __( 'LLM class not available', 'rtbcb' ) );
     }
 
     $company_name = sanitize_text_field( $company_name );
+    $model_key    = sanitize_key( $model_key );
 
     $llm = new RTBCB_LLM();
-    return $llm->generate_company_overview( $company_name );
+    return $llm->generate_company_overview( $company_name, false, $model_key );
 }
 
 /**
