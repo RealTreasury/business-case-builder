@@ -6,9 +6,14 @@
 (function($) {
     'use strict';
 
-    console.log('Test dashboard script loaded');
-    console.log('AJAX URL:', typeof rtbcbDashboard !== 'undefined' ? rtbcbDashboard.ajaxurl : ( typeof ajaxurl !== 'undefined' ? ajaxurl : 'undefined' ) );
-    console.log('Nonce:', typeof rtbcbDashboard !== 'undefined' && rtbcbDashboard.nonces ? rtbcbDashboard.nonces.apiHealth : 'undefined');
+    if ( typeof rtbcbDashboard === 'undefined' ) {
+        console.error( 'rtbcbDashboard is not defined' );
+        return;
+    }
+
+    console.log( 'Test dashboard script loaded' );
+    console.log( 'AJAX URL:', rtbcbDashboard.ajaxurl );
+    console.log( 'Nonce:', rtbcbDashboard.nonces ? rtbcbDashboard.nonces.apiHealth : 'undefined' );
 
     const debounce = (func, delay) => {
         let timeoutId;
