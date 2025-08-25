@@ -89,6 +89,9 @@ $last_index_display = $last_indexed ? $last_indexed : __( 'Never', 'rtbcb' );
         <?php
     endif;
     ?>
+    <?php if ( ! $api_valid ) : ?>
+        <div class="notice notice-warning"><p><?php esc_html_e( 'Please enter and save a valid OpenAI API key in the Settings tab to run tests.', 'rtbcb' ); ?></p></div>
+    <?php endif; ?>
     <div class="rtbcb-dashboard-header">
         <h1><?php esc_html_e( 'Unified Test Dashboard', 'rtbcb' ); ?></h1>
         <p class="rtbcb-dashboard-subtitle">

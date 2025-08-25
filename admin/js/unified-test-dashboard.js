@@ -1778,6 +1778,15 @@
                 return;
             }
 
+            const apiKey = $('#rtbcb_openai_api_key').val();
+            if (!apiKey) {
+                console.warn('[API Health] OpenAI API key missing');
+                const msg = rtbcbDashboard.strings.apiKeyRequired;
+                $('#rtbcb-api-health-notice').text(msg);
+                this.showNotification(msg, 'warning');
+                return;
+            }
+
             const $button = $('[data-action="api-health-ping"]').prop('disabled', true);
             $('#rtbcb-api-health-notice').text('Running comprehensive API health tests...');
 
@@ -1855,6 +1864,15 @@
                 this.showNotification(rtbcbDashboard.strings.error, 'error');
                 return;
             }
+            const apiKey = $('#rtbcb_openai_api_key').val();
+            if (!apiKey) {
+                console.warn('[API Health] OpenAI API key missing');
+                const msg = rtbcbDashboard.strings.apiKeyRequired;
+                $('#rtbcb-api-health-notice').text(msg);
+                this.showNotification(msg, 'warning');
+                return;
+            }
+
             const button = $(`.rtbcb-retest[data-component="${component}"]`).prop('disabled', true);
             $.ajax({
                 url: rtbcbDashboard.ajaxurl,
