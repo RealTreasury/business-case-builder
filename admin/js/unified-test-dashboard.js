@@ -727,13 +727,13 @@
                     $button.prop('disabled', false)
                            .addClass('rtbcb-success')
                            .html(`<span class="dashicons dashicons-yes-alt"></span> ${text || 'Complete'}`);
-                    setTimeout(() => $button.removeClass('rtbcb-success').html(defaultText), 3000);
+                    setTimeout(() => $button.removeClass('rtbcb-success').html(this.escapeHtml(defaultText)), 3000);
                     break;
                 case 'error':
                     $button.prop('disabled', false)
                            .addClass('rtbcb-error')
                            .html(`<span class="dashicons dashicons-warning"></span> ${text || 'Error'}`);
-                    setTimeout(() => $button.removeClass('rtbcb-error').html(defaultText), 5000);
+                    setTimeout(() => $button.removeClass('rtbcb-error').html(this.escapeHtml(defaultText)), 5000);
                     break;
                 default:
                     $button.prop('disabled', false).html(text ? text : this.escapeHtml(defaultText));
