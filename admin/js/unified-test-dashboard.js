@@ -126,20 +126,11 @@
         loadChartJs: function(callback) {
             if (typeof Chart !== 'undefined') {
                 callback();
-                return;
             }
-            const script = document.createElement('script');
-            script.src = rtbcbDashboard.urls.chartJsUrl;
-            script.onload = callback;
-            document.head.appendChild(script);
         },
 
         // Bind all event handlers using delegated pattern
         bindEvents() {
-            console.log('[DIAG] Binding events - jQuery ready:', !!$);
-            console.log('[DIAG] Button count:', $('[data-action]').length);
-            console.log('[DIAG] Available nonces:', Object.keys(rtbcbDashboard?.nonces || {}));
-
             // Use delegated handlers for dynamic content
             $(document).off('.rtbcb').on('click.rtbcb', '[data-action="run-company-overview"]', (e) => {
                 e.preventDefault();
@@ -166,7 +157,7 @@
                 this.exportResults();
             });
 
-            // Rebind after tab switches
+            // Tab navigation
             $('.rtbcb-test-tabs .nav-tab').on('click.rtbcb', this.handleTabClick.bind(this));
         },
 
@@ -274,10 +265,6 @@
 
         // Promise-based request wrapper with retry logic
         request: function(action, data = {}, options = {}) {
-            if (!circuitBreaker.canExecute()) {
-                return Promise.reject(new Error(rtbcbDashboard.strings.serviceUnavailable));
-            }
-
             const defaults = {
                 retries: 3,
                 backoffMs: 1000,
@@ -289,10 +276,9 @@
 
             return new Promise((resolve, reject) => {
                 const attemptRequest = (attemptNum) => {
-                    // Verify nonce exists
                     const nonceKey = this.getNonceKeyForAction(action);
                     if (!rtbcbDashboard.nonces[nonceKey]) {
-                        reject(new Error(`Missing nonce for action: ${action} (key: ${nonceKey})`));
+                        reject(new Error(`Missing nonce for action: ${action}`));
                         return;
                     }
 
@@ -303,64 +289,42 @@
 
                     $.ajax({
                         url: rtbcbDashboard.ajaxurl,
-                        type: 'POST',
+                        type: 'POST', 
                         data: requestData,
                         timeout: config.timeout,
 
                         success: (response) => {
                             if (config.validateResponse && (!response || typeof response.success === 'undefined')) {
-                                circuitBreaker.recordFailure();
                                 reject(new Error('Invalid response format'));
                                 return;
                             }
 
                             if (response.success) {
-                                circuitBreaker.recordSuccess();
                                 resolve(response.data || response);
                             } else {
-                                circuitBreaker.recordFailure();
-                                const errorMsg = response.data?.message || 'Request failed';
-                                const errorCode = response.data?.code || 'unknown';
-                                reject(new Error(`${errorCode}: ${errorMsg}`));
+                                reject(new Error(response.data?.message || 'Request failed'));
                             }
                         },
 
                         error: (xhr, status, error) => {
-                            circuitBreaker.recordFailure();
                             const isRateLimit = xhr.status === 429;
-                            const shouldRetry = attemptNum < config.retries && (isRateLimit || status === 'timeout');
+                            const shouldRetry = attemptNum < config.retries;
 
-                            if (shouldRetry) {
-                                const delay = isRateLimit ?
-                                    config.backoffMs * Math.pow(2, attemptNum - 1) :
+                            if (shouldRetry && (isRateLimit || status === 'timeout')) {
+                                const delay = isRateLimit ? 
+                                    config.backoffMs * Math.pow(2, attemptNum - 1) : 
                                     config.backoffMs;
                                 setTimeout(() => attemptRequest(attemptNum + 1), delay);
                                 return;
                             }
 
-                            const retryAfter = xhr.getResponseHeader('Retry-After');
-                            const errorObj = new Error(`${status}: ${error}`);
-                            errorObj.retryAfter = retryAfter;
-                            reject(errorObj);
+                            reject(new Error(`${status}: ${error}`));
                         }
                     });
                 };
 
                 attemptRequest(1);
             });
-        },
-
-        getNonceKeyForAction: function(action) {
-            const actionNonceMap = {
-                'test_company_overview_enhanced': 'dashboard',
-                'test_llm_model': 'llm',
-                'run_llm_test': 'llm',
-                'test_rag_query': 'dashboard',
-                'run_rag_test': 'ragTesting',
-                'run_api_health_tests': 'apiHealth',
-                'api_health_ping': 'apiHealth'
-            };
-            return actionNonceMap[action] || 'dashboard';
         },
 
         // Chart.js Memory Management
@@ -627,7 +591,7 @@
         // Start the generation process
         startGeneration(companyName, model, showDebug) {
             if (!circuitBreaker.canExecute()) {
-                this.showNotification(rtbcbDashboard.strings.serviceUnavailable, 'error');
+                this.showNotification(rtbcbDashboard.strings.error, 'error');
                 return;
             }
 
@@ -1131,7 +1095,7 @@
         runRagQuery() {
             if (this.ragRequest) return;
             if (!circuitBreaker.canExecute()) {
-                this.showNotification(rtbcbDashboard.strings.serviceUnavailable, 'error');
+                this.showNotification(rtbcbDashboard.strings.error, 'error');
                 return;
             }
 
@@ -1309,7 +1273,7 @@
 
         runAllApiTests() {
             if (!circuitBreaker.canExecute()) {
-                this.showNotification(rtbcbDashboard.strings.serviceUnavailable, 'error');
+                this.showNotification(rtbcbDashboard.strings.error, 'error');
                 return;
             }
             $('[data-action="api-health-ping"]').prop('disabled', true);
@@ -1346,7 +1310,7 @@
 
         runSingleApiTest(component) {
             if (!circuitBreaker.canExecute()) {
-                this.showNotification(rtbcbDashboard.strings.serviceUnavailable, 'error');
+                this.showNotification(rtbcbDashboard.strings.error, 'error');
                 return;
             }
             const button = $(`.rtbcb-retest[data-component="${component}"]`).prop('disabled', true);
@@ -1397,10 +1361,7 @@
             }
             row.find('.rtbcb-last-tested').text(result.last_tested || '');
             row.find('.rtbcb-response-time').text(result.response_time ? `${result.response_time} ms` : '');
-            let msg = result.message || '';
-            if (!result.passed && /API key/i.test(msg) && rtbcbDashboard.urls?.settings) {
-                msg += ` <a href="${rtbcbDashboard.urls.settings}">${rtbcbDashboard.strings.settings}</a>`;
-            }
+            const msg = result.message || '';
             row.find('.rtbcb-message').html(msg);
             $(`#rtbcb-details-${component} pre`).text(JSON.stringify(result.details || {}, null, 2));
         },
@@ -1507,6 +1468,18 @@
             div.textContent = text;
             return div.innerHTML;
         }
+    };
+    Dashboard.getNonceKeyForAction = function(action) {
+        const actionNonceMap = {
+            'test_company_overview_enhanced': 'dashboard',
+            'test_llm_model': 'llm',
+            'run_llm_test': 'llm',
+            'test_rag_query': 'dashboard',
+            'run_rag_test': 'ragTesting',
+            'run_api_health_tests': 'apiHealth',
+            'api_health_ping': 'apiHealth'
+        };
+        return actionNonceMap[action] || 'dashboard';
     };
 
     // Unified Result Store
