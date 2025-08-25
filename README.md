@@ -364,6 +364,36 @@ For manual verification during development, `debug_ajax_handler()` includes runt
 - **Asset Optimization**: Minified CSS/JS for production
 - **Lazy Loading**: Assets only loaded when shortcode is present
 
+## 🧪 AJAX Test Dashboard
+
+The plugin now includes a unified test dashboard with several AJAX actions for validating OpenAI and RAG integrations:
+
+- `wp_ajax_rtbcb_run_llm_test` – Execute LLM model comparison tests
+- `wp_ajax_rtbcb_run_rag_test` – Run RAG system similarity search tests
+- `wp_ajax_rtbcb_api_health_ping` – Ping OpenAI API for health status
+- `wp_ajax_rtbcb_export_results` – Export test dashboard results
+
+### Setup Instructions
+
+- Ensure OpenAI API key is configured in the Settings tab
+- Minimum required models: `gpt-4o-mini` (mini) and `gpt-4o` (premium)
+- RAG system requires database table: `wp_rtbcb_rag_index`
+- For staging environments, disable health notices: `define( 'RTBCB_DISABLE_API_NOTICES', true );`
+
+### Performance Notes
+
+- Chart.js is loaded from a CDN for better caching
+- AJAX requests use exponential backoff on rate limits
+- Result data persists in browser `localStorage`
+- Heavy operations use `requestIdleCallback` when available
+
+### Security Features
+
+- All AJAX endpoints require the `manage_options` capability
+- Comprehensive input sanitization and output escaping
+- Nonce verification on all requests
+- No API keys exposed to frontend JavaScript
+
 ## 📞 Support and Documentation
 
 ### Getting Help
@@ -378,7 +408,7 @@ For manual verification during development, `debug_ajax_handler()` includes runt
 A: Verify your API key is correct and has sufficient credits in your OpenAI account.
 
 **Q: Charts not displaying in analytics**
-A: The analytics dashboard relies on Chart.js for visualizations. The plugin bundles this library locally to avoid ad blockers, but strict privacy extensions may still block it. Ensure your browser allows the plugin's scripts so charts can render correctly.
+A: The analytics dashboard relies on Chart.js for visualizations. The library now loads from a CDN for improved caching, but strict privacy extensions or network restrictions may still block it. Ensure your browser allows assets from the CDN so charts can render correctly.
 
 **Q: Lead data not saving**
 A: Check database permissions and ensure tables were created during plugin activation.

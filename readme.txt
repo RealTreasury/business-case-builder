@@ -27,9 +27,14 @@ Add the `[rt_business_case_builder]` shortcode to a post or page.
 Yes. The plugin generates downloadable PDF reports for each business case.
 
 = Why aren't charts showing in analytics? =
-The analytics dashboard uses Chart.js for its visualizations. The library is bundled with the plugin to reduce blocking by privacy tools, but strict ad blockers may still prevent it from loading. Allow the plugin's scripts in your browser to enable the charts.
+The analytics dashboard uses Chart.js loaded from a CDN for better caching. Strict privacy extensions or network restrictions may block CDN assets; allow requests to the CDN so charts can render.
 
 == Changelog ==
+= 2.1.1 =
+* Added AJAX test dashboard actions: `rtbcb_run_llm_test`, `rtbcb_run_rag_test`, `rtbcb_api_health_ping`, `rtbcb_export_results`
+* Setup notes: OpenAI API key, required models (`gpt-4o-mini`, `gpt-4o`), `wp_rtbcb_rag_index` table, `RTBCB_DISABLE_API_NOTICES` flag for staging
+* Performance updates: Chart.js from CDN, exponential backoff for AJAX, results stored in localStorage, `requestIdleCallback` for heavy operations
+* Security hardening: `manage_options` capability, nonce verification, sanitized input/output, no frontend API keys
 = 2.1.0 =
 * Added PDF report generation capabilities.
 
