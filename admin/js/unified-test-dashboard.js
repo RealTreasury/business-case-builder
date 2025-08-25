@@ -13,7 +13,7 @@
 
     console.log( 'Test dashboard script loaded' );
     console.log( 'AJAX URL:', rtbcbDashboard.ajaxurl );
-    console.log( 'Nonce:', rtbcbDashboard.nonces ? rtbcbDashboard.nonces.apiHealth : 'undefined' );
+    console.log( 'Nonces:', rtbcbDashboard.nonces );
 
     const debounce = (func, delay) => {
         let timeoutId;
