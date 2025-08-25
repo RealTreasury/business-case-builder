@@ -26,22 +26,10 @@ function handleSubmissionError(errorMessage) {
             heading.textContent = 'Generation Failed';
 
             const message = document.createElement('p');
-            message.textContent = "We're sorry, but we couldn't generate your business case. Please try again later.";
-
-            const details = document.createElement('p');
-            details.style.fontSize = '0.9em';
-            details.style.color = '#6c757d';
-            details.style.marginTop = '15px';
-
-            const strong = document.createElement('strong');
-            strong.textContent = 'Error Details:';
-
-            details.appendChild(strong);
-            details.appendChild(document.createTextNode(' ' + errorMessage));
+            message.textContent = errorMessage;
 
             errorContent.appendChild(heading);
             errorContent.appendChild(message);
-            errorContent.appendChild(details);
 
             if (typeof progressContainer.appendChild === 'function') {
                 progressContainer.appendChild(errorContent);
@@ -51,10 +39,7 @@ function handleSubmissionError(errorMessage) {
         } else {
             progressContainer.innerHTML = '<div class="rtbcb-error-content">' +
                 '<h3 style="color: #dc3545;">Generation Failed</h3>' +
-                "<p>We're sorry, but we couldn't generate your business case. Please try again later.</p>" +
-                '<p style="font-size: 0.9em; color: #6c757d; margin-top: 15px;"><strong>Error Details:</strong> ' +
-                escapeHtml(errorMessage) +
-                '</p>' +
+                '<p>' + escapeHtml(errorMessage) + '</p>' +
                 '</div>';
         }
     }
