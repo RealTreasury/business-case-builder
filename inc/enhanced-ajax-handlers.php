@@ -536,6 +536,8 @@ add_action( 'wp_ajax_rtbcb_rag_rebuild_index', 'rtbcb_rag_rebuild_index' );
 add_action( 'wp_ajax_rtbcb_generate_preview_report', 'rtbcb_generate_preview_report' );
 add_action( 'wp_ajax_rtbcb_save_dashboard_settings', 'rtbcb_save_dashboard_settings' );
 add_action( 'wp_ajax_rtbcb_export_dashboard_results', 'rtbcb_export_dashboard_results' );
+add_action( 'wp_ajax_rtbcb_generate_report', 'rtbcb_generate_report' );
+add_action( 'wp_ajax_nopriv_rtbcb_generate_report', 'rtbcb_generate_report' );
 
 /**
  * Test individual LLM model with given prompt.
@@ -2971,6 +2973,67 @@ function rtbcb_export_dashboard_results() {
         error_log( 'RTBCB Export Error: ' . $e->getMessage() );
         rtbcb_send_json_error( 'export_failed', __( 'Export generation failed.', 'rtbcb' ), 500, $e->getMessage() );
     }
+}
+
+/**
+ * Generate professional report via OpenAI using stored API key.
+ *
+ * @return void
+ */
+function rtbcb_generate_report() {
+    if ( ! check_ajax_referer( 'rtbcb_generate_report', 'nonce', false ) ) {
+        rtbcb_send_json_error( 'security_check_failed', __( 'Security check failed.', 'rtbcb' ), 403 );
+    }
+
+    if ( ! current_user_can( 'manage_options' ) ) {
+        rtbcb_send_json_error( 'insufficient_permissions', __( 'Insufficient permissions.', 'rtbcb' ), 403 );
+    }
+
+    $request_raw = wp_unslash( $_POST['request'] ?? '' );
+    if ( empty( $request_raw ) ) {
+        rtbcb_send_json_error( 'invalid_request', __( 'Invalid request.', 'rtbcb' ), 400 );
+    }
+
+    $request = json_decode( $request_raw, true );
+    if ( ! is_array( $request ) ) {
+        rtbcb_send_json_error( 'invalid_request', __( 'Invalid request.', 'rtbcb' ), 400 );
+    }
+
+    $api_key = sanitize_text_field( get_option( 'rtbcb_openai_api_key', '' ) );
+    if ( empty( $api_key ) ) {
+        rtbcb_send_json_error( 'api_key_not_configured', __( 'OpenAI API key not configured.', 'rtbcb' ), 500 );
+    }
+
+    $args = [
+        'timeout' => 60,
+        'headers' => [
+            'Content-Type'  => 'application/json',
+            'Authorization' => 'Bearer ' . $api_key,
+        ],
+        'body'    => wp_json_encode( $request ),
+    ];
+
+    $response = wp_remote_post( 'https://api.openai.com/v1/responses', $args );
+
+    if ( is_wp_error( $response ) ) {
+        rtbcb_send_json_error( 'http_request_failed', __( 'HTTP request failed.', 'rtbcb' ), 500, $response->get_error_message() );
+    }
+
+    $code    = wp_remote_retrieve_response_code( $response );
+    $body    = wp_remote_retrieve_body( $response );
+    $decoded = json_decode( $body, true );
+
+    if ( 200 !== $code || ! is_array( $decoded ) ) {
+        rtbcb_send_json_error( 'api_error', __( 'API request failed.', 'rtbcb' ), $code, $body );
+    }
+
+    if ( isset( $decoded['error'] ) ) {
+        $message = is_array( $decoded['error'] ) ? sanitize_text_field( $decoded['error']['message'] ?? '' ) : '';
+        rtbcb_send_json_error( 'api_error', $message ? $message : __( 'API request failed.', 'rtbcb' ), $code, $body );
+    }
+
+    $html = wp_kses_post( $decoded['output_text'] ?? '' );
+    wp_send_json_success( [ 'html' => $html ] );
 }
 
 /**

@@ -435,7 +435,6 @@ class RTBCB_Plugin {
             true
         );
 
-        $api_key      = sanitize_text_field( get_option( 'rtbcb_openai_api_key', '' ) );
         $report_model = sanitize_text_field( get_option( 'rtbcb_advanced_model', rtbcb_get_default_model( 'advanced' ) ) );
 
         $config = rtbcb_get_gpt5_config( get_option( 'rtbcb_gpt5_config', [] ) );
@@ -462,9 +461,10 @@ class RTBCB_Plugin {
             'rtbcb-report',
             'rtbcbReport',
             [
-                'api_key'            => $api_key,
-                'report_model'       => $report_model,
-                'defaults'           => $config_localized,
+                'ajax_url'          => admin_url( 'admin-ajax.php' ),
+                'nonce'             => wp_create_nonce( 'rtbcb_generate_report' ),
+                'report_model'      => $report_model,
+                'defaults'          => $config_localized,
                 'model_capabilities' => $model_capabilities,
             ]
         );
