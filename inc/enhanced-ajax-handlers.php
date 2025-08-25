@@ -2025,8 +2025,6 @@ function rtbcb_run_data_health_checks() {
  * @return void
  */
 function rtbcb_run_single_api_test() {
-    error_log( 'AJAX handler called: rtbcb_run_single_api_test' );
-    error_log( 'Request data: ' . print_r( $_POST, true ) );
     if ( ! check_ajax_referer( 'rtbcb_api_health_tests', 'nonce', false ) ) {
         rtbcb_send_json_error( 'security_check_failed', __( 'Security check failed.', 'rtbcb' ), 403 );
     }
@@ -2036,9 +2034,8 @@ function rtbcb_run_single_api_test() {
     }
 
     $component = isset( $_POST['component'] ) ? sanitize_key( wp_unslash( $_POST['component'] ) ) : '';
-    $start     = microtime( true );
 
-    $map = [
+    $tests = [
         'chat'      => [ __( 'OpenAI Chat API', 'rtbcb' ), [ 'RTBCB_API_Tester', 'test_connection' ] ],
         'embedding' => [ __( 'OpenAI Embedding API', 'rtbcb' ), [ 'RTBCB_API_Tester', 'test_embedding' ] ],
         'portal'    => [ __( 'Real Treasury Portal', 'rtbcb' ), [ 'RTBCB_API_Tester', 'test_portal' ] ],
@@ -2046,32 +2043,35 @@ function rtbcb_run_single_api_test() {
         'rag'       => [ __( 'RAG Index', 'rtbcb' ), [ 'RTBCB_API_Tester', 'test_rag_index' ] ],
     ];
 
-    if ( ! isset( $map[ $component ] ) ) {
+    if ( empty( $component ) || ! isset( $tests[ $component ] ) ) {
         rtbcb_send_json_error( 'invalid_component', __( 'Invalid component.', 'rtbcb' ) );
     }
 
-    $name = $map[ $component ][0];
-    $test = call_user_func( $map[ $component ][1] );
+    $label    = sanitize_text_field( $tests[ $component ][0] );
+    $callback = $tests[ $component ][1];
 
-    $end = microtime( true );
+    $start_time = microtime( true );
+    $test       = call_user_func( $callback );
+    $end_time   = microtime( true );
 
     $result = [
-        'name'          => $name,
+        'component'     => $component,
+        'name'          => $label,
         'passed'        => (bool) ( $test['success'] ?? false ),
-        'response_time' => intval( ( $end - $start ) * 1000 ),
+        'response_time' => (int) ( ( $end_time - $start_time ) * 1000 ),
         'message'       => sanitize_text_field( $test['message'] ?? '' ),
         'details'       => $test,
     ];
 
-    $option                              = get_option( 'rtbcb_last_api_test', [ 'timestamp' => '', 'results' => [] ] );
-    $option['timestamp']                 = current_time( 'mysql' );
-    $result['last_tested']               = $option['timestamp'];
-    $option['results'][ $component ]     = $result;
-    update_option( 'rtbcb_last_api_test', $option );
+    $timestamp = current_time( 'mysql' );
+    $stored    = get_option( 'rtbcb_last_api_test', [ 'timestamp' => '', 'results' => [] ] );
+    $stored['timestamp']           = $timestamp;
+    $stored['results'][ $component ] = $result;
+    update_option( 'rtbcb_last_api_test', $stored );
 
     wp_send_json_success(
         [
-            'timestamp' => $option['timestamp'],
+            'timestamp' => sanitize_text_field( $timestamp ),
             'result'    => $result,
         ]
     );
