@@ -31,44 +31,43 @@ if ( ! function_exists( 'add_action' ) ) {
     function add_action( $tag, $function_to_add, $priority = 10, $accepted_args = 1 ) {}
 }
 
-if ( ! function_exists( 'wp_remote_get' ) ) {
-    function wp_remote_get( $url, $args ) {
-        return [
-            'body'    => json_encode( [ 'data' => [] ] ),
-            'headers' => [],
-        ];
-    }
-}
-
-if ( ! function_exists( 'wp_remote_retrieve_response_code' ) ) {
-    function wp_remote_retrieve_response_code( $response ) {
-        return 200;
-    }
-}
-
-if ( ! function_exists( 'wp_remote_retrieve_headers' ) ) {
-    function wp_remote_retrieve_headers( $response ) {
-        return [];
-    }
-}
-
-if ( ! function_exists( 'wp_remote_retrieve_body' ) ) {
-    function wp_remote_retrieve_body( $response ) {
-        return $response['body'] ?? '';
-    }
-}
-
 if ( ! function_exists( 'is_wp_error' ) ) {
     function is_wp_error( $thing ) {
         return false;
     }
 }
 
+require_once __DIR__ . '/helpers/wp-http.php';
 require_once __DIR__ . '/../inc/enhanced-ajax-handlers.php';
 
-$result = RTBCB_API_Tester::test_connection( 'sk-test' );
+$api_key = getenv( 'OPENAI_API_KEY' );
+if ( empty( $api_key ) ) {
+    echo "api-tester-gpt5-mini.test.php incomplete: missing OPENAI_API_KEY\n";
+    exit( 0 );
+}
+
+$result = RTBCB_API_Tester::test_connection( $api_key );
 if ( empty( $result['success'] ) ) {
     echo "API connection test failed\n";
+    exit( 1 );
+}
+
+$status_code = $result['details']['status_code'] ?? 0;
+$model_count = $result['details']['model_count'] ?? 0;
+$rate_limits = $result['details']['rate_limits'] ?? null;
+
+if ( 200 !== $status_code ) {
+    echo "Unexpected status code: $status_code\n";
+    exit( 1 );
+}
+
+if ( $model_count <= 0 ) {
+    echo "No models returned\n";
+    exit( 1 );
+}
+
+if ( ! is_array( $rate_limits ) || ! array_key_exists( 'requests_remaining', $rate_limits ) ) {
+    echo "Rate limit info missing\n";
     exit( 1 );
 }
 
