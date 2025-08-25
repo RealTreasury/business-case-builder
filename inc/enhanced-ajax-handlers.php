@@ -1,15 +1,8 @@
 <?php
-// Temporary AJAX flow tracing
-add_action( 'wp_ajax_rtbcb_test_company_overview_enhanced', function() {
-    error_log( '[DIAG] AJAX Handler Entry: rtbcb_test_company_overview_enhanced' );
-    error_log( '[DIAG] POST data keys: ' . implode( ', ', array_keys( $_POST ) ) );
-    error_log( '[DIAG] Current user can manage_options: ' . ( current_user_can( 'manage_options' ) ? 'YES' : 'NO' ) );
-    // Continue to actual handler...
-}, 5 );
-
-add_action( 'wp_ajax_rtbcb_run_llm_test', function() {
-    error_log( '[DIAG] AJAX Handler Entry: rtbcb_run_llm_test - Handler ' . ( has_action( 'wp_ajax_rtbcb_run_llm_test' ) ? 'EXISTS' : 'MISSING' ) );
-}, 5 );
+// Add immediate debug hook
+add_action('wp_ajax_rtbcb_test_company_overview_enhanced', function() {
+    error_log('[DIAG] AJAX Entry: company_overview, User: ' . get_current_user_id() . ', Nonce: ' . ($_POST['nonce'] ?? 'missing'));
+}, 1);
 
 /**
  * Enhanced AJAX helper functions.
