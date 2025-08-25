@@ -959,7 +959,7 @@ $last_index_display = $last_indexed ? $last_indexed : __( 'Never', 'rtbcb' );
                 <p><?php esc_html_e( 'Monitor API connectivity, rate limits, and error handling', 'rtbcb' ); ?></p>
             </div>
             <div class="rtbcb-api-controls">
-                <button type="button" id="rtbcb-run-all-api-tests" class="button button-primary">
+                <button type="button" id="rtbcb-run-all-api-tests" class="button button-primary" data-action="api-health-ping">
                     <span class="dashicons dashicons-update"></span>
                     <?php esc_html_e( 'Run All Tests', 'rtbcb' ); ?>
                 </button>
