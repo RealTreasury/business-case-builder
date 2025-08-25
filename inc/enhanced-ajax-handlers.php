@@ -76,6 +76,10 @@ function rtbcb_send_json_error( $code, $message, $status = 400, $debug = '', $ex
  * @return void
  */
 function rtbcb_debug_api_key() {
+    if ( ! check_ajax_referer( 'rtbcb_debug_api_key', 'nonce', false ) ) {
+        wp_die( esc_html__( 'Security check failed.', 'rtbcb' ) );
+    }
+
     if ( ! current_user_can( 'manage_options' ) ) {
         wp_die( esc_html__( 'Unauthorized', 'rtbcb' ) );
     }

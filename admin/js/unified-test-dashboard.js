@@ -367,6 +367,15 @@
                 }
             });
 
+            $(document).on('click.rtbcb', '[data-action="debug-api-key"]', function(e) {
+                e.preventDefault();
+                try {
+                    Dashboard.debugApiKey();
+                } catch (err) {
+                    console.error('Error debugging API key:', err);
+                }
+            });
+
             $(document).on('click.rtbcb', '[data-action="run-data-health"]', function(e) {
                 e.preventDefault();
                 try {
@@ -1945,6 +1954,32 @@
                 message = rtbcbDashboard.strings.errorsDetected.replace('%d', failures);
             }
             $('#rtbcb-api-health-notice').text(message);
+        },
+
+        debugApiKey() {
+            if (!rtbcbDashboard.nonces || !rtbcbDashboard.nonces.debugApiKey) {
+                this.showNotification(rtbcbDashboard.strings.error, 'error');
+                return;
+            }
+
+            $.post(rtbcbDashboard.ajaxurl, {
+                action: 'rtbcb_debug_api_key',
+                nonce: rtbcbDashboard.nonces.debugApiKey
+            }).done((response) => {
+                if (response.success) {
+                    const data = response.data || {};
+                    const info = `${rtbcbDashboard.strings.configured}: ${data.configured ? rtbcbDashboard.strings.yes : rtbcbDashboard.strings.no}\n`
+                        + `${rtbcbDashboard.strings.length}: ${data.length}\n`
+                        + `${rtbcbDashboard.strings.preview}: ${data.preview}\n`
+                        + `${rtbcbDashboard.strings.validFormat}: ${data.valid_format ? rtbcbDashboard.strings.yes : rtbcbDashboard.strings.no}`;
+                    alert(`${rtbcbDashboard.strings.apiKeyDebug}\n\n${info}`);
+                } else {
+                    this.showNotification(rtbcbDashboard.strings.debugApiKeyFailed, 'error');
+                }
+            }).fail((jqXHR, textStatus, errorThrown) => {
+                const detail = errorThrown || textStatus;
+                this.showNotification(`${rtbcbDashboard.strings.debugApiKeyFailed}: ${detail}`, 'error');
+            });
         },
 
         // Run data health checks
