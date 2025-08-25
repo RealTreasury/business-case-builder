@@ -689,7 +689,7 @@ function rtbcb_ajax_test_company_overview_enhanced() {
 
     try {
         // Generate company overview
-        $overview_result = rtbcb_test_generate_company_overview( $company_name );
+        $overview_result = rtbcb_test_generate_company_overview( $company_name, $model_key );
 
         if ( is_wp_error( $overview_result ) ) {
             rtbcb_send_json_error( $overview_result->get_error_code(), $overview_result->get_error_message(), 500, $overview_result->get_error_data() );

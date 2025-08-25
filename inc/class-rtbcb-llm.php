@@ -175,16 +175,18 @@ class RTBCB_LLM {
      *
      * @param string $company_name  Company name.
      * @param bool   $include_prompt Whether to include prompt in response for debugging.
+     * @param string $model_key     Model tier key for selecting the LLM.
      * @return array|WP_Error Structured overview array or error object.
      */
-    public function generate_company_overview( $company_name, $include_prompt = false ) {
+    public function generate_company_overview( $company_name, $include_prompt = false, $model_key = 'mini' ) {
         $company_name = sanitize_text_field( $company_name );
+        $model_key    = sanitize_key( $model_key );
 
         if ( empty( $this->api_key ) ) {
             return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
         }
 
-        $model = $this->get_model( 'mini' );
+        $model = $this->get_model( $model_key );
 
         // Store prompts for debugging
         $system_prompt = 'You are a treasury technology consultant. Analyze companies and respond with valid JSON only using this exact structure:
