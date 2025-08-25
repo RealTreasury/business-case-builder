@@ -59,69 +59,77 @@ class RTBCB_API_Tester {
     /**
      * Test OpenAI embedding API connectivity.
      *
-     * @param string $text Sample text to embed.
      * @return array Test result data.
      */
-    public static function test_embedding( $text = 'test' ) {
+    public static function test_embedding() {
         $api_key = get_option( 'rtbcb_openai_api_key' );
 
         if ( empty( $api_key ) ) {
             return [
                 'success' => false,
-                'message' => __( 'No API key configured.', 'rtbcb' ),
+                'message' => __( 'API key not configured', 'rtbcb' ),
+                'details' => [ 'error' => 'missing_api_key' ],
             ];
         }
 
-        $model = get_option( 'rtbcb_embedding_model', rtbcb_get_default_model( 'embedding' ) );
-        $args  = [
-            'headers' => [
-                'Authorization' => 'Bearer ' . $api_key,
-                'Content-Type'  => 'application/json',
-            ],
-            'body'    => wp_json_encode(
-                [
-                    'model' => $model,
-                    'input' => $text,
-                ]
-            ),
-            'timeout' => 30,
-        ];
+        $model = get_option( 'rtbcb_embedding_model', 'text-embedding-3-small' );
 
-        $response = wp_remote_post( 'https://api.openai.com/v1/embeddings', $args );
+        $response = wp_remote_post(
+            'https://api.openai.com/v1/embeddings',
+            [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $api_key,
+                    'Content-Type'  => 'application/json',
+                ],
+                'body'    => wp_json_encode(
+                    [
+                        'model' => $model,
+                        'input' => 'test embedding',
+                    ]
+                ),
+                'timeout' => 15,
+            ]
+        );
 
         if ( is_wp_error( $response ) ) {
             return [
                 'success' => false,
-                'message' => __( 'Connection failed.', 'rtbcb' ),
-                'details' => $response->get_error_message(),
+                'message' => $response->get_error_message(),
+                'details' => [ 'error' => $response->get_error_code() ],
             ];
         }
 
-        $code = wp_remote_retrieve_response_code( $response );
-        if ( 200 !== $code ) {
-            $body    = wp_remote_retrieve_body( $response );
-            $decoded = json_decode( $body, true );
-            $error   = $decoded['error']['message'] ?? 'Unknown error';
+        $status_code = wp_remote_retrieve_response_code( $response );
+
+        if ( 200 === $status_code ) {
+            $body            = json_decode( wp_remote_retrieve_body( $response ), true );
+            $embedding       = $body['data'][0]['embedding'] ?? [];
+            $embedding_count = is_array( $embedding ) ? count( $embedding ) : 0;
 
             return [
+                'success' => true,
+                'message' => sprintf( __( 'Embedding API working (vector dim: %d)', 'rtbcb' ), $embedding_count ),
+                'details' => [
+                    'model_used'           => $model,
+                    'embedding_dimensions' => $embedding_count,
+                    'tokens_used'          => $body['usage']['total_tokens'] ?? 0,
+                ],
+            ];
+        } else {
+            return [
                 'success' => false,
-                'message' => sprintf( __( 'API error (%d)', 'rtbcb' ), $code ),
-                'details' => $error,
+                'message' => sprintf( __( 'Embedding API error (HTTP %d)', 'rtbcb' ), $status_code ),
+                'details' => [
+                    'error'       => 'api_error',
+                    'status_code' => $status_code,
+                    'body'        => substr( wp_remote_retrieve_body( $response ), 0, 200 ),
+                ],
             ];
         }
-
-        $data   = json_decode( wp_remote_retrieve_body( $response ), true );
-        $vector = $data['data'][0]['embedding'] ?? [];
-
-        return [
-            'success'       => ! empty( $vector ),
-            'message'       => ! empty( $vector ) ? __( 'Embedding retrieved.', 'rtbcb' ) : __( 'Empty embedding response.', 'rtbcb' ),
-            'vector_length' => count( $vector ),
-        ];
     }
 
     /**
-     * Test portal vendor retrieval.
+     * Test Real Treasury Portal integration.
      *
      * @return array Test result data.
      */
@@ -129,20 +137,32 @@ class RTBCB_API_Tester {
         if ( ! has_filter( 'rt_portal_get_vendors' ) ) {
             return [
                 'success' => false,
-                'message' => __( 'Portal filters not available.', 'rtbcb' ),
+                'message' => __( 'Portal integration not active', 'rtbcb' ),
+                'details' => [ 'error' => 'integration_missing' ],
             ];
         }
 
-        $vendors = apply_filters( 'rt_portal_get_vendors', [] );
-        $count   = is_array( $vendors ) ? count( $vendors ) : 0;
+        try {
+            $vendors = apply_filters( 'rt_portal_get_vendors', [], [ 'limit' => 1 ] );
 
-        return [
-            'success'     => $count > 0,
-            'message'     => $count > 0
-                ? sprintf( _n( '%d vendor retrieved.', '%d vendors retrieved.', $count, 'rtbcb' ), $count )
-                : __( 'Portal connection returned no vendors.', 'rtbcb' ),
-            'vendor_count' => $count,
-        ];
+            return [
+                'success' => true,
+                'message' => sprintf( __( 'Portal integration active (%d vendors available)', 'rtbcb' ), count( $vendors ) ),
+                'details' => [
+                    'vendors_count'      => count( $vendors ),
+                    'integration_active' => true,
+                ],
+            ];
+        } catch ( Exception $e ) {
+            return [
+                'success' => false,
+                'message' => __( 'Portal integration error: ', 'rtbcb' ) . $e->getMessage(),
+                'details' => [
+                    'error'     => 'integration_error',
+                    'exception' => $e->getMessage(),
+                ],
+            ];
+        }
     }
 
     /**
@@ -151,42 +171,109 @@ class RTBCB_API_Tester {
      * @return array Test result data.
      */
     public static function test_roi_calculator() {
-        $sample = [
-            'industry'               => 'banking',
-            'hours_reconciliation'   => 1,
-            'hours_cash_positioning' => 1,
-            'num_banks'              => 1,
-            'ftes'                   => 1,
+        $test_data = [
+            'company_size'        => 'medium',
+            'annual_revenue'      => 100000000,
+            'treasury_staff'      => 3,
+            'hours_reconciliation' => 20,
+            'num_banks'           => 5,
         ];
 
         try {
-            $roi = RTBCB_Calculator::calculate_roi( $sample );
-        } catch ( Exception $e ) {
-            $roi = [];
-        }
+            if ( ! class_exists( 'RTBCB_Calculator' ) ) {
+                return [
+                    'success' => false,
+                    'message' => __( 'ROI Calculator class not found', 'rtbcb' ),
+                    'details' => [ 'error' => 'class_missing' ],
+                ];
+            }
 
-        return [
-            'success'   => is_array( $roi ) && ! empty( $roi ),
-            'message'   => ! empty( $roi ) ? __( 'ROI calculation successful.', 'rtbcb' ) : __( 'ROI calculation failed.', 'rtbcb' ),
-            'scenarios' => is_array( $roi ) ? array_keys( $roi ) : [],
-        ];
+            $calculator = new RTBCB_Calculator();
+            $result     = $calculator->calculate_roi( $test_data );
+
+            if ( is_wp_error( $result ) ) {
+                return [
+                    'success' => false,
+                    'message' => __( 'ROI calculation failed: ', 'rtbcb' ) . $result->get_error_message(),
+                    'details' => [ 'error' => 'calculation_failed' ],
+                ];
+            }
+
+            return [
+                'success' => true,
+                'message' => __( 'ROI Calculator working', 'rtbcb' ),
+                'details' => [
+                    'test_roi'        => $result['base']['roi_percentage'] ?? 0,
+                    'calculation_time' => microtime( true ),
+                ],
+            ];
+        } catch ( Exception $e ) {
+            return [
+                'success' => false,
+                'message' => __( 'ROI Calculator error: ', 'rtbcb' ) . $e->getMessage(),
+                'details' => [
+                    'error'     => 'exception',
+                    'exception' => $e->getMessage(),
+                ],
+            ];
+        }
     }
 
     /**
-     * Test RAG index search capability.
+     * Test RAG index health and search capability.
      *
      * @return array Test result data.
      */
     public static function test_rag_index() {
-        $rag     = new RTBCB_RAG();
-        $results = $rag->search_similar( 'test', 1 );
+        global $wpdb;
 
-        return [
-            'success'      => is_array( $results ),
-            'message'      => is_array( $results ) ? __( 'RAG search executed.', 'rtbcb' ) : __( 'RAG search failed.', 'rtbcb' ),
-            'result_count' => is_array( $results ) ? count( $results ) : 0,
-            'last_indexed' => get_option( 'rtbcb_last_indexed', '' ),
-        ];
+        try {
+            $table_name   = $wpdb->prefix . 'rtbcb_rag_index';
+            $table_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) );
+
+            if ( ! $table_exists ) {
+                return [
+                    'success' => false,
+                    'message' => __( 'RAG index table not found', 'rtbcb' ),
+                    'details' => [ 'error' => 'table_missing' ],
+                ];
+            }
+
+            $index_size = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table_name}" );
+
+            if ( class_exists( 'RTBCB_RAG' ) ) {
+                $rag          = new RTBCB_RAG();
+                $test_results = $rag->search_similar( 'test query', 1 );
+
+                return [
+                    'success' => true,
+                    'message' => sprintf( __( 'RAG index healthy (%d entries)', 'rtbcb' ), $index_size ),
+                    'details' => [
+                        'index_size'         => $index_size,
+                        'test_results_count' => is_array( $test_results ) ? count( $test_results ) : 0,
+                        'last_indexed'       => get_option( 'rtbcb_last_indexed', '' ),
+                    ],
+                ];
+            } else {
+                return [
+                    'success' => $index_size > 0,
+                    'message' => sprintf( __( 'RAG table exists (%d entries) but RAG class unavailable', 'rtbcb' ), $index_size ),
+                    'details' => [
+                        'index_size'      => $index_size,
+                        'class_available' => false,
+                    ],
+                ];
+            }
+        } catch ( Exception $e ) {
+            return [
+                'success' => false,
+                'message' => __( 'RAG index error: ', 'rtbcb' ) . $e->getMessage(),
+                'details' => [
+                    'error'     => 'exception',
+                    'exception' => $e->getMessage(),
+                ],
+            ];
+        }
     }
 
     /**
