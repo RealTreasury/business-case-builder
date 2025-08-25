@@ -1861,28 +1861,7 @@ function rtbcb_run_api_health_tests() {
 
     error_log( '[RTBCB] Security checks passed, running tests...' );
 
-    $components = [
-        'chat'      => [
-            'label' => __( 'OpenAI Chat API', 'rtbcb' ),
-            'test'  => [ 'RTBCB_API_Tester', 'test_connection' ],
-        ],
-        'embedding' => [
-            'label' => __( 'OpenAI Embedding API', 'rtbcb' ),
-            'test'  => [ 'RTBCB_API_Tester', 'test_embedding' ],
-        ],
-        'portal'    => [
-            'label' => __( 'Real Treasury Portal', 'rtbcb' ),
-            'test'  => [ 'RTBCB_API_Tester', 'test_portal' ],
-        ],
-        'roi'       => [
-            'label' => __( 'ROI Calculator', 'rtbcb' ),
-            'test'  => [ 'RTBCB_API_Tester', 'test_roi_calculator' ],
-        ],
-        'rag'       => [
-            'label' => __( 'RAG Index', 'rtbcb' ),
-            'test'  => [ 'RTBCB_API_Tester', 'test_rag_index' ],
-        ],
-    ];
+    $components = rtbcb_get_api_health_components();
 
     $results   = [];
     $timestamp = current_time( 'mysql' );
@@ -2035,20 +2014,14 @@ function rtbcb_run_single_api_test() {
 
     $component = isset( $_POST['component'] ) ? sanitize_key( wp_unslash( $_POST['component'] ) ) : '';
 
-    $tests = [
-        'chat'      => [ __( 'OpenAI Chat API', 'rtbcb' ), [ 'RTBCB_API_Tester', 'test_connection' ] ],
-        'embedding' => [ __( 'OpenAI Embedding API', 'rtbcb' ), [ 'RTBCB_API_Tester', 'test_embedding' ] ],
-        'portal'    => [ __( 'Real Treasury Portal', 'rtbcb' ), [ 'RTBCB_API_Tester', 'test_portal' ] ],
-        'roi'       => [ __( 'ROI Calculator', 'rtbcb' ), [ 'RTBCB_API_Tester', 'test_roi_calculator' ] ],
-        'rag'       => [ __( 'RAG Index', 'rtbcb' ), [ 'RTBCB_API_Tester', 'test_rag_index' ] ],
-    ];
+    $components = rtbcb_get_api_health_components();
 
-    if ( empty( $component ) || ! isset( $tests[ $component ] ) ) {
+    if ( empty( $component ) || ! isset( $components[ $component ] ) ) {
         rtbcb_send_json_error( 'invalid_component', __( 'Invalid component.', 'rtbcb' ) );
     }
 
-    $label    = sanitize_text_field( $tests[ $component ][0] );
-    $callback = $tests[ $component ][1];
+    $label    = sanitize_text_field( $components[ $component ]['label'] );
+    $callback = $components[ $component ]['test'];
 
     $start_time = microtime( true );
     $test       = call_user_func( $callback );
