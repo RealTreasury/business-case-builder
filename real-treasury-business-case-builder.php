@@ -891,10 +891,22 @@ class RTBCB_Plugin {
 
                     if ( is_wp_error( $comprehensive_analysis ) ) {
                         $error_message = $comprehensive_analysis->get_error_message();
-                        rtbcb_log_api_debug( 'LLM generation failed', $error_message );
                         $error_code    = method_exists( $comprehensive_analysis, 'get_error_code' ) ? $comprehensive_analysis->get_error_code() : '';
+                        $error_data    = method_exists( $comprehensive_analysis, 'get_error_data' ) ? $comprehensive_analysis->get_error_data() : null;
+                        rtbcb_log_error(
+                            'LLM generation failed',
+                            [
+                                'code'   => $error_code,
+                                'message' => $error_message,
+                                'data'   => $error_data,
+                                'errors' => isset( $comprehensive_analysis->errors ) ? $comprehensive_analysis->errors : [],
+                            ]
+                        );
                         if ( 'no_api_key' === $error_code ) {
-                            wp_send_json_error( [ 'message' => $error_message ], 500 );
+                            wp_send_json_error(
+                                [ 'message' => __( 'OpenAI API key not configured.', 'rtbcb' ) ],
+                                400
+                            );
                         }
                         $response_message = __( 'Failed to generate business case analysis.', 'rtbcb' );
                         if ( function_exists( 'wp_get_environment_type' ) && 'production' !== wp_get_environment_type() ) {
