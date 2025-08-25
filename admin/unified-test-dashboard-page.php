@@ -34,7 +34,7 @@ function rtbcb_enqueue_dashboard_assets() {
         true
     );
 
-    wp_register_script(
+    wp_enqueue_script(
         'rtbcb-unified-dashboard',
         $js_file,
         [ 'jquery', 'chart-js' ],
@@ -82,8 +82,6 @@ function rtbcb_enqueue_dashboard_assets() {
             'hide'             => __( 'Hide', 'rtbcb' ),
         ],
     ] );
-
-    wp_enqueue_script( 'rtbcb-unified-dashboard' );
 
     if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
         echo "<!-- Debugging output -->\n";
