@@ -1327,7 +1327,10 @@
         },
 
         runAllApiTests() {
-            console.log('[API Health] Initiating all API tests');
+            console.log('[API Health] === runAllApiTests start: running all API tests ===');
+            console.log('[API Health] rtbcbDashboard:', rtbcbDashboard);
+            console.log('[API Health] ajaxurl:', rtbcbDashboard.ajaxurl);
+            console.log('[API Health] nonce:', rtbcbDashboard?.nonces?.apiHealth);
             if (!circuitBreaker.canExecute()) {
                 console.error('[API Health] Circuit breaker open. Aborting all API tests.');
                 this.showNotification(rtbcbDashboard.strings.error, 'error');
@@ -1343,8 +1346,12 @@
                     action: 'rtbcb_run_api_health_tests',
                     nonce: rtbcbDashboard.nonces.apiHealth
                 },
-                timeout: 60000
+                timeout: 60000,
+                beforeSend: () => {
+                    console.log('[API Health] Request dispatched to API health endpoint');
+                }
             }).done((response) => {
+                console.log('[API Health] Success payload:', response);
                 if (response.success) {
                     circuitBreaker.recordSuccess();
                     console.log('[API Health] All API tests succeeded', response.data);
@@ -1365,10 +1372,16 @@
                 const detail = jqXHR?.responseJSON?.data?.detail || errorThrown || textStatus;
                 const msg = `${rtbcbDashboard.strings.error}: ${detail}`;
                 this.showNotification(msg, 'error');
-                console.error('[API Health] Request error during API tests:', textStatus, errorThrown, jqXHR.responseText);
+                console.error('[API Health] Request error during API tests:', {
+                    status: jqXHR.status,
+                    textStatus: textStatus,
+                    errorThrown: errorThrown,
+                    responseText: jqXHR.responseText
+                });
                 $('#rtbcb-api-health-notice').text(msg);
             }).always(() => {
                 $('[data-action="api-health-ping"]').prop('disabled', false);
+                console.log('[API Health] === runAllApiTests complete ===');
             });
         },
 
