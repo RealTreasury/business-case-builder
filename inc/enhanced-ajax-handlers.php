@@ -591,7 +591,7 @@ function rtbcb_ajax_test_llm_model() {
     // Get API key
     $api_key = get_option( 'rtbcb_openai_api_key', '' );
     if ( empty( $api_key ) ) {
-        rtbcb_send_json_error( 'api_key_not_configured', __( 'OpenAI API key not configured.', 'rtbcb' ), 500 );
+        rtbcb_send_json_error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ), 400 );
     }
 
     // Prepare context if requested
@@ -3012,7 +3012,7 @@ function rtbcb_generate_report() {
 
     $api_key = sanitize_text_field( get_option( 'rtbcb_openai_api_key', '' ) );
     if ( empty( $api_key ) ) {
-        rtbcb_send_json_error( 'api_key_not_configured', __( 'OpenAI API key not configured.', 'rtbcb' ), 500 );
+        rtbcb_send_json_error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ), 400 );
     }
 
     $args = [

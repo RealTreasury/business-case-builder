@@ -903,47 +903,35 @@ class RTBCB_Plugin {
                             ]
                         );
                         if ( 'no_api_key' === $error_code ) {
-                            wp_send_json_error(
-                                [ 'message' => __( 'OpenAI API key not configured.', 'rtbcb' ) ],
-                                400
-                            );
+                            rtbcb_send_json_error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ), 400 );
                         }
                         $response_message = __( 'Failed to generate business case analysis.', 'rtbcb' );
                         if ( function_exists( 'wp_get_environment_type' ) && 'production' !== wp_get_environment_type() ) {
                             $response_message = $error_message;
                         }
-                        wp_send_json_error( [ 'message' => $response_message ], 500 );
+                        rtbcb_send_json_error( 'llm_generation_failed', $response_message, 500 );
                     }
 
                     if ( isset( $comprehensive_analysis['error'] ) ) {
                         rtbcb_log_api_debug( 'LLM generation returned error', $comprehensive_analysis['error'] );
-                        wp_send_json_error(
-                            [ 'message' => __( 'Failed to generate business case analysis.', 'rtbcb' ) ],
-                            500
-                        );
+                        rtbcb_send_json_error( 'llm_generation_failed', __( 'Failed to generate business case analysis.', 'rtbcb' ), 500 );
                     }
                     rtbcb_log_api_debug( 'LLM generation succeeded' );
                 } catch ( Exception $e ) {
+                    rtbcb_log_memory_usage( 'exception_occurred' );
                     rtbcb_log_error( 'LLM generation failed', $e->getMessage() );
-                    wp_send_json_error(
-                        [ 'message' => __( 'Failed to generate business case analysis.', 'rtbcb' ) ],
-                        500
-                    );
+                    rtbcb_send_json_error( 'llm_generation_exception', __( 'Failed to generate business case analysis.', 'rtbcb' ), 500 );
                 } catch ( Error $e ) {
+                    rtbcb_log_memory_usage( 'fatal_error_occurred' );
                     rtbcb_log_error( 'LLM generation fatal error', $e->getMessage() );
-                    wp_send_json_error(
-                        [ 'message' => __( 'Failed to generate business case analysis.', 'rtbcb' ) ],
-                        500
-                    );
+                    rtbcb_send_json_error( 'llm_generation_error', __( 'Failed to generate business case analysis.', 'rtbcb' ), 500 );
                 }
             }
 
             if ( empty( $comprehensive_analysis ) ) {
+                rtbcb_log_memory_usage( 'empty_analysis' );
                 rtbcb_log_error( 'LLM returned empty analysis', $user_inputs );
-                wp_send_json_error(
-                    [ 'message' => __( 'Failed to generate business case analysis.', 'rtbcb' ) ],
-                    500
-                );
+                rtbcb_send_json_error( 'empty_analysis', __( 'Failed to generate business case analysis.', 'rtbcb' ), 500 );
             }
 
             if ( empty( $comprehensive_analysis['company_name'] ) ) {
@@ -1050,8 +1038,9 @@ class RTBCB_Plugin {
                 'Ajax exception',
                 $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine()
             );
-            wp_send_json_error(
-                [ 'message' => __( 'An error occurred while generating your business case. Please try again.', 'rtbcb' ) ],
+            rtbcb_send_json_error(
+                'ajax_exception',
+                __( 'An error occurred while generating your business case. Please try again.', 'rtbcb' ),
                 500
             );
         } catch ( Error $e ) {
@@ -1060,8 +1049,9 @@ class RTBCB_Plugin {
                 'Ajax fatal error',
                 $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine()
             );
-            wp_send_json_error(
-                [ 'message' => __( 'A system error occurred. Please contact support.', 'rtbcb' ) ],
+            rtbcb_send_json_error(
+                'ajax_fatal_error',
+                __( 'A system error occurred. Please contact support.', 'rtbcb' ),
                 500
             );
         }
