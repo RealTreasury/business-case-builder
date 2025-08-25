@@ -315,7 +315,10 @@ add_filter('rtbcb_category_scores', function($scores, $inputs) {
 ## 🧪 Testing and Quality Assurance
 
 ### Automated Tests
-Automated test documentation will be provided in future releases.
+The `tests` directory contains PHP and JavaScript unit tests.
+An additional Cypress-style acceptance test suite (`tests/acceptance.cy.js`) verifies
+dashboard interactions, API health notices, model comparisons, RAG metrics, and
+API health monitoring.
 
 #### Configuring the Test Model
 JavaScript and PHP tests read the OpenAI model from the `RTBCB_TEST_MODEL` setting so they stay aligned with plugin configuration.
