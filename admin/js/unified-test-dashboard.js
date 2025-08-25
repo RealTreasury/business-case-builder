@@ -6,6 +6,39 @@
 (function($) {
     'use strict';
 
+    const debounce = (func, delay) => {
+        let timeoutId;
+        return (...args) => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => func.apply(this, args), delay);
+        };
+    };
+
+    const circuitBreaker = {
+        failures: 0,
+        threshold: 3,
+        resetTime: 300000, // 5 minutes
+
+        canExecute() {
+            return this.failures < this.threshold;
+        },
+
+        recordFailure() {
+            this.failures++;
+            if (this.failures >= this.threshold) {
+                setTimeout(() => this.reset(), this.resetTime);
+            }
+        },
+
+        recordSuccess() {
+            this.failures = 0;
+        },
+
+        reset() {
+            this.failures = 0;
+        }
+    };
+
     // Dashboard state management
     const Dashboard = {
         currentTab: 'company-overview',
@@ -30,6 +63,9 @@
             this.initRagModule();
             this.initLLMModule();
             this.setupCharts();
+
+            $('#company-name-input').on('input', debounce(this.validateInput.bind(this), 300));
+            this.validateInput();
 
             // Store default button text for state management
             $('[data-action]').each(function() {
@@ -71,9 +107,22 @@
         },
 
         setupCharts: function() {
-            if (typeof this.setupLLMCharts === 'function') {
-                this.setupLLMCharts();
+            this.loadChartJs(() => {
+                if (typeof this.setupLLMCharts === 'function') {
+                    this.setupLLMCharts();
+                }
+            });
+        },
+
+        loadChartJs: function(callback) {
+            if (typeof Chart !== 'undefined') {
+                callback();
+                return;
             }
+            const script = document.createElement('script');
+            script.src = rtbcbDashboard.urls.chartJsUrl;
+            script.onload = callback;
+            document.head.appendChild(script);
         },
 
         // Bind all event handlers using delegated pattern
@@ -212,6 +261,10 @@
 
         // Promise-based request wrapper with retry logic
         request: function(action, data = {}, options = {}) {
+            if (!circuitBreaker.canExecute()) {
+                return Promise.reject(new Error(rtbcbDashboard.strings.serviceUnavailable));
+            }
+
             const defaults = {
                 retries: 3,
                 backoffMs: 1000,
@@ -243,13 +296,16 @@
 
                         success: (response) => {
                             if (config.validateResponse && (!response || typeof response.success === 'undefined')) {
+                                circuitBreaker.recordFailure();
                                 reject(new Error('Invalid response format'));
                                 return;
                             }
 
                             if (response.success) {
+                                circuitBreaker.recordSuccess();
                                 resolve(response.data || response);
                             } else {
+                                circuitBreaker.recordFailure();
                                 const errorMsg = response.data?.message || 'Request failed';
                                 const errorCode = response.data?.code || 'unknown';
                                 reject(new Error(`${errorCode}: ${errorMsg}`));
@@ -257,6 +313,7 @@
                         },
 
                         error: (xhr, status, error) => {
+                            circuitBreaker.recordFailure();
                             const isRateLimit = xhr.status === 429;
                             const shouldRetry = attemptNum < config.retries && (isRateLimit || status === 'timeout');
 
@@ -378,15 +435,15 @@
         // LLM Integration Testing Methods
         bindLLMEvents: function() {
             // Temperature slider update
-            $('#llm-temperature').on('input', function() {
+            $('#llm-temperature').on('input', debounce(function() {
                 $('#llm-temperature-value').text($(this).val());
-            });
+            }, 100));
 
             // Model selection validation
             $('input[name="test-models[]"]').on('change', this.validateLLMInputs.bind(this));
 
             // Prompt validation
-            $('#llm-test-prompt').on('input', this.validateLLMInputs.bind(this));
+            $('#llm-test-prompt').on('input', debounce(this.validateLLMInputs.bind(this), 300));
         },
 
         validateLLMInputs: function() {
@@ -398,31 +455,39 @@
         },
 
         displayLLMResults: function(data) {
-            const results = data.results || {};
-            const metadata = data.metadata || {};
+            const render = () => {
+                const results = data.results || {};
+                const metadata = data.metadata || {};
 
-            // Update results metadata
-            $('#llm-results-meta').html(`
-                <div class="rtbcb-meta-item"><strong>Models Tested:</strong> ${metadata.modelsCount || 0}</div>
-                <div class="rtbcb-meta-item"><strong>Total Time:</strong> ${metadata.totalTime || 0}s</div>
-                <div class="rtbcb-meta-item"><strong>Timestamp:</strong> ${metadata.timestamp || ''}</div>
-            `);
+                // Update results metadata
+                $('#llm-results-meta').html(`
+                    <div class="rtbcb-meta-item"><strong>Models Tested:</strong> ${metadata.modelsCount || 0}</div>
+                    <div class="rtbcb-meta-item"><strong>Total Time:</strong> ${metadata.totalTime || 0}s</div>
+                    <div class="rtbcb-meta-item"><strong>Timestamp:</strong> ${metadata.timestamp || ''}</div>
+                `);
 
-            // Create performance summary
-            this.createLLMPerformanceSummary(results);
+                // Create performance summary
+                this.createLLMPerformanceSummary(results);
 
-            // Populate comparison table
-            this.populateLLMComparisonTable(results);
+                // Populate comparison table
+                this.populateLLMComparisonTable(results);
 
-            // Create performance chart
-            this.createLLMPerformanceChart(results);
+                // Create performance chart
+                this.createLLMPerformanceChart(results);
 
-            // Store results for export
-            this.llmTestResults = data;
-            $('#export-llm-results').prop('disabled', false);
+                // Store results for export
+                this.llmTestResults = data;
+                $('#export-llm-results').prop('disabled', false);
 
-            // Show results container
-            $('#llm-test-results').show().addClass('rtbcb-fade-in');
+                // Show results container
+                $('#llm-test-results').show().addClass('rtbcb-fade-in');
+            };
+
+            if ('requestIdleCallback' in window) {
+                requestIdleCallback(render);
+            } else {
+                setTimeout(render, 0);
+            }
         },
 
         createLLMPerformanceSummary: function(results) {
@@ -465,6 +530,7 @@
 
         populateLLMComparisonTable: function(results) {
             const tbody = $('#llm-comparison-tbody').empty();
+            const fragment = document.createDocumentFragment();
 
             Object.values(results).forEach(result => {
                 const statusClass = result.success ? 'success' : 'error';
@@ -472,19 +538,20 @@
                     (result.content.substring(0, 100) + (result.content.length > 100 ? '...' : '')) :
                     result.error;
 
-                const row = `
-                    <tr class="rtbcb-result-row rtbcb-${statusClass}">
+                const row = document.createElement('tr');
+                row.className = `rtbcb-result-row rtbcb-${statusClass}`;
+                row.innerHTML = `
                         <td><strong>${this.escapeHtml(result.model_name)}</strong><br><small>${result.model_key}</small></td>
                         <td>${result.response_time || '--'}ms</td>
                         <td>${result.tokens_used || '--'}</td>
                         <td>$${result.success ? result.cost_estimate.toFixed(6) : '--'}</td>
                         <td>${result.success ? result.quality_score + '/100' : '--'}</td>
                         <td class="rtbcb-response-preview">${this.escapeHtml(responsePreview)}</td>
-                    </tr>
                 `;
-
-                tbody.append(row);
+                fragment.appendChild(row);
             });
+
+            tbody.append(fragment);
         },
 
         createLLMPerformanceChart: function(results) {
@@ -546,6 +613,11 @@
 
         // Start the generation process
         startGeneration(companyName, model, showDebug) {
+            if (!circuitBreaker.canExecute()) {
+                this.showNotification(rtbcbDashboard.strings.serviceUnavailable, 'error');
+                return;
+            }
+
             this.isGenerating = true;
             this.startTime = Date.now();
 
@@ -576,13 +648,15 @@
                 url: rtbcbDashboard.ajaxurl,
                 type: 'POST',
                 data: requestData,
-                timeout: 120000, // 2 minutes timeout
+                timeout: 60000,
 
                 success: (response) => {
+                    circuitBreaker.recordSuccess();
                     this.handleGenerationSuccess(response);
                 },
 
                 error: (xhr, status, error) => {
+                    circuitBreaker.recordFailure();
                     this.handleGenerationError(xhr, status, error);
                 },
 
@@ -1043,6 +1117,10 @@
 
         runRagQuery() {
             if (this.ragRequest) return;
+            if (!circuitBreaker.canExecute()) {
+                this.showNotification(rtbcbDashboard.strings.serviceUnavailable, 'error');
+                return;
+            }
 
             const query = $('#rtbcb-rag-query').val().trim();
             const topK = parseInt($('#rtbcb-rag-top-k').val(), 10) || 3;
@@ -1061,7 +1139,8 @@
                     query,
                     top_k: topK,
                     type
-                }
+                },
+                timeout: 60000
             });
 
             $('#rtbcb-rag-progress').text(rtbcbDashboard.strings.retrieving).show();
@@ -1070,12 +1149,15 @@
 
             this.ragRequest.done((res) => {
                 if (res.success) {
+                    circuitBreaker.recordSuccess();
                     this.displayRagResults(res.data);
                     this.showNotification('Retrieval complete', 'success');
                 } else {
+                    circuitBreaker.recordFailure();
                     this.showNotification(res.data?.message || rtbcbDashboard.strings.error, 'error');
                 }
             }).fail(() => {
+                circuitBreaker.recordFailure();
                 this.showNotification(rtbcbDashboard.strings.error, 'error');
             }).always(() => {
                 this.ragRequest = null;
@@ -1213,14 +1295,24 @@
         },
 
         runAllApiTests() {
+            if (!circuitBreaker.canExecute()) {
+                this.showNotification(rtbcbDashboard.strings.serviceUnavailable, 'error');
+                return;
+            }
             $('[data-action="api-health-ping"]').prop('disabled', true);
             $('#rtbcb-api-health-notice').text(rtbcbDashboard.strings.running);
 
-            $.post(rtbcbDashboard.ajaxurl, {
-                action: 'rtbcb_run_api_health_tests',
-                nonce: rtbcbDashboard.nonces.apiHealth
+            $.ajax({
+                url: rtbcbDashboard.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'rtbcb_run_api_health_tests',
+                    nonce: rtbcbDashboard.nonces.apiHealth
+                },
+                timeout: 60000
             }).done((response) => {
                 if (response.success) {
+                    circuitBreaker.recordSuccess();
                     const data = response.data;
                     this.apiResults = data.results;
                     Object.keys(data.results).forEach(key => {
@@ -1228,9 +1320,11 @@
                     });
                     this.updateApiSummary();
                 } else {
+                    circuitBreaker.recordFailure();
                     $('#rtbcb-api-health-notice').text(rtbcbDashboard.strings.error);
                 }
             }).fail(() => {
+                circuitBreaker.recordFailure();
                 $('#rtbcb-api-health-notice').text(rtbcbDashboard.strings.error);
             }).always(() => {
                 $('[data-action="api-health-ping"]').prop('disabled', false);
@@ -1238,21 +1332,33 @@
         },
 
         runSingleApiTest(component) {
+            if (!circuitBreaker.canExecute()) {
+                this.showNotification(rtbcbDashboard.strings.serviceUnavailable, 'error');
+                return;
+            }
             const button = $(`.rtbcb-retest[data-component="${component}"]`).prop('disabled', true);
-            $.post(rtbcbDashboard.ajaxurl, {
-                action: 'rtbcb_run_single_api_test',
-                nonce: rtbcbDashboard.nonces.apiHealth,
-                component
+            $.ajax({
+                url: rtbcbDashboard.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'rtbcb_run_single_api_test',
+                    nonce: rtbcbDashboard.nonces.apiHealth,
+                    component
+                },
+                timeout: 60000
             }).done((response) => {
                 if (response.success) {
+                    circuitBreaker.recordSuccess();
                     const res = response.data.result;
                     this.apiResults[component] = res;
                     this.updateApiRow(component, res, response.data.timestamp);
                     this.updateApiSummary();
                 } else {
+                    circuitBreaker.recordFailure();
                     $('#rtbcb-api-health-notice').text(rtbcbDashboard.strings.error);
                 }
             }).fail(() => {
+                circuitBreaker.recordFailure();
                 $('#rtbcb-api-health-notice').text(rtbcbDashboard.strings.error);
             }).always(() => {
                 button.prop('disabled', false);

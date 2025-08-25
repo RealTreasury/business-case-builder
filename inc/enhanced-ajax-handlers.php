@@ -39,7 +39,7 @@ class RTBCB_API_Tester {
                     'Authorization' => 'Bearer ' . $api_key,
                     'Content-Type'  => 'application/json',
                 ],
-                'timeout' => 10,
+                'timeout' => 60,
             ]
         );
 
@@ -232,7 +232,7 @@ add_action( 'wp_ajax_rtbcb_export_results', 'rtbcb_ajax_export_results' );
  */
 function rtbcb_ajax_test_llm_model() {
     // Verify nonce and permissions
-    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'rtbcb_llm_testing' ) ) {
+    if ( ! check_ajax_referer( 'rtbcb_llm_testing', 'nonce', false ) ) {
         wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
     }
 
@@ -380,7 +380,7 @@ function rtbcb_ajax_test_llm_model() {
  */
 function rtbcb_ajax_test_company_overview_enhanced() {
     // Verify nonce and permissions
-    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'rtbcb_unified_test_dashboard' ) ) {
+    if ( ! check_ajax_referer( 'rtbcb_unified_test_dashboard', 'nonce', false ) ) {
         wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
     }
 
@@ -488,7 +488,7 @@ function rtbcb_ajax_test_company_overview_enhanced() {
  */
 function rtbcb_ajax_calculate_roi_test() {
     // Verify nonce and permissions
-    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'rtbcb_roi_calculator_test' ) ) {
+    if ( ! check_ajax_referer( 'rtbcb_roi_calculator_test', 'nonce', false ) ) {
         wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
     }
 
@@ -552,7 +552,7 @@ function rtbcb_ajax_calculate_roi_test() {
  */
 function rtbcb_ajax_evaluate_response_quality() {
     // Verify nonce and permissions
-    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'rtbcb_llm_testing' ) ) {
+    if ( ! check_ajax_referer( 'rtbcb_llm_testing', 'nonce', false ) ) {
         wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
     }
 
@@ -609,7 +609,7 @@ function rtbcb_ajax_evaluate_response_quality() {
  */
 function rtbcb_ajax_optimize_prompt_tokens() {
     // Verify nonce and permissions
-    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'rtbcb_llm_testing' ) ) {
+    if ( ! check_ajax_referer( 'rtbcb_llm_testing', 'nonce', false ) ) {
         wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
     }
 
@@ -1648,7 +1648,7 @@ function rtbcb_run_data_health_checks() {
             'https://api.openai.com/v1/models',
             [
                 'headers' => [ 'Authorization' => 'Bearer ' . $api_key ],
-                'timeout' => 10,
+                'timeout' => 60,
             ]
         );
 
@@ -2322,7 +2322,7 @@ function rtbcb_execute_openai_health_ping() {
             'headers' => [
                 'Authorization' => 'Bearer ' . $api_key,
             ],
-            'timeout' => 10,
+            'timeout' => 60,
         ]
     );
 
