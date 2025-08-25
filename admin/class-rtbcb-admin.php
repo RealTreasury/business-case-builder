@@ -51,6 +51,11 @@ class RTBCB_Admin {
             RTBCB_VERSION
         );
         if ( false !== strpos( $hook, RTBCB_UNIFIED_TESTS_SLUG ) || RTBCB_UNIFIED_TESTS_SLUG === $page ) {
+            wp_dequeue_script( 'rtbcb-dashboard' );
+            wp_deregister_script( 'rtbcb-dashboard' );
+            wp_dequeue_script( 'rtbcb-test-dashboard' );
+            wp_deregister_script( 'rtbcb-test-dashboard' );
+
             wp_enqueue_style(
                 'rtbcb-unified-dashboard',
                 RTBCB_URL . 'admin/css/unified-test-dashboard.css',
