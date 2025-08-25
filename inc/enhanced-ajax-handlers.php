@@ -2133,6 +2133,8 @@ function rtbcb_save_dashboard_settings() {
         'rtbcb_premium_model'   => 'sanitize_text_field',
         'rtbcb_advanced_model'  => 'sanitize_text_field',
         'rtbcb_embedding_model' => 'sanitize_text_field',
+        'rtbcb_cb_threshold'    => 'absint',
+        'rtbcb_cb_reset_time'   => 'absint',
     ];
 
     foreach ( $fields as $option => $sanitize ) {

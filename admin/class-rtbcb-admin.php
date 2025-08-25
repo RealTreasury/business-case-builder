@@ -117,6 +117,10 @@ class RTBCB_Admin {
                     'apiHealth' => [
                         'lastResults' => get_option( 'rtbcb_last_api_test', [] ),
                     ],
+                    'circuitBreaker' => [
+                        'threshold' => (int) get_option( 'rtbcb_cb_threshold', 5 ),
+                        'resetTime' => (int) get_option( 'rtbcb_cb_reset_time', 60000 ),
+                    ],
                     'urls'     => [
                         'settings' => admin_url( 'admin.php?page=' . RTBCB_UNIFIED_TESTS_SLUG . '#settings' ),
                     ],
@@ -284,6 +288,8 @@ class RTBCB_Admin {
             'rtbcb_premium_model'   => 'sanitize_text_field',
             'rtbcb_advanced_model'  => 'sanitize_text_field',
             'rtbcb_embedding_model' => 'sanitize_text_field',
+            'rtbcb_cb_threshold'    => 'absint',
+            'rtbcb_cb_reset_time'   => 'absint',
         ];
 
         foreach ( $fields as $option => $sanitize ) {

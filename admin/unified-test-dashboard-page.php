@@ -33,6 +33,8 @@ $mini_model     = $available_models['mini'];
 $premium_model  = $available_models['premium'];
 $advanced_model = $available_models['advanced'];
 $embedding_model = get_option( 'rtbcb_embedding_model', rtbcb_get_default_model( 'embedding' ) );
+$cb_threshold = (int) get_option( 'rtbcb_cb_threshold', 5 );
+$cb_reset_time = (int) get_option( 'rtbcb_cb_reset_time', 60000 );
 
 $all_models = rtbcb_get_available_models();
 $chat_models = [];
@@ -1090,6 +1092,24 @@ $last_index_display = $last_indexed ? $last_indexed : __( 'Never', 'rtbcb' );
                                     <option value="<?php echo esc_attr( $value ); ?>" <?php selected( $embedding_model, $value ); ?>><?php echo esc_html( $label ); ?></option>
                                 <?php endforeach; ?>
                             </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="rtbcb_cb_threshold"><?php esc_html_e( 'Circuit Breaker Threshold', 'rtbcb' ); ?></label>
+                        </th>
+                        <td>
+                            <input type="number" id="rtbcb_cb_threshold" name="rtbcb_cb_threshold" value="<?php echo esc_attr( $cb_threshold ); ?>" class="small-text" min="1" />
+                            <p class="description"><?php esc_html_e( 'Number of consecutive failures before the circuit opens.', 'rtbcb' ); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="rtbcb_cb_reset_time"><?php esc_html_e( 'Circuit Breaker Reset Time (ms)', 'rtbcb' ); ?></label>
+                        </th>
+                        <td>
+                            <input type="number" id="rtbcb_cb_reset_time" name="rtbcb_cb_reset_time" value="<?php echo esc_attr( $cb_reset_time ); ?>" class="small-text" min="0" step="1000" />
+                            <p class="description"><?php esc_html_e( 'Time before the circuit resets after opening.', 'rtbcb' ); ?></p>
                         </td>
                     </tr>
                 </table>
