@@ -75,6 +75,7 @@
             this.initApiHealth();
             this.initRagModule();
             this.initLLMModule();
+            this.initROIModule();
             this.setupCharts();
 
             $('#company-name-input').on('input', debounce(this.validateInput.bind(this), 300));
@@ -111,6 +112,9 @@
             const activeTab = this.currentTab;
 
             switch (activeTab) {
+                case 'roi-calculator':
+                    this.initROIModule();
+                    break;
                 case 'llm-tests':
                     this.initLLMModule();
                     break;
@@ -171,6 +175,19 @@
                     console.error('Error running RAG test:', err);
                 }
             });
+
+            $(document).on('click.rtbcb', '#calculate-roi', function(e) {
+                e.preventDefault();
+                try {
+                    Dashboard.runROITest();
+                } catch (err) {
+                    console.error('Error running ROI test:', err);
+                }
+            });
+
+            $(document).on('input.rtbcb change.rtbcb', '#roi-calculator input, #roi-calculator select', debounce(function() {
+                Dashboard.validateROIInputs();
+            }, 300));
 
             $(document).on('click.rtbcb', '[data-action="api-health-ping"]', function(e) {
                 e.preventDefault();
@@ -465,6 +482,134 @@
                         this.setButtonState('#run-llm-matrix-test', 'ready');
                     }, 3000);
                 });
+        },
+
+        // ROI Calculator methods
+        initROIModule() {
+            this.validateROIInputs();
+        },
+
+        validateROIInputs() {
+            let isValid = true;
+            $('#roi-calculator').find('input[type="number"]').each(function() {
+                if ($(this).val() === '') {
+                    isValid = false;
+                    return false;
+                }
+            });
+            $('#calculate-roi').prop('disabled', !isValid);
+        },
+
+        runROITest() {
+            const roiData = {};
+            $('#roi-calculator').find('input, select').each(function() {
+                roiData[this.id] = $(this).val();
+            });
+
+            this.setButtonState('#calculate-roi', 'loading', 'Calculating...');
+
+            this.request('calculate_roi_test', { roi_data: roiData })
+                .then((data) => {
+                    this.displayROIResults(data);
+                    this.setButtonState('#calculate-roi', 'success', 'Done');
+                    this.showNotification('ROI test completed', 'success');
+                })
+                .catch((error) => {
+                    this.setButtonState('#calculate-roi', 'error', 'Failed');
+                    this.showNotification('ROI test failed: ' + error.message, 'error');
+                })
+                .finally(() => {
+                    setTimeout(() => {
+                        this.setButtonState('#calculate-roi', 'ready');
+                    }, 3000);
+                });
+        },
+
+        displayROIResults(data) {
+            const scenarios = {
+                conservative: data.conservative || {},
+                realistic: data.base || data.realistic || {},
+                optimistic: data.optimistic || {}
+            };
+
+            $('#roi-conservative-percent').text(this.formatPercent(scenarios.conservative.roi_percentage));
+            $('#roi-conservative-amount').text(this.formatCurrency(scenarios.conservative.total_annual_benefit));
+            $('#roi-realistic-percent').text(this.formatPercent(scenarios.realistic.roi_percentage));
+            $('#roi-realistic-amount').text(this.formatCurrency(scenarios.realistic.total_annual_benefit));
+            $('#roi-optimistic-percent').text(this.formatPercent(scenarios.optimistic.roi_percentage));
+            $('#roi-optimistic-amount').text(this.formatCurrency(scenarios.optimistic.total_annual_benefit));
+
+            const calcPayback = (scenario) => {
+                const pct = parseFloat(scenario.roi_percentage);
+                return pct > 0 ? (1200 / pct).toFixed(1) : '--';
+            };
+
+            $('#roi-conservative-payback').text(calcPayback(scenarios.conservative));
+            $('#roi-realistic-payback').text(calcPayback(scenarios.realistic));
+            $('#roi-optimistic-payback').text(calcPayback(scenarios.optimistic));
+
+            const comparisonConfig = {
+                type: 'bar',
+                data: {
+                    labels: ['Conservative', 'Realistic', 'Optimistic'],
+                    datasets: [{
+                        label: 'ROI %',
+                        data: [
+                            scenarios.conservative.roi_percentage || 0,
+                            scenarios.realistic.roi_percentage || 0,
+                            scenarios.optimistic.roi_percentage || 0
+                        ],
+                        backgroundColor: ['#6b7280', '#3b82f6', '#10b981']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: { y: { beginAtZero: true } },
+                    plugins: {
+                        title: { display: true, text: 'ROI % by Scenario' },
+                        legend: { display: false }
+                    }
+                }
+            };
+            this.createChart('roi-comparison-chart', comparisonConfig);
+
+            const breakdownConfig = {
+                type: 'doughnut',
+                data: {
+                    labels: ['Labor Savings', 'Fee Savings', 'Error Reduction'],
+                    datasets: [{
+                        data: [
+                            scenarios.realistic.labor_savings || 0,
+                            scenarios.realistic.fee_savings || 0,
+                            scenarios.realistic.error_reduction || 0
+                        ],
+                        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: { display: true, text: 'Cost-Benefit Breakdown' }
+                    }
+                }
+            };
+            this.createChart('roi-breakdown-chart', breakdownConfig);
+
+            const analysis = data.analysis || {};
+            const analysisItems = [];
+            if (analysis.recommendation) {
+                analysisItems.push(`<li><strong>Recommendation:</strong> ${this.escapeHtml(analysis.recommendation)}</li>`);
+            }
+            if (analysis.confidence) {
+                analysisItems.push(`<li><strong>Confidence:</strong> ${this.escapeHtml(analysis.confidence)}</li>`);
+            }
+            if (Array.isArray(analysis.key_drivers) && analysis.key_drivers.length) {
+                analysisItems.push(`<li><strong>Key Drivers:</strong> ${analysis.key_drivers.map(item => this.escapeHtml(item)).join(', ')}</li>`);
+            }
+            $('#roi-assumptions-list').html(analysisItems.join(''));
+
+            $('#roi-results-container').show().addClass('rtbcb-fade-in');
+            $('#export-roi-results').prop('disabled', false);
         },
 
         // LLM Integration Testing Methods
@@ -954,6 +1099,20 @@
             }
 
             return meta.join('');
+        },
+
+        formatCurrency(value) {
+            if (value === undefined || value === null) {
+                return '$0';
+            }
+            return '$' + Number(value).toLocaleString();
+        },
+
+        formatPercent(value, decimals = 1) {
+            if (value === undefined || value === null) {
+                return '0%';
+            }
+            return Number(value).toFixed(decimals) + '%';
         },
 
         generateRequestId() {
@@ -1645,7 +1804,8 @@
             'test_rag_query': 'dashboard',
             'run_rag_test': 'ragTesting',
             'run_api_health_tests': 'apiHealth',
-            'api_health_ping': 'apiHealth'
+            'api_health_ping': 'apiHealth',
+            'calculate_roi_test': 'roiCalculator'
         };
         return actionNonceMap[action] || 'dashboard';
     };

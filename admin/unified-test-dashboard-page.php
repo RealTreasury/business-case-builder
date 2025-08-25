@@ -52,6 +52,7 @@ function rtbcb_enqueue_dashboard_assets() {
             'dataHealth'    => wp_create_nonce( 'rtbcb_data_health_checks' ),
             'ragTesting'    => wp_create_nonce( 'rtbcb_rag_testing' ),
             'saveSettings'  => wp_create_nonce( 'rtbcb_save_dashboard_settings' ),
+            'roiCalculator' => wp_create_nonce( 'rtbcb_roi_calculator_test' ),
         ],
         'models'  => [
             'mini'     => get_option( 'rtbcb_mini_model', rtbcb_get_default_model( 'mini' ) ),
