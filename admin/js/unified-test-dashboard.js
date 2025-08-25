@@ -38,6 +38,15 @@
 
             // Re-init after tab switches
             $(document).on('rtbcb:tab-switched', this.reinitializeCurrentTab.bind(this));
+
+            setTimeout(() => {
+                $('*').each(function() {
+                    const zIndex = parseInt($(this).css('z-index'));
+                    if (zIndex > 1000 && $(this).is(':visible')) {
+                        console.warn('[DIAG] High z-index overlay:', this, zIndex);
+                    }
+                });
+            }, 1000);
         },
 
         reinitializeCurrentTab: function() {
@@ -78,6 +87,10 @@
 
         // Bind all event handlers using delegated pattern
         bindEvents() {
+            console.log('[DIAG] Binding events - jQuery ready:', !!$);
+            console.log('[DIAG] Button count:', $('[data-action]').length);
+            console.log('[DIAG] Available nonces:', Object.keys(rtbcbDashboard?.nonces || {}));
+
             // Use delegated handlers for dynamic content
             $(document).off('.rtbcb').on('click.rtbcb', '[data-action="run-company-overview"]', (e) => {
                 e.preventDefault();
@@ -1398,45 +1411,47 @@
     // Expose Dashboard object for debugging
     window.RTBCBDashboard = Dashboard;
 
-    // Add this debug helper
     window.DashboardDiag = {
         assertNonce: function(action) {
             const nonces = rtbcbDashboard?.nonces || {};
-            console.log(`[DIAG] Nonce check for ${action}:`, nonces[action] ? 'FOUND' : 'MISSING');
-            return !!nonces[action];
+            const found = !!nonces[action];
+            console.log(`[DIAG] Nonce '${action}':`, found ? 'FOUND' : 'MISSING');
+            if (!found) console.warn('[DIAG] Available nonces:', Object.keys(nonces));
+            return found;
         },
 
         assertTabVisibility: function() {
-            const activeTab = $('.rtbcb-test-section.active');
-            console.log('[DIAG] Active tab:', activeTab.attr('id'), 'Visible:', activeTab.is(':visible'));
-            return activeTab.length > 0 && activeTab.is(':visible');
+            const activeTab = $('.rtbcb-test-section.active:visible');
+            console.log('[DIAG] Active visible tabs:', activeTab.length);
+            console.log('[DIAG] Current tab ID:', activeTab.attr('id'));
+            return activeTab.length > 0;
         },
 
         countHandlers: function(selector) {
-            const events = $._data($(selector)[0], 'events') || {};
-            const count = Object.keys(events).length;
-            console.log(`[DIAG] Event handlers on ${selector}:`, count, events);
+            const el = $(selector)[0];
+            if (!el) return 0;
+            const events = $._data(el, 'events') || {};
+            const count = Object.keys(events).reduce((sum, type) => sum + events[type].length, 0);
+            console.log(`[DIAG] Handlers on '${selector}':`, count, events);
             return count;
         },
 
         checkOverlays: function() {
-            const overlays = $('.rtbcb-loading, .rtbcb-overlay, .rtbcb-modal').filter(':visible');
-            console.log('[DIAG] Visible overlays:', overlays.length);
+            const overlays = $('.rtbcb-loading, [style*="z-index"]').filter(':visible');
             overlays.each(function() {
                 const zIndex = $(this).css('z-index');
                 const pointerEvents = $(this).css('pointer-events');
-                console.log(`[DIAG] Overlay ${this.className}: z-index=${zIndex}, pointer-events=${pointerEvents}`);
+                console.log('[DIAG] Overlay:', this.className, `z-index:${zIndex}, pointer-events:${pointerEvents}`);
             });
             return overlays.length;
         }
     };
 
-    // Bind diagnostic to button clicks
+    // Auto-diagnose button clicks
     $(document).on('click', '[data-action]', function(e) {
         const action = $(this).data('action');
-        console.log(`[DIAG] Button click: ${action}, disabled=${$(this).prop('disabled')}, preventDefault called`);
+        console.log(`[DIAG] Button click: ${action}, disabled:${$(this).prop('disabled')}`);
         window.DashboardDiag.assertNonce(action.replace('run-', '').replace('-test', ''));
-        window.DashboardDiag.checkOverlays();
     });
 
 })(jQuery);
