@@ -1279,10 +1279,19 @@ Respond with the JSON structure only. No additional text.";
 
         $response = wp_remote_post( $endpoint, $args );
 
-        // Log timing information
-        if ( ! is_wp_error( $response ) ) {
-            $response_code = wp_remote_retrieve_response_code( $response );
-            error_log( "RTBCB: OpenAI API response code: {$response_code}" );
+        if ( is_wp_error( $response ) ) {
+            return new WP_Error( 'api_error', $response->get_error_message() );
+        }
+
+        $response_code = wp_remote_retrieve_response_code( $response );
+        error_log( "RTBCB: OpenAI API response code: {$response_code}" );
+
+        if ( 200 !== $response_code ) {
+            $body_snippet = substr( wp_remote_retrieve_body( $response ), 0, 200 );
+            return new WP_Error(
+                'api_error',
+                sprintf( __( 'API request failed with status %d: %s', 'rtbcb' ), $response_code, $body_snippet )
+            );
         }
 
         return $response;

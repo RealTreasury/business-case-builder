@@ -468,7 +468,16 @@ function rtbcb_test_generate_category_recommendation( $analysis ) {
         );
 
         if ( is_wp_error( $response ) ) {
-            return new WP_Error( 'llm_failure', __( 'Unable to generate recommendation at this time.', 'rtbcb' ) );
+            return new WP_Error( 'api_error', sprintf( __( 'Request error: %s', 'rtbcb' ), $response->get_error_message() ) );
+        }
+
+        $status_code = wp_remote_retrieve_response_code( $response );
+        if ( 200 !== $status_code ) {
+            $body_snippet = substr( wp_remote_retrieve_body( $response ), 0, 200 );
+            return new WP_Error(
+                'api_error',
+                sprintf( __( 'API request failed with status %d: %s', 'rtbcb' ), $status_code, $body_snippet )
+            );
         }
 
         $body    = wp_remote_retrieve_body( $response );
