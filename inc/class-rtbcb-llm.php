@@ -9,12 +9,29 @@ require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/helpers.php';
 
 class RTBCB_LLM {
+    /**
+     * OpenAI API key.
+     *
+     * @var string
+     */
     private $api_key;
+
+    /**
+     * Current sanitized user inputs.
+     *
+     * @var array
+     */
     private $current_inputs = [];
+
+    /**
+     * GPT-5 configuration options.
+     *
+     * @var array
+     */
     private $gpt5_config;
 
     public function __construct() {
-        $this->api_key = get_option( 'rtbcb_openai_api_key' );
+        $this->api_key = sanitize_text_field( get_option( 'rtbcb_openai_api_key' ) );
 
         $config     = rtbcb_get_gpt5_config( get_option( 'rtbcb_gpt5_config', [] ) );
         $this->gpt5_config = $config;
