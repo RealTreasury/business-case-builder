@@ -1791,6 +1791,8 @@ function rtbcb_rag_rebuild_index() {
  * @return void
  */
 function rtbcb_run_api_health_tests() {
+    error_log( 'rtbcb_run_api_health_tests action: ' . print_r( $_POST, true ) );
+
     if ( ! check_ajax_referer( 'rtbcb_api_health_tests', 'nonce', false ) ) {
         wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
     }
@@ -1854,6 +1856,8 @@ function rtbcb_run_api_health_tests() {
             'results'   => $results,
         ]
     );
+
+    error_log( 'rtbcb_run_api_health_tests result: ' . print_r( $results, true ) );
 
     wp_send_json_success(
         [
@@ -2542,6 +2546,8 @@ function rtbcb_audit_context_window( $context_chunks ) {
  * @return void
  */
 function rtbcb_ajax_api_health_ping() {
+    error_log( 'rtbcb_ajax_api_health_ping action: ' . print_r( $_POST, true ) );
+
     if ( ! check_ajax_referer( 'rtbcb_api_health_tests', 'nonce', false ) ) {
         wp_send_json_error(
             [
@@ -2587,6 +2593,8 @@ function rtbcb_ajax_api_health_ping() {
                 600
             );
         }
+
+        error_log( 'rtbcb_ajax_api_health_ping result: ' . print_r( $ping_result, true ) );
 
         wp_send_json_success(
             [
