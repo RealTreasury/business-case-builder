@@ -736,7 +736,7 @@
                     setTimeout(() => $button.removeClass('rtbcb-error').html(defaultText), 5000);
                     break;
                 default:
-                    $button.prop('disabled', false).html(text || defaultText);
+                    $button.prop('disabled', false).html(text ? text : this.escapeHtml(defaultText));
                     break;
             }
         },
