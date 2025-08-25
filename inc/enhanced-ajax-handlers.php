@@ -1845,25 +1845,37 @@ function rtbcb_rag_rebuild_index() {
  * @return void
  */
 function rtbcb_run_api_health_tests() {
-    error_log( '[RTBCB] API Health Test - Entry Point' );
+    $is_debug = defined( 'WP_DEBUG' ) && WP_DEBUG;
+
+    if ( $is_debug ) {
+        error_log( '[RTBCB] API Health Test - Entry Point' );
+    }
 
     // Enhanced nonce checking with debug info.
     $nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['nonce'] ) ) : '';
-    error_log( '[RTBCB] Nonce received: ' . $nonce );
+    if ( $is_debug ) {
+        error_log( '[RTBCB] Nonce received: ' . $nonce );
+    }
 
     if ( ! wp_verify_nonce( $nonce, 'rtbcb_api_health_tests' ) ) {
-        error_log( '[RTBCB] Nonce verification failed' );
+        if ( $is_debug ) {
+            error_log( '[RTBCB] Nonce verification failed' );
+        }
         rtbcb_send_json_error( 'security_check_failed', __( 'Security check failed.', 'rtbcb' ), 403 );
         return;
     }
 
     if ( ! current_user_can( 'manage_options' ) ) {
-        error_log( '[RTBCB] Permission check failed for user: ' . get_current_user_id() );
+        if ( $is_debug ) {
+            error_log( '[RTBCB] Permission check failed for user: ' . get_current_user_id() );
+        }
         rtbcb_send_json_error( 'insufficient_permissions', __( 'Insufficient permissions.', 'rtbcb' ), 403 );
         return;
     }
 
-    error_log( '[RTBCB] Security checks passed, running tests...' );
+    if ( $is_debug ) {
+        error_log( '[RTBCB] Security checks passed, running tests...' );
+    }
 
     $components = [
         'chat'      => [
@@ -1893,11 +1905,15 @@ function rtbcb_run_api_health_tests() {
 
     try {
         foreach ( $components as $key => $component ) {
-            error_log( "[RTBCB] Testing component: {$key}" );
+            if ( $is_debug ) {
+                error_log( "[RTBCB] Testing component: {$key}" );
+            }
             $start = microtime( true );
 
             if ( ! is_callable( $component['test'] ) ) {
-                error_log( "[RTBCB] Test method not callable for {$key}" );
+                if ( $is_debug ) {
+                    error_log( "[RTBCB] Test method not callable for {$key}" );
+                }
                 $results[ $key ] = [
                     'name'          => $component['label'],
                     'passed'        => false,
@@ -1921,10 +1937,14 @@ function rtbcb_run_api_health_tests() {
                 'last_tested'   => $timestamp,
             ];
 
-            error_log( '[RTBCB] Component ' . $key . ' result: ' . ( $results[ $key ]['passed'] ? 'PASS' : 'FAIL' ) );
+            if ( $is_debug ) {
+                error_log( '[RTBCB] Component ' . $key . ' result: ' . ( $results[ $key ]['passed'] ? 'PASS' : 'FAIL' ) );
+            }
         }
     } catch ( Throwable $e ) {
-        error_log( '[RTBCB] Exception in API health tests: ' . $e->getMessage() );
+        if ( $is_debug ) {
+            error_log( '[RTBCB] Exception in API health tests: ' . $e->getMessage() );
+        }
         rtbcb_send_json_error( 'api_health_tests_failed', __( 'API health tests failed to execute.', 'rtbcb' ), 500, $e->getMessage() );
         return;
     }
@@ -1941,7 +1961,9 @@ function rtbcb_run_api_health_tests() {
         ]
     );
 
-    error_log( '[RTBCB] API Health Tests completed. Overall: ' . ( $all_passed ? 'PASS' : 'FAIL' ) );
+    if ( $is_debug ) {
+        error_log( '[RTBCB] API Health Tests completed. Overall: ' . ( $all_passed ? 'PASS' : 'FAIL' ) );
+    }
 
     wp_send_json_success(
         [
