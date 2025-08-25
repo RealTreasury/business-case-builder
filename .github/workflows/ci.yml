@@ -1,0 +1,307 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # PHP Compatibility and Quality Checks
+  php-quality:
+    name: PHP Quality & Compatibility
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php-version: ['7.4', '8.0', '8.1', '8.2', '8.3']
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP ${{ matrix.php-version }}
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ matrix.php-version }}
+        extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv
+        coverage: xdebug
+
+    - name: Cache Composer packages
+      id: composer-cache
+      uses: actions/cache@v3
+      with:
+        path: vendor
+        key: ${{ runner.os }}-composer-${{ matrix.php-version }}-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-composer-${{ matrix.php-version }}-
+
+    - name: Install Composer dependencies
+      run: composer install --prefer-dist --no-progress
+
+    - name: PHP Lint
+      run: composer run lint
+
+    - name: WordPress Coding Standards
+      run: composer run cs:check
+
+    - name: PHP Compatibility Check
+      run: composer run compat:check
+
+  # PHPUnit Tests
+  phpunit-tests:
+    name: PHPUnit Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php-version: ['7.4', '8.0', '8.1', '8.2', '8.3']
+        wordpress-version: ['6.2', '6.3', '6.4', 'latest']
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: wordpress_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP ${{ matrix.php-version }}
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ matrix.php-version }}
+        extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, mysql
+        coverage: xdebug
+
+    - name: Cache Composer packages
+      uses: actions/cache@v3
+      with:
+        path: vendor
+        key: ${{ runner.os }}-composer-${{ matrix.php-version }}-${{ hashFiles('**/composer.lock') }}
+
+    - name: Install Composer dependencies
+      run: composer install --prefer-dist --no-progress
+
+    - name: Install WordPress Test Suite
+      run: bash bin/install-wp-tests.sh wordpress_test root root 127.0.0.1:3306 ${{ matrix.wordpress-version }}
+      env:
+        WP_TESTS_DIR: /tmp/wordpress-tests-lib
+        WP_CORE_DIR: /tmp/wordpress
+
+    - name: Run PHPUnit tests
+      run: |
+        export WP_TESTS_DIR=/tmp/wordpress-tests-lib
+        export WP_PHPUNIT_DIR=/tmp/wordpress-tests-lib
+        composer test
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+    - name: Upload coverage to Codecov
+      if: matrix.php-version == '8.0' && matrix.wordpress-version == 'latest'
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage/clover.xml
+        flags: phpunit
+        name: codecov-umbrella
+
+  # JavaScript Quality Checks
+  javascript-quality:
+    name: JavaScript Quality
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install Node.js dependencies
+      run: npm ci
+
+    - name: JavaScript Lint
+      run: npm run lint:js
+
+    - name: JavaScript Tests
+      run: npm run test:js
+
+  # End-to-End Tests with Cypress
+  e2e-tests:
+    name: End-to-End Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.3'
+        extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv
+
+    - name: Install dependencies
+      run: |
+        npm ci
+        composer install --prefer-dist --no-progress
+
+    - name: Start WordPress environment
+      run: npm run wp-env:start
+
+    - name: Wait for WordPress
+      run: |
+        timeout 300 bash -c 'until curl -f http://localhost:8888; do sleep 5; done'
+
+    - name: Run Cypress tests
+      run: npm run test:e2e:ci
+      env:
+        CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+
+    - name: Upload Cypress screenshots
+      uses: actions/upload-artifact@v3
+      if: failure()
+      with:
+        name: cypress-screenshots
+        path: tests/cypress/screenshots
+
+    - name: Upload Cypress videos
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: cypress-videos
+        path: tests/cypress/videos
+
+  # WordPress.com Compatibility Check
+  wordpress-com-compatibility:
+    name: WordPress.com Compatibility
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.3'
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: |
+        npm ci
+        composer install --prefer-dist --no-progress
+
+    - name: Check for WordPress.com incompatible functions
+      run: |
+        echo "Checking for WordPress.com incompatible functions..."
+        if grep -r "exec\|shell_exec\|system\|passthru" --include="*.php" ./inc ./admin ./public; then
+          echo "❌ Found potentially incompatible functions"
+          exit 1
+        else
+          echo "✅ No incompatible functions found"
+        fi
+
+    - name: Validate plugin structure
+      run: |
+        echo "Validating plugin structure for WordPress.com..."
+        if [[ ! -f "real-treasury-business-case-builder.php" ]]; then
+          echo "❌ Main plugin file not found"
+          exit 1
+        fi
+        if [[ ! -f "readme.txt" ]]; then
+          echo "❌ readme.txt not found"
+          exit 1
+        fi
+        echo "✅ Plugin structure is valid"
+
+    - name: Build production ZIP
+      run: npm run build
+
+    - name: Check ZIP size for WordPress.com limits
+      run: |
+        ZIP_SIZE=$(stat -c%s build/*.zip)
+        MAX_SIZE=$((50 * 1024 * 1024)) # 50MB
+        if [[ $ZIP_SIZE -gt $MAX_SIZE ]]; then
+          echo "❌ ZIP file too large for WordPress.com upload: $(($ZIP_SIZE / 1024 / 1024))MB"
+          exit 1
+        else
+          echo "✅ ZIP file size OK: $(($ZIP_SIZE / 1024 / 1024))MB"
+        fi
+
+    - name: Upload production ZIP
+      uses: actions/upload-artifact@v3
+      with:
+        name: wordpress-com-plugin-zip
+        path: build/*.zip
+
+  # Build and Release
+  build-release:
+    name: Build Release
+    needs: [php-quality, phpunit-tests, javascript-quality, wordpress-com-compatibility]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.3'
+
+    - name: Install dependencies
+      run: |
+        npm ci
+        composer install --no-dev --prefer-dist --no-progress --optimize-autoloader
+
+    - name: Build production package
+      run: npm run build
+
+    - name: Create release notes
+      run: |
+        echo "# Real Treasury Business Case Builder Release" > release-notes.md
+        echo "" >> release-notes.md
+        echo "## WordPress.com Compatible" >> release-notes.md
+        echo "This release is optimized for WordPress.com hosting:" >> release-notes.md
+        echo "- ✅ No incompatible functions" >> release-notes.md
+        echo "- ✅ Uses WordPress HTTP API" >> release-notes.md
+        echo "- ✅ Respects WordPress.com constraints" >> release-notes.md
+        echo "- ✅ Optimized for shared hosting" >> release-notes.md
+
+    - name: Upload release artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: release-package
+        path: |
+          build/*.zip
+          release-notes.md
+
+env:
+  # WordPress.com optimization flags
+  WP_ENVIRONMENT_TYPE: production
+  WP_DEBUG: false
