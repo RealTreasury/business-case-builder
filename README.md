@@ -123,7 +123,10 @@ real-treasury-business-case-builder/
 - **unified-test-dashboard-page.php** – Centralized testing interface for plugin components.
 - **css/rtbcb-admin.css** – Core styles for all admin pages.
 - **css/unified-test-dashboard.css** – Styling for the unified test dashboard.
-- **js/unified-test-dashboard.js** – JavaScript powering the testing dashboard.
+- **js/unified-test-dashboard.js** – JavaScript powering the testing dashboard with a circuit breaker, progress tracking, and notification utilities.
+
+##### Unified Test Dashboard
+Navigate to **Real Treasury → Unified Tests** in the WordPress admin to run LLM, RAG, and API checks. The dashboard displays progress for each test, halts sequences via a circuit breaker on repeated failures, and surfaces notifications summarizing results.
 
 #### Frontend Assets (`/public/`)
 - **css/rtbcb-variables.css** – CSS variables and theme tokens.
@@ -185,7 +188,7 @@ real-treasury-business-case-builder/
 | `rtbcb_run_llm_test` | Compare multiple LLM models for diagnostics | `modelIds`, `promptA/B`, `maxTokens`, `temperature` | Array of model responses with latency and token metrics |
 | `rtbcb_run_rag_test` | Evaluate retrieval quality of the RAG index | `queries`, `topK`, `evaluationMode` | Retrieval results and scoring metrics |
 | `rtbcb_api_health_ping` | Check OpenAI API connectivity and rate limits | None beyond nonce | Health status and rate-limit headers |
-| `rtbcb_generate_preview_report` | Build a full HTML report in the admin test dashboard | Authenticated request, nonce | Sanitized report HTML |
+| `rtbcb_generate_preview_report` | Build a full HTML report in the Unified Test Dashboard | Authenticated request, nonce | Sanitized report HTML |
 
 ## 5. Installation & Setup
 1. Upload the plugin directory to `wp-content/plugins/` or install the ZIP via the WordPress admin panel, then activate it.

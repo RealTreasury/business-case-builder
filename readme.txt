@@ -30,8 +30,11 @@ Yes. The plugin generates downloadable PDF reports for each business case.
 The analytics dashboard uses Chart.js loaded from a CDN for better caching. Strict privacy extensions or network restrictions may block CDN assets; allow requests to the CDN so charts can render.
 
 == Changelog ==
+= 2.1.2 =
+* Refactored unified test dashboard script for improved state management, error handling, and user notifications.
+
 = 2.1.1 =
-* Added AJAX test dashboard actions: `rtbcb_run_llm_test`, `rtbcb_run_rag_test`, `rtbcb_api_health_ping`, `rtbcb_export_results`
+* Added AJAX Unified Test Dashboard actions: `rtbcb_run_llm_test`, `rtbcb_run_rag_test`, `rtbcb_api_health_ping`, `rtbcb_export_results`
 * Setup notes: OpenAI API key, required models (`gpt-4o-mini`, `gpt-4o`), `wp_rtbcb_rag_index` table, `RTBCB_DISABLE_API_NOTICES` flag for staging
 * Performance updates: Chart.js from CDN, exponential backoff for AJAX, results stored in localStorage, `requestIdleCallback` for heavy operations
 * Security hardening: `manage_options` capability, nonce verification, sanitized input/output, no frontend API keys
