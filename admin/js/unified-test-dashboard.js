@@ -26,7 +26,7 @@
     const circuitBreaker = {
         failures: 0,
         threshold: 5, // Increased from 3
-        resetTime: 60000, // Reduced from 300000 (1 minute)
+        resetTime: 60000, // Reduced from 300000 ms (five minutes) to 60000 ms (one minute)
 
         canExecute() {
             return this.failures < this.threshold;
