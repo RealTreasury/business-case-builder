@@ -673,11 +673,11 @@ function rtbcb_ajax_test_llm_model() {
 function rtbcb_ajax_test_company_overview_enhanced() {
     // Verify nonce and permissions
     if ( ! check_ajax_referer( 'rtbcb_unified_test_dashboard', 'nonce', false ) ) {
-        rtbcb_send_json_error( 'security_check_failed', __( 'Security check failed.', 'rtbcb' ), 403 );
+        rtbcb_send_json_error( 'security_check_failed', __( 'Security check failed.', 'rtbcb' ), 403, 'Invalid or missing nonce.' );
     }
 
     if ( ! current_user_can( 'manage_options' ) ) {
-        rtbcb_send_json_error( 'insufficient_permissions', __( 'Insufficient permissions.', 'rtbcb' ), 403 );
+        rtbcb_send_json_error( 'insufficient_permissions', __( 'Insufficient permissions.', 'rtbcb' ), 403, 'User lacks manage_options capability.' );
     }
 
     // Get input parameters
@@ -688,7 +688,7 @@ function rtbcb_ajax_test_company_overview_enhanced() {
 
     // Validate required fields
     if ( empty( $company_name ) ) {
-        rtbcb_send_json_error( 'company_name_required', __( 'Company name is required.', 'rtbcb' ) );
+        rtbcb_send_json_error( 'company_name_required', __( 'Company name is required.', 'rtbcb' ), 400, 'Missing company_name parameter.' );
     }
 
     // Set timeout and memory limits for comprehensive analysis
@@ -704,7 +704,11 @@ function rtbcb_ajax_test_company_overview_enhanced() {
         $overview_result = rtbcb_test_generate_company_overview( $company_name, $model_key );
 
         if ( is_wp_error( $overview_result ) ) {
-            rtbcb_send_json_error( $overview_result->get_error_code(), $overview_result->get_error_message(), 500, $overview_result->get_error_data() );
+            $detail = $overview_result->get_error_data();
+            if ( empty( $detail ) ) {
+                $detail = $overview_result->get_error_message();
+            }
+            rtbcb_send_json_error( $overview_result->get_error_code(), $overview_result->get_error_message(), 500, $detail );
         }
 
         // Calculate metrics

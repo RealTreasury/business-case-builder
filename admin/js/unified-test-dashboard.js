@@ -824,6 +824,11 @@
             } else if (xhr && xhr.responseJSON) {
                 errorMessage = xhr.responseJSON.data?.message || errorMessage;
                 debugInfo = xhr.responseJSON.data?.debug || {};
+
+                const detail = xhr.responseJSON.data?.detail;
+                if (detail) {
+                    debugInfo.detail = detail;
+                }
             } else if (error) {
                 errorMessage = error;
             }
