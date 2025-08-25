@@ -9,6 +9,7 @@ add_action( 'wp_ajax_rtbcb_run_llm_test', 'rtbcb_ajax_run_llm_test' );
 add_action( 'wp_ajax_rtbcb_run_rag_test', 'rtbcb_ajax_run_rag_test' );
 add_action( 'wp_ajax_rtbcb_api_health_ping', 'rtbcb_ajax_api_health_ping' );
 add_action( 'wp_ajax_rtbcb_export_results', 'rtbcb_ajax_export_results' );
+add_action( 'wp_ajax_rtbcb_debug_api_key', 'rtbcb_debug_api_key' );
 
 // Remove duplicate handlers and add debug logging.
 add_action(
@@ -60,6 +61,33 @@ function rtbcb_send_json_error( $code, $message, $status = 400, $detail = '', $e
     }
 
     wp_send_json_error( $data, $status );
+}
+
+/**
+ * Debug OpenAI API key configuration.
+ *
+ * Provides basic information about the stored API key for troubleshooting
+ * purposes. Requires manage_options capability.
+ *
+ * @return void
+ */
+function rtbcb_debug_api_key() {
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_die( esc_html__( 'Unauthorized', 'rtbcb' ) );
+    }
+
+    $api_key    = sanitize_text_field( get_option( 'rtbcb_openai_api_key' ) );
+    $key_length = strlen( $api_key );
+    $key_preview = $key_length > 10 ? substr( $api_key, 0, 8 ) . '...' . substr( $api_key, -4 ) : 'too_short';
+
+    wp_send_json_success(
+        [
+            'configured'   => ! empty( $api_key ),
+            'length'       => $key_length,
+            'preview'      => $key_preview,
+            'valid_format' => rtbcb_is_valid_openai_api_key( $api_key ),
+        ]
+    );
 }
 
 /**
