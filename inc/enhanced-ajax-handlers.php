@@ -1771,14 +1771,27 @@ function rtbcb_rag_rebuild_index() {
  * @return void
  */
 function rtbcb_run_api_health_tests() {
-    error_log( 'AJAX handler called: rtbcb_run_api_health_tests' );
-    error_log( 'Request data: ' . print_r( $_POST, true ) );
+    error_log( 'Entering rtbcb_run_api_health_tests' );
 
-    if ( ! check_ajax_referer( 'rtbcb_api_health_tests', 'nonce', false ) ) {
+    $user_id   = get_current_user_id();
+    $can_manage = current_user_can( 'manage_options' );
+    error_log( 'User ID: ' . $user_id . ' manage_options: ' . ( $can_manage ? 'yes' : 'no' ) );
+
+    $request_method = isset( $_SERVER['REQUEST_METHOD'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) ) : 'UNKNOWN';
+    error_log( 'Request method: ' . $request_method );
+    error_log( 'POST data: ' . print_r( $_POST, true ) );
+
+    $nonce    = isset( $_POST['nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['nonce'] ) ) : '';
+    $nonce_ok = $nonce ? wp_verify_nonce( $nonce, 'rtbcb_api_health_tests' ) : false;
+    error_log( 'Nonce value: ' . $nonce . ' verification: ' . ( $nonce_ok ? 'passed' : 'failed' ) );
+
+    if ( ! $nonce_ok ) {
+        error_log( 'Nonce verification failed in rtbcb_run_api_health_tests' );
         rtbcb_send_json_error( 'security_check_failed', __( 'Security check failed.', 'rtbcb' ), 403 );
     }
 
-    if ( ! current_user_can( 'manage_options' ) ) {
+    if ( ! $can_manage ) {
+        error_log( 'User lacks manage_options capability in rtbcb_run_api_health_tests' );
         rtbcb_send_json_error( 'insufficient_permissions', __( 'Insufficient permissions.', 'rtbcb' ), 403 );
     }
 
@@ -1809,21 +1822,26 @@ function rtbcb_run_api_health_tests() {
 
     $timestamp = current_time( 'mysql' );
 
-    foreach ( $components as $key => $component ) {
-        $start = microtime( true );
+    try {
+        foreach ( $components as $key => $component ) {
+            $start = microtime( true );
 
-        $test = call_user_func( $component['test'] );
+            $test = call_user_func( $component['test'] );
 
-        $end = microtime( true );
+            $end = microtime( true );
 
-        $results[ $key ] = [
-            'name'          => $component['label'],
-            'passed'        => (bool) ( $test['success'] ?? false ),
-            'response_time' => intval( ( $end - $start ) * 1000 ),
-            'message'       => sanitize_text_field( $test['message'] ?? '' ),
-            'details'       => $test,
-            'last_tested'   => $timestamp,
-        ];
+            $results[ $key ] = [
+                'name'          => $component['label'],
+                'passed'        => (bool) ( $test['success'] ?? false ),
+                'response_time' => intval( ( $end - $start ) * 1000 ),
+                'message'       => sanitize_text_field( $test['message'] ?? '' ),
+                'details'       => $test,
+                'last_tested'   => $timestamp,
+            ];
+        }
+    } catch ( Throwable $e ) {
+        error_log( 'rtbcb_run_api_health_tests exception: ' . $e->getMessage() );
+        rtbcb_send_json_error( 'api_health_tests_failed', __( 'API health tests failed to execute.', 'rtbcb' ), 500, $e->getMessage() );
     }
 
     $all_passed = ! array_filter( $results, function( $r ) {
