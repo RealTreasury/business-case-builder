@@ -42,12 +42,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @param string $code   Error code.
  * @param string $message Error message.
  * @param int    $status HTTP status code.
- * @param string $detail Optional debug detail.
- * @param array  $extra  Additional data to include in the response.
+ * @param string $debug Optional debug information.
+ * @param array  $extra Additional data to include in the response.
  *
  * @return void
  */
-function rtbcb_send_json_error( $code, $message, $status = 400, $detail = '', $extra = [] ) {
+function rtbcb_send_json_error( $code, $message, $status = 400, $debug = '', $extra = [] ) {
     $data = array_merge(
         [
             'code'    => $code,
@@ -56,8 +56,8 @@ function rtbcb_send_json_error( $code, $message, $status = 400, $detail = '', $e
         $extra
     );
 
-    if ( WP_DEBUG && ! empty( $detail ) ) {
-        $data['detail'] = $detail;
+    if ( WP_DEBUG && ! empty( $debug ) ) {
+        $data['debug'] = $debug;
     }
 
     wp_send_json_error( $data, $status );
@@ -767,20 +767,37 @@ function rtbcb_ajax_test_company_overview_enhanced() {
  * @return void
  */
 function rtbcb_ajax_calculate_roi_test() {
+    error_log( 'AJAX handler called: rtbcb_ajax_calculate_roi_test' );
+    error_log( 'Request data: ' . print_r( $_POST, true ) );
     // Verify nonce and permissions
     if ( ! check_ajax_referer( 'rtbcb_roi_calculator_test', 'nonce', false ) ) {
-        rtbcb_send_json_error( 'security_check_failed', __( 'Security check failed.', 'rtbcb' ), 403 );
+        rtbcb_send_json_error(
+            'security_check_failed',
+            __( 'Security check failed.', 'rtbcb' ),
+            403,
+            [ 'request' => rtbcb_sanitize_form_data( wp_unslash( $_POST ) ) ]
+        );
     }
 
     if ( ! current_user_can( 'manage_options' ) ) {
-        rtbcb_send_json_error( 'insufficient_permissions', __( 'Insufficient permissions.', 'rtbcb' ), 403 );
+        rtbcb_send_json_error(
+            'insufficient_permissions',
+            __( 'Insufficient permissions.', 'rtbcb' ),
+            403,
+            [ 'request' => rtbcb_sanitize_form_data( wp_unslash( $_POST ) ) ]
+        );
     }
 
     // Get ROI input data
     $roi_data = isset( $_POST['roi_data'] ) ? wp_unslash( $_POST['roi_data'] ) : [];
 
     if ( empty( $roi_data ) || ! is_array( $roi_data ) ) {
-        rtbcb_send_json_error( 'roi_data_required', __( 'ROI data is required.', 'rtbcb' ) );
+        rtbcb_send_json_error(
+            'roi_data_required',
+            __( 'ROI data is required.', 'rtbcb' ),
+            400,
+            [ 'request' => rtbcb_sanitize_form_data( wp_unslash( $_POST ) ) ]
+        );
     }
 
     // Sanitize ROI data
@@ -809,8 +826,16 @@ function rtbcb_ajax_calculate_roi_test() {
 
         wp_send_json_success( $response_data );
     } catch ( Exception $e ) {
-        error_log( 'RTBCB ROI Test Calculation Error: ' . $e->getMessage() );
-        rtbcb_send_json_error( 'roi_calculation_failed', __( 'An error occurred while calculating ROI.', 'rtbcb' ), 500, $e->getMessage() );
+        error_log( 'RTBCB ROI Test Calculation Error: ' . $e->getMessage() . ' Data: ' . print_r( $roi_data, true ) );
+        rtbcb_send_json_error(
+            'roi_calculation_failed',
+            __( 'An error occurred while calculating ROI.', 'rtbcb' ),
+            500,
+            [
+                'error'   => $e->getMessage(),
+                'request' => $roi_data,
+            ]
+        );
     }
 }
 
@@ -2148,11 +2173,21 @@ function rtbcb_ajax_run_llm_test() {
     error_log( 'AJAX handler called: rtbcb_ajax_run_llm_test' );
     error_log( 'Request data: ' . print_r( $_POST, true ) );
     if ( ! check_ajax_referer( 'rtbcb_llm_testing', 'nonce', false ) ) {
-        rtbcb_send_json_error( 'security_check_failed', __( 'Security check failed.', 'rtbcb' ), 403 );
+        rtbcb_send_json_error(
+            'security_check_failed',
+            __( 'Security check failed.', 'rtbcb' ),
+            403,
+            [ 'request' => rtbcb_sanitize_form_data( wp_unslash( $_POST ) ) ]
+        );
     }
 
     if ( ! current_user_can( 'manage_options' ) ) {
-        rtbcb_send_json_error( 'insufficient_permissions', __( 'Insufficient permissions.', 'rtbcb' ), 403 );
+        rtbcb_send_json_error(
+            'insufficient_permissions',
+            __( 'Insufficient permissions.', 'rtbcb' ),
+            403,
+            [ 'request' => rtbcb_sanitize_form_data( wp_unslash( $_POST ) ) ]
+        );
     }
 
     $input_data = [
@@ -2165,11 +2200,21 @@ function rtbcb_ajax_run_llm_test() {
     ];
 
     if ( empty( $input_data['modelIds'] ) ) {
-        rtbcb_send_json_error( 'no_models_selected', __( 'No models selected.', 'rtbcb' ) );
+        rtbcb_send_json_error(
+            'no_models_selected',
+            __( 'No models selected.', 'rtbcb' ),
+            400,
+            [ 'request' => $input_data ]
+        );
     }
 
     if ( empty( $input_data['promptA'] ) ) {
-        rtbcb_send_json_error( 'prompt_a_required', __( 'Prompt A is required.', 'rtbcb' ) );
+        rtbcb_send_json_error(
+            'prompt_a_required',
+            __( 'Prompt A is required.', 'rtbcb' ),
+            400,
+            [ 'request' => $input_data ]
+        );
     }
 
     try {
@@ -2229,8 +2274,16 @@ function rtbcb_ajax_run_llm_test() {
         ] );
 
     } catch ( Exception $e ) {
-        error_log( 'RTBCB LLM Test Error: ' . $e->getMessage() );
-        rtbcb_send_json_error( 'llm_test_failed', __( 'LLM test execution failed.', 'rtbcb' ), 500, $e->getMessage() );
+        error_log( 'RTBCB LLM Test Error: ' . $e->getMessage() . ' Data: ' . print_r( $input_data, true ) );
+        rtbcb_send_json_error(
+            'llm_test_failed',
+            __( 'LLM test execution failed.', 'rtbcb' ),
+            500,
+            [
+                'error'   => $e->getMessage(),
+                'request' => $input_data,
+            ]
+        );
     }
 }
 
@@ -2379,11 +2432,21 @@ function rtbcb_ajax_run_rag_test() {
     error_log( 'Request data: ' . print_r( $_POST, true ) );
     // Security and permission checks.
     if ( ! check_ajax_referer( 'rtbcb_rag_testing', 'nonce', false ) ) {
-        rtbcb_send_json_error( 'security_check_failed', __( 'Security check failed.', 'rtbcb' ), 403 );
+        rtbcb_send_json_error(
+            'security_check_failed',
+            __( 'Security check failed.', 'rtbcb' ),
+            403,
+            [ 'request' => rtbcb_sanitize_form_data( wp_unslash( $_POST ) ) ]
+        );
     }
 
     if ( ! current_user_can( 'manage_options' ) ) {
-        rtbcb_send_json_error( 'insufficient_permissions', __( 'Insufficient permissions.', 'rtbcb' ), 403 );
+        rtbcb_send_json_error(
+            'insufficient_permissions',
+            __( 'Insufficient permissions.', 'rtbcb' ),
+            403,
+            [ 'request' => rtbcb_sanitize_form_data( wp_unslash( $_POST ) ) ]
+        );
     }
 
     // Input handling.
@@ -2392,7 +2455,17 @@ function rtbcb_ajax_run_rag_test() {
     $evaluation_mode = sanitize_text_field( wp_unslash( $_POST['evaluationMode'] ?? 'similarity' ) );
 
     if ( empty( $queries ) ) {
-        rtbcb_send_json_error( 'test_queries_required', __( 'Test queries required.', 'rtbcb' ) );
+        $debug_request = [
+            'queries'         => $queries,
+            'top_k'           => $top_k,
+            'evaluation_mode' => $evaluation_mode,
+        ];
+        rtbcb_send_json_error(
+            'test_queries_required',
+            __( 'Test queries required.', 'rtbcb' ),
+            400,
+            [ 'request' => $debug_request ]
+        );
     }
 
     try {
@@ -2450,8 +2523,21 @@ function rtbcb_ajax_run_rag_test() {
             ]
         );
     } catch ( Exception $e ) {
-        error_log( 'RTBCB RAG Test Error: ' . $e->getMessage() );
-        rtbcb_send_json_error( 'rag_test_failed', __( 'RAG test execution failed.', 'rtbcb' ), 500, $e->getMessage() );
+        $request_data = [
+            'queries'         => $queries,
+            'top_k'           => $top_k,
+            'evaluation_mode' => $evaluation_mode,
+        ];
+        error_log( 'RTBCB RAG Test Error: ' . $e->getMessage() . ' Data: ' . print_r( $request_data, true ) );
+        rtbcb_send_json_error(
+            'rag_test_failed',
+            __( 'RAG test execution failed.', 'rtbcb' ),
+            500,
+            [
+                'error'   => $e->getMessage(),
+                'request' => $request_data,
+            ]
+        );
     }
 }
 
