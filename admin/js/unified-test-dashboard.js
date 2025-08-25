@@ -6,6 +6,10 @@
 (function($) {
     'use strict';
 
+    console.log('Test dashboard script loaded');
+    console.log('AJAX URL:', typeof rtbcbDashboard !== 'undefined' ? rtbcbDashboard.ajaxurl : ( typeof ajaxurl !== 'undefined' ? ajaxurl : 'undefined' ) );
+    console.log('Nonce:', typeof rtbcbDashboard !== 'undefined' && rtbcbDashboard.nonces ? rtbcbDashboard.nonces.apiHealth : 'undefined');
+
     const debounce = (func, delay) => {
         let timeoutId;
         return (...args) => {
@@ -132,34 +136,58 @@
         // Bind all event handlers using delegated pattern
         bindEvents() {
             // Use delegated handlers for dynamic content
-            $(document).off('.rtbcb').on('click.rtbcb', '[data-action="run-company-overview"]', (e) => {
+            $(document).off('.rtbcb').on('click.rtbcb', '[data-action="run-company-overview"]', function(e) {
                 e.preventDefault();
-                this.generateCompanyOverview();
+                try {
+                    Dashboard.generateCompanyOverview();
+                } catch (err) {
+                    console.error('Error generating company overview:', err);
+                }
             });
 
-            $(document).on('click.rtbcb', '[data-action="run-llm-test"]', (e) => {
+            $(document).on('click.rtbcb', '[data-action="run-llm-test"]', function(e) {
                 e.preventDefault();
-                this.runModelComparison();
+                try {
+                    Dashboard.runModelComparison();
+                } catch (err) {
+                    console.error('Error running LLM test:', err);
+                }
             });
 
-            $(document).on('click.rtbcb', '[data-action="run-rag-test"]', (e) => {
+            $(document).on('click.rtbcb', '[data-action="run-rag-test"]', function(e) {
                 e.preventDefault();
-                this.runRagQuery();
+                try {
+                    Dashboard.runRagQuery();
+                } catch (err) {
+                    console.error('Error running RAG test:', err);
+                }
             });
 
-            $(document).on('click.rtbcb', '[data-action="api-health-ping"]', (e) => {
+            $(document).on('click.rtbcb', '[data-action="api-health-ping"]', function(e) {
                 e.preventDefault();
-                this.runAllApiTests();
+                try {
+                    Dashboard.runAllApiTests();
+                } catch (err) {
+                    console.error('Error running API health tests:', err);
+                }
             });
 
-            $(document).on('click.rtbcb', '.rtbcb-retest', (e) => {
+            $(document).on('click.rtbcb', '.rtbcb-retest', function(e) {
                 e.preventDefault();
-                this.runSingleApiTest($(e.currentTarget).data('component'));
+                try {
+                    Dashboard.runSingleApiTest($(e.currentTarget).data('component'));
+                } catch (err) {
+                    console.error('Error running single API test:', err);
+                }
             });
 
-            $(document).on('click.rtbcb', '[data-action="export-results"]', (e) => {
+            $(document).on('click.rtbcb', '[data-action="export-results"]', function(e) {
                 e.preventDefault();
-                this.exportResults();
+                try {
+                    Dashboard.exportResults();
+                } catch (err) {
+                    console.error('Error exporting results:', err);
+                }
             });
 
             $(document).on('submit.rtbcb', '#rtbcb-dashboard-settings-form', this.saveDashboardSettings.bind(this));
@@ -1698,7 +1726,7 @@
     // });
 
     // Initialize when DOM is ready
-    $(document).ready(() => {
+    $(document).ready(function() {
         Dashboard.init();
     });
 
