@@ -89,6 +89,7 @@ class RTBCB_Admin {
                         'ragTesting'    => wp_create_nonce( 'rtbcb_rag_testing' ),
                         'saveSettings'  => wp_create_nonce( 'rtbcb_save_dashboard_settings' ),
                         'roiCalculator' => wp_create_nonce( 'rtbcb_roi_calculator_test' ),
+                        'debugApiKey'   => wp_create_nonce( 'rtbcb_debug_api_key' ),
                     ],
                     'strings' => [
                         'generating'       => __( 'Generating...', 'rtbcb' ),
@@ -115,6 +116,13 @@ class RTBCB_Admin {
                         'show'             => __( 'Show', 'rtbcb' ),
                         'hide'             => __( 'Hide', 'rtbcb' ),
                         'apiKeyRequired'   => __( 'Please save a valid OpenAI API key in the Settings tab before running tests.', 'rtbcb' ),
+                        'apiKeyDebugInfo'  => __( 'API Key Debug Info', 'rtbcb' ),
+                        'configured'       => __( 'Configured', 'rtbcb' ),
+                        'length'           => __( 'Length', 'rtbcb' ),
+                        'preview'          => __( 'Preview', 'rtbcb' ),
+                        'formatValid'      => __( 'Format valid', 'rtbcb' ),
+                        'yes'              => __( 'Yes', 'rtbcb' ),
+                        'no'               => __( 'No', 'rtbcb' ),
                     ],
                     'models'  => [
                         'mini'     => get_option( 'rtbcb_mini_model', rtbcb_get_default_model( 'mini' ) ),

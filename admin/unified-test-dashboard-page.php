@@ -895,6 +895,9 @@ $last_index_display = $last_indexed ? $last_indexed : __( 'Never', 'rtbcb' );
                     <span class="dashicons dashicons-update"></span>
                     <?php esc_html_e( 'Run All Tests', 'rtbcb' ); ?>
                 </button>
+                <button type="button" class="button" data-action="debug-api-key">
+                    <?php esc_html_e( 'Debug API Key', 'rtbcb' ); ?>
+                </button>
                 <div id="rtbcb-api-health-notice" class="rtbcb-api-health-notice">
                     <?php
                     if ( $last_timestamp ) {
