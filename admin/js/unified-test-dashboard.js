@@ -1184,9 +1184,10 @@
                 }
             }).fail((jqXHR, textStatus, errorThrown) => {
                 circuitBreaker.recordFailure();
-                const detail = jqXHR?.responseJSON?.data?.detail || errorThrown || textStatus;
-                this.showNotification(`${rtbcbDashboard.strings.error}: ${detail}`, 'error');
-                console.error('[RAG] Retrieval error:', textStatus, errorThrown, jqXHR?.responseText);
+                const detail = this.extractAjaxErrorMessage(jqXHR, textStatus, errorThrown);
+                const msg = `${rtbcbDashboard.strings.error}: ${detail}`;
+                this.showNotification(msg, 'error');
+                console.error('[RAG] Retrieval error');
             }).always(() => {
                 this.ragRequest = null;
                 $('#rtbcb-rag-progress').hide();
@@ -1310,11 +1311,11 @@
                     $('#rtbcb-rag-index-notice').text(res.data?.message || rtbcbDashboard.strings.rebuildFailed);
                 }
             }).fail((jqXHR, textStatus, errorThrown) => {
-                const detail = jqXHR?.responseJSON?.data?.detail || errorThrown || textStatus;
+                const detail = this.extractAjaxErrorMessage(jqXHR, textStatus, errorThrown);
                 const msg = `${rtbcbDashboard.strings.rebuildFailed}: ${detail}`;
                 $('#rtbcb-rag-index-notice').text(msg);
                 this.showNotification(msg, 'error');
-                console.error('[RAG] Index rebuild error:', textStatus, errorThrown, jqXHR?.responseText);
+                console.error('[RAG] Index rebuild error');
             }).always(() => {
                 btn.prop('disabled', false);
             });
@@ -1362,11 +1363,11 @@
                 }
             }).fail((jqXHR, textStatus, errorThrown) => {
                 circuitBreaker.recordFailure();
-                const detail = jqXHR?.responseJSON?.data?.detail || errorThrown || textStatus;
+                const detail = this.extractAjaxErrorMessage(jqXHR, textStatus, errorThrown);
                 const msg = `${rtbcbDashboard.strings.error}: ${detail}`;
                 this.showNotification(msg, 'error');
-                console.error('[API Health] Request error during API tests:', textStatus, errorThrown, jqXHR.responseText);
                 $('#rtbcb-api-health-notice').text(msg);
+                console.error('[API Health] Request error during API tests');
             }).always(() => {
                 $('[data-action="api-health-ping"]').prop('disabled', false);
             });
@@ -1405,11 +1406,11 @@
                 }
             }).fail((jqXHR, textStatus, errorThrown) => {
                 circuitBreaker.recordFailure();
-                const detail = jqXHR?.responseJSON?.data?.detail || errorThrown || textStatus;
+                const detail = this.extractAjaxErrorMessage(jqXHR, textStatus, errorThrown);
                 const msg = `${rtbcbDashboard.strings.error}: ${detail}`;
                 this.showNotification(msg, 'error');
-                console.error(`[API Health] Request error during API test for ${component}:`, textStatus, errorThrown, jqXHR.responseText);
                 $('#rtbcb-api-health-notice').text(msg);
+                console.error(`[API Health] Request error during API test for ${component}`);
             }).always(() => {
                 button.prop('disabled', false);
             });
@@ -1481,11 +1482,11 @@
                     $('#rtbcb-data-health-results').html(`<tr><td colspan="3">${rtbcbDashboard.strings.error}</td></tr>`);
                 }
             }).fail((jqXHR, textStatus, errorThrown) => {
-                const detail = jqXHR?.responseJSON?.data?.detail || errorThrown || textStatus;
+                const detail = this.extractAjaxErrorMessage(jqXHR, textStatus, errorThrown);
                 const msg = `${rtbcbDashboard.strings.error}: ${detail}`;
                 $('#rtbcb-data-health-results').html(`<tr><td colspan="3">${msg}</td></tr>`);
                 this.showNotification(msg, 'error');
-                console.error('[Data Health] Request error:', textStatus, errorThrown, jqXHR?.responseText);
+                console.error('[Data Health] Request error');
             }).always(() => {
                 button.prop('disabled', false);
             });
@@ -1505,10 +1506,10 @@
                     this.showNotification(response.data?.message || rtbcbDashboard.strings.error, 'error');
                 }
             }).fail((jqXHR, textStatus, errorThrown) => {
-                const detail = jqXHR?.responseJSON?.data?.detail || errorThrown || textStatus;
+                const detail = this.extractAjaxErrorMessage(jqXHR, textStatus, errorThrown);
                 const msg = `${rtbcbDashboard.strings.error}: ${detail}`;
                 this.showNotification(msg, 'error');
-                console.error('[Report Preview] AJAX error:', textStatus, errorThrown, jqXHR?.responseText);
+                console.error('[Report Preview] AJAX error');
             }).always(() => {
                 button.prop('disabled', false);
             });
@@ -1540,13 +1541,38 @@
                     this.showNotification(response.data?.message || rtbcbDashboard.strings.error, 'error');
                 }
             }).fail((jqXHR, textStatus, errorThrown) => {
-                const detail = jqXHR?.responseJSON?.data?.detail || errorThrown || textStatus;
+                const detail = this.extractAjaxErrorMessage(jqXHR, textStatus, errorThrown);
                 const msg = `${rtbcbDashboard.strings.error}: ${detail}`;
-                console.error('[RTBCB] Save settings AJAX error', textStatus, errorThrown, jqXHR?.responseText);
+                console.error('[RTBCB] Save settings AJAX error');
                 this.showNotification(msg, 'error');
             }).always(() => {
                 $button.prop('disabled', false);
             });
+        },
+
+        extractAjaxErrorMessage(jqXHR, textStatus, errorThrown) {
+            console.error('Status:', jqXHR?.status);
+            console.error('Status text:', jqXHR?.statusText);
+            console.error('Response text:', jqXHR?.responseText);
+            console.error('Text status:', textStatus);
+            console.error('Error thrown:', errorThrown);
+
+            let message = '';
+
+            if (jqXHR?.responseText) {
+                try {
+                    const parsed = JSON.parse(jqXHR.responseText);
+                    message = parsed?.data?.detail || parsed?.data?.message || parsed?.message || '';
+                } catch (e) {
+                    message = jqXHR.responseText.trim();
+                }
+            }
+
+            if (!message) {
+                message = errorThrown || textStatus || rtbcbDashboard.strings.error;
+            }
+
+            return message;
         },
 
         // Utility function for HTML escaping
