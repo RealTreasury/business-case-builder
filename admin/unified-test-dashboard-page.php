@@ -1072,7 +1072,7 @@ $last_index_display = $last_indexed ? $last_indexed : __( 'Never', 'rtbcb' );
                 <h2><?php esc_html_e( 'Settings', 'rtbcb' ); ?></h2>
                 <p><?php esc_html_e( 'Configure plugin options.', 'rtbcb' ); ?></p>
             </div>
-            <form id="rtbcb-dashboard-settings-form">
+            <form id="rtbcb-dashboard-settings-form" method="post">
                 <?php wp_nonce_field( 'rtbcb_save_dashboard_settings', 'nonce' ); ?>
                 <table class="form-table" role="presentation">
                     <tr>
