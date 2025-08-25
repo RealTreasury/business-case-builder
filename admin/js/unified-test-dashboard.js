@@ -25,8 +25,8 @@
 
     const circuitBreaker = {
         failures: 0,
-        threshold: 3,
-        resetTime: 300000, // 5 minutes
+        threshold: 5, // Increased from 3
+        resetTime: 60000, // Reduced from 300000 (1 minute)
 
         canExecute() {
             return this.failures < this.threshold;
@@ -34,16 +34,20 @@
 
         recordFailure() {
             this.failures++;
+            console.warn(`[Circuit Breaker] Failure recorded. Count: ${this.failures}/${this.threshold}`);
             if (this.failures >= this.threshold) {
+                console.error(`[Circuit Breaker] Threshold reached. Resetting in ${this.resetTime}ms`);
                 setTimeout(() => this.reset(), this.resetTime);
             }
         },
 
         recordSuccess() {
+            console.log('[Circuit Breaker] Success recorded. Resetting failure count.');
             this.failures = 0;
         },
 
         reset() {
+            console.log('[Circuit Breaker] Reset');
             this.failures = 0;
         }
     };
@@ -1763,6 +1767,8 @@
         }
     };
 
+    Dashboard.circuitBreaker = circuitBreaker;
+
     // Initialize result store
     Dashboard.ResultStore.loadFromStorage();
 
@@ -1784,6 +1790,7 @@
 
     // Expose Dashboard object for debugging
     window.RTBCBDashboard = Dashboard;
+    window.Dashboard = Dashboard;
 
     window.DashboardDiag = {
         assertNonce: function(action) {
