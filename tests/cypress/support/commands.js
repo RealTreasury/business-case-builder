@@ -73,8 +73,18 @@ Cypress.Commands.add('checkCDNAssets', () => {
   cy.visit('/')
   cy.get('script, link[rel="stylesheet"], img').each(($el) => {
     const src = $el.attr('src') || $el.attr('href')
-    if (src && src.includes('wp.com')) {
-      cy.request(src).its('status').should('equal', 200)
+    if (src) {
+      let url;
+      try {
+        url = new URL(src, window.location.origin);
+      } catch (e) {
+        // Skip invalid URLs
+        return;
+      }
+      // Check if the hostname is exactly 'wp.com' or ends with '.wp.com'
+      if (url.hostname === 'wp.com' || url.hostname.endsWith('.wp.com')) {
+        cy.request(src).its('status').should('equal', 200)
+      }
     }
   })
 })
