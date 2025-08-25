@@ -9,8 +9,21 @@ add_action( 'wp_ajax_rtbcb_run_llm_test', 'rtbcb_ajax_run_llm_test' );
 add_action( 'wp_ajax_rtbcb_run_rag_test', 'rtbcb_ajax_run_rag_test' );
 add_action( 'wp_ajax_rtbcb_api_health_ping', 'rtbcb_ajax_api_health_ping' );
 add_action( 'wp_ajax_rtbcb_export_results', 'rtbcb_ajax_export_results' );
-add_action( 'init', 'rtbcb_log_ajax_handler_registration' );
-add_action( 'wp_loaded', 'rtbcb_log_health_test_hook_presence' );
+
+// Remove duplicate handlers and add debug logging.
+add_action(
+    'init',
+    function () {
+        error_log( '[RTBCB] Registering AJAX handlers' );
+
+        // API Health handlers.
+        add_action( 'wp_ajax_rtbcb_run_api_health_tests', 'rtbcb_run_api_health_tests' );
+        add_action( 'wp_ajax_rtbcb_run_single_api_test', 'rtbcb_run_single_api_test' );
+
+        // Verify handlers are registered.
+        error_log( '[RTBCB] API health handlers registered' );
+    }
+);
 
 /**
  * Enhanced AJAX helper functions.
@@ -20,33 +33,6 @@ add_action( 'wp_loaded', 'rtbcb_log_health_test_hook_presence' );
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
-}
-
-/**
- * Log that AJAX handlers are being registered.
- *
- * @return void
- */
-function rtbcb_log_ajax_handler_registration() {
-    if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-        error_log( '[RTBCB] Registering AJAX handlers' );
-    }
-}
-
-/**
- * Log whether the API health test AJAX hook is present.
- *
- * @return void
- */
-function rtbcb_log_health_test_hook_presence() {
-    if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-        global $wp_filter;
-
-        $hook_exists = isset( $wp_filter['wp_ajax_rtbcb_run_api_health_tests'] )
-            && ! empty( $wp_filter['wp_ajax_rtbcb_run_api_health_tests']->callbacks );
-
-        error_log( '[RTBCB] wp_ajax_rtbcb_run_api_health_tests exists: ' . ( $hook_exists ? 'yes' : 'no' ) );
-    }
 }
 
 /**
@@ -508,8 +494,6 @@ add_action( 'wp_ajax_rtbcb_test_company_overview_enhanced', 'rtbcb_ajax_test_com
 add_action( 'wp_ajax_rtbcb_calculate_roi_test', 'rtbcb_ajax_calculate_roi_test' );
 add_action( 'wp_ajax_rtbcb_evaluate_response_quality', 'rtbcb_ajax_evaluate_response_quality' );
 add_action( 'wp_ajax_rtbcb_optimize_prompt_tokens', 'rtbcb_ajax_optimize_prompt_tokens' );
-add_action( 'wp_ajax_rtbcb_run_api_health_tests', 'rtbcb_run_api_health_tests' );
-add_action( 'wp_ajax_rtbcb_run_single_api_test', 'rtbcb_run_single_api_test' );
 add_action( 'wp_ajax_rtbcb_run_data_health_checks', 'rtbcb_run_data_health_checks' );
 add_action( 'wp_ajax_rtbcb_test_rag_query', 'rtbcb_test_rag_query' );
 add_action( 'wp_ajax_rtbcb_rag_rebuild_index', 'rtbcb_rag_rebuild_index' );
