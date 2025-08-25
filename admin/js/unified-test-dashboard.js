@@ -1149,9 +1149,13 @@
                     circuitBreaker.recordFailure();
                     this.showNotification(res.data?.message || rtbcbDashboard.strings.error, 'error');
                 }
-            }).fail(() => {
+            }).fail((jqXHR) => {
                 circuitBreaker.recordFailure();
-                this.showNotification(rtbcbDashboard.strings.error, 'error');
+                const res = jqXHR?.responseJSON || {};
+                const msg = res.message || rtbcbDashboard.strings.error;
+                const detail = res.detail ? `: ${res.detail}` : '';
+                this.showNotification(msg + detail, 'error');
+                console.error('RAG request failed:', jqXHR);
             }).always(() => {
                 this.ragRequest = null;
                 $('#rtbcb-rag-progress').hide();
@@ -1274,8 +1278,13 @@
                 } else {
                     $('#rtbcb-rag-index-notice').text(res.data?.message || rtbcbDashboard.strings.rebuildFailed);
                 }
-            }).fail(() => {
-                $('#rtbcb-rag-index-notice').text(rtbcbDashboard.strings.rebuildFailed);
+            }).fail((jqXHR) => {
+                const res = jqXHR?.responseJSON || {};
+                const msg = res.message || rtbcbDashboard.strings.rebuildFailed;
+                const detail = res.detail ? `: ${res.detail}` : '';
+                $('#rtbcb-rag-index-notice').text(msg + detail);
+                this.showNotification(msg + detail, 'error');
+                console.error('RAG index rebuild failed:', jqXHR);
             }).always(() => {
                 btn.prop('disabled', false);
             });
@@ -1316,9 +1325,14 @@
                     circuitBreaker.recordFailure();
                     $('#rtbcb-api-health-notice').text(rtbcbDashboard.strings.error);
                 }
-            }).fail(() => {
+            }).fail((jqXHR) => {
                 circuitBreaker.recordFailure();
-                $('#rtbcb-api-health-notice').text(rtbcbDashboard.strings.error);
+                const res = jqXHR?.responseJSON || {};
+                const msg = res.message || rtbcbDashboard.strings.error;
+                const detail = res.detail ? `: ${res.detail}` : '';
+                $('#rtbcb-api-health-notice').text(msg + detail);
+                this.showNotification(msg + detail, 'error');
+                console.error('API health ping failed:', jqXHR);
             }).always(() => {
                 $('[data-action="api-health-ping"]').prop('disabled', false);
             });
@@ -1350,9 +1364,14 @@
                     circuitBreaker.recordFailure();
                     $('#rtbcb-api-health-notice').text(rtbcbDashboard.strings.error);
                 }
-            }).fail(() => {
+            }).fail((jqXHR) => {
                 circuitBreaker.recordFailure();
-                $('#rtbcb-api-health-notice').text(rtbcbDashboard.strings.error);
+                const res = jqXHR?.responseJSON || {};
+                const msg = res.message || rtbcbDashboard.strings.error;
+                const detail = res.detail ? `: ${res.detail}` : '';
+                $('#rtbcb-api-health-notice').text(msg + detail);
+                this.showNotification(msg + detail, 'error');
+                console.error('Single API test failed:', jqXHR);
             }).always(() => {
                 button.prop('disabled', false);
             });
@@ -1423,8 +1442,13 @@
                 } else {
                     $('#rtbcb-data-health-results').html(`<tr><td colspan="3">${rtbcbDashboard.strings.error}</td></tr>`);
                 }
-            }).fail(() => {
-                $('#rtbcb-data-health-results').html(`<tr><td colspan="3">${rtbcbDashboard.strings.error}</td></tr>`);
+            }).fail((jqXHR) => {
+                const res = jqXHR?.responseJSON || {};
+                const msg = res.message || rtbcbDashboard.strings.error;
+                const detail = res.detail ? `: ${res.detail}` : '';
+                $('#rtbcb-data-health-results').html(`<tr><td colspan="3">${msg + detail}</td></tr>`);
+                this.showNotification(msg + detail, 'error');
+                console.error('Data health check failed:', jqXHR);
             }).always(() => {
                 button.prop('disabled', false);
             });
@@ -1443,8 +1467,12 @@
                 } else {
                     this.showNotification(response.data?.message || rtbcbDashboard.strings.error, 'error');
                 }
-            }).fail(() => {
-                this.showNotification(rtbcbDashboard.strings.error, 'error');
+            }).fail((jqXHR) => {
+                const res = jqXHR?.responseJSON || {};
+                const msg = res.message || rtbcbDashboard.strings.error;
+                const detail = res.detail ? `: ${res.detail}` : '';
+                this.showNotification(msg + detail, 'error');
+                console.error('Preview report generation failed:', jqXHR);
             }).always(() => {
                 button.prop('disabled', false);
             });
@@ -1475,9 +1503,12 @@
                 } else {
                     this.showNotification(response.data?.message || rtbcbDashboard.strings.error, 'error');
                 }
-            }).fail((jqXHR, textStatus) => {
-                console.error('[RTBCB] Save settings AJAX error', textStatus);
-                this.showNotification(rtbcbDashboard.strings.error, 'error');
+            }).fail((jqXHR) => {
+                const res = jqXHR?.responseJSON || {};
+                const msg = res.message || rtbcbDashboard.strings.error;
+                const detail = res.detail ? `: ${res.detail}` : '';
+                this.showNotification(msg + detail, 'error');
+                console.error('[RTBCB] Save settings AJAX error', jqXHR);
             }).always(() => {
                 $button.prop('disabled', false);
             });
