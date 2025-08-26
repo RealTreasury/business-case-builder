@@ -12,6 +12,7 @@
  * Domain Path: /languages
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ * Network: false
  *
  * @package RealTreasuryBusinessCaseBuilder
  * @since 2.1.0
@@ -19,46 +20,60 @@
 
 // Prevent direct access
 if ( ! defined( 'ABSPATH' ) ) {
-    exit;
+    exit( 'Direct access not permitted.' );
 }
 
-// Plugin constants
+// Core plugin constants
 define( 'RTBCB_VERSION', '2.1.0' );
 define( 'RTBCB_PLUGIN_FILE', __FILE__ );
 define( 'RTBCB_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'RTBCB_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'RTBCB_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
+define( 'RTBCB_MIN_WP_VERSION', '6.0' );
+define( 'RTBCB_MIN_PHP_VERSION', '7.4' );
 
 /**
- * Main Plugin Class
+ * Main Plugin Class - Modern Enterprise Architecture
  * 
- * Modern, clean implementation following WordPress best practices
+ * Complete rebuild implementing best-in-class patterns:
+ * - Dependency injection container
+ * - Service locator pattern
+ * - Clean component separation
+ * - Security-first design
+ * - Performance optimization
  */
 final class RTBCB_Business_Case_Builder {
     
     /**
-     * Plugin instance
+     * Singleton instance
      * 
      * @var RTBCB_Business_Case_Builder|null
      */
     private static $instance = null;
     
     /**
-     * Plugin data
+     * Service container
+     * 
+     * @var array
+     */
+    private $services = array();
+    
+    /**
+     * Plugin initialization state
+     * 
+     * @var bool
+     */
+    private $initialized = false;
+    
+    /**
+     * Plugin data cache
      * 
      * @var array
      */
     private $plugin_data = array();
     
     /**
-     * Component instances
-     * 
-     * @var array
-     */
-    private $components = array();
-    
-    /**
-     * Get plugin instance (Singleton pattern)
+     * Get singleton instance
      * 
      * @return RTBCB_Business_Case_Builder
      */
@@ -71,60 +86,155 @@ final class RTBCB_Business_Case_Builder {
     }
     
     /**
-     * Constructor
+     * Private constructor for singleton
      */
     private function __construct() {
-        $this->init_plugin_data();
-        $this->init_hooks();
-        $this->load_dependencies();
-        $this->init_components();
+        $this->validate_environment();
+        $this->define_constants();
+        $this->register_autoloader();
+        $this->register_hooks();
     }
     
     /**
-     * Initialize plugin data
+     * Prevent cloning
      */
-    private function init_plugin_data() {
-        $this->plugin_data = get_file_data( RTBCB_PLUGIN_FILE, array(
-            'name' => 'Plugin Name',
-            'version' => 'Version',
-            'description' => 'Description',
-            'author' => 'Author',
-            'requires_wp' => 'Requires at least',
-            'requires_php' => 'Requires PHP',
-            'text_domain' => 'Text Domain'
-        ) );
+    private function __clone() {}
+    
+    /**
+     * Prevent unserialization
+     */
+    public function __wakeup() {
+        throw new Exception( 'Cannot unserialize singleton' );
     }
     
     /**
-     * Initialize WordPress hooks
+     * Validate environment requirements
      */
-    private function init_hooks() {
-        // Activation/Deactivation hooks
+    private function validate_environment() {
+        // PHP version check
+        if ( version_compare( PHP_VERSION, RTBCB_MIN_PHP_VERSION, '<' ) ) {
+            add_action( 'admin_notices', array( $this, 'php_version_notice' ) );
+            return;
+        }
+        
+        // WordPress version check
+        global $wp_version;
+        if ( version_compare( $wp_version, RTBCB_MIN_WP_VERSION, '<' ) ) {
+            add_action( 'admin_notices', array( $this, 'wp_version_notice' ) );
+            return;
+        }
+    }
+    
+    /**
+     * Define additional constants
+     */
+    private function define_constants() {
+        if ( ! defined( 'RTBCB_DEBUG' ) ) {
+            define( 'RTBCB_DEBUG', defined( 'WP_DEBUG' ) && WP_DEBUG );
+        }
+        
+        if ( ! defined( 'RTBCB_UPLOADS_DIR' ) ) {
+            $upload_dir = wp_upload_dir();
+            define( 'RTBCB_UPLOADS_DIR', $upload_dir['basedir'] . '/rtbcb/' );
+        }
+    }
+    
+    /**
+     * Register PSR-4 compatible autoloader
+     */
+    private function register_autoloader() {
+        spl_autoload_register( array( $this, 'autoload' ) );
+    }
+    
+    /**
+     * Autoload classes
+     * 
+     * @param string $class_name Class name to load
+     */
+    public function autoload( $class_name ) {
+        if ( 0 !== strpos( $class_name, 'RTBCB_' ) ) {
+            return;
+        }
+        
+        // Convert class name to file path
+        $class_name = str_replace( 'RTBCB_', '', $class_name );
+        $class_name = str_replace( '_', '-', strtolower( $class_name ) );
+        
+        // Define potential file locations
+        $locations = array(
+            RTBCB_PLUGIN_DIR . 'inc/class-rtbcb-' . $class_name . '.php',
+            RTBCB_PLUGIN_DIR . 'inc/classes/class-rtbcb-' . $class_name . '.php',
+            RTBCB_PLUGIN_DIR . 'admin/classes/class-rtbcb-' . $class_name . '.php',
+        );
+        
+        foreach ( $locations as $file ) {
+            if ( file_exists( $file ) ) {
+                require_once $file;
+                break;
+            }
+        }
+    }
+    
+    /**
+     * Register WordPress hooks
+     */
+    private function register_hooks() {
+        // Core WordPress hooks
+        add_action( 'init', array( $this, 'init' ), 0 );
+        add_action( 'plugins_loaded', array( $this, 'plugins_loaded' ) );
+        
+        // Activation/Deactivation
         register_activation_hook( RTBCB_PLUGIN_FILE, array( $this, 'activate' ) );
         register_deactivation_hook( RTBCB_PLUGIN_FILE, array( $this, 'deactivate' ) );
         
-        // Core WordPress hooks
-        add_action( 'init', array( $this, 'init' ) );
-        add_action( 'plugins_loaded', array( $this, 'plugins_loaded' ) );
+        // Asset loading
         add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_public_assets' ) );
         add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_assets' ) );
         
-        // Shortcode registration
-        add_shortcode( 'rt_business_case_builder', array( $this, 'render_shortcode' ) );
+        // Shortcode
+        add_action( 'init', array( $this, 'register_shortcodes' ) );
         
         // AJAX handlers
         add_action( 'wp_ajax_rtbcb_generate_case', array( $this, 'handle_ajax_generate_case' ) );
         add_action( 'wp_ajax_nopriv_rtbcb_generate_case', array( $this, 'handle_ajax_generate_case' ) );
         
-        // Admin functionality
+        // Admin hooks
         if ( is_admin() ) {
-            add_action( 'admin_menu', array( $this, 'add_admin_menu' ) );
+            add_action( 'admin_menu', array( $this, 'register_admin_menu' ) );
             add_action( 'admin_init', array( $this, 'admin_init' ) );
             add_action( 'admin_notices', array( $this, 'admin_notices' ) );
         }
         
-        // Plugin action links
+        // Plugin links
         add_filter( 'plugin_action_links_' . RTBCB_PLUGIN_BASENAME, array( $this, 'plugin_action_links' ) );
+        add_filter( 'plugin_row_meta', array( $this, 'plugin_row_meta' ), 10, 2 );
+    }
+    
+    /**
+     * Initialize plugin
+     */
+    public function init() {
+        if ( $this->initialized ) {
+            return;
+        }
+        
+        // Load dependencies
+        $this->load_dependencies();
+        
+        // Initialize services
+        $this->init_services();
+        
+        // Load text domain
+        $this->load_textdomain();
+        
+        // Create database tables if needed
+        $this->maybe_create_tables();
+        
+        // Mark as initialized
+        $this->initialized = true;
+        
+        // Fire initialization action
+        do_action( 'rtbcb_initialized' );
     }
     
     /**
@@ -137,110 +247,156 @@ final class RTBCB_Business_Case_Builder {
         // Load API components
         require_once RTBCB_PLUGIN_DIR . 'inc/api/openai-client.php';
         
-        // Load core classes
-        require_once RTBCB_PLUGIN_DIR . 'inc/class-rtbcb-calculator.php';
-        require_once RTBCB_PLUGIN_DIR . 'inc/class-rtbcb-llm.php';
-        require_once RTBCB_PLUGIN_DIR . 'inc/class-rtbcb-leads.php';
-        require_once RTBCB_PLUGIN_DIR . 'inc/class-rtbcb-validator.php';
-        require_once RTBCB_PLUGIN_DIR . 'inc/class-rtbcb-router.php';
+        // Load core business logic classes
+        $core_classes = array(
+            'calculator',
+            'validator',
+            'leads',
+            'router',
+            'llm',
+            'rag',
+            'db',
+            'category-recommender',
+            'error-handler',
+            'performance-monitor'
+        );
         
-        // Load admin classes if in admin
+        foreach ( $core_classes as $class ) {
+            $file = RTBCB_PLUGIN_DIR . 'inc/class-rtbcb-' . $class . '.php';
+            if ( file_exists( $file ) ) {
+                require_once $file;
+            }
+        }
+        
+        // Load configuration
+        if ( file_exists( RTBCB_PLUGIN_DIR . 'inc/config.php' ) ) {
+            require_once RTBCB_PLUGIN_DIR . 'inc/config.php';
+        }
+        
+        // Load admin components if in admin
         if ( is_admin() ) {
             require_once RTBCB_PLUGIN_DIR . 'admin/classes/Admin.php';
         }
     }
     
     /**
-     * Initialize plugin components
+     * Initialize services using dependency injection
      */
-    private function init_components() {
-        // Initialize core components
-        $this->components['calculator'] = new RTBCB_Calculator();
-        $this->components['validator'] = new RTBCB_Validator();
-        $this->components['leads'] = new RTBCB_Leads();
+    private function init_services() {
+        // Core services
+        $this->services['db'] = new RTBCB_DB();
+        $this->services['validator'] = new RTBCB_Validator();
+        $this->services['calculator'] = new RTBCB_Calculator();
+        $this->services['leads'] = new RTBCB_Leads();
         
-        // Initialize admin component if in admin
-        if ( is_admin() ) {
-            $this->components['admin'] = new RTBCB_Admin();
+        // Optional services (only if classes exist)
+        if ( class_exists( 'RTBCB_LLM' ) ) {
+            $this->services['llm'] = new RTBCB_LLM();
+        }
+        
+        if ( class_exists( 'RTBCB_RAG' ) ) {
+            $this->services['rag'] = new RTBCB_RAG();
+        }
+        
+        if ( class_exists( 'RTBCB_Router' ) ) {
+            $this->services['router'] = new RTBCB_Router();
+        }
+        
+        if ( class_exists( 'RTBCB_Error_Handler' ) ) {
+            $this->services['error_handler'] = new RTBCB_Error_Handler();
+        }
+        
+        if ( class_exists( 'RTBCB_Performance_Monitor' ) ) {
+            $this->services['performance_monitor'] = new RTBCB_Performance_Monitor();
+        }
+        
+        // Admin service
+        if ( is_admin() && class_exists( 'RTBCB_Admin' ) ) {
+            $this->services['admin'] = new RTBCB_Admin();
         }
     }
     
     /**
-     * Plugin initialization
+     * Load plugin text domain
      */
-    public function init() {
-        // Load text domain for internationalization
+    private function load_textdomain() {
         load_plugin_textdomain(
             'rtbcb',
             false,
             dirname( RTBCB_PLUGIN_BASENAME ) . '/languages'
         );
-        
-        // Initialize database if needed
-        $this->maybe_upgrade_database();
-        
-        do_action( 'rtbcb_init' );
     }
     
     /**
-     * Plugins loaded hook
+     * Maybe create database tables
      */
-    public function plugins_loaded() {
-        // Check WordPress and PHP version compatibility
-        if ( ! $this->check_compatibility() ) {
-            return;
-        }
+    private function maybe_create_tables() {
+        $db_version = get_option( 'rtbcb_db_version', '0.0.0' );
         
-        do_action( 'rtbcb_loaded' );
+        if ( version_compare( $db_version, RTBCB_VERSION, '<' ) ) {
+            $this->create_database_tables();
+            update_option( 'rtbcb_db_version', RTBCB_VERSION );
+        }
     }
     
     /**
-     * Check WordPress and PHP compatibility
-     * 
-     * @return bool True if compatible
+     * Create database tables
      */
-    private function check_compatibility() {
-        global $wp_version;
+    private function create_database_tables() {
+        global $wpdb;
         
-        $wp_required = '6.0';
-        $php_required = '7.4';
+        $charset_collate = $wpdb->get_charset_collate();
         
-        if ( version_compare( $wp_version, $wp_required, '<' ) ) {
-            add_action( 'admin_notices', function() use ( $wp_required ) {
-                echo '<div class="notice notice-error"><p>';
-                printf(
-                    __( 'Real Treasury Business Case Builder requires WordPress %s or higher. You are running %s.', 'rtbcb' ),
-                    esc_html( $wp_required ),
-                    esc_html( $GLOBALS['wp_version'] )
-                );
-                echo '</p></div>';
-            } );
-            return false;
-        }
+        // Leads table
+        $leads_table = $wpdb->prefix . 'rtbcb_leads';
+        $leads_sql = "CREATE TABLE $leads_table (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            email varchar(255) NOT NULL,
+            company varchar(255) NOT NULL,
+            industry varchar(100) DEFAULT '',
+            company_size varchar(50) DEFAULT '',
+            roi_data longtext,
+            status varchar(20) DEFAULT 'new',
+            created_at datetime DEFAULT CURRENT_TIMESTAMP,
+            updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            KEY email (email),
+            KEY status (status),
+            KEY created_at (created_at),
+            KEY company (company)
+        ) $charset_collate;";
         
-        if ( version_compare( PHP_VERSION, $php_required, '<' ) ) {
-            add_action( 'admin_notices', function() use ( $php_required ) {
-                echo '<div class="notice notice-error"><p>';
-                printf(
-                    __( 'Real Treasury Business Case Builder requires PHP %s or higher. You are running %s.', 'rtbcb' ),
-                    esc_html( $php_required ),
-                    esc_html( PHP_VERSION )
-                );
-                echo '</p></div>';
-            } );
-            return false;
-        }
+        // RAG index table (if RAG is enabled)
+        $rag_table = $wpdb->prefix . 'rtbcb_rag_index';
+        $rag_sql = "CREATE TABLE $rag_table (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            content_hash varchar(64) NOT NULL,
+            content_type varchar(50) NOT NULL,
+            content longtext NOT NULL,
+            embeddings longtext,
+            metadata longtext,
+            created_at datetime DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            UNIQUE KEY content_hash (content_hash),
+            KEY content_type (content_type)
+        ) $charset_collate;";
         
-        return true;
+        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+        dbDelta( $leads_sql );
+        dbDelta( $rag_sql );
     }
     
     /**
      * Plugin activation
      */
     public function activate() {
-        // Check system requirements
-        if ( ! $this->check_compatibility() ) {
-            wp_die( __( 'Plugin activation failed due to system requirements.', 'rtbcb' ) );
+        // Verify system requirements
+        if ( version_compare( PHP_VERSION, RTBCB_MIN_PHP_VERSION, '<' ) ) {
+            deactivate_plugins( RTBCB_PLUGIN_BASENAME );
+            wp_die( sprintf(
+                __( 'Real Treasury Business Case Builder requires PHP %s or higher.', 'rtbcb' ),
+                RTBCB_MIN_PHP_VERSION
+            ) );
         }
         
         // Create database tables
@@ -255,8 +411,11 @@ final class RTBCB_Business_Case_Builder {
         }
         
         // Record activation
-        update_option( 'rtbcb_activated', time() );
+        update_option( 'rtbcb_activated_time', time() );
         update_option( 'rtbcb_version', RTBCB_VERSION );
+        
+        // Flush rewrite rules
+        flush_rewrite_rules();
         
         do_action( 'rtbcb_activated' );
     }
@@ -268,40 +427,13 @@ final class RTBCB_Business_Case_Builder {
         // Clear scheduled events
         wp_clear_scheduled_hook( 'rtbcb_daily_cleanup' );
         
-        // Clear transients
-        $this->clear_transients();
+        // Clear caches
+        $this->clear_caches();
+        
+        // Flush rewrite rules
+        flush_rewrite_rules();
         
         do_action( 'rtbcb_deactivated' );
-    }
-    
-    /**
-     * Create database tables
-     */
-    private function create_database_tables() {
-        global $wpdb;
-        
-        $charset_collate = $wpdb->get_charset_collate();
-        
-        // Leads table
-        $table_name = $wpdb->prefix . 'rtbcb_leads';
-        $sql = "CREATE TABLE $table_name (
-            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-            email varchar(255) NOT NULL,
-            company varchar(255) NOT NULL,
-            industry varchar(100) DEFAULT '',
-            company_size varchar(50) DEFAULT '',
-            roi_data longtext,
-            status varchar(20) DEFAULT 'new',
-            created_at datetime DEFAULT CURRENT_TIMESTAMP,
-            updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            PRIMARY KEY (id),
-            KEY email (email),
-            KEY status (status),
-            KEY created_at (created_at)
-        ) $charset_collate;";
-        
-        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-        dbDelta( $sql );
     }
     
     /**
@@ -313,7 +445,12 @@ final class RTBCB_Business_Case_Builder {
             'rtbcb_max_tokens' => 2000,
             'rtbcb_temperature' => 0.7,
             'rtbcb_enable_logging' => true,
-            'rtbcb_data_retention_days' => 90
+            'rtbcb_log_level' => 'info',
+            'rtbcb_data_retention_days' => 90,
+            'rtbcb_rate_limit_enabled' => true,
+            'rtbcb_rate_limit_requests' => 60,
+            'rtbcb_cache_enabled' => true,
+            'rtbcb_cache_ttl' => 3600
         );
         
         foreach ( $defaults as $option => $value ) {
@@ -324,43 +461,36 @@ final class RTBCB_Business_Case_Builder {
     }
     
     /**
-     * Clear plugin transients
+     * Clear all plugin caches
      */
-    private function clear_transients() {
+    private function clear_caches() {
         global $wpdb;
         
+        // Clear transients
         $wpdb->query(
             $wpdb->prepare(
-                "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s",
-                '_transient_rtbcb_%'
-            )
-        );
-        
-        $wpdb->query(
-            $wpdb->prepare(
-                "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s",
+                "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
+                '_transient_rtbcb_%',
                 '_transient_timeout_rtbcb_%'
             )
         );
+        
+        // Clear object cache
+        wp_cache_flush();
     }
     
     /**
-     * Maybe upgrade database
+     * Plugins loaded hook
      */
-    private function maybe_upgrade_database() {
-        $current_version = get_option( 'rtbcb_version', '0.0.0' );
-        
-        if ( version_compare( $current_version, RTBCB_VERSION, '<' ) ) {
-            $this->create_database_tables();
-            update_option( 'rtbcb_version', RTBCB_VERSION );
-        }
+    public function plugins_loaded() {
+        do_action( 'rtbcb_plugins_loaded' );
     }
     
     /**
      * Enqueue public assets
      */
     public function enqueue_public_assets() {
-        // Only load on pages with shortcode
+        // Only load on pages with our shortcode
         if ( ! $this->should_load_public_assets() ) {
             return;
         }
@@ -380,13 +510,14 @@ final class RTBCB_Business_Case_Builder {
             true
         );
         
-        // Localize script
+        // Localize script with AJAX data
         wp_localize_script( 'rtbcb-wizard', 'rtbcb_ajax', array(
             'ajax_url' => admin_url( 'admin-ajax.php' ),
-            'nonce' => rtbcb_create_nonce( 'generate_case' ),
+            'nonce' => wp_create_nonce( 'rtbcb_generate_case' ),
             'strings' => array(
-                'processing' => __( 'Processing...', 'rtbcb' ),
-                'error' => __( 'An error occurred. Please try again.', 'rtbcb' )
+                'processing' => __( 'Processing your business case...', 'rtbcb' ),
+                'error' => __( 'An error occurred. Please try again.', 'rtbcb' ),
+                'success' => __( 'Business case generated successfully!', 'rtbcb' )
             )
         ) );
     }
@@ -396,7 +527,7 @@ final class RTBCB_Business_Case_Builder {
      */
     public function enqueue_admin_assets( $hook ) {
         // Only load on plugin admin pages
-        if ( strpos( $hook, 'rtbcb' ) === false ) {
+        if ( false === strpos( $hook, 'rtbcb' ) ) {
             return;
         }
         
@@ -414,6 +545,11 @@ final class RTBCB_Business_Case_Builder {
             RTBCB_VERSION,
             true
         );
+        
+        wp_localize_script( 'rtbcb-admin', 'rtbcb_admin', array(
+            'ajax_url' => admin_url( 'admin-ajax.php' ),
+            'nonce' => wp_create_nonce( 'rtbcb_admin_action' )
+        ) );
     }
     
     /**
@@ -428,7 +564,24 @@ final class RTBCB_Business_Case_Builder {
             return true;
         }
         
+        // Check for shortcode in widgets
+        if ( is_active_widget( false, false, 'text' ) ) {
+            $text_widgets = get_option( 'widget_text', array() );
+            foreach ( $text_widgets as $widget ) {
+                if ( isset( $widget['text'] ) && has_shortcode( $widget['text'], 'rt_business_case_builder' ) ) {
+                    return true;
+                }
+            }
+        }
+        
         return false;
+    }
+    
+    /**
+     * Register shortcodes
+     */
+    public function register_shortcodes() {
+        add_shortcode( 'rt_business_case_builder', array( $this, 'render_shortcode' ) );
     }
     
     /**
@@ -440,12 +593,35 @@ final class RTBCB_Business_Case_Builder {
     public function render_shortcode( $atts ) {
         $atts = shortcode_atts( array(
             'theme' => 'default',
-            'show_scenarios' => 'true'
+            'show_scenarios' => 'true',
+            'enable_analytics' => 'true'
         ), $atts, 'rt_business_case_builder' );
         
+        // Security check
+        if ( ! $this->verify_shortcode_permissions() ) {
+            return '<p>' . __( 'Insufficient permissions to display business case builder.', 'rtbcb' ) . '</p>';
+        }
+        
         ob_start();
-        include RTBCB_PLUGIN_DIR . 'templates/business-case-form.php';
+        
+        $template_path = RTBCB_PLUGIN_DIR . 'templates/business-case-form.php';
+        if ( file_exists( $template_path ) ) {
+            include $template_path;
+        } else {
+            echo '<p>' . __( 'Business case builder template not found.', 'rtbcb' ) . '</p>';
+        }
+        
         return ob_get_clean();
+    }
+    
+    /**
+     * Verify shortcode permissions
+     * 
+     * @return bool
+     */
+    private function verify_shortcode_permissions() {
+        // Allow public access by default
+        return true;
     }
     
     /**
@@ -453,23 +629,42 @@ final class RTBCB_Business_Case_Builder {
      */
     public function handle_ajax_generate_case() {
         // Verify nonce
-        if ( ! rtbcb_verify_nonce( $_POST['nonce'] ?? '', 'generate_case' ) ) {
+        if ( ! wp_verify_nonce( $_POST['nonce'] ?? '', 'rtbcb_generate_case' ) ) {
             wp_send_json_error( array(
-                'message' => rtbcb_get_user_friendly_error( 'security_check_failed' )
+                'message' => __( 'Security verification failed.', 'rtbcb' )
             ) );
         }
         
-        // Sanitize inputs
-        $inputs = rtbcb_sanitize_calculation_inputs( $_POST );
+        // Rate limiting
+        if ( $this->is_rate_limited() ) {
+            wp_send_json_error( array(
+                'message' => __( 'Too many requests. Please try again later.', 'rtbcb' )
+            ) );
+        }
         
+        // Sanitize and validate inputs
+        $validator = $this->get_service( 'validator' );
+        if ( ! $validator ) {
+            wp_send_json_error( array(
+                'message' => __( 'Validation service unavailable.', 'rtbcb' )
+            ) );
+        }
+        
+        $inputs = $validator->sanitize_and_validate( $_POST );
         if ( is_wp_error( $inputs ) ) {
             wp_send_json_error( array(
                 'message' => $inputs->get_error_message()
             ) );
         }
         
-        // Generate case using router
-        $router = new RTBCB_Router();
+        // Generate business case
+        $router = $this->get_service( 'router' );
+        if ( ! $router ) {
+            wp_send_json_error( array(
+                'message' => __( 'Business case generation service unavailable.', 'rtbcb' )
+            ) );
+        }
+        
         $result = $router->generate_comprehensive_case( $inputs );
         
         if ( is_wp_error( $result ) ) {
@@ -482,78 +677,249 @@ final class RTBCB_Business_Case_Builder {
     }
     
     /**
-     * Add admin menu
+     * Check if request is rate limited
+     * 
+     * @return bool
      */
-    public function add_admin_menu() {
+    private function is_rate_limited() {
+        if ( ! get_option( 'rtbcb_rate_limit_enabled', true ) ) {
+            return false;
+        }
+        
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+        $limit = get_option( 'rtbcb_rate_limit_requests', 60 );
+        $window = 3600; // 1 hour
+        
+        $transient_key = 'rtbcb_rate_limit_' . md5( $ip );
+        $requests = get_transient( $transient_key );
+        
+        if ( false === $requests ) {
+            set_transient( $transient_key, 1, $window );
+            return false;
+        }
+        
+        if ( $requests >= $limit ) {
+            return true;
+        }
+        
+        set_transient( $transient_key, $requests + 1, $window );
+        return false;
+    }
+    
+    /**
+     * Register admin menu
+     */
+    public function register_admin_menu() {
         add_menu_page(
             __( 'Business Case Builder', 'rtbcb' ),
             __( 'Business Cases', 'rtbcb' ),
             'manage_options',
             'rtbcb-dashboard',
-            array( $this, 'admin_dashboard_page' ),
+            array( $this, 'render_admin_dashboard' ),
             'dashicons-chart-line',
             30
+        );
+        
+        add_submenu_page(
+            'rtbcb-dashboard',
+            __( 'Settings', 'rtbcb' ),
+            __( 'Settings', 'rtbcb' ),
+            'manage_options',
+            'rtbcb-settings',
+            array( $this, 'render_admin_settings' )
+        );
+        
+        add_submenu_page(
+            'rtbcb-dashboard',
+            __( 'Leads', 'rtbcb' ),
+            __( 'Leads', 'rtbcb' ),
+            'manage_options',
+            'rtbcb-leads',
+            array( $this, 'render_admin_leads' )
         );
     }
     
     /**
-     * Admin init
+     * Admin initialization
      */
     public function admin_init() {
         // Register settings
-        register_setting( 'rtbcb_settings', 'rtbcb_openai_api_key' );
+        register_setting( 'rtbcb_settings', 'rtbcb_openai_api_key', array(
+            'sanitize_callback' => array( $this, 'sanitize_api_key' )
+        ) );
+        
         register_setting( 'rtbcb_settings', 'rtbcb_openai_model' );
+        register_setting( 'rtbcb_settings', 'rtbcb_enable_logging' );
+        register_setting( 'rtbcb_settings', 'rtbcb_data_retention_days' );
     }
     
     /**
-     * Admin dashboard page
+     * Sanitize API key
+     * 
+     * @param string $api_key API key to sanitize
+     * @return string Sanitized API key
      */
-    public function admin_dashboard_page() {
-        if ( ! rtbcb_user_can_manage_settings() ) {
+    public function sanitize_api_key( $api_key ) {
+        $api_key = sanitize_text_field( $api_key );
+        
+        if ( ! empty( $api_key ) && ! preg_match( '/^sk-[a-zA-Z0-9]{48,}$/', $api_key ) ) {
+            add_settings_error(
+                'rtbcb_openai_api_key',
+                'invalid_api_key',
+                __( 'Invalid OpenAI API key format.', 'rtbcb' )
+            );
+            return get_option( 'rtbcb_openai_api_key', '' );
+        }
+        
+        return $api_key;
+    }
+    
+    /**
+     * Render admin dashboard
+     */
+    public function render_admin_dashboard() {
+        if ( ! current_user_can( 'manage_options' ) ) {
             wp_die( __( 'You do not have sufficient permissions to access this page.', 'rtbcb' ) );
         }
         
-        include RTBCB_PLUGIN_DIR . 'admin/views/dashboard/main.php';
+        $admin = $this->get_service( 'admin' );
+        if ( $admin && method_exists( $admin, 'render_dashboard' ) ) {
+            $admin->render_dashboard();
+        } else {
+            echo '<div class="wrap">';
+            echo '<h1>' . __( 'Business Case Builder Dashboard', 'rtbcb' ) . '</h1>';
+            echo '<p>' . __( 'Welcome to the Business Case Builder dashboard.', 'rtbcb' ) . '</p>';
+            echo '</div>';
+        }
+    }
+    
+    /**
+     * Render admin settings
+     */
+    public function render_admin_settings() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( __( 'You do not have sufficient permissions to access this page.', 'rtbcb' ) );
+        }
+        
+        $admin = $this->get_service( 'admin' );
+        if ( $admin && method_exists( $admin, 'render_settings' ) ) {
+            $admin->render_settings();
+        } else {
+            include RTBCB_PLUGIN_DIR . 'admin/views/settings.php';
+        }
+    }
+    
+    /**
+     * Render admin leads
+     */
+    public function render_admin_leads() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( __( 'You do not have sufficient permissions to access this page.', 'rtbcb' ) );
+        }
+        
+        $admin = $this->get_service( 'admin' );
+        if ( $admin && method_exists( $admin, 'render_leads' ) ) {
+            $admin->render_leads();
+        } else {
+            include RTBCB_PLUGIN_DIR . 'admin/views/leads.php';
+        }
     }
     
     /**
      * Admin notices
      */
     public function admin_notices() {
-        // Check if API key is configured
+        // API key configuration notice
         if ( empty( get_option( 'rtbcb_openai_api_key' ) ) ) {
             echo '<div class="notice notice-warning is-dismissible">';
             echo '<p>' . sprintf(
-                __( 'Business Case Builder: Please <a href="%s">configure your OpenAI API key</a> to enable AI-powered reports.', 'rtbcb' ),
-                admin_url( 'admin.php?page=rtbcb-settings' )
+                __( '<strong>Business Case Builder:</strong> <a href="%s">Configure your OpenAI API key</a> to enable AI-powered business case generation.', 'rtbcb' ),
+                esc_url( admin_url( 'admin.php?page=rtbcb-settings' ) )
             ) . '</p>';
             echo '</div>';
         }
     }
     
     /**
+     * PHP version notice
+     */
+    public function php_version_notice() {
+        echo '<div class="notice notice-error">';
+        echo '<p>' . sprintf(
+            __( '<strong>Real Treasury Business Case Builder</strong> requires PHP %s or higher. You are running %s.', 'rtbcb' ),
+            esc_html( RTBCB_MIN_PHP_VERSION ),
+            esc_html( PHP_VERSION )
+        ) . '</p>';
+        echo '</div>';
+    }
+    
+    /**
+     * WordPress version notice
+     */
+    public function wp_version_notice() {
+        global $wp_version;
+        echo '<div class="notice notice-error">';
+        echo '<p>' . sprintf(
+            __( '<strong>Real Treasury Business Case Builder</strong> requires WordPress %s or higher. You are running %s.', 'rtbcb' ),
+            esc_html( RTBCB_MIN_WP_VERSION ),
+            esc_html( $wp_version )
+        ) . '</p>';
+        echo '</div>';
+    }
+    
+    /**
      * Plugin action links
      * 
-     * @param array $links Existing links
-     * @return array Modified links
+     * @param array $links Existing action links
+     * @return array Modified action links
      */
     public function plugin_action_links( $links ) {
         $plugin_links = array(
-            '<a href="' . admin_url( 'admin.php?page=rtbcb-dashboard' ) . '">' . __( 'Dashboard', 'rtbcb' ) . '</a>',
-            '<a href="' . admin_url( 'admin.php?page=rtbcb-settings' ) . '">' . __( 'Settings', 'rtbcb' ) . '</a>',
+            'dashboard' => '<a href="' . esc_url( admin_url( 'admin.php?page=rtbcb-dashboard' ) ) . '">' . __( 'Dashboard', 'rtbcb' ) . '</a>',
+            'settings' => '<a href="' . esc_url( admin_url( 'admin.php?page=rtbcb-settings' ) ) . '">' . __( 'Settings', 'rtbcb' ) . '</a>',
         );
         
         return array_merge( $plugin_links, $links );
     }
     
     /**
-     * Get component instance
+     * Plugin row meta
      * 
-     * @param string $component Component name
-     * @return object|null Component instance or null if not found
+     * @param array  $links Plugin row meta
+     * @param string $file  Plugin file
+     * @return array Modified plugin row meta
      */
-    public function get_component( $component ) {
-        return isset( $this->components[ $component ] ) ? $this->components[ $component ] : null;
+    public function plugin_row_meta( $links, $file ) {
+        if ( RTBCB_PLUGIN_BASENAME === $file ) {
+            $row_meta = array(
+                'docs' => '<a href="https://realtreasury.com/docs/business-case-builder" target="_blank">' . __( 'Documentation', 'rtbcb' ) . '</a>',
+                'support' => '<a href="https://realtreasury.com/support" target="_blank">' . __( 'Support', 'rtbcb' ) . '</a>',
+            );
+            
+            return array_merge( $links, $row_meta );
+        }
+        
+        return $links;
+    }
+    
+    /**
+     * Get service from container
+     * 
+     * @param string $service_name Service name
+     * @return object|null Service instance or null if not found
+     */
+    public function get_service( $service_name ) {
+        return isset( $this->services[ $service_name ] ) ? $this->services[ $service_name ] : null;
+    }
+    
+    /**
+     * Register service in container
+     * 
+     * @param string $service_name Service name
+     * @param object $service      Service instance
+     */
+    public function register_service( $service_name, $service ) {
+        $this->services[ $service_name ] = $service;
     }
     
     /**
@@ -563,16 +929,37 @@ final class RTBCB_Business_Case_Builder {
      * @return mixed Plugin data
      */
     public function get_plugin_data( $key = null ) {
+        if ( empty( $this->plugin_data ) ) {
+            $this->plugin_data = get_file_data( RTBCB_PLUGIN_FILE, array(
+                'name' => 'Plugin Name',
+                'version' => 'Version',
+                'description' => 'Description',
+                'author' => 'Author',
+                'requires_wp' => 'Requires at least',
+                'requires_php' => 'Requires PHP',
+                'text_domain' => 'Text Domain'
+            ) );
+        }
+        
         if ( null === $key ) {
             return $this->plugin_data;
         }
         
         return isset( $this->plugin_data[ $key ] ) ? $this->plugin_data[ $key ] : null;
     }
+    
+    /**
+     * Check if plugin is initialized
+     * 
+     * @return bool
+     */
+    public function is_initialized() {
+        return $this->initialized;
+    }
 }
 
 /**
- * Initialize the plugin
+ * Get main plugin instance
  * 
  * @return RTBCB_Business_Case_Builder
  */
@@ -580,5 +967,8 @@ function rtbcb() {
     return RTBCB_Business_Case_Builder::get_instance();
 }
 
-// Initialize the plugin
+/**
+ * Initialize plugin
+ * Main entry point - completely rebuilt from scratch
+ */
 rtbcb();

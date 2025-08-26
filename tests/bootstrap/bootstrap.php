@@ -121,6 +121,238 @@ if ( ! function_exists( 'is_wp_error' ) ) {
     }
 }
 
+// WordPress plugin functions
+if ( ! function_exists( 'plugin_dir_url' ) ) {
+    function plugin_dir_url( $file ) {
+        return 'http://example.com/wp-content/plugins/' . basename( dirname( $file ) ) . '/';
+    }
+}
+
+if ( ! function_exists( 'plugin_dir_path' ) ) {
+    function plugin_dir_path( $file ) {
+        return dirname( $file ) . '/';
+    }
+}
+
+if ( ! function_exists( 'plugin_basename' ) ) {
+    function plugin_basename( $file ) {
+        return basename( dirname( $file ) ) . '/' . basename( $file );
+    }
+}
+
+if ( ! function_exists( 'register_activation_hook' ) ) {
+    function register_activation_hook( $file, $function ) {
+        return true;
+    }
+}
+
+if ( ! function_exists( 'register_deactivation_hook' ) ) {
+    function register_deactivation_hook( $file, $function ) {
+        return true;
+    }
+}
+
+if ( ! function_exists( 'do_action' ) ) {
+    function do_action( $tag ) {
+        return true;
+    }
+}
+
+if ( ! function_exists( 'load_plugin_textdomain' ) ) {
+    function load_plugin_textdomain( $domain, $deprecated, $plugin_rel_path ) {
+        return true;
+    }
+}
+
+if ( ! function_exists( 'wp_create_nonce' ) ) {
+    function wp_create_nonce( $action ) {
+        return 'test_nonce_' . $action;
+    }
+}
+
+if ( ! function_exists( 'wp_verify_nonce' ) ) {
+    function wp_verify_nonce( $nonce, $action ) {
+        return $nonce === 'test_nonce_' . $action;
+    }
+}
+
+if ( ! function_exists( 'current_user_can' ) ) {
+    function current_user_can( $capability ) {
+        global $test_user_capabilities;
+        if ( isset( $test_user_capabilities ) ) {
+            return in_array( $capability, $test_user_capabilities );
+        }
+        return true; // Allow all capabilities in tests by default
+    }
+}
+
+if ( ! function_exists( 'admin_url' ) ) {
+    function admin_url( $path = '', $scheme = 'admin' ) {
+        return 'http://example.com/wp-admin/' . $path;
+    }
+}
+
+if ( ! function_exists( 'wp_upload_dir' ) ) {
+    function wp_upload_dir() {
+        return array(
+            'path' => '/tmp/wp-uploads',
+            'url' => 'http://example.com/wp-content/uploads',
+            'subdir' => '',
+            'basedir' => '/tmp/wp-uploads',
+            'baseurl' => 'http://example.com/wp-content/uploads',
+            'error' => false
+        );
+    }
+}
+
+if ( ! function_exists( 'get_file_data' ) ) {
+    function get_file_data( $file, $headers, $context = '' ) {
+        return array(
+            'name' => 'Real Treasury - Business Case Builder (Enhanced Pro)',
+            'version' => '2.1.0',
+            'description' => 'Professional-grade ROI calculator',
+            'author' => 'Real Treasury',
+            'requires_wp' => '6.0',
+            'requires_php' => '7.4',
+            'text_domain' => 'rtbcb'
+        );
+    }
+}
+
+if ( ! function_exists( 'is_admin' ) ) {
+    function is_admin() {
+        return defined( 'RTBCB_TESTING_ADMIN' ) ? RTBCB_TESTING_ADMIN : false;
+    }
+}
+
+if ( ! function_exists( 'wp_schedule_event' ) ) {
+    function wp_schedule_event( $timestamp, $recurrence, $hook, $args = array() ) {
+        return true;
+    }
+}
+
+if ( ! function_exists( 'wp_next_scheduled' ) ) {
+    function wp_next_scheduled( $hook, $args = array() ) {
+        return false;
+    }
+}
+
+if ( ! function_exists( 'wp_clear_scheduled_hook' ) ) {
+    function wp_clear_scheduled_hook( $hook, $args = array() ) {
+        return true;
+    }
+}
+
+if ( ! function_exists( 'wp_cache_flush' ) ) {
+    function wp_cache_flush() {
+        return true;
+    }
+}
+
+if ( ! function_exists( 'wp_send_json_success' ) ) {
+    function wp_send_json_success( $data = null ) {
+        echo wp_json_encode( array( 'success' => true, 'data' => $data ) );
+        exit;
+    }
+}
+
+if ( ! function_exists( 'wp_send_json_error' ) ) {
+    function wp_send_json_error( $data = null ) {
+        if ( isset( $data['message'] ) ) {
+            throw new Exception( $data['message'] );
+        }
+        echo wp_json_encode( array( 'success' => false, 'data' => $data ) );
+        exit;
+    }
+}
+
+if ( ! function_exists( 'shortcode_atts' ) ) {
+    function shortcode_atts( $pairs, $atts, $shortcode = '' ) {
+        return array_merge( $pairs, $atts );
+    }
+}
+
+if ( ! function_exists( 'add_shortcode' ) ) {
+    function add_shortcode( $tag, $func ) {
+        return true;
+    }
+}
+
+if ( ! function_exists( 'wp_enqueue_style' ) ) {
+    function wp_enqueue_style( $handle, $src = '', $deps = array(), $ver = false, $media = 'all' ) {
+        return true;
+    }
+}
+
+if ( ! function_exists( 'wp_enqueue_script' ) ) {
+    function wp_enqueue_script( $handle, $src = '', $deps = array(), $ver = false, $in_footer = false ) {
+        return true;
+    }
+}
+
+if ( ! function_exists( 'wp_localize_script' ) ) {
+    function wp_localize_script( $handle, $object_name, $l10n ) {
+        return true;
+    }
+}
+
+if ( ! function_exists( 'wp_die' ) ) {
+    function wp_die( $message, $title = '', $args = array() ) {
+        throw new Exception( $message );
+    }
+}
+
+if ( ! function_exists( 'add_menu_page' ) ) {
+    function add_menu_page( $page_title, $menu_title, $capability, $menu_slug, $function = '', $icon_url = '', $position = null ) {
+        global $admin_page_hooks;
+        if ( ! isset( $admin_page_hooks ) ) {
+            $admin_page_hooks = array();
+        }
+        $admin_page_hooks[ $menu_slug ] = array(
+            'page_title' => $page_title,
+            'menu_title' => $menu_title,
+            'capability' => $capability
+        );
+        return $menu_slug;
+    }
+}
+
+if ( ! function_exists( 'add_submenu_page' ) ) {
+    function add_submenu_page( $parent_slug, $page_title, $menu_title, $capability, $menu_slug, $function = '' ) {
+        return true;
+    }
+}
+
+if ( ! function_exists( 'register_setting' ) ) {
+    function register_setting( $option_group, $option_name, $args = array() ) {
+        return true;
+    }
+}
+
+if ( ! function_exists( 'flush_rewrite_rules' ) ) {
+    function flush_rewrite_rules( $hard = true ) {
+        return true;
+    }
+}
+
+if ( ! function_exists( 'deactivate_plugins' ) ) {
+    function deactivate_plugins( $plugins, $silent = false, $network_wide = null ) {
+        return true;
+    }
+}
+
+if ( ! function_exists( 'set_transient' ) ) {
+    function set_transient( $transient, $value, $expiration = 0 ) {
+        return true;
+    }
+}
+
+if ( ! function_exists( 'get_transient' ) ) {
+    function get_transient( $transient ) {
+        return false;
+    }
+}
+
 // Mock WP_Error class
 if ( ! class_exists( 'WP_Error' ) ) {
     class WP_Error {
@@ -171,34 +403,13 @@ if ( ! class_exists( 'WP_Error' ) ) {
     }
 }
 
+// Global variables needed
+global $wp_version;
+$wp_version = '6.3.0';
+
 // Initialize test options
 global $rtbcb_test_options;
 $rtbcb_test_options = array();
-
-// Include plugin files
-require_once ABSPATH . 'inc/utils/helpers.php';
-require_once ABSPATH . 'inc/class-rtbcb-category-recommender.php';
-require_once ABSPATH . 'inc/class-rtbcb-calculator.php';
-require_once ABSPATH . 'inc/class-rtbcb-llm.php';
-require_once ABSPATH . 'inc/class-rtbcb-validator.php';
-require_once ABSPATH . 'inc/class-rtbcb-router.php';
-
-/**
- * Test assertion helper
- */
-function rtbcb_assert( $condition, $message = 'Assertion failed' ) {
-    if ( ! $condition ) {
-        throw new Exception( $message );
-    }
-}
-
-/**
- * Test helper for mocking HTTP responses
- */
-function rtbcb_mock_http_response( $response ) {
-    global $rtbcb_mock_http_response;
-    $rtbcb_mock_http_response = $response;
-}
 
 // Mock WordPress HTTP functions
 if ( ! function_exists( 'wp_remote_post' ) ) {
@@ -240,6 +451,34 @@ if ( ! function_exists( 'wp_remote_retrieve_headers' ) ) {
         }
         return isset( $response['headers'] ) ? $response['headers'] : array();
     }
+}
+
+// Include plugin files
+require_once ABSPATH . 'inc/utils/helpers.php';
+require_once ABSPATH . 'inc/class-rtbcb-category-recommender.php';
+require_once ABSPATH . 'inc/class-rtbcb-calculator.php';
+require_once ABSPATH . 'inc/class-rtbcb-llm.php';
+require_once ABSPATH . 'inc/class-rtbcb-validator.php';
+require_once ABSPATH . 'inc/class-rtbcb-router.php';
+
+// Load main plugin file for tests that need the rtbcb() function
+require_once ABSPATH . 'real-treasury-business-case-builder.php';
+
+/**
+ * Test assertion helper
+ */
+function rtbcb_assert( $condition, $message = 'Assertion failed' ) {
+    if ( ! $condition ) {
+        throw new Exception( $message );
+    }
+}
+
+/**
+ * Test helper for mocking HTTP responses
+ */
+function rtbcb_mock_http_response( $response ) {
+    global $rtbcb_mock_http_response;
+    $rtbcb_mock_http_response = $response;
 }
 
 echo "Bootstrap loaded successfully\n";

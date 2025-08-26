@@ -20,22 +20,6 @@ class RTBCB_Admin_Integration_Test {
         $admin_page_hooks = array();
         $submenu = array();
         
-        // Mock current_user_can
-        function current_user_can( $capability ) {
-            return $capability === 'manage_options';
-        }
-        
-        // Mock add_menu_page
-        function add_menu_page( $page_title, $menu_title, $capability, $menu_slug, $function, $icon_url, $position ) {
-            global $admin_page_hooks;
-            $admin_page_hooks[ $menu_slug ] = array(
-                'page_title' => $page_title,
-                'menu_title' => $menu_title,
-                'capability' => $capability
-            );
-            return $menu_slug;
-        }
-        
         // Initialize plugin admin
         if ( class_exists( 'RTBCB_Admin' ) ) {
             $admin = new RTBCB_Admin();
@@ -59,19 +43,6 @@ class RTBCB_Admin_Integration_Test {
      * Test AJAX endpoint security
      */
     public function test_ajax_security() {
-        // Mock WordPress AJAX functions
-        function wp_verify_nonce( $nonce, $action ) {
-            return $nonce === 'valid_nonce';
-        }
-        
-        function wp_send_json_error( $data ) {
-            throw new Exception( 'Security check failed' );
-        }
-        
-        function wp_send_json_success( $data ) {
-            return $data;
-        }
-        
         // Test without nonce
         $_POST = array(
             'action' => 'rtbcb_generate_case',
@@ -84,13 +55,13 @@ class RTBCB_Admin_Integration_Test {
             rtbcb_assert( false, 'AJAX handler should reject request without valid nonce' );
         } catch ( Exception $e ) {
             rtbcb_assert(
-                $e->getMessage() === 'Security check failed',
+                $e->getMessage() === 'Security verification failed.',
                 'Security check should fail without valid nonce'
             );
         }
         
-        // Test with valid nonce
-        $_POST['nonce'] = 'valid_nonce';
+        // Test with valid nonce (using the test nonce format from bootstrap)
+        $_POST['nonce'] = 'test_nonce_rtbcb_generate_case';
         
         // This should not throw security exception
         // (but may fail for other reasons like missing data)
@@ -168,12 +139,6 @@ class RTBCB_Admin_Integration_Test {
      * Test permission checks
      */
     public function test_permission_checks() {
-        // Mock WordPress capability functions
-        function current_user_can( $capability ) {
-            global $test_user_capabilities;
-            return in_array( $capability, $test_user_capabilities ?: array() );
-        }
-        
         // Test with manage_options capability
         global $test_user_capabilities;
         $test_user_capabilities = array( 'manage_options' );
