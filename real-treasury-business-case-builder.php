@@ -358,10 +358,7 @@ final class RTBCB_Business_Case_Builder {
             );
         }
         
-        // 6. Admin service (loads last)
-        if ( is_admin() && class_exists( 'RTBCB_Admin' ) ) {
-            $this->services['admin'] = new RTBCB_Admin();
-        }
+        // Note: Admin service is now initialized in plugins_loaded() for proper timing
         
         // Log service initialization
         if ( isset( $this->services['performance_monitor'] ) ) {
@@ -539,6 +536,20 @@ final class RTBCB_Business_Case_Builder {
      * Plugins loaded hook
      */
     public function plugins_loaded() {
+        // Load admin class file early if in admin context
+        if ( is_admin() ) {
+            $admin_file = RTBCB_PLUGIN_DIR . 'admin/classes/Admin.php';
+            if ( file_exists( $admin_file ) ) {
+                require_once $admin_file;
+            }
+            
+            // Initialize admin service early if in admin context
+            // This ensures admin menu registration happens before admin_menu hook
+            if ( class_exists( 'RTBCB_Admin' ) ) {
+                $this->services['admin'] = new RTBCB_Admin();
+            }
+        }
+        
         do_action( 'rtbcb_plugins_loaded' );
     }
     
