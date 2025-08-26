@@ -47,16 +47,104 @@ class RTBCB_Admin {
     }
 
     /**
+     * Get the appropriate capability for WordPress.com compatibility.
+     * 
+     * WordPress.com has different capability requirements than self-hosted WordPress.
+     * This method ensures the admin menu works across all WordPress environments.
+     *
+     * @return string The capability required for admin access
+     */
+    private function get_admin_capability() {
+        // Check if we're on WordPress.com
+        if ( $this->is_wordpress_com() ) {
+            // WordPress.com uses different capabilities
+            // Check for editor capability first, then fall back to read
+            if ( current_user_can( 'edit_pages' ) ) {
+                return 'edit_pages';
+            } elseif ( current_user_can( 'edit_posts' ) ) {
+                return 'edit_posts';
+            } else {
+                return 'read';
+            }
+        }
+        
+        // For regular WordPress installations, use manage_options if available
+        if ( current_user_can( 'manage_options' ) ) {
+            return 'manage_options';
+        }
+        
+        // Fallback capability chain for other managed WordPress environments
+        $fallback_caps = [ 'edit_pages', 'edit_posts', 'upload_files', 'read' ];
+        
+        foreach ( $fallback_caps as $cap ) {
+            if ( current_user_can( $cap ) ) {
+                return $cap;
+            }
+        }
+        
+        // Final fallback
+        return 'read';
+    }
+
+    /**
+     * Detect if we're running on WordPress.com
+     *
+     * @return bool True if running on WordPress.com
+     */
+    private function is_wordpress_com() {
+        // Check for WordPress.com specific constants and functions
+        if ( defined( 'IS_WPCOM' ) && IS_WPCOM ) {
+            return true;
+        }
+        
+        // Check for WordPress.com VIP
+        if ( defined( 'WPCOM_VIP' ) && WPCOM_VIP ) {
+            return true;
+        }
+        
+        // Check for WordPress.com specific functions
+        if ( function_exists( 'wpcom_vip_file_get_contents' ) ) {
+            return true;
+        }
+        
+        // Check server environment indicators
+        $server_name = $_SERVER['SERVER_NAME'] ?? '';
+        if ( strpos( $server_name, '.wordpress.com' ) !== false ) {
+            return true;
+        }
+        
+        // Check for Automattic environment
+        if ( defined( 'AUTOMATTIC_DOMAIN' ) ) {
+            return true;
+        }
+        
+        return false;
+    }
+
+    /**
      * Register admin menu and submenus with modern structure.
+     * Now with WordPress.com compatibility for capability requirements.
      *
      * @return void
      */
     public function register_admin_menu() {
+        // Get the appropriate capability for this environment
+        $capability = $this->get_admin_capability();
+        
+        // Log capability selection for debugging (only in WP_DEBUG mode)
+        if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+            error_log( sprintf( 
+                'RTBCB: Using capability "%s" for admin menu (WordPress.com: %s)', 
+                $capability, 
+                $this->is_wordpress_com() ? 'yes' : 'no' 
+            ) );
+        }
+
         // Main menu page
         add_menu_page(
             __( 'Business Case Builder', 'rtbcb' ),
             __( 'Real Treasury', 'rtbcb' ),
-            'manage_options',
+            $capability,
             'rtbcb-dashboard',
             [ $this, 'render_dashboard_page' ],
             'dashicons-chart-line',
@@ -68,7 +156,7 @@ class RTBCB_Admin {
             'rtbcb-dashboard',
             __( 'Dashboard', 'rtbcb' ),
             __( 'Dashboard', 'rtbcb' ),
-            'manage_options',
+            $capability,
             'rtbcb-dashboard',
             [ $this, 'render_dashboard_page' ]
         );
@@ -78,7 +166,7 @@ class RTBCB_Admin {
             'rtbcb-dashboard',
             __( 'Leads Management', 'rtbcb' ),
             __( 'Leads', 'rtbcb' ),
-            'manage_options',
+            $capability,
             'rtbcb-leads',
             [ $this, 'render_leads_page' ]
         );
@@ -88,17 +176,18 @@ class RTBCB_Admin {
             'rtbcb-dashboard',
             __( 'Analytics & Reports', 'rtbcb' ),
             __( 'Analytics', 'rtbcb' ),
-            'manage_options',
+            $capability,
             'rtbcb-analytics',
             [ $this, 'render_analytics_page' ]
         );
 
-        // Settings & Testing
+        // Settings & Testing - Keep manage_options for settings if available, otherwise use main capability
+        $settings_capability = current_user_can( 'manage_options' ) ? 'manage_options' : $capability;
         add_submenu_page(
             'rtbcb-dashboard',
             __( 'Settings & Testing', 'rtbcb' ),
             __( 'Settings', 'rtbcb' ),
-            'manage_options',
+            $settings_capability,
             'rtbcb-settings',
             [ $this, 'render_settings_page' ]
         );
@@ -199,12 +288,22 @@ class RTBCB_Admin {
     }
 
     /**
+     * Check if current user has admin access with WordPress.com compatibility.
+     *
+     * @return bool True if user has sufficient permissions
+     */
+    private function current_user_can_admin() {
+        $capability = $this->get_admin_capability();
+        return current_user_can( $capability );
+    }
+
+    /**
      * Render dashboard page.
      *
      * @return void
      */
     public function render_dashboard_page() {
-        if ( ! current_user_can( 'manage_options' ) ) {
+        if ( ! $this->current_user_can_admin() ) {
             wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'rtbcb' ) );
         }
 
@@ -217,7 +316,7 @@ class RTBCB_Admin {
      * @return void
      */
     public function render_leads_page() {
-        if ( ! current_user_can( 'manage_options' ) ) {
+        if ( ! $this->current_user_can_admin() ) {
             wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'rtbcb' ) );
         }
 
@@ -230,7 +329,7 @@ class RTBCB_Admin {
      * @return void
      */
     public function render_analytics_page() {
-        if ( ! current_user_can( 'manage_options' ) ) {
+        if ( ! $this->current_user_can_admin() ) {
             wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'rtbcb' ) );
         }
 
@@ -243,7 +342,8 @@ class RTBCB_Admin {
      * @return void
      */
     public function render_settings_page() {
-        if ( ! current_user_can( 'manage_options' ) ) {
+        // Settings page requires manage_options if available, otherwise use admin capability
+        if ( ! current_user_can( 'manage_options' ) && ! $this->current_user_can_admin() ) {
             wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'rtbcb' ) );
         }
 
@@ -261,8 +361,8 @@ class RTBCB_Admin {
             wp_send_json_error( __( 'Security check failed.', 'rtbcb' ) );
         }
 
-        // Check capabilities
-        if ( ! current_user_can( 'manage_options' ) ) {
+        // Check capabilities with WordPress.com compatibility
+        if ( ! $this->current_user_can_admin() ) {
             wp_send_json_error( __( 'Insufficient permissions.', 'rtbcb' ) );
         }
 
@@ -315,7 +415,7 @@ class RTBCB_Admin {
             wp_send_json_error( __( 'Security check failed.', 'rtbcb' ) );
         }
 
-        if ( ! current_user_can( 'manage_options' ) ) {
+        if ( ! $this->current_user_can_admin() ) {
             wp_send_json_error( __( 'Insufficient permissions.', 'rtbcb' ) );
         }
 
@@ -348,7 +448,7 @@ class RTBCB_Admin {
             wp_send_json_error( __( 'Security check failed.', 'rtbcb' ) );
         }
 
-        if ( ! current_user_can( 'manage_options' ) ) {
+        if ( ! $this->current_user_can_admin() ) {
             wp_send_json_error( __( 'Insufficient permissions.', 'rtbcb' ) );
         }
 
@@ -377,8 +477,8 @@ class RTBCB_Admin {
             return;
         }
 
-        // Check capabilities
-        if ( ! current_user_can( 'manage_options' ) ) {
+        // Check capabilities - settings require manage_options if available
+        if ( ! current_user_can( 'manage_options' ) && ! $this->current_user_can_admin() ) {
             add_action( 'admin_notices', function() {
                 echo '<div class="notice notice-error"><p>' . esc_html__( 'Insufficient permissions.', 'rtbcb' ) . '</p></div>';
             } );
@@ -417,7 +517,7 @@ class RTBCB_Admin {
         }
 
         // Check capabilities
-        if ( ! current_user_can( 'manage_options' ) ) {
+        if ( ! $this->current_user_can_admin() ) {
             add_action( 'admin_notices', function() {
                 echo '<div class="notice notice-error"><p>' . esc_html__( 'Insufficient permissions.', 'rtbcb' ) . '</p></div>';
             } );

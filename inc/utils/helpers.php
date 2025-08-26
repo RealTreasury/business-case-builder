@@ -180,12 +180,104 @@ function rtbcb_sanitize_calculation_inputs( $inputs ) {
 }
 
 /**
- * Check if current user can manage plugin settings
+ * Get the appropriate capability for WordPress.com compatibility.
+ * 
+ * WordPress.com has different capability requirements than self-hosted WordPress.
+ * This function ensures the admin functions work across all WordPress environments.
+ *
+ * @return string The capability required for admin access
+ */
+function rtbcb_get_admin_capability() {
+    // Check if we're on WordPress.com
+    if ( rtbcb_is_wordpress_com() ) {
+        // WordPress.com uses different capabilities
+        // Check for editor capability first, then fall back to read
+        if ( current_user_can( 'edit_pages' ) ) {
+            return 'edit_pages';
+        } elseif ( current_user_can( 'edit_posts' ) ) {
+            return 'edit_posts';
+        } else {
+            return 'read';
+        }
+    }
+    
+    // For regular WordPress installations, use manage_options if available
+    if ( current_user_can( 'manage_options' ) ) {
+        return 'manage_options';
+    }
+    
+    // Fallback capability chain for other managed WordPress environments
+    $fallback_caps = [ 'edit_pages', 'edit_posts', 'upload_files', 'read' ];
+    
+    foreach ( $fallback_caps as $cap ) {
+        if ( current_user_can( $cap ) ) {
+            return $cap;
+        }
+    }
+    
+    // Final fallback
+    return 'read';
+}
+
+/**
+ * Detect if we're running on WordPress.com
+ *
+ * @return bool True if running on WordPress.com
+ */
+function rtbcb_is_wordpress_com() {
+    // Check for WordPress.com specific constants and functions
+    if ( defined( 'IS_WPCOM' ) && IS_WPCOM ) {
+        return true;
+    }
+    
+    // Check for WordPress.com VIP
+    if ( defined( 'WPCOM_VIP' ) && WPCOM_VIP ) {
+        return true;
+    }
+    
+    // Check for WordPress.com specific functions
+    if ( function_exists( 'wpcom_vip_file_get_contents' ) ) {
+        return true;
+    }
+    
+    // Check server environment indicators
+    $server_name = $_SERVER['SERVER_NAME'] ?? '';
+    if ( strpos( $server_name, '.wordpress.com' ) !== false ) {
+        return true;
+    }
+    
+    // Check for Automattic environment
+    if ( defined( 'AUTOMATTIC_DOMAIN' ) ) {
+        return true;
+    }
+    
+    return false;
+}
+
+/**
+ * Check if current user can manage plugin settings with WordPress.com compatibility
  * 
  * @return bool True if user has sufficient permissions
  */
 function rtbcb_user_can_manage_settings() {
-    return current_user_can( 'manage_options' );
+    // Settings require manage_options if available, otherwise use admin capability
+    if ( current_user_can( 'manage_options' ) ) {
+        return true;
+    }
+    
+    // For WordPress.com, allow users with admin capability to manage settings
+    $admin_capability = rtbcb_get_admin_capability();
+    return current_user_can( $admin_capability );
+}
+
+/**
+ * Check if current user can access admin functions with WordPress.com compatibility
+ * 
+ * @return bool True if user has sufficient permissions
+ */
+function rtbcb_user_can_admin() {
+    $capability = rtbcb_get_admin_capability();
+    return current_user_can( $capability );
 }
 
 /**
