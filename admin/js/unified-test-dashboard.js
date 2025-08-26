@@ -1093,7 +1093,7 @@
                    .html(this.escapeHtml(text));
         },
 
-        // Force reset all buttons (emergency cleanup) - FIXED VERSION
+        // Force reset all buttons (emergency cleanup)
         resetAllButtonStates() {
             console.log('Resetting all button states...');
 
