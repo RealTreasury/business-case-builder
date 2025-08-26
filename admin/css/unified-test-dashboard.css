@@ -1350,6 +1350,7 @@ button[data-action].rtbcb-loading {
 button[data-action]:hover:not(:disabled):not(.rtbcb-loading) {
     background: #e6ffe6 !important; /* Light green on hover */
     transform: scale(1.05);
+    will-change: transform;
 }
 
 /* Show which tab is active */
