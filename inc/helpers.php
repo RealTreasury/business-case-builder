@@ -449,6 +449,21 @@ function rtbcb_send_standardized_error( $error_code, $user_message, $status = 50
 }
 
 /**
+ * Send standardized AJAX success response.
+ *
+ * @param array $data   Data to send in the response.
+ * @param int   $status HTTP status code. Default 200.
+ * @return void
+ */
+function rtbcb_send_standardized_success( $data = [], $status = 200 ) {
+    if ( ! is_array( $data ) ) {
+        $data = [];
+    }
+
+    wp_send_json_success( $data, $status );
+}
+
+/**
  * Get user-friendly error message for common error scenarios.
  *
  * @param string $error_code Error code.
