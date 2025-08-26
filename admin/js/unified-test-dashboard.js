@@ -75,6 +75,9 @@
             console.log('Dashboard initializing...');
             
             try {
+                // Reset any stuck button states first
+                this.resetAllButtonStates();
+                
                 this.bindEvents();
                 this.initializeTabs();
                 this.setupValidation();
@@ -84,6 +87,13 @@
                 if (typeof Chart !== 'undefined') {
                     this.setupCharts();
                 }
+                
+                // Add emergency reset handler (Ctrl/Cmd + R while on dashboard)
+                $(document).on('keydown.rtbcb-dashboard', (e) => {
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+                        this.resetAllButtonStates();
+                    }
+                });
                 
                 console.log('Dashboard initialized successfully');
             } catch (error) {
@@ -102,9 +112,62 @@
             // Store reference to Dashboard object for event handlers
             const self = this;
             
+            // Enhanced event binding for cross-platform compatibility
+            this.bindCrossPlatformEvents();
+            
+            console.log('Events bound successfully');
+        },
+
+        // Enhanced cross-platform event binding
+        bindCrossPlatformEvents() {
+            const self = this;
+            
+            // Function to bind both click and touch events for better compatibility
+            function bindAction(selector, callback, options = {}) {
+                // Standard click event for desktop
+                $(document).on('click.rtbcb-dashboard', selector, function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Check if button is disabled or in loading state
+                    const $button = $(this);
+                    if ($button.prop('disabled') || $button.hasClass('rtbcb-loading') || self.isGenerating) {
+                        console.log('Button interaction blocked - disabled or loading state');
+                        return false;
+                    }
+                    
+                    console.log('Button clicked:', selector, this);
+                    callback.call(this, e);
+                });
+                
+                // Touch events for mobile compatibility
+                $(document).on('touchstart.rtbcb-dashboard', selector, function(e) {
+                    const $button = $(this);
+                    if ($button.prop('disabled') || $button.hasClass('rtbcb-loading') || self.isGenerating) {
+                        return false;
+                    }
+                    
+                    // Add visual feedback for touch
+                    $button.addClass('rtbcb-touch-active');
+                });
+                
+                $(document).on('touchend.rtbcb-dashboard', selector, function(e) {
+                    const $button = $(this);
+                    $button.removeClass('rtbcb-touch-active');
+                    
+                    if ($button.prop('disabled') || $button.hasClass('rtbcb-loading') || self.isGenerating) {
+                        return false;
+                    }
+                    
+                    // Prevent duplicate click events on mobile
+                    e.preventDefault();
+                    console.log('Button touched:', selector, this);
+                    callback.call(this, e);
+                });
+            }
+            
             // Tab navigation
-            $(document).on('click.rtbcb-dashboard', '.rtbcb-test-tabs .nav-tab', function(e) {
-                e.preventDefault();
+            bindAction('.rtbcb-test-tabs .nav-tab', function(e) {
                 const tab = $(e.currentTarget).data('tab');
                 if (tab) {
                     self.switchTab(tab);
@@ -112,42 +175,35 @@
             });
 
             // Company Overview actions
-            $(document).on('click.rtbcb-dashboard', '[data-action="run-company-overview"]', function(e) {
-                e.preventDefault();
+            bindAction('[data-action="run-company-overview"]', function(e) {
                 self.generateCompanyOverview();
             });
 
-            $(document).on('click.rtbcb-dashboard', '[data-action="clear-results"]', function(e) {
-                e.preventDefault();
+            bindAction('[data-action="clear-results"]', function(e) {
                 self.clearResults();
             });
 
             // LLM Test actions
-            $(document).on('click.rtbcb-dashboard', '[data-action="run-llm-test"]', function(e) {
-                e.preventDefault();
+            bindAction('[data-action="run-llm-test"]', function(e) {
                 self.runLLMTest();
             });
 
             // RAG System actions
-            $(document).on('click.rtbcb-dashboard', '[data-action="run-rag-test"]', function(e) {
-                e.preventDefault();
+            bindAction('[data-action="run-rag-test"]', function(e) {
                 self.runRagTest();
             });
 
-            $(document).on('click.rtbcb-dashboard', '[data-action="rebuild-rag-index"]', function(e) {
-                e.preventDefault();
+            bindAction('[data-action="rebuild-rag-index"]', function(e) {
                 self.rebuildRagIndex();
             });
 
             // API Health actions
-            $(document).on('click.rtbcb-dashboard', '[data-action="api-health-ping"]', function(e) {
-                e.preventDefault();
+            bindAction('[data-action="api-health-ping"]', function(e) {
                 self.runAllApiTests();
             });
 
             // ROI Calculator actions
-            $(document).on('click.rtbcb-dashboard', '[data-action="calculate-roi"]', function(e) {
-                e.preventDefault();
+            bindAction('[data-action="calculate-roi"]', function(e) {
                 self.calculateROI();
             });
 
@@ -157,12 +213,11 @@
                 self.saveSettings();
             });
 
-            $(document).on('click.rtbcb-dashboard', '[data-action="toggle-api-key"]', function(e) {
-                e.preventDefault();
+            bindAction('[data-action="toggle-api-key"]', function(e) {
                 self.toggleApiKeyVisibility();
             });
 
-            // Input validation
+            // Input validation (keep original for these)
             $(document).on('input.rtbcb-dashboard', '#company-name-input', debounce(function() {
                 self.validateCompanyInput();
             }, 300));
@@ -181,8 +236,6 @@
             $(document).on('input.rtbcb-dashboard', '#rtbcb-rag-query', debounce(function() {
                 self.validateRagQuery();
             }, 300));
-
-            console.log('Events bound successfully');
         },
 
         // Initialize tab system
@@ -839,35 +892,79 @@
             return div.innerHTML;
         },
 
-        // Button state management
+        // Enhanced button state management
         setButtonState(selector, state, text) {
             const $button = $(selector);
-            const defaultText = $button.data('default-text') || $button.text();
+            if ($button.length === 0) {
+                console.warn('Button not found:', selector);
+                return;
+            }
+            
+            // Store original text if not already stored
+            if (!$button.data('default-text')) {
+                $button.data('default-text', $button.text().trim());
+            }
+            const defaultText = $button.data('default-text');
 
-            $button.removeClass('rtbcb-loading rtbcb-success rtbcb-error');
+            // Clear all state classes first
+            $button.removeClass('rtbcb-loading rtbcb-success rtbcb-error rtbcb-touch-active');
 
             switch (state) {
                 case 'loading':
                     $button.prop('disabled', true)
                            .addClass('rtbcb-loading')
+                           .css('pointer-events', 'none') // Explicitly disable pointer events
                            .html(`<span class="dashicons dashicons-update rtbcb-spin"></span> ${text || 'Loading...'}`);
                     break;
                 case 'success':
                     $button.prop('disabled', false)
                            .addClass('rtbcb-success')
+                           .css('pointer-events', 'auto') // Explicitly enable pointer events
                            .html(`<span class="dashicons dashicons-yes-alt"></span> ${text || 'Complete'}`);
-                    setTimeout(() => $button.removeClass('rtbcb-success').html(this.escapeHtml(defaultText)), 3000);
+                    // Reset after delay
+                    setTimeout(() => {
+                        if ($button.hasClass('rtbcb-success')) { // Only reset if still in success state
+                            this.resetButtonState($button, defaultText);
+                        }
+                    }, 3000);
                     break;
                 case 'error':
                     $button.prop('disabled', false)
                            .addClass('rtbcb-error')
+                           .css('pointer-events', 'auto') // Explicitly enable pointer events
                            .html(`<span class="dashicons dashicons-warning"></span> ${text || 'Error'}`);
-                    setTimeout(() => $button.removeClass('rtbcb-error').html(this.escapeHtml(defaultText)), 5000);
+                    // Reset after delay
+                    setTimeout(() => {
+                        if ($button.hasClass('rtbcb-error')) { // Only reset if still in error state
+                            this.resetButtonState($button, defaultText);
+                        }
+                    }, 5000);
                     break;
+                case 'reset':
+                case 'default':
                 default:
-                    $button.prop('disabled', false).html(text ? text : this.escapeHtml(defaultText));
+                    this.resetButtonState($button, text || defaultText);
                     break;
             }
+        },
+
+        // Reset button to default state
+        resetButtonState($button, text) {
+            $button.prop('disabled', false)
+                   .removeClass('rtbcb-loading rtbcb-success rtbcb-error rtbcb-touch-active')
+                   .css('pointer-events', 'auto')
+                   .html(this.escapeHtml(text));
+        },
+
+        // Force reset all buttons (emergency cleanup)
+        resetAllButtonStates() {
+            console.log('Resetting all button states...');
+            $('[data-action]').each((index, element) => {
+                const $button = $(element);
+                const defaultText = $button.data('default-text') || $button.text().trim();
+                this.resetButtonState($button, defaultText);
+            });
+            this.isGenerating = false;
         },
 
         // Progress management
@@ -1039,6 +1136,9 @@
                 clearInterval(this.progressTimer);
                 this.progressTimer = null;
             }
+            
+            // Reset all button states
+            this.resetAllButtonStates();
             
             // Remove event handlers
             $(document).off('.rtbcb-dashboard');
