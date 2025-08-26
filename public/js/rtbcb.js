@@ -112,7 +112,7 @@ function handleSubmit(e) {
 
     try {
         const xhr = new XMLHttpRequest();
-        xhr.open('POST', ajaxObj.ajax_url, false);
+        xhr.open('POST', rtbcbAjax.ajax_url, false);
         xhr.send(formData);
 
         if (xhr.status < 200 || xhr.status >= 300) {

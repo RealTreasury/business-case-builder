@@ -18,7 +18,7 @@ global.document = {
     }
 };
 
-global.ajaxObj = { ajax_url: '' };
+global.rtbcbAjax = { ajax_url: '' };
 
 global.DOMPurify = { sanitize: (html) => html };
 
