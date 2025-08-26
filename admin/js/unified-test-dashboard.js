@@ -146,7 +146,7 @@
                             return;
                         }
 
-                        if (e.type === 'pointerup' || e.type === 'touchstart') {
+                        if (e.type === 'pointerup' || e.type === 'touchend') {
                             $button.data('rtbcb-interacted', true);
                         }
 
