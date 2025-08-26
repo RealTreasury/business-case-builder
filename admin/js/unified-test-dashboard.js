@@ -75,6 +75,9 @@
             console.log('Dashboard initializing...');
             
             try {
+                // Reset any stuck button states first
+                this.resetAllButtonStates();
+                
                 this.bindEvents();
                 this.initializeTabs();
                 this.setupValidation();
@@ -84,6 +87,13 @@
                 if (typeof Chart !== 'undefined') {
                     this.setupCharts();
                 }
+                
+                // Add emergency reset handler (Ctrl/Cmd + R while on dashboard)
+                $(document).on('keydown.rtbcb-dashboard', (e) => {
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+                        this.resetAllButtonStates();
+                    }
+                });
                 
                 console.log('Dashboard initialized successfully');
             } catch (error) {
@@ -102,9 +112,89 @@
             // Store reference to Dashboard object for event handlers
             const self = this;
             
+            // Enhanced event binding for cross-platform compatibility
+            this.bindCrossPlatformEvents();
+            
+            console.log('Events bound successfully');
+        },
+
+        // Enhanced cross-platform event binding
+        bindCrossPlatformEvents() {
+            const self = this;
+            
+            // Function to bind both click and touch events for better compatibility
+            function bindAction(selector, callback, options = {}) {
+                // Shared function to check if button interaction should be blocked
+                function isButtonInteractionBlocked($button) {
+                    return $button.prop('disabled') || $button.hasClass('rtbcb-loading') || self.isGenerating;
+                }
+
+                // Standard click event for desktop
+                $(document).on('click.rtbcb-dashboard', selector, function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    const $button = $(this);
+                    if (isButtonInteractionBlocked($button)) {
+                        console.log('Button interaction blocked - disabled or loading state');
+                        return false;
+                    }
+
+                    console.log('Button clicked:', selector, this);
+                    callback.call(this, e);
+                });
+                // Touch events for mobile compatibility
+                $(document).on('touchstart.rtbcb-dashboard', selector, function(e) {
+                    const $button = $(this);
+                    if (isButtonInteractionBlocked($button)) {
+                        return false;
+                    }
+
+                    // Track initial touch position for tap detection
+                    if (e.originalEvent && e.originalEvent.touches && e.originalEvent.touches.length === 1) {
+                        const touch = e.originalEvent.touches[0];
+                        $button.data('rtbcbTouchStart', { x: touch.clientX, y: touch.clientY });
+                    }
+
+                    // Add visual feedback for touch
+                    $button.addClass('rtbcb-touch-active');
+                });
+
+                $(document).on('touchend.rtbcb-dashboard', selector, function(e) {
+                    const $button = $(this);
+                    $button.removeClass('rtbcb-touch-active');
+
+                    if ($button.prop('disabled') || $button.hasClass('rtbcb-loading') || self.isGenerating) {
+                        return false;
+                    }
+
+                    // Only prevent default if this was a tap (not a scroll)
+                    let isTap = false;
+                    if (e.originalEvent && e.originalEvent.changedTouches && e.originalEvent.changedTouches.length === 1) {
+                        const touch = e.originalEvent.changedTouches[0];
+                        const start = $button.data('rtbcbTouchStart');
+                        if (start) {
+                            const dx = Math.abs(touch.clientX - start.x);
+                            const dy = Math.abs(touch.clientY - start.y);
+                            // Consider it a tap if movement is less than 10px
+                            if (dx < 10 && dy < 10) {
+                                isTap = true;
+                            }
+                        }
+                    }
+                    $button.removeData('rtbcbTouchStart');
+
+                    if (isTap) {
+                        // Prevent duplicate click events on mobile
+                        e.preventDefault();
+                        console.log('Button touched:', selector, this);
+                        callback.call(this, e);
+                    }
+                });
+            }
+            
             // Tab navigation
-            $(document).on('click.rtbcb-dashboard', '.rtbcb-test-tabs .nav-tab', function(e) {
-                e.preventDefault();
+            bindAction('.rtbcb-test-tabs .nav-tab', function(e) {
                 const tab = $(e.currentTarget).data('tab');
                 if (tab) {
                     self.switchTab(tab);
@@ -112,42 +202,35 @@
             });
 
             // Company Overview actions
-            $(document).on('click.rtbcb-dashboard', '[data-action="run-company-overview"]', function(e) {
-                e.preventDefault();
+            bindAction('[data-action="run-company-overview"]', function(e) {
                 self.generateCompanyOverview();
             });
 
-            $(document).on('click.rtbcb-dashboard', '[data-action="clear-results"]', function(e) {
-                e.preventDefault();
+            bindAction('[data-action="clear-results"]', function(e) {
                 self.clearResults();
             });
 
             // LLM Test actions
-            $(document).on('click.rtbcb-dashboard', '[data-action="run-llm-test"]', function(e) {
-                e.preventDefault();
+            bindAction('[data-action="run-llm-test"]', function(e) {
                 self.runLLMTest();
             });
 
             // RAG System actions
-            $(document).on('click.rtbcb-dashboard', '[data-action="run-rag-test"]', function(e) {
-                e.preventDefault();
+            bindAction('[data-action="run-rag-test"]', function(e) {
                 self.runRagTest();
             });
 
-            $(document).on('click.rtbcb-dashboard', '[data-action="rebuild-rag-index"]', function(e) {
-                e.preventDefault();
+            bindAction('[data-action="rebuild-rag-index"]', function(e) {
                 self.rebuildRagIndex();
             });
 
             // API Health actions
-            $(document).on('click.rtbcb-dashboard', '[data-action="api-health-ping"]', function(e) {
-                e.preventDefault();
+            bindAction('[data-action="api-health-ping"]', function(e) {
                 self.runAllApiTests();
             });
 
             // ROI Calculator actions
-            $(document).on('click.rtbcb-dashboard', '[data-action="calculate-roi"]', function(e) {
-                e.preventDefault();
+            bindAction('[data-action="calculate-roi"]', function(e) {
                 self.calculateROI();
             });
 
@@ -157,12 +240,11 @@
                 self.saveSettings();
             });
 
-            $(document).on('click.rtbcb-dashboard', '[data-action="toggle-api-key"]', function(e) {
-                e.preventDefault();
+            bindAction('[data-action="toggle-api-key"]', function(e) {
                 self.toggleApiKeyVisibility();
             });
 
-            // Input validation
+            // Input validation (keep original for these)
             $(document).on('input.rtbcb-dashboard', '#company-name-input', debounce(function() {
                 self.validateCompanyInput();
             }, 300));
@@ -181,8 +263,6 @@
             $(document).on('input.rtbcb-dashboard', '#rtbcb-rag-query', debounce(function() {
                 self.validateRagQuery();
             }, 300));
-
-            console.log('Events bound successfully');
         },
 
         // Initialize tab system
@@ -258,10 +338,66 @@
         },
 
         // Setup form validation
+        // Enhanced setup form validation with API connection testing
         setupValidation() {
+            console.log('Setting up validation...');
             this.validateCompanyInput();
             this.validateLLMInputs();
             this.validateRagQuery();
+            
+            // Add initial connection test if API key is configured
+            if (rtbcbDashboard.apiKeyConfigured) {
+                this.testInitialConnection();
+            }
+        },
+
+        // Test initial API connection
+        testInitialConnection() {
+            console.log('Testing initial API connection...');
+            
+            // Simple ping test without updating UI heavily
+            const testData = {
+                action: 'rtbcb_test_api_connection',
+                nonce: rtbcbDashboard.nonces?.apiHealth || rtbcbDashboard.nonces?.dashboard || ''
+            };
+            
+            this.makeRequest(testData)
+                .then(response => {
+                    console.log('Initial API connection test passed:', response);
+                    this.updateConnectionStatus('connected');
+                })
+                .catch(error => {
+                    console.warn('Initial API connection test failed:', error.message);
+                    this.updateConnectionStatus('error', error.message);
+                });
+        },
+
+        // Update connection status indicator
+        updateConnectionStatus(status, message = '') {
+            const $indicators = $('.rtbcb-system-status-bar .rtbcb-status-indicator');
+            const $apiIndicator = $indicators.filter(':contains("OpenAI API")');
+            
+            if ($apiIndicator.length) {
+                const $icon = $apiIndicator.find('.dashicons');
+                
+                switch (status) {
+                    case 'connected':
+                        $apiIndicator.removeClass('status-error status-warning').addClass('status-good');
+                        $icon.removeClass('dashicons-warning dashicons-info').addClass('dashicons-yes-alt');
+                        break;
+                    case 'error':
+                        $apiIndicator.removeClass('status-good status-warning').addClass('status-error');
+                        $icon.removeClass('dashicons-yes-alt dashicons-info').addClass('dashicons-warning');
+                        if (message) {
+                            $apiIndicator.attr('title', message);
+                        }
+                        break;
+                    case 'warning':
+                        $apiIndicator.removeClass('status-good status-error').addClass('status-warning');
+                        $icon.removeClass('dashicons-yes-alt dashicons-warning').addClass('dashicons-info');
+                        break;
+                }
+            }
         },
 
         // Load saved state
@@ -315,7 +451,13 @@
                 .catch(error => {
                     circuitBreaker.recordFailure();
                     console.error('Company overview error:', error);
-                    this.showError(error.message || 'Failed to generate overview');
+                    this.showError(error.message || 'Failed to generate overview', {
+                        action: 'generateCompanyOverview',
+                        companyName: companyName,
+                        model: $('#model-selection').val(),
+                        timestamp: new Date().toISOString(),
+                        error: error
+                    });
                     this.setButtonState('[data-action="run-company-overview"]', 'error');
                 })
                 .finally(() => {
@@ -494,7 +636,11 @@
                 .catch(error => {
                     circuitBreaker.recordFailure();
                     console.error('API health test error:', error);
-                    this.showError(error.message || 'API health tests failed');
+                    this.showError(error.message || 'API health tests failed', {
+                        action: 'runAllApiTests',
+                        timestamp: new Date().toISOString(),
+                        error: error
+                    });
                     this.setButtonState('[data-action="api-health-ping"]', 'error');
                     $('#rtbcb-api-health-notice').text('API tests failed');
                 })
@@ -808,21 +954,74 @@
             this.showNotification('Results cleared', 'info');
         },
 
-        showError(message) {
+        // Enhanced error display with debugging options
+        showError(message, debugInfo = null) {
             // Dismiss any existing notifications first
             this.dismissNotifications();
             
             const $container = $('#error-container');
             const $content = $('#error-content');
             
-            $content.html(`<strong>Error:</strong> ${this.escapeHtml(message)}`);
+            let errorHtml = `<strong>Error:</strong> ${this.escapeHtml(message)}`;
+            
+            // Add debug information if available and debug mode is enabled
+            if (debugInfo && ($('#show-debug-info').is(':checked') || this.debugMode)) {
+                errorHtml += `
+                    <div class="rtbcb-debug-error" style="margin-top: 10px; padding: 10px; background: #fafafa; border: 1px solid #ddd; border-radius: 4px;">
+                        <strong>Debug Information:</strong>
+                        <details style="margin-top: 5px;">
+                            <summary style="cursor: pointer; font-weight: bold;">Click to expand</summary>
+                            <pre style="margin-top: 5px; font-size: 12px; white-space: pre-wrap;">${this.escapeHtml(JSON.stringify(debugInfo, null, 2))}</pre>
+                        </details>
+                    </div>
+                `;
+            }
+            
+            // Add troubleshooting tips for common errors
+            if (message.includes('timeout') || message.includes('timed out')) {
+                errorHtml += `
+                    <div class="rtbcb-error-tips" style="margin-top: 10px; padding: 8px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px;">
+                        <strong>💡 Troubleshooting tip:</strong> Request timed out. Try refreshing the page or check your internet connection.
+                    </div>
+                `;
+            } else if (message.includes('Permission denied') || message.includes('403')) {
+                errorHtml += `
+                    <div class="rtbcb-error-tips" style="margin-top: 10px; padding: 8px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px;">
+                        <strong>💡 Troubleshooting tip:</strong> Permission denied. Please refresh the page and try again.
+                    </div>
+                `;
+            } else if (message.includes('API') || message.includes('Network error')) {
+                errorHtml += `
+                    <div class="rtbcb-error-tips" style="margin-top: 10px; padding: 8px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px;">
+                        <strong>💡 Troubleshooting tip:</strong> API connection issue. Check your API key configuration in Settings.
+                    </div>
+                `;
+            }
+            
+            $content.html(errorHtml);
             $container.show();
             $('#results-container').hide();
             
-            // Auto-dismiss error after 10 seconds
+            // Add a manual retry button for failed operations
+            if (!$container.find('.rtbcb-retry-button').length) {
+                const retryButton = $(`
+                    <button type="button" class="button button-small rtbcb-retry-button" style="margin-top: 10px;">
+                        <span class="dashicons dashicons-update"></span> Retry
+                    </button>
+                `);
+                
+                retryButton.on('click', () => {
+                    $container.fadeOut();
+                    this.resetAllButtonStates();
+                });
+                
+                $content.append(retryButton);
+            }
+            
+            // Auto-dismiss error after 15 seconds (increased from 10)
             setTimeout(() => {
                 $container.fadeOut();
-            }, 10000);
+            }, 15000);
         },
 
         formatContent(content) {
@@ -839,35 +1038,79 @@
             return div.innerHTML;
         },
 
-        // Button state management
+        // Enhanced button state management
         setButtonState(selector, state, text) {
             const $button = $(selector);
-            const defaultText = $button.data('default-text') || $button.text();
+            if ($button.length === 0) {
+                console.warn('Button not found:', selector);
+                return;
+            }
+            
+            // Store original text if not already stored
+            if (!$button.data('default-text')) {
+                $button.data('default-text', $button.text().trim());
+            }
+            const defaultText = $button.data('default-text');
 
-            $button.removeClass('rtbcb-loading rtbcb-success rtbcb-error');
+            // Clear all state classes first
+            $button.removeClass('rtbcb-loading rtbcb-success rtbcb-error rtbcb-touch-active');
 
             switch (state) {
                 case 'loading':
                     $button.prop('disabled', true)
                            .addClass('rtbcb-loading')
+                           .css('pointer-events', 'none') // Explicitly disable pointer events
                            .html(`<span class="dashicons dashicons-update rtbcb-spin"></span> ${text || 'Loading...'}`);
                     break;
                 case 'success':
                     $button.prop('disabled', false)
                            .addClass('rtbcb-success')
+                           .css('pointer-events', 'auto') // Explicitly enable pointer events
                            .html(`<span class="dashicons dashicons-yes-alt"></span> ${text || 'Complete'}`);
-                    setTimeout(() => $button.removeClass('rtbcb-success').html(this.escapeHtml(defaultText)), 3000);
+                    // Reset after delay
+                    setTimeout(() => {
+                        if ($button.hasClass('rtbcb-success')) { // Only reset if still in success state
+                            this.resetButtonState($button, defaultText);
+                        }
+                    }, 3000);
                     break;
                 case 'error':
                     $button.prop('disabled', false)
                            .addClass('rtbcb-error')
+                           .css('pointer-events', 'auto') // Explicitly enable pointer events
                            .html(`<span class="dashicons dashicons-warning"></span> ${text || 'Error'}`);
-                    setTimeout(() => $button.removeClass('rtbcb-error').html(this.escapeHtml(defaultText)), 5000);
+                    // Reset after delay
+                    setTimeout(() => {
+                        if ($button.hasClass('rtbcb-error')) { // Only reset if still in error state
+                            this.resetButtonState($button, defaultText);
+                        }
+                    }, 5000);
                     break;
+                case 'reset':
+                case 'default':
                 default:
-                    $button.prop('disabled', false).html(text ? text : this.escapeHtml(defaultText));
+                    this.resetButtonState($button, text || defaultText);
                     break;
             }
+        },
+
+        // Reset button to default state
+        resetButtonState($button, text) {
+            $button.prop('disabled', false)
+                   .removeClass('rtbcb-loading rtbcb-success rtbcb-error rtbcb-touch-active')
+                   .css('pointer-events', 'auto')
+                   .html(this.escapeHtml(text));
+        },
+
+        // Force reset all buttons (emergency cleanup)
+        resetAllButtonStates() {
+            console.log('Resetting all button states...');
+            $('button[data-action]').each((index, element) => {
+                const $button = $(element);
+                const defaultText = $button.data('default-text') || $button.text().trim();
+                this.resetButtonState($button, defaultText);
+            });
+            this.isGenerating = false;
         },
 
         // Progress management
@@ -908,7 +1151,7 @@
             }
         },
 
-        // AJAX request handling
+        // Enhanced AJAX request handling with improved error reporting
         makeRequest(data) {
             // Abort any existing request
             if (this.currentRequest) {
@@ -916,18 +1159,36 @@
                 this.currentRequest = null;
             }
             
+            console.log('Making API request:', data.action, data);
+            
             return new Promise((resolve, reject) => {
                 this.currentRequest = $.ajax({
                     url: rtbcbDashboard.ajaxurl,
                     type: 'POST',
                     data: data,
                     timeout: 120000,
-                    success: (response) => {
+                    beforeSend: (xhr) => {
+                        console.log('API request started:', data.action);
+                    },
+                    success: (response, textStatus, xhr) => {
                         this.currentRequest = null;
+                        console.log('API response received:', {
+                            action: data.action,
+                            success: response.success,
+                            status: xhr.status,
+                            response: response
+                        });
+                        
                         if (response.success) {
                             resolve(response.data);
                         } else {
-                            reject(new Error(response.data?.message || 'Request failed'));
+                            const errorMessage = this.extractErrorMessage(response);
+                            console.error('API request failed:', {
+                                action: data.action,
+                                error: errorMessage,
+                                response: response
+                            });
+                            reject(new Error(errorMessage));
                         }
                     },
                     error: (xhr, status, error) => {
@@ -939,20 +1200,104 @@
                             return;
                         }
                         
-                        let message = 'Request failed';
+                        const errorDetails = {
+                            action: data.action,
+                            status: status,
+                            httpStatus: xhr.status,
+                            error: error,
+                            responseText: xhr.responseText
+                        };
                         
-                        if (status === 'timeout') {
-                            message = 'Request timed out';
-                        } else if (xhr.responseJSON && xhr.responseJSON.data) {
-                            message = xhr.responseJSON.data.message || message;
-                        } else if (error) {
-                            message = error;
+                        console.error('API request error:', errorDetails);
+                        
+                        let message = this.getErrorMessage(xhr, status, error);
+                        
+                        // Add debugging information in development
+                        if (typeof DEBUG !== 'undefined' && DEBUG) {
+                            if (console.groupCollapsed) {
+                                console.groupCollapsed('API Error Details');
+                                console.log('Status:', status);
+                                console.log('HTTP Status:', xhr.status);
+                                console.log('Error:', error);
+                                console.log('Response:', xhr.responseText);
+                                console.log('Full XHR:', xhr);
+                                console.groupEnd();
+                            } else {
+                                console.log('API Error Details:', {
+                                    status: status,
+                                    httpStatus: xhr.status,
+                                    error: error,
+                                    response: xhr.responseText,
+                                    xhr: xhr
+                                });
+                            }
                         }
                         
                         reject(new Error(message));
                     }
                 });
             });
+        },
+
+        // Extract error message from API response
+        extractErrorMessage(response) {
+            // Try multiple paths to find error message
+            if (response.data && typeof response.data === 'string') {
+                return response.data;
+            }
+            if (response.data && response.data.message) {
+                return response.data.message;
+            }
+            if (response.data && response.data.error) {
+                return response.data.error;
+            }
+            if (response.message) {
+                return response.message;
+            }
+            return 'API request failed - no error message provided';
+        },
+
+        // Get user-friendly error message
+        getErrorMessage(xhr, status, error) {
+            if (status === 'timeout') {
+                return 'Request timed out. Please check your connection and try again.';
+            }
+            
+            if (xhr.status === 0) {
+                return 'Network error. Please check your internet connection.';
+            }
+            
+            if (xhr.status === 403) {
+                return 'Permission denied. Please refresh the page and try again.';
+            }
+            
+            if (xhr.status === 404) {
+                return 'API endpoint not found. Please contact support.';
+            }
+            
+            if (xhr.status === 500) {
+                return 'Server error. Please try again later.';
+            }
+            
+            if (xhr.status === 502 || xhr.status === 503 || xhr.status === 504) {
+                return 'Service temporarily unavailable. Please try again later.';
+            }
+            
+            // Try to parse JSON error response
+            try {
+                const jsonResponse = JSON.parse(xhr.responseText);
+                if (jsonResponse.data && jsonResponse.data.message) {
+                    return jsonResponse.data.message;
+                }
+                if (jsonResponse.message) {
+                    return jsonResponse.message;
+                }
+            } catch (e) {
+                // Not JSON or malformed
+            }
+            
+            // Default fallback
+            return `Request failed: ${error || 'Unknown error'} (HTTP ${xhr.status})`;
         },
 
         // Chart management
@@ -1039,6 +1384,9 @@
                 clearInterval(this.progressTimer);
                 this.progressTimer = null;
             }
+            
+            // Reset all button states
+            this.resetAllButtonStates();
             
             // Remove event handlers
             $(document).off('.rtbcb-dashboard');
