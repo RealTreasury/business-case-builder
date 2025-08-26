@@ -196,126 +196,99 @@
             console.log('Events bound successfully');
         },
 
-        // Enhanced cross-platform event binding - FIXED VERSION
+        // Simplified cross-platform event binding
         bindCrossPlatformEvents() {
             const self = this;
 
-            // Generalised action binder for mouse, touch, pointer and keyboard interaction
-            function bindAction(selector, callback) {
-                // Helper to determine if interaction should be blocked
-                function isButtonInteractionBlocked($button) {
-                    return $button.prop('disabled') || $button.hasClass('rtbcb-loading') || self.isGenerating;
+            // Remove existing handlers first
+            $(document).off('.rtbcb-dashboard');
+
+            // Simple click handlers - one for each action
+            $(document).on('click.rtbcb-dashboard', '[data-action="run-company-overview"]', function(e) {
+                e.preventDefault();
+                if (!$(this).prop('disabled') && !self.isGenerating) {
+                    self.generateCompanyOverview();
                 }
+            });
 
-                // Handle various input types - FIXED: Added click events and improved logic
-                $(document).on(
-                    'pointerup.rtbcb-dashboard keydown.rtbcb-dashboard',
-                    selector,
-                    function(e) {
-                        // Handle keyboard events
-                        if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ' && e.key !== 'Space') {
-                            return;
-                        }
+            $(document).on('click.rtbcb-dashboard', '[data-action="clear-results"]', function(e) {
+                e.preventDefault();
+                self.clearResults();
+            });
 
-                        const $button = $(this);
-                        const interactionKey = 'rtbcb-interacted';
+            $(document).on('click.rtbcb-dashboard', '[data-action="run-llm-test"]', function(e) {
+                e.preventDefault();
+                if (!$(this).prop('disabled') && !self.isGenerating) {
+                    self.runLLMTest();
+                }
+            });
 
-                        // Prevent duplicate events within a short timeframe
-                        const now = Date.now();
-                        const lastInteraction = $button.data(interactionKey + '-time') || 0;
+            $(document).on('click.rtbcb-dashboard', '[data-action="run-rag-test"]', function(e) {
+                e.preventDefault();
+                if (!$(this).prop('disabled') && !self.isGenerating) {
+                    self.runRagTest();
+                }
+            });
 
-                        if (now - lastInteraction < INTERACTION_DEBOUNCE_MS) {
-                            return; // Prevent rapid-fire events
-                        }
+            $(document).on('click.rtbcb-dashboard', '[data-action="rebuild-rag-index"]', function(e) {
+                e.preventDefault();
+                if (!$(this).prop('disabled') && !self.isGenerating) {
+                    self.rebuildRagIndex();
+                }
+            });
 
-                        // Mark this interaction
-                        $button.data(interactionKey + '-time', now);
+            $(document).on('click.rtbcb-dashboard', '[data-action="api-health-ping"]', function(e) {
+                e.preventDefault();
+                if (!$(this).prop('disabled') && !self.isGenerating) {
+                    self.runAllApiTests();
+                }
+            });
 
-                        if (isButtonInteractionBlocked($button)) {
-                            return;
-                        }
+            $(document).on('click.rtbcb-dashboard', '[data-action="calculate-roi"]', function(e) {
+                e.preventDefault();
+                if (!$(this).prop('disabled') && !self.isGenerating) {
+                    self.calculateROI();
+                }
+            });
 
-                        // Only prevent default for non-click events or when specifically needed
-                        if (e.type !== 'click' || $(this).is('a[href="#"], a[href=""]')) {
-                            e.preventDefault();
-                        }
-                        e.stopPropagation();
-
-                        callback.call(this, e);
-                    }
-                );
-            }
+            $(document).on('click.rtbcb-dashboard', '[data-action="toggle-api-key"]', function(e) {
+                e.preventDefault();
+                self.toggleApiKeyVisibility();
+            });
 
             // Tab navigation
-            bindAction('.rtbcb-test-tabs .nav-tab', function(e) {
-                const tab = $(e.currentTarget).data('tab');
-                if (tab) {
+            $(document).on('click.rtbcb-dashboard', '.rtbcb-test-tabs .nav-tab', function(e) {
+                e.preventDefault();
+                const tab = $(this).data('tab');
+                if (tab && !self.isGenerating) {
                     self.switchTab(tab);
                 }
             });
 
-            // Company Overview actions
-            bindAction('[data-action="run-company-overview"]', function(e) {
-                self.generateCompanyOverview();
-            });
-
-            bindAction('[data-action="clear-results"]', function(e) {
-                self.clearResults();
-            });
-
-            // LLM Test actions
-            bindAction('[data-action="run-llm-test"]', function(e) {
-                self.runLLMTest();
-            });
-
-            // RAG System actions
-            bindAction('[data-action="run-rag-test"]', function(e) {
-                self.runRagTest();
-            });
-
-            bindAction('[data-action="rebuild-rag-index"]', function(e) {
-                self.rebuildRagIndex();
-            });
-
-            // API Health actions
-            bindAction('[data-action="api-health-ping"]', function(e) {
-                self.runAllApiTests();
-            });
-
-            // ROI Calculator actions
-            bindAction('[data-action="calculate-roi"]', function(e) {
-                self.calculateROI();
-            });
-
-            // Settings actions
+            // Form submission
             $(document).on('submit.rtbcb-dashboard', '#rtbcb-dashboard-settings-form', function(e) {
                 e.preventDefault();
                 self.saveSettings();
             });
 
-            bindAction('[data-action="toggle-api-key"]', function(e) {
-                self.toggleApiKeyVisibility();
+            // Input handlers (keep these as they were working)
+            $(document).on('input.rtbcb-dashboard', '#company-name-input', function() {
+                clearTimeout(self.inputTimer);
+                self.inputTimer = setTimeout(() => self.validateCompanyInput(), 300);
             });
 
-            // Input validation (keep original for these)
-            $(document).on('input.rtbcb-dashboard', '#company-name-input', debounce(function() {
-                self.validateCompanyInput();
-            }, 300));
-
-            // Temperature slider
             $(document).on('input.rtbcb-dashboard', '#llm-temperature', function(e) {
                 $('#llm-temperature-value').text($(e.target).val());
             });
 
-            // Model selection
             $(document).on('change.rtbcb-dashboard', 'input[name="test-models[]"]', function() {
                 self.validateLLMInputs();
             });
 
-            // RAG query input
-            $(document).on('input.rtbcb-dashboard', '#rtbcb-rag-query', debounce(function() {
-                self.validateRagQuery();
-            }, 300));
+            $(document).on('input.rtbcb-dashboard', '#rtbcb-rag-query', function() {
+                clearTimeout(self.ragTimer);
+                self.ragTimer = setTimeout(() => self.validateRagQuery(), 300);
+            });
         },
 
         // Initialize tab system
