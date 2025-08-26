@@ -28,7 +28,7 @@
         "build": "npm run build:production",
         "build:production": "npm run build:js && node scripts/build-plugin-zip.js",
         "build:dev": "npm run build:js",
-        "build:js": "mkdir -p admin/js/build && babel admin/js/src/unified-test-dashboard.js --out-file admin/js/build/unified-test-dashboard.js",
+        "build:js": "mkdir -p admin/js/build && babel admin/js/src --out-dir admin/js/build",
         "compat:check": "composer run compat:check",
         "setup": "npm run setup:composer && npm run setup:wp-env",
         "setup:composer": "composer install",
