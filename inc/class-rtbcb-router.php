@@ -565,7 +565,7 @@ final class RTBCB_Router {
             'start_time' => microtime( true ),
             'report_type' => $report_type,
             'user_ip' => $this->get_client_ip(),
-            'user_agent' => sanitize_text_field( $_SERVER['HTTP_USER_AGENT'] ?? '' ),
+            'user_agent' => sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ?? '' ) ),
             'company_name' => $validated_data['company_name'],
             'industry' => $validated_data['industry'],
             'company_size' => $validated_data['company_size']
