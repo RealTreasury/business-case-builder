@@ -147,23 +147,47 @@
                     if ($button.prop('disabled') || $button.hasClass('rtbcb-loading') || self.isGenerating) {
                         return false;
                     }
-                    
+
+                    // Track initial touch position for tap detection
+                    if (e.originalEvent && e.originalEvent.touches && e.originalEvent.touches.length === 1) {
+                        const touch = e.originalEvent.touches[0];
+                        $button.data('rtbcbTouchStart', { x: touch.clientX, y: touch.clientY });
+                    }
+
                     // Add visual feedback for touch
                     $button.addClass('rtbcb-touch-active');
                 });
-                
+
                 $(document).on('touchend.rtbcb-dashboard', selector, function(e) {
                     const $button = $(this);
                     $button.removeClass('rtbcb-touch-active');
-                    
+
                     if ($button.prop('disabled') || $button.hasClass('rtbcb-loading') || self.isGenerating) {
                         return false;
                     }
-                    
-                    // Prevent duplicate click events on mobile
-                    e.preventDefault();
-                    console.log('Button touched:', selector, this);
-                    callback.call(this, e);
+
+                    // Only prevent default if this was a tap (not a scroll)
+                    let isTap = false;
+                    if (e.originalEvent && e.originalEvent.changedTouches && e.originalEvent.changedTouches.length === 1) {
+                        const touch = e.originalEvent.changedTouches[0];
+                        const start = $button.data('rtbcbTouchStart');
+                        if (start) {
+                            const dx = Math.abs(touch.clientX - start.x);
+                            const dy = Math.abs(touch.clientY - start.y);
+                            // Consider it a tap if movement is less than 10px
+                            if (dx < 10 && dy < 10) {
+                                isTap = true;
+                            }
+                        }
+                    }
+                    $button.removeData('rtbcbTouchStart');
+
+                    if (isTap) {
+                        // Prevent duplicate click events on mobile
+                        e.preventDefault();
+                        console.log('Button touched:', selector, this);
+                        callback.call(this, e);
+                    }
                 });
             }
             
