@@ -1494,3 +1494,40 @@
 waitForDashboardAndInit();
 })();
 
+// Add this at the very end of unified-test-dashboard.js
+// Visual indicator that JavaScript loaded successfully
+$(document).ready(function() {
+    $('body').addClass('rtbcb-js-loaded');
+
+    // Add debug info panel
+    $('body').append(`
+        <div class="rtbcb-debug-overlay">
+            <div>JS Status: ✓ Loaded</div>
+            <div>jQuery: ${typeof $ !== 'undefined' ? '✓' : '✗'}</div>
+            <div>Dashboard: ${typeof window.RTBCBDashboard !== 'undefined' ? '✓' : '✗'}</div>
+            <div>Buttons: <span id="debug-button-count">0</span></div>
+            <div>Events: <span id="debug-event-count">0</span></div>
+        </div>
+    `);
+
+    // Count buttons and events
+    $('#debug-button-count').text($('button[data-action]').length);
+
+    // Test if events are working by adding a counter
+    let eventCount = 0;
+    $(document).on('click', 'button[data-action]', function() {
+        eventCount++;
+        $('#debug-event-count').text(eventCount);
+        $(this).css('background', '#ffff99'); // Yellow flash when clicked
+        setTimeout(() => $(this).css('background', ''), 200);
+    });
+});
+
+// Simple click test function you can run manually
+window.testButtonClicks = function() {
+    alert('Testing button clicks...');
+    $('button[data-action]').each(function(i, btn) {
+        $(btn).css('background', i % 2 ? 'red' : 'blue');
+    });
+};
+
