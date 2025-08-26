@@ -42,6 +42,7 @@ class RTBCB_Leads {
             roi_base decimal(12,2) DEFAULT 0,
             roi_high decimal(12,2) DEFAULT 0,
             report_html longtext DEFAULT '',
+            status varchar(20) DEFAULT 'new',
             ip_address varchar(45) DEFAULT '',
             user_agent text DEFAULT '',
             utm_source varchar(100) DEFAULT '',
@@ -286,14 +287,17 @@ class RTBCB_Leads {
         global $wpdb;
 
         $defaults = [
-            'per_page'    => 20,
-            'page'        => 1,
-            'orderby'     => 'created_at',
-            'order'       => 'DESC',
-            'search'      => '',
-            'category'    => '',
-            'date_from'   => '',
-            'date_to'     => '',
+            'per_page'     => 20,
+            'page'         => 1,
+            'order_by'     => 'created_at',
+            'order'        => 'DESC',
+            'search'       => '',
+            'status'       => '',
+            'industry'     => '',
+            'company_size' => '',
+            'category'     => '',
+            'date_from'    => '',
+            'date_to'      => '',
         ];
 
         $args = wp_parse_args( $args, $defaults );
@@ -302,11 +306,34 @@ class RTBCB_Leads {
         $where_conditions = [ '1=1' ];
         $prepare_values = [];
 
+        // Search filter (search across email, company_size, industry)
         if ( ! empty( $args['search'] ) ) {
-            $where_conditions[] = 'email LIKE %s';
-            $prepare_values[] = '%' . $wpdb->esc_like( $args['search'] ) . '%';
+            $where_conditions[] = '(email LIKE %s OR company_size LIKE %s OR industry LIKE %s)';
+            $search_term = '%' . $wpdb->esc_like( $args['search'] ) . '%';
+            $prepare_values[] = $search_term;
+            $prepare_values[] = $search_term;
+            $prepare_values[] = $search_term;
         }
 
+        // Status filter
+        if ( ! empty( $args['status'] ) ) {
+            $where_conditions[] = 'status = %s';
+            $prepare_values[] = $args['status'];
+        }
+
+        // Industry filter
+        if ( ! empty( $args['industry'] ) ) {
+            $where_conditions[] = 'industry = %s';
+            $prepare_values[] = $args['industry'];
+        }
+
+        // Company size filter
+        if ( ! empty( $args['company_size'] ) ) {
+            $where_conditions[] = 'company_size = %s';
+            $prepare_values[] = $args['company_size'];
+        }
+
+        // Legacy category filter (for backwards compatibility)
         if ( ! empty( $args['category'] ) ) {
             $where_conditions[] = 'recommended_category = %s';
             $prepare_values[] = $args['category'];
@@ -334,17 +361,38 @@ class RTBCB_Leads {
 
         // Get leads
         $offset = ( $args['page'] - 1 ) * $args['per_page'];
-        $orderby = sanitize_sql_orderby( $args['orderby'] . ' ' . $args['order'] );
+        
+        // Handle order by parameter (both 'orderby' and 'order_by' for compatibility)
+        $order_by_field = $args['order_by'] ?? $args['orderby'] ?? 'created_at';
+        $allowed_order_by = [ 'created_at', 'email', 'company_size', 'industry', 'roi_base' ];
+        $order_by = in_array( $order_by_field, $allowed_order_by, true ) ? $order_by_field : 'created_at';
+        $order = strtoupper( $args['order'] ) === 'ASC' ? 'ASC' : 'DESC';
 
-        $sql = "SELECT * FROM " . self::$table_name . " WHERE " . $where_clause . " ORDER BY " . $orderby . " LIMIT %d OFFSET %d";
-        $prepare_values[] = $args['per_page'];
-        $prepare_values[] = $offset;
+        // Handle pagination
+        if ( $args['per_page'] === -1 ) {
+            // Get all leads (for export)
+            $sql = "SELECT * FROM " . self::$table_name . " WHERE " . $where_clause . " ORDER BY " . $order_by . " " . $order;
+        } else {
+            $sql = "SELECT * FROM " . self::$table_name . " WHERE " . $where_clause . " ORDER BY " . $order_by . " " . $order . " LIMIT %d OFFSET %d";
+            $prepare_values[] = $args['per_page'];
+            $prepare_values[] = $offset;
+        }
 
         $leads = $wpdb->get_results( $wpdb->prepare( $sql, $prepare_values ), ARRAY_A );
 
-        // Unserialize pain points
+        // Process leads data - handle both old serialized and new JSON format
         foreach ( $leads as &$lead ) {
-            $lead['pain_points'] = maybe_unserialize( $lead['pain_points'] );
+            $pain_points = $lead['pain_points'] ?? '';
+            if ( is_string( $pain_points ) ) {
+                // Try JSON decode first, fallback to unserialize for legacy data
+                $decoded = json_decode( $pain_points, true );
+                $lead['pain_points'] = $decoded !== null ? $decoded : maybe_unserialize( $pain_points );
+            }
+            
+            // Ensure pain_points is always an array
+            if ( ! is_array( $lead['pain_points'] ) ) {
+                $lead['pain_points'] = [];
+            }
         }
 
         return [
@@ -450,6 +498,79 @@ class RTBCB_Leads {
         }
 
         return $csv_content;
+    }
+
+    /**
+     * Delete multiple leads by IDs.
+     *
+     * @param array $lead_ids Array of lead IDs to delete.
+     * @return int Number of leads deleted.
+     */
+    public static function delete_leads( $lead_ids ) {
+        global $wpdb;
+
+        if ( empty( $lead_ids ) ) {
+            return 0;
+        }
+
+        // Sanitize IDs
+        $lead_ids = array_map( 'intval', $lead_ids );
+        $placeholders = implode( ',', array_fill( 0, count( $lead_ids ), '%d' ) );
+
+        $deleted = $wpdb->query( $wpdb->prepare(
+            "DELETE FROM " . self::$table_name . " WHERE id IN ($placeholders)",
+            ...$lead_ids
+        ) );
+
+        return intval( $deleted );
+    }
+
+    /**
+     * Get a single lead by ID.
+     *
+     * @param int $lead_id Lead ID.
+     * @return array|null Lead data or null if not found.
+     */
+    public static function get_lead( $lead_id ) {
+        global $wpdb;
+
+        $lead = $wpdb->get_row( $wpdb->prepare(
+            "SELECT * FROM " . self::$table_name . " WHERE id = %d",
+            $lead_id
+        ), ARRAY_A );
+
+        if ( $lead ) {
+            // Decode JSON fields
+            $lead['pain_points'] = json_decode( $lead['pain_points'], true ) ?: [];
+        }
+
+        return $lead;
+    }
+
+    /**
+     * Update lead status.
+     *
+     * @param int    $lead_id Lead ID.
+     * @param string $status  New status.
+     * @return bool Success.
+     */
+    public static function update_lead_status( $lead_id, $status ) {
+        global $wpdb;
+
+        $valid_statuses = [ 'new', 'contacted', 'qualified', 'converted', 'lost' ];
+        if ( ! in_array( $status, $valid_statuses, true ) ) {
+            return false;
+        }
+
+        $updated = $wpdb->update(
+            self::$table_name,
+            [ 'status' => $status ],
+            [ 'id' => $lead_id ],
+            [ '%s' ],
+            [ '%d' ]
+        );
+
+        return false !== $updated;
     }
 
     /**

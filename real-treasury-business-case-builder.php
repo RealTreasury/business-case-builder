@@ -134,7 +134,7 @@ class RTBCB_Plugin {
 
         // Admin functionality
         if ( is_admin() ) {
-            require_once RTBCB_DIR . 'admin/class-rtbcb-admin.php';
+            require_once RTBCB_DIR . 'admin/classes/Admin.php';
             new RTBCB_Admin();
         }
     }
