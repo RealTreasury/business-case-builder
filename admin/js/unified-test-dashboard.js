@@ -1211,14 +1211,24 @@
                         let message = this.getErrorMessage(xhr, status, error);
                         
                         // Add debugging information in development
-                        if (window.console && console.groupCollapsed) {
-                            console.groupCollapsed('API Error Details');
-                            console.log('Status:', status);
-                            console.log('HTTP Status:', xhr.status);
-                            console.log('Error:', error);
-                            console.log('Response:', xhr.responseText);
-                            console.log('Full XHR:', xhr);
-                            console.groupEnd();
+                        if (DEBUG) {
+                            if (console.groupCollapsed) {
+                                console.groupCollapsed('API Error Details');
+                                console.log('Status:', status);
+                                console.log('HTTP Status:', xhr.status);
+                                console.log('Error:', error);
+                                console.log('Response:', xhr.responseText);
+                                console.log('Full XHR:', xhr);
+                                console.groupEnd();
+                            } else {
+                                console.log('API Error Details:', {
+                                    status: status,
+                                    httpStatus: xhr.status,
+                                    error: error,
+                                    response: xhr.responseText,
+                                    xhr: xhr
+                                });
+                            }
                         }
                         
                         reject(new Error(message));
