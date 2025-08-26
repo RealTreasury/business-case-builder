@@ -118,7 +118,15 @@
                     const $button = $(e.currentTarget);
 
                     // Only handle if the button appears to be stuck or unresponsive
-                    if (!$button.hasClass('rtbcb-loading') && !this.isGenerating) {
+                    const isLoading = $button.hasClass('rtbcb-loading');
+                    const isDisabled = $button.is(':disabled');
+                    const isGenerating = this.isGenerating;
+                    const lastActivated = parseInt($button.attr('data-last-activated') || '0', 10);
+                    const now = Date.now();
+                    const MIN_STUCK_TIME = 5000; // 5 seconds
+
+                    // Consider button stuck if not loading, not generating, not disabled, and last activation was >5s ago
+                    if (!isLoading && !isGenerating && !isDisabled && (now - lastActivated > MIN_STUCK_TIME)) {
                         console.log('Backup click handler triggered for:', $button.data('action'));
 
                         // Small delay to allow main handler to work first
