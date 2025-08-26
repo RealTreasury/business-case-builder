@@ -9,6 +9,17 @@
 
 require_once __DIR__ . '/../bootstrap/bootstrap.php';
 
+// Define plugin constants for test
+if ( ! defined( 'RTBCB_PLUGIN_DIR' ) ) {
+    define( 'RTBCB_PLUGIN_DIR', dirname( dirname( __DIR__ ) ) . '/' );
+}
+if ( ! defined( 'RTBCB_VERSION' ) ) {
+    define( 'RTBCB_VERSION', '2.1.0' );
+}
+
+// Load main plugin file to get rtbcb() function
+require_once RTBCB_PLUGIN_DIR . 'real-treasury-business-case-builder.php';
+
 class RTBCB_Admin_Integration_Test {
     
     /**

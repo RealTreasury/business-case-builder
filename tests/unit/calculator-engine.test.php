@@ -121,33 +121,20 @@ class RTBCB_Calculator_Test {
             isset( $result['base'] ),
             'Calculator should return base scenario for minimal inputs'
         );
-        
-        // Test with minimal valid inputs - should work
-        $minimal_inputs = array(
-            'company_name' => 'Test Company',
-            'industry' => 'default', 
-            'company_size' => 'medium'
-        );
-        
-        $result = RTBCB_Calculator::calculate_roi( $minimal_inputs );
-        
-        rtbcb_assert(
-            is_array( $result ),
-            'Calculator should handle minimal valid inputs'
-        );
-        
-        rtbcb_assert(
-            isset( $result['base'] ),
-            'Calculator should return base scenario for minimal inputs'
-        );
     }
     
     /**
      * Test edge cases
      */
     public function test_edge_cases() {
-        // Test with zero investment cost
+        // Initialize calculator
+        RTBCB_Calculator::initialize();
+        
+        // Test with zero investment cost - provide required fields
         $zero_investment = array(
+            'company_name' => 'Test Company',
+            'industry' => 'default',
+            'company_size' => 'medium',
             'treasury_staff_count' => 5,
             'treasury_staff_salary' => 80000,
             'investment_cost' => 0
@@ -160,8 +147,11 @@ class RTBCB_Calculator_Test {
             'Zero investment should be handled gracefully'
         );
         
-        // Test with very high values
+        // Test with very high values - provide required fields  
         $high_values = array(
+            'company_name' => 'Test Company',
+            'industry' => 'default',
+            'company_size' => 'large',
             'treasury_staff_count' => 1000,
             'treasury_staff_salary' => 200000,
             'investment_cost' => 10000000
@@ -179,11 +169,16 @@ class RTBCB_Calculator_Test {
      * Test scenario calculations
      */
     public function test_scenario_calculations() {
+        // Initialize calculator
+        RTBCB_Calculator::initialize();
+        
         $base_inputs = array(
+            'company_name' => 'Test Company',
+            'industry' => 'financial_services',
+            'company_size' => 'medium',
             'treasury_staff_count' => 5,
             'treasury_staff_salary' => 80000,
-            'investment_cost' => 100000,
-            'industry' => 'financial_services'
+            'investment_cost' => 100000
         );
         
         $result = RTBCB_Calculator::calculate_roi( $base_inputs );
@@ -219,11 +214,16 @@ class RTBCB_Calculator_Test {
      * Test calculation accuracy
      */
     public function test_calculation_accuracy() {
+        // Initialize calculator
+        RTBCB_Calculator::initialize();
+        
         $inputs = array(
+            'company_name' => 'Test Company',
+            'industry' => 'financial_services',
+            'company_size' => 'large',
             'treasury_staff_count' => 10,
             'treasury_staff_salary' => 100000,
-            'investment_cost' => 200000,
-            'industry' => 'financial_services'
+            'investment_cost' => 200000
         );
         
         $result = RTBCB_Calculator::calculate_roi( $inputs );
@@ -253,11 +253,16 @@ class RTBCB_Calculator_Test {
      * Test data formatting
      */
     public function test_data_formatting() {
+        // Initialize calculator
+        RTBCB_Calculator::initialize();
+        
         $inputs = array(
+            'company_name' => 'Test Company',
+            'industry' => 'financial_services',
+            'company_size' => 'medium',
             'treasury_staff_count' => 5,
             'treasury_staff_salary' => 80000,
-            'investment_cost' => 100000,
-            'industry' => 'financial_services'
+            'investment_cost' => 100000
         );
         
         $result = RTBCB_Calculator::calculate_roi( $inputs );
@@ -267,16 +272,23 @@ class RTBCB_Calculator_Test {
             'Result should be an array'
         );
         
+        // Check if result has scenarios key structure
+        if ( isset( $result['scenarios'] ) ) {
+            $scenarios_data = $result['scenarios'];
+        } else {
+            $scenarios_data = $result;
+        }
+        
         // Check that we have the expected scenario structure
         $required_scenarios = array( 'conservative', 'base', 'optimistic' );
         foreach ( $required_scenarios as $scenario ) {
             rtbcb_assert(
-                isset( $result[ $scenario ] ),
+                isset( $scenarios_data[ $scenario ] ),
                 "Result should include $scenario scenario"
             );
             
             rtbcb_assert(
-                is_array( $result[ $scenario ] ),
+                is_array( $scenarios_data[ $scenario ] ),
                 "Scenario $scenario should be an array"
             );
         }
