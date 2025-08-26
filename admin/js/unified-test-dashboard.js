@@ -131,7 +131,7 @@
 
                 // Handle mouse clicks and keyboard activation (Enter/Space)
                 $(document).on('click.rtbcb-dashboard keydown.rtbcb-dashboard', selector, function(e) {
-                    if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') {
+                    if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ' && e.key !== 'Space') {
                         return;
                     }
 
