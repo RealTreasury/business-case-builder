@@ -48,12 +48,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 class BusinessCaseBuilder {
     constructor() {
-        // Check if required AJAX data is available
-        if (typeof window.rtbcb_ajax === 'undefined') {
-            console.error('RTBCB: AJAX configuration not loaded. Plugin scripts may not be properly enqueued.');
-            return;
-        }
-
         this.currentStep = 1;
         this.totalSteps = 5;
         this.form = document.getElementById('rtbcbForm');
@@ -395,12 +389,7 @@ class BusinessCaseBuilder {
         this.showProgress();
 
         try {
-            // Use localized nonce instead of form field for better reliability
-            const nonce = window.rtbcb_ajax.nonce;
-            if (!nonce) {
-                throw new Error('Security nonce not available. Please refresh the page.');
-            }
-
+            const nonce = this.form.querySelector('[name="rtbcb_nonce"]').value;
             const formData = new FormData(this.form);
             const numericFields = ['hours_reconciliation', 'hours_cash_positioning', 'num_banks', 'ftes'];
 
@@ -413,11 +402,11 @@ class BusinessCaseBuilder {
             });
 
             formData.append('action', 'rtbcb_generate_case');
-            formData.append('nonce', nonce);
+            formData.append('rtbcb_nonce', nonce);
 
             console.log('RTBCB: Submitting form data:', Object.fromEntries(formData));
 
-            const response = await fetch(window.rtbcb_ajax.ajax_url, {
+            const response = await fetch(rtbcbAjax.ajax_url, {
                 method: 'POST',
                 body: formData,
                 credentials: 'same-origin'
