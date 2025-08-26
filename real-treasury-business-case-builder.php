@@ -690,9 +690,6 @@ class RTBCB_Plugin {
             set_time_limit( 300 ); // 5 minutes
         }
 
-        // Set proper headers
-        header( 'Content-Type: application/json; charset=utf-8' );
-
         // Prevent any output before JSON
         if ( ob_get_level() ) {
             ob_end_clean();
@@ -958,9 +955,11 @@ class RTBCB_Plugin {
 
                     if ( empty( get_option( 'rtbcb_openai_api_key' ) ) ) {
                         rtbcb_log_api_debug( 'OpenAI API key not configured' );
-                        wp_send_json_error(
-                            [ 'message' => __( 'OpenAI API key not configured.', 'rtbcb' ) ],
-                            500
+                        rtbcb_send_standardized_error(
+                            'no_api_key',
+                            rtbcb_get_user_friendly_error( 'no_api_key' ),
+                            400,
+                            'OpenAI API key not configured'
                         );
                     }
 
@@ -1137,7 +1136,7 @@ class RTBCB_Plugin {
 
             rtbcb_log_memory_usage( 'before_response' );
 
-            wp_send_json_success( $response_data );
+            rtbcb_send_standardized_success( $response_data );
 
         } catch ( Exception $e ) {
             rtbcb_log_memory_usage( 'exception_occurred' );
