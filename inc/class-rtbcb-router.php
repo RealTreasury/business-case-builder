@@ -72,8 +72,8 @@ final class RTBCB_Router {
         RTBCB_Error_Handler $error_handler = null,
         RTBCB_Performance_Monitor $performance_monitor = null
     ) {
-        $this->error_handler = $error_handler ?: new RTBCB_Error_Handler();
-        $this->performance_monitor = $performance_monitor ?: new RTBCB_Performance_Monitor();
+        $this->error_handler = $error_handler ?? new RTBCB_Error_Handler();
+        $this->performance_monitor = $performance_monitor ?? new RTBCB_Performance_Monitor();
         
         $this->initialize_services();
         $this->setup_validation_rules();
