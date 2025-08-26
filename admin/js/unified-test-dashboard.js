@@ -122,29 +122,44 @@
         bindCrossPlatformEvents() {
             const self = this;
 
-            // Generalised action binder for both mouse and keyboard interaction
+            // Generalised action binder for mouse, touch, pointer and keyboard interaction
             function bindAction(selector, callback) {
                 // Helper to determine if interaction should be blocked
                 function isButtonInteractionBlocked($button) {
                     return $button.prop('disabled') || $button.hasClass('rtbcb-loading') || self.isGenerating;
                 }
 
-                // Handle mouse clicks and keyboard activation (Enter/Space)
-                $(document).on('click.rtbcb-dashboard keydown.rtbcb-dashboard', selector, function(e) {
-                    if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ' && e.key !== 'Space') {
-                        return;
+                // Handle various input types including touch and pointer events
+                $(document).on(
+                    'click.rtbcb-dashboard keydown.rtbcb-dashboard pointerup.rtbcb-dashboard touchstart.rtbcb-dashboard',
+                    selector,
+                    function(e) {
+                        if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ' && e.key !== 'Space') {
+                            return;
+                        }
+
+                        const $button = $(this);
+
+                        // Prevent duplicate events (e.g., click after touch/pointer)
+                        if (e.type === 'click' && $button.data('rtbcb-interacted')) {
+                            $button.removeData('rtbcb-interacted');
+                            return;
+                        }
+
+                        if (e.type === 'pointerup' || e.type === 'touchstart') {
+                            $button.data('rtbcb-interacted', true);
+                        }
+
+                        if (isButtonInteractionBlocked($button)) {
+                            return;
+                        }
+
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        callback.call(this, e);
                     }
-
-                    const $button = $(this);
-                    if (isButtonInteractionBlocked($button)) {
-                        return;
-                    }
-
-                    e.preventDefault();
-                    e.stopPropagation();
-
-                    callback.call(this, e);
-                });
+                );
             }
             
             // Tab navigation
