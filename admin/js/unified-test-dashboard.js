@@ -144,7 +144,7 @@
                 // Touch events for mobile compatibility
                 $(document).on('touchstart.rtbcb-dashboard', selector, function(e) {
                     const $button = $(this);
-                    if ($button.prop('disabled') || $button.hasClass('rtbcb-loading') || self.isGenerating) {
+                    if (isButtonInteractionBlocked($button)) {
                         return false;
                     }
 
