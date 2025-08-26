@@ -7,6 +7,8 @@
 
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/helpers.php';
+require_once __DIR__ . '/class-rtbcb-performance-monitor.php';
+require_once __DIR__ . '/class-rtbcb-error-handler.php';
 
 class RTBCB_LLM {
     /**
@@ -37,7 +39,12 @@ class RTBCB_LLM {
         $this->gpt5_config = $config;
 
         if ( empty( $this->api_key ) ) {
-            error_log( 'RTBCB: OpenAI API key not configured' );
+            RTBCB_Error_Handler::log_error( 
+                'OpenAI API key not configured', 
+                RTBCB_Error_Handler::ERROR_LEVEL_CRITICAL,
+                [],
+                'LLM_INITIALIZATION'
+            );
         }
     }
 
@@ -244,7 +251,13 @@ Respond with the JSON structure only. No additional text.";
         $response = $this->call_openai_with_retry( $model, $context, 2 ); // Reduce retries for faster response
 
         if ( is_wp_error( $response ) ) {
-            error_log( 'RTBCB: Company overview generation failed: ' . $response->get_error_message() );
+            RTBCB_Error_Handler::handle_llm_error(
+                'Company overview generation failed: ' . $response->get_error_message(),
+                $model,
+                $user_prompt,
+                0,
+                $response
+            );
             return new WP_Error( 'llm_failure', __( 'Unable to generate company overview. Please try again.', 'rtbcb' ) );
         }
 
@@ -1170,20 +1183,109 @@ Respond with the JSON structure only. No additional text.";
     }
 
     /**
-     * Call OpenAI with retry logic.
+     * Generate cache key for LLM request.
+     *
+     * @param string       $model  Model name.
+     * @param array|string $prompt Prompt data.
+     * @return string Cache key.
+     */
+    private function generate_cache_key( $model, $prompt ) {
+        $cache_data = [
+            'model' => $model,
+            'prompt' => $prompt,
+            'version' => '2.1.0', // Include version to invalidate on updates
+        ];
+        return 'rtbcb_llm_' . md5( wp_json_encode( $cache_data ) );
+    }
+
+    /**
+     * Get cached LLM response.
+     *
+     * @param string $cache_key Cache key.
+     * @return array|false Cached response or false if not found.
+     */
+    private function get_cached_response( $cache_key ) {
+        $cached = get_transient( $cache_key );
+        if ( false !== $cached ) {
+            error_log( 'RTBCB: Cache hit for key: ' . substr( $cache_key, 0, 20 ) . '...' );
+            return $cached;
+        }
+        return false;
+    }
+
+    /**
+     * Store LLM response in cache.
+     *
+     * @param string $cache_key Cache key.
+     * @param array  $response  Response to cache.
+     * @param int    $expiration Cache expiration in seconds.
+     * @return bool Success status.
+     */
+    private function store_cached_response( $cache_key, $response, $expiration = 3600 ) {
+        // Only cache successful responses
+        if ( is_wp_error( $response ) ) {
+            return false;
+        }
+
+        // Get cache duration from options (default 1 hour)
+        $cache_duration = get_option( 'rtbcb_llm_cache_duration', $expiration );
+        $success = set_transient( $cache_key, $response, $cache_duration );
+        
+        if ( $success ) {
+            error_log( 'RTBCB: Cached response for key: ' . substr( $cache_key, 0, 20 ) . '... (expires in ' . $cache_duration . 's)' );
+        }
+        
+        return $success;
+    }
+
+    /**
+     * Check if caching is enabled for LLM requests.
+     *
+     * @return bool True if caching is enabled.
+     */
+    private function is_caching_enabled() {
+        return get_option( 'rtbcb_llm_caching_enabled', true );
+    }
+
+    /**
+     * Call OpenAI with retry logic and caching.
      */
 
     private function call_openai_with_retry( $model, $prompt, $max_retries = null ) {
+        // Check cache first if caching is enabled
+        if ( $this->is_caching_enabled() ) {
+            $cache_key = $this->generate_cache_key( $model, $prompt );
+            $cached_response = $this->get_cached_response( $cache_key );
+            
+            if ( false !== $cached_response ) {
+                // Log cache hit performance
+                RTBCB_Performance_Monitor::log_llm_performance( $model, $prompt, 0.001, true );
+                return $cached_response;
+            }
+        }
+
         $max_retries = $max_retries ?? intval( $this->gpt5_config['max_retries'] );
 
         for ( $attempt = 1; $attempt <= $max_retries; $attempt++ ) {
             $response = $this->call_openai( $model, $prompt );
 
             if ( ! is_wp_error( $response ) ) {
+                // Store successful response in cache
+                if ( $this->is_caching_enabled() ) {
+                    $this->store_cached_response( $cache_key, $response );
+                }
                 return $response;
             }
 
             error_log( "RTBCB: OpenAI attempt {$attempt} failed: " . $response->get_error_message() );
+            
+            // Log retry attempts
+            RTBCB_Error_Handler::log_error(
+                "LLM API attempt {$attempt} failed: " . $response->get_error_message(),
+                RTBCB_Error_Handler::ERROR_LEVEL_WARNING,
+                [ 'attempt' => $attempt, 'max_retries' => $max_retries, 'model' => $model ],
+                'LLM_RETRY'
+            );
 
             if ( $attempt < $max_retries ) {
                 sleep( $attempt ); // Progressive backoff
@@ -1296,9 +1398,24 @@ Respond with the JSON structure only. No additional text.";
             'timeout' => 120, // Reduced from 300 to 2 minutes
         ];
 
+        // Start performance monitoring
+        $timer_key = 'llm_api_' . $model_name;
+        RTBCB_Performance_Monitor::start_timer( $timer_key );
+
         $response = wp_remote_post( $endpoint, $args );
 
+        // End performance monitoring
+        $duration = RTBCB_Performance_Monitor::end_timer( $timer_key );
+        RTBCB_Performance_Monitor::log_llm_performance( $model_name, $prompt, $duration, false );
+
         if ( is_wp_error( $response ) ) {
+            RTBCB_Error_Handler::handle_llm_error(
+                'API request failed: ' . $response->get_error_message(),
+                $model_name,
+                $prompt,
+                0,
+                $response
+            );
             return new WP_Error( 'api_error', $response->get_error_message() );
         }
 
@@ -1587,6 +1704,54 @@ Respond with the JSON structure only. No additional text.";
         ];
         
         return $trends[$industry] ?? 'Companies across industries are modernizing treasury operations to improve efficiency and risk management';
+    }
+
+    /**
+     * Clear all cached LLM responses.
+     *
+     * @return int Number of cached items cleared.
+     */
+    public function clear_llm_cache() {
+        global $wpdb;
+        
+        // Clear all transients with rtbcb_llm_ prefix
+        $result = $wpdb->query( 
+            $wpdb->prepare(
+                "DELETE FROM {$wpdb->options} 
+                 WHERE option_name LIKE %s 
+                 OR option_name LIKE %s",
+                '_transient_rtbcb_llm_%',
+                '_transient_timeout_rtbcb_llm_%'
+            )
+        );
+        
+        error_log( 'RTBCB: Cleared ' . $result . ' LLM cache entries' );
+        return intval( $result );
+    }
+
+    /**
+     * Get cache statistics.
+     *
+     * @return array Cache statistics.
+     */
+    public function get_cache_stats() {
+        global $wpdb;
+        
+        $cache_count = $wpdb->get_var( 
+            $wpdb->prepare(
+                "SELECT COUNT(*) FROM {$wpdb->options} 
+                 WHERE option_name LIKE %s 
+                 AND option_name NOT LIKE %s",
+                '_transient_rtbcb_llm_%',
+                '_transient_timeout_rtbcb_llm_%'
+            )
+        );
+        
+        return [
+            'cache_enabled' => $this->is_caching_enabled(),
+            'cached_responses' => intval( $cache_count ),
+            'cache_duration' => get_option( 'rtbcb_llm_cache_duration', 3600 ),
+        ];
     }
 
     private function build_financial_analysis( $roi_data, $user_inputs ) {
