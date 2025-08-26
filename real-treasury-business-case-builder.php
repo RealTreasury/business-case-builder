@@ -613,10 +613,14 @@ final class RTBCB_Business_Case_Builder {
             true
         );
         
-        wp_localize_script( 'rtbcb-admin', 'rtbcb_admin', array(
-            'ajax_url' => admin_url( 'admin-ajax.php' ),
-            'nonce' => wp_create_nonce( 'rtbcb_admin_action' )
-        ) );
+        wp_localize_script(
+            'rtbcb-admin',
+            'rtbcbAdmin',
+            array(
+                'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+                'nonce'   => wp_create_nonce( 'rtbcb_admin_action' ),
+            )
+        );
     }
     
     /**
