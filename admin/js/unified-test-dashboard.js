@@ -5,22 +5,18 @@
 (function($) {
     'use strict';
 
-    // Early validation with detailed debugging
+    // Early validation
     if (typeof rtbcbDashboard === 'undefined') {
-        console.error('CRITICAL: rtbcbDashboard is not defined - check PHP localization');
-        console.error('Available global objects:', Object.keys(window).filter(key => key.includes('rtbcb')));
+        console.error('rtbcbDashboard is not defined');
         return;
     }
 
     if (typeof jQuery === 'undefined') {
-        console.error('CRITICAL: jQuery is not available');
+        console.error('jQuery is not available');
         return;
     }
 
-    console.log('✅ Test dashboard script loaded successfully');
-    console.log('📊 rtbcbDashboard data:', rtbcbDashboard);
-    console.log('🔐 Available nonces:', rtbcbDashboard.nonces);
-    console.log('🌐 AJAX URL:', rtbcbDashboard.ajaxurl);
+    console.log('Test dashboard script loaded');
 
     // Utility functions
     const debounce = (func, delay) => {
@@ -31,7 +27,7 @@
         };
     };
 
-    // Circuit breaker for API failures with enhanced functionality
+    // Circuit breaker for API failures
     const circuitBreaker = {
         failures: 0,
         threshold: parseInt(rtbcbDashboard.circuitBreaker?.threshold || 5, 10),
@@ -43,7 +39,6 @@
             
             const now = Date.now();
             if (now - this.lastFailTime > this.resetTime) {
-                console.log('🔄 Circuit breaker auto-reset after timeout');
                 this.reset();
                 return true;
             }
@@ -53,41 +48,16 @@
         recordFailure() {
             this.failures++;
             this.lastFailTime = Date.now();
-            console.warn(`⚡ [Circuit Breaker] Failure ${this.failures}/${this.threshold}`);
-            
-            if (this.failures >= this.threshold) {
-                console.error('🚫 Circuit breaker opened - too many failures');
-                this.showCircuitBreakerNotice();
-            }
+            console.warn(`[Circuit Breaker] Failure ${this.failures}/${this.threshold}`);
         },
 
         recordSuccess() {
-            if (this.failures > 0) {
-                console.log('✅ Circuit breaker reset on success');
-            }
             this.failures = 0;
         },
 
         reset() {
             this.failures = 0;
-            console.log('🔄 [Circuit Breaker] Manual reset');
-        },
-        
-        // Show user-friendly notice when circuit breaker opens
-        showCircuitBreakerNotice() {
-            const resetTimeMinutes = Math.ceil(this.resetTime / 60000);
-            const notice = `
-                <div class="rtbcb-circuit-breaker-notice">
-                    <h4>🚫 Too Many Failures Detected</h4>
-                    <p>The system has detected ${this.failures} consecutive failures and has temporarily disabled requests to prevent further issues.</p>
-                    <p>The system will automatically reset in ${resetTimeMinutes} minute(s), or you can:</p>
-                    <button type="button" class="button" onclick="circuitBreaker.reset(); this.closest('.rtbcb-circuit-breaker-notice').remove();">
-                        Reset Now
-                    </button>
-                </div>
-            `;
-            
-            $('.wrap.rtbcb-unified-test-dashboard').prepend(notice);
+            console.log('[Circuit Breaker] Reset');
         }
     };
 
@@ -102,12 +72,9 @@
 
         // Initialize dashboard
         init() {
-            console.log('🚀 Dashboard initializing...');
+            console.log('Dashboard initializing...');
             
             try {
-                // Validate required data
-                this.validateEnvironment();
-                
                 this.bindEvents();
                 this.initializeTabs();
                 this.setupValidation();
@@ -116,44 +83,18 @@
                 // Initialize Chart.js if available
                 if (typeof Chart !== 'undefined') {
                     this.setupCharts();
-                    console.log('📈 Chart.js initialized');
-                } else {
-                    console.warn('⚠️ Chart.js not available');
                 }
                 
-                console.log('✅ Dashboard initialized successfully');
-                this.showNotification('Dashboard ready', 'success');
+                console.log('Dashboard initialized successfully');
             } catch (error) {
-                console.error('❌ Dashboard initialization failed:', error);
+                console.error('Dashboard initialization failed:', error);
                 this.showNotification('Dashboard initialization failed. Please refresh the page.', 'error');
             }
         },
 
-        // Validate dashboard environment
-        validateEnvironment() {
-            console.log('🔍 Validating dashboard environment...');
-            
-            const required = ['ajaxurl', 'nonces', 'strings'];
-            const missing = required.filter(key => !rtbcbDashboard[key]);
-            
-            if (missing.length > 0) {
-                throw new Error(`Missing required dashboard data: ${missing.join(', ')}`);
-            }
-            
-            // Check individual nonces
-            const requiredNonces = ['dashboard', 'llm', 'apiHealth', 'reportPreview', 'dataHealth', 'ragTesting', 'saveSettings', 'roiCalculator', 'debugApiKey'];
-            const missingNonces = requiredNonces.filter(nonce => !rtbcbDashboard.nonces[nonce]);
-            
-            if (missingNonces.length > 0) {
-                console.warn('⚠️ Missing nonces:', missingNonces);
-            }
-            
-            console.log('✅ Environment validation complete');
-        },
-
         // Bind all event handlers
         bindEvents() {
-            console.log('🔗 Binding dashboard events...');
+            console.log('Binding events...');
             
             // Remove any existing handlers to prevent duplicates
             $(document).off('.rtbcb-dashboard');
@@ -163,7 +104,6 @@
             
             // Tab navigation
             $(document).on('click.rtbcb-dashboard', '.rtbcb-test-tabs .nav-tab', function(e) {
-                console.log('🏷️ Tab clicked:', $(e.currentTarget).data('tab'));
                 e.preventDefault();
                 const tab = $(e.currentTarget).data('tab');
                 if (tab) {
@@ -173,81 +113,53 @@
 
             // Company Overview actions
             $(document).on('click.rtbcb-dashboard', '[data-action="run-company-overview"]', function(e) {
-                console.log('🏢 Company overview button clicked');
                 e.preventDefault();
                 self.generateCompanyOverview();
             });
 
             $(document).on('click.rtbcb-dashboard', '[data-action="clear-results"]', function(e) {
-                console.log('🧹 Clear results button clicked');
                 e.preventDefault();
                 self.clearResults();
             });
 
             // LLM Test actions
             $(document).on('click.rtbcb-dashboard', '[data-action="run-llm-test"]', function(e) {
-                console.log('🤖 LLM test button clicked');
                 e.preventDefault();
                 self.runLLMTest();
             });
 
             // RAG System actions
             $(document).on('click.rtbcb-dashboard', '[data-action="run-rag-test"]', function(e) {
-                console.log('🔍 RAG test button clicked');
                 e.preventDefault();
                 self.runRagTest();
             });
 
             $(document).on('click.rtbcb-dashboard', '[data-action="rebuild-rag-index"]', function(e) {
-                console.log('🔄 RAG rebuild button clicked');
                 e.preventDefault();
                 self.rebuildRagIndex();
             });
 
             // API Health actions
             $(document).on('click.rtbcb-dashboard', '[data-action="api-health-ping"]', function(e) {
-                console.log('🏥 API health button clicked');
                 e.preventDefault();
                 self.runAllApiTests();
             });
 
             // ROI Calculator actions
             $(document).on('click.rtbcb-dashboard', '[data-action="calculate-roi"]', function(e) {
-                console.log('💰 ROI calculator button clicked');
                 e.preventDefault();
                 self.calculateROI();
             });
 
             // Settings actions
             $(document).on('submit.rtbcb-dashboard', '#rtbcb-dashboard-settings-form', function(e) {
-                console.log('⚙️ Settings form submitted');
                 e.preventDefault();
                 self.saveSettings();
             });
 
             $(document).on('click.rtbcb-dashboard', '[data-action="toggle-api-key"]', function(e) {
-                console.log('👁️ API key toggle clicked');
                 e.preventDefault();
                 self.toggleApiKeyVisibility();
-            });
-
-            // Additional debugging for data health and report actions
-            $(document).on('click.rtbcb-dashboard', '[data-action="run-data-health"]', function(e) {
-                console.log('🏥 Data health button clicked');
-                e.preventDefault();
-                self.runDataHealthChecks();
-            });
-
-            $(document).on('click.rtbcb-dashboard', '[data-action="generate-preview-report"]', function(e) {
-                console.log('📄 Preview report button clicked');
-                e.preventDefault();
-                self.generatePreviewReport();
-            });
-
-            $(document).on('click.rtbcb-dashboard', '[data-action="debug-api-key"]', function(e) {
-                console.log('🔧 Debug API key button clicked');
-                e.preventDefault();
-                self.debugApiKey();
             });
 
             // Input validation
@@ -270,9 +182,7 @@
                 self.validateRagQuery();
             }, 300));
 
-            // Test that event binding worked
-            const eventCount = $._data(document, 'events');
-            console.log('✅ Events bound successfully. Total bound events:', eventCount ? Object.keys(eventCount).length : 0);
+            console.log('Events bound successfully');
         },
 
         // Initialize tab system
@@ -891,168 +801,6 @@
             }
         },
 
-        // Missing methods implementation
-        runDataHealthChecks() {
-            if (this.isGenerating) return;
-
-            if (!circuitBreaker.canExecute()) {
-                this.showNotification('Too many failures. Please wait before trying again.', 'warning');
-                return;
-            }
-
-            console.log('🏥 Running data health checks...');
-
-            this.isGenerating = true;
-            this.setButtonState('[data-action="run-data-health"]', 'loading');
-
-            const requestData = {
-                action: 'rtbcb_run_data_health_checks',
-                nonce: rtbcbDashboard.nonces?.dataHealth || ''
-            };
-
-            this.makeRequest(requestData)
-                .then(response => {
-                    circuitBreaker.recordSuccess();
-                    this.displayDataHealthResults(response);
-                    this.setButtonState('[data-action="run-data-health"]', 'success');
-                    this.showNotification('Data health checks completed', 'success');
-                })
-                .catch(error => {
-                    circuitBreaker.recordFailure();
-                    console.error('Data health check error:', error);
-                    this.showError(error.message || 'Data health checks failed');
-                    this.setButtonState('[data-action="run-data-health"]', 'error');
-                })
-                .finally(() => {
-                    this.isGenerating = false;
-                });
-        },
-
-        generatePreviewReport() {
-            if (this.isGenerating) return;
-
-            if (!circuitBreaker.canExecute()) {
-                this.showNotification('Too many failures. Please wait before trying again.', 'warning');
-                return;
-            }
-
-            console.log('📄 Generating preview report...');
-
-            this.isGenerating = true;
-            this.setButtonState('[data-action="generate-preview-report"]', 'loading');
-
-            const requestData = {
-                action: 'rtbcb_generate_preview_report',
-                nonce: rtbcbDashboard.nonces?.reportPreview || ''
-            };
-
-            this.makeRequest(requestData)
-                .then(response => {
-                    circuitBreaker.recordSuccess();
-                    this.displayPreviewReport(response);
-                    this.setButtonState('[data-action="generate-preview-report"]', 'success');
-                    this.showNotification('Preview report generated', 'success');
-                })
-                .catch(error => {
-                    circuitBreaker.recordFailure();
-                    console.error('Preview report error:', error);
-                    this.showError(error.message || 'Preview report generation failed');
-                    this.setButtonState('[data-action="generate-preview-report"]', 'error');
-                })
-                .finally(() => {
-                    this.isGenerating = false;
-                });
-        },
-
-        debugApiKey() {
-            if (this.isGenerating) return;
-
-            console.log('🔧 Debugging API key...');
-
-            this.isGenerating = true;
-            this.setButtonState('[data-action="debug-api-key"]', 'loading');
-
-            const requestData = {
-                action: 'rtbcb_debug_api_key',
-                nonce: rtbcbDashboard.nonces?.debugApiKey || ''
-            };
-
-            this.makeRequest(requestData)
-                .then(response => {
-                    this.displayApiKeyDebugInfo(response);
-                    this.setButtonState('[data-action="debug-api-key"]', 'success');
-                    this.showNotification('API key debug info retrieved', 'success');
-                })
-                .catch(error => {
-                    console.error('API key debug error:', error);
-                    this.showError(error.message || 'API key debug failed');
-                    this.setButtonState('[data-action="debug-api-key"]', 'error');
-                })
-                .finally(() => {
-                    this.isGenerating = false;
-                });
-        },
-
-        // Display methods for the new functionality
-        displayDataHealthResults(data) {
-            console.log('Displaying data health results:', data);
-            
-            const $tbody = $('#rtbcb-data-health-results');
-            $tbody.empty();
-
-            if (data.results && data.results.length > 0) {
-                data.results.forEach(result => {
-                    const statusClass = result.passed ? 'status-good' : 'status-error';
-                    const icon = result.passed ? 'dashicons-yes-alt' : 'dashicons-warning';
-                    
-                    $tbody.append(`
-                        <tr>
-                            <td>
-                                <span class="rtbcb-status-indicator ${statusClass}">
-                                    <span class="dashicons ${icon}"></span>
-                                </span>
-                            </td>
-                            <td>${this.escapeHtml(result.check)}</td>
-                            <td>${this.escapeHtml(result.message)}</td>
-                        </tr>
-                    `);
-                });
-            } else {
-                $tbody.append('<tr><td colspan="3">No health check results available</td></tr>');
-            }
-        },
-
-        displayPreviewReport(data) {
-            console.log('Displaying preview report:', data);
-            
-            const $frame = $('#rtbcb-report-preview-frame');
-            if (data.html) {
-                // Create a blob URL for the HTML content
-                const blob = new Blob([data.html], { type: 'text/html' });
-                const url = URL.createObjectURL(blob);
-                $frame.attr('src', url);
-            } else {
-                $frame.attr('src', 'about:blank');
-                this.showNotification('No report content available', 'warning');
-            }
-        },
-
-        displayApiKeyDebugInfo(data) {
-            console.log('Displaying API key debug info:', data);
-            
-            // Create a modal or alert with the debug info
-            const debugInfo = `
-                <h4>API Key Debug Information</h4>
-                <p><strong>Configured:</strong> ${data.configured ? 'Yes' : 'No'}</p>
-                <p><strong>Length:</strong> ${data.length || 0} characters</p>
-                <p><strong>Preview:</strong> ${data.preview || 'N/A'}</p>
-                <p><strong>Format Valid:</strong> ${data.valid_format ? 'Yes' : 'No'}</p>
-            `;
-            
-            // Show in a notice or modal
-            this.showNotification(debugInfo, 'info');
-        },
-
         // Utility methods
         clearResults() {
             $('#results-container, #error-container').hide();
@@ -1122,33 +870,6 @@
             }
         },
 
-        // Reset all buttons to normal state
-        resetAllButtonStates() {
-            console.log('🔄 Resetting all button states...');
-            
-            const buttons = [
-                '[data-action="run-company-overview"]',
-                '[data-action="run-llm-test"]', 
-                '[data-action="run-rag-test"]',
-                '[data-action="rebuild-rag-index"]',
-                '[data-action="api-health-ping"]',
-                '[data-action="calculate-roi"]',
-                '[data-action="run-data-health"]',
-                '[data-action="generate-preview-report"]',
-                '[data-action="debug-api-key"]'
-            ];
-            
-            buttons.forEach(selector => {
-                this.setButtonState(selector, 'default');
-            });
-            
-            // Reset generating state
-            this.isGenerating = false;
-            this.clearProgress();
-            
-            console.log('✅ All button states reset');
-        },
-
         // Progress management
         startProgress() {
             this.clearProgress();
@@ -1187,30 +908,10 @@
             }
         },
 
-        // AJAX request handling with enhanced debugging
+        // AJAX request handling
         makeRequest(data) {
-            console.log('🌐 Making AJAX request:', {
-                action: data.action,
-                nonce: data.nonce ? 'present' : 'missing',
-                url: rtbcbDashboard.ajaxurl
-            });
-            
-            // Validate required data
-            if (!rtbcbDashboard.ajaxurl) {
-                return Promise.reject(new Error('AJAX URL not configured'));
-            }
-            
-            if (!data.action) {
-                return Promise.reject(new Error('No action specified'));
-            }
-            
-            if (!data.nonce) {
-                console.warn('⚠️ No nonce provided for action:', data.action);
-            }
-            
             // Abort any existing request
             if (this.currentRequest) {
-                console.log('⏹️ Aborting previous request');
                 this.currentRequest.abort();
                 this.currentRequest = null;
             }
@@ -1221,52 +922,27 @@
                     type: 'POST',
                     data: data,
                     timeout: 120000,
-                    beforeSend: (xhr) => {
-                        console.log('📤 Sending request:', data.action);
-                    },
                     success: (response) => {
-                        console.log('📥 Response received:', {
-                            action: data.action,
-                            success: response.success,
-                            hasData: !!response.data
-                        });
-                        
                         this.currentRequest = null;
                         if (response.success) {
                             resolve(response.data);
                         } else {
-                            const errorMsg = response.data?.message || 'Request failed';
-                            console.error('❌ Request failed:', errorMsg, response.data);
-                            reject(new Error(errorMsg));
+                            reject(new Error(response.data?.message || 'Request failed'));
                         }
                     },
                     error: (xhr, status, error) => {
                         this.currentRequest = null;
                         
-                        console.error('💥 AJAX Error:', {
-                            action: data.action,
-                            status: status,
-                            error: error,
-                            statusCode: xhr.status,
-                            responseText: xhr.responseText
-                        });
-                        
                         // Don't reject if request was aborted
                         if (status === 'abort') {
-                            console.log('⏹️ Request aborted');
+                            console.log('Request aborted');
                             return;
                         }
                         
                         let message = 'Request failed';
                         
                         if (status === 'timeout') {
-                            message = 'Request timed out after 2 minutes';
-                        } else if (xhr.status === 403) {
-                            message = 'Security check failed - please refresh the page';
-                        } else if (xhr.status === 404) {
-                            message = 'Endpoint not found - check if plugin is properly activated';
-                        } else if (xhr.status === 500) {
-                            message = 'Server error - check the error logs';
+                            message = 'Request timed out';
                         } else if (xhr.responseJSON && xhr.responseJSON.data) {
                             message = xhr.responseJSON.data.message || message;
                         } else if (error) {
@@ -1386,17 +1062,6 @@
 
     // Expose for debugging
     window.RTBCBDashboard = Dashboard;
-    window.RTBCBCircuitBreaker = circuitBreaker;
-    
-    // Add global reset function for debugging
-    window.RTBCBReset = function() {
-        console.log('🚨 EMERGENCY RESET - Resetting all dashboard states');
-        circuitBreaker.reset();
-        Dashboard.resetAllButtonStates();
-        Dashboard.isGenerating = false;
-        $('.rtbcb-circuit-breaker-notice').remove();
-        console.log('✅ Emergency reset complete');
-    };
 
 })(jQuery);
 
