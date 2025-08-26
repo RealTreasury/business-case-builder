@@ -141,8 +141,9 @@
                         const $button = $(this);
 
                         // Prevent duplicate events (e.g., click after touch/pointer)
-                        if (e.type === 'click' && $button.data('rtbcb-interacted')) {
-                            $button.removeData('rtbcb-interacted');
+                            setTimeout(function() {
+                                $button.removeData('rtbcb-interacted');
+                            }, 100);
                             return;
                         }
 
