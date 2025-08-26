@@ -1,53 +1,65 @@
 # Real Treasury Business Case Builder
 
-## 1. Project Summary
-- **Plugin Name:** Real Treasury – Business Case Builder (Enhanced Pro)
-- **Purpose:** Multi-step wizard that gathers company profile and treasury operations data, performs ROI calculations, and invokes a Large Language Model (LLM) to produce a customized business case report for prospective customers of Real Treasury.
-- **Primary Audience:**
-  - **End Users:** Prospective customers evaluating treasury technology.
-  - **Administrators:** Real Treasury marketing and sales teams managing leads and analytics.
+## Project Overview
+- **Plugin Name:** Real Treasury – Business Case Builder  
+- **Purpose:** WordPress plugin that creates ROI-driven business cases for treasury technology investments
+- **Features:** Multi-step wizard, OpenAI-powered narrative generation, comprehensive PDF reports
+- **Audience:** Prospective customers evaluating treasury technology solutions
 
-## 2. Complete File Structure
+## Technology Stack
+- **Platform:** WordPress 6.0+ Plugin
+- **Languages:** PHP 7.4+, JavaScript (ES6), CSS
+- **Framework:** WordPress with OpenAI API integration
+- **Runtime:** LAMP/LEMP stack, MySQL/MariaDB
+- **Size:** ~85 files, ~15,000 lines of code
 
-### Directory Overview
+## Quick Start
+
+### Prerequisites
+```bash
+# Install PHP dependencies
+composer install
+
+# Verify environment
+php --version  # Must be 7.4+
+```
+
+### Validation
+```bash
+# PHP syntax check
+find . -name "*.php" -not -path "./vendor/*" -print0 | xargs -0 -n1 php -l
+
+# Run test suite
+bash tests/run-tests.sh
+```
+
+## Directory Structure
+
 ```
 real-treasury-business-case-builder/
 ├── .editorconfig
 ├── .eslintrc.json
-├── .htaccess
-├── .wp-env.json
-├── ADMIN_MENU_VERIFICATION_REPORT.md
+├── .gitignore
 ├── AGENTS.md
-├── API.md
-├── ARCHITECTURE.md
-├── CONTRIBUTING.md
-├── DEPLOYMENT.md
-├── DEVELOPER.md
 ├── README.md
-├── SECURITY.md
 ├── WORDPRESS_COM_COMPATIBILITY.md
-├── admin-debug.php
 ├── composer.json
 ├── composer.lock
-├── cypress.config.js
 ├── package.json
 ├── phpcs.xml.dist
 ├── phpunit.xml.dist
 ├── readme.txt
-├── real-treasury-business-case-builder.php
-├── admin/
+├── real-treasury-business-case-builder.php    # Main plugin file
+├── admin/                                     # WordPress admin interface
 │   ├── AGENTS.md
 │   ├── assets/
-│   │   ├── css/
-│   │   │   └── admin-modern.css
-│   │   └── js/
-│   │       └── admin-modern.js
-│   ├── classes/
-│   │   └── Admin.php
+│   │   ├── css/admin-modern.css
+│   │   └── js/admin-modern.js
+│   ├── classes/Admin.php
 │   ├── includes/
 │   │   ├── analytics-processor.php
 │   │   └── leads-exporter.php
-│   └── views/
+│   └── views/                              # Admin page templates
 │       ├── analytics/
 │       │   └── main.php
 │       ├── dashboard/
@@ -56,93 +68,129 @@ real-treasury-business-case-builder/
 │       │   └── main.php
 │       └── settings/
 │           └── main.php
-├── bin/
-│   └── install-wp-tests.sh
-├── inc/
+├── bin/install-wp-tests.sh                   # WordPress test setup
+├── inc/                                     # Core PHP classes
 │   ├── AGENTS.md
-│   ├── README.md
-│   ├── api/
-│   │   └── openai-client.php
-│   ├── class-rtbcb-calculator-old.php
-│   ├── class-rtbcb-calculator.php
+│   ├── api/openai-client.php               # OpenAI integration
+│   ├── class-rtbcb-calculator.php          # ROI calculation engine
 │   ├── class-rtbcb-category-recommender.php
-│   ├── class-rtbcb-db.php
+│   ├── class-rtbcb-db.php                  # Database operations
 │   ├── class-rtbcb-error-handler.php
-│   ├── class-rtbcb-leads.php
-│   ├── class-rtbcb-llm-old.php
-│   ├── class-rtbcb-llm.php
+│   ├── class-rtbcb-leads.php               # Lead management
+│   ├── class-rtbcb-llm.php                 # LLM integration
 │   ├── class-rtbcb-performance-monitor.php
-│   ├── class-rtbcb-rag.php
-│   ├── class-rtbcb-router-old.php
-│   ├── class-rtbcb-router.php
-│   ├── class-rtbcb-validator.php
-│   ├── config.php
-│   └── utils/
-│       └── helpers.php
-├── languages/
+│   ├── class-rtbcb-rag.php                 # Vector search
+│   ├── class-rtbcb-router.php              # Request routing
+│   ├── class-rtbcb-validator.php           # Input validation
+│   ├── config.php                          # Configuration
+│   └── utils/helpers.php                   # Utility functions
+├── languages/                               # Internationalization
 │   ├── README.md
 │   └── rtbcb.pot
-├── public/
+├── public/                                  # Frontend assets
 │   ├── AGENTS.md
-│   ├── css/
-│   │   └── rtbcb.css
+│   ├── css/rtbcb.css                       # Main styles
 │   └── js/
-│       ├── chart.min.js
-│       ├── chartjs-license.txt
-│       └── rtbcb-wizard.js
-├── scripts/
+│       ├── chart.min.js                    # Chart library
+│       └── rtbcb-wizard.js                 # Multi-step form
+├── scripts/                                 # Build tools
 │   ├── build-plugin-zip.js
 │   └── build-simple.js
-├── templates/
+├── templates/                               # PHP templates
 │   ├── AGENTS.md
-│   ├── business-case-form.php
+│   ├── business-case-form.php              # User-facing wizard
 │   ├── comprehensive-report-template.php
 │   └── report-template.php
-├── tests/
-│   ├── README.md
-│   ├── admin-menu-fix-verification.test.php
-│   ├── admin-menu-registration.test.php
-│   ├── admin-menu-verification.test.php
-│   ├── api/
-│   │   ├── openai-connection.test.php
-│   │   └── openai-error-handling.test.php
-│   ├── bootstrap/
-│   │   └── bootstrap.php
-│   ├── integration/
-│   │   └── admin-interface.test.php
-│   ├── php83-compatibility.test.php
-│   ├── run-tests.sh
-│   ├── unit/
-│   │   └── calculator-engine.test.php
-│   └── wordpress-com-compatibility.test.php
-└── vendor/
-    └── [composer dependencies]
+└── tests/                                   # Test suite
+    ├── README.md
+    ├── api/
+    ├── bootstrap/
+    ├── integration/
+    ├── unit/
+    ├── run-tests.sh                        # Master test runner
+    └── *.test.php                          # PHP unit tests
 ```
 
-### File Descriptions
+## Core Features
 
-#### Root Directory Files
-- **real-treasury-business-case-builder.php** – Bootstrap file that defines constants, registers hooks, and loads core classes.
-- **admin-debug.php** – Standalone diagnostic script for troubleshooting admin menu visibility issues on WordPress.com and other environments.
-- **composer.json** – PHP dependency configuration for Composer.
-- **composer.lock** – Locked versions of Composer dependencies.
-- **readme.txt** – WordPress.org metadata for plugin distribution.
-- **.htaccess** – Example Apache rules to prevent direct access.
-- **AGENTS.md** – Contributor guidelines and coding standards.
+### Multi-Step Business Case Wizard
+- Company profile data collection
+- Treasury operations assessment  
+- ROI calculations and projections
+- Lead capture and management
 
-#### Core Classes (`/inc/`)
-- **config.php** – Defines configuration constants and default settings.
-- **utils/helpers.php** – Utility functions shared across the plugin.
-- **api/openai-client.php** – OpenAI API client implementation.
-- **class-rtbcb-calculator.php** – ROI calculation engine for multiple scenarios.
-- **class-rtbcb-router.php** – Coordinates validation, calculations, RAG, and LLM calls.
-- **class-rtbcb-llm.php** – Interfaces with OpenAI models to generate narrative reports.
-- **class-rtbcb-rag.php** – Retrieval-Augmented Generation for contextual data lookup.
-- **class-rtbcb-leads.php** – Captures, stores, and manages lead records.
-- **class-rtbcb-db.php** – Handles database schema creation and upgrades.
-- **class-rtbcb-category-recommender.php** – Suggests product categories based on inputs.
-- **class-rtbcb-validator.php** – Sanitizes and validates user-submitted data.
-- **class-rtbcb-error-handler.php** – Centralized error handling and logging.
+### AI-Powered Narrative Generation
+- OpenAI GPT-4/GPT-4o integration
+- Context-aware business case writing
+- Industry-specific recommendations
+- Fallback for missing API keys
+
+### Admin Dashboard
+- Lead analytics and reporting
+- Export functionality
+- Performance monitoring
+- WordPress.com compatibility
+
+### Technical Architecture
+1. **Frontend:** Shortcode `[rt_business_case_builder]` renders wizard
+2. **AJAX Processing:** Secure nonce-validated endpoints
+3. **Orchestration:** Router coordinates validation, calculation, RAG, LLM
+4. **Output:** JSON response → HTML report → optional PDF
+
+## Database Schema
+- `wp_rtbcb_leads`: Lead data and ROI results
+- `wp_rtbcb_rag_index`: Vector embeddings for search
+
+## Development
+
+### Testing
+```bash
+# PHP syntax validation  
+find . -name "*.php" -not -path "./vendor/*" -print0 | xargs -0 -n1 php -l
+
+# Run full test suite
+bash tests/run-tests.sh
+
+# Specific test categories
+php tests/json-output-lint.php
+php tests/cosine-similarity-search.test.php
+php tests/scenario-selection.test.php
+node tests/handle-submit-error.test.js
+```
+
+### Code Standards
+- WordPress PHP Coding Standards
+- 4-space indentation (not tabs)
+- Function prefix: `rtbcb_`, Class prefix: `RTBCB_`
+- All input sanitized, all output escaped
+- Internationalization ready
+
+### Security Features
+- WordPress nonce verification
+- Capability checks for admin functions
+- Input sanitization and output escaping
+- WordPress.com compatibility
+
+## Installation
+
+1. Upload plugin files to `/wp-content/plugins/real-treasury-business-case-builder/`
+2. Activate plugin through WordPress admin
+3. Configure OpenAI API key (optional)
+4. Add shortcode `[rt_business_case_builder]` to any page
+
+## Requirements
+- **WordPress:** 6.0+
+- **PHP:** 7.4+
+- **Memory:** 256MB+ (for LLM operations)
+- **MySQL/MariaDB:** Any recent version
+- **OpenAI API Key:** Optional (graceful fallbacks)
+
+## License
+GPL v2 or later
+
+---
+
+*Last updated: August 2024*
 - **class-rtbcb-performance-monitor.php** – Performance monitoring and optimization.
 
 #### Admin Interface (`/admin/`)
