@@ -42,8 +42,6 @@ class RTBCB_Admin {
         if ( strpos( $hook, 'rtbcb' ) === false && strpos( $page, 'rtbcb' ) === false ) {
             return;
         }
-
-        wp_enqueue_script( 'chart-js', RTBCB_URL . 'public/js/chart.min.js', [], '3.9.1', true );
         wp_enqueue_style(
             'rtbcb-admin',
             RTBCB_URL . 'admin/css/rtbcb-admin.css',
@@ -51,11 +49,19 @@ class RTBCB_Admin {
             RTBCB_VERSION
         );
         if ( false !== strpos( $hook, RTBCB_UNIFIED_TESTS_SLUG ) || RTBCB_UNIFIED_TESTS_SLUG === $page ) {
+            // Step 1: Ensure jQuery is loaded first.
+            wp_enqueue_script( 'jquery' );
+
+            // Step 2: Load Chart.js with jQuery dependency.
+            wp_enqueue_script( 'chart-js', RTBCB_URL . 'public/js/chart.min.js', [ 'jquery' ], '3.9.1', true );
+
+            // Step 3: Clean up any existing scripts.
             wp_dequeue_script( 'rtbcb-dashboard' );
             wp_deregister_script( 'rtbcb-dashboard' );
             wp_dequeue_script( 'rtbcb-test-dashboard' );
             wp_deregister_script( 'rtbcb-test-dashboard' );
 
+            // Step 4: Load CSS.
             wp_enqueue_style(
                 'rtbcb-unified-dashboard',
                 RTBCB_URL . 'admin/css/unified-test-dashboard.css',
@@ -63,10 +69,7 @@ class RTBCB_Admin {
                 RTBCB_VERSION
             );
 
-            // Remove any legacy dashboard scripts to prevent conflicts.
-            wp_dequeue_script( 'rtbcb-dashboard' );
-            wp_deregister_script( 'rtbcb-dashboard' );
-
+            // Step 5: Register your dashboard script with both dependencies.
             wp_register_script(
                 'rtbcb-unified-dashboard',
                 RTBCB_URL . 'admin/js/unified-test-dashboard.js',
@@ -75,6 +78,7 @@ class RTBCB_Admin {
                 true
             );
 
+            // Step 6: Add your localization data.
             wp_localize_script(
                 'rtbcb-unified-dashboard',
                 'rtbcbDashboard',
@@ -150,6 +154,7 @@ class RTBCB_Admin {
                 ]
             );
 
+            // Step 7: Finally enqueue your script.
             wp_enqueue_script( 'rtbcb-unified-dashboard' );
         }
     }
