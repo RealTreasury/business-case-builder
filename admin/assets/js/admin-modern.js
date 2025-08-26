@@ -91,6 +91,57 @@
         },
 
         /**
+         * Initialize analytics charts specifically
+         */
+        initAnalyticsCharts() {
+            // Load charts for analytics page
+            const chartElements = document.querySelectorAll('[data-chart-type]');
+            
+            chartElements.forEach(canvas => {
+                const chartType = canvas.dataset.chartType;
+                const dateRange = $('.rtbcb-date-range-selector').val() || '30';
+                
+                // Show loading state
+                const $container = $(canvas).closest('.rtbcb-chart-container');
+                $container.append('<div class="rtbcb-chart-loading"><div class="rtbcb-chart-spinner"></div><span>Loading chart...</span></div>');
+                
+                // Load chart data
+                this.loadChartData(canvas.id, chartType, dateRange);
+            });
+        },
+
+        /**
+         * Load chart data via AJAX
+         */
+        loadChartData(chartId, chartType, dateRange) {
+            $.ajax({
+                url: rtbcbAdmin.ajaxUrl,
+                type: 'POST',
+                data: {
+                    action: 'rtbcb_get_analytics_data',
+                    chart_type: chartType,
+                    date_range: dateRange,
+                    nonce: rtbcbAdmin.nonce
+                },
+                success: (response) => {
+                    const $container = $(`#${chartId}`).closest('.rtbcb-chart-container');
+                    $container.find('.rtbcb-chart-loading').remove();
+                    
+                    if (response.success && response.data) {
+                        this.createChart(document.getElementById(chartId), response.data.type, response.data);
+                    } else {
+                        $container.append('<div class="rtbcb-chart-empty"><span class="dashicons dashicons-chart-line"></span><p>No data available</p></div>');
+                    }
+                },
+                error: () => {
+                    const $container = $(`#${chartId}`).closest('.rtbcb-chart-container');
+                    $container.find('.rtbcb-chart-loading').remove();
+                    $container.append('<div class="rtbcb-chart-empty"><span class="dashicons dashicons-warning"></span><p>Failed to load chart</p></div>');
+                }
+            });
+        },
+
+        /**
          * Initialize bulk actions
          */
         initBulkActions() {
@@ -390,15 +441,25 @@
         createChart(element, type, data) {
             const ctx = element.getContext('2d');
             
+            // Destroy existing chart if it exists
+            const existingChart = Chart.getChart(element);
+            if (existingChart) {
+                existingChart.destroy();
+            }
+            
             const config = {
-                type: type,
-                data: data,
+                type: data.type || type,
+                data: data.data || data,
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
                             position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true,
+                            }
                         },
                         tooltip: {
                             backgroundColor: 'rgba(0, 0, 0, 0.8)',
@@ -407,22 +468,36 @@
                             borderColor: 'rgba(255, 255, 255, 0.1)',
                             borderWidth: 1,
                             cornerRadius: 8,
+                            displayColors: true,
                         }
                     },
-                    scales: type !== 'pie' && type !== 'doughnut' ? {
-                        x: {
-                            grid: {
-                                color: 'rgba(0, 0, 0, 0.1)',
-                            }
-                        },
-                        y: {
-                            grid: {
-                                color: 'rgba(0, 0, 0, 0.1)',
-                            }
-                        }
-                    } : {}
+                    ...(data.options || {})
                 }
             };
+            
+            // Add scales for line and bar charts
+            if (['line', 'bar'].includes(config.type)) {
+                config.options.scales = {
+                    x: {
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)',
+                        },
+                        ticks: {
+                            color: '#64748b'
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)',
+                        },
+                        ticks: {
+                            color: '#64748b'
+                        }
+                    },
+                    ...config.options.scales
+                };
+            }
             
             return new Chart(ctx, config);
         },
