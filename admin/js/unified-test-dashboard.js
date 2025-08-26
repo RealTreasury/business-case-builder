@@ -124,22 +124,25 @@
             
             // Function to bind both click and touch events for better compatibility
             function bindAction(selector, callback, options = {}) {
+                // Shared function to check if button interaction should be blocked
+                function isButtonInteractionBlocked($button) {
+                    return $button.prop('disabled') || $button.hasClass('rtbcb-loading') || self.isGenerating;
+                }
+
                 // Standard click event for desktop
                 $(document).on('click.rtbcb-dashboard', selector, function(e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    
-                    // Check if button is disabled or in loading state
+
                     const $button = $(this);
-                    if ($button.prop('disabled') || $button.hasClass('rtbcb-loading') || self.isGenerating) {
+                    if (isButtonInteractionBlocked($button)) {
                         console.log('Button interaction blocked - disabled or loading state');
                         return false;
                     }
-                    
+
                     console.log('Button clicked:', selector, this);
                     callback.call(this, e);
                 });
-                
                 // Touch events for mobile compatibility
                 $(document).on('touchstart.rtbcb-dashboard', selector, function(e) {
                     const $button = $(this);
