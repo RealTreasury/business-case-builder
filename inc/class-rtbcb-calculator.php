@@ -174,7 +174,7 @@ final class RTBCB_Calculator {
             self::$error_handler = new RTBCB_Error_Handler();
         }
         
-        if ( ! self::$performance_monitor ) {
+        if ( ! self::$performance_monitor && class_exists( 'RTBCB_Performance_Monitor' ) ) {
             self::$performance_monitor = new RTBCB_Performance_Monitor();
         }
     }
