@@ -45,7 +45,7 @@ function rtbcb_is_valid_openai_api_key( $api_key ) {
         return false;
     }
 
-    if ( ! str_starts_with( $api_key, 'sk-' ) ) {
+    if ( 0 !== strpos( $api_key, 'sk-' ) ) {
         return false;
     }
 
