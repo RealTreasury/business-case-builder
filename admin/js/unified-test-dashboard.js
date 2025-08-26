@@ -15,7 +15,15 @@
 
     // Early exit if jQuery is not available
     if (typeof $ === 'undefined' || typeof jQuery === 'undefined') {
-        console.error('RTBCB Dashboard: jQuery is not available');
+        console.error('RTBCB Dashboard: jQuery is not available - buttons will not work properly');
+        
+        // Add a fallback error message to the page
+        if (document.body) {
+            var errorDiv = document.createElement('div');
+            errorDiv.style.cssText = 'position:fixed;top:10px;right:10px;background:#f8d7da;color:#721c24;border:2px solid #dc3545;padding:10px;z-index:9999;font-family:sans-serif;font-size:12px;border-radius:4px;';
+            errorDiv.innerHTML = '⚠️ jQuery Error: Dashboard buttons may not work.<br>Please contact administrator.';
+            document.body.appendChild(errorDiv);
+        }
         return;
     }
 
@@ -23,11 +31,21 @@
     console.log('RTBCB Dashboard: Script loading with jQuery', $.fn.jquery);
 
     // Wait for rtbcbDashboard to be available
+    var configWaitAttempts = 0;
+    var MAX_CONFIG_WAIT_ATTEMPTS = 50; // 5 seconds max
+    
     function waitForDashboardConfig() {
+        configWaitAttempts++;
+        
         if (typeof rtbcbDashboard === 'undefined') {
-            console.log('RTBCB Dashboard: Waiting for rtbcbDashboard config...');
-            setTimeout(waitForDashboardConfig, 100);
-            return;
+            if (configWaitAttempts < MAX_CONFIG_WAIT_ATTEMPTS) {
+                console.log('RTBCB Dashboard: Waiting for rtbcbDashboard config... (attempt ' + configWaitAttempts + '/' + MAX_CONFIG_WAIT_ATTEMPTS + ')');
+                setTimeout(waitForDashboardConfig, 100);
+                return;
+            } else {
+                console.error('RTBCB Dashboard: Config not available after ' + (MAX_CONFIG_WAIT_ATTEMPTS * 100) + 'ms, dashboard may not function properly');
+                return;
+            }
         }
         
         console.log('RTBCB Dashboard: Config available, initializing...');
