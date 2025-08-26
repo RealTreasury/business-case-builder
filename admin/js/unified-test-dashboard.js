@@ -160,7 +160,7 @@
                         const now = Date.now();
                         const lastInteraction = $button.data(interactionKey + '-time') || 0;
 
-                        if (now - lastInteraction < 100) {
+                        if (now - lastInteraction < INTERACTION_DEBOUNCE_MS) {
                             return; // Prevent rapid-fire events
                         }
 
