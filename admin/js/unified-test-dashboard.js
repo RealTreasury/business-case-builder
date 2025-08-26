@@ -142,6 +142,7 @@
 
                         // Prevent duplicate events (e.g., click after touch/pointer)
                         if ($button.data('rtbcb-interacted')) {
+                        if ($button.data('rtbcb-interacted')) {
                             setTimeout(function() {
                                 $button.removeData('rtbcb-interacted');
                             }, 100);
