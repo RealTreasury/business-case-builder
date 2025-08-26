@@ -1,0 +1,18 @@
+# Prevent direct access to PHP files
+<FilesMatch "\.php$">
+    Order Deny,Allow
+    Deny from all
+    Allow from 127.0.0.1
+</FilesMatch>
+
+# Allow main plugin file
+<Files "real-treasury-business-case-builder.php">
+    Order Allow,Deny
+    Allow from all
+</Files>
+
+# Protect sensitive directories
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^(inc|admin|tests|vendor)/.*$ - [F,L]
+</IfModule>
