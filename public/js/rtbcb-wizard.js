@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', function() {
 class BusinessCaseBuilder {
     constructor() {
         // Check if required AJAX data is available
-        if (typeof rtbcb_ajax === 'undefined') {
+        if (typeof window.rtbcb_ajax === 'undefined') {
             console.error('RTBCB: AJAX configuration not loaded. Plugin scripts may not be properly enqueued.');
             return;
         }
@@ -396,7 +396,7 @@ class BusinessCaseBuilder {
 
         try {
             // Use localized nonce instead of form field for better reliability
-            const nonce = rtbcb_ajax.nonce;
+            const nonce = window.rtbcb_ajax.nonce;
             if (!nonce) {
                 throw new Error('Security nonce not available. Please refresh the page.');
             }
@@ -417,7 +417,7 @@ class BusinessCaseBuilder {
 
             console.log('RTBCB: Submitting form data:', Object.fromEntries(formData));
 
-            const response = await fetch(rtbcb_ajax.ajax_url, {
+            const response = await fetch(window.rtbcb_ajax.ajax_url, {
                 method: 'POST',
                 body: formData,
                 credentials: 'same-origin'
