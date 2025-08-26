@@ -1211,7 +1211,7 @@
                         let message = this.getErrorMessage(xhr, status, error);
                         
                         // Add debugging information in development
-                        if (DEBUG) {
+                        if (typeof DEBUG !== 'undefined' && DEBUG) {
                             if (console.groupCollapsed) {
                                 console.groupCollapsed('API Error Details');
                                 console.log('Status:', status);
