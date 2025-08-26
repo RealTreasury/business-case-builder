@@ -170,7 +170,7 @@ final class RTBCB_Calculator {
      * Initialize static dependencies
      */
     public static function initialize() {
-        if ( ! self::$error_handler ) {
+        if ( ! self::$error_handler && class_exists( 'RTBCB_Error_Handler' ) ) {
             self::$error_handler = new RTBCB_Error_Handler();
         }
         
