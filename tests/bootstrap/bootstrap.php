@@ -89,9 +89,25 @@ if ( ! function_exists( 'delete_option' ) ) {
     }
 }
 
+// Global hooks system for testing
+global $wp_filter;
+if ( ! isset( $wp_filter ) ) {
+    $wp_filter = array();
+}
+
 if ( ! function_exists( 'add_action' ) ) {
     function add_action( $tag, $function_to_add, $priority = 10, $accepted_args = 1 ) {
-        // Mock implementation for testing
+        global $wp_filter;
+        if ( ! isset( $wp_filter[ $tag ] ) ) {
+            $wp_filter[ $tag ] = array();
+        }
+        if ( ! isset( $wp_filter[ $tag ][ $priority ] ) ) {
+            $wp_filter[ $tag ][ $priority ] = array();
+        }
+        $wp_filter[ $tag ][ $priority ][] = array(
+            'function' => $function_to_add,
+            'accepted_args' => $accepted_args
+        );
         return true;
     }
 }
@@ -169,6 +185,24 @@ if ( ! function_exists( 'register_deactivation_hook' ) ) {
 
 if ( ! function_exists( 'do_action' ) ) {
     function do_action( $tag ) {
+        global $wp_filter;
+        if ( ! isset( $wp_filter[ $tag ] ) ) {
+            return true;
+        }
+        
+        $args = func_get_args();
+        array_shift( $args ); // Remove the tag
+        
+        // Sort by priority
+        ksort( $wp_filter[ $tag ] );
+        
+        foreach ( $wp_filter[ $tag ] as $priority => $callbacks ) {
+            foreach ( $callbacks as $callback ) {
+                if ( is_callable( $callback['function'] ) ) {
+                    call_user_func_array( $callback['function'], $args );
+                }
+            }
+        }
         return true;
     }
 }
