@@ -121,6 +121,21 @@ if ( ! function_exists( 'is_wp_error' ) ) {
     }
 }
 
+if ( ! function_exists( 'current_time' ) ) {
+    function current_time( $type, $gmt = 0 ) {
+        if ( $type === 'c' ) {
+            return gmdate( 'c' );
+        }
+        return gmdate( $type );
+    }
+}
+
+if ( ! function_exists( 'absint' ) ) {
+    function absint( $maybeint ) {
+        return abs( intval( $maybeint ) );
+    }
+}
+
 // WordPress plugin functions
 if ( ! function_exists( 'plugin_dir_url' ) ) {
     function plugin_dir_url( $file ) {

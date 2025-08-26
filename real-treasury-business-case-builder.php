@@ -280,28 +280,12 @@ final class RTBCB_Business_Case_Builder {
     }
     
     /**
-     * Initialize services using dependency injection
+     * Initialize services using dependency injection with proper order
      */
     private function init_services() {
-        // Core services
-        $this->services['db'] = new RTBCB_DB();
-        $this->services['validator'] = new RTBCB_Validator();
-        $this->services['calculator'] = new RTBCB_Calculator();
-        $this->services['leads'] = new RTBCB_Leads();
+        // Initialize core services in dependency order
         
-        // Optional services (only if classes exist)
-        if ( class_exists( 'RTBCB_LLM' ) ) {
-            $this->services['llm'] = new RTBCB_LLM();
-        }
-        
-        if ( class_exists( 'RTBCB_RAG' ) ) {
-            $this->services['rag'] = new RTBCB_RAG();
-        }
-        
-        if ( class_exists( 'RTBCB_Router' ) ) {
-            $this->services['router'] = new RTBCB_Router();
-        }
-        
+        // 1. Foundation services (no dependencies)
         if ( class_exists( 'RTBCB_Error_Handler' ) ) {
             $this->services['error_handler'] = new RTBCB_Error_Handler();
         }
@@ -310,9 +294,57 @@ final class RTBCB_Business_Case_Builder {
             $this->services['performance_monitor'] = new RTBCB_Performance_Monitor();
         }
         
-        // Admin service
+        // 2. Core data services
+        if ( class_exists( 'RTBCB_DB' ) ) {
+            $this->services['db'] = new RTBCB_DB();
+        }
+        
+        if ( class_exists( 'RTBCB_Validator' ) ) {
+            $this->services['validator'] = new RTBCB_Validator();
+        }
+        
+        // 3. Initialize Calculator static dependencies
+        if ( class_exists( 'RTBCB_Calculator' ) ) {
+            RTBCB_Calculator::initialize();
+            $this->services['calculator'] = 'RTBCB_Calculator'; // Static class reference
+        }
+        
+        if ( class_exists( 'RTBCB_Leads' ) ) {
+            $this->services['leads'] = new RTBCB_Leads();
+        }
+        
+        // 4. API and processing services (may depend on foundation services)
+        if ( class_exists( 'RTBCB_RAG' ) ) {
+            $this->services['rag'] = new RTBCB_RAG();
+        }
+        
+        if ( class_exists( 'RTBCB_LLM' ) ) {
+            $this->services['llm'] = new RTBCB_LLM(
+                null, // API client - will use default
+                $this->services['error_handler'] ?? null,
+                $this->services['performance_monitor'] ?? null
+            );
+        }
+        
+        // 5. Router service (depends on all other services)
+        if ( class_exists( 'RTBCB_Router' ) ) {
+            $this->services['router'] = new RTBCB_Router(
+                $this->services['error_handler'] ?? null,
+                $this->services['performance_monitor'] ?? null
+            );
+        }
+        
+        // 6. Admin service (loads last)
         if ( is_admin() && class_exists( 'RTBCB_Admin' ) ) {
             $this->services['admin'] = new RTBCB_Admin();
+        }
+        
+        // Log service initialization
+        if ( isset( $this->services['performance_monitor'] ) ) {
+            $this->services['performance_monitor']->log_event( 'plugin_services_initialized', array(
+                'services_count' => count( $this->services ),
+                'services' => array_keys( $this->services )
+            ));
         }
     }
     

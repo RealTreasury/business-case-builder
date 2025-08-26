@@ -9,20 +9,29 @@
 
 require_once __DIR__ . '/../bootstrap/bootstrap.php';
 
+// Load required dependencies for new calculator
+require_once RTBCB_PLUGIN_DIR . 'inc/class-rtbcb-error-handler.php';
+require_once RTBCB_PLUGIN_DIR . 'inc/class-rtbcb-performance-monitor.php';
+require_once RTBCB_PLUGIN_DIR . 'inc/class-rtbcb-calculator.php';
+
 class RTBCB_Calculator_Test {
     
     /**
-     * Test basic ROI calculation
+     * Test basic ROI calculation with new calculator
      */
     public function test_basic_roi_calculation() {
+        // Initialize calculator static dependencies
+        RTBCB_Calculator::initialize();
+        
+        // Use new field structure that matches rebuilt calculator
         $inputs = array(
-            'treasury_staff_count' => 5,
-            'treasury_staff_salary' => 80000,
-            'time_savings_percentage' => 20,
-            'error_reduction_percentage' => 15,
-            'compliance_cost_savings' => 50000,
-            'investment_cost' => 100000,
-            'industry' => 'financial_services'
+            'company_name' => 'Test Company',
+            'industry' => 'banking',
+            'company_size' => 'medium',
+            'hours_reconciliation' => 10,
+            'hours_cash_positioning' => 5,
+            'num_banks' => 3,
+            'ftes' => 2
         );
         
         $result = RTBCB_Calculator::calculate_roi( $inputs );
@@ -47,49 +56,81 @@ class RTBCB_Calculator_Test {
             'Result should include optimistic scenario'
         );
         
-        // Check that each scenario has the expected structure
+        // Check that each scenario has the new expected structure
         foreach ( array( 'conservative', 'base', 'optimistic' ) as $scenario ) {
             rtbcb_assert(
-                isset( $result[ $scenario ]['total_annual_benefit'] ),
-                "Scenario '$scenario' should include total annual benefit"
+                isset( $result[ $scenario ]['annual_benefits']['total'] ),
+                "Scenario '$scenario' should include total annual benefits"
             );
             
             rtbcb_assert(
-                is_numeric( $result[ $scenario ]['total_annual_benefit'] ),
+                is_numeric( $result[ $scenario ]['annual_benefits']['total'] ),
                 "Total annual benefit should be numeric in '$scenario' scenario"
             );
             
             rtbcb_assert(
-                isset( $result[ $scenario ]['roi_percentage'] ),
+                isset( $result[ $scenario ]['financial_metrics']['roi_percentage'] ),
                 "Scenario '$scenario' should include ROI percentage"
+            );
+            
+            rtbcb_assert(
+                isset( $result[ $scenario ]['financial_metrics']['npv'] ),
+                "Scenario '$scenario' should include NPV"
             );
         }
     }
     
     /**
-     * Test input validation
+     * Test input validation with new requirements
      */
     public function test_input_validation() {
-        // Test with empty inputs
+        // Initialize calculator
+        RTBCB_Calculator::initialize();
+        
+        // Test with missing required fields - should return WP_Error
         $result = RTBCB_Calculator::calculate_roi( array() );
         
         rtbcb_assert(
-            is_array( $result ),
-            'Calculator should handle empty inputs gracefully'
+            is_wp_error( $result ),
+            'Calculator should return error for missing required fields'
         );
         
-        // Test with minimal valid inputs
+        // Test with minimal valid inputs - should work
         $minimal_inputs = array(
-            'treasury_staff_count' => 1,
-            'treasury_staff_salary' => 50000,
-            'investment_cost' => 10000
+            'company_name' => 'Test Company',
+            'industry' => 'default', 
+            'company_size' => 'medium'
         );
         
         $result = RTBCB_Calculator::calculate_roi( $minimal_inputs );
         
         rtbcb_assert(
             is_array( $result ),
-            'Calculator should handle minimal inputs'
+            'Calculator should handle minimal valid inputs'
+        );
+        
+        rtbcb_assert(
+            isset( $result['base'] ),
+            'Calculator should return base scenario for minimal inputs'
+        );
+        
+        // Test with minimal valid inputs - should work
+        $minimal_inputs = array(
+            'company_name' => 'Test Company',
+            'industry' => 'default', 
+            'company_size' => 'medium'
+        );
+        
+        $result = RTBCB_Calculator::calculate_roi( $minimal_inputs );
+        
+        rtbcb_assert(
+            is_array( $result ),
+            'Calculator should handle minimal valid inputs'
+        );
+        
+        rtbcb_assert(
+            isset( $result['base'] ),
+            'Calculator should return base scenario for minimal inputs'
         );
     }
     
