@@ -1103,7 +1103,7 @@
         // Force reset all buttons (emergency cleanup)
         resetAllButtonStates() {
             console.log('Resetting all button states...');
-            $('[data-action]').each((index, element) => {
+            $('button[data-action]').each((index, element) => {
                 const $button = $(element);
                 const defaultText = $button.data('default-text') || $button.text().trim();
                 this.resetButtonState($button, defaultText);
