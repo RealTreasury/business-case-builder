@@ -537,7 +537,7 @@ final class RTBCB_Business_Case_Builder {
      */
     public function plugins_loaded() {
         // Load admin class file early if in admin context
-        if ( is_admin() ) {
+        if ( is_admin() || defined( 'RTBCB_TESTING_ADMIN' ) ) {
             $admin_file = RTBCB_PLUGIN_DIR . 'admin/classes/Admin.php';
             if ( file_exists( $admin_file ) ) {
                 require_once $admin_file;

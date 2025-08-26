@@ -159,17 +159,31 @@ class RTBCB_Admin_Integration_Test {
             'User with manage_options should be able to manage settings'
         );
         
-        // Test without manage_options capability
+        // Test with edit_posts capability (WordPress.com compatible)
         $test_user_capabilities = array( 'edit_posts' );
         
         rtbcb_assert(
-            ! rtbcb_user_can_manage_settings(),
-            'User without manage_options should not be able to manage settings'
+            rtbcb_user_can_manage_settings(),
+            'User with edit_posts should be able to manage settings (WordPress.com compatibility)'
         );
         
         rtbcb_assert(
             rtbcb_user_can_view_reports(),
             'User with edit_posts should be able to view reports'
+        );
+        
+        // Test with minimal capability
+        $test_user_capabilities = array( 'read' );
+        
+        rtbcb_assert(
+            rtbcb_user_can_manage_settings(),
+            'User with read capability should be able to manage settings (WordPress.com compatibility)'
+        );
+        
+        // Test admin capability function
+        rtbcb_assert(
+            rtbcb_user_can_admin(),
+            'User should have admin capability'
         );
     }
     
