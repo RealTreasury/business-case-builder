@@ -1383,6 +1383,7 @@
     })(jQuery);
 }
 
-check();
+// Start initialization: wait for rtbcbDashboard to be available, then initialize dashboard logic
+waitForDashboardAndInit();
 })();
 
