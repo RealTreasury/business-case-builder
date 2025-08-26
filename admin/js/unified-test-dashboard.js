@@ -145,7 +145,7 @@
 
                 // Handle various input types - FIXED: Added click events and improved logic
                 $(document).on(
-                    'click.rtbcb-dashboard pointerup.rtbcb-dashboard touchend.rtbcb-dashboard keydown.rtbcb-dashboard',
+                    'pointerup.rtbcb-dashboard keydown.rtbcb-dashboard',
                     selector,
                     function(e) {
                         // Handle keyboard events
