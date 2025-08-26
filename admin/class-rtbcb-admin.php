@@ -141,6 +141,7 @@ class RTBCB_Admin {
                         'debugMode'                  => defined( 'WP_DEBUG' ) && WP_DEBUG,
                         'lastSuccessfulOpenAIPingAt' => get_option( 'rtbcb_openai_last_ok', 0 ),
                     ],
+                    'debug'   => defined( 'WP_DEBUG' ) && WP_DEBUG, // Enable debug panel in JS
                     'apiHealth' => [
                         'lastResults' => get_option( 'rtbcb_last_api_test', [] ),
                     ],
