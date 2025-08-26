@@ -72,7 +72,9 @@ class RTBCB_Admin_Menu_Test {
     
     private function assertEquals($expected, $actual, $message) {
         if ($expected !== $actual) {
-            throw new Exception($message . " Expected: $expected, Actual: $actual");
+            $expected_str = is_array($expected) ? print_r($expected, true) : $expected;
+            $actual_str = is_array($actual) ? print_r($actual, true) : $actual;
+            throw new Exception($message . " Expected: $expected_str, Actual: $actual_str");
         }
     }
     
