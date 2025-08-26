@@ -1,3 +1,105 @@
+// EMERGENCY FIX - Add this to the very top of unified-test-dashboard.js
+// This will work even if jQuery isn't loaded properly
+
+(function() {
+    'use strict';
+    
+    // Wait for page to load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initEmergencyHandlers);
+    } else {
+        initEmergencyHandlers();
+    }
+    
+    function initEmergencyHandlers() {
+        console.log('Emergency handlers starting...');
+        
+        // Add visual indicator that this script is working
+        document.body.style.borderTop = '5px solid red';
+        
+        // Show/Hide API Key button
+        document.addEventListener('click', function(e) {
+            if (e.target.getAttribute('data-action') === 'toggle-api-key') {
+                e.preventDefault();
+                
+                const input = document.getElementById('rtbcb_openai_api_key');
+                const button = e.target;
+                
+                if (input && button) {
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        button.textContent = 'Hide';
+                        button.style.background = '#cfc';
+                    } else {
+                        input.type = 'password';
+                        button.textContent = 'Show';
+                        button.style.background = '';
+                    }
+                }
+            }
+            
+            // Tab navigation
+            if (e.target.classList.contains('nav-tab')) {
+                e.preventDefault();
+                
+                // Remove active class from all tabs
+                const tabs = document.querySelectorAll('.nav-tab');
+                tabs.forEach(tab => tab.classList.remove('nav-tab-active'));
+                
+                // Add active class to clicked tab
+                e.target.classList.add('nav-tab-active');
+                
+                // Hide all sections
+                const sections = document.querySelectorAll('.rtbcb-test-section');
+                sections.forEach(section => section.style.display = 'none');
+                
+                // Show target section
+                const tabId = e.target.getAttribute('data-tab');
+                const targetSection = document.getElementById(tabId);
+                if (targetSection) {
+                    targetSection.style.display = 'block';
+                }
+                
+                // Visual feedback
+                e.target.style.background = '#e1f5fe';
+            }
+            
+            // Generic button click feedback
+            if (e.target.hasAttribute('data-action')) {
+                // Visual feedback
+                e.target.style.background = '#ffeb3b';
+                setTimeout(() => {
+                    e.target.style.background = '';
+                }, 200);
+                
+                console.log('Button clicked:', e.target.getAttribute('data-action'));
+            }
+        });
+        
+        console.log('Emergency handlers attached');
+        
+        // Test if jQuery is available and report status
+        setTimeout(function() {
+            const statusDiv = document.createElement('div');
+            statusDiv.style.cssText = 'position:fixed;top:10px;right:10px;background:white;border:2px solid black;padding:10px;z-index:9999;font-family:monospace;font-size:12px;';
+            
+            let status = 'Emergency Mode: ON<br>';
+            status += 'jQuery: ' + (typeof jQuery !== 'undefined' ? 'LOADED' : 'MISSING') + '<br>';
+            status += 'Buttons: ' + document.querySelectorAll('[data-action]').length;
+            
+            statusDiv.innerHTML = status;
+            document.body.appendChild(statusDiv);
+        }, 1000);
+    }
+})();
+
+// If jQuery loads later, we can still use it
+if (typeof jQuery !== 'undefined') {
+    jQuery(document).ready(function($) {
+        console.log('jQuery is available, switching to jQuery mode');
+        document.body.style.borderTop = '5px solid green';
+    });
+}
 /**
  * Fixed Unified Test Dashboard JavaScript
  * Handles all dashboard functionality with improved error handling and state management
