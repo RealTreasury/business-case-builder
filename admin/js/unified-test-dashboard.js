@@ -121,75 +121,29 @@
         // Enhanced cross-platform event binding
         bindCrossPlatformEvents() {
             const self = this;
-            
-            // Function to bind both click and touch events for better compatibility
-            function bindAction(selector, callback, options = {}) {
-                // Shared function to check if button interaction should be blocked
+
+            // Generalised action binder for both mouse and keyboard interaction
+            function bindAction(selector, callback) {
+                // Helper to determine if interaction should be blocked
                 function isButtonInteractionBlocked($button) {
                     return $button.prop('disabled') || $button.hasClass('rtbcb-loading') || self.isGenerating;
                 }
 
-                // Standard click event for desktop
-                $(document).on('click.rtbcb-dashboard', selector, function(e) {
+                // Handle mouse clicks and keyboard activation (Enter/Space)
+                $(document).on('click.rtbcb-dashboard keydown.rtbcb-dashboard', selector, function(e) {
+                    if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') {
+                        return;
+                    }
+
+                    const $button = $(this);
+                    if (isButtonInteractionBlocked($button)) {
+                        return;
+                    }
+
                     e.preventDefault();
                     e.stopPropagation();
 
-                    const $button = $(this);
-                    if (isButtonInteractionBlocked($button)) {
-                        console.log('Button interaction blocked - disabled or loading state');
-                        return false;
-                    }
-
-                    console.log('Button clicked:', selector, this);
                     callback.call(this, e);
-                });
-                // Touch events for mobile compatibility
-                $(document).on('touchstart.rtbcb-dashboard', selector, function(e) {
-                    const $button = $(this);
-                    if (isButtonInteractionBlocked($button)) {
-                        return false;
-                    }
-
-                    // Track initial touch position for tap detection
-                    if (e.originalEvent && e.originalEvent.touches && e.originalEvent.touches.length === 1) {
-                        const touch = e.originalEvent.touches[0];
-                        $button.data('rtbcbTouchStart', { x: touch.clientX, y: touch.clientY });
-                    }
-
-                    // Add visual feedback for touch
-                    $button.addClass('rtbcb-touch-active');
-                });
-
-                $(document).on('touchend.rtbcb-dashboard', selector, function(e) {
-                    const $button = $(this);
-                    $button.removeClass('rtbcb-touch-active');
-
-                    if ($button.prop('disabled') || $button.hasClass('rtbcb-loading') || self.isGenerating) {
-                        return false;
-                    }
-
-                    // Only prevent default if this was a tap (not a scroll)
-                    let isTap = false;
-                    if (e.originalEvent && e.originalEvent.changedTouches && e.originalEvent.changedTouches.length === 1) {
-                        const touch = e.originalEvent.changedTouches[0];
-                        const start = $button.data('rtbcbTouchStart');
-                        if (start) {
-                            const dx = Math.abs(touch.clientX - start.x);
-                            const dy = Math.abs(touch.clientY - start.y);
-                            // Consider it a tap if movement is less than 10px
-                            if (dx < 10 && dy < 10) {
-                                isTap = true;
-                            }
-                        }
-                    }
-                    $button.removeData('rtbcbTouchStart');
-
-                    if (isTap) {
-                        // Prevent duplicate click events on mobile
-                        e.preventDefault();
-                        console.log('Button touched:', selector, this);
-                        callback.call(this, e);
-                    }
                 });
             }
             
@@ -612,6 +566,11 @@
 
             if (!circuitBreaker.canExecute()) {
                 this.showNotification('Too many failures. Please wait before trying again.', 'warning');
+                return;
+            }
+
+            if (!rtbcbDashboard.nonces || !rtbcbDashboard.nonces.apiHealth) {
+                this.showNotification('Missing security token. Please refresh the page and try again.', 'error');
                 return;
             }
 
