@@ -5,10 +5,9 @@
  * @package RealTreasuryBusinessCaseBuilder
  */
 
-require_once __DIR__ . '/config.php';
-require_once __DIR__ . '/helpers.php';
-require_once __DIR__ . '/class-rtbcb-performance-monitor.php';
-require_once __DIR__ . '/class-rtbcb-error-handler.php';
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
 
 class RTBCB_LLM {
     /**
