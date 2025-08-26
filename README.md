@@ -21,6 +21,7 @@ real-treasury-business-case-builder/
 ├── DEPLOYMENT.md
 ├── README.md
 ├── readme.txt
+├── admin-debug.php
 ├── composer.json
 ├── composer.lock
 ├── cypress.config.js
@@ -135,6 +136,7 @@ real-treasury-business-case-builder/
 
 #### Root Directory Files
 - **real-treasury-business-case-builder.php** – Bootstrap file that defines constants, registers hooks, and loads core classes.
+- **admin-debug.php** – Standalone diagnostic script for troubleshooting admin menu visibility issues on WordPress.com and other environments.
 - **composer.json** – PHP dependency configuration for Composer.
 - **composer.lock** – Locked versions of Composer dependencies.
 - **readme.txt** – WordPress.org metadata for plugin distribution.
@@ -182,8 +184,9 @@ Navigate to **Real Treasury → Unified Tests** in the WordPress admin to run LL
 - **comprehensive-report-template.php** – Extended report template with executive summary and detailed analysis.
 
 #### Testing Suite (`/tests/`)
-- **run-tests.sh** – Executes linting, unit tests, integration tests, and JavaScript checks.
+- **tests/run-tests.sh** – Executes linting, unit tests, integration tests, and JavaScript checks.
 - **acceptance.cy.js** – Cypress end-to-end test for the full user journey.
+- **admin-menu-registration.test.php** – PHPUnit test verifying admin menu registration and WordPress.com compatibility.
 - **RTBCB_AjaxGenerateComprehensiveCaseErrorTest.php** – PHPUnit test verifying AJAX error handling.
 - **api-tester-gpt5-mini.test.php** – Validates OpenAI API tester for GPT‑5 Mini.
 - **cosine-similarity-search.test.php** – Ensures vector search accuracy for RAG.
@@ -297,7 +300,30 @@ npm run build
 
 See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed WordPress.com deployment instructions.
 
-## 7. Visual Architecture Diagram
+## 8. Troubleshooting
+
+### Admin Menu Not Visible on WordPress.com
+
+If you cannot see the "Real Treasury" admin menu after plugin activation, use the diagnostic script:
+
+1. **Upload the diagnostic script**: Download `admin-debug.php` from the plugin files and upload it to your WordPress root directory
+2. **Access the diagnostic URL**: Visit `https://yourdomain.com/admin-debug.php` in your browser
+3. **Review the output**: The script will check:
+   - Plugin activation status and class availability
+   - User permissions and WordPress.com capability requirements
+   - Environment detection (WordPress.com vs self-hosted)
+   - Actual admin menu registration status in real-time
+   - Provides specific troubleshooting recommendations
+
+Common causes and solutions:
+- **User Permissions**: WordPress.com may require `edit_pages` capability instead of `manage_options`
+- **Plugin Conflicts**: Other plugins may interfere with menu registration
+- **PHP Errors**: Silent errors may prevent the admin class from loading
+- **Environment Issues**: WordPress.com-specific hosting restrictions
+
+**Important**: Remove the `admin-debug.php` file after troubleshooting for security purposes.
+
+## 9. Visual Architecture Diagram
 ```mermaid
 flowchart TD
     A[User] --> B[rtbcb-wizard.js]

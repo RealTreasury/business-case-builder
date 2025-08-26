@@ -3,7 +3,7 @@ Contributors: realtreasury
 Tags: business, case, builder, roi, treasury
 Requires at least: 6.0
 Tested up to: 6.0
-Stable tag: 2.1.0
+Stable tag: 2.1.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -26,10 +26,25 @@ Add the `[rt_business_case_builder]` shortcode to a post or page.
 = Does the plugin generate PDF reports? =
 Yes. The plugin generates downloadable PDF reports for each business case.
 
+= Why can't I see the Real Treasury admin menu? =
+If the admin menu is not visible after plugin activation, use the diagnostic script:
+1. Upload the `admin-debug.php` file (included with the plugin) to your WordPress root directory
+2. Visit `https://yourdomain.com/admin-debug.php` in your browser
+3. Follow the recommendations provided by the diagnostic output
+4. Remove the diagnostic file after troubleshooting for security
+
+This is particularly useful for WordPress.com environments where permission requirements may differ.
+
 = Why aren't charts showing in analytics? =
 The analytics dashboard uses Chart.js loaded from a CDN for better caching. Strict privacy extensions or network restrictions may block CDN assets; allow requests to the CDN so charts can render.
 
 == Changelog ==
+= 2.1.3 =
+* Added comprehensive diagnostic script (admin-debug.php) for troubleshooting admin menu visibility issues
+* Improved WordPress.com compatibility testing and environment detection
+* Fixed admin menu registration test infrastructure for more accurate development testing
+* Enhanced capability detection for WordPress.com environments
+
 = 2.1.2 =
 * Refactored unified test dashboard script for improved state management, error handling, and user notifications.
 
