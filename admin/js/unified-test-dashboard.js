@@ -131,7 +131,7 @@
 
                 // Handle various input types including touch and pointer events
                 $(document).on(
-                    'click.rtbcb-dashboard keydown.rtbcb-dashboard pointerup.rtbcb-dashboard touchstart.rtbcb-dashboard',
+                    'pointerup.rtbcb-dashboard keydown.rtbcb-dashboard',
                     selector,
                     function(e) {
                         if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ' && e.key !== 'Space') {
