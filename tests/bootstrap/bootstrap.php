@@ -468,16 +468,12 @@ if ( ! function_exists( 'wp_remote_retrieve_headers' ) ) {
     }
 }
 
-// Include plugin files
-require_once ABSPATH . 'inc/utils/helpers.php';
-require_once ABSPATH . 'inc/class-rtbcb-category-recommender.php';
-require_once ABSPATH . 'inc/class-rtbcb-calculator.php';
-require_once ABSPATH . 'inc/class-rtbcb-llm.php';
-require_once ABSPATH . 'inc/class-rtbcb-validator.php';
-require_once ABSPATH . 'inc/class-rtbcb-router.php';
+// Include plugin files conditionally for tests that need them
+if ( file_exists( ABSPATH . 'inc/utils/helpers.php' ) ) {
+    require_once ABSPATH . 'inc/utils/helpers.php';
+}
 
-// Load main plugin file for tests that need the rtbcb() function
-require_once ABSPATH . 'real-treasury-business-case-builder.php';
+// Don't auto-load all classes in bootstrap - let individual tests load what they need
 
 /**
  * Test assertion helper

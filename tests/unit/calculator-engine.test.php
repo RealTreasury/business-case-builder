@@ -9,6 +9,14 @@
 
 require_once __DIR__ . '/../bootstrap/bootstrap.php';
 
+// Define plugin constants for test
+if ( ! defined( 'RTBCB_PLUGIN_DIR' ) ) {
+    define( 'RTBCB_PLUGIN_DIR', dirname( dirname( __DIR__ ) ) . '/' );
+}
+if ( ! defined( 'RTBCB_VERSION' ) ) {
+    define( 'RTBCB_VERSION', '2.1.0' );
+}
+
 // Load required dependencies for new calculator
 require_once RTBCB_PLUGIN_DIR . 'inc/class-rtbcb-error-handler.php';
 require_once RTBCB_PLUGIN_DIR . 'inc/class-rtbcb-performance-monitor.php';
