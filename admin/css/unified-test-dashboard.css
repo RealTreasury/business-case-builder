@@ -1367,6 +1367,7 @@ button[data-action]:hover:not(:disabled):not(.rtbcb-loading) {
 button[data-action]:active {
     background: #ccffcc !important;
     transform: scale(0.98);
+    will-change: transform;
 }
 
 /* Show if buttons are getting focus */
