@@ -375,7 +375,7 @@ class RTBCB_Plugin {
         // DOMPurify ensures any injected HTML is sanitized client-side.
         wp_enqueue_script(
             'dompurify',
-            'https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.2/purify.min.js',
+            RTBCB_URL . 'public/js/dompurify.min.js',
             [],
             '3.0.2',
             true
@@ -384,7 +384,7 @@ class RTBCB_Plugin {
         wp_enqueue_script(
             'rtbcb-wizard',
             RTBCB_URL . 'public/js/rtbcb-wizard.js',
-            [ 'jquery' ],
+            [ 'jquery', 'dompurify' ],
             RTBCB_VERSION,
             true
         );
