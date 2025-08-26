@@ -1328,6 +1328,82 @@
     pointer-events: auto !important;
 }
 
+/* Visual Debug Indicators - Add temporarily to see what's happening */
+
+/* Show all clickable buttons with colored borders */
+button[data-action] {
+    border: 3px solid green !important; /* Green = should be clickable */
+    position: relative;
+}
+
+button[data-action]:disabled {
+    border: 3px solid red !important; /* Red = disabled */
+    background: #ffcccc !important;
+}
+
+button[data-action].rtbcb-loading {
+    border: 3px solid orange !important; /* Orange = loading */
+    background: #fff3cd !important;
+}
+
+/* Add visual feedback on hover */
+button[data-action]:hover:not(:disabled):not(.rtbcb-loading) {
+    background: #e6ffe6 !important; /* Light green on hover */
+    transform: scale(1.05);
+}
+
+/* Show which tab is active */
+.rtbcb-test-tabs .nav-tab {
+    border: 2px solid blue !important;
+}
+
+.rtbcb-test-tabs .nav-tab.nav-tab-active {
+    border: 2px solid purple !important;
+    background: #f0f0ff !important;
+}
+
+/* Visual indicator when events are working */
+button[data-action]:active {
+    background: #ccffcc !important;
+    transform: scale(0.98);
+}
+
+/* Show if buttons are getting focus */
+button[data-action]:focus {
+    outline: 3px solid yellow !important;
+    outline-offset: 2px;
+}
+
+/* Debug overlay for problem detection */
+.rtbcb-debug-overlay {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background: white;
+    border: 2px solid black;
+    padding: 10px;
+    z-index: 9999;
+    font-family: monospace;
+    font-size: 12px;
+}
+
+/* Add a visible indicator when JavaScript is loaded */
+body.rtbcb-js-loaded {
+    border-top: 5px solid green;
+}
+
+body.rtbcb-js-loaded::before {
+    content: "✓ JavaScript Loaded";
+    position: fixed;
+    top: 0;
+    left: 0;
+    background: green;
+    color: white;
+    padding: 5px;
+    font-size: 12px;
+    z-index: 10000;
+}
+
 /* LLM Integration Testing Module Styles - Add to unified-test-dashboard.css */
 
 /* LLM Test Mode Navigation */
