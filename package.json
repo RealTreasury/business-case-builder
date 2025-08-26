@@ -26,8 +26,9 @@
         "lint:php:fix": "composer run cs:fix",
         "lint:js:fix": "eslint admin/js/ public/js/ --ext .js --fix",
         "build": "npm run build:production",
-        "build:production": "node scripts/build-plugin-zip.js",
-        "build:dev": "echo 'No build step required for development'",
+        "build:production": "npm run build:js && node scripts/build-plugin-zip.js",
+        "build:dev": "npm run build:js",
+        "build:js": "mkdir -p admin/js/build && babel admin/js/src/unified-test-dashboard.js --out-file admin/js/build/unified-test-dashboard.js",
         "compat:check": "composer run compat:check",
         "setup": "npm run setup:composer && npm run setup:wp-env",
         "setup:composer": "composer install",
@@ -56,13 +57,16 @@
     },
     "homepage": "https://github.com/RealTreasury/business-case-builder#readme",
     "devDependencies": {
+        "@babel/cli": "^7.28.3",
+        "@babel/core": "^7.28.3",
+        "@babel/preset-env": "^7.28.3",
         "@wordpress/env": "^8.7.0",
         "@wordpress/eslint-plugin": "^17.3.0",
         "@wordpress/scripts": "^26.19.0",
+        "archiver": "^6.0.1",
         "cypress": "^13.6.0",
         "eslint": "^8.55.0",
-        "start-server-and-test": "^2.0.3",
-        "archiver": "^6.0.1"
+        "start-server-and-test": "^2.0.3"
     },
     "engines": {
         "node": ">=16.0.0",

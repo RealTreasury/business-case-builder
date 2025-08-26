@@ -69,7 +69,7 @@ class RTBCB_Admin {
 
             wp_register_script(
                 'rtbcb-unified-dashboard',
-                RTBCB_URL . 'admin/js/unified-test-dashboard.js',
+                RTBCB_URL . 'admin/js/build/unified-test-dashboard.js',
                 [ 'jquery', 'chart-js' ],
                 RTBCB_VERSION,
                 true

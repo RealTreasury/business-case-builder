@@ -26,6 +26,7 @@ const excludePatterns = [
     'tests/**',
     'cypress/**',
     'coverage/**',
+    'admin/js/src/**',
     'bin/**',
     'scripts/**',
     'tmp/**',
