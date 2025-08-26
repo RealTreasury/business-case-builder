@@ -351,18 +351,43 @@ if ( ! function_exists( 'wp_die' ) ) {
     }
 }
 
+if ( ! function_exists( 'get_plugin_page_hookname' ) ) {
+    function get_plugin_page_hookname( $plugin_page, $parent_page ) {
+        if ( empty( $parent_page ) ) {
+            // Top-level menu - convert slug to hook name
+            if ( $plugin_page === 'rtbcb-dashboard' ) {
+                return 'real-treasury';
+            }
+            return sanitize_title( $plugin_page );
+        }
+        return $plugin_page;
+    }
+}
+
+if ( ! function_exists( 'sanitize_title' ) ) {
+    function sanitize_title( $title ) {
+        return preg_replace( '/[^a-z0-9-]/', '', strtolower( $title ) );
+    }
+}
+
 if ( ! function_exists( 'add_menu_page' ) ) {
     function add_menu_page( $page_title, $menu_title, $capability, $menu_slug, $function = '', $icon_url = '', $position = null ) {
-        global $admin_page_hooks;
+        global $admin_page_hooks, $menu;
         if ( ! isset( $admin_page_hooks ) ) {
             $admin_page_hooks = array();
         }
-        $admin_page_hooks[ $menu_slug ] = array(
-            'page_title' => $page_title,
-            'menu_title' => $menu_title,
-            'capability' => $capability
-        );
-        return $menu_slug;
+        if ( ! isset( $menu ) ) {
+            $menu = array();
+        }
+        
+        // WordPress converts menu slug to hook name
+        $hookname = get_plugin_page_hookname( $menu_slug, '' );
+        $admin_page_hooks[ $menu_slug ] = $hookname;
+        
+        // Also add to menu array for more complete simulation
+        $menu[] = array( $page_title, $capability, $menu_slug, $menu_title );
+        
+        return $hookname;
     }
 }
 
