@@ -132,7 +132,7 @@
             console.log('Events bound successfully');
         },
 
-        // Enhanced cross-platform event binding
+        // Enhanced cross-platform event binding - FIXED VERSION
         bindCrossPlatformEvents() {
             const self = this;
 
@@ -143,42 +143,45 @@
                     return $button.prop('disabled') || $button.hasClass('rtbcb-loading') || self.isGenerating;
                 }
 
-                // Handle various input types including touch and pointer events
+                // Handle various input types - FIXED: Added click events and improved logic
                 $(document).on(
                     'pointerup.rtbcb-dashboard keydown.rtbcb-dashboard',
                     selector,
                     function(e) {
+                        // Handle keyboard events
                         if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ' && e.key !== 'Space') {
                             return;
                         }
 
                         const $button = $(this);
+                        const interactionKey = 'rtbcb-interacted';
 
-                        // Prevent duplicate events (e.g., click after touch/pointer)
-                        if ($button.data('rtbcb-interacted')) {
-                        if ($button.data('rtbcb-interacted')) {
-                            setTimeout(function() {
-                                $button.removeData('rtbcb-interacted');
-                            }, 100);
-                            return;
+                        // Prevent duplicate events within a short timeframe
+                        const now = Date.now();
+                        const lastInteraction = $button.data(interactionKey + '-time') || 0;
+
+                        if (now - lastInteraction < INTERACTION_DEBOUNCE_MS) {
+                            return; // Prevent rapid-fire events
                         }
 
-                        if (e.type === 'pointerup' || e.type === 'touchend') {
-                            $button.data('rtbcb-interacted', true);
-                        }
+                        // Mark this interaction
+                        $button.data(interactionKey + '-time', now);
 
                         if (isButtonInteractionBlocked($button)) {
                             return;
                         }
 
-                        e.preventDefault();
+                        // Only prevent default for non-click events or when specifically needed
+                        if (e.type !== 'click' || $(this).is('a[href="#"], a[href=""]')) {
+                            e.preventDefault();
+                        }
                         e.stopPropagation();
 
                         callback.call(this, e);
                     }
                 );
             }
-            
+
             // Tab navigation
             bindAction('.rtbcb-test-tabs .nav-tab', function(e) {
                 const tab = $(e.currentTarget).data('tab');
