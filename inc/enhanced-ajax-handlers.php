@@ -47,6 +47,20 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return void
  */
 function rtbcb_send_json_error( $code, $message, $status = 400, $debug = '', $extra = [] ) {
+    if ( in_array( $code, [ 'security_check_failed', 'invalid_nonce', 'security_failed' ], true ) ) {
+        $user_id = get_current_user_id();
+        // Filter out sensitive fields before logging request data.
+        $sensitive_keys = [ 'password', 'pass', 'pwd', 'api_key', 'apikey', 'token', 'auth', 'authorization', 'secret' ];
+        $filtered_request = wp_unslash( $_REQUEST );
+        foreach ( $sensitive_keys as $sensitive_key ) {
+            if ( isset( $filtered_request[ $sensitive_key ] ) ) {
+                $filtered_request[ $sensitive_key ] = '[FILTERED]';
+            }
+        }
+        $request_data = wp_json_encode( array_map( 'sanitize_text_field', $filtered_request ) );
+        error_log( sprintf( 'RTBCB nonce failure [%s] for user %d: %s', $code, $user_id, $request_data ) );
+    }
+
     $data = array_merge(
         [
             'code'    => $code,
