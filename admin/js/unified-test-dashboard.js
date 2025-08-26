@@ -1108,8 +1108,8 @@
                 this.resetButtonState($button, defaultText);
             });
 
-            // Also reset any other interactive elements
-            $('[data-action]').each((index, element) => {
+            // Also reset any other interactive elements (excluding buttons already handled above)
+            $('[data-action]:not(button)').each((index, element) => {
                 const $element = $(element);
                 $element.removeData('rtbcb-interacted');
                 $element.removeData('rtbcb-interacted-time');
