@@ -101,6 +101,11 @@
     background: none;
     margin: 0;
     transition: all 0.2s ease;
+    cursor: pointer;
+    pointer-events: auto;
+    user-select: none;
+    position: relative;
+    z-index: 1;
 }
 
 .rtbcb-test-tabs .nav-tab:hover {
@@ -122,6 +127,7 @@
 /* Test Sections */
 .rtbcb-test-section {
     padding: 32px;
+    pointer-events: auto;
 }
 
 .rtbcb-test-section.active {
@@ -133,6 +139,7 @@
     border-radius: 8px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     overflow: hidden;
+    pointer-events: auto;
 }
 
 /* Panel Header */
@@ -206,8 +213,11 @@
     gap: 12px;
     align-items: center;
     margin-top: 24px;
+    position: relative;
+    z-index: 10;
 }
 
+.rtbcb-action-buttons button,
 .rtbcb-action-buttons .button {
     display: inline-flex;
     align-items: center;
@@ -223,6 +233,10 @@
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
+    margin: 0 5px;
+    min-height: 32px;
+    position: relative;
+    z-index: 1;
 }
 
 .rtbcb-action-buttons .button .dashicons {
@@ -249,6 +263,10 @@
 .rtbcb-loading {
     pointer-events: none !important;
     opacity: 0.6;
+}
+
+.rtbcb-loading:not(:disabled) {
+    cursor: wait !important;
 }
 
 .rtbcb-loading .button {
@@ -1316,16 +1334,50 @@
         border: 1px solid #e1e1e1;
     }
 }
-
-/* Temporary diagnostic styles */
-.rtbcb-debug-outline * {
-    outline: 1px solid red !important;
+/* Debug styles - remove after fixing */
+.rtbcb-debug-clickable {
+    outline: 2px dashed red !important;
 }
 
-.rtbcb-debug-z-index {
-    position: relative !important;
-    z-index: 999999 !important;
+.rtbcb-debug-blocked {
+    outline: 2px solid blue !important;
+    background: rgba(255, 0, 0, 0.1) !important;
+}
+
+button[data-action],
+.button[data-action],
+[data-action] {
     pointer-events: auto !important;
+    position: relative;
+    z-index: 1;
+    touch-action: manipulation;
+    user-select: none;
+    min-height: 44px;
+    min-width: 44px;
+    padding: 8px 16px;
+}
+
+button[data-action]:disabled,
+.button[data-action]:disabled {
+    pointer-events: none !important;
+}
+
+.rtbcb-progress-container,
+.rtbcb-notification {
+    pointer-events: none;
+}
+
+.rtbcb-progress-container button,
+.rtbcb-notification button {
+    pointer-events: auto;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    button[data-action]:hover:not(:disabled):not(.rtbcb-loading) {
+        opacity: 0.9;
+        transform: translateY(-1px);
+        transition: all 0.1s ease;
+    }
 }
 
 /* LLM Integration Testing Module Styles - Add to unified-test-dashboard.css */
@@ -2102,16 +2154,5 @@
     .rtbcb-comparison-charts canvas {
         max-height: 300px;
     }
-}
-
-/* Temporary diagnostic styles */
-.rtbcb-debug-outline * {
-    outline: 1px solid red !important;
-}
-
-.rtbcb-debug-z-index {
-    position: relative !important;
-    z-index: 999999 !important;
-    pointer-events: auto !important;
 }
 
