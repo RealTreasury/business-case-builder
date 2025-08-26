@@ -618,7 +618,7 @@ final class RTBCB_Business_Case_Builder {
             'rtbcbAdmin',
             array(
                 'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-                'nonce'   => wp_create_nonce( 'rtbcb_admin_action' ),
+                'nonce'   => wp_create_nonce( 'rtbcb_admin_nonce' ),
             )
         );
     }

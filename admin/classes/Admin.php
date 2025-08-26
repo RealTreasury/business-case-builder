@@ -553,7 +553,7 @@ class RTBCB_Admin {
                     'page' => 'rtbcb-leads',
                     'action' => 'export',
                     'lead_ids' => implode( ',', $lead_ids ),
-                    'nonce' => wp_create_nonce( 'rtbcb_export_leads' ),
+                    'nonce' => wp_create_nonce( 'rtbcb_admin_nonce' ),
                 ], admin_url( 'admin.php' ) ) );
                 exit;
 
