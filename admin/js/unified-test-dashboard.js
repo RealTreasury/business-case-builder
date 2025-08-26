@@ -69,7 +69,6 @@
         startTime: null,
         currentRequest: null,
         charts: {},
-        debugMode: false, // Toggle for enhanced debugging
 
         // Initialize dashboard
         init() {
