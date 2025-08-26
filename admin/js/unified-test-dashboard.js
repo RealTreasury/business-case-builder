@@ -2,30 +2,40 @@
  * Fixed Unified Test Dashboard JavaScript
  * Handles all dashboard functionality with improved error handling and state management
  */
-(function($) {
-    'use strict';
+(function ensureDashboard() {
+    const MAX_RETRIES = 5;
+    const RETRY_DELAY = 50;
+    let attempts = 0;
 
-    // Early validation
-    if (typeof rtbcbDashboard === 'undefined') {
-        console.error('rtbcbDashboard is not defined');
-        return;
-    }
+    function check() {
+        if ( typeof rtbcbDashboard === 'undefined' ) {
+            if ( attempts < MAX_RETRIES ) {
+                attempts++;
+                setTimeout( check, RETRY_DELAY );
+            } else {
+                console.error(`Failed to initialize dashboard after ${attempts} attempts (max ${MAX_RETRIES}): rtbcbDashboard is not defined`);
+            }
+            return;
+        }
 
-    if (typeof jQuery === 'undefined') {
-        console.error('jQuery is not available');
-        return;
-    }
+        (function($) {
+        'use strict';
 
-    console.log('Test dashboard script loaded');
+        if (typeof jQuery === 'undefined') {
+            console.error('jQuery is not available');
+            return;
+        }
 
-    // Utility functions
-    const debounce = (func, delay) => {
-        let timeoutId;
-        return (...args) => {
-            clearTimeout(timeoutId);
-            timeoutId = setTimeout(() => func.apply(this, args), delay);
+        console.log('Test dashboard script loaded');
+
+        // Utility functions
+        const debounce = (func, delay) => {
+            let timeoutId;
+            return (...args) => {
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(() => func.apply(this, args), delay);
+            };
         };
-    };
 
     // Circuit breaker for API failures
     const circuitBreaker = {
@@ -1374,5 +1384,10 @@
     // Expose for debugging
     window.RTBCBDashboard = Dashboard;
 
-})(jQuery);
+    })(jQuery);
+}
+
+// Start initialization: wait for rtbcbDashboard to be available, then initialize dashboard logic
+waitForDashboardAndInit();
+})();
 
