@@ -1093,15 +1093,33 @@
                    .html(this.escapeHtml(text));
         },
 
-        // Force reset all buttons (emergency cleanup)
+        // Force reset all buttons (emergency cleanup) - FIXED VERSION
         resetAllButtonStates() {
             console.log('Resetting all button states...');
+
             $('button[data-action]').each((index, element) => {
                 const $button = $(element);
+
+                // Clear all interaction tracking data
+                $button.removeData('rtbcb-interacted');
+                $button.removeData('rtbcb-interacted-time');
+
                 const defaultText = $button.data('default-text') || $button.text().trim();
                 this.resetButtonState($button, defaultText);
             });
+
+            // Also reset any other interactive elements
+            $('[data-action]').each((index, element) => {
+                const $element = $(element);
+                $element.removeData('rtbcb-interacted');
+                $element.removeData('rtbcb-interacted-time');
+            });
+
             this.isGenerating = false;
+
+            // Force remove any stuck loading states
+            $('.rtbcb-loading').removeClass('rtbcb-loading');
+            $('.rtbcb-touch-active').removeClass('rtbcb-touch-active');
         },
 
         // Progress management
