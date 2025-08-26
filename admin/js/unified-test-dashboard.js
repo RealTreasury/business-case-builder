@@ -13,7 +13,7 @@
                 attempts++;
                 setTimeout( check, RETRY_DELAY );
             } else {
-                console.error( 'rtbcbDashboard is not defined' );
+                console.error(`Failed to initialize dashboard after ${attempts} attempts (max ${MAX_RETRIES}): rtbcbDashboard is not defined`);
             }
             return;
         }
