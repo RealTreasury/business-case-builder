@@ -83,36 +83,92 @@
         // Initialize dashboard
         init() {
             console.log('Dashboard initializing...');
-            
+
             try {
+                // Clean up any existing event handlers first
+                $(document).off('.rtbcb-dashboard');
+                $(document).off('.rtbcb-dashboard-backup');
+
                 // Reset any stuck button states first
                 this.resetAllButtonStates();
-                
-            this.bindEvents();
-            this.initializeTabs();
-            this.setupValidation();
-            this.loadSavedState();
 
-            if (!rtbcbDashboard.nonces || !rtbcbDashboard.nonces.apiHealth) {
-                this.showNotification('Security token missing. Please refresh the page.', 'warning');
-            }
+                this.bindEvents();
+                this.initializeTabs();
+                this.setupValidation();
+                this.loadSavedState();
 
-            // Initialize Chart.js if available
-            if (typeof Chart !== 'undefined') {
-                this.setupCharts();
-            }
-                
+                if (!rtbcbDashboard.nonces || !rtbcbDashboard.nonces.apiHealth) {
+                    this.showNotification('Security token missing. Please refresh the page.', 'warning');
+                }
+
+                // Initialize Chart.js if available
+                if (typeof Chart !== 'undefined') {
+                    this.setupCharts();
+                }
+
                 // Add emergency reset handler (Ctrl/Cmd + R while on dashboard)
                 $(document).on('keydown.rtbcb-dashboard', (e) => {
                     if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
                         this.resetAllButtonStates();
                     }
                 });
-                
+
+                // Add a backup click handler for critical buttons in case the main system fails
+                $(document).on('click.rtbcb-dashboard-backup', 'button[data-action]', (e) => {
+                    const $button = $(e.currentTarget);
+
+                    // Only handle if the button appears to be stuck or unresponsive
+                    if (!$button.hasClass('rtbcb-loading') && !this.isGenerating) {
+                        console.log('Backup click handler triggered for:', $button.data('action'));
+
+                        // Small delay to allow main handler to work first
+                        setTimeout(() => {
+                            if (!this.isGenerating) {
+                                const action = $button.data('action');
+                                this.handleBackupAction(action, $button);
+                            }
+                        }, 50);
+                    }
+                });
+
                 console.log('Dashboard initialized successfully');
             } catch (error) {
                 console.error('Dashboard initialization failed:', error);
                 this.showNotification('Dashboard initialization failed. Please refresh the page.', 'error');
+            }
+        },
+
+        // Backup action handler for when main system fails
+        handleBackupAction(action, $button) {
+            console.log('Executing backup action:', action);
+
+            switch (action) {
+                case 'toggle-api-key':
+                    this.toggleApiKeyVisibility();
+                    break;
+                case 'run-company-overview':
+                    this.generateCompanyOverview();
+                    break;
+                case 'clear-results':
+                    this.clearResults();
+                    break;
+                case 'run-llm-test':
+                    this.runLLMTest();
+                    break;
+                case 'run-rag-test':
+                    this.runRagTest();
+                    break;
+                case 'rebuild-rag-index':
+                    this.rebuildRagIndex();
+                    break;
+                case 'api-health-ping':
+                    this.runAllApiTests();
+                    break;
+                case 'calculate-roi':
+                    this.calculateROI();
+                    break;
+                default:
+                    console.log('No backup handler for action:', action);
             }
         },
 
