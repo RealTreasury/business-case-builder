@@ -473,13 +473,24 @@ class RTBCB_Plugin {
      * @return bool
      */
     private function should_load_assets() {
-        // Always load on admin pages for this plugin
-        if ( is_admin() && isset( $_GET['page'] ) && strpos( $_GET['page'], 'rtbcb' ) !== false ) {
+        if ( is_admin() ) {
+            if ( isset( $_GET['page'] ) ) {
+                $page = sanitize_key( wp_unslash( $_GET['page'] ) );
+
+                if ( strpos( $page, 'rtbcb' ) !== false ) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        $post = get_post();
+        if ( $post instanceof WP_Post && has_shortcode( $post->post_content, 'rt_business_case_builder' ) ) {
             return true;
         }
 
-        // Load on any page - let WordPress handle caching
-        return true;
+        return false;
     }
 
     /**
