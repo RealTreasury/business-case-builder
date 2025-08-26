@@ -241,7 +241,7 @@ function rtbcb_is_wordpress_com() {
     }
     
     // Check server environment indicators
-    $server_name = $_SERVER['SERVER_NAME'] ?? '';
+    $server_name = sanitize_text_field( $_SERVER['SERVER_NAME'] ?? '' );
     if ( strpos( $server_name, '.wordpress.com' ) !== false ) {
         return true;
     }
