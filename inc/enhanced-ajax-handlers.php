@@ -47,6 +47,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return void
  */
 function rtbcb_send_json_error( $code, $message, $status = 400, $debug = '', $extra = [] ) {
+    if ( in_array( $code, [ 'security_check_failed', 'invalid_nonce', 'security_failed' ], true ) ) {
+        $user_id = get_current_user_id();
+        $request_data = wp_json_encode( array_map( 'sanitize_text_field', wp_unslash( $_REQUEST ) ) );
+        error_log( sprintf( 'RTBCB nonce failure [%s] for user %d: %s', $code, $user_id, $request_data ) );
+    }
+
     $data = array_merge(
         [
             'code'    => $code,

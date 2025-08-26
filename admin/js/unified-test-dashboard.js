@@ -78,15 +78,19 @@
                 // Reset any stuck button states first
                 this.resetAllButtonStates();
                 
-                this.bindEvents();
-                this.initializeTabs();
-                this.setupValidation();
-                this.loadSavedState();
-                
-                // Initialize Chart.js if available
-                if (typeof Chart !== 'undefined') {
-                    this.setupCharts();
-                }
+            this.bindEvents();
+            this.initializeTabs();
+            this.setupValidation();
+            this.loadSavedState();
+
+            if (!rtbcbDashboard.nonces || !rtbcbDashboard.nonces.apiHealth) {
+                this.showNotification('Security token missing. Please refresh the page.', 'warning');
+            }
+
+            // Initialize Chart.js if available
+            if (typeof Chart !== 'undefined') {
+                this.setupCharts();
+            }
                 
                 // Add emergency reset handler (Ctrl/Cmd + R while on dashboard)
                 $(document).on('keydown.rtbcb-dashboard', (e) => {
@@ -582,7 +586,7 @@
 
             const requestData = {
                 action: 'rtbcb_run_api_health_tests',
-                nonce: rtbcbDashboard.nonces?.apiHealth || ''
+                nonce: rtbcbDashboard.nonces.apiHealth
             };
 
             this.makeRequest(requestData)
