@@ -104,7 +104,13 @@ final class RTBCB_Business_Case_Builder {
      * Prevent unserialization
      */
     public function __wakeup() {
-        throw new Exception( 'Cannot unserialize singleton' );
+        // Log the attempt but don't crash with Exception
+        if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+            error_log( 'RTBCB: Attempted unserialization of singleton prevented' );
+        }
+        
+        // Return early instead of throwing exception to prevent crashes
+        return;
     }
     
     /**
@@ -241,11 +247,21 @@ final class RTBCB_Business_Case_Builder {
      * Load plugin dependencies
      */
     private function load_dependencies() {
-        // Load utilities first
-        require_once RTBCB_PLUGIN_DIR . 'inc/utils/helpers.php';
+        // Load utilities first with safety check
+        $helpers_file = RTBCB_PLUGIN_DIR . 'inc/utils/helpers.php';
+        if ( file_exists( $helpers_file ) ) {
+            require_once $helpers_file;
+        } else {
+            error_log( 'RTBCB: Missing critical file: ' . $helpers_file );
+        }
         
-        // Load API components
-        require_once RTBCB_PLUGIN_DIR . 'inc/api/openai-client.php';
+        // Load API components with safety check
+        $api_file = RTBCB_PLUGIN_DIR . 'inc/api/openai-client.php';
+        if ( file_exists( $api_file ) ) {
+            require_once $api_file;
+        } else {
+            error_log( 'RTBCB: Missing API file: ' . $api_file );
+        }
         
         // Load core business logic classes
         $core_classes = array(
@@ -265,17 +281,25 @@ final class RTBCB_Business_Case_Builder {
             $file = RTBCB_PLUGIN_DIR . 'inc/class-rtbcb-' . $class . '.php';
             if ( file_exists( $file ) ) {
                 require_once $file;
+            } else {
+                error_log( 'RTBCB: Missing class file: ' . $file );
             }
         }
         
-        // Load configuration
-        if ( file_exists( RTBCB_PLUGIN_DIR . 'inc/config.php' ) ) {
-            require_once RTBCB_PLUGIN_DIR . 'inc/config.php';
+        // Load configuration with safety check
+        $config_file = RTBCB_PLUGIN_DIR . 'inc/config.php';
+        if ( file_exists( $config_file ) ) {
+            require_once $config_file;
         }
         
-        // Load admin components if in admin
+        // Load admin components if in admin with safety check
         if ( is_admin() ) {
-            require_once RTBCB_PLUGIN_DIR . 'admin/classes/Admin.php';
+            $admin_file = RTBCB_PLUGIN_DIR . 'admin/classes/Admin.php';
+            if ( file_exists( $admin_file ) ) {
+                require_once $admin_file;
+            } else {
+                error_log( 'RTBCB: Missing admin file: ' . $admin_file );
+            }
         }
     }
     
@@ -1000,7 +1024,40 @@ function rtbcb() {
 }
 
 /**
- * Initialize plugin
- * Main entry point - completely rebuilt from scratch
+ * Initialize plugin safely
+ * Main entry point - completely rebuilt from scratch with safety checks
  */
-rtbcb();
+function rtbcb_safe_init() {
+    // Only initialize if WordPress is fully loaded
+    if ( ! function_exists( 'add_action' ) ) {
+        return;
+    }
+    
+    // Add safety check for critical WordPress functions
+    if ( ! function_exists( 'wp_verify_nonce' ) || ! function_exists( 'sanitize_text_field' ) ) {
+        return;
+    }
+    
+    try {
+        rtbcb();
+    } catch ( Exception $e ) {
+        // Log the error but don't crash WordPress
+        if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+            error_log( 'RTBCB Plugin Error: ' . $e->getMessage() );
+        }
+        
+        // Add admin notice about the error
+        if ( is_admin() ) {
+            add_action( 'admin_notices', function() use ( $e ) {
+                echo '<div class="notice notice-error is-dismissible">';
+                echo '<p><strong>Real Treasury Business Case Builder:</strong> Plugin initialization failed. Please check error logs for details.</p>';
+                echo '</div>';
+            } );
+        }
+    }
+}
+
+// Safe initialization - only if WordPress is loaded
+if ( defined( 'ABSPATH' ) ) {
+    rtbcb_safe_init();
+}
