@@ -206,7 +206,7 @@ final class RTBCB_Business_Case_Builder {
         
         // Admin hooks
         if ( is_admin() ) {
-            add_action( 'admin_menu', array( $this, 'register_admin_menu' ) );
+            // Note: Admin menu registration is handled by RTBCB_Admin class
             add_action( 'admin_init', array( $this, 'admin_init' ) );
             add_action( 'admin_notices', array( $this, 'admin_notices' ) );
         }
@@ -765,38 +765,9 @@ final class RTBCB_Business_Case_Builder {
     /**
      * Register admin menu
      */
-    public function register_admin_menu() {
-        add_menu_page(
-            __( 'Business Case Builder', 'rtbcb' ),
-            __( 'Business Cases', 'rtbcb' ),
-            'manage_options',
-            'rtbcb-dashboard',
-            array( $this, 'render_admin_dashboard' ),
-            'dashicons-chart-line',
-            30
-        );
-        
-        add_submenu_page(
-            'rtbcb-dashboard',
-            __( 'Settings', 'rtbcb' ),
-            __( 'Settings', 'rtbcb' ),
-            'manage_options',
-            'rtbcb-settings',
-            array( $this, 'render_admin_settings' )
-        );
-        
-        add_submenu_page(
-            'rtbcb-dashboard',
-            __( 'Leads', 'rtbcb' ),
-            __( 'Leads', 'rtbcb' ),
-            'manage_options',
-            'rtbcb-leads',
-            array( $this, 'render_admin_leads' )
-        );
-    }
-    
     /**
-     * Admin initialization
+     * Admin initialization - basic functionality only
+     * Note: Admin menu and pages are handled by RTBCB_Admin class
      */
     public function admin_init() {
         // Register settings
@@ -828,57 +799,6 @@ final class RTBCB_Business_Case_Builder {
         }
         
         return $api_key;
-    }
-    
-    /**
-     * Render admin dashboard
-     */
-    public function render_admin_dashboard() {
-        if ( ! current_user_can( 'manage_options' ) ) {
-            wp_die( __( 'You do not have sufficient permissions to access this page.', 'rtbcb' ) );
-        }
-        
-        $admin = $this->get_service( 'admin' );
-        if ( $admin && method_exists( $admin, 'render_dashboard' ) ) {
-            $admin->render_dashboard();
-        } else {
-            echo '<div class="wrap">';
-            echo '<h1>' . __( 'Business Case Builder Dashboard', 'rtbcb' ) . '</h1>';
-            echo '<p>' . __( 'Welcome to the Business Case Builder dashboard.', 'rtbcb' ) . '</p>';
-            echo '</div>';
-        }
-    }
-    
-    /**
-     * Render admin settings
-     */
-    public function render_admin_settings() {
-        if ( ! current_user_can( 'manage_options' ) ) {
-            wp_die( __( 'You do not have sufficient permissions to access this page.', 'rtbcb' ) );
-        }
-        
-        $admin = $this->get_service( 'admin' );
-        if ( $admin && method_exists( $admin, 'render_settings' ) ) {
-            $admin->render_settings();
-        } else {
-            include RTBCB_PLUGIN_DIR . 'admin/views/settings.php';
-        }
-    }
-    
-    /**
-     * Render admin leads
-     */
-    public function render_admin_leads() {
-        if ( ! current_user_can( 'manage_options' ) ) {
-            wp_die( __( 'You do not have sufficient permissions to access this page.', 'rtbcb' ) );
-        }
-        
-        $admin = $this->get_service( 'admin' );
-        if ( $admin && method_exists( $admin, 'render_leads' ) ) {
-            $admin->render_leads();
-        } else {
-            include RTBCB_PLUGIN_DIR . 'admin/views/leads.php';
-        }
     }
     
     /**

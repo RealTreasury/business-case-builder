@@ -119,7 +119,7 @@ class RTBCB_Admin {
         // Modern admin CSS with responsive design
         wp_enqueue_style(
             'rtbcb-admin-modern',
-            RTBCB_URL . 'admin/assets/css/admin-modern.css',
+            RTBCB_PLUGIN_URL . 'admin/assets/css/admin-modern.css',
             [],
             $this->version
         );
@@ -127,7 +127,7 @@ class RTBCB_Admin {
         // Chart.js for analytics
         wp_enqueue_script(
             'rtbcb-chartjs',
-            RTBCB_URL . 'public/js/chart.min.js',
+            RTBCB_PLUGIN_URL . 'public/js/chart.min.js',
             [],
             '3.9.1',
             true
@@ -136,7 +136,7 @@ class RTBCB_Admin {
         // Modern admin JavaScript with AJAX handling
         wp_enqueue_script(
             'rtbcb-admin-modern',
-            RTBCB_URL . 'admin/assets/js/admin-modern.js',
+            RTBCB_PLUGIN_URL . 'admin/assets/js/admin-modern.js',
             [ 'jquery', 'rtbcb-chartjs' ],
             $this->version,
             true
@@ -208,7 +208,7 @@ class RTBCB_Admin {
             wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'rtbcb' ) );
         }
 
-        include RTBCB_DIR . 'admin/views/dashboard/main.php';
+        include RTBCB_PLUGIN_DIR . 'admin/views/dashboard/main.php';
     }
 
     /**
@@ -221,7 +221,7 @@ class RTBCB_Admin {
             wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'rtbcb' ) );
         }
 
-        include RTBCB_DIR . 'admin/views/leads/main.php';
+        include RTBCB_PLUGIN_DIR . 'admin/views/leads/main.php';
     }
 
     /**
@@ -234,7 +234,7 @@ class RTBCB_Admin {
             wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'rtbcb' ) );
         }
 
-        include RTBCB_DIR . 'admin/views/analytics/main.php';
+        include RTBCB_PLUGIN_DIR . 'admin/views/analytics/main.php';
     }
 
     /**
@@ -247,7 +247,7 @@ class RTBCB_Admin {
             wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'rtbcb' ) );
         }
 
-        include RTBCB_DIR . 'admin/views/settings/main.php';
+        include RTBCB_PLUGIN_DIR . 'admin/views/settings/main.php';
     }
 
     /**
@@ -299,7 +299,7 @@ class RTBCB_Admin {
         }
 
         // Include the leads exporter
-        require_once RTBCB_DIR . 'admin/includes/leads-exporter.php';
+        require_once RTBCB_PLUGIN_DIR . 'admin/includes/leads-exporter.php';
         $exporter = new RTBCB_Leads_Exporter();
         $exporter->export_to_csv();
     }
@@ -356,7 +356,7 @@ class RTBCB_Admin {
         $date_range = sanitize_text_field( $_POST['date_range'] ?? '30' );
 
         // Include analytics processor
-        require_once RTBCB_DIR . 'admin/includes/analytics-processor.php';
+        require_once RTBCB_PLUGIN_DIR . 'admin/includes/analytics-processor.php';
         $processor = new RTBCB_Analytics_Processor();
         $data = $processor->get_chart_data( $chart_type, $date_range );
 
@@ -522,7 +522,7 @@ class RTBCB_Admin {
         $date_range = sanitize_text_field( $_POST['date_range'] ?? '30' );
 
         // Include analytics processor
-        require_once RTBCB_DIR . 'admin/includes/analytics-processor.php';
+        require_once RTBCB_PLUGIN_DIR . 'admin/includes/analytics-processor.php';
         $processor = new RTBCB_Analytics_Processor();
         $data = $processor->get_chart_data( $chart_type, $date_range );
 
