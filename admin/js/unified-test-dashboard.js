@@ -586,7 +586,7 @@
 
             const requestData = {
                 action: 'rtbcb_run_api_health_tests',
-                nonce: rtbcbDashboard.nonces.apiHealth
+                nonce: rtbcbDashboard.nonces?.apiHealth
             };
 
             this.makeRequest(requestData)
