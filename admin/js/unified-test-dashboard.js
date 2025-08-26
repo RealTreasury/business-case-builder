@@ -285,20 +285,16 @@ if (typeof jQuery !== 'undefined') {
         // Bind all event handlers
         bindEvents() {
             console.log('Binding events...');
-            
+
             // Remove any existing handlers to prevent duplicates
             $(document).off('.rtbcb-dashboard');
-            
-            // Store reference to Dashboard object for event handlers
-            const self = this;
-            
-            // Enhanced event binding for cross-platform compatibility
+
+            // Bind cross-platform events
             this.bindCrossPlatformEvents();
-            
+
             console.log('Events bound successfully');
         },
 
-        // Simplified cross-platform event binding
         bindCrossPlatformEvents() {
             const self = this;
 
