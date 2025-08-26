@@ -69,6 +69,7 @@
         startTime: null,
         currentRequest: null,
         charts: {},
+        debugMode: false, // Toggle for enhanced debugging
 
         // Initialize dashboard
         init() {
@@ -311,10 +312,66 @@
         },
 
         // Setup form validation
+        // Enhanced setup form validation with API connection testing
         setupValidation() {
+            console.log('Setting up validation...');
             this.validateCompanyInput();
             this.validateLLMInputs();
             this.validateRagQuery();
+            
+            // Add initial connection test if API key is configured
+            if (rtbcbDashboard.apiKeyConfigured) {
+                this.testInitialConnection();
+            }
+        },
+
+        // Test initial API connection
+        testInitialConnection() {
+            console.log('Testing initial API connection...');
+            
+            // Simple ping test without updating UI heavily
+            const testData = {
+                action: 'rtbcb_test_api_connection',
+                nonce: rtbcbDashboard.nonces?.apiHealth || rtbcbDashboard.nonces?.dashboard || ''
+            };
+            
+            this.makeRequest(testData)
+                .then(response => {
+                    console.log('Initial API connection test passed:', response);
+                    this.updateConnectionStatus('connected');
+                })
+                .catch(error => {
+                    console.warn('Initial API connection test failed:', error.message);
+                    this.updateConnectionStatus('error', error.message);
+                });
+        },
+
+        // Update connection status indicator
+        updateConnectionStatus(status, message = '') {
+            const $indicators = $('.rtbcb-system-status-bar .rtbcb-status-indicator');
+            const $apiIndicator = $indicators.filter(':contains("OpenAI API")');
+            
+            if ($apiIndicator.length) {
+                const $icon = $apiIndicator.find('.dashicons');
+                
+                switch (status) {
+                    case 'connected':
+                        $apiIndicator.removeClass('status-error status-warning').addClass('status-good');
+                        $icon.removeClass('dashicons-warning dashicons-info').addClass('dashicons-yes-alt');
+                        break;
+                    case 'error':
+                        $apiIndicator.removeClass('status-good status-warning').addClass('status-error');
+                        $icon.removeClass('dashicons-yes-alt dashicons-info').addClass('dashicons-warning');
+                        if (message) {
+                            $apiIndicator.attr('title', message);
+                        }
+                        break;
+                    case 'warning':
+                        $apiIndicator.removeClass('status-good status-error').addClass('status-warning');
+                        $icon.removeClass('dashicons-yes-alt dashicons-warning').addClass('dashicons-info');
+                        break;
+                }
+            }
         },
 
         // Load saved state
@@ -368,7 +425,13 @@
                 .catch(error => {
                     circuitBreaker.recordFailure();
                     console.error('Company overview error:', error);
-                    this.showError(error.message || 'Failed to generate overview');
+                    this.showError(error.message || 'Failed to generate overview', {
+                        action: 'generateCompanyOverview',
+                        companyName: companyName,
+                        model: $('#model-selection').val(),
+                        timestamp: new Date().toISOString(),
+                        error: error
+                    });
                     this.setButtonState('[data-action="run-company-overview"]', 'error');
                 })
                 .finally(() => {
@@ -547,7 +610,11 @@
                 .catch(error => {
                     circuitBreaker.recordFailure();
                     console.error('API health test error:', error);
-                    this.showError(error.message || 'API health tests failed');
+                    this.showError(error.message || 'API health tests failed', {
+                        action: 'runAllApiTests',
+                        timestamp: new Date().toISOString(),
+                        error: error
+                    });
                     this.setButtonState('[data-action="api-health-ping"]', 'error');
                     $('#rtbcb-api-health-notice').text('API tests failed');
                 })
@@ -861,21 +928,74 @@
             this.showNotification('Results cleared', 'info');
         },
 
-        showError(message) {
+        // Enhanced error display with debugging options
+        showError(message, debugInfo = null) {
             // Dismiss any existing notifications first
             this.dismissNotifications();
             
             const $container = $('#error-container');
             const $content = $('#error-content');
             
-            $content.html(`<strong>Error:</strong> ${this.escapeHtml(message)}`);
+            let errorHtml = `<strong>Error:</strong> ${this.escapeHtml(message)}`;
+            
+            // Add debug information if available and debug mode is enabled
+            if (debugInfo && ($('#show-debug-info').is(':checked') || this.debugMode)) {
+                errorHtml += `
+                    <div class="rtbcb-debug-error" style="margin-top: 10px; padding: 10px; background: #fafafa; border: 1px solid #ddd; border-radius: 4px;">
+                        <strong>Debug Information:</strong>
+                        <details style="margin-top: 5px;">
+                            <summary style="cursor: pointer; font-weight: bold;">Click to expand</summary>
+                            <pre style="margin-top: 5px; font-size: 12px; white-space: pre-wrap;">${this.escapeHtml(JSON.stringify(debugInfo, null, 2))}</pre>
+                        </details>
+                    </div>
+                `;
+            }
+            
+            // Add troubleshooting tips for common errors
+            if (message.includes('timeout') || message.includes('timed out')) {
+                errorHtml += `
+                    <div class="rtbcb-error-tips" style="margin-top: 10px; padding: 8px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px;">
+                        <strong>💡 Troubleshooting tip:</strong> Request timed out. Try refreshing the page or check your internet connection.
+                    </div>
+                `;
+            } else if (message.includes('Permission denied') || message.includes('403')) {
+                errorHtml += `
+                    <div class="rtbcb-error-tips" style="margin-top: 10px; padding: 8px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px;">
+                        <strong>💡 Troubleshooting tip:</strong> Permission denied. Please refresh the page and try again.
+                    </div>
+                `;
+            } else if (message.includes('API') || message.includes('Network error')) {
+                errorHtml += `
+                    <div class="rtbcb-error-tips" style="margin-top: 10px; padding: 8px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px;">
+                        <strong>💡 Troubleshooting tip:</strong> API connection issue. Check your API key configuration in Settings.
+                    </div>
+                `;
+            }
+            
+            $content.html(errorHtml);
             $container.show();
             $('#results-container').hide();
             
-            // Auto-dismiss error after 10 seconds
+            // Add a manual retry button for failed operations
+            if (!$container.find('.rtbcb-retry-button').length) {
+                const retryButton = $(`
+                    <button type="button" class="button button-small rtbcb-retry-button" style="margin-top: 10px;">
+                        <span class="dashicons dashicons-update"></span> Retry
+                    </button>
+                `);
+                
+                retryButton.on('click', () => {
+                    $container.fadeOut();
+                    this.resetAllButtonStates();
+                });
+                
+                $content.append(retryButton);
+            }
+            
+            // Auto-dismiss error after 15 seconds (increased from 10)
             setTimeout(() => {
                 $container.fadeOut();
-            }, 10000);
+            }, 15000);
         },
 
         formatContent(content) {
@@ -1005,7 +1125,7 @@
             }
         },
 
-        // AJAX request handling
+        // Enhanced AJAX request handling with improved error reporting
         makeRequest(data) {
             // Abort any existing request
             if (this.currentRequest) {
@@ -1013,18 +1133,36 @@
                 this.currentRequest = null;
             }
             
+            console.log('Making API request:', data.action, data);
+            
             return new Promise((resolve, reject) => {
                 this.currentRequest = $.ajax({
                     url: rtbcbDashboard.ajaxurl,
                     type: 'POST',
                     data: data,
                     timeout: 120000,
-                    success: (response) => {
+                    beforeSend: (xhr) => {
+                        console.log('API request started:', data.action);
+                    },
+                    success: (response, textStatus, xhr) => {
                         this.currentRequest = null;
+                        console.log('API response received:', {
+                            action: data.action,
+                            success: response.success,
+                            status: xhr.status,
+                            response: response
+                        });
+                        
                         if (response.success) {
                             resolve(response.data);
                         } else {
-                            reject(new Error(response.data?.message || 'Request failed'));
+                            const errorMessage = this.extractErrorMessage(response);
+                            console.error('API request failed:', {
+                                action: data.action,
+                                error: errorMessage,
+                                response: response
+                            });
+                            reject(new Error(errorMessage));
                         }
                     },
                     error: (xhr, status, error) => {
@@ -1036,20 +1174,94 @@
                             return;
                         }
                         
-                        let message = 'Request failed';
+                        const errorDetails = {
+                            action: data.action,
+                            status: status,
+                            httpStatus: xhr.status,
+                            error: error,
+                            responseText: xhr.responseText
+                        };
                         
-                        if (status === 'timeout') {
-                            message = 'Request timed out';
-                        } else if (xhr.responseJSON && xhr.responseJSON.data) {
-                            message = xhr.responseJSON.data.message || message;
-                        } else if (error) {
-                            message = error;
+                        console.error('API request error:', errorDetails);
+                        
+                        let message = this.getErrorMessage(xhr, status, error);
+                        
+                        // Add debugging information in development
+                        if (window.console && console.groupCollapsed) {
+                            console.groupCollapsed('API Error Details');
+                            console.log('Status:', status);
+                            console.log('HTTP Status:', xhr.status);
+                            console.log('Error:', error);
+                            console.log('Response:', xhr.responseText);
+                            console.log('Full XHR:', xhr);
+                            console.groupEnd();
                         }
                         
                         reject(new Error(message));
                     }
                 });
             });
+        },
+
+        // Extract error message from API response
+        extractErrorMessage(response) {
+            // Try multiple paths to find error message
+            if (response.data && typeof response.data === 'string') {
+                return response.data;
+            }
+            if (response.data && response.data.message) {
+                return response.data.message;
+            }
+            if (response.data && response.data.error) {
+                return response.data.error;
+            }
+            if (response.message) {
+                return response.message;
+            }
+            return 'API request failed - no error message provided';
+        },
+
+        // Get user-friendly error message
+        getErrorMessage(xhr, status, error) {
+            if (status === 'timeout') {
+                return 'Request timed out. Please check your connection and try again.';
+            }
+            
+            if (xhr.status === 0) {
+                return 'Network error. Please check your internet connection.';
+            }
+            
+            if (xhr.status === 403) {
+                return 'Permission denied. Please refresh the page and try again.';
+            }
+            
+            if (xhr.status === 404) {
+                return 'API endpoint not found. Please contact support.';
+            }
+            
+            if (xhr.status === 500) {
+                return 'Server error. Please try again later.';
+            }
+            
+            if (xhr.status === 502 || xhr.status === 503 || xhr.status === 504) {
+                return 'Service temporarily unavailable. Please try again later.';
+            }
+            
+            // Try to parse JSON error response
+            try {
+                const jsonResponse = JSON.parse(xhr.responseText);
+                if (jsonResponse.data && jsonResponse.data.message) {
+                    return jsonResponse.data.message;
+                }
+                if (jsonResponse.message) {
+                    return jsonResponse.message;
+                }
+            } catch (e) {
+                // Not JSON or malformed
+            }
+            
+            // Default fallback
+            return `Request failed: ${error || 'Unknown error'} (HTTP ${xhr.status})`;
         },
 
         // Chart management
