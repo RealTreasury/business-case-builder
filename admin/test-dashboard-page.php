@@ -52,4 +52,17 @@ $company = rtbcb_get_current_company();
     <?php include RTBCB_DIR . 'admin/partials/test-dashboard-nav-tabs.php'; ?>
 
     <?php include RTBCB_DIR . 'admin/partials/test-dashboard-tab-panels.php'; ?>
+
+    <script>
+    jQuery(function($){
+        $('#rtbcb-test-tabs a').on('click', function(e){
+            e.preventDefault();
+            var target = $(this).attr('href');
+            $('#rtbcb-test-tabs a').removeClass('nav-tab-active');
+            $(this).addClass('nav-tab-active');
+            $('.rtbcb-tab-panel').hide();
+            $(target).show();
+        });
+    });
+    </script>
 </div>
