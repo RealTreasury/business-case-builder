@@ -799,7 +799,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
           loadSample.addEventListener('click', injectSample);
         }
       }
-    },
+    }
     generateReportPreview: function generateReportPreview(e) {
       try {
         var _exit9 = false;
