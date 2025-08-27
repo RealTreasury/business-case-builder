@@ -924,3 +924,45 @@ function rtbcb_parse_gpt5_business_case_response( $response ) {
     return $result;
 }
 
+/**
+ * Proxy requests to the OpenAI Responses API.
+ *
+ * Reads the API key from options and forwards the provided request body to
+ * the OpenAI endpoint.
+ *
+ * @return void
+ */
+function rtbcb_proxy_openai_responses() {
+    $api_key = get_option( 'rtbcb_openai_api_key' );
+    if ( empty( $api_key ) ) {
+        wp_send_json_error( [ 'message' => __( 'OpenAI API key not configured.', 'rtbcb' ) ], 500 );
+    }
+
+    $body = isset( $_POST['body'] ) ? wp_unslash( $_POST['body'] ) : '';
+    if ( empty( $body ) ) {
+        wp_send_json_error( [ 'message' => __( 'Missing request body.', 'rtbcb' ) ], 400 );
+    }
+
+    $response = wp_remote_post(
+        'https://api.openai.com/v1/responses',
+        [
+            'headers' => [
+                'Content-Type'  => 'application/json',
+                'Authorization' => 'Bearer ' . $api_key,
+            ],
+            'body'    => $body,
+            'timeout' => 120,
+        ]
+    );
+
+    if ( is_wp_error( $response ) ) {
+        wp_send_json_error( [ 'message' => $response->get_error_message() ], 500 );
+    }
+
+    $code       = wp_remote_retrieve_response_code( $response );
+    $resp_body  = wp_remote_retrieve_body( $response );
+    $decoded    = json_decode( $resp_body, true );
+
+    wp_send_json( $decoded, $code );
+}
+
