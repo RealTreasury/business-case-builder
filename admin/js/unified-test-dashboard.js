@@ -54,7 +54,7 @@
 
                 // Hide all sections
                 const sections = document.querySelectorAll('.rtbcb-test-section');
-                sections.forEach(section => (section.style.display = 'none'));
+                sections.forEach(section => section.style.display = 'none');
 
                 // Show target section
                 const tabId = tabTarget.getAttribute('data-tab');
