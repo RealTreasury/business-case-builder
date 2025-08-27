@@ -485,9 +485,6 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       }
       var status = $('#rtbcb-test-status');
       var tableBody = $('#rtbcb-test-results-summary tbody');
-      var cancelButton = $('#rtbcb-cancel-tests');
-      var progressBar = $('#rtbcb-test-progress');
-      var controller = null;
       var originalText = button.text();
       var sectionMap = {
         'Company Overview': 'rtbcb-test-company-overview',
@@ -498,14 +495,11 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
         'Estimated Benefits': 'rtbcb-test-estimated-benefits'
       };
       var runTests = _async(function () {
-        controller = new AbortController();
         var companyName = $('#rtbcb-company-name').val().trim() || (rtbcbAdmin.company && rtbcbAdmin.company.name ? rtbcbAdmin.company.name : '').trim();
         if (!companyName) {
           alert('Please enter a company name.');
           status.text('');
           button.prop('disabled', false).text(originalText);
-          cancelButton.hide();
-          progressBar.hide();
           return;
         }
         var tests = [{
@@ -522,68 +516,38 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
           label: 'Industry Overview'
         }];
         var results = [];
-        var completed = 0;
-        progressBar.attr('max', tests.length).val(0).show();
-        cancelButton.show().prop('disabled', false);
         return _continue(_forOf(tests, function (test) {
-          if (controller.signal.aborted) {
-            return;
-          }
           status.text('Testing ' + test.label + '...');
           return _continueIgnored(_catch(function () {
-            var formData = new FormData();
-            formData.append('action', test.action);
-            formData.append('nonce', test.nonce);
+            var postData = {
+              action: test.action,
+              nonce: test.nonce
+            };
             if (test.action === 'rtbcb_test_company_overview') {
-              formData.append('company_name', companyName);
+              postData.company_name = companyName;
             }
-            return _await(fetch(rtbcbAdmin.ajax_url, {
-              method: 'POST',
-              body: formData,
-              signal: controller.signal
-            }), function (response) {
-              if (!response.ok) {
-                throw new Error('Server responded ' + response.status);
-              }
-              return _await(response.json(), function (data) {
-                var message = data && data.data && data.data.message ? data.data.message : '';
-                results.push({
-                  section: test.label,
-                  status: data.success ? 'success' : 'error',
-                  message: message
-                });
+            return _await($.post(rtbcbAdmin.ajax_url, postData), function (response) {
+              var message = response && response.data && response.data.message ? response.data.message : '';
+              results.push({
+                section: test.label,
+                status: response.success ? 'success' : 'error',
+                message: message
               });
             });
           }, function (err) {
-            if (err.name !== 'AbortError') {
-              results.push({
-                section: test.label,
-                status: 'error',
-                message: err.message
-              });
-            }
-            controller.abort();
-          }), function () {
-            completed++;
-            progressBar.val(completed);
-          });
+            results.push({
+              section: test.label,
+              status: 'error',
+              message: err.message
+            });
+          }));
         }), function () {
-          cancelButton.hide();
-          progressBar.hide();
-          if (controller.signal.aborted) {
-            status.text('Testing cancelled.');
-            button.prop('disabled', false).text(originalText);
-            return;
-          }
           status.text('Saving results...');
           return _continue(_catch(function () {
-            var saveData = new FormData();
-            saveData.append('action', 'rtbcb_save_test_results');
-            saveData.append('nonce', rtbcbAdmin.test_dashboard_nonce);
-            saveData.append('results', JSON.stringify(results));
-            return _awaitIgnored(fetch(rtbcbAdmin.ajax_url, {
-              method: 'POST',
-              body: saveData
+            return _awaitIgnored($.post(rtbcbAdmin.ajax_url, {
+              action: 'rtbcb_save_test_results',
+              nonce: rtbcbAdmin.test_dashboard_nonce,
+              results: JSON.stringify(results)
             }));
           }, _empty), function () {
             tableBody.empty();
@@ -595,15 +559,8 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
             });
             status.text('');
             button.prop('disabled', false).text(originalText);
-            $(document).trigger('rtbcb-tests-complete');
           });
         });
-      });
-      cancelButton.on('click', function () {
-        if (controller) {
-          controller.abort();
-          cancelButton.prop('disabled', true);
-        }
       });
       button.on('click', function () {
         button.prop('disabled', true).text(rtbcbAdmin.strings.testing);

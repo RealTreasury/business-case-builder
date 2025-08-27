@@ -39,12 +39,8 @@ $company = rtbcb_get_current_company();
             <button type="button" id="rtbcb-test-all-sections" class="button button-primary">
                 <?php esc_html_e( 'Test All Sections', 'rtbcb' ); ?>
             </button>
-            <button type="button" id="rtbcb-cancel-tests" class="button" style="display:none;">
-                <?php esc_html_e( 'Cancel', 'rtbcb' ); ?>
-            </button>
             <?php wp_nonce_field( 'rtbcb_test_dashboard', 'rtbcb_test_dashboard_nonce' ); ?>
         </p>
-        <progress id="rtbcb-test-progress" value="0" max="0" style="display:none;"></progress>
         <p id="rtbcb-test-status"></p>
     </div>
 
