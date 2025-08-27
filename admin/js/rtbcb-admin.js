@@ -486,46 +486,84 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       var status = $('#rtbcb-test-status');
       var tableBody = $('#rtbcb-test-results-summary tbody');
       var originalText = button.text();
-      var sectionMap = {
-        'Company Overview': 'rtbcb-test-company-overview',
-        'Treasury Tech Overview': 'rtbcb-test-treasury-tech-overview',
-        'Industry Overview': 'rtbcb-test-industry-overview',
-        'Real Treasury Overview': 'rtbcb-test-real-treasury-overview',
-        'Recommended Category': 'rtbcb-test-recommended-category',
-        'Estimated Benefits': 'rtbcb-test-estimated-benefits'
-      };
       var runTests = _async(function () {
+        var company = rtbcbAdmin.company || {};
         var tests = [{
+          id: 'rtbcb-test-company-overview',
+          label: 'Company Overview',
           action: 'rtbcb_test_company_overview',
           nonce: rtbcbAdmin.company_overview_nonce,
-          label: 'Company Overview'
+          data: {
+            company_name: company.name || 'Sample Company'
+          }
         }, {
+          id: 'rtbcb-test-treasury-tech-overview',
+          label: 'Treasury Tech Overview',
           action: 'rtbcb_test_treasury_tech_overview',
           nonce: rtbcbAdmin.treasury_tech_overview_nonce,
-          label: 'Treasury Tech Overview'
+          data: {
+            focus_areas: company.focus_areas || ['automation'],
+            complexity: company.complexity || 'basic'
+          }
         }, {
+          id: 'rtbcb-test-industry-overview',
+          label: 'Industry Overview',
           action: 'rtbcb_test_industry_overview',
           nonce: rtbcbAdmin.industry_overview_nonce,
-          label: 'Industry Overview'
+          data: {
+            company_data: JSON.stringify({
+              industry: company.industry || 'Finance',
+              size: company.size || '100-500'
+            })
+          }
+        }, {
+          id: 'rtbcb-test-real-treasury-overview',
+          label: 'Real Treasury Overview',
+          action: 'rtbcb_test_real_treasury_overview',
+          nonce: rtbcbAdmin.real_treasury_overview_nonce,
+          data: {
+            include_portal: 1,
+            categories: company.categories || ['cash_management']
+          }
+        }, {
+          id: 'rtbcb-test-recommended-category',
+          label: 'Recommended Category',
+          action: 'rtbcb_generate_category_recommendation',
+          nonce: rtbcbAdmin.category_recommendation_nonce,
+          data: {}
+        }, {
+          id: 'rtbcb-test-estimated-benefits',
+          label: 'Estimated Benefits',
+          action: 'rtbcb_test_estimated_benefits',
+          nonce: rtbcbAdmin.benefits_estimate_nonce,
+          data: {
+            company_data: {
+              revenue: company.revenue || 1000000,
+              staff_count: company.staff_count || 10,
+              efficiency: company.efficiency || 0.5
+            },
+            recommended_category: company.recommended_category || 'Cash Management'
+          }
         }];
         var results = [];
         return _continue(_forOf(tests, function (test) {
           status.text('Testing ' + test.label + '...');
           return _continueIgnored(_catch(function () {
-            return _await($.post(rtbcbAdmin.ajax_url, {
+            var payload = Object.assign({
               action: test.action,
               nonce: test.nonce
-            }), function (response) {
+            }, test.data || {});
+            return _await($.post(rtbcbAdmin.ajax_url, payload), function (response) {
               var message = response && response.data && response.data.message ? response.data.message : '';
               results.push({
-                section: test.label,
+                section: test.id,
                 status: response.success ? 'success' : 'error',
                 message: message
               });
             });
           }, function (err) {
             results.push({
-              section: test.label,
+              section: test.id,
               status: 'error',
               message: err.message
             });
@@ -541,9 +579,12 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
           }, _empty), function () {
             tableBody.empty();
             results.forEach(function (item) {
-              var sectionId = sectionMap[item.section] || '';
-              var actions = sectionId ? '<a href="#' + sectionId + '" class="rtbcb-jump-tab">' + rtbcbAdmin.strings.view + '</a> | <a href="#" class="rtbcb-rerun-test" data-section="' + sectionId + '">' + rtbcbAdmin.strings.rerun + '</a>' : '';
-              var row = '<tr><td>' + item.section + '</td><td>' + item.status + '</td><td>' + item.message + '</td><td>' + new Date().toLocaleString() + '</td><td>' + actions + '</td></tr>';
+              var testObj = tests.find(function (t) {
+                return t.id === item.section;
+              });
+              var label = testObj ? testObj.label : item.section;
+              var actions = '<a href="#' + item.section + '" class="rtbcb-jump-tab">' + rtbcbAdmin.strings.view + '</a> | <a href="#" class="rtbcb-rerun-test" data-section="' + item.section + '">' + rtbcbAdmin.strings.rerun + '</a>';
+              var row = '<tr><td>' + label + '</td><td>' + item.status + '</td><td>' + item.message + '</td><td>' + new Date().toLocaleString() + '</td><td>' + actions + '</td></tr>';
               tableBody.append(row);
             });
             status.text('');
