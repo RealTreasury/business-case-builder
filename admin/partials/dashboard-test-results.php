@@ -33,8 +33,22 @@ $sections     = rtbcb_get_dashboard_sections();
     <?php if ( ! empty( $recent_results ) ) : ?>
         <?php foreach ( $recent_results as $result ) : ?>
             <?php
-            $section_id    = isset( $result['section'] ) ? sanitize_text_field( $result['section'] ) : '';
-            $section_label = isset( $sections[ $section_id ]['label'] ) ? $sections[ $section_id ]['label'] : $section_id;
+            $section_id = isset( $result['section'] ) ? sanitize_text_field( $result['section'] ) : '';
+            $section_label = '';
+            if ( isset( $sections[ $section_id ] ) ) {
+                $section_label = $sections[ $section_id ]['label'];
+            } else {
+                foreach ( $sections as $id => $section ) {
+                    if ( $section['label'] === $section_id ) {
+                        $section_label = $section['label'];
+                        $section_id    = $id;
+                        break;
+                    }
+                }
+                if ( '' === $section_label ) {
+                    $section_label = $section_id;
+                }
+            }
             ?>
             <tr>
                 <td><?php echo esc_html( $section_label ); ?></td>

@@ -104,6 +104,8 @@ class RTBCB_Admin {
             'complete_report_nonce'      => wp_create_nonce( 'rtbcb_test_generate_complete_report' ),
             'test_dashboard_nonce'       => wp_create_nonce( 'rtbcb_test_dashboard' ),
             'roi_nonce'                  => wp_create_nonce( 'rtbcb_test_calculate_roi' ),
+            'real_treasury_overview_nonce' => wp_create_nonce( 'rtbcb_test_real_treasury_overview' ),
+            'category_recommendation_nonce' => wp_create_nonce( 'rtbcb_test_category_recommendation' ),
             'page'                       => $page,
             'company'                    => $company_data,
             'strings'                    => [
