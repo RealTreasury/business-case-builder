@@ -362,7 +362,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       }));
     },
     bindCompanyOverviewTest: function bindCompanyOverviewTest() {
-      if (!rtbcbAdmin || rtbcbAdmin.page !== 'rtbcb-test-company-overview') {
+      if (!rtbcbAdmin || rtbcbAdmin.page !== 'rtbcb-test-company-overview' && rtbcbAdmin.page !== 'rtbcb-test-dashboard') {
         return;
       }
       var form = $('#rtbcb-company-overview-form');
@@ -412,7 +412,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       RTBCBAdmin.utils.bindClear(clearBtn, results);
     },
     bindIndustryOverviewTest: function bindIndustryOverviewTest() {
-      if (!rtbcbAdmin || rtbcbAdmin.page !== 'rtbcb-test-industry-overview') {
+      if (!rtbcbAdmin || rtbcbAdmin.page !== 'rtbcb-test-industry-overview' && rtbcbAdmin.page !== 'rtbcb-test-dashboard') {
         return;
       }
       var form = $('#rtbcb-industry-overview-form');
@@ -468,7 +468,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       RTBCBAdmin.utils.bindClear(clearBtn, results);
     },
     bindBenefitsEstimateTest: function bindBenefitsEstimateTest() {
-      if (!rtbcbAdmin || rtbcbAdmin.page !== 'rtbcb-test-estimated-benefits') {
+      if (!rtbcbAdmin || rtbcbAdmin.page !== 'rtbcb-test-estimated-benefits' && rtbcbAdmin.page !== 'rtbcb-test-dashboard') {
         return;
       }
       var form = $('#rtbcb-benefits-estimate-form');

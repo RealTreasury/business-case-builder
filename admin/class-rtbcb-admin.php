@@ -128,7 +128,7 @@ class RTBCB_Admin {
             'after'
         );
 
-        if ( 'rtbcb-report-test' === $page ) {
+        if ( in_array( $page, [ 'rtbcb-report-test', 'rtbcb-test-dashboard' ], true ) ) {
             wp_enqueue_script(
                 'rtbcb-report-test',
                 RTBCB_URL . 'admin/js/report-test.js',
@@ -202,33 +202,6 @@ class RTBCB_Admin {
 
         add_submenu_page(
             'rtbcb-dashboard',
-            __( 'API Test', 'rtbcb' ),
-            __( 'API Test', 'rtbcb' ),
-            'manage_options',
-            'rtbcb-api-test',
-            [ $this, 'render_api_test' ]
-        );
-
-        add_submenu_page(
-            'rtbcb-dashboard',
-            __( 'Report Preview', 'rtbcb' ),
-            __( 'Report Preview', 'rtbcb' ),
-            'manage_options',
-            'rtbcb-report-preview',
-            [ $this, 'render_report_preview' ]
-        );
-
-        add_submenu_page(
-            'rtbcb-dashboard',
-            __( 'Report Test', 'rtbcb' ),
-            __( 'Report Test', 'rtbcb' ),
-            'manage_options',
-            'rtbcb-report-test',
-            [ $this, 'render_report_test' ]
-        );
-
-        add_submenu_page(
-            'rtbcb-dashboard',
             __( 'Calculation Info', 'rtbcb' ),
             __( 'Calculation Info', 'rtbcb' ),
             'manage_options',
@@ -245,59 +218,6 @@ class RTBCB_Admin {
             [ $this, 'render_test_dashboard' ]
         );
 
-        add_submenu_page(
-            'rtbcb-dashboard',
-            __( 'Test Company Overview', 'rtbcb' ),
-            __( 'Test Company Overview', 'rtbcb' ),
-            'manage_options',
-            'rtbcb-test-company-overview',
-            [ $this, 'render_test_company_overview' ]
-        );
-
-        add_submenu_page(
-            'rtbcb-dashboard',
-            __( 'Test Treasury Tech Overview', 'rtbcb' ),
-            __( 'Test Treasury Tech Overview', 'rtbcb' ),
-            'manage_options',
-            'rtbcb-test-treasury-tech-overview',
-            [ $this, 'render_test_treasury_tech_overview' ]
-        );
-
-        add_submenu_page(
-            'rtbcb-dashboard',
-            __( 'Test Industry Overview', 'rtbcb' ),
-            __( 'Test Industry Overview', 'rtbcb' ),
-            'manage_options',
-            'rtbcb-test-industry-overview',
-            [ $this, 'render_test_industry_overview' ]
-        );
-
-        add_submenu_page(
-            'rtbcb-dashboard',
-            __( 'Test Real Treasury Overview', 'rtbcb' ),
-            __( 'Test Real Treasury Overview', 'rtbcb' ),
-            'manage_options',
-            'rtbcb-test-real-treasury-overview',
-            [ $this, 'render_test_real_treasury_overview' ]
-        );
-
-        add_submenu_page(
-            'rtbcb-dashboard',
-            __( 'Test Category Recommendation', 'rtbcb' ),
-            __( 'Test Category Recommendation', 'rtbcb' ),
-            'manage_options',
-            'rtbcb-test-recommended-category',
-            [ $this, 'render_test_recommended_category' ]
-        );
-
-        add_submenu_page(
-            'rtbcb-dashboard',
-            __( 'Test Estimated Benefits', 'rtbcb' ),
-            __( 'Test Estimated Benefits', 'rtbcb' ),
-            'manage_options',
-            'rtbcb-test-estimated-benefits',
-            [ $this, 'render_test_estimated_benefits' ]
-        );
     }
 
     /**
@@ -388,33 +308,6 @@ class RTBCB_Admin {
     }
 
     /**
-     * Render OpenAI API test page.
-     *
-     * @return void
-     */
-    public function render_api_test() {
-        include RTBCB_DIR . 'admin/api-test-page.php';
-    }
-
-    /**
-     * Render report preview page.
-     *
-     * @return void
-     */
-    public function render_report_preview() {
-        include RTBCB_DIR . 'admin/report-preview-page.php';
-    }
-
-    /**
-     * Render report test page.
-     *
-     * @return void
-     */
-    public function render_report_test() {
-        include RTBCB_DIR . 'admin/report-test-page.php';
-    }
-
-    /**
      * Render calculation info page.
      *
      * @return void
@@ -436,60 +329,6 @@ class RTBCB_Admin {
         $rag_health     = $this->check_rag_health();
 
         include RTBCB_DIR . 'admin/test-dashboard-page.php';
-    }
-
-    /**
-     * Render test company overview page.
-     *
-     * @return void
-     */
-    public function render_test_company_overview() {
-        include RTBCB_DIR . 'admin/test-company-overview-page.php';
-    }
-
-    /**
-     * Render test treasury tech overview page.
-     *
-     * @return void
-     */
-    public function render_test_treasury_tech_overview() {
-        include RTBCB_DIR . 'admin/test-treasury-tech-overview-page.php';
-    }
-
-    /**
-     * Render test industry overview page.
-     *
-     * @return void
-     */
-    public function render_test_industry_overview() {
-        include RTBCB_DIR . 'admin/test-industry-overview-page.php';
-    }
-
-    /**
-     * Render test real treasury overview page.
-     *
-     * @return void
-     */
-    public function render_test_real_treasury_overview() {
-        include RTBCB_DIR . 'admin/test-real-treasury-overview-page.php';
-    }
-
-    /**
-     * Render test category recommendation page.
-     *
-     * @return void
-     */
-    public function render_test_recommended_category() {
-        include RTBCB_DIR . 'admin/test-recommended-category-page.php';
-    }
-
-    /**
-     * Render test estimated benefits page.
-     *
-     * @return void
-     */
-    public function render_test_estimated_benefits() {
-        include RTBCB_DIR . 'admin/test-estimated-benefits-page.php';
     }
 
     /**
