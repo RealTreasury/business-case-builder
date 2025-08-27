@@ -23,16 +23,14 @@ $sections     = rtbcb_get_dashboard_sections();
 </div>
 
 <h2 class="title"><?php esc_html_e( 'Recent Test Results', 'rtbcb' ); ?></h2>
-<label for="rtbcb-test-results-search" class="screen-reader-text"><?php esc_html_e( 'Search test results', 'rtbcb' ); ?></label>
-<input type="search" id="rtbcb-test-results-search" placeholder="<?php esc_attr_e( 'Filter results...', 'rtbcb' ); ?>" aria-controls="rtbcb-test-results-summary" />
-<table class="widefat striped" id="rtbcb-test-results-summary" role="grid">
+<table class="widefat striped" id="rtbcb-test-results-summary">
     <thead>
         <tr>
-            <th scope="col" tabindex="0" aria-sort="none"><?php esc_html_e( 'Section', 'rtbcb' ); ?></th>
-            <th scope="col" tabindex="0" aria-sort="none"><?php esc_html_e( 'Status', 'rtbcb' ); ?></th>
-            <th scope="col" tabindex="0" aria-sort="none"><?php esc_html_e( 'Message', 'rtbcb' ); ?></th>
-            <th scope="col" tabindex="0" aria-sort="none"><?php esc_html_e( 'Timestamp', 'rtbcb' ); ?></th>
-            <th scope="col" tabindex="0" aria-sort="none"><?php esc_html_e( 'Actions', 'rtbcb' ); ?></th>
+            <th><?php esc_html_e( 'Section', 'rtbcb' ); ?></th>
+            <th><?php esc_html_e( 'Status', 'rtbcb' ); ?></th>
+            <th><?php esc_html_e( 'Message', 'rtbcb' ); ?></th>
+            <th><?php esc_html_e( 'Timestamp', 'rtbcb' ); ?></th>
+            <th><?php esc_html_e( 'Actions', 'rtbcb' ); ?></th>
         </tr>
     </thead>
     <tbody>
@@ -57,13 +55,10 @@ $sections     = rtbcb_get_dashboard_sections();
             </tr>
         <?php endforeach; ?>
     <?php else : ?>
-        <tr class="rtbcb-no-results">
+        <tr>
             <td colspan="5"><?php esc_html_e( 'No test results found.', 'rtbcb' ); ?></td>
         </tr>
     <?php endif; ?>
-        <tr class="rtbcb-no-results" style="display:none;">
-            <td colspan="5"><?php esc_html_e( 'No matching results found.', 'rtbcb' ); ?></td>
-        </tr>
     </tbody>
 </table>
 <script>
