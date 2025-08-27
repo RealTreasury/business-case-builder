@@ -149,7 +149,7 @@
 
     // Wait for rtbcbDashboard to be available
     var configWaitAttempts = 0;
-    var MAX_CONFIG_WAIT_ATTEMPTS = 50; // 5 seconds max
+    
     
     function waitForDashboardConfig() {
         configWaitAttempts++;
