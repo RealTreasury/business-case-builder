@@ -78,10 +78,5 @@ if ( empty( $company ) ) {
         <div id="rtbcb-report-preview">
             <iframe id="rtbcb-report-iframe"></iframe>
         </div>
-    </details>
+</details>
 </div>
-<script>
-document.getElementById( 'rtbcb-rerun-report-preview' )?.addEventListener( 'click', function() {
-    document.getElementById( 'rtbcb-generate-report' ).click();
-});
-</script>

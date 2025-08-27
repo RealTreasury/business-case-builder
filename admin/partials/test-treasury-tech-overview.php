@@ -111,22 +111,5 @@ if ( empty( $suggested_focus_areas ) && ! empty( $company_size ) ) {
             <button type="button" id="rtbcb-regenerate-treasury-tech-overview" class="button"><?php esc_html_e( 'Regenerate', 'rtbcb' ); ?></button>
             <button type="button" id="rtbcb-copy-treasury-tech-overview" class="button"><?php esc_html_e( 'Copy', 'rtbcb' ); ?></button>
         </p>
-    </details>
+</details>
 </div>
-<style>
-#rtbcb-treasury-tech-overview-card details {
-    margin-top: 20px;
-}
-#rtbcb-treasury-tech-overview-results div[style*="background"] {
-    white-space: pre-wrap;
-    line-height: 1.6;
-}
-</style>
-<script>
-<?php if ( ! isset( $GLOBALS['ajaxurl'] ) || empty( $GLOBALS['ajaxurl'] ) ) : ?>
-var ajaxurl = '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>';
-<?php endif; ?>
-document.getElementById( 'rtbcb-rerun-treasury-tech' )?.addEventListener( 'click', function() {
-    document.getElementById( 'rtbcb-generate-treasury-tech-overview' ).click();
-});
-</script>

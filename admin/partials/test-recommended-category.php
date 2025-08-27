@@ -85,8 +85,3 @@ $treasury_challenges = get_option( 'rtbcb_treasury_challenges', '' );
         </p>
     </details>
 </div>
-<script>
-document.getElementById( 'rtbcb-rerun-category' )?.addEventListener( 'click', function() {
-    document.getElementById( 'rtbcb-generate-category-recommendation' ).click();
-});
-</script>

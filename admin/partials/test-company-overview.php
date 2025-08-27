@@ -62,25 +62,5 @@ if ( ! defined( 'ABSPATH' ) ) {
                 <?php esc_html_e( 'Copy to Clipboard', 'rtbcb' ); ?>
             </button>
         </p>
-    </details>
+</details>
 </div>
-<style>
-#rtbcb-company-overview-card details {
-    margin-top: 20px;
-}
-#rtbcb-company-overview-results div[style*="background"] {
-    white-space: pre-wrap;
-    line-height: 1.6;
-}
-#rtbcb-company-overview-meta {
-    margin-top: 10px;
-}
-</style>
-<script>
-<?php if ( ! isset( $GLOBALS['ajaxurl'] ) || empty( $GLOBALS['ajaxurl'] ) ) : ?>
-var ajaxurl = '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>';
-<?php endif; ?>
-document.getElementById( 'rtbcb-rerun-company-overview' )?.addEventListener( 'click', function() {
-    document.getElementById( 'rtbcb-generate-company-overview' ).click();
-});
-</script>

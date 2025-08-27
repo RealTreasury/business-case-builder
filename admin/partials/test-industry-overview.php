@@ -73,8 +73,3 @@ $company_ind  = isset( $company['industry'] ) ? sanitize_text_field( $company['i
         <div id="rtbcb-industry-overview-results"></div>
     </details>
 </div>
-<script>
-document.getElementById( 'rtbcb-rerun-industry-overview' )?.addEventListener( 'click', function() {
-    jQuery( '#rtbcb-industry-overview-form' ).trigger( 'submit' );
-});
-</script>
