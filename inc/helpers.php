@@ -137,6 +137,31 @@ function rtbcb_require_completed_steps( $current_section ) {
 }
 
 /**
+ * Retrieve the most recent test result for a section.
+ *
+ * @param string     $section_id   Section identifier.
+ * @param array|null $test_results Optional preloaded test results.
+ * @return array|null Matching result or null when none found.
+ */
+function rtbcb_get_last_test_result( $section_id, $test_results = null ) {
+    if ( null === $test_results ) {
+        $test_results = get_option( 'rtbcb_test_results', [] );
+    }
+
+    if ( ! is_array( $test_results ) ) {
+        return null;
+    }
+
+    foreach ( $test_results as $result ) {
+        if ( isset( $result['section'] ) && $result['section'] === $section_id ) {
+            return $result;
+        }
+    }
+
+    return null;
+}
+
+/**
  * Render a button to start a new company analysis.
  *
  * The button clears existing company data and navigates to the Company

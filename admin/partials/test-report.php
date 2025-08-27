@@ -20,6 +20,20 @@ if ( empty( $company ) ) {
 }
 ?>
 <h2><?php esc_html_e( 'Report Test', 'rtbcb' ); ?></h2>
+<p class="description"><?php esc_html_e( 'Generate a full business case report to test end-to-end content creation.', 'rtbcb' ); ?></p>
+<?php $rtbcb_last = rtbcb_get_last_test_result( 'rtbcb-report-test', $test_results ?? [] ); ?>
+<?php if ( $rtbcb_last ) : ?>
+    <div class="notice notice-info" role="status">
+        <p><strong><?php esc_html_e( 'Status:', 'rtbcb' ); ?></strong> <?php echo esc_html( $rtbcb_last['status'] ); ?></p>
+        <p><strong><?php esc_html_e( 'Message:', 'rtbcb' ); ?></strong> <?php echo esc_html( $rtbcb_last['message'] ); ?></p>
+        <p><strong><?php esc_html_e( 'Timestamp:', 'rtbcb' ); ?></strong> <?php echo esc_html( $rtbcb_last['timestamp'] ); ?></p>
+        <p class="submit">
+            <button type="button" class="button" id="rtbcb-rerun-report-test" data-section="rtbcb-report-test">
+                <?php esc_html_e( 'Regenerate', 'rtbcb' ); ?>
+            </button>
+        </p>
+    </div>
+<?php endif; ?>
 <?php wp_nonce_field( 'rtbcb_test_generate_complete_report', 'rtbcb_complete_report_nonce' ); ?>
 <table class="form-table">
     <tr>
@@ -110,3 +124,8 @@ if ( empty( $company ) ) {
     </div>
 </div>
 <div id="rtbcb-report-preview" style="display:none;"></div>
+<script>
+document.getElementById( 'rtbcb-rerun-report-test' )?.addEventListener( 'click', function() {
+    document.getElementById( 'rtbcb-generate-report' ).click();
+});
+</script>

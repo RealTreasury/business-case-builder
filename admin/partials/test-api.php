@@ -10,8 +10,27 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 ?>
 <h2><?php esc_html_e( 'OpenAI API Test', 'rtbcb' ); ?></h2>
-<div id="rtbcb-test-results" style="margin: 20px 0;">
-    <p><?php esc_html_e( 'Click the button below to test your OpenAI API connection:', 'rtbcb' ); ?></p>
+<p class="description"><?php esc_html_e( 'Verify that your API credentials and network connection are working properly.', 'rtbcb' ); ?></p>
+<?php $rtbcb_last = rtbcb_get_last_test_result( 'rtbcb-api-test', $test_results ?? [] ); ?>
+<?php if ( $rtbcb_last ) : ?>
+    <div class="notice notice-info" role="status">
+        <p><strong><?php esc_html_e( 'Status:', 'rtbcb' ); ?></strong> <?php echo esc_html( $rtbcb_last['status'] ); ?></p>
+        <p><strong><?php esc_html_e( 'Message:', 'rtbcb' ); ?></strong> <?php echo esc_html( $rtbcb_last['message'] ); ?></p>
+        <p><strong><?php esc_html_e( 'Timestamp:', 'rtbcb' ); ?></strong> <?php echo esc_html( $rtbcb_last['timestamp'] ); ?></p>
+        <p class="submit">
+            <button type="button" class="button" onclick="document.getElementById('rtbcb-api-test-card').scrollIntoView();">
+                <?php esc_html_e( 'View Details', 'rtbcb' ); ?>
+            </button>
+        </p>
+    </div>
+<?php endif; ?>
+<div id="rtbcb-api-test-card" class="rtbcb-result-card">
+    <details>
+        <summary><?php esc_html_e( 'Test Output', 'rtbcb' ); ?></summary>
+        <div id="rtbcb-test-results" style="margin: 20px 0;">
+            <p><?php esc_html_e( 'Click the button below to test your OpenAI API connection:', 'rtbcb' ); ?></p>
+        </div>
+    </details>
 </div>
 <button type="button" id="rtbcb-test-api-btn" class="button button-primary">
     <?php esc_html_e( 'Test API Connection', 'rtbcb' ); ?>
