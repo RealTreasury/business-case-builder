@@ -212,8 +212,8 @@
         // Circuit breaker for API failures
         var circuitBreaker = {
             failures: 0,
-            threshold: parseInt((rtbcbDashboard.circuitBreaker && rtbcbDashboard.circuitBreaker.threshold) || 5, 10),
-            resetTime: parseInt((rtbcbDashboard.circuitBreaker?.resetTime) || 60000, 10),
+            threshold: parseInt(rtbcbDashboard.circuitBreaker?.threshold ?? 5, 10),
+            resetTime: parseInt(rtbcbDashboard.circuitBreaker?.resetTime ?? 60000, 10),
             lastFailTime: 0,
 
             canExecute: function() {
