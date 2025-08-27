@@ -306,7 +306,7 @@ class RTBCB_Admin {
 
         $openai_key = isset( $_POST['rtbcb_openai_api_key'] ) ? sanitize_text_field( wp_unslash( $_POST['rtbcb_openai_api_key'] ) ) : '';
 
-        if ( '' !== $openai_key ) {
+        if ( ! empty( trim( $openai_key ) ) ) {
             if ( ! rtbcb_is_valid_openai_api_key( $openai_key ) ) {
                 $redirect_url = add_query_arg(
                     'settings-status',
