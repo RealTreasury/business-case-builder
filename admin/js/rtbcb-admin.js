@@ -845,6 +845,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
                   if (iframe) {
                     iframe.srcdoc = data.data.html || data.data.report_html;
                   }
+                  document.getElementById('rtbcb-report-preview-card').style.display = 'block';
                   document.getElementById('rtbcb-download-pdf').style.display = 'inline-block';
                 } else {
                   var message = data.data && data.data.message ? data.data.message : rtbcbAdmin.strings.error;

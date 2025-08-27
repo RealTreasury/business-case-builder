@@ -24,6 +24,20 @@ if ( empty( $company ) ) {
 }
 ?>
 <h2><?php esc_html_e( 'Report Preview', 'rtbcb' ); ?></h2>
+<p class="description"><?php esc_html_e( 'Preview the generated business case report before finalizing.', 'rtbcb' ); ?></p>
+<?php $rtbcb_last = rtbcb_get_last_test_result( 'rtbcb-report-preview', $test_results ?? [] ); ?>
+<?php if ( $rtbcb_last ) : ?>
+    <div class="notice notice-info" role="status">
+        <p><strong><?php esc_html_e( 'Status:', 'rtbcb' ); ?></strong> <?php echo esc_html( $rtbcb_last['status'] ); ?></p>
+        <p><strong><?php esc_html_e( 'Message:', 'rtbcb' ); ?></strong> <?php echo esc_html( $rtbcb_last['message'] ); ?></p>
+        <p><strong><?php esc_html_e( 'Timestamp:', 'rtbcb' ); ?></strong> <?php echo esc_html( $rtbcb_last['timestamp'] ); ?></p>
+        <p class="submit">
+            <button type="button" class="button" id="rtbcb-rerun-report-preview" data-section="rtbcb-report-preview">
+                <?php esc_html_e( 'Regenerate', 'rtbcb' ); ?>
+            </button>
+        </p>
+    </div>
+<?php endif; ?>
 <form id="rtbcb-report-preview-form" method="post" action="<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>">
     <input type="hidden" name="action" value="rtbcb_generate_report_preview" />
     <p>
@@ -58,6 +72,16 @@ if ( empty( $company ) ) {
         </button>
     </p>
 </form>
-<div id="rtbcb-report-preview">
-    <iframe id="rtbcb-report-iframe"></iframe>
+<div id="rtbcb-report-preview-card" class="rtbcb-result-card" style="display:none;">
+    <details>
+        <summary><?php esc_html_e( 'Preview', 'rtbcb' ); ?></summary>
+        <div id="rtbcb-report-preview">
+            <iframe id="rtbcb-report-iframe"></iframe>
+        </div>
+    </details>
 </div>
+<script>
+document.getElementById( 'rtbcb-rerun-report-preview' )?.addEventListener( 'click', function() {
+    document.getElementById( 'rtbcb-generate-report' ).click();
+});
+</script>

@@ -47,6 +47,20 @@ if ( empty( $suggested_focus_areas ) && ! empty( $company_size ) ) {
 }
 ?>
 <h2><?php esc_html_e( 'Test Treasury Technology Overview', 'rtbcb' ); ?></h2>
+<p class="description"><?php esc_html_e( 'Assess the treasury technology landscape and highlight key focus areas.', 'rtbcb' ); ?></p>
+<?php $rtbcb_last = rtbcb_get_last_test_result( 'rtbcb-test-treasury-tech-overview', $test_results ?? [] ); ?>
+<?php if ( $rtbcb_last ) : ?>
+    <div class="notice notice-info" role="status">
+        <p><strong><?php esc_html_e( 'Status:', 'rtbcb' ); ?></strong> <?php echo esc_html( $rtbcb_last['status'] ); ?></p>
+        <p><strong><?php esc_html_e( 'Message:', 'rtbcb' ); ?></strong> <?php echo esc_html( $rtbcb_last['message'] ); ?></p>
+        <p><strong><?php esc_html_e( 'Timestamp:', 'rtbcb' ); ?></strong> <?php echo esc_html( $rtbcb_last['timestamp'] ); ?></p>
+        <p class="submit">
+            <button type="button" class="button" id="rtbcb-rerun-treasury-tech" data-section="rtbcb-test-treasury-tech-overview">
+                <?php esc_html_e( 'Regenerate', 'rtbcb' ); ?>
+            </button>
+        </p>
+    </div>
+<?php endif; ?>
 <?php if ( $company_name || $company_size || $company_complexity ) : ?>
     <p><?php printf( esc_html__( 'Company: %1$s | Size: %2$s | Complexity: %3$s', 'rtbcb' ), esc_html( $company_name ), esc_html( $company_size ), esc_html( $company_complexity ) ); ?></p>
 <?php endif; ?>
@@ -87,14 +101,21 @@ if ( empty( $suggested_focus_areas ) && ! empty( $company_size ) ) {
             <?php esc_html_e( 'Clear', 'rtbcb' ); ?>
         </button>
     </p>
+    </div>
+<div id="rtbcb-treasury-tech-overview-card" class="rtbcb-result-card" style="display:none;">
+    <details>
+        <summary><?php esc_html_e( 'Generated Overview', 'rtbcb' ); ?></summary>
+        <div id="rtbcb-treasury-tech-overview-results"></div>
+        <div id="rtbcb-treasury-tech-overview-meta" class="rtbcb-meta"></div>
+        <p class="rtbcb-actions">
+            <button type="button" id="rtbcb-regenerate-treasury-tech-overview" class="button"><?php esc_html_e( 'Regenerate', 'rtbcb' ); ?></button>
+            <button type="button" id="rtbcb-copy-treasury-tech-overview" class="button"><?php esc_html_e( 'Copy', 'rtbcb' ); ?></button>
+        </p>
+    </details>
 </div>
-<div id="rtbcb-treasury-tech-overview-results"></div>
 <style>
-#rtbcb-treasury-tech-overview-results {
+#rtbcb-treasury-tech-overview-card details {
     margin-top: 20px;
-}
-#rtbcb-treasury-tech-overview-results .notice {
-    margin: 5px 0;
 }
 #rtbcb-treasury-tech-overview-results div[style*="background"] {
     white-space: pre-wrap;
@@ -105,4 +126,7 @@ if ( empty( $suggested_focus_areas ) && ! empty( $company_size ) ) {
 <?php if ( ! isset( $GLOBALS['ajaxurl'] ) || empty( $GLOBALS['ajaxurl'] ) ) : ?>
 var ajaxurl = '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>';
 <?php endif; ?>
+document.getElementById( 'rtbcb-rerun-treasury-tech' )?.addEventListener( 'click', function() {
+    document.getElementById( 'rtbcb-generate-treasury-tech-overview' ).click();
+});
 </script>

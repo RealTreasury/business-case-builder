@@ -4,6 +4,7 @@
     $(document).ready(function() {
         const $generateBtn = $('#rtbcb-generate-category-recommendation');
         const $resultsDiv = $('#rtbcb-category-recommendation-results');
+        const $card = $('#rtbcb-category-recommendation-card');
 
         function sendRequest() {
             const data = {
@@ -13,6 +14,7 @@
             };
 
             const original = rtbcbTestUtils.showLoading($generateBtn, 'Generating...');
+            $card.show();
             $resultsDiv.html('<p>Generating recommendation...</p>');
 
             $.ajax({
@@ -47,6 +49,12 @@
                             html += '<p><strong>Success Factors:</strong> ' + $('<div/>').text(rec.success_factors).html() + '</p>';
                         }
                         $resultsDiv.html(html);
+                        $('#rtbcb-regenerate-category-recommendation').on('click', function(){
+                            $generateBtn.trigger('click');
+                        });
+                        $('#rtbcb-copy-category-recommendation').on('click', function(){
+                            rtbcbTestUtils.copyToClipboard($resultsDiv.text());
+                        });
                     } else {
                         const message = (response.data && response.data.message) ? response.data.message : 'Failed to generate recommendation.';
                         rtbcbTestUtils.renderError($resultsDiv, message, sendRequest);

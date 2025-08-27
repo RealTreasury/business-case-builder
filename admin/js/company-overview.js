@@ -4,6 +4,8 @@
     $(function() {
         const generateBtn = $('#rtbcb-generate-company-overview');
         const resultsDiv = $('#rtbcb-company-overview-results');
+        const card = $('#rtbcb-company-overview-card');
+        const metaDiv = $('#rtbcb-company-overview-meta');
 
         function sendRequest(companyName) {
             console.log('Starting simple company overview request');
@@ -39,8 +41,7 @@
         }
 
         function displaySimpleResults(data) {
-            let html = '<div class="simple-results">';
-            html += '<h3>Connection Test Results</h3>';
+            let html = '';
             html += '<p><strong>Status:</strong> ' + data.status + '</p>';
             html += '<p><strong>Message:</strong> ' + data.message + '</p>';
 
@@ -55,15 +56,30 @@
                     });
                     html += '</ul>';
                 }
+
+                if (data.simple_analysis.references) {
+                    metaDiv.html('<p><strong>Sources:</strong> ' + data.simple_analysis.references.join(', ') + '</p>');
+                }
             }
 
-            html += '</div>';
             resultsDiv.html(html);
+            card.show();
         }
 
         function showError(message) {
             resultsDiv.html('<div class="error-message" style="color: red; padding: 10px; border: 1px solid red;">' + message + '</div>');
         }
+
+        $('#rtbcb-regenerate-company-overview').on('click', function() {
+            generateBtn.trigger('click');
+        });
+
+        $('#rtbcb-copy-company-overview').on('click', function() {
+            var text = resultsDiv.text();
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text);
+            }
+        });
 
         generateBtn.on('click', function(e) {
             e.preventDefault();

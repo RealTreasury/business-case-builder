@@ -29,6 +29,20 @@ $company_sum  = isset( $company['summary'] ) ? sanitize_textarea_field( $company
 $company_ind  = isset( $company['industry'] ) ? sanitize_text_field( $company['industry'] ) : '';
 ?>
 <h2><?php esc_html_e( 'Test Industry Overview', 'rtbcb' ); ?></h2>
+<p class="description"><?php esc_html_e( 'Generate insights about the company\'s industry to inform later recommendations.', 'rtbcb' ); ?></p>
+<?php $rtbcb_last = rtbcb_get_last_test_result( 'rtbcb-test-industry-overview', $test_results ?? [] ); ?>
+<?php if ( $rtbcb_last ) : ?>
+    <div class="notice notice-info" role="status">
+        <p><strong><?php esc_html_e( 'Status:', 'rtbcb' ); ?></strong> <?php echo esc_html( $rtbcb_last['status'] ); ?></p>
+        <p><strong><?php esc_html_e( 'Message:', 'rtbcb' ); ?></strong> <?php echo esc_html( $rtbcb_last['message'] ); ?></p>
+        <p><strong><?php esc_html_e( 'Timestamp:', 'rtbcb' ); ?></strong> <?php echo esc_html( $rtbcb_last['timestamp'] ); ?></p>
+        <p class="submit">
+            <button type="button" class="button" id="rtbcb-rerun-industry-overview" data-section="rtbcb-test-industry-overview">
+                <?php esc_html_e( 'Regenerate', 'rtbcb' ); ?>
+            </button>
+        </p>
+    </div>
+<?php endif; ?>
 <?php if ( ! empty( $company_name ) ) : ?>
     <h3><?php echo esc_html( $company_name ); ?></h3>
     <?php if ( ! empty( $company_sum ) ) : ?>
@@ -53,4 +67,14 @@ $company_ind  = isset( $company['industry'] ) ? sanitize_text_field( $company['i
         <button type="button" id="rtbcb-clear-results" class="button"><?php esc_html_e( 'Clear Results', 'rtbcb' ); ?></button>
     </p>
 </form>
-<div id="rtbcb-industry-overview-results"></div>
+<div id="rtbcb-industry-overview-card" class="rtbcb-result-card">
+    <details>
+        <summary><?php esc_html_e( 'Generated Overview', 'rtbcb' ); ?></summary>
+        <div id="rtbcb-industry-overview-results"></div>
+    </details>
+</div>
+<script>
+document.getElementById( 'rtbcb-rerun-industry-overview' )?.addEventListener( 'click', function() {
+    jQuery( '#rtbcb-industry-overview-form' ).trigger( 'submit' );
+});
+</script>

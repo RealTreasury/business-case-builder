@@ -24,6 +24,20 @@ if ( empty( $company ) ) {
 }
 ?>
 <h2><?php esc_html_e( 'Test Real Treasury Overview Generation', 'rtbcb' ); ?></h2>
+<p class="description"><?php esc_html_e( 'Create a tailored treasury overview based on company data and selected options.', 'rtbcb' ); ?></p>
+<?php $rtbcb_last = rtbcb_get_last_test_result( 'rtbcb-test-real-treasury-overview', $test_results ?? [] ); ?>
+<?php if ( $rtbcb_last ) : ?>
+    <div class="notice notice-info" role="status">
+        <p><strong><?php esc_html_e( 'Status:', 'rtbcb' ); ?></strong> <?php echo esc_html( $rtbcb_last['status'] ); ?></p>
+        <p><strong><?php esc_html_e( 'Message:', 'rtbcb' ); ?></strong> <?php echo esc_html( $rtbcb_last['message'] ); ?></p>
+        <p><strong><?php esc_html_e( 'Timestamp:', 'rtbcb' ); ?></strong> <?php echo esc_html( $rtbcb_last['timestamp'] ); ?></p>
+        <p class="submit">
+            <button type="button" class="button" id="rtbcb-rerun-real-treasury" data-section="rtbcb-test-real-treasury-overview">
+                <?php esc_html_e( 'Regenerate', 'rtbcb' ); ?>
+            </button>
+        </p>
+    </div>
+<?php endif; ?>
 <div class="card">
     <h3 class="title"><?php esc_html_e( 'Generate Real Treasury Overview', 'rtbcb' ); ?></h3>
     <p><?php esc_html_e( 'Configure options and generate an overview.', 'rtbcb' ); ?></p>
@@ -76,14 +90,21 @@ if ( empty( $company ) ) {
             <?php esc_html_e( 'Clear Results', 'rtbcb' ); ?>
         </button>
     </p>
+    </div>
+<div id="rtbcb-real-treasury-overview-card" class="rtbcb-result-card" style="display:none;">
+    <details>
+        <summary><?php esc_html_e( 'Generated Overview', 'rtbcb' ); ?></summary>
+        <div id="rtbcb-real-treasury-overview-results"></div>
+        <div id="rtbcb-real-treasury-overview-meta" class="rtbcb-meta"></div>
+        <p class="rtbcb-actions">
+            <button type="button" id="rtbcb-regenerate-real-treasury-overview" class="button"><?php esc_html_e( 'Regenerate', 'rtbcb' ); ?></button>
+            <button type="button" id="rtbcb-copy-real-treasury-overview" class="button"><?php esc_html_e( 'Copy', 'rtbcb' ); ?></button>
+        </p>
+    </details>
 </div>
-<div id="rtbcb-real-treasury-overview-results"></div>
 <style>
-#rtbcb-real-treasury-overview-results {
+#rtbcb-real-treasury-overview-card details {
     margin-top: 20px;
-}
-#rtbcb-real-treasury-overview-results .notice {
-    margin: 5px 0;
 }
 #rtbcb-real-treasury-overview-results div[style*="background"] {
     white-space: pre-wrap;
@@ -94,4 +115,7 @@ if ( empty( $company ) ) {
 <?php if ( ! isset( $GLOBALS['ajaxurl'] ) || empty( $GLOBALS['ajaxurl'] ) ) : ?>
 var ajaxurl = '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>';
 <?php endif; ?>
+document.getElementById( 'rtbcb-rerun-real-treasury' )?.addEventListener( 'click', function() {
+    document.getElementById( 'rtbcb-generate-real-treasury-overview' ).click();
+});
 </script>

@@ -5,6 +5,7 @@
         const generateBtn = $('#rtbcb-generate-treasury-tech-overview');
         const clearBtn = $('#rtbcb-clear-treasury-tech-overview');
         const resultsDiv = $('#rtbcb-treasury-tech-overview-results');
+        const card = $('#rtbcb-treasury-tech-overview-card');
 
         generateBtn.on('click', function() {
             const focusAreas = [];
@@ -21,6 +22,7 @@
 
             const start = performance.now();
             const original = rtbcbTestUtils.showLoading(generateBtn, 'Generating...');
+            card.show();
             resultsDiv.html('<p>Generating overview...</p>');
 
             $.ajax({
@@ -41,25 +43,13 @@
                             elapsed_time: data.elapsed,
                             generated_at: data.generated
                         });
-                        const actions = $('<p />');
-                        const regen = $('<button type="button" class="button" />').text('Regenerate');
-                        const copy = $('<button type="button" class="button" />').text('Copy');
-                        const clear = $('<button type="button" class="button" />').text('Clear');
-                        regen.on('click', function() {
+                        $('#rtbcb-regenerate-treasury-tech-overview').on('click', function(){
                             generateBtn.trigger('click');
                         });
-                        copy.on('click', function() {
-                            rtbcbTestUtils.copyToClipboard(text).then(function(){
-                                alert('Copied to clipboard');
-                            }).catch(function(err){
-                                alert('Copy failed: ' + err.message);
-                            });
+                        $('#rtbcb-copy-treasury-tech-overview').on('click', function(){
+                            rtbcbTestUtils.copyToClipboard(text);
                         });
-                        clear.on('click', function() {
-                            clearBtn.trigger('click');
-                        });
-                        actions.append(regen).append(' ').append(copy).append(' ').append(clear);
-                        resultsDiv.find('.notice').append(actions);
+                        card.show();
                     } else {
                         rtbcbTestUtils.renderError(resultsDiv, response.data.message || 'Failed to generate overview', function(){
                             generateBtn.trigger('click');

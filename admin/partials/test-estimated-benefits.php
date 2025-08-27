@@ -28,6 +28,20 @@ $recommended_category = get_option( 'rtbcb_last_recommended_category', '' );
 $categories           = RTBCB_Category_Recommender::get_all_categories();
 ?>
 <h2><?php esc_html_e( 'Test Estimated Benefits', 'rtbcb' ); ?></h2>
+<p class="description"><?php esc_html_e( 'Estimate potential savings and efficiency gains based on company metrics.', 'rtbcb' ); ?></p>
+<?php $rtbcb_last = rtbcb_get_last_test_result( 'rtbcb-test-estimated-benefits', $test_results ?? [] ); ?>
+<?php if ( $rtbcb_last ) : ?>
+    <div class="notice notice-info" role="status">
+        <p><strong><?php esc_html_e( 'Status:', 'rtbcb' ); ?></strong> <?php echo esc_html( $rtbcb_last['status'] ); ?></p>
+        <p><strong><?php esc_html_e( 'Message:', 'rtbcb' ); ?></strong> <?php echo esc_html( $rtbcb_last['message'] ); ?></p>
+        <p><strong><?php esc_html_e( 'Timestamp:', 'rtbcb' ); ?></strong> <?php echo esc_html( $rtbcb_last['timestamp'] ); ?></p>
+        <p class="submit">
+            <button type="button" class="button" id="rtbcb-rerun-benefits" data-section="rtbcb-test-estimated-benefits">
+                <?php esc_html_e( 'Regenerate', 'rtbcb' ); ?>
+            </button>
+        </p>
+    </div>
+<?php endif; ?>
 <form id="rtbcb-benefits-estimate-form">
     <table class="form-table">
         <tr>
@@ -74,4 +88,14 @@ $categories           = RTBCB_Category_Recommender::get_all_categories();
         </button>
     </p>
 </form>
-<div id="rtbcb-benefits-estimate-results"></div>
+<div id="rtbcb-benefits-estimate-card" class="rtbcb-result-card">
+    <details>
+        <summary><?php esc_html_e( 'Estimated Benefits', 'rtbcb' ); ?></summary>
+        <div id="rtbcb-benefits-estimate-results"></div>
+    </details>
+</div>
+<script>
+document.getElementById( 'rtbcb-rerun-benefits' )?.addEventListener( 'click', function() {
+    jQuery( '#rtbcb-benefits-estimate-form' ).trigger( 'submit' );
+});
+</script>
