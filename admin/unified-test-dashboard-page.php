@@ -1039,8 +1039,13 @@ $last_index_display = $last_indexed ? $last_indexed : __( 'Never', 'rtbcb' );
                             <label for="rtbcb_openai_api_key"><?php esc_html_e( 'OpenAI API Key', 'rtbcb' ); ?></label>
                         </th>
                         <td>
-                            <input type="password" id="rtbcb_openai_api_key" name="rtbcb_openai_api_key" value="<?php echo esc_attr( $api_key ); ?>" class="regular-text" autocomplete="off" />
-                            <button type="button" class="button button-secondary" data-action="toggle-api-key"><?php esc_html_e( 'Show', 'rtbcb' ); ?></button>
+                            <?php
+                            $api_nonce    = wp_create_nonce( 'rtbcb_get_api_key' );
+                            $has_api_key  = ! empty( $api_key );
+                            $placeholder  = $has_api_key ? '********' : '';
+                            ?>
+                            <input type="password" id="rtbcb_openai_api_key" name="rtbcb_openai_api_key" value="" placeholder="<?php echo esc_attr( $placeholder ); ?>" data-has-key="<?php echo $has_api_key ? '1' : '0'; ?>" class="regular-text" autocomplete="off" />
+                            <button type="button" class="button button-secondary" data-action="toggle-api-key" data-nonce="<?php echo esc_attr( $api_nonce ); ?>"><?php esc_html_e( 'Show', 'rtbcb' ); ?></button>
                             <span id="rtbcb-api-key-status" class="rtbcb-status-indicator rtbcb-api-key-status <?php echo esc_attr( $api_valid ? 'status-good' : 'status-error' ); ?>">
                                 <span class="dashicons <?php echo esc_attr( $api_valid ? 'dashicons-yes-alt' : 'dashicons-warning' ); ?>"></span>
                                 <span class="status-text"><?php echo esc_html( $api_valid ? __( 'Valid', 'rtbcb' ) : __( 'Invalid', 'rtbcb' ) ); ?></span>
