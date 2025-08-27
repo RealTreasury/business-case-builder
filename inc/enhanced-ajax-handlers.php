@@ -5,6 +5,7 @@ add_action( 'wp_ajax_rtbcb_run_rag_test', 'rtbcb_ajax_run_rag_test' );
 add_action( 'wp_ajax_rtbcb_api_health_ping', 'rtbcb_ajax_api_health_ping' );
 add_action( 'wp_ajax_rtbcb_export_results', 'rtbcb_ajax_export_results' );
 add_action( 'wp_ajax_rtbcb_debug_api_key', 'rtbcb_debug_api_key' );
+add_action( 'wp_ajax_rtbcb_get_api_key', 'rtbcb_get_api_key' );
 
 // Remove duplicate handlers and add debug logging.
 add_action(
@@ -103,6 +104,33 @@ function rtbcb_debug_api_key() {
             'length'       => $key_length,
             'preview'      => $key_preview,
             'valid_format' => rtbcb_is_valid_openai_api_key( $api_key ),
+        ]
+    );
+}
+
+/**
+ * Retrieve stored OpenAI API key for authorized users.
+ *
+ * @return void
+ */
+function rtbcb_get_api_key() {
+    if ( ! check_ajax_referer( 'rtbcb_get_api_key', 'nonce', false ) ) {
+        rtbcb_send_json_error( 'security_check_failed', rtbcb_get_user_friendly_error( 'security_check_failed' ), 403 );
+    }
+
+    if ( ! current_user_can( 'manage_options' ) ) {
+        rtbcb_send_json_error( 'insufficient_permissions', rtbcb_get_user_friendly_error( 'insufficient_permissions' ), 403 );
+    }
+
+    $api_key = sanitize_text_field( get_option( 'rtbcb_openai_api_key' ) );
+
+    if ( empty( $api_key ) ) {
+        rtbcb_send_json_error( 'api_key_missing', rtbcb_get_user_friendly_error( 'api_key_missing' ), 404 );
+    }
+
+    wp_send_json_success(
+        [
+            'api_key' => $api_key,
         ]
     );
 }

@@ -24,20 +24,8 @@
 
             if (actionTarget && actionTarget.getAttribute('data-action') === 'toggle-api-key') {
                 e.preventDefault();
-
-                const input  = document.getElementById('rtbcb_openai_api_key');
-                const button = actionTarget;
-
-                if (input && button) {
-                    if (input.type === 'password') {
-                        input.type        = 'text';
-                        button.textContent = 'Hide';
-                        button.style.background = '#cfc';
-                    } else {
-                        input.type        = 'password';
-                        button.textContent = 'Show';
-                        button.style.background = '';
-                    }
+                if (window.RTBCBDashboard && typeof window.RTBCBDashboard.toggleApiKeyVisibility === 'function') {
+                    window.RTBCBDashboard.toggleApiKeyVisibility();
                 }
             }
 
@@ -865,14 +853,42 @@ if (typeof jQuery !== 'undefined') {
         },
 
         toggleApiKeyVisibility() {
-            const $input = $('#rtbcb_openai_api_key');
+            const $input  = $('#rtbcb_openai_api_key');
             const $button = $('[data-action="toggle-api-key"]');
-            
+
             if ($input.attr('type') === 'password') {
-                $input.attr('type', 'text');
-                $button.text('Hide');
+                if (!$input.val() && $input.data('has-key')) {
+                    $button.prop('disabled', true).text(rtbcbDashboard.strings?.retrieving || 'Retrieving...');
+
+                    $.post(rtbcbDashboard.ajaxurl, {
+                        action: 'rtbcb_get_api_key',
+                        nonce: rtbcbDashboard.nonces?.getApiKey || '',
+                    })
+                        .done((response) => {
+                            if (response.success && response.data?.api_key) {
+                                $input.val(response.data.api_key);
+                                $input.attr('type', 'text');
+                                $button.text('Hide');
+                            } else {
+                                $button.text('Show');
+                                alert(response.data?.message || rtbcbDashboard.strings?.apiKeyRetrieveFailed || 'Unable to retrieve API key.');
+                            }
+                        })
+                        .fail(() => {
+                            $button.text('Show');
+                        })
+                        .always(() => {
+                            $button.prop('disabled', false);
+                        });
+                } else {
+                    $input.attr('type', 'text');
+                    $button.text('Hide');
+                }
             } else {
                 $input.attr('type', 'password');
+                if ($input.data('has-key')) {
+                    $input.val('');
+                }
                 $button.text('Show');
             }
         },
