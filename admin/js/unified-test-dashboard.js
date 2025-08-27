@@ -1,8 +1,99 @@
+// EMERGENCY FIX - Add this to the very top of unified-test-dashboard.js
+// This will work even if jQuery isn't loaded properly
+
+(function() {
+    'use strict';
+    
+    // Wait for page to load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initEmergencyHandlers);
+    } else {
+        initEmergencyHandlers();
+    }
+    
+    function initEmergencyHandlers() {
+        console.log('Emergency handlers starting...');
+        
+        // Add visual indicator that this script is working
+        document.body.style.borderTop = '5px solid red';
+
+        // Show/Hide API Key button and generic action handler
+        document.addEventListener('click', function(e) {
+            var actionTarget = e.target.closest('[data-action]');
+            var tabTarget = e.target.closest('.nav-tab');
+
+            if (actionTarget && actionTarget.getAttribute('data-action') === 'toggle-api-key') {
+                e.preventDefault();
+                if (window.RTBCBDashboard && typeof window.RTBCBDashboard.toggleApiKeyVisibility === 'function') {
+                    window.RTBCBDashboard.toggleApiKeyVisibility();
+                }
+            }
+
+            // Tab navigation
+            if (tabTarget) {
+                e.preventDefault();
+
+                // Remove active class from all tabs
+                var tabs = document.querySelectorAll('.nav-tab');
+                for (var i = 0; i < tabs.length; i++) {
+                    tabs[i].classList.remove('nav-tab-active');
+                }
+
+                // Add active class to clicked tab
+                tabTarget.classList.add('nav-tab-active');
+
+                // Hide all sections
+                var sections = document.querySelectorAll('.rtbcb-test-section');
+                for (var j = 0; j < sections.length; j++) {
+                    sections[j].style.display = 'none';
+                }
+
+                // Show target section
+                var tabId = tabTarget.getAttribute('data-tab');
+                var targetSection = document.getElementById(tabId);
+                if (targetSection) {
+                    targetSection.style.display = 'block';
+                }
+
+                // Visual feedback
+                tabTarget.style.background = '#e1f5fe';
+            }
+
+            // Generic button click feedback
+            if (actionTarget) {
+                // Visual feedback
+                actionTarget.style.background = '#ffeb3b';
+                setTimeout(function() {
+                    actionTarget.style.background = '';
+                }, 200);
+
+                console.log('Button clicked:', actionTarget.getAttribute('data-action'));
+            }
+        });
+        
+        console.log('Emergency handlers attached');
+        
+        // Test if jQuery is available and report status
+        setTimeout(function() {
+            var statusDiv = document.createElement('div');
+            statusDiv.style.cssText = 'position:fixed;top:10px;right:10px;background:white;border:2px solid black;padding:10px;z-index:9999;font-family:monospace;font-size:12px;';
+            
+            var status = 'Emergency Mode: ON<br>';
+            status += 'jQuery: ' + (typeof jQuery !== 'undefined' ? 'LOADED' : 'MISSING') + '<br>';
+            status += 'Buttons: ' + document.querySelectorAll('[data-action]').length;
+            
+            statusDiv.innerHTML = status;
+            document.body.appendChild(statusDiv);
+        }, 1000);
+    }
+})();
+
 /**
  * Unified Test Dashboard JavaScript - Fixed Version
  * Handles all dashboard functionality with proper jQuery noConflict support
  * 
  * Fixes:
+ * - Emergency fallback for when jQuery fails to load
  * - Proper jQuery noConflict wrapper
  * - Consistent event delegation
  * - Improved error handling
@@ -54,8 +145,18 @@
 
     // Initialize when document is ready
     $(document).ready(function() {
-        // Visual indicator that jQuery is working
-        $('body').css('border-top', '3px solid green');
+        // Visual indicator that jQuery is working (override emergency mode border)
+        $('body').css('border-top', '5px solid green');
+        
+        // Remove the emergency status div since jQuery is working
+        setTimeout(function() {
+            var emergencyDiv = document.querySelector('div[style*="position:fixed"][style*="top:10px"][style*="right:10px"]');
+            if (emergencyDiv && emergencyDiv.innerHTML.includes('Emergency Mode: ON')) {
+                emergencyDiv.innerHTML = emergencyDiv.innerHTML.replace('Emergency Mode: ON', 'jQuery Mode: ON');
+                emergencyDiv.style.background = '#d4edda';
+                emergencyDiv.style.borderColor = '#28a745';
+            }
+        }, 100);
         
         waitForDashboardConfig();
     });
