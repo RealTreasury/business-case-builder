@@ -46,6 +46,9 @@ class RTBCB_Admin {
         add_action( 'wp_ajax_rtbcb_test_generate_complete_report', [ $this, 'ajax_test_generate_complete_report' ] );
         add_action( 'wp_ajax_rtbcb_test_complete_report', [ $this, 'ajax_test_generate_complete_report' ] );
         add_action( 'wp_ajax_rtbcb_test_calculate_roi', [ $this, 'ajax_test_calculate_roi' ] );
+        add_action( 'wp_ajax_rtbcb_test_portal', [ $this, 'ajax_test_portal' ] );
+        add_action( 'wp_ajax_rtbcb_test_rag', [ $this, 'ajax_test_rag' ] );
+        add_action( 'wp_ajax_rtbcb_set_test_company', [ $this, 'ajax_set_test_company' ] );
     }
 
     /**
@@ -928,6 +931,73 @@ class RTBCB_Admin {
 
         if ( ! current_user_can( 'manage_options' ) ) {
             wp_send_json_error( [ 'message' => __( 'Permission denied.', 'rtbcb' ) ], 403 );
+        }
+
+        $company_name = isset( $_POST['company_name'] ) ? sanitize_text_field( wp_unslash( $_POST['company_name'] ) ) : '';
+        if ( '' === $company_name ) {
+            wp_send_json_error( [ 'message' => __( 'Invalid company name.', 'rtbcb' ) ], 400 );
+        }
+
+        update_option( 'rtbcb_company_data', [ 'name' => $company_name ] );
+        delete_option( 'rtbcb_test_results' );
+
+        wp_send_json_success( [ 'message' => __( 'Company saved.', 'rtbcb' ) ] );
+    }
+
+    /**
+     * AJAX handler to test Portal integration.
+     *
+     * @return void
+     */
+    public function ajax_test_portal() {
+        check_ajax_referer( 'rtbcb_test_dashboard', 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'message' => __( 'Unauthorized', 'rtbcb' ) ] );
+        }
+
+        if ( ! $this->check_portal_integration() ) {
+            wp_send_json_error( [ 'message' => __( 'Portal integration not active.', 'rtbcb' ) ] );
+        }
+
+        $vendor_count = $this->get_vendor_count();
+
+        wp_send_json_success( [ 'vendor_count' => intval( $vendor_count ) ] );
+    }
+
+    /**
+     * AJAX handler to test RAG index health.
+     *
+     * @return void
+     */
+    public function ajax_test_rag() {
+        check_ajax_referer( 'rtbcb_test_dashboard', 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'message' => __( 'Unauthorized', 'rtbcb' ) ] );
+        }
+
+        $health = $this->check_rag_health();
+
+        wp_send_json_success(
+            [
+                'status'        => sanitize_text_field( $health['status'] ?? '' ),
+                'indexed_items' => isset( $health['indexed_items'] ) ? intval( $health['indexed_items'] ) : 0,
+                'last_updated'  => isset( $health['last_updated'] ) ? sanitize_text_field( $health['last_updated'] ) : '',
+            ]
+        );
+    }
+
+    /**
+     * AJAX handler to set test company name.
+     *
+     * @return void
+     */
+    public function ajax_set_test_company() {
+        check_ajax_referer( 'rtbcb_test_dashboard', 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'message' => __( 'Unauthorized', 'rtbcb' ) ], 403 );
         }
 
         $company_name = isset( $_POST['company_name'] ) ? sanitize_text_field( wp_unslash( $_POST['company_name'] ) ) : '';
