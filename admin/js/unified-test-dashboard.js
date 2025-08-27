@@ -871,7 +871,7 @@ if (typeof jQuery !== 'undefined') {
                                 $button.text('Hide');
                             } else {
                                 $button.text('Show');
-                                alert(response.data?.message || rtbcbDashboard.strings?.apiKeyRetrieveFailed || 'Unable to retrieve API key.');
+                                showApiKeyError(response.data?.message || rtbcbDashboard.strings?.apiKeyRetrieveFailed || 'Unable to retrieve API key.');
                             }
                         })
                             $button.text('Show');
