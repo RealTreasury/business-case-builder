@@ -16,7 +16,8 @@ const testFiles = [
     'handle-submit-success.test.js',
     'handle-server-error-display.test.js',
     'temperature-model.test.js',
-    'dashboard-api-key-button.test.js'
+    'dashboard-api-key-button.test.js',
+    'jquery-noconflict.test.js'
 ];
 
 const testsDir = path.join(__dirname, '..', 'tests');
