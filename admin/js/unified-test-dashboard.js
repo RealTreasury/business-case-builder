@@ -1580,6 +1580,17 @@ if (typeof jQuery !== 'undefined') {
     })(jQuery);
 }
 
+function waitForDashboardAndInit() {
+    if ( typeof jQuery === 'undefined' ) {
+        setTimeout( waitForDashboardAndInit, RETRY_DELAY );
+        return;
+    }
+
+    jQuery( function() {
+        check();
+    } );
+}
+
 // Start initialization: wait for rtbcbDashboard to be available, then initialize dashboard logic
 waitForDashboardAndInit();
 })();
