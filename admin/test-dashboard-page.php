@@ -16,16 +16,16 @@ $company = rtbcb_get_current_company();
     <?php rtbcb_render_start_new_analysis_button(); ?>
 
     <?php
-    $steps = rtbcb_get_test_steps();
+    $sections = rtbcb_get_dashboard_sections();
     ?>
     <div class="card">
         <h2 class="title"><?php esc_html_e( 'Analysis Progress', 'rtbcb' ); ?></h2>
         <ul>
-            <?php foreach ( $steps as $slug => $step ) : ?>
-                <?php $done = ! empty( get_option( $step['option'] ) ); ?>
+            <?php foreach ( $sections as $id => $section ) : ?>
+                <?php $done = ! empty( $section['completed'] ); ?>
                 <li class="<?php echo $done ? 'completed' : 'missing'; ?>">
-                    <a href="#<?php echo esc_attr( $slug ); ?>">
-                        <?php echo esc_html( $step['label'] ); ?>
+                    <a href="#<?php echo esc_attr( $id ); ?>">
+                        <?php echo esc_html( $section['label'] ); ?>
                     </a>
                     - <?php echo $done ? esc_html__( 'Complete', 'rtbcb' ) : esc_html__( 'Incomplete', 'rtbcb' ); ?>
                 </li>
