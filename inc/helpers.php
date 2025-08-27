@@ -105,7 +105,7 @@ function rtbcb_require_completed_steps( $current_page ) {
     foreach ( $dependencies[ $current_page ] as $dependency ) {
         $option = $steps[ $dependency ]['option'] ?? '';
         if ( empty( get_option( $option ) ) ) {
-            $url = admin_url( 'admin.php?page=' . $dependency );
+            $url = admin_url( 'admin.php?page=rtbcb-test-dashboard#' . $dependency );
             echo '<div class="notice notice-error"><p>' .
                 sprintf( __( 'Please complete %s first.', 'rtbcb' ),
                     '<a href="' . esc_url( $url ) . '">' .
@@ -137,14 +137,14 @@ function rtbcb_render_test_navigation( $current_page ) {
 
     if ( $current_index > 0 ) {
         $prev_page = $step_keys[ $current_index - 1 ];
-        $prev_url  = admin_url( 'admin.php?page=' . $prev_page );
+        $prev_url  = admin_url( 'admin.php?page=rtbcb-test-dashboard#' . $prev_page );
         echo '<a href="' . esc_url( $prev_url ) . '" class="button">' .
             esc_html__( 'Previous', 'rtbcb' ) . '</a> ';
     }
 
     if ( $current_index < count( $step_keys ) - 1 ) {
         $next_page = $step_keys[ $current_index + 1 ];
-        $next_url  = admin_url( 'admin.php?page=' . $next_page );
+        $next_url  = admin_url( 'admin.php?page=rtbcb-test-dashboard#' . $next_page );
         echo '<a href="' . esc_url( $next_url ) . '" class="button button-primary">' .
             esc_html__( 'Next', 'rtbcb' ) . '</a>';
     }
@@ -161,7 +161,7 @@ function rtbcb_render_test_navigation( $current_page ) {
  * @return void
  */
 function rtbcb_render_start_new_analysis_button() {
-    $url = admin_url( 'admin.php?page=rtbcb-test-company-overview' );
+    $url = admin_url( 'admin.php?page=rtbcb-test-dashboard#rtbcb-test-company-overview' );
     echo '<p><a href="' . esc_url( $url ) . '" class="button">' .
         esc_html__( 'Start New Analysis', 'rtbcb' ) . '</a></p>';
 }
