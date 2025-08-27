@@ -44,10 +44,7 @@ $company = rtbcb_get_current_company();
         <p id="rtbcb-test-status"></p>
     </div>
 
-    <?php
-    $rag_is_healthy = isset( $rag_health['status'] ) && 'healthy' === $rag_health['status'];
-    include RTBCB_DIR . 'admin/partials/dashboard-connectivity.php';
-    ?>
+    <?php include RTBCB_DIR . 'admin/partials/dashboard-connectivity.php'; ?>
 
     <h2 class="nav-tab-wrapper" id="rtbcb-test-tabs">
         <a href="#rtbcb-test-company-overview" class="nav-tab nav-tab-active"><?php esc_html_e( 'Company Overview', 'rtbcb' ); ?></a>
