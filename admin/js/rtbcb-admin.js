@@ -486,6 +486,14 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       var status = $('#rtbcb-test-status');
       var tableBody = $('#rtbcb-test-results-summary tbody');
       var originalText = button.text();
+      var sectionMap = {
+        'Company Overview': 'rtbcb-test-company-overview',
+        'Treasury Tech Overview': 'rtbcb-test-treasury-tech-overview',
+        'Industry Overview': 'rtbcb-test-industry-overview',
+        'Real Treasury Overview': 'rtbcb-test-real-treasury-overview',
+        'Recommended Category': 'rtbcb-test-recommended-category',
+        'Estimated Benefits': 'rtbcb-test-estimated-benefits'
+      };
       var runTests = _async(function () {
         var tests = [{
           action: 'rtbcb_test_company_overview',
@@ -533,7 +541,9 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
           }, _empty), function () {
             tableBody.empty();
             results.forEach(function (item) {
-              var row = '<tr><td>' + item.section + '</td><td>' + item.status + '</td><td>' + item.message + '</td><td>' + new Date().toLocaleString() + '</td></tr>';
+              var sectionId = sectionMap[item.section] || '';
+              var actions = sectionId ? '<a href="#' + sectionId + '" class="rtbcb-jump-tab">' + rtbcbAdmin.strings.view + '</a> | <a href="#" class="rtbcb-rerun-test" data-section="' + sectionId + '">' + rtbcbAdmin.strings.rerun + '</a>' : '';
+              var row = '<tr><td>' + item.section + '</td><td>' + item.status + '</td><td>' + item.message + '</td><td>' + new Date().toLocaleString() + '</td><td>' + actions + '</td></tr>';
               tableBody.append(row);
             });
             status.text('');

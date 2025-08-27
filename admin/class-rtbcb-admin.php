@@ -113,6 +113,8 @@ class RTBCB_Admin {
                 'generating'          => __( 'Generating...', 'rtbcb' ),
                 'copied'              => __( 'Copied to clipboard.', 'rtbcb' ),
                 'retry'               => __( 'Retry', 'rtbcb' ),
+                'view'                => __( 'View', 'rtbcb' ),
+                'rerun'               => __( 'Re-run', 'rtbcb' ),
             ],
         ] );
 
@@ -360,7 +362,15 @@ class RTBCB_Admin {
             ];
         }
 
-        update_option( 'rtbcb_test_results', $sanitized );
+        $existing    = get_option( 'rtbcb_test_results', [] );
+        $existing    = is_array( $existing ) ? $existing : [];
+        $combined    = array_merge( $sanitized, $existing );
+        $max_results = 10;
+        if ( count( $combined ) > $max_results ) {
+            $combined = array_slice( $combined, 0, $max_results );
+        }
+
+        update_option( 'rtbcb_test_results', $combined );
 
         wp_send_json_success();
     }
