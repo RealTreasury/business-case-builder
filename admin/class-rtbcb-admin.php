@@ -42,6 +42,7 @@ class RTBCB_Admin {
         add_action( 'wp_ajax_rtbcb_get_company_data', [ $this, 'ajax_get_company_data' ] );
         add_action( 'wp_ajax_rtbcb_test_estimated_benefits', [ $this, 'ajax_test_estimated_benefits' ] );
         add_action( 'wp_ajax_rtbcb_save_test_results', [ $this, 'save_test_results' ] );
+        add_action( 'wp_ajax_rtbcb_set_company_name', [ $this, 'ajax_set_company_name' ] );
         add_action( 'wp_ajax_rtbcb_test_generate_complete_report', [ $this, 'ajax_test_generate_complete_report' ] );
         add_action( 'wp_ajax_rtbcb_test_complete_report', [ $this, 'ajax_test_generate_complete_report' ] );
         add_action( 'wp_ajax_rtbcb_test_calculate_roi', [ $this, 'ajax_test_calculate_roi' ] );
@@ -915,6 +916,29 @@ class RTBCB_Admin {
         $results = RTBCB_Tests::run_integration_tests();
 
         wp_send_json_success( $results );
+    }
+
+    /**
+     * AJAX handler to set company name for tests.
+     *
+     * @return void
+     */
+    public function ajax_set_company_name() {
+        check_ajax_referer( 'rtbcb_set_company', 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'message' => __( 'Permission denied.', 'rtbcb' ) ], 403 );
+        }
+
+        $company_name = isset( $_POST['company_name'] ) ? sanitize_text_field( wp_unslash( $_POST['company_name'] ) ) : '';
+        if ( '' === $company_name ) {
+            wp_send_json_error( [ 'message' => __( 'Invalid company name.', 'rtbcb' ) ], 400 );
+        }
+
+        update_option( 'rtbcb_company_data', [ 'name' => $company_name ] );
+        delete_option( 'rtbcb_test_results' );
+
+        wp_send_json_success( [ 'message' => __( 'Company saved.', 'rtbcb' ) ] );
     }
 
     /**
