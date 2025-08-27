@@ -326,7 +326,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       var start = performance.now();
       var formData = new FormData();
       formData.append('action', 'rtbcb_test_company_overview');
-      formData.append('company', company);
+      formData.append('company_name', company);
       formData.append('nonce', nonce);
       fetch(rtbcbAdmin.ajax_url, {
         method: 'POST',
