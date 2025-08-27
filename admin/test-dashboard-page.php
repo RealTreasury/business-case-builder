@@ -44,6 +44,8 @@ $company = rtbcb_get_current_company();
         <p id="rtbcb-test-status"></p>
     </div>
 
+    <?php include RTBCB_DIR . 'admin/partials/dashboard-connectivity.php'; ?>
+
     <h2 class="nav-tab-wrapper" id="rtbcb-test-tabs">
         <a href="#rtbcb-test-company-overview" class="nav-tab nav-tab-active"><?php esc_html_e( 'Company Overview', 'rtbcb' ); ?></a>
         <a href="#rtbcb-test-treasury-tech-overview" class="nav-tab"><?php esc_html_e( 'Treasury Tech', 'rtbcb' ); ?></a>
@@ -114,25 +116,6 @@ $company = rtbcb_get_current_company();
         </table>
     </div>
 
-    <div class="card">
-        <h2 class="title"><?php esc_html_e( 'System Status', 'rtbcb' ); ?></h2>
-        <table class="widefat striped">
-            <tbody>
-                <tr>
-                    <th><?php esc_html_e( 'OpenAI API Key', 'rtbcb' ); ?></th>
-                    <td><?php echo $openai_status ? esc_html__( 'Configured', 'rtbcb' ) : esc_html__( 'Missing', 'rtbcb' ); ?></td>
-                </tr>
-                <tr>
-                    <th><?php esc_html_e( 'Portal Integration', 'rtbcb' ); ?></th>
-                    <td><?php echo $portal_active ? esc_html__( 'Active', 'rtbcb' ) : esc_html__( 'Inactive', 'rtbcb' ); ?></td>
-                </tr>
-                <tr>
-                    <th><?php esc_html_e( 'RAG Index', 'rtbcb' ); ?></th>
-                    <td><?php echo $rag_health ? esc_html__( 'Healthy', 'rtbcb' ) : esc_html__( 'Needs attention', 'rtbcb' ); ?></td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
     <script>
     jQuery(function($){
         $('#rtbcb-test-tabs a').on('click', function(e){
