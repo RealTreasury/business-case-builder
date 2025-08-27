@@ -43,7 +43,8 @@ $embedding_models = [
                     <label for="rtbcb_openai_api_key"><?php echo esc_html__( 'OpenAI API Key', 'rtbcb' ); ?></label>
                 </th>
                 <td>
-                    <input type="text" id="rtbcb_openai_api_key" name="rtbcb_openai_api_key" value="<?php echo esc_attr( $api_key ); ?>" class="regular-text" />
+                    <input type="password" id="rtbcb_openai_api_key" name="rtbcb_openai_api_key" value="<?php echo esc_attr( $api_key ); ?>" class="regular-text" />
+                    <button type="button" class="button" id="rtbcb-toggle-api-key"><?php echo esc_html__( 'Show', 'rtbcb' ); ?></button>
                 </td>
             </tr>
             <tr>
@@ -123,5 +124,23 @@ $embedding_models = [
         <?php submit_button(); ?>
     </form>
 </div>
+
+<script type="text/javascript">
+( function() {
+    var toggleButton = document.getElementById( 'rtbcb-toggle-api-key' );
+    var apiInput = document.getElementById( 'rtbcb_openai_api_key' );
+    if ( toggleButton && apiInput ) {
+        toggleButton.addEventListener( 'click', function() {
+            if ( 'password' === apiInput.type ) {
+                apiInput.type = 'text';
+                toggleButton.textContent = '<?php echo esc_js( __( 'Hide', 'rtbcb' ) ); ?>';
+            } else {
+                apiInput.type = 'password';
+                toggleButton.textContent = '<?php echo esc_js( __( 'Show', 'rtbcb' ) ); ?>';
+            }
+        } );
+    }
+} )();
+</script>
 
 
