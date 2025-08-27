@@ -1,6 +1,6 @@
 <?php
 /**
- * Connectivity status card for test dashboard.
+ * Dashboard connectivity status and tests.
  *
  * @package RealTreasuryBusinessCaseBuilder
  */

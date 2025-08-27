@@ -46,12 +46,48 @@ $company = rtbcb_get_current_company();
 
     <?php
     $rag_is_healthy = isset( $rag_health['status'] ) && 'healthy' === $rag_health['status'];
-    include RTBCB_DIR . 'admin/partials/test-dashboard-connectivity-card.php';
+    include RTBCB_DIR . 'admin/partials/dashboard-connectivity.php';
     ?>
 
-    <?php include RTBCB_DIR . 'admin/partials/test-dashboard-nav-tabs.php'; ?>
+    <h2 class="nav-tab-wrapper" id="rtbcb-test-tabs">
+        <a href="#rtbcb-test-company-overview" class="nav-tab nav-tab-active"><?php esc_html_e( 'Company Overview', 'rtbcb' ); ?></a>
+        <a href="#rtbcb-test-treasury-tech-overview" class="nav-tab"><?php esc_html_e( 'Treasury Tech', 'rtbcb' ); ?></a>
+        <a href="#rtbcb-test-industry-overview" class="nav-tab"><?php esc_html_e( 'Industry', 'rtbcb' ); ?></a>
+        <a href="#rtbcb-test-real-treasury-overview" class="nav-tab"><?php esc_html_e( 'Real Treasury', 'rtbcb' ); ?></a>
+        <a href="#rtbcb-test-recommended-category" class="nav-tab"><?php esc_html_e( 'Recommended Category', 'rtbcb' ); ?></a>
+        <a href="#rtbcb-test-estimated-benefits" class="nav-tab"><?php esc_html_e( 'Estimated Benefits', 'rtbcb' ); ?></a>
+        <a href="#rtbcb-api-test" class="nav-tab"><?php esc_html_e( 'API Test', 'rtbcb' ); ?></a>
+        <a href="#rtbcb-report-preview" class="nav-tab"><?php esc_html_e( 'Report Preview', 'rtbcb' ); ?></a>
+        <a href="#rtbcb-report-test" class="nav-tab"><?php esc_html_e( 'Report Test', 'rtbcb' ); ?></a>
+    </h2>
 
-    <?php include RTBCB_DIR . 'admin/partials/test-dashboard-tab-panels.php'; ?>
+    <div id="rtbcb-test-company-overview" class="rtbcb-tab-panel" style="display:block;">
+        <?php include RTBCB_DIR . 'admin/partials/test-company-overview.php'; ?>
+    </div>
+    <div id="rtbcb-test-treasury-tech-overview" class="rtbcb-tab-panel" style="display:none;">
+        <?php include RTBCB_DIR . 'admin/partials/test-treasury-tech-overview.php'; ?>
+    </div>
+    <div id="rtbcb-test-industry-overview" class="rtbcb-tab-panel" style="display:none;">
+        <?php include RTBCB_DIR . 'admin/partials/test-industry-overview.php'; ?>
+    </div>
+    <div id="rtbcb-test-real-treasury-overview" class="rtbcb-tab-panel" style="display:none;">
+        <?php include RTBCB_DIR . 'admin/partials/test-real-treasury-overview.php'; ?>
+    </div>
+    <div id="rtbcb-test-recommended-category" class="rtbcb-tab-panel" style="display:none;">
+        <?php include RTBCB_DIR . 'admin/partials/test-recommended-category.php'; ?>
+    </div>
+    <div id="rtbcb-test-estimated-benefits" class="rtbcb-tab-panel" style="display:none;">
+        <?php include RTBCB_DIR . 'admin/partials/test-estimated-benefits.php'; ?>
+    </div>
+    <div id="rtbcb-api-test" class="rtbcb-tab-panel" style="display:none;">
+        <?php include RTBCB_DIR . 'admin/partials/test-api.php'; ?>
+    </div>
+    <div id="rtbcb-report-preview" class="rtbcb-tab-panel" style="display:none;">
+        <?php include RTBCB_DIR . 'admin/partials/test-report-preview.php'; ?>
+    </div>
+    <div id="rtbcb-report-test" class="rtbcb-tab-panel" style="display:none;">
+        <?php include RTBCB_DIR . 'admin/partials/test-report.php'; ?>
+    </div>
 
     <script>
     jQuery(function($){
