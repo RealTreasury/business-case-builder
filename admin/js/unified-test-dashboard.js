@@ -771,7 +771,7 @@ if (typeof jQuery !== 'undefined') {
                         error: error
                     });
                     this.setButtonState('[data-action="api-health-ping"]', 'error');
-                    $('#rtbcb-api-health-notice').text('API tests failed');
+                    $('#rtbcb-api-health-notice').text(error.message || 'API tests failed');
                 })
                 .finally(() => {
                     this.isGenerating = false;
