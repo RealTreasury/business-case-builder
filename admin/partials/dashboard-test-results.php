@@ -18,10 +18,6 @@ if ( ! empty( $test_results ) && is_array( $test_results ) ) {
 $sections     = rtbcb_get_dashboard_sections();
 ?>
 
-<div id="rtbcb-tests-complete-toast" class="notice notice-success is-dismissible" style="display:none;">
-    <p><?php esc_html_e( 'All tests completed.', 'rtbcb' ); ?></p>
-</div>
-
 <h2 class="title"><?php esc_html_e( 'Recent Test Results', 'rtbcb' ); ?></h2>
 <table class="widefat striped" id="rtbcb-test-results-summary">
     <thead>
@@ -73,13 +69,6 @@ $sections     = rtbcb_get_dashboard_sections();
         var section = $(this).data('section');
         $('#rtbcb-test-tabs a[href="#' + section + '"]').trigger('click');
         $('#' + section).find('form').first().trigger('submit');
-    });
-    $(document).on('rtbcb-tests-complete', function(){
-        var toast = $('#rtbcb-tests-complete-toast');
-        toast.fadeIn();
-        setTimeout(function(){
-            toast.fadeOut();
-        }, 5000);
     });
 })(jQuery);
 </script>
