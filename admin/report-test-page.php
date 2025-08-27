@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 $company = rtbcb_get_current_company();
 if ( empty( $company ) ) {
-    $overview_url = admin_url( 'admin.php?page=rtbcb-test-company-overview' );
+    $overview_url = admin_url( 'admin.php?page=rtbcb-test-dashboard&tab=company-overview' );
     echo '<div class="notice notice-error"><p>' . sprintf(
         esc_html__( 'No company data found. Please run the %s first.', 'rtbcb' ),
         '<a href="' . esc_url( $overview_url ) . '">' . esc_html__( 'Company Overview', 'rtbcb' ) . '</a>'

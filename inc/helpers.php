@@ -76,8 +76,17 @@ function rtbcb_get_test_steps() {
             'label' => __( 'Real Treasury Overview', 'rtbcb' ),
             'option' => 'rtbcb_real_treasury_overview',
         ],
+        'rtbcb-test-recommended-category' => [
+            'label' => __( 'Recommended Category', 'rtbcb' ),
+            'option' => 'rtbcb_last_recommended_category',
+        ],
+        'rtbcb-test-estimated-benefits' => [
+            'label' => __( 'Estimated Benefits', 'rtbcb' ),
+            'option' => 'rtbcb_estimated_benefits',
+        ],
     ];
 }
+
 
 /**
  * Ensure all previous steps are complete before rendering a page.
@@ -105,7 +114,8 @@ function rtbcb_require_completed_steps( $current_page ) {
     foreach ( $dependencies[ $current_page ] as $dependency ) {
         $option = $steps[ $dependency ]['option'] ?? '';
         if ( empty( get_option( $option ) ) ) {
-            $url = admin_url( 'admin.php?page=' . $dependency );
+            $tab = str_replace( 'rtbcb-test-', '', $dependency );
+            $url = admin_url( 'admin.php?page=rtbcb-test-dashboard&tab=' . $tab );
             echo '<div class="notice notice-error"><p>' .
                 sprintf( __( 'Please complete %s first.', 'rtbcb' ),
                     '<a href="' . esc_url( $url ) . '">' .
@@ -123,7 +133,6 @@ function rtbcb_require_completed_steps( $current_page ) {
  *
  * @param string $current_slug Current page slug.
  * @return void
- */
 function rtbcb_render_test_navigation( $current_page ) {
     $steps        = rtbcb_get_test_steps();
     $step_keys    = array_keys( $steps );
@@ -137,20 +146,23 @@ function rtbcb_render_test_navigation( $current_page ) {
 
     if ( $current_index > 0 ) {
         $prev_page = $step_keys[ $current_index - 1 ];
-        $prev_url  = admin_url( 'admin.php?page=' . $prev_page );
+        $prev_tab  = str_replace( 'rtbcb-test-', '', $prev_page );
+        $prev_url  = admin_url( 'admin.php?page=rtbcb-test-dashboard&tab=' . $prev_tab );
         echo '<a href="' . esc_url( $prev_url ) . '" class="button">' .
             esc_html__( 'Previous', 'rtbcb' ) . '</a> ';
     }
 
     if ( $current_index < count( $step_keys ) - 1 ) {
         $next_page = $step_keys[ $current_index + 1 ];
-        $next_url  = admin_url( 'admin.php?page=' . $next_page );
+        $next_tab  = str_replace( 'rtbcb-test-', '', $next_page );
+        $next_url  = admin_url( 'admin.php?page=rtbcb-test-dashboard&tab=' . $next_tab );
         echo '<a href="' . esc_url( $next_url ) . '" class="button button-primary">' .
             esc_html__( 'Next', 'rtbcb' ) . '</a>';
     }
 
     echo '</div>';
 }
+
 
 /**
  * Render a button to start a new company analysis.
@@ -161,7 +173,7 @@ function rtbcb_render_test_navigation( $current_page ) {
  * @return void
  */
 function rtbcb_render_start_new_analysis_button() {
-    $url = admin_url( 'admin.php?page=rtbcb-test-company-overview' );
+    $url = admin_url( 'admin.php?page=rtbcb-test-dashboard&tab=company-overview' );
     echo '<p><a href="' . esc_url( $url ) . '" class="button">' .
         esc_html__( 'Start New Analysis', 'rtbcb' ) . '</a></p>';
 }
