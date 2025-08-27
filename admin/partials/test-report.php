@@ -124,8 +124,3 @@ if ( empty( $company ) ) {
     </div>
 </div>
 <div id="rtbcb-report-preview" style="display:none;"></div>
-<script>
-document.getElementById( 'rtbcb-rerun-report-test' )?.addEventListener( 'click', function() {
-    document.getElementById( 'rtbcb-generate-report' ).click();
-});
-</script>
