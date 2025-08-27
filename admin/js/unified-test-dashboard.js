@@ -874,8 +874,8 @@ if (typeof jQuery !== 'undefined') {
                                 alert(response.data?.message || rtbcbDashboard.strings?.apiKeyRetrieveFailed || 'Unable to retrieve API key.');
                             }
                         })
-                        .fail(() => {
                             $button.text('Show');
+                            alert(rtbcbDashboard.strings?.apiKeyRetrieveFailed || 'Unable to retrieve API key.');
                         })
                         .always(() => {
                             $button.prop('disabled', false);
