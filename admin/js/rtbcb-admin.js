@@ -495,6 +495,13 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
         'Estimated Benefits': 'rtbcb-test-estimated-benefits'
       };
       var runTests = _async(function () {
+        var companyName = $('#rtbcb-company-name').val().trim() || (rtbcbAdmin.company && rtbcbAdmin.company.name ? rtbcbAdmin.company.name : '').trim();
+        if (!companyName) {
+          alert('Please enter a company name.');
+          status.text('');
+          button.prop('disabled', false).text(originalText);
+          return;
+        }
         var tests = [{
           action: 'rtbcb_test_company_overview',
           nonce: rtbcbAdmin.company_overview_nonce,
@@ -512,10 +519,14 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
         return _continue(_forOf(tests, function (test) {
           status.text('Testing ' + test.label + '...');
           return _continueIgnored(_catch(function () {
-            return _await($.post(rtbcbAdmin.ajax_url, {
+            var postData = {
               action: test.action,
               nonce: test.nonce
-            }), function (response) {
+            };
+            if (test.action === 'rtbcb_test_company_overview') {
+              postData.company_name = companyName;
+            }
+            return _await($.post(rtbcbAdmin.ajax_url, postData), function (response) {
               var message = response && response.data && response.data.message ? response.data.message : '';
               results.push({
                 section: test.label,
