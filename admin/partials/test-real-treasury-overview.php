@@ -100,5 +100,22 @@ if ( empty( $company ) ) {
             <button type="button" id="rtbcb-regenerate-real-treasury-overview" class="button"><?php esc_html_e( 'Regenerate', 'rtbcb' ); ?></button>
             <button type="button" id="rtbcb-copy-real-treasury-overview" class="button"><?php esc_html_e( 'Copy', 'rtbcb' ); ?></button>
         </p>
-</details>
+    </details>
 </div>
+<style>
+#rtbcb-real-treasury-overview-card details {
+    margin-top: 20px;
+}
+#rtbcb-real-treasury-overview-results div[style*="background"] {
+    white-space: pre-wrap;
+    line-height: 1.6;
+}
+</style>
+<script>
+<?php if ( ! isset( $GLOBALS['ajaxurl'] ) || empty( $GLOBALS['ajaxurl'] ) ) : ?>
+var ajaxurl = '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>';
+<?php endif; ?>
+document.getElementById( 'rtbcb-rerun-real-treasury' )?.addEventListener( 'click', function() {
+    document.getElementById( 'rtbcb-generate-real-treasury-overview' ).click();
+});
+</script>

@@ -94,3 +94,8 @@ $categories           = RTBCB_Category_Recommender::get_all_categories();
         <div id="rtbcb-benefits-estimate-results"></div>
     </details>
 </div>
+<script>
+document.getElementById( 'rtbcb-rerun-benefits' )?.addEventListener( 'click', function() {
+    jQuery( '#rtbcb-benefits-estimate-form' ).trigger( 'submit' );
+});
+</script>
