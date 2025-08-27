@@ -86,36 +86,6 @@ $company = rtbcb_get_current_company();
         <?php include RTBCB_DIR . 'admin/partials/test-report.php'; ?>
     </div>
 
-    <div class="card">
-        <h2 class="title"><?php esc_html_e( 'Recent Test Results', 'rtbcb' ); ?></h2>
-        <table class="widefat striped" id="rtbcb-test-results-summary">
-            <thead>
-                <tr>
-                    <th><?php esc_html_e( 'Section', 'rtbcb' ); ?></th>
-                    <th><?php esc_html_e( 'Status', 'rtbcb' ); ?></th>
-                    <th><?php esc_html_e( 'Message', 'rtbcb' ); ?></th>
-                    <th><?php esc_html_e( 'Timestamp', 'rtbcb' ); ?></th>
-                </tr>
-            </thead>
-            <tbody>
-            <?php if ( ! empty( $test_results ) ) : ?>
-                <?php foreach ( $test_results as $result ) : ?>
-                    <tr>
-                        <td><?php echo esc_html( $result['section'] ); ?></td>
-                        <td><?php echo esc_html( $result['status'] ); ?></td>
-                        <td><?php echo esc_html( $result['message'] ); ?></td>
-                        <td><?php echo esc_html( $result['timestamp'] ); ?></td>
-                    </tr>
-                <?php endforeach; ?>
-            <?php else : ?>
-                <tr>
-                    <td colspan="4"><?php esc_html_e( 'No test results found.', 'rtbcb' ); ?></td>
-                </tr>
-            <?php endif; ?>
-            </tbody>
-        </table>
-    </div>
-
     <script>
     jQuery(function($){
         $('#rtbcb-test-tabs a').on('click', function(e){

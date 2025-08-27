@@ -42,6 +42,8 @@ $company_name = isset( $company_data['name'] ) ? sanitize_text_field( $company_d
         <?php wp_nonce_field( 'rtbcb_set_company', 'rtbcb_set_company_nonce' ); ?>
     </p>
     <p id="rtbcb-connectivity-status"></p>
+
+    <?php include RTBCB_DIR . 'admin/partials/dashboard-test-results.php'; ?>
 </div>
 <script>
 (function($){
