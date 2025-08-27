@@ -302,13 +302,13 @@ async function generateProfessionalReport(businessContext) {
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         try {
-            const response = await fetch('https://api.openai.com/v1/responses', {
+            const formData = new FormData();
+            formData.append('action', 'rtbcb_openai_responses');
+            formData.append('body', JSON.stringify(requestBody));
+
+            const response = await fetch(rtbcbReport.ajax_url, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${rtbcbReport.api_key}`
-                },
-                body: JSON.stringify(requestBody)
+                body: formData
             });
 
             if (!response.ok) {

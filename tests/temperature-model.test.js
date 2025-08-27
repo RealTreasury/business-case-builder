@@ -11,11 +11,16 @@ const { execSync } = require('child_process');
     const unsupportedModels = [...capabilities.temperature.unsupported, 'gpt-5-mini'];
     const supportedModels = ['gpt-4o', 'gpt-4.1-preview'];
 
+    global.FormData = class {
+        constructor() { this.store = {}; }
+        append(key, value) { this.store[key] = value; }
+    };
+
     for (const model of [...unsupportedModels, ...supportedModels]) {
         let capturedBody;
-        global.rtbcbReport = { report_model: model, api_key: 'test', model_capabilities: capabilities };
+        global.rtbcbReport = { report_model: model, model_capabilities: capabilities, ajax_url: 'https://example.com' };
         global.fetch = async (url, options) => {
-            capturedBody = JSON.parse(options.body);
+            capturedBody = JSON.parse(options.body.store.body);
             return { ok: true, json: async () => ({ output_text: '<html></html>' }) };
         };
         global.document = { getElementById: () => null };

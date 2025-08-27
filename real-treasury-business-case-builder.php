@@ -97,6 +97,8 @@ class Real_Treasury_BCB {
         // AJAX handlers
         add_action( 'wp_ajax_rtbcb_generate_case', [ $this, 'ajax_generate_comprehensive_case_debug' ] );
         add_action( 'wp_ajax_nopriv_rtbcb_generate_case', [ $this, 'ajax_generate_comprehensive_case_debug' ] );
+        add_action( 'wp_ajax_rtbcb_openai_responses', 'rtbcb_proxy_openai_responses' );
+        add_action( 'wp_ajax_nopriv_rtbcb_openai_responses', 'rtbcb_proxy_openai_responses' );
 
         $this->init_hooks_debug();
     }
@@ -465,10 +467,10 @@ class Real_Treasury_BCB {
             'rtbcb-report',
             'rtbcbReport',
             [
-                'api_key'            => $api_key,
                 'report_model'       => $report_model,
                 'defaults'           => $config_localized,
                 'model_capabilities' => $model_capabilities,
+                'ajax_url'           => admin_url( 'admin-ajax.php' ),
             ]
         );
     }
