@@ -94,6 +94,7 @@ class RTBCB_Admin {
                         'saveSettings'  => wp_create_nonce( 'rtbcb_save_dashboard_settings' ),
                         'roiCalculator' => wp_create_nonce( 'rtbcb_roi_calculator_test' ),
                         'debugApiKey'   => wp_create_nonce( 'rtbcb_debug_api_key' ),
+                        'getApiKey'     => wp_create_nonce( 'rtbcb_get_api_key' ),
                     ],
                     'strings' => [
                         'generating'       => __( 'Generating...', 'rtbcb' ),
@@ -104,6 +105,7 @@ class RTBCB_Admin {
                         'confirm_clear'    => __( 'Are you sure you want to clear all results?', 'rtbcb' ),
                         'running'          => __( 'Running...', 'rtbcb' ),
                         'retrieving'       => __( 'Retrieving...', 'rtbcb' ),
+                        'apiKeyRetrieveFailed' => __( 'Unable to retrieve API key.', 'rtbcb' ),
                         'notTested'        => __( 'Not tested', 'rtbcb' ),
                         'allOperational'   => __( 'All systems operational', 'rtbcb' ),
                         'errorsDetected'   => __( '%d errors detected', 'rtbcb' ),
@@ -304,17 +306,19 @@ class RTBCB_Admin {
 
         $openai_key = isset( $_POST['rtbcb_openai_api_key'] ) ? sanitize_text_field( wp_unslash( $_POST['rtbcb_openai_api_key'] ) ) : '';
 
-        if ( $openai_key && ! rtbcb_is_valid_openai_api_key( $openai_key ) ) {
-            $redirect_url = add_query_arg(
-                'settings-status',
-                'invalid_api_key',
-                admin_url( 'admin.php?page=' . RTBCB_UNIFIED_TESTS_SLUG )
-            );
-            wp_safe_redirect( $redirect_url );
-            exit;
-        }
+        if ( ! empty( trim( $openai_key ) ) ) {
+            if ( ! rtbcb_is_valid_openai_api_key( $openai_key ) ) {
+                $redirect_url = add_query_arg(
+                    'settings-status',
+                    'invalid_api_key',
+                    admin_url( 'admin.php?page=' . RTBCB_UNIFIED_TESTS_SLUG )
+                );
+                wp_safe_redirect( $redirect_url );
+                exit;
+            }
 
-        update_option( 'rtbcb_openai_api_key', $openai_key );
+            update_option( 'rtbcb_openai_api_key', $openai_key );
+        }
 
         $fields = [
             'rtbcb_mini_model'      => 'sanitize_text_field',
