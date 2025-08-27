@@ -273,7 +273,7 @@ function rtbcb_is_business_email( $email ) {
  * @return bool Whether the format is valid.
  */
 function rtbcb_is_valid_openai_api_key( $api_key ) {
-    return preg_match( '/^sk-[A-Za-z0-9]{48,}$/', $api_key );
+    return preg_match( '/^sk-[A-Za-z0-9_:-]{48,}$/', $api_key );
 }
 
 /**
