@@ -1416,71 +1416,6 @@ function rtbcb_init_connectivity_tests() {
     });
 }
 
-function rtbcb_sort_test_results(table, column) {
-    var headers = table.querySelectorAll('th');
-    var tbody = table.querySelector('tbody');
-    var direction = headers[column].getAttribute('aria-sort') === 'ascending' ? 'descending' : 'ascending';
-    headers.forEach(function (th) {
-        th.setAttribute('aria-sort', 'none');
-    });
-    headers[column].setAttribute('aria-sort', direction);
-    var rows = Array.from(tbody.querySelectorAll('tr')).filter(function (row) {
-        return !row.classList.contains('rtbcb-no-results');
-    });
-    rows.sort(function (a, b) {
-        var aText = a.children[column].textContent.trim().toLowerCase();
-        var bText = b.children[column].textContent.trim().toLowerCase();
-        if (direction === 'ascending') {
-            return aText.localeCompare(bText);
-        }
-        return bText.localeCompare(aText);
-    });
-    rows.forEach(function (row) {
-        tbody.appendChild(row);
-    });
-}
-
-function rtbcb_init_test_results_table() {
-    var table = document.getElementById('rtbcb-test-results-summary');
-    if (!table) {
-        return;
-    }
-    var search = document.getElementById('rtbcb-test-results-search');
-    var headers = table.querySelectorAll('th');
-    headers.forEach(function (th, index) {
-        th.addEventListener('click', function () {
-            rtbcb_sort_test_results(table, index);
-        });
-        th.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                rtbcb_sort_test_results(table, index);
-            }
-        });
-    });
-    if (search) {
-        search.addEventListener('input', function () {
-            var query = search.value.toLowerCase();
-            var rows = Array.from(table.querySelectorAll('tbody tr')).filter(function (row) {
-                return !row.classList.contains('rtbcb-no-results');
-            });
-            var visible = 0;
-            rows.forEach(function (row) {
-                var text = row.textContent.toLowerCase();
-                var match = text.indexOf(query) !== -1;
-                row.style.display = match ? '' : 'none';
-                if (match) {
-                    visible++;
-                }
-            });
-            var noResults = table.querySelector('tbody .rtbcb-no-results');
-            if (noResults) {
-                noResults.style.display = visible === 0 ? '' : 'none';
-            }
-        });
-    }
-}
-
 document.addEventListener('DOMContentLoaded', function () {
     rtbcb_set_ajaxurl();
     rtbcb_bind_regenerate('rtbcb-rerun-company-overview', 'rtbcb-generate-company-overview');
@@ -1493,5 +1428,4 @@ document.addEventListener('DOMContentLoaded', function () {
     rtbcb_bind_regenerate('rtbcb-rerun-report-test', 'rtbcb-generate-report');
     rtbcb_init_api_test();
     rtbcb_init_connectivity_tests();
-    rtbcb_init_test_results_table();
 });
