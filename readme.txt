@@ -19,6 +19,13 @@ Use the `[rt_business_case_builder]` shortcode to embed the calculator on any pa
 2. Activate the plugin through the "Plugins" menu in WordPress.
 3. Navigate to **Real Treasury → Settings** to configure ROI defaults and API keys.
 
+== Testing Dashboard ==
+From the WordPress admin, go to **Real Treasury → Test Dashboard** to run
+section tests for company overview, recommended category, and more. The
+dashboard replaces the individual test pages from earlier versions. Access
+requires the `manage_options` capability and each test action uses a dedicated
+nonce such as `rtbcb_test_company_overview` to protect requests.
+
 == Frequently Asked Questions ==
 = How do I display the calculator? =
 Add the `[rt_business_case_builder]` shortcode to a post or page.

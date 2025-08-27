@@ -314,6 +314,15 @@ add_filter('rtbcb_category_scores', function($scores, $inputs) {
 
 ## 🧪 Testing and Quality Assurance
 
+### Testing Dashboard
+Use the unified testing dashboard to verify each report component. This
+dashboard replaces individual test pages from earlier versions. Navigate to
+**Real Treasury → Test Dashboard** in the WordPress admin to access it. The
+page is restricted to users with the `manage_options` capability. AJAX
+actions from the dashboard require nonces such as `rtbcb_test_company_overview`,
+`rtbcb_test_estimated_benefits`, and `rtbcb_test_dashboard` when saving
+results.
+
 ### Automated Tests
 The plugin includes integration tests for all major components. These can be run from the settings page via the **Run Diagnostics** button or programmatically:
 ```php

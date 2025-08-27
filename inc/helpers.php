@@ -54,7 +54,7 @@ function rtbcb_model_supports_temperature( $model ) {
 }
 
 /**
- * Get dashboard sections and their completion state.
+ * Get testing dashboard sections and their completion state.
  *
  * The returned array is keyed by section ID and contains the section label,
  * related option key, dependencies, and whether the section has been
@@ -104,22 +104,22 @@ function rtbcb_get_dashboard_sections() {
 }
 
 /**
- * Ensure all previous steps are complete before rendering a page.
+ * Ensure required sections are complete before rendering a dashboard section.
  *
- * Outputs a warning linking to the starting page when prerequisites are
- * missing.
+ * Outputs a warning linking to the first incomplete section when prerequisites
+ * are missing.
  *
- * @param string $current_page Current page slug.
+ * @param string $current_section Current section ID.
  * @return bool True when allowed, false otherwise.
  */
-function rtbcb_require_completed_steps( $current_page ) {
+function rtbcb_require_completed_steps( $current_section ) {
     $sections = rtbcb_get_dashboard_sections();
 
-    if ( empty( $sections[ $current_page ]['requires'] ) ) {
+    if ( empty( $sections[ $current_section ]['requires'] ) ) {
         return true;
     }
 
-    foreach ( $sections[ $current_page ]['requires'] as $dependency ) {
+    foreach ( $sections[ $current_section ]['requires'] as $dependency ) {
         if ( empty( $sections[ $dependency ]['completed'] ) ) {
             $url = admin_url( 'admin.php?page=rtbcb-test-dashboard#' . $dependency );
             echo '<div class="notice notice-error"><p>' .
@@ -139,8 +139,8 @@ function rtbcb_require_completed_steps( $current_page ) {
 /**
  * Render a button to start a new company analysis.
  *
- * The button clears existing company data and redirects to the Company Overview
- * page so a new analysis can begin.
+ * The button clears existing company data and navigates to the Company
+ * Overview section of the testing dashboard so a new analysis can begin.
  *
  * @return void
  */
