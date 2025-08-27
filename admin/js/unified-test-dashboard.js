@@ -1,31 +1,59 @@
-// EMERGENCY FIX - Add this to the very top of unified-test-dashboard.js
-// This will work even if jQuery isn't loaded properly
-
+/**
+ * Emergency Fallback System - Only activates when jQuery is unavailable
+ * This provides basic functionality when jQuery fails to load
+ */
 (function() {
     'use strict';
     
-    // Wait for page to load
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initEmergencyHandlers);
-    } else {
+    // Global flag to track if emergency mode is needed
+    window.rtbcbEmergencyMode = false;
+    window.rtbcbEmergencyHandlers = null;
+    
+    function checkJQueryAndActivateEmergency() {
+        // Check if jQuery is available and working
+        if (typeof jQuery !== 'undefined' && typeof $ !== 'undefined') {
+            console.log('RTBCB: jQuery detected, emergency mode not needed');
+            return;
+        }
+        
+        console.log('RTBCB: jQuery not available, activating emergency mode');
+        window.rtbcbEmergencyMode = true;
         initEmergencyHandlers();
     }
     
     function initEmergencyHandlers() {
-        console.log('Emergency handlers starting...');
+        // Add visual indicator for emergency mode
+        document.body.style.borderTop = '5px solid orange';
         
-        // Add visual indicator that this script is working
-        document.body.style.borderTop = '5px solid red';
-
-        // Show/Hide API Key button and generic action handler
-        document.addEventListener('click', function(e) {
+        // Single emergency click handler
+        function emergencyClickHandler(e) {
             var actionTarget = e.target.closest('[data-action]');
             var tabTarget = e.target.closest('.nav-tab');
 
-            if (actionTarget && actionTarget.getAttribute('data-action') === 'toggle-api-key') {
+            if (actionTarget) {
                 e.preventDefault();
-                if (window.RTBCBDashboard && typeof window.RTBCBDashboard.toggleApiKeyVisibility === 'function') {
-                    window.RTBCBDashboard.toggleApiKeyVisibility();
+                var action = actionTarget.getAttribute('data-action');
+                
+                // Visual feedback
+                actionTarget.style.background = '#ffeb3b';
+                setTimeout(function() {
+                    actionTarget.style.background = '';
+                }, 200);
+
+                console.log('Emergency Mode - Button clicked:', action);
+                
+                // Handle specific actions that are critical
+                if (action === 'toggle-api-key') {
+                    var input = document.getElementById('rtbcb_openai_api_key');
+                    if (input) {
+                        if (input.type === 'password') {
+                            input.type = 'text';
+                            actionTarget.textContent = 'Hide';
+                        } else {
+                            input.type = 'password';
+                            actionTarget.textContent = 'Show';
+                        }
+                    }
                 }
             }
 
@@ -54,37 +82,35 @@
                 if (targetSection) {
                     targetSection.style.display = 'block';
                 }
-
-                // Visual feedback
-                tabTarget.style.background = '#e1f5fe';
             }
-
-            // Generic button click feedback
-            if (actionTarget) {
-                // Visual feedback
-                actionTarget.style.background = '#ffeb3b';
-                setTimeout(function() {
-                    actionTarget.style.background = '';
-                }, 200);
-
-                console.log('Button clicked:', actionTarget.getAttribute('data-action'));
-            }
-        });
+        }
         
-        console.log('Emergency handlers attached');
+        // Store handler for potential cleanup
+        window.rtbcbEmergencyHandlers = emergencyClickHandler;
+        document.addEventListener('click', emergencyClickHandler);
         
-        // Test if jQuery is available and report status
+        // Add emergency status indicator
         setTimeout(function() {
+            if (!window.rtbcbEmergencyMode) return; // jQuery took over
+            
             var statusDiv = document.createElement('div');
-            statusDiv.style.cssText = 'position:fixed;top:10px;right:10px;background:white;border:2px solid black;padding:10px;z-index:9999;font-family:monospace;font-size:12px;';
+            statusDiv.id = 'rtbcb-emergency-status';
+            statusDiv.style.cssText = 'position:fixed;top:10px;right:10px;background:#fff3cd;color:#856404;border:2px solid #ffc107;padding:10px;z-index:9999;font-family:monospace;font-size:12px;border-radius:4px;';
             
-            var status = 'Emergency Mode: ON<br>';
-            status += 'jQuery: ' + (typeof jQuery !== 'undefined' ? 'LOADED' : 'MISSING') + '<br>';
-            status += 'Buttons: ' + document.querySelectorAll('[data-action]').length;
-            
-            statusDiv.innerHTML = status;
+            statusDiv.innerHTML = '⚠️ Emergency Mode: ON<br>jQuery: MISSING<br>Buttons: ' + document.querySelectorAll('[data-action]').length;
             document.body.appendChild(statusDiv);
-        }, 1000);
+        }, 500);
+        
+        console.log('Emergency handlers activated');
+    }
+    
+    // Wait for page load then check for jQuery
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(checkJQueryAndActivateEmergency, 100);
+        });
+    } else {
+        setTimeout(checkJQueryAndActivateEmergency, 100);
     }
 })();
 
@@ -145,18 +171,26 @@
 
     // Initialize when document is ready
     $(document).ready(function() {
-        // Visual indicator that jQuery is working (override emergency mode border)
-        $('body').css('border-top', '5px solid green');
-        
-        // Remove the emergency status div since jQuery is working
-        setTimeout(function() {
-            var emergencyDiv = document.querySelector('div[style*="position:fixed"][style*="top:10px"][style*="right:10px"]');
-            if (emergencyDiv && emergencyDiv.innerHTML.includes('Emergency Mode: ON')) {
-                emergencyDiv.innerHTML = emergencyDiv.innerHTML.replace('Emergency Mode: ON', 'jQuery Mode: ON');
-                emergencyDiv.style.background = '#d4edda';
-                emergencyDiv.style.borderColor = '#28a745';
+        // Disable emergency mode since jQuery is available
+        if (window.rtbcbEmergencyMode) {
+            console.log('RTBCB: Disabling emergency mode, jQuery is available');
+            window.rtbcbEmergencyMode = false;
+            
+            // Remove emergency event handlers if they exist
+            if (window.rtbcbEmergencyHandlers) {
+                document.removeEventListener('click', window.rtbcbEmergencyHandlers);
+                window.rtbcbEmergencyHandlers = null;
             }
-        }, 100);
+            
+            // Remove emergency status indicator
+            var emergencyStatus = document.getElementById('rtbcb-emergency-status');
+            if (emergencyStatus) {
+                emergencyStatus.remove();
+            }
+        }
+        
+        // Visual indicator that jQuery is working
+        $('body').css('border-top', '5px solid green');
         
         waitForDashboardConfig();
     });
@@ -325,14 +359,17 @@
                     localStorage.setItem('rtbcb_company_name', $(this).val());
                 }, 500));
 
-                // Visual feedback for all data-action buttons
+                // Visual feedback for all data-action buttons  
                 $(document).on('click.rtbcb-dashboard', '[data-action]', function() {
                     var $button = $(this);
-                    $button.css('background-color', '#ffeb3b');
-                    setTimeout(function() {
-                        $button.css('background-color', '');
-                    }, 200);
-                    console.log('Button clicked:', $button.data('action'));
+                    // Only add visual feedback if not already disabled/loading
+                    if (!$button.prop('disabled') && !$button.hasClass('loading')) {
+                        $button.css('background-color', '#ffeb3b');
+                        setTimeout(function() {
+                            $button.css('background-color', '');
+                        }, 200);
+                    }
+                    console.log('jQuery Mode - Button clicked:', $button.data('action'));
                 });
 
                 console.log('Events bound successfully');
@@ -615,13 +652,16 @@
         if (rtbcbDashboard.debug) {
             console.log('Debug mode enabled');
             
-            // Add debug panel
-            $('body').append('<div id="rtbcb-debug" style="position:fixed;top:10px;right:10px;background:white;border:2px solid black;padding:10px;z-index:9999;font-family:monospace;font-size:12px;">' +
-                '<div><strong>RTBCB Debug</strong></div>' +
-                '<div>jQuery: ' + (typeof jQuery !== 'undefined' ? $.fn.jquery : 'MISSING') + '</div>' +
+            // Add debug panel that replaces emergency status
+            var debugPanel = '<div id="rtbcb-debug" style="position:fixed;top:10px;right:10px;background:#d4edda;color:#155724;border:2px solid #28a745;padding:10px;z-index:9999;font-family:monospace;font-size:12px;border-radius:4px;">' +
+                '<div><strong>✅ RTBCB Debug</strong></div>' +
+                '<div>jQuery: ' + $.fn.jquery + '</div>' +
+                '<div>Mode: jQuery Active</div>' +
                 '<div>Buttons: <span id="debug-button-count">0</span></div>' +
                 '<div>Events: <span id="debug-event-count">0</span></div>' +
-            '</div>');
+            '</div>';
+            
+            $('body').append(debugPanel);
 
             // Count buttons
             $('#debug-button-count').text($('button[data-action]').length);
@@ -632,6 +672,15 @@
                 eventCount++;
                 $('#debug-event-count').text(eventCount);
             });
+        } else {
+            // Add simple status indicator when not in debug mode
+            var statusPanel = '<div id="rtbcb-status" style="position:fixed;top:10px;right:10px;background:#d4edda;color:#155724;border:2px solid #28a745;padding:10px;z-index:9999;font-family:monospace;font-size:12px;border-radius:4px;">' +
+                '<div>✅ jQuery Mode: ON</div>' +
+                '<div>jQuery: ' + $.fn.jquery + '</div>' +
+                '<div>Buttons: ' + $('button[data-action]').length + '</div>' +
+            '</div>';
+            
+            $('body').append(statusPanel);
         }
     }
 
