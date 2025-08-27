@@ -16,63 +16,66 @@
         
         // Add visual indicator that this script is working
         document.body.style.borderTop = '5px solid red';
-        
-        // Show/Hide API Key button
+
+        // Show/Hide API Key button and generic action handler
         document.addEventListener('click', function(e) {
-            if (e.target.getAttribute('data-action') === 'toggle-api-key') {
+            const actionTarget = e.target.closest('[data-action]');
+            const tabTarget    = e.target.closest('.nav-tab');
+
+            if (actionTarget && actionTarget.getAttribute('data-action') === 'toggle-api-key') {
                 e.preventDefault();
-                
-                const input = document.getElementById('rtbcb_openai_api_key');
-                const button = e.target;
-                
+
+                const input  = document.getElementById('rtbcb_openai_api_key');
+                const button = actionTarget;
+
                 if (input && button) {
                     if (input.type === 'password') {
-                        input.type = 'text';
+                        input.type        = 'text';
                         button.textContent = 'Hide';
                         button.style.background = '#cfc';
                     } else {
-                        input.type = 'password';
+                        input.type        = 'password';
                         button.textContent = 'Show';
                         button.style.background = '';
                     }
                 }
             }
-            
+
             // Tab navigation
-            if (e.target.classList.contains('nav-tab')) {
+            if (tabTarget) {
                 e.preventDefault();
-                
+
                 // Remove active class from all tabs
                 const tabs = document.querySelectorAll('.nav-tab');
                 tabs.forEach(tab => tab.classList.remove('nav-tab-active'));
-                
+
                 // Add active class to clicked tab
-                e.target.classList.add('nav-tab-active');
-                
+                tabTarget.classList.add('nav-tab-active');
+
                 // Hide all sections
                 const sections = document.querySelectorAll('.rtbcb-test-section');
                 sections.forEach(section => section.style.display = 'none');
-                
+
                 // Show target section
-                const tabId = e.target.getAttribute('data-tab');
+                const tabId = tabTarget.getAttribute('data-tab');
                 const targetSection = document.getElementById(tabId);
                 if (targetSection) {
                     targetSection.style.display = 'block';
                 }
-                
+
                 // Visual feedback
-                e.target.style.background = '#e1f5fe';
+                tabTarget.style.background = '#e1f5fe';
             }
-            
+
             // Generic button click feedback
-            if (e.target.hasAttribute('data-action')) {
+            if (actionTarget) {
                 // Visual feedback
-                e.target.style.background = '#ffeb3b';
+                actionTarget.style.background = '#ffeb3b';
                 setTimeout(() => {
-                    e.target.style.background = '';
+                    actionTarget.style.background = '';
                 }, 200);
-                
-                console.log('Button clicked:', e.target.getAttribute('data-action'));
+
+                console.log('Button clicked:', actionTarget.getAttribute('data-action'));
             }
         });
         
