@@ -54,29 +54,53 @@ function rtbcb_model_supports_temperature( $model ) {
 }
 
 /**
- * Get ordered list of test steps and their option keys.
+ * Get dashboard sections and their completion state.
  *
- * @return array[] Step data keyed by page slug.
+ * The returned array is keyed by section ID and contains the section label,
+ * related option key, dependencies, and whether the section has been
+ * completed.
+ *
+ * @return array[] Section data keyed by section ID.
  */
-function rtbcb_get_test_steps() {
-    return [
-        'rtbcb-test-company-overview' => [
-            'label' => __( 'Company Overview', 'rtbcb' ),
-            'option' => 'rtbcb_current_company',
+function rtbcb_get_dashboard_sections() {
+    $sections = [
+        'rtbcb-test-company-overview'      => [
+            'label'    => __( 'Company Overview', 'rtbcb' ),
+            'option'   => 'rtbcb_current_company',
+            'requires' => [],
         ],
         'rtbcb-test-treasury-tech-overview' => [
-            'label' => __( 'Treasury Tech Overview', 'rtbcb' ),
-            'option' => 'rtbcb_treasury_tech_overview',
+            'label'    => __( 'Treasury Tech Overview', 'rtbcb' ),
+            'option'   => 'rtbcb_treasury_tech_overview',
+            'requires' => [ 'rtbcb-test-company-overview' ],
         ],
-        'rtbcb-test-industry-overview' => [
-            'label' => __( 'Industry Overview', 'rtbcb' ),
-            'option' => 'rtbcb_industry_insights',
+        'rtbcb-test-industry-overview'      => [
+            'label'    => __( 'Industry Overview', 'rtbcb' ),
+            'option'   => 'rtbcb_industry_insights',
+            'requires' => [ 'rtbcb-test-company-overview' ],
         ],
         'rtbcb-test-real-treasury-overview' => [
-            'label' => __( 'Real Treasury Overview', 'rtbcb' ),
-            'option' => 'rtbcb_real_treasury_overview',
+            'label'    => __( 'Real Treasury Overview', 'rtbcb' ),
+            'option'   => 'rtbcb_real_treasury_overview',
+            'requires' => [ 'rtbcb-test-company-overview' ],
+        ],
+        'rtbcb-test-recommended-category'   => [
+            'label'    => __( 'Recommended Category', 'rtbcb' ),
+            'option'   => 'rtbcb_recommended_category',
+            'requires' => [ 'rtbcb-test-company-overview' ],
+        ],
+        'rtbcb-test-estimated-benefits'     => [
+            'label'    => __( 'Estimated Benefits', 'rtbcb' ),
+            'option'   => 'rtbcb_estimated_benefits',
+            'requires' => [ 'rtbcb-test-company-overview' ],
         ],
     ];
+
+    foreach ( $sections as $id => &$section ) {
+        $section['completed'] = ! empty( get_option( $section['option'] ) );
+    }
+
+    return $sections;
 }
 
 /**
@@ -85,71 +109,31 @@ function rtbcb_get_test_steps() {
  * Outputs a warning linking to the starting page when prerequisites are
  * missing.
  *
- * @param string $current_slug Current page slug.
+ * @param string $current_page Current page slug.
  * @return bool True when allowed, false otherwise.
  */
 function rtbcb_require_completed_steps( $current_page ) {
-    $steps = rtbcb_get_test_steps();
-    $dependencies = [
-        'rtbcb-test-treasury-tech-overview' => [ 'rtbcb-test-company-overview' ],
-        'rtbcb-test-industry-overview'      => [ 'rtbcb-test-company-overview' ],
-        'rtbcb-test-real-treasury-overview' => [ 'rtbcb-test-company-overview' ],
-        'rtbcb-test-estimated-benefits'     => [ 'rtbcb-test-company-overview' ],
-        'rtbcb-test-recommended-category'   => [ 'rtbcb-test-company-overview' ],
-    ];
+    $sections = rtbcb_get_dashboard_sections();
 
-    if ( ! isset( $dependencies[ $current_page ] ) ) {
+    if ( empty( $sections[ $current_page ]['requires'] ) ) {
         return true;
     }
 
-    foreach ( $dependencies[ $current_page ] as $dependency ) {
-        $option = $steps[ $dependency ]['option'] ?? '';
-        if ( empty( get_option( $option ) ) ) {
+    foreach ( $sections[ $current_page ]['requires'] as $dependency ) {
+        if ( empty( $sections[ $dependency ]['completed'] ) ) {
             $url = admin_url( 'admin.php?page=rtbcb-test-dashboard#' . $dependency );
             echo '<div class="notice notice-error"><p>' .
-                sprintf( __( 'Please complete %s first.', 'rtbcb' ),
+                sprintf(
+                    __( 'Please complete %s first.', 'rtbcb' ),
                     '<a href="' . esc_url( $url ) . '">' .
-                    esc_html( $steps[ $dependency ]['label'] ) . '</a>' ) .
+                    esc_html( $sections[ $dependency ]['label'] ) . '</a>'
+                ) .
                 '</p></div>';
             return false;
         }
     }
 
     return true;
-}
-
-/**
- * Render navigation and progress list for test pages.
- *
- * @param string $current_slug Current page slug.
- * @return void
- */
-function rtbcb_render_test_navigation( $current_page ) {
-    $steps        = rtbcb_get_test_steps();
-    $step_keys    = array_keys( $steps );
-    $current_index = array_search( $current_page, $step_keys );
-
-    if ( false === $current_index ) {
-        return;
-    }
-
-    echo '<div class="rtbcb-test-navigation" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">';
-
-    if ( $current_index > 0 ) {
-        $prev_page = $step_keys[ $current_index - 1 ];
-        $prev_url  = admin_url( 'admin.php?page=rtbcb-test-dashboard#' . $prev_page );
-        echo '<a href="' . esc_url( $prev_url ) . '" class="button">' .
-            esc_html__( 'Previous', 'rtbcb' ) . '</a> ';
-    }
-
-    if ( $current_index < count( $step_keys ) - 1 ) {
-        $next_page = $step_keys[ $current_index + 1 ];
-        $next_url  = admin_url( 'admin.php?page=rtbcb-test-dashboard#' . $next_page );
-        echo '<a href="' . esc_url( $next_url ) . '" class="button button-primary">' .
-            esc_html__( 'Next', 'rtbcb' ) . '</a>';
-    }
-
-    echo '</div>';
 }
 
 /**
