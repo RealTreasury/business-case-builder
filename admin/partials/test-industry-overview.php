@@ -27,6 +27,7 @@ $overview_url = admin_url( 'admin.php?page=rtbcb-test-dashboard#rtbcb-phase1' );
 $company_name = isset( $company['name'] ) ? sanitize_text_field( $company['name'] ) : '';
 $company_sum  = isset( $company['summary'] ) ? sanitize_textarea_field( $company['summary'] ) : '';
 $company_ind  = isset( $company['industry'] ) ? sanitize_text_field( $company['industry'] ) : '';
+$company_size = isset( $company['size'] ) ? sanitize_text_field( $company['size'] ) : '';
 ?>
 <h2><?php esc_html_e( 'Test Industry Overview', 'rtbcb' ); ?></h2>
 <p class="description"><?php esc_html_e( 'Generate insights about the company\'s industry to inform later recommendations.', 'rtbcb' ); ?></p>
@@ -50,6 +51,7 @@ $company_ind  = isset( $company['industry'] ) ? sanitize_text_field( $company['i
     <?php endif; ?>
 <?php endif; ?>
 <form id="rtbcb-industry-overview-form">
+    <input type="hidden" id="rtbcb-company-size" value="<?php echo esc_attr( $company_size ); ?>" />
     <table class="form-table">
         <tr>
             <th scope="row">

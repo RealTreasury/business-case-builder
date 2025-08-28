@@ -318,10 +318,12 @@ jQuery(document).ready(function($) {
             $btn.prop('disabled', true).text(window.rtbcbAdmin.strings.processing || 'Processing...');
             
             var industry = $('#rtbcb-industry-name').val();
+            var size = $('#rtbcb-company-size').val();
             var nonce = $form.find('[name="nonce"]').val() || window.rtbcbAdmin.industry_overview_nonce;
-            
+
             var companyData = {
-                industry: industry
+                industry: industry,
+                size: size
             };
             
             $.ajax({
