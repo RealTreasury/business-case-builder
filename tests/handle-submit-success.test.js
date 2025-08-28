@@ -22,16 +22,16 @@ global.ajaxObj = { ajax_url: 'test-url' };
 
 global.DOMPurify = { sanitize: (html) => html };
 
-global.fetch = async () => ({
+global.fetch = () => Promise.resolve({
     ok: true,
-    json: async () => ({
+    json: () => Promise.resolve({
         success: true,
         data: {
             report_html: '<div>Report</div>',
             download_url: 'http://example.com/test.pdf'
         }
     }),
-    text: async () => ''
+    text: () => Promise.resolve('')
 });
 
 global.FormData = class { constructor() {} };
@@ -39,9 +39,13 @@ global.FormData = class { constructor() {} };
 const code = fs.readFileSync('public/js/rtbcb.js', 'utf8');
 vm.runInThisContext(code);
 
-(async () => {
-    await handleSubmit({ preventDefault() {}, target: {} });
-    assert.strictEqual(reportContainer.innerHTML, '<div>Report</div>');
-    assert.ok(!reportContainer.innerHTML.includes('test.pdf'));
-    console.log('Success path test passed.');
-})();
+handleSubmit({ preventDefault() {}, target: {} })
+    .then(() => {
+        assert.strictEqual(reportContainer.innerHTML, '<div>Report</div>');
+        assert.ok(!reportContainer.innerHTML.includes('test.pdf'));
+        console.log('Success path test passed.');
+    })
+    .catch((error) => {
+        console.error(error);
+        process.exit(1);
+    });
