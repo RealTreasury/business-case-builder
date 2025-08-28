@@ -70,6 +70,18 @@ function rtbcb_get_dashboard_sections() {
             'requires' => [],
             'phase'    => 1,
         ],
+        'rtbcb-test-data-enrichment'       => [
+            'label'    => __( 'Data Enrichment', 'rtbcb' ),
+            'option'   => 'rtbcb_data_enrichment',
+            'requires' => [ 'rtbcb-test-company-overview' ],
+            'phase'    => 1,
+        ],
+        'rtbcb-test-data-storage'          => [
+            'label'    => __( 'Data Storage', 'rtbcb' ),
+            'option'   => 'rtbcb_data_storage',
+            'requires' => [ 'rtbcb-test-company-overview' ],
+            'phase'    => 1,
+        ],
         'rtbcb-test-treasury-tech-overview' => [
             'label'    => __( 'Treasury Tech Overview', 'rtbcb' ),
             'option'   => 'rtbcb_treasury_tech_overview',

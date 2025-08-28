@@ -44,6 +44,8 @@ class RTBCB_Admin {
         add_action( 'wp_ajax_rtbcb_test_calculate_roi', [ $this, 'ajax_test_calculate_roi' ] );
         add_action( 'wp_ajax_rtbcb_test_portal', [ $this, 'ajax_test_portal' ] );
         add_action( 'wp_ajax_rtbcb_test_rag', [ $this, 'ajax_test_rag' ] );
+        add_action( 'wp_ajax_rtbcb_test_data_enrichment', [ $this, 'ajax_test_data_enrichment' ] );
+        add_action( 'wp_ajax_rtbcb_test_data_storage', [ $this, 'ajax_test_data_storage' ] );
     }
 
     /**
@@ -875,6 +877,85 @@ class RTBCB_Admin {
                 'word_count'=> 0,
                 'elapsed'   => $elapsed,
                 'generated' => current_time( 'mysql' ),
+            ]
+        );
+    }
+
+    /**
+     * AJAX handler for data enrichment testing.
+     *
+     * @return void
+     */
+    public function ajax_test_data_enrichment() {
+        check_ajax_referer( 'rtbcb_test_data_enrichment', 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'rtbcb' ) ] );
+        }
+
+        $inputs   = rtbcb_get_sample_inputs();
+        $roi_data = [
+            'base' => [
+                'labor_savings'        => 1000,
+                'fee_savings'          => 500,
+                'error_reduction'      => 250,
+                'total_annual_benefit' => 1750,
+                'roi_percentage'       => 150,
+                'assumptions'          => [],
+            ],
+        ];
+
+        $llm      = new RTBCB_LLM();
+        $analysis = $llm->generate_business_case( $inputs, $roi_data );
+
+        if ( is_wp_error( $analysis ) ) {
+            wp_send_json_error( [ 'message' => sanitize_text_field( $analysis->get_error_message() ) ] );
+        }
+
+        update_option( 'rtbcb_data_enrichment', $analysis );
+
+        wp_send_json_success( [ 'analysis' => $analysis ] );
+    }
+
+    /**
+     * AJAX handler for data storage testing.
+     *
+     * @return void
+     */
+    public function ajax_test_data_storage() {
+        check_ajax_referer( 'rtbcb_test_data_storage', 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'rtbcb' ) ] );
+        }
+
+        RTBCB_DB::init();
+
+        $email   = 'test+' . wp_rand( 1000, 9999 ) . '@example.com';
+        $lead_id = RTBCB_Leads::save_lead(
+            [
+                'email'        => $email,
+                'company_size' => 'medium',
+                'industry'     => 'finance',
+            ]
+        );
+
+        if ( ! $lead_id ) {
+            wp_send_json_error( [ 'message' => __( 'Failed to save lead.', 'rtbcb' ) ] );
+        }
+
+        $lead = RTBCB_Leads::get_lead_by_email( $email );
+
+        if ( ! $lead ) {
+            wp_send_json_error( [ 'message' => __( 'Failed to retrieve lead.', 'rtbcb' ) ] );
+        }
+
+        update_option( 'rtbcb_data_storage', $lead );
+
+        wp_send_json_success(
+            [
+                'lead_id'    => intval( $lead_id ),
+                'lead_email' => sanitize_email( $lead['email'] ),
             ]
         );
     }
