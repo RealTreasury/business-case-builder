@@ -948,7 +948,7 @@ class RTBCB_Admin {
      * @return void
      */
     public function ajax_test_portal() {
-        check_ajax_referer( 'rtbcb_test_dashboard', 'nonce' );
+        check_ajax_referer( 'rtbcb_test_portal', 'nonce' );
 
         if ( ! current_user_can( 'manage_options' ) ) {
             wp_send_json_error( [ 'message' => __( 'Unauthorized', 'rtbcb' ) ] );
