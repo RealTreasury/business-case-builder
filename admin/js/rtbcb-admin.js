@@ -493,184 +493,79 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       form.on('submit', RTBCBAdmin.runBenefitsEstimateTest);
     },
     bindTestDashboard: function bindTestDashboard() {
-      var button = $('#rtbcb-test-all-sections');
-      if (!button.length) {
-        return;
-      }
-      var status = $('#rtbcb-test-status');
-      var tableBody = $('#rtbcb-test-results-summary tbody');
-      var originalText = button.text();
-      // Company name input moved to Test Tools card; cache for reuse.
-      var nameInput = $('#rtbcb-company-name');
-      if (nameInput.length) {
-        nameInput.on('input', function () {
-          $(this).next('.rtbcb-error-message').remove();
-        });
-      }
-      var runTests = _async(function () {
-        var companyName = nameInput.length ? nameInput.val().trim() : '';
-        if (!companyName) {
-          alert(rtbcbAdmin.strings.company_required);
-          if (nameInput.length) {
-            var error = nameInput.next('.rtbcb-error-message');
-            if (!error.length) {
-              error = $('<span class="rtbcb-error-message" />').insertAfter(nameInput);
-            }
-            error.text(rtbcbAdmin.strings.company_required);
-            nameInput.focus();
-          }
-          return _await();
-        }
-        if (nameInput.length) {
-          nameInput.next('.rtbcb-error-message').remove();
-        }
-        var company = rtbcbAdmin.company = rtbcbAdmin.company || {};
-        company.name = companyName;
-        if (typeof rtbcb_set_test_company === 'function') {
-          var setCompany = rtbcb_set_test_company({ name: companyName });
-          if (setCompany && typeof setCompany.then === 'function') {
-            setCompany.then(function (response) {
-              if (response && response.success && response.data && response.data.name) {
-                rtbcbAdmin.company.name = response.data.name;
-              }
-            })["catch"](function () {});
-          }
-        }
-        var tests = [{
-          id: 'rtbcb-test-company-overview',
-          label: 'Company Overview',
-          action: 'rtbcb_test_company_overview',
-          nonce: rtbcbAdmin.company_overview_nonce,
-          data: {
-            company_name: companyName
-          }
-        }, {
-          id: 'rtbcb-test-treasury-tech-overview',
-          label: 'Treasury Tech Overview',
-          action: 'rtbcb_test_treasury_tech_overview',
-          nonce: rtbcbAdmin.treasury_tech_overview_nonce,
-          data: {
-            focus_areas: company.focus_areas || [],
-            complexity: company.complexity || 'basic'
-          }
-        }, {
-          id: 'rtbcb-test-industry-overview',
-          label: 'Industry Overview',
-          action: 'rtbcb_test_industry_overview',
-          nonce: rtbcbAdmin.industry_overview_nonce,
-          data: {
-            company_data: JSON.stringify({
-              industry: company.industry || '',
-              size: company.size || ''
-            })
-          }
-        }, {
-          id: 'rtbcb-test-real-treasury-overview',
-          label: 'Real Treasury Overview',
-          action: 'rtbcb_test_real_treasury_overview',
-          nonce: rtbcbAdmin.real_treasury_overview_nonce,
-          data: {
-            include_portal: 1,
-            categories: company.categories || ['cash_management']
-          }
-        }, {
-          id: 'rtbcb-test-recommended-category',
-          label: 'Recommended Category',
-          action: 'rtbcb_generate_category_recommendation',
-          nonce: rtbcbAdmin.category_recommendation_nonce,
-          data: {}
-        }, {
-          id: 'rtbcb-test-estimated-benefits',
-          label: 'Estimated Benefits',
-          action: 'rtbcb_test_estimated_benefits',
-          nonce: rtbcbAdmin.benefits_estimate_nonce,
-          data: {
-            company_data: {
-              revenue: company.revenue || 1000000,
-              staff_count: company.staff_count || 10,
-              efficiency: company.efficiency || 0.5
-            },
-            recommended_category: company.recommended_category || 'Cash Management'
-          }
-        }];
-        var results = [];
-        return _continue(_forOf(tests, function (test) {
-          status.text('Testing ' + test.label + '...');
-          return _continueIgnored(_catch(function () {
-            var payload = jQuery.extend({}, {
-              action: test.action,
-              nonce: test.nonce
-            }, test.data || {});
-            if (test.id === 'rtbcb-test-estimated-benefits') {
-              payload.recommended_category = rtbcbAdmin.company && rtbcbAdmin.company.recommended_category ? rtbcbAdmin.company.recommended_category : payload.recommended_category;
-            }
-              return _await($.post(rtbcbAdmin.ajax_url, payload), function (response) {
-                if (response.success && test.id === 'rtbcb-test-company-overview' && response.data) {
-                  rtbcbAdmin.company = rtbcbAdmin.company || {};
-                  if (response.data.focus_areas) {
-                    rtbcbAdmin.company.focus_areas = response.data.focus_areas;
-                  }
-                  if (response.data.industry) {
-                    rtbcbAdmin.company.industry = response.data.industry;
-                  }
-                  if (response.data.size) {
-                    rtbcbAdmin.company.size = response.data.size;
-                  }
+        if (!rtbcbAdmin || rtbcbAdmin.page !== 'rtbcb-test-dashboard') { return; }
+        const button = $('#rtbcb-test-all-sections');
+        if (!button.length) { return; }
+        const status = $('#rtbcb-test-status');
+        const tableBody = $('#rtbcb-test-results-summary tbody');
+        const originalText = button.text();
+
+        async function runTests() {
+            const tests = [
+                {
+                    action: 'rtbcb_test_company_overview',
+                    nonce: rtbcbAdmin.company_overview_nonce,
+                    label: 'Company Overview'
+                },
+                {
+                    action: 'rtbcb_test_treasury_tech_overview',
+                    nonce: rtbcbAdmin.treasury_tech_overview_nonce,
+                    label: 'Treasury Tech Overview'
+                },
+                {
+                    action: 'rtbcb_test_industry_overview',
+                    nonce: rtbcbAdmin.industry_overview_nonce,
+                    label: 'Industry Overview'
                 }
-                if (response.success && test.id === 'rtbcb-test-recommended-category' && response.data && response.data.recommended) {
-                  rtbcbAdmin.company = rtbcbAdmin.company || {};
-                  rtbcbAdmin.company.recommended_category = response.data.recommended.key || response.data.recommended;
+            ];
+
+            const results = [];
+            for (const test of tests) {
+                status.text('Testing ' + test.label + '...');
+                try {
+                    const response = await $.post(rtbcbAdmin.ajax_url, {
+                        action: test.action,
+                        nonce: test.nonce
+                    });
+                    const message = response && response.data && response.data.message ? response.data.message : '';
+                    results.push({
+                        section: test.label,
+                        status: response.success ? 'success' : 'error',
+                        message
+                    });
+                } catch (err) {
+                    results.push({
+                        section: test.label,
+                        status: 'error',
+                        message: err.message
+                    });
                 }
-                var message = response && response.data && response.data.message ? response.data.message : 'Unknown error';
-                results.push({
-                  section: test.id,
-                  status: response.success ? 'success' : 'error',
-                  message: message
+            }
+
+            status.text('Saving results...');
+            try {
+                await $.post(rtbcbAdmin.ajax_url, {
+                    action: 'rtbcb_save_test_results',
+                    nonce: rtbcbAdmin.test_dashboard_nonce,
+                    results: JSON.stringify(results)
                 });
-              });
-          }, function (err) {
-            results.push({
-              section: test.id,
-              status: 'error',
-              message: err.message
-            });
-          }));
-        }), function () {
-          status.text('Saving results...');
-          return _continue(_catch(function () {
-            return _awaitIgnored($.post(rtbcbAdmin.ajax_url, {
-              action: 'rtbcb_save_test_results',
-              nonce: rtbcbAdmin.test_dashboard_nonce,
-              results: JSON.stringify(results)
-            }));
-          }, _empty), function () {
+            } catch (err) {
+                // Ignore save errors; proceed to update UI.
+            }
+
             tableBody.empty();
-            results.forEach(function (item) {
-              var testObj = null;
-              for (var i = 0; i < tests.length; i++) {
-                if (tests[i].id === item.section) {
-                  testObj = tests[i];
-                  break;
-                }
-              }
-              var label = testObj ? testObj.label : item.section;
-              var actions = '<a href="#' + item.section + '" class="rtbcb-jump-tab">' + rtbcbAdmin.strings.view + '</a> | <a href="#" class="rtbcb-rerun-test" data-section="' + item.section + '">' + rtbcbAdmin.strings.rerun + '</a>';
-              var row = '<tr><td>' + label + '</td><td>' + item.status + '</td><td>' + item.message + '</td><td>' + new Date().toLocaleString() + '</td><td>' + actions + '</td></tr>';
-              tableBody.append(row);
+            results.forEach(function(item) {
+                const row = '<tr><td>' + item.section + '</td><td>' + item.status + '</td><td>' + item.message + '</td><td>' + new Date().toLocaleString() + '</td></tr>';
+                tableBody.append(row);
             });
-          });
+            status.text('');
+            button.prop('disabled', false).text(originalText);
+        }
+
+        button.on('click', function() {
+            button.prop('disabled', true).text(rtbcbAdmin.strings.testing);
+            runTests();
         });
-      });
-      button.on('click', function () {
-        button.prop('disabled', true).text(rtbcbAdmin.strings.testing);
-        runTests().catch(function (err) {
-          alert("".concat(rtbcbAdmin.strings.error, " ").concat(err.message));
-          return Promise.resolve();
-        }).then(function () {
-          status.text('');
-          button.text(originalText).prop('disabled', false);
-        });
-      });
     },
     testApiConnection: function testApiConnection(e) {
       try {
