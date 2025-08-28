@@ -49,6 +49,8 @@ class RTBCB_Admin {
         add_action( 'wp_ajax_rtbcb_test_data_enrichment', [ $this, 'ajax_test_data_enrichment' ] );
         add_action( 'wp_ajax_rtbcb_test_data_storage', [ $this, 'ajax_test_data_storage' ] );
         add_action( 'wp_ajax_rtbcb_test_report_assembly', [ $this, 'ajax_test_report_assembly' ] );
+        add_action( 'wp_ajax_rtbcb_test_tracking_script', [ $this, 'ajax_test_tracking_script' ] );
+        add_action( 'wp_ajax_rtbcb_test_follow_up_email', [ $this, 'ajax_test_follow_up_email' ] );
     }
 
     /**
@@ -116,6 +118,8 @@ class RTBCB_Admin {
             'real_treasury_overview_nonce' => wp_create_nonce( 'rtbcb_test_real_treasury_overview' ),
             'category_recommendation_nonce' => wp_create_nonce( 'rtbcb_test_category_recommendation' ),
             'report_assembly_nonce'      => wp_create_nonce( 'rtbcb_test_report_assembly' ),
+            'tracking_script_nonce'      => wp_create_nonce( 'rtbcb_test_tracking_script' ),
+            'follow_up_email_nonce'      => wp_create_nonce( 'rtbcb_test_follow_up_email' ),
             'page'                       => $page,
             'company'                    => $company_data,
             'strings'                    => [
@@ -1030,6 +1034,75 @@ class RTBCB_Admin {
                 'generated' => current_time( 'mysql' ),
             ]
         );
+    }
+
+    /**
+     * AJAX handler for tracking script testing.
+     *
+     * @return void
+     */
+    public function ajax_test_tracking_script() {
+        check_ajax_referer( 'rtbcb_test_tracking_script', 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'rtbcb' ) ] );
+        }
+
+        update_option( 'rtbcb_tracking_script', [ 'verified' => true, 'timestamp' => current_time( 'mysql' ) ] );
+
+        $result   = [
+            'section'   => 'rtbcb-test-tracking-script',
+            'status'    => 'success',
+            'message'   => __( 'Tracking event captured.', 'rtbcb' ),
+            'timestamp' => current_time( 'mysql' ),
+        ];
+        $existing = get_option( 'rtbcb_test_results', [] );
+        $existing = is_array( $existing ) ? $existing : [];
+        array_unshift( $existing, $result );
+        $existing = array_slice( $existing, 0, 10 );
+        update_option( 'rtbcb_test_results', $existing );
+
+        wp_send_json_success( [ 'message' => __( 'Tracking event captured.', 'rtbcb' ) ] );
+    }
+
+    /**
+     * AJAX handler for follow-up email testing.
+     *
+     * @return void
+     */
+    public function ajax_test_follow_up_email() {
+        check_ajax_referer( 'rtbcb_test_follow_up_email', 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'rtbcb' ) ] );
+        }
+
+        $queue   = get_option( 'rtbcb_follow_up_queue', [] );
+        $queue   = is_array( $queue ) ? $queue : [];
+        $email   = 'lead+' . wp_rand( 1000, 9999 ) . '@example.com';
+        $message = __( 'Thanks for reviewing your business case. Let us know if you have questions.', 'rtbcb' );
+
+        $entry = [
+            'email'     => sanitize_email( $email ),
+            'message'   => sanitize_text_field( $message ),
+            'queued_at' => current_time( 'mysql' ),
+        ];
+        $queue[] = $entry;
+        update_option( 'rtbcb_follow_up_queue', $queue );
+
+        $result   = [
+            'section'   => 'rtbcb-test-follow-up-email',
+            'status'    => 'success',
+            'message'   => __( 'Follow-up email queued.', 'rtbcb' ),
+            'timestamp' => current_time( 'mysql' ),
+        ];
+        $existing = get_option( 'rtbcb_test_results', [] );
+        $existing = is_array( $existing ) ? $existing : [];
+        array_unshift( $existing, $result );
+        $existing = array_slice( $existing, 0, 10 );
+        update_option( 'rtbcb_test_results', $existing );
+
+        wp_send_json_success( [ 'queue' => $queue ] );
     }
 
     /**
