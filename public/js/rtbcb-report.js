@@ -297,64 +297,54 @@ function generateProfessionalReport(businessContext) {
     }
 
     const maxAttempts = cfg.max_retries || 3;
-    const baseDelay = 500;
     let lastError;
-    let attempt = 1;
 
-    function attemptRequest() {
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         const formData = new FormData();
         formData.append('action', 'rtbcb_openai_responses');
         formData.append('body', JSON.stringify(requestBody));
 
-        return fetch(rtbcbReport.ajax_url, {
-            method: 'POST',
-            body: formData
-        })
-            .then(function(response) {
-                if (!response.ok) {
-                    return response.text().then(function(errorText) {
-                        if (rtbcbReport && rtbcbReport.debug) {
-                            console.error('Attempt ' + attempt + ' failed:', errorText);
-                            console.error('RTBCB request body:', requestBody);
-                        }
-                        throw new Error('HTTP ' + response.status);
-                    });
+        try {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', rtbcbReport.ajax_url, false);
+            xhr.send(formData);
+
+            if (xhr.status >= 200 && xhr.status < 300) {
+                let data;
+                try {
+                    data = JSON.parse(xhr.responseText);
+                } catch (parseError) {
+                    lastError = parseError;
+                    continue;
                 }
-                return response.json();
-            })
-            .then(function(data) {
+
                 if (data.error) {
                     console.error('Attempt ' + attempt + ' API error details:', data.error);
-                    const errorMessage = data.error.message || 'Responses API error';
-                    throw new Error(errorMessage);
+                    lastError = new Error(data.error.message || 'Responses API error');
+                    continue;
                 }
+
                 const htmlContent = data.output_text;
                 const cleanedHTML = htmlContent
                     .replace(/```html\n?/g, '')
                     .replace(/```\n?/g, '')
                     .trim();
                 return cleanedHTML;
-            })
-            .catch(function(error) {
-                console.error('Error generating report (attempt ' + attempt + '):', error);
-                lastError = error;
-                if (attempt < maxAttempts) {
-                    const delay = baseDelay * Math.pow(2, attempt - 1);
-                    return new Promise(function(resolve) {
-                        setTimeout(resolve, delay);
-                    }).then(function() {
-                        attempt++;
-                        return attemptRequest();
-                    });
-                }
-                throw error;
-            });
+            }
+
+            if (rtbcbReport && rtbcbReport.debug) {
+                console.error('Attempt ' + attempt + ' failed:', xhr.responseText);
+                console.error('RTBCB request body:', requestBody);
+            }
+            lastError = new Error('HTTP ' + xhr.status);
+        } catch (error) {
+            console.error('Error generating report (attempt ' + attempt + '):', error);
+            lastError = error;
+        }
     }
 
-    return attemptRequest().catch(function() {
-        console.error('All attempts to generate report failed:', lastError);
-        throw new Error('Unable to generate report at this time. Please try again later.');
-    });
+    console.error('All attempts to generate report failed:', lastError);
+    throw new Error('Unable to generate report at this time. Please try again later.');
 }
 
 function sanitizeReportHTML(htmlContent) {
@@ -384,17 +374,8 @@ function exportToPDF(htmlContent) {
     const printWindow = window.open('', '_blank');
     const doc = printWindow.document;
     doc.documentElement.innerHTML = sanitizeReportHTML(htmlContent);
-
-    const triggerPrint = () => {
-        printWindow.focus();
-        printWindow.print();
-    };
-
-    if (printWindow.requestAnimationFrame) {
-        printWindow.requestAnimationFrame(triggerPrint);
-    } else {
-        setTimeout(triggerPrint, 0);
-    }
+    printWindow.focus();
+    printWindow.print();
 }
 
 function generateAndDisplayReport(businessContext) {
@@ -406,26 +387,25 @@ function generateAndDisplayReport(businessContext) {
     errorElement.style.display = 'none';
     reportContainer.innerHTML = '';
 
-    return generateProfessionalReport(businessContext)
-        .then(function(htmlReport) {
-            if (!htmlReport.includes('<!DOCTYPE html>')) {
-                throw new Error('Invalid HTML response from API');
-            }
+    try {
+        const htmlReport = generateProfessionalReport(businessContext);
 
-            const safeReport = sanitizeReportHTML(htmlReport);
-            displayReport(safeReport);
+        if (!htmlReport.includes('<!DOCTYPE html>')) {
+            throw new Error('Invalid HTML response from API');
+        }
 
-            const exportBtn = document.createElement('button');
-            exportBtn.textContent = 'Export to PDF';
-            exportBtn.className = 'export-btn';
-            exportBtn.onclick = function() { exportToPDF(safeReport); };
-            reportContainer.appendChild(exportBtn);
-        })
-        .catch(function(error) {
-            errorElement.textContent = 'Error: ' + error.message;
-            errorElement.style.display = 'block';
-        })
-        .then(function() {
-            loadingElement.style.display = 'none';
-        });
+        const safeReport = sanitizeReportHTML(htmlReport);
+        displayReport(safeReport);
+
+        const exportBtn = document.createElement('button');
+        exportBtn.textContent = 'Export to PDF';
+        exportBtn.className = 'export-btn';
+        exportBtn.onclick = function() { exportToPDF(safeReport); };
+        reportContainer.appendChild(exportBtn);
+    } catch (error) {
+        errorElement.textContent = 'Error: ' + error.message;
+        errorElement.style.display = 'block';
+    }
+
+    loadingElement.style.display = 'none';
 }
