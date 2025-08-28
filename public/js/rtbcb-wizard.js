@@ -102,10 +102,15 @@ class BusinessCaseBuilder {
         }
 
         // Form submission
-        this.form.addEventListener('submit', (e) => {
+        this.form.addEventListener('submit', async (e) => {
             e.preventDefault();
             if (this.validateStep(this.totalSteps)) {
-                this.handleSubmit();
+                try {
+                    await this.handleSubmit();
+                } catch (error) {
+                    console.error('RTBCB: handleSubmit error:', error);
+                    this.showError('An unexpected error occurred. Please try again.');
+                }
             }
         });
 
