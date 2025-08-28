@@ -370,7 +370,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       var results = $('#rtbcb-industry-overview-results');
       var submitBtn = form.find('button[type="submit"]');
       var original = RTBCBAdmin.utils.setLoading(submitBtn, rtbcbAdmin.strings.processing);
-      var company = Object.assign({}, rtbcbAdmin.company || {});
+      var company = jQuery.extend({}, rtbcbAdmin.company || {});
       company.industry = $('#rtbcb-industry-name').val();
       var nonce = form.find('[name="nonce"]').val();
       if (!company.industry) {
@@ -589,7 +589,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
         return _continue(_forOf(tests, function (test) {
           status.text('Testing ' + test.label + '...');
           return _continueIgnored(_catch(function () {
-            var payload = Object.assign({
+            var payload = jQuery.extend({}, {
               action: test.action,
               nonce: test.nonce
             }, test.data || {});
@@ -638,9 +638,13 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
           }, _empty), function () {
             tableBody.empty();
             results.forEach(function (item) {
-              var testObj = tests.find(function (t) {
-                return t.id === item.section;
-              });
+              var testObj = null;
+              for (var i = 0; i < tests.length; i++) {
+                if (tests[i].id === item.section) {
+                  testObj = tests[i];
+                  break;
+                }
+              }
               var label = testObj ? testObj.label : item.section;
               var actions = '<a href="#' + item.section + '" class="rtbcb-jump-tab">' + rtbcbAdmin.strings.view + '</a> | <a href="#" class="rtbcb-rerun-test" data-section="' + item.section + '">' + rtbcbAdmin.strings.rerun + '</a>';
               var row = '<tr><td>' + label + '</td><td>' + item.status + '</td><td>' + item.message + '</td><td>' + new Date().toLocaleString() + '</td><td>' + actions + '</td></tr>';
