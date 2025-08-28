@@ -42,31 +42,39 @@ jQuery(function($){
         var $results = $('#rtbcb-test-results');
         $btn.prop('disabled', true).text('<?php echo esc_js( __( 'Testing...', 'rtbcb' ) ); ?>');
         $results.html('<p><?php echo esc_js( __( 'Testing OpenAI API connection...', 'rtbcb' ) ); ?></p>');
-        $.post(ajaxurl, {
-            action: 'rtbcb_test_api',
-            nonce: '<?php echo wp_create_nonce( 'rtbcb_test_api' ); ?>'
-        }).done(function(response){
-            if (response.success) {
-                var html = '<div class="notice notice-success"><p><strong><?php echo esc_js( '✅ ' . __( 'OpenAI API connection successful', 'rtbcb' ) ); ?></strong></p>' +
-                    '<p>' + response.data.details + '</p>';
-                if (response.data.models_available) {
-                    html += '<p><strong><?php echo esc_js( __( 'Available models:', 'rtbcb' ) ); ?></strong> ' + response.data.models_available.join(', ') + '</p>';
+        $.ajax({
+            url: ajaxurl,
+            method: 'POST',
+            data: {
+                action: 'rtbcb_test_api',
+                nonce: '<?php echo wp_create_nonce( 'rtbcb_test_api' ); ?>'
+            },
+            async: false,
+            success: function(response){
+                if (response.success) {
+                    var html = '<div class="notice notice-success"><p><strong><?php echo esc_js( '✅ ' . __( 'OpenAI API connection successful', 'rtbcb' ) ); ?></strong></p>' +
+                        '<p>' + response.data.details + '</p>';
+                    if (response.data.models_available) {
+                        html += '<p><strong><?php echo esc_js( __( 'Available models:', 'rtbcb' ) ); ?></strong> ' + response.data.models_available.join(', ') + '</p>';
+                    }
+                    html += '</div>';
+                    $results.html(html);
+                } else {
+                    var errorHtml = '<div class="notice notice-error"><p><strong>❌ ' + response.data.message + '</strong></p>' +
+                        '<p>' + response.data.details + '</p>';
+                    if (response.data.http_code) {
+                        errorHtml += '<p><?php echo esc_js( __( 'HTTP Code:', 'rtbcb' ) ); ?> ' + response.data.http_code + '</p>';
+                    }
+                    errorHtml += '</div>';
+                    $results.html(errorHtml);
                 }
-                html += '</div>';
-                $results.html(html);
-            } else {
-                var errorHtml = '<div class="notice notice-error"><p><strong>❌ ' + response.data.message + '</strong></p>' +
-                    '<p>' + response.data.details + '</p>';
-                if (response.data.http_code) {
-                    errorHtml += '<p><?php echo esc_js( __( 'HTTP Code:', 'rtbcb' ) ); ?> ' + response.data.http_code + '</p>';
-                }
-                errorHtml += '</div>';
-                $results.html(errorHtml);
+            },
+            error: function(){
+                $results.html('<div class="notice notice-error"><p><strong>❌ <?php echo esc_js( __( 'Request failed', 'rtbcb' ) ); ?></strong></p><p><?php echo esc_js( __( 'Unable to connect to WordPress AJAX handler.', 'rtbcb' ) ); ?></p></div>');
+            },
+            complete: function(){
+                $btn.prop('disabled', false).text('<?php echo esc_js( __( 'Test API Connection', 'rtbcb' ) ); ?>');
             }
-        }).fail(function(){
-            $results.html('<div class="notice notice-error"><p><strong>❌ <?php echo esc_js( __( 'Request failed', 'rtbcb' ) ); ?></strong></p><p><?php echo esc_js( __( 'Unable to connect to WordPress AJAX handler.', 'rtbcb' ) ); ?></p></div>');
-        }).always(function(){
-            $btn.prop('disabled', false).text('<?php echo esc_js( __( 'Test API Connection', 'rtbcb' ) ); ?>');
         });
     });
 });
