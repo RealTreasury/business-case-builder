@@ -91,6 +91,9 @@ class RTBCB_Admin {
                     'size'           => isset( $raw_company['size'] ) ? sanitize_text_field( $raw_company['size'] ) : '',
                     'geography'      => isset( $raw_company['geography'] ) ? sanitize_text_field( $raw_company['geography'] ) : '',
                     'business_model' => isset( $raw_company['business_model'] ) ? sanitize_text_field( $raw_company['business_model'] ) : '',
+                    'revenue'        => isset( $raw_company['revenue'] ) ? floatval( $raw_company['revenue'] ) : 0,
+                    'staff_count'    => isset( $raw_company['staff_count'] ) ? intval( $raw_company['staff_count'] ) : 0,
+                    'efficiency'     => isset( $raw_company['efficiency'] ) ? floatval( $raw_company['efficiency'] ) : 0,
                 ];
 
                 $company_data['focus_areas'] = isset( $raw_company['focus_areas'] )
@@ -630,6 +633,10 @@ class RTBCB_Admin {
             $analysis        = $overview['analysis'] ?? '';
             $recommendations = array_map( 'sanitize_text_field', $overview['recommendations'] ?? [] );
             $references      = array_map( 'esc_url_raw', $overview['references'] ?? [] );
+            $metrics         = is_array( $overview['metrics'] ?? null ) ? $overview['metrics'] : [];
+            $revenue         = floatval( $metrics['revenue'] ?? 0 );
+            $staff_count     = intval( $metrics['staff_count'] ?? 0 );
+            $efficiency      = floatval( $metrics['baseline_efficiency'] ?? 0 );
 
             $word_count   = str_word_count( wp_strip_all_tags( $analysis ) );
             $elapsed_time = microtime( true ) - $start_time;
@@ -644,9 +651,21 @@ class RTBCB_Admin {
                 'focus_areas'     => array_map( 'sanitize_text_field', (array) ( $existing['focus_areas'] ?? [] ) ),
                 'industry'        => isset( $existing['industry'] ) ? sanitize_text_field( $existing['industry'] ) : '',
                 'size'            => isset( $existing['size'] ) ? sanitize_text_field( $existing['size'] ) : '',
+                'revenue'         => $revenue,
+                'staff_count'     => $staff_count,
+                'efficiency'      => $efficiency,
             ];
 
             update_option( 'rtbcb_current_company', $company_data );
+            $stored = get_option( 'rtbcb_company_data', [] );
+            if ( ! is_array( $stored ) ) {
+                $stored = [];
+            }
+            $stored['name']        = $company_name;
+            $stored['revenue']     = $revenue;
+            $stored['staff_count'] = $staff_count;
+            $stored['efficiency']  = $efficiency;
+            update_option( 'rtbcb_company_data', $stored );
 
             wp_send_json_success(
                 [
@@ -660,6 +679,11 @@ class RTBCB_Admin {
                     'focus_areas'     => $company_data['focus_areas'],
                     'industry'        => $company_data['industry'],
                     'size'            => $company_data['size'],
+                    'metrics'         => [
+                        'revenue'     => $revenue,
+                        'staff_count' => $staff_count,
+                        'efficiency'  => $efficiency,
+                    ],
                 ]
             );
 

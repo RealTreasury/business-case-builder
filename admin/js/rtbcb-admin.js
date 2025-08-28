@@ -294,6 +294,14 @@ jQuery(document).ready(function($) {
                     if (response.success && response.data) {
                         $results.html('<div class="notice notice-success"><p>' +
                             (response.data.overview || 'Generated successfully') + '</p></div>');
+
+                        if (response.data.metrics) {
+                            window.rtbcbAdmin = window.rtbcbAdmin || {};
+                            rtbcbAdmin.company = rtbcbAdmin.company || {};
+                            rtbcbAdmin.company.revenue = response.data.metrics.revenue || 0;
+                            rtbcbAdmin.company.staff_count = response.data.metrics.staff_count || 0;
+                            rtbcbAdmin.company.efficiency = response.data.metrics.efficiency || 0;
+                        }
                     } else {
                         $results.html('<div class="notice notice-error"><p>' +
                             (response.data && response.data.message ? response.data.message : 'Generation failed') + '</p></div>');
@@ -359,15 +367,17 @@ jQuery(document).ready(function($) {
             
             $results.text(window.rtbcbAdmin.strings.processing || 'Processing...');
             
+            var company = window.rtbcbAdmin.company || {};
+
             $.ajax({
                 url: window.rtbcbAdmin.ajax_url,
                 method: 'POST',
                 data: {
                     action: 'rtbcb_test_estimated_benefits',
                     company_data: {
-                        revenue: $('#rtbcb-test-revenue').val(),
-                        staff_count: $('#rtbcb-test-staff-count').val(),
-                        efficiency: $('#rtbcb-test-efficiency').val()
+                        revenue: company.revenue,
+                        staff_count: company.staff_count,
+                        efficiency: company.efficiency
                     },
                     recommended_category: $('#rtbcb-test-category').val(),
                     nonce: window.rtbcbAdmin.benefits_estimate_nonce

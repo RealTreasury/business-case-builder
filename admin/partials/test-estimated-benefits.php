@@ -23,7 +23,7 @@ $overview_url = admin_url( 'admin.php?page=rtbcb-test-dashboard#rtbcb-phase1' );
     return;
 }
 
-$company_data         = get_option( 'rtbcb_company_data', [] );
+$company_data         = $company;
 $recommended_category = get_option( 'rtbcb_last_recommended_category', '' );
 $categories           = RTBCB_Category_Recommender::get_all_categories();
 ?>
@@ -45,28 +45,16 @@ $categories           = RTBCB_Category_Recommender::get_all_categories();
 <form id="rtbcb-benefits-estimate-form">
     <table class="form-table">
         <tr>
-            <th scope="row">
-                <label for="rtbcb-test-revenue"><?php esc_html_e( 'Company Annual Revenue', 'rtbcb' ); ?></label>
-            </th>
-            <td>
-                <input type="number" id="rtbcb-test-revenue" value="<?php echo esc_attr( $company_data['revenue'] ?? '' ); ?>" />
-            </td>
+            <th scope="row"><?php esc_html_e( 'Company Annual Revenue', 'rtbcb' ); ?></th>
+            <td><?php echo esc_html( $company_data['revenue'] ?? '' ); ?></td>
         </tr>
         <tr>
-            <th scope="row">
-                <label for="rtbcb-test-staff-count"><?php esc_html_e( 'Treasury Staff Count', 'rtbcb' ); ?></label>
-            </th>
-            <td>
-                <input type="number" id="rtbcb-test-staff-count" value="<?php echo esc_attr( $company_data['staff_count'] ?? '' ); ?>" />
-            </td>
+            <th scope="row"><?php esc_html_e( 'Treasury Staff Count', 'rtbcb' ); ?></th>
+            <td><?php echo esc_html( $company_data['staff_count'] ?? '' ); ?></td>
         </tr>
         <tr>
-            <th scope="row">
-                <label for="rtbcb-test-efficiency"><?php esc_html_e( 'Current Process Efficiency', 'rtbcb' ); ?></label>
-            </th>
-            <td>
-                <input type="range" id="rtbcb-test-efficiency" min="1" max="10" value="<?php echo esc_attr( $company_data['efficiency'] ?? '' ); ?>" />
-            </td>
+            <th scope="row"><?php esc_html_e( 'Current Process Efficiency', 'rtbcb' ); ?></th>
+            <td><?php echo esc_html( $company_data['efficiency'] ?? '' ); ?></td>
         </tr>
         <tr>
             <th scope="row">
