@@ -1,8 +1,8 @@
-# Real Treasury Business Case Builder - Enhanced Version 2.0
+# Real Treasury Business Case Builder - Enhanced Version 2.1.0
 
 A comprehensive WordPress plugin that helps treasury teams quantify the benefits of modern treasury tools, generate professional business case reports, and track lead engagement with advanced analytics.
 
-## 🚀 What's New in Version 2.0
+## 🚀 What's New in Version 2.1.0
 
 ### ✨ Major Enhancements
 
@@ -11,11 +11,11 @@ A comprehensive WordPress plugin that helps treasury teams quantify the benefits
 - Intelligent scoring algorithm considers company size, complexity, and pain points
 - Detailed reasoning provided for each recommendation
 
-**📄 HTML Reports**
+**📄 HTML Reports with Optional Print-to-PDF**
 - Generates comprehensive business case reports as HTML with charts and visualizations
 - Executive summary, ROI analysis, and implementation roadmap
 - Responsive formatting ready for stakeholder presentations
-- Report HTML returned via AJAX for immediate viewing
+- Report HTML returned via AJAX for immediate viewing or browser print-to-PDF
 
 **📈 Advanced Analytics Dashboard**
 - Real-time lead tracking with detailed metrics
@@ -110,13 +110,33 @@ Add the shortcode to any page or post:
    style="modern"]
 ```
 
+## 🗂️ Repository Structure
+
+- `admin/` – WordPress dashboard pages, settings, and nonces.
+- `inc/` – Core classes and helper functions.
+- `public/` – Front-end hooks, shortcodes, and assets.
+- `templates/` – PHP templates rendered for reports and forms.
+- `tests/` – Automated tests and diagnostics.
+- `vendor/` – Composer-managed third-party libraries (do not modify).
+
+## 🤖 AI Coding Guidelines
+
+- Follow WordPress PHP coding standards with four-space indentation.
+- Prefix global functions with `rtbcb_` and classes with `RTBCB_` (`RTBCB_Admin`, `RTBCB_Public`, etc.).
+- Sanitize and escape all input and output; wrap user-facing text in translation functions using the `rtbcb` text domain.
+- Do not edit files under `vendor/`.
+- Run PHP linting on modified PHP files:
+  ```bash
+  find . -name "*.php" -not -path "./vendor/*" -print0 | xargs -0 -n1 php -l
+  ```
+
 ## 📄 HTML Reports
 
 - Reports are rendered server-side using `templates/report-template.php`.
 - After form submission, `RTBCB_Router` returns the report HTML via AJAX as `report_html`.
 - `public/js/rtbcb.js` injects this HTML into `#rtbcb-report-container` for immediate viewing.
 - Reports are not saved as files; only lead metadata is stored in the database.
-- Users can save or print the report directly from their browser if needed.
+- Users can save or print the report directly from their browser, including printing to PDF.
 
 ## 🎛️ Admin Dashboard Features
 
@@ -377,7 +397,7 @@ For manual verification during development, `debug_ajax_handler()` includes runt
 ## 📞 Support and Documentation
 
 ### Getting Help
-1. **Plugin Documentation**: Complete feature documentation in `/docs/`
+1. **Plugin Documentation**: Complete feature documentation in `readme.txt`
 2. **WordPress Support Forums**: Community support and troubleshooting
 3. **GitHub Issues**: Bug reports and feature requests
 4. **Real Treasury Support**: Priority support for enterprise users
