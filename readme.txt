@@ -71,7 +71,6 @@ nonce such as `rtbcb_test_company_overview` to protect requests.
 ├── inc
 │  ├── AGENTS.md
 │  ├── class-rtbcb-api-tester.php
-│  ├── class-rtbcb-async-jobs.php
 │  ├── class-rtbcb-calculator.php
 │  ├── class-rtbcb-category-recommender.php
 │  ├── class-rtbcb-db.php

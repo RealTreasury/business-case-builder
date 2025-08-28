@@ -64,12 +64,12 @@ function handleSubmissionError(errorMessage) {
  * Handles the form submission by sending data to the backend.
  * @param {Event} e - The form submission event.
  */
-async function handleSubmit(e) {
+function handleSubmit(e) {
     e.preventDefault();
-    const form = e.target;
-    const formData = new FormData(form);
-    const progressContainer = document.getElementById('rtbcb-progress-container');
-    const formContainer = document.getElementById('rtbcb-form-container');
+    var form = e.target;
+    var formData = new FormData(form);
+    var progressContainer = document.getElementById('rtbcb-progress-container');
+    var formContainer = document.getElementById('rtbcb-form-container');
 
     // Show progress indicator
     if (formContainer) formContainer.style.display = 'none';
@@ -79,58 +79,59 @@ async function handleSubmit(e) {
         return;
     }
 
-    try {
-        const response = await fetch(ajaxObj.ajax_url, {
-            method: 'POST',
-            body: formData,
-        });
+    var loggedData = typeof formData.entries === 'function' ? Object.fromEntries(formData.entries()) : {};
+    console.log('RTBCB: Submitting form data:', loggedData);
 
-        // Check for server-side errors
-        if (!response.ok) {
-            const errorText = await response.text();
-            let errorMessage = `Server responded with status ${response.status}.`;
-            try {
-                const errorJson = JSON.parse(errorText);
-                errorMessage = errorJson.data.message || errorMessage;
-            } catch (jsonError) {
-                console.error('Could not parse error response as JSON.', jsonError);
-                errorMessage = errorText || errorMessage;
+    return fetch(ajaxObj.ajax_url, {
+        method: 'POST',
+        body: formData,
+    })
+        .then(function(response) {
+            if (!response.ok) {
+                return response.text().then(function(errorText) {
+                    var errorMessage = 'Server responded with status ' + response.status + '.';
+                    try {
+                        var errorJson = JSON.parse(errorText);
+                        errorMessage = errorJson.data.message || errorMessage;
+                    } catch (jsonError) {
+                        console.error('Could not parse error response as JSON.', jsonError);
+                        errorMessage = errorText || errorMessage;
+                    }
+                    throw new Error(errorMessage);
+                });
             }
-            throw new Error(errorMessage);
-        }
+            return response.json();
+        })
+        .then(function(result) {
+            if (!result.success) {
+                throw new Error(result.data.message || 'An unknown error occurred.');
+            }
 
-        const result = await response.json();
-
-        // Application-specific errors
-        if (!result.success) {
-            throw new Error(result.data.message || 'An unknown error occurred.');
-        }
-
-        // On success, display the report
-        const reportContainer = document.getElementById('rtbcb-report-container');
-        if (progressContainer) progressContainer.style.display = 'none';
-        if (reportContainer) {
-            // Sanitize server-provided HTML before injecting to prevent XSS.
-            // Only allow expected markup needed for business case output.
-            const allowedTags = [
-                'a', 'p', 'br', 'strong', 'em', 'ul', 'ol', 'li',
-                'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span',
-                'table', 'thead', 'tbody', 'tr', 'th', 'td'
-            ];
-            const allowedAttr = { a: [ 'href', 'title', 'target', 'rel' ], '*': [ 'style' ] };
-            const sanitized = typeof DOMPurify !== 'undefined'
-                ? DOMPurify.sanitize(
-                    result.data.report_html,
-                    { ALLOWED_TAGS: allowedTags, ALLOWED_ATTR: allowedAttr }
-                )
-                : result.data.report_html;
-            reportContainer.innerHTML = sanitized;
-            reportContainer.style.display = 'block';
-        }
-
-    } catch (error) {
-        handleSubmissionError(error.message);
-    }
+            // On success, display the report
+            var reportContainer = document.getElementById('rtbcb-report-container');
+            if (progressContainer) progressContainer.style.display = 'none';
+            if (reportContainer) {
+                // Sanitize server-provided HTML before injecting to prevent XSS.
+                // Only allow expected markup needed for business case output.
+                var allowedTags = [
+                    'a', 'p', 'br', 'strong', 'em', 'ul', 'ol', 'li',
+                    'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span',
+                    'table', 'thead', 'tbody', 'tr', 'th', 'td'
+                ];
+                var allowedAttr = { a: [ 'href', 'title', 'target', 'rel' ], '*': [ 'style' ] };
+                var sanitized = typeof DOMPurify !== 'undefined'
+                    ? DOMPurify.sanitize(
+                        result.data.report_html,
+                        { ALLOWED_TAGS: allowedTags, ALLOWED_ATTR: allowedAttr }
+                    )
+                    : result.data.report_html;
+                reportContainer.innerHTML = sanitized;
+                reportContainer.style.display = 'block';
+            }
+        })
+        .catch(function(error) {
+            handleSubmissionError(error.message);
+        });
 }
 
 // Ensure the form submission is handled by our new function
