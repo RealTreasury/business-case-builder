@@ -53,7 +53,6 @@ nonce such as `rtbcb_test_company_overview` to protect requests.
 │  ├── partials
 │  │  ├── dashboard-connectivity.php
 │  │  ├── dashboard-test-results.php
-│  │  ├── test-api.php
 │  │  ├── test-company-overview.php
 │  │  ├── test-estimated-benefits.php
 │  │  ├── test-industry-overview.php

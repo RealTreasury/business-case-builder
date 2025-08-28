@@ -146,7 +146,6 @@ Add the shortcode to any page or post:
 │  ├── partials
 │  │  ├── dashboard-connectivity.php
 │  │  ├── dashboard-test-results.php
-│  │  ├── test-api.php
 │  │  ├── test-company-overview.php
 │  │  ├── test-estimated-benefits.php
 │  │  ├── test-industry-overview.php
