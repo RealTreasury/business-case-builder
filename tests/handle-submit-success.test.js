@@ -2,50 +2,41 @@ const fs = require('fs');
 const vm = require('vm');
 const assert = require('assert');
 
-const progressContainer = { innerHTML: '', style: {} };
-const formContainer = { style: {} };
-const reportContainer = { innerHTML: '', style: {} };
-
+global.window = {};
+global.ajaxObj = { ajax_url: 'test-url' };
 global.document = {
-    readyState: 'complete',
     addEventListener: () => {},
-    getElementById: (id) => {
-        if (id === 'rtbcb-progress-container') return progressContainer;
-        if (id === 'rtbcb-form-container') return formContainer;
-        if (id === 'rtbcb-report-container') return reportContainer;
-        if (id === 'rtbcb-form') return {};
-        return null;
-    }
+    getElementById: () => null
 };
 
-global.ajaxObj = { ajax_url: 'test-url' };
+global.FormData = class {
+    constructor() { this._data = []; }
+    append(key, value) { this._data.push([key, value]); }
+    entries() { return this._data[Symbol.iterator](); }
+    [Symbol.iterator]() { return this._data[Symbol.iterator](); }
+};
 
-global.DOMPurify = { sanitize: (html) => html };
-
-global.fetch = () => Promise.resolve({
-    ok: true,
-    json: () => Promise.resolve({
-        success: true,
-        data: {
-            report_html: '<div>Report</div>',
-            download_url: 'http://example.com/test.pdf'
+global.XMLHttpRequest = function() {
+    return {
+        open() {},
+        send() {
+            this.status = 200;
+            this.responseText = JSON.stringify({ success: true, data: { report_html: '<div>Report</div>' } });
         }
-    }),
-    text: () => Promise.resolve('')
-});
+    };
+};
 
-global.FormData = class { constructor() {} };
-
-const code = fs.readFileSync('public/js/rtbcb.js', 'utf8');
+const code = fs.readFileSync('public/js/rtbcb-wizard.js', 'utf8');
 vm.runInThisContext(code);
 
-handleSubmit({ preventDefault() {}, target: {} })
-    .then(() => {
-        assert.strictEqual(reportContainer.innerHTML, '<div>Report</div>');
-        assert.ok(!reportContainer.innerHTML.includes('test.pdf'));
-        console.log('Success path test passed.');
-    })
-    .catch((error) => {
-        console.error(error);
-        process.exit(1);
-    });
+const builder = Object.create(BusinessCaseBuilder.prototype);
+builder.form = {};
+builder.showProgress = () => {};
+let result;
+builder.showResults = (data) => { result = data; };
+builder.showError = () => { throw new Error('Should not fail'); };
+
+builder.handleSubmit();
+
+assert.strictEqual(result.report_html, '<div>Report</div>');
+console.log('Success path test passed.');
