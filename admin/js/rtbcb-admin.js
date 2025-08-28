@@ -434,70 +434,67 @@ jQuery(document).ready(function($) {
             });
         },
 
-        runAllTests: function(e) {
+        runAllTests: async function(e) {
             e.preventDefault();
             var $btn = $(this);
             var $status = $('#rtbcb-test-status');
             var original = $btn.text();
-            
+
             $btn.prop('disabled', true).text(window.rtbcbAdmin.strings.testing || 'Testing...');
             $status.text('Running tests...');
-            
+
             var tests = [
-                { action: 'rtbcb_test_company_overview', label: 'Company Overview', nonce: window.rtbcbAdmin.company_overview_nonce },
-                { action: 'rtbcb_test_maturity_model', label: 'Maturity Model', nonce: window.rtbcbAdmin.maturity_model_nonce },
-                { action: 'rtbcb_test_rag_market_analysis', label: 'RAG Market Analysis', nonce: window.rtbcbAdmin.rag_market_analysis_nonce },
-                { action: 'rtbcb_test_value_proposition', label: 'Value Proposition', nonce: window.rtbcbAdmin.value_proposition_nonce },
-                { action: 'rtbcb_test_industry_overview', label: 'Industry Overview', nonce: window.rtbcbAdmin.industry_overview_nonce }
+                { action: 'rtbcb_test_company_overview', label: 'Company Overview', nonce: window.rtbcbAdmin.company_overview_nonce || $('#rtbcb_test_company_overview_nonce').val() },
+                { action: 'rtbcb_test_data_enrichment', label: 'Data Enrichment', nonce: $('#rtbcb_test_data_enrichment_nonce').val() },
+                { action: 'rtbcb_test_data_storage', label: 'Data Storage', nonce: $('#rtbcb_test_data_storage_nonce').val() },
+                { action: 'rtbcb_test_maturity_model', label: 'Maturity Model', nonce: window.rtbcbAdmin.maturity_model_nonce || $('#rtbcb_test_maturity_model_nonce').val() },
+                { action: 'rtbcb_test_rag_market_analysis', label: 'RAG Market Analysis', nonce: window.rtbcbAdmin.rag_market_analysis_nonce || $('#rtbcb_test_rag_market_analysis_nonce').val() },
+                { action: 'rtbcb_test_value_proposition', label: 'Value Proposition', nonce: window.rtbcbAdmin.value_proposition_nonce || $('#rtbcb_test_value_proposition_nonce').val() },
+                { action: 'rtbcb_test_industry_overview', label: 'Industry Overview', nonce: window.rtbcbAdmin.industry_overview_nonce || $('#rtbcb_test_industry_overview_nonce').val() },
+                { action: 'rtbcb_test_real_treasury_overview', label: 'Real Treasury Overview', nonce: window.rtbcbAdmin.real_treasury_overview_nonce || $('#rtbcb_test_real_treasury_overview_nonce').val() },
+                { action: 'rtbcb_test_calculate_roi', label: 'ROI Calculator', nonce: window.rtbcbAdmin.roi_nonce },
+                { action: 'rtbcb_test_estimated_benefits', label: 'Estimated Benefits', nonce: window.rtbcbAdmin.benefits_estimate_nonce || $('#rtbcb_test_estimated_benefits_nonce').val() },
+                { action: 'rtbcb_test_report_assembly', label: 'Report Assembly & Delivery', nonce: window.rtbcbAdmin.report_assembly_nonce || $('#rtbcb_test_report_assembly_nonce').val() },
+                { action: 'rtbcb_test_tracking_script', label: 'Tracking Scripts', nonce: window.rtbcbAdmin.tracking_script_nonce || $('#rtbcb_test_tracking_script_nonce').val() },
+                { action: 'rtbcb_test_follow_up_email', label: 'Follow-up Emails', nonce: window.rtbcbAdmin.follow_up_email_nonce || $('#rtbcb_test_follow_up_email_nonce').val() }
             ];
-            
+
             var results = [];
-            var currentTest = 0;
-            
-            function runNext() {
-                if (currentTest >= tests.length) {
-                    $status.text('Tests completed');
-                    $btn.prop('disabled', false).text(original);
-                    
-                    var message = 'Test Results:\n';
-                    for (var i = 0; i < results.length; i++) {
-                        message += results[i].label + ': ' + results[i].status + '\n';
-                    }
-                    alert(message);
-                    return;
-                }
-                
-                var test = tests[currentTest];
+
+            for (var i = 0; i < tests.length; i++) {
+                var test = tests[i];
                 $status.text('Testing ' + test.label + '...');
-                
-                $.ajax({
-                    url: window.rtbcbAdmin.ajax_url,
-                    method: 'POST',
-                    data: {
-                        action: test.action,
-                        nonce: test.nonce || window.rtbcbAdmin.test_dashboard_nonce
-                    },
-                    async: false,
-                    success: function(response) {
-                        results.push({
-                            label: test.label,
-                            status: response.success ? 'SUCCESS' : 'FAILED'
-                        });
-                    },
-                    error: function() {
-                        results.push({
-                            label: test.label,
-                            status: 'ERROR'
-                        });
-                    },
-                    complete: function() {
-                        currentTest++;
-                        runNext();
-                    }
-                });
+
+                try {
+                    var response = await $.ajax({
+                        url: window.rtbcbAdmin.ajax_url,
+                        method: 'POST',
+                        data: {
+                            action: test.action,
+                            nonce: test.nonce || window.rtbcbAdmin.test_dashboard_nonce
+                        }
+                    });
+
+                    results.push({
+                        label: test.label,
+                        status: response.success ? 'SUCCESS' : 'FAILED'
+                    });
+                } catch (error) {
+                    results.push({
+                        label: test.label,
+                        status: 'ERROR'
+                    });
+                }
             }
-            
-            runNext();
+
+            $status.text('Tests completed');
+            $btn.prop('disabled', false).text(original);
+
+            var message = 'Test Results:\n';
+            for (var j = 0; j < results.length; j++) {
+                message += results[j].label + ': ' + results[j].status + '\n';
+            }
+            alert(message);
         },
         
         initLeadsManager: function() {
