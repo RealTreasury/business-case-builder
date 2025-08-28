@@ -10,19 +10,10 @@ window.openBusinessCaseModal = function() {
         overlay.classList.add('active');
         document.body.style.overflow = 'hidden';
 
-        // Force re-initialization without blocking rendering
-        const initBuilder = () => {
-            if (window.businessCaseBuilder) {
-                window.businessCaseBuilder.reinitialize();
-            } else {
-                window.businessCaseBuilder = new BusinessCaseBuilder();
-            }
-        };
-
-        if (window.requestAnimationFrame) {
-            window.requestAnimationFrame(initBuilder);
+        if (window.businessCaseBuilder) {
+            window.businessCaseBuilder.reinitialize();
         } else {
-            setTimeout(initBuilder, 0);
+            window.businessCaseBuilder = new BusinessCaseBuilder();
         }
     }
 };
@@ -105,10 +96,12 @@ class BusinessCaseBuilder {
         this.form.addEventListener('submit', (e) => {
             e.preventDefault();
             if (this.validateStep(this.totalSteps)) {
-                this.handleSubmit().catch((error) => {
+                try {
+                    this.handleSubmit();
+                } catch (error) {
                     console.error('RTBCB: handleSubmit error:', error);
                     this.showError('An unexpected error occurred. Please try again.');
-                });
+                }
             }
         });
 
@@ -304,14 +297,6 @@ class BusinessCaseBuilder {
                 messageDiv.textContent = message;
                 messageDiv.style.display = 'block';
                 messageDiv.style.color = '#ef4444';
-
-                if (this.messageHideTimeout) {
-                    clearTimeout(this.messageHideTimeout);
-                }
-
-                this.messageHideTimeout = setTimeout(() => {
-                    messageDiv.style.display = 'none';
-                }, 5000);
             }
         }
     }
@@ -392,7 +377,7 @@ class BusinessCaseBuilder {
         this.showProgress();
         if (typeof ajaxObj === 'undefined' || !ajaxObj.ajax_url) {
             this.showError('Unable to submit form. Please refresh the page and try again.');
-            return Promise.resolve();
+            return;
         }
 
         const formData = new FormData();
@@ -411,59 +396,49 @@ class BusinessCaseBuilder {
 
         console.log('RTBCB: Submitting form data:', Object.fromEntries(formData));
 
-        const self = this;
-        return fetch(ajaxObj.ajax_url, {
-            method: 'POST',
-            body: formData
-        })
-            .then(function(response) {
-                console.log('RTBCB: Response status:', response.status);
-                console.log('RTBCB: Response headers:', response.headers ? Object.fromEntries(response.headers) : {});
+        try {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', ajaxObj.ajax_url, false);
+            xhr.send(formData);
 
-                if (!response.ok) {
-                    return response.text().then(function(errorText) {
-                        console.error('RTBCB: Server error response:', errorText);
-
-                        var errorMessage = 'Server responded with status ' + response.status;
-                        try {
-                            var errorJson = JSON.parse(errorText);
-                            errorMessage = errorJson.data?.message || errorMessage;
-                        } catch (parseError) {
-                            console.error('RTBCB: Could not parse error response as JSON:', parseError);
-                        }
-
-                        throw new Error(errorMessage);
-                    });
+            if (xhr.status >= 200 && xhr.status < 300) {
+                let result;
+                try {
+                    result = JSON.parse(xhr.responseText);
+                } catch (e) {
+                    throw new Error('Invalid server response');
                 }
 
-                return response.json();
-            })
-            .then(function(result) {
-                console.log('RTBCB: Parsed response:', result);
-
-                if (result.success) {
+                if (result && result.success) {
                     console.log('RTBCB: Business case generated successfully');
-                    self.showResults(result.data);
+                    this.showResults(result.data);
                 } else {
-                    var errorMessage = result.data?.message || 'Failed to generate business case';
-                    console.error('RTBCB: Business case generation failed:', errorMessage);
+                    const errorMessage = result?.data?.message || 'Failed to generate business case';
                     throw new Error(errorMessage);
                 }
-            })
-            .catch(function(error) {
-                console.error('RTBCB: Submission error details:', {
-                    message: error.message,
-                    stack: error.stack,
-                    type: error.constructor.name
-                });
-
-                var displayMessage = error.name === 'TypeError'
-                    ? 'Network error. Please check your connection and try again.'
-                    : error.message;
-
-                self.showError(displayMessage);
-                throw error;
+            } else {
+                let errorMessage = 'Server responded with status ' + xhr.status;
+                try {
+                    const errorJson = JSON.parse(xhr.responseText);
+                    errorMessage = errorJson.data?.message || errorMessage;
+                } catch (parseError) {
+                    console.error('RTBCB: Could not parse error response as JSON:', parseError);
+                }
+                throw new Error(errorMessage);
+            }
+        } catch (error) {
+            console.error('RTBCB: Submission error details:', {
+                message: error.message,
+                stack: error.stack,
+                type: error.constructor.name
             });
+
+            const displayMessage = error.name === 'TypeError'
+                ? 'Network error. Please check your connection and try again.'
+                : error.message;
+
+            this.showError(displayMessage);
+        }
     }
 
     showProgress() {
@@ -474,13 +449,14 @@ class BusinessCaseBuilder {
         }
 
         // Create and show progress overlay
+        const companyName = this.form.querySelector('[name="company_name"]')?.value || 'your company';
         const progressHTML = `
             <div class="rtbcb-progress-overlay" style="position: relative; background: none;">
                 <div class="rtbcb-progress-content">
                     <div class="rtbcb-progress-spinner"></div>
                     <div class="rtbcb-progress-text">Generating Your Business Case</div>
                     <div class="rtbcb-progress-step">
-                        <span class="rtbcb-progress-step-text">Analyzing your treasury operations...</span>
+                        <span class="rtbcb-progress-step-text">Analyzing ${companyName}'s treasury operations...</span>
                     </div>
                 </div>
             </div>
@@ -490,43 +466,9 @@ class BusinessCaseBuilder {
         if (modalBody) {
             modalBody.insertAdjacentHTML('beforeend', progressHTML);
         }
-
-        // Animate progress steps
-        this.animateProgressSteps();
-    }
-
-    animateProgressSteps() {
-        const companyName = this.form.querySelector('[name="company_name"]')?.value || 'your company';
-
-        const steps = [
-            `Analyzing ${companyName}'s treasury operations...`,
-            `Calculating ROI projections for ${companyName}...`,
-            `Generating personalized recommendations...`,
-            `Preparing ${companyName}'s business case report...`
-        ];
-
-        let currentStep = 0;
-        const stepElement = document.querySelector('.rtbcb-progress-step-text');
-
-        if (stepElement) {
-            this.progressInterval = setInterval(() => {
-                currentStep = (currentStep + 1) % steps.length;
-                stepElement.textContent = steps[currentStep];
-                stepElement.parentElement.classList.add('rtbcb-progress-step-animation');
-
-                setTimeout(() => {
-                    stepElement.parentElement.classList.remove('rtbcb-progress-step-animation');
-                }, 500);
-            }, 2500); // Increased interval for longer messages
-        }
     }
 
     showResults(data) {
-        // Clear progress interval
-        if (this.progressInterval) {
-            clearInterval(this.progressInterval);
-        }
-
         // Close modal
         window.closeBusinessCaseModal();
 

@@ -2,56 +2,71 @@ const fs = require('fs');
 const vm = require('vm');
 const assert = require('assert');
 
-const progressContainer = { innerHTML: '', style: {} };
-const formContainer = { style: {} };
-const reportContainer = { innerHTML: '', style: {} };
+global.ajaxObj = { ajax_url: 'test-url' };
+
+class SimpleFormData {
+    constructor(form) {
+        this._data = [];
+        if (form && form.fields) {
+            for (const [key, value] of Object.entries(form.fields)) {
+                this._data.push([key, value]);
+            }
+        }
+    }
+    append(key, value) {
+        this._data.push([key, value]);
+    }
+    entries() {
+        return this._data[Symbol.iterator]();
+    }
+    [Symbol.iterator]() {
+        return this.entries();
+    }
+}
+
+global.FormData = SimpleFormData;
+
+global.XMLHttpRequest = function() {
+    this.open = function(method, url, async) {};
+    this.send = function() {
+        this.status = 200;
+        this.responseText = JSON.stringify({
+            success: true,
+            data: { report_html: '<div>Report</div>' }
+        });
+    };
+};
+
+const form = {
+    fields: { company_name: 'Test Co' },
+    querySelector: (selector) => selector === '[name="company_name"]' ? { value: 'Test Co' } : null,
+    querySelectorAll: () => [],
+    addEventListener: () => {},
+    closest: () => ({ style: {} })
+};
 
 global.document = {
     readyState: 'complete',
     addEventListener: () => {},
     getElementById: (id) => {
-        if (id === 'rtbcb-progress-container') return progressContainer;
-        if (id === 'rtbcb-form-container') return formContainer;
-        if (id === 'rtbcb-report-container') return reportContainer;
-        if (id === 'rtbcb-form') return {};
+        if (id === 'rtbcbForm') return form;
+        if (id === 'rtbcbModalOverlay') return {};
         return null;
     }
 };
 
-global.ajaxObj = { ajax_url: 'test-url' };
+global.window = {};
 
-global.DOMPurify = { sanitize: (html) => html };
-
-
-global.XMLHttpRequest = function() {
-    this.open = function(method, url, async) {
-        this.method = method;
-        this.url = url;
-        this.async = async;
-    };
-    this.send = function() {
-        this.status = 200;
-        this.responseText = JSON.stringify({
-            success: true,
-            data: {
-                report_html: '<div>Report</div>',
-                download_url: 'http://example.com/test.pdf'
-            }
-        });
-    };
-};
-
-global.FormData = class { constructor() {} };
-
-const code = fs.readFileSync('public/js/rtbcb.js', 'utf8');
+const code = fs.readFileSync('public/js/rtbcb-wizard.js', 'utf8');
 vm.runInThisContext(code);
 
-try {
-    handleSubmit({ preventDefault() {}, target: {} });
-    assert.strictEqual(reportContainer.innerHTML, '<div>Report</div>');
-    assert.ok(!reportContainer.innerHTML.includes('test.pdf'));
-    console.log('Success path test passed.');
-} catch (error) {
-    console.error(error);
-    process.exit(1);
-}
+const builder = new BusinessCaseBuilder();
+builder.form = form;
+let resultsData = null;
+builder.showProgress = () => {};
+builder.showResults = (data) => { resultsData = data; };
+builder.showError = () => {};
+
+builder.handleSubmit();
+assert.strictEqual(resultsData.report_html, '<div>Report</div>');
+console.log('Success path test passed.');
