@@ -589,6 +589,10 @@ class RTBCB_Admin {
     /**
      * AJAX handler for company overview testing.
      *
+     * Retrieves the company name from the request, stored options, or the
+     * currently selected company. Returns an error only if no name can be
+     * determined.
+     *
      * @return void
      */
     public function ajax_test_company_overview() {
@@ -601,7 +605,21 @@ class RTBCB_Admin {
         $company_name = isset( $_POST['company_name'] ) ?
             sanitize_text_field( wp_unslash( $_POST['company_name'] ) ) : '';
 
-        if ( empty( $company_name ) ) {
+        if ( '' === $company_name ) {
+            $stored_data = get_option( 'rtbcb_company_data', [] );
+            if ( is_array( $stored_data ) && ! empty( $stored_data['name'] ) ) {
+                $company_name = sanitize_text_field( $stored_data['name'] );
+            }
+        }
+
+        if ( '' === $company_name ) {
+            $current_company = rtbcb_get_current_company();
+            if ( is_array( $current_company ) && ! empty( $current_company['name'] ) ) {
+                $company_name = sanitize_text_field( $current_company['name'] );
+            }
+        }
+
+        if ( '' === $company_name ) {
             wp_send_json_error( [ 'message' => __( 'Company name is required.', 'rtbcb' ) ] );
         }
 
