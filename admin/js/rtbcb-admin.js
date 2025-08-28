@@ -44,11 +44,6 @@ jQuery(document).ready(function($) {
             
             // Test Dashboard
             $('#rtbcb-test-all-sections').on('click', this.runAllTests);
-            
-            // Report Preview
-            $('#rtbcb-report-preview-form').on('submit', this.generateReport);
-            $('#rtbcb-generate-sample-report').on('click', this.generateSampleReport);
-            $('#rtbcb-download-pdf').on('click', this.downloadPDF);
         },
         
         initComponents: function() {
@@ -61,9 +56,6 @@ jQuery(document).ready(function($) {
             if ($('#rtbcb-test-tabs').length) {
                 this.initTabs();
             }
-            
-            // Initialize report preview if present
-            this.initReportPreview();
         },
         
         testApi: function(e) {
@@ -453,88 +445,6 @@ jQuery(document).ready(function($) {
             runNext();
         },
         
-        generateReport: function(e) {
-            e.preventDefault();
-            var form = e.target;
-            var $btn = $('#rtbcb-generate-report');
-            var original = $btn.text();
-            
-            $btn.text(window.rtbcbAdmin.strings.processing || 'Processing...').prop('disabled', true);
-            
-            var formData = new FormData(form);
-            
-            $.ajax({
-                url: window.rtbcbAdmin.ajax_url,
-                method: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                async: false,
-                dataType: 'json',
-                success: function(data) {
-                    if (data.success) {
-                        var iframe = document.getElementById('rtbcb-report-iframe');
-                        if (iframe) {
-                            iframe.srcdoc = data.data.html || data.data.report_html;
-                        }
-                        $('#rtbcb-report-preview-card').show();
-                        $('#rtbcb-download-pdf').show();
-                    } else {
-                        alert(data.data && data.data.message ? data.data.message : 'Report generation failed');
-                    }
-                },
-                error: function() {
-                    alert('Report generation request failed');
-                },
-                complete: function() {
-                    $btn.text(original).prop('disabled', false);
-                }
-            });
-        },
-        
-        generateSampleReport: function(e) {
-            e.preventDefault();
-            var $btn = $(this);
-            var original = $btn.text();
-            
-            $btn.text(window.rtbcbAdmin.strings.processing || 'Processing...').prop('disabled', true);
-            
-            $.ajax({
-                url: window.rtbcbAdmin.ajax_url,
-                method: 'POST',
-                data: {
-                    action: 'rtbcb_generate_sample_report',
-                    nonce: window.rtbcbAdmin.report_preview_nonce
-                },
-                async: false,
-                success: function(response) {
-                    if (response.success) {
-                        var iframe = document.getElementById('rtbcb-sample-report-frame');
-                        if (iframe) {
-                            iframe.srcdoc = response.data.report_html;
-                        }
-                    } else {
-                        alert(response.data && response.data.message ? response.data.message : 'Sample report generation failed');
-                    }
-                },
-                error: function() {
-                    alert('Sample report generation request failed');
-                },
-                complete: function() {
-                    $btn.text(original).prop('disabled', false);
-                }
-            });
-        },
-        
-        downloadPDF: function(e) {
-            e.preventDefault();
-            var iframe = document.getElementById('rtbcb-report-iframe');
-            if (iframe && iframe.contentWindow) {
-                iframe.contentWindow.focus();
-                iframe.contentWindow.print();
-            }
-        },
-        
         initLeadsManager: function() {
             var self = this;
             
@@ -682,24 +592,8 @@ jQuery(document).ready(function($) {
                 $('.rtbcb-tab-panel').hide();
                 $(target).show();
             });
-        },
-        
-        initReportPreview: function() {
-            var $select = $('#rtbcb-sample-select');
-            if (!$select.length) return;
-            
-            $select.on('change', function() {
-                var key = this.value;
-                var $target = $('#rtbcb-sample-context');
-                if (key && $target.length && window.rtbcbAdmin.sampleForms && window.rtbcbAdmin.sampleForms[key]) {
-                    $target.val(JSON.stringify(window.rtbcbAdmin.sampleForms[key], null, 2));
-                }
-            });
-            
-            $('#rtbcb-load-sample').on('click', function() {
-                $select.trigger('change');
-            });
         }
+
     };
     
     // Initialize when ready
