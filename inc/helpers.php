@@ -138,6 +138,18 @@ function rtbcb_get_dashboard_sections() {
             'requires' => [ 'rtbcb-test-estimated-benefits' ],
             'phase'    => 4,
         ],
+        'rtbcb-test-tracking-script'        => [
+            'label'    => __( 'Tracking Scripts', 'rtbcb' ),
+            'option'   => 'rtbcb_tracking_script',
+            'requires' => [ 'rtbcb-test-report-assembly' ],
+            'phase'    => 5,
+        ],
+        'rtbcb-test-follow-up-email'        => [
+            'label'    => __( 'Follow-up Emails', 'rtbcb' ),
+            'option'   => 'rtbcb_follow_up_queue',
+            'requires' => [ 'rtbcb-test-report-assembly' ],
+            'phase'    => 5,
+        ],
     ];
 
     foreach ( $sections as $id => &$section ) {
