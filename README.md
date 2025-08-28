@@ -119,6 +119,109 @@ Add the shortcode to any page or post:
 - `tests/` – Automated tests and diagnostics.
 - `vendor/` – Composer-managed third-party libraries (do not modify).
 
+### Full Directory Tree
+
+```
+.
+├── AGENTS.md
+├── README.md
+├── admin
+│  ├── AGENTS.md
+│  ├── analytics-page.php
+│  ├── calculations-page.php
+│  ├── class-rtbcb-admin.php
+│  ├── css
+│  │  └── rtbcb-admin.css
+│  ├── dashboard-page.php
+│  ├── data-health-page.php
+│  ├── js
+│  │  ├── company-overview.js
+│  │  ├── real-treasury-overview.js
+│  │  ├── recommended-category.js
+│  │  ├── report-test.js
+│  │  ├── rtbcb-admin.js
+│  │  ├── rtbcb-test-utils.js
+│  │  └── treasury-tech-overview.js
+│  ├── leads-page-enhanced.php
+│  ├── partials
+│  │  ├── dashboard-connectivity.php
+│  │  ├── dashboard-test-results.php
+│  │  ├── test-api.php
+│  │  ├── test-company-overview.php
+│  │  ├── test-estimated-benefits.php
+│  │  ├── test-industry-overview.php
+│  │  ├── test-real-treasury-overview.php
+│  │  ├── test-recommended-category.php
+│  │  ├── test-report-preview.php
+│  │  ├── test-report.php
+│  │  └── test-treasury-tech-overview.php
+│  ├── settings-page.php
+│  └── test-dashboard-page.php
+├── composer.json
+├── composer.lock
+├── docs
+│  └── REPOSITORY_STRUCTURE.md
+├── inc
+│  ├── AGENTS.md
+│  ├── class-rtbcb-api-tester.php
+│  ├── class-rtbcb-async-jobs.php
+│  ├── class-rtbcb-calculator.php
+│  ├── class-rtbcb-category-recommender.php
+│  ├── class-rtbcb-db.php
+│  ├── class-rtbcb-leads.php
+│  ├── class-rtbcb-llm.php
+│  ├── class-rtbcb-rag.php
+│  ├── class-rtbcb-router.php
+│  ├── class-rtbcb-settings.php
+│  ├── class-rtbcb-tests.php
+│  ├── class-rtbcb-validator.php
+│  ├── config.php
+│  ├── helpers.php
+│  └── model-capabilities.php
+├── public
+│  ├── AGENTS.md
+│  ├── css
+│  │  ├── rtbcb-variables.css
+│  │  └── rtbcb.css
+│  └── js
+│     ├── chart.min.js
+│     ├── chartjs-license.txt
+│     ├── rtbcb-report.js
+│     ├── rtbcb-wizard.js
+│     ├── rtbcb-wizard.min.js
+│     └── rtbcb.js
+├── readme.txt
+├── real-treasury-business-case-builder.php
+├── templates
+│  ├── AGENTS.md
+│  ├── business-case-form.php
+│  ├── comprehensive-report-template.php
+│  └── report-template.php
+├── tests
+│  ├── RTBCB_AdminAjaxReportTest.php
+│  ├── RTBCB_AjaxGenerateComprehensiveCaseErrorTest.php
+│  ├── api-tester-gpt5-mini.test.php
+│  ├── cosine-similarity-search.test.php
+│  ├── filters-override.test.php
+│  ├── gpt5-responses-api.test.php
+│  ├── handle-server-error-display.test.js
+│  ├── handle-submit-error.test.js
+│  ├── handle-submit-success.test.js
+│  ├── helpers
+│  │  └── capture-call-openai-body.php
+│  ├── json-output-lint.php
+│  ├── mini-model-dynamic.test.php
+│  ├── openai-api-key-validation.test.php
+│  ├── parse-comprehensive-response.test.php
+│  ├── reasoning-first-output.test.php
+│  ├── render-results-no-narrative.test.js
+│  ├── run-tests.sh
+│  ├── scenario-selection.test.php
+│  └── temperature-model.test.js
+└── vendor
+   └── AGENTS.md
+```
+
 ## 🤖 AI Coding Guidelines
 
 - Follow WordPress PHP coding standards with four-space indentation.
