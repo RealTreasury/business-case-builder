@@ -321,7 +321,9 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       var results = $('#rtbcb-company-overview-results');
       var submitBtn = form.find('button[type="submit"]');
       var original = RTBCBAdmin.utils.setLoading(submitBtn, rtbcbAdmin.strings.processing);
-      var company = $('#rtbcb-company-name').val();
+      // Company name field resides in Test Tools card; guard against missing input.
+      var companyInput = $('#rtbcb-company-name');
+      var company = companyInput.length ? companyInput.val() : '';
       var nonce = form.find('[name="nonce"]').val();
       var start = performance.now();
       var formData = new FormData();
@@ -486,6 +488,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       var status = $('#rtbcb-test-status');
       var tableBody = $('#rtbcb-test-results-summary tbody');
       var originalText = button.text();
+      // Company name input moved to Test Tools card; cache for reuse.
       var nameInput = $('#rtbcb-company-name');
       var toggleButtonState = function toggleButtonState() {};
       if (nameInput.length) {
@@ -496,7 +499,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
         nameInput.on('input', toggleButtonState);
       }
       var runTests = _async(function () {
-        var companyName = $('#rtbcb-company-name').val().trim();
+        var companyName = nameInput.length ? nameInput.val().trim() : '';
         if (!companyName) {
           alert(rtbcbAdmin.strings.company_required);
           return _await();

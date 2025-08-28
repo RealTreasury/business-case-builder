@@ -1,5 +1,11 @@
 jQuery( function( $ ) {
     var latestReportText = '';
+
+    // Company name input now lives in the Test Tools card; fetch safely.
+    function getCompanyName() {
+        var input = $( '#rtbcb-company-name' );
+        return input.length ? input.val().trim() : '';
+    }
     function setStatus( message, isError, retryFn ) {
         var status = $( '#rtbcb-report-status' );
         status.removeClass( 'error' ).empty();
@@ -32,7 +38,7 @@ jQuery( function( $ ) {
     }
 
     function generateReport() {
-        var company = $( '#rtbcb-company-name' ).val().trim();
+        var company = getCompanyName();
         var focusRaw = $( '#rtbcb-focus-areas' ).val().trim();
         var complexity = $( '#rtbcb-complexity' ).val();
         if ( ! company || ! focusRaw ) {
@@ -141,7 +147,7 @@ jQuery( function( $ ) {
     } );
 
     function regenerateCompany() {
-        var company = $( '#rtbcb-company-name' ).val().trim();
+        var company = getCompanyName();
         if ( ! company ) {
             alert( rtbcbAdmin.strings.error );
             return;
