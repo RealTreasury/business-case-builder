@@ -599,13 +599,14 @@ jQuery(document).ready(function($) {
                 var roi = $row.find('.column-roi').text().trim();
                 var date = $row.find('.column-date').text().trim();
                 
-                var html = '<div class="rtbcb-lead-detail-grid">' +
-                    '<div class="rtbcb-detail-item"><label>Email:</label><span>' + email + '</span></div>' +
-                    '<div class="rtbcb-detail-item"><label>Company Size:</label><span>' + size + '</span></div>' +
-                    '<div class="rtbcb-detail-item"><label>Category:</label><span>' + category + '</span></div>' +
-                    '<div class="rtbcb-detail-item"><label>ROI:</label><span>' + roi + '</span></div>' +
-                    '<div class="rtbcb-detail-item"><label>Date:</label><span>' + date + '</span></div>' +
-                    '</div>';
+                var html = `
+                    <div class="rtbcb-lead-detail-grid">
+                        <div class="rtbcb-detail-item"><label>Email:</label><span>${email}</span></div>
+                        <div class="rtbcb-detail-item"><label>Company Size:</label><span>${size}</span></div>
+                        <div class="rtbcb-detail-item"><label>Category:</label><span>${category}</span></div>
+                        <div class="rtbcb-detail-item"><label>ROI:</label><span>${roi}</span></div>
+                        <div class="rtbcb-detail-item"><label>Date:</label><span>${date}</span></div>
+                    </div>`;
                 
                 $('#rtbcb-lead-details').html(html);
                 $('#rtbcb-lead-modal').show();
