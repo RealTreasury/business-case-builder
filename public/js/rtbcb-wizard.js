@@ -387,6 +387,10 @@ class BusinessCaseBuilder {
     async handleSubmit() {
         // Show loading state
         this.showProgress();
+        if (typeof ajaxObj === 'undefined' || !ajaxObj.ajax_url) {
+            this.showError('Unable to submit form. Please refresh the page and try again.');
+            return;
+        }
 
         try {
             const formData = new FormData();

@@ -18,7 +18,7 @@ global.document = {
     }
 };
 
-global.ajaxObj = { ajax_url: '' };
+global.ajaxObj = { ajax_url: 'test-url' };
 
 global.DOMPurify = { sanitize: (html) => html };
 

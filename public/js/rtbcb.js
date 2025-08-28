@@ -74,6 +74,10 @@ async function handleSubmit(e) {
     // Show progress indicator
     if (formContainer) formContainer.style.display = 'none';
     if (progressContainer) progressContainer.style.display = 'block';
+    if (typeof ajaxObj === 'undefined' || !ajaxObj.ajax_url) {
+        handleSubmissionError('Unable to submit form. Please refresh the page and try again.');
+        return;
+    }
 
     try {
         const response = await fetch(ajaxObj.ajax_url, {
