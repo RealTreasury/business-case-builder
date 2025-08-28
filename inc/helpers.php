@@ -114,9 +114,15 @@ function rtbcb_get_dashboard_sections() {
             'requires' => [ 'rtbcb-test-company-overview' ],
             'phase'    => 2,
         ],
-        'rtbcb-test-recommended-category'   => [
-            'label'    => __( 'Recommended Category', 'rtbcb' ),
-            'option'   => 'rtbcb_recommended_category',
+        'rtbcb-test-roadmap-generator'      => [
+            'label'    => __( 'Roadmap Generator', 'rtbcb' ),
+            'option'   => 'rtbcb_roadmap_plan',
+            'requires' => [ 'rtbcb-test-company-overview' ],
+            'phase'    => 3,
+        ],
+        'rtbcb-test-roi-calculator'         => [
+            'label'    => __( 'ROI Calculator', 'rtbcb' ),
+            'option'   => 'rtbcb_roi_results',
             'requires' => [ 'rtbcb-test-company-overview' ],
             'phase'    => 3,
         ],

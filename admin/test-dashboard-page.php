@@ -98,7 +98,8 @@ $company_name = isset( $company_data['name'] ) ? sanitize_text_field( $company_d
         <?php include RTBCB_DIR . 'admin/partials/test-real-treasury-overview.php'; ?>
     </div>
     <div id="rtbcb-phase3" class="rtbcb-tab-panel" style="display:none;">
-        <?php include RTBCB_DIR . 'admin/partials/test-recommended-category.php'; ?>
+        <?php include RTBCB_DIR . 'admin/partials/test-roadmap-generator.php'; ?>
+        <?php include RTBCB_DIR . 'admin/partials/test-roi-calculator.php'; ?>
         <?php include RTBCB_DIR . 'admin/partials/test-estimated-benefits.php'; ?>
     </div>
     <div id="rtbcb-phase4" class="rtbcb-tab-panel" style="display:none;">
