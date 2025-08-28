@@ -38,10 +38,13 @@ jQuery(document).ready(function($) {
             
             // Industry Overview Test
             $('#rtbcb-industry-overview-form').on('submit', this.testIndustryOverview);
-            
+
             // Benefits Test
             $('#rtbcb-benefits-estimate-form').on('submit', this.testBenefits);
-            
+
+            // Report Assembly Test
+            $('#rtbcb-report-assembly-form').on('submit', this.testReportAssembly);
+
             // Test Dashboard
             $('#rtbcb-test-all-sections').on('click', this.runAllTests);
         },
@@ -380,7 +383,45 @@ jQuery(document).ready(function($) {
                 }
             });
         },
-        
+
+        testReportAssembly: function(e) {
+            e.preventDefault();
+            var $form = $(this);
+            var $results = $('#rtbcb-report-assembly-results');
+            var $btn = $form.find('button[type="submit"]');
+            var original = $btn.text();
+
+            $btn.prop('disabled', true).text(window.rtbcbAdmin.strings.processing || 'Processing...');
+
+            $.ajax({
+                url: window.rtbcbAdmin.ajax_url,
+                method: 'POST',
+                data: {
+                    action: 'rtbcb_test_report_assembly',
+                    nonce: $form.find('[name="nonce"]').val() || window.rtbcbAdmin.report_assembly_nonce
+                },
+                async: false,
+                success: function(response) {
+                    if (response.success && response.data && response.data.summary) {
+                        var notice = $('<div class="notice notice-success" />');
+                        var pre = $('<pre />').text(JSON.stringify(response.data.summary, null, 2));
+                        notice.append(pre);
+                        $results.html(notice);
+                    } else {
+                        $results.html('<div class="notice notice-error"><p>' +
+                            (response.data && response.data.message ? response.data.message : 'Generation failed') +
+                            '</p></div>');
+                    }
+                },
+                error: function() {
+                    $results.html('<div class="notice notice-error"><p>Request failed</p></div>');
+                },
+                complete: function() {
+                    $btn.prop('disabled', false).text(original);
+                }
+            });
+        },
+
         runAllTests: function(e) {
             e.preventDefault();
             var $btn = $(this);
