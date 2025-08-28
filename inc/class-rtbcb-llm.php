@@ -13,6 +13,20 @@ class RTBCB_LLM {
     private $current_inputs = [];
     private $gpt5_config;
 
+    /**
+     * Last JSON-decoded request body sent to OpenAI.
+     *
+     * @var array|null
+     */
+    protected $last_request;
+
+    /**
+     * Last response or WP_Error returned from the OpenAI API.
+     *
+     * @var array|WP_Error|null
+     */
+    protected $last_response;
+
     public function __construct() {
         $this->api_key = get_option( 'rtbcb_openai_api_key' );
 
@@ -39,6 +53,24 @@ class RTBCB_LLM {
         $model   = get_option( "rtbcb_{$tier}_model", $default );
 
         return sanitize_text_field( $model );
+    }
+
+    /**
+     * Retrieve the last request body sent to the OpenAI API.
+     *
+     * @return array|null Last request body.
+     */
+    public function get_last_request() {
+        return $this->last_request;
+    }
+
+    /**
+     * Retrieve the last response returned from the OpenAI API.
+     *
+     * @return array|WP_Error|null Last response or WP_Error.
+     */
+    public function get_last_response() {
+        return $this->last_response;
     }
 
     /**
@@ -1273,7 +1305,11 @@ Respond with valid JSON only, following the specified schema exactly. Ensure all
             'timeout' => 300, // 5 minutes for comprehensive analysis
         ];
 
-        return wp_remote_post( $endpoint, $args );
+        $this->last_request = $body;
+        $response           = wp_remote_post( $endpoint, $args );
+        $this->last_response = $response;
+
+        return $response;
     }
 
     /**
