@@ -11,14 +11,15 @@
         const overrideCategories = $('#rtbcb-override-categories');
         const summaryDiv = $('#rtbcb-company-summary');
         const challengesList = $('#rtbcb-company-challenges');
+        const api = window.rtbcbAdmin || window.rtbcb_ajax;
 
         // Fetch stored company data
         $.ajax({
-            url: rtbcb_ajax.ajax_url,
+            url: api.ajax_url,
             type: 'POST',
             data: {
                 action: 'rtbcb_get_company_data',
-                nonce: rtbcb_ajax.nonce,
+                nonce: api.nonce,
             },
             success: function(response) {
                 if (response.success) {
@@ -42,8 +43,8 @@
         generateBtn.on('click', function() {
             const include = includePortal.is(':checked') ? 1 : 0;
             const categories = overrideCategories.is(':checked') ? (categoriesSelect.val() || []) : [];
-            const nonce = rtbcb_ajax.nonce;
-            const url = rtbcb_ajax.ajax_url;
+            const nonce = window.rtbcbAdmin ? rtbcbAdmin.real_treasury_overview_nonce : api.nonce;
+            const url = api.ajax_url;
 
             const start = performance.now();
             const original = rtbcbTestUtils.showLoading(generateBtn, 'Generating...');
