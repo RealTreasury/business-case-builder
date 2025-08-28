@@ -287,7 +287,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeAnalyticsCharts();
 });
 
-async function initializeAnalyticsCharts() {
+function initializeAnalyticsCharts() {
     const fallbackMessage = '<?php echo esc_js( __( 'Chart unavailable', 'rtbcb' ) ); ?>';
     const showFallback = (id) => {
         const canvas = document.getElementById(id);
