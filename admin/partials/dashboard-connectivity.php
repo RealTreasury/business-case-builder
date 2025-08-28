@@ -112,7 +112,9 @@ if ( ! defined( 'ABSPATH' ) ) {
         var $btn = $(this);
         var original = $btn.text();
         var $status = $('#rtbcb-connectivity-status');
-        var name = $('#rtbcb-company-name').val();
+        // Company name input resides in the Test Tools card; fetch safely.
+        var nameInput = $('#rtbcb-company-name');
+        var name = nameInput.length ? nameInput.val() : '';
         $btn.prop('disabled', true).text('<?php echo esc_js( __( 'Saving...', 'rtbcb' ) ); ?>');
         $.post(ajaxurl, {
             action: 'rtbcb_set_test_company',
