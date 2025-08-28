@@ -401,6 +401,7 @@ For manual verification during development, `debug_ajax_handler()` includes runt
 2. **WordPress Support Forums**: Community support and troubleshooting
 3. **GitHub Issues**: Bug reports and feature requests
 4. **Real Treasury Support**: Priority support for enterprise users
+5. **Repository Structure**: Directory layout and coding guidelines in [docs/REPOSITORY_STRUCTURE.md](docs/REPOSITORY_STRUCTURE.md)
 
 ### Common Issues
 
