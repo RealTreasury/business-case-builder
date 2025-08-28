@@ -1,5 +1,6 @@
 jQuery( function( $ ) {
     var latestReportText = '';
+    var latestReportData = null;
 
     // Company name input uses a data attribute to avoid ID conflicts.
     function getCompanyName() {
@@ -37,6 +38,24 @@ jQuery( function( $ ) {
         container.find( '.rtbcb-elapsed' ).text( data.elapsed + 's' );
     }
 
+    function assembleReportText() {
+        if ( ! latestReportData || ! latestReportData.sections ) {
+            latestReportText = '';
+            return;
+        }
+        var parts = [];
+        $.each( latestReportData.sections, function( id, section ) {
+            if ( section.overview !== undefined ) {
+                if ( 'string' === typeof section.overview ) {
+                    parts.push( section.overview );
+                } else {
+                    parts.push( JSON.stringify( section.overview ) );
+                }
+            }
+        } );
+        latestReportText = parts.join( '\n\n' );
+    }
+
     function generateReport() {
         var company = getCompanyName();
         var focusRaw = $( '#rtbcb-focus-areas' ).val().trim();
@@ -62,29 +81,28 @@ jQuery( function( $ ) {
             if ( resp.success ) {
                 setStatus( '' );
                 var d = resp.data;
-                $( '#rtbcb-report-preview' ).html( d.html );
-                $( '#rtbcb-section-company_overview .rtbcb-section-content' ).text( d.sections.company_overview );
-                updateSectionMeta( 'company_overview', {
-                    word_count: d.word_counts.company_overview,
-                    elapsed: d.timestamps.per_section.company_overview,
-                    generated: new Date( d.timestamps.end * 1000 ).toLocaleString()
+                latestReportData = d;
+                $( '#rtbcb-report-preview' ).html( d.html || '' );
+                $.each( d.sections, function( id, section ) {
+                    $( '#rtbcb-section-' + id + ' .rtbcb-section-content' ).text( 'string' === typeof section.overview ? section.overview : JSON.stringify( section.overview ) );
+                    updateSectionMeta( id, {
+                        word_count: section.word_count,
+                        elapsed: section.elapsed,
+                        generated: new Date( ( d.generated || d.timestamps && d.timestamps.end || Date.now() / 1000 ) * 1000 ).toLocaleString()
+                    } );
                 } );
-                $( '#rtbcb-section-treasury_tech_overview .rtbcb-section-content' ).text( d.sections.treasury_tech_overview );
-                updateSectionMeta( 'treasury_tech_overview', {
-                    word_count: d.word_counts.treasury_tech_overview,
-                    elapsed: d.timestamps.per_section.treasury_tech_overview,
-                    generated: new Date( d.timestamps.end * 1000 ).toLocaleString()
-                } );
-                $( '#rtbcb-section-roi .rtbcb-section-content' ).text( JSON.stringify( d.sections.roi ) );
-                updateSectionMeta( 'roi', {
-                    word_count: 0,
-                    elapsed: d.timestamps.per_section.roi,
-                    generated: new Date( d.timestamps.end * 1000 ).toLocaleString()
-                } );
-                latestReportText = d.sections.company_overview + '\n\n' + d.sections.treasury_tech_overview + '\n\n' + JSON.stringify( d.sections.roi );
-                $( '#rtbcb-summary-word-count' ).text( d.word_counts.combined );
-                $( '#rtbcb-summary-generated' ).text( new Date( d.timestamps.end * 1000 ).toLocaleString() );
-                $( '#rtbcb-summary-elapsed' ).text( d.timestamps.elapsed.toFixed( 2 ) + 's' );
+                assembleReportText();
+                if ( d.word_count !== undefined ) {
+                    $( '#rtbcb-summary-word-count' ).text( d.word_count );
+                } else if ( d.word_counts && d.word_counts.combined !== undefined ) {
+                    $( '#rtbcb-summary-word-count' ).text( d.word_counts.combined );
+                }
+                var generatedTime = new Date( ( d.generated || d.timestamps && d.timestamps.end || Date.now() / 1000 ) * 1000 ).toLocaleString();
+                $( '#rtbcb-summary-generated' ).text( generatedTime );
+                var elapsed = d.elapsed !== undefined ? d.elapsed : d.timestamps && d.timestamps.elapsed;
+                if ( elapsed !== undefined ) {
+                    $( '#rtbcb-summary-elapsed' ).text( ( elapsed.toFixed ? elapsed.toFixed( 2 ) : elapsed ) + 's' );
+                }
                 if ( d.download_url ) {
                     $( '#rtbcb-export-html' ).attr( 'href', d.download_url );
                 }
@@ -144,6 +162,7 @@ jQuery( function( $ ) {
         $( '#rtbcb-report-sections, #rtbcb-report-actions, #rtbcb-report-summary' ).hide();
         $( '#rtbcb-report-sections .rtbcb-section-content' ).empty();
         latestReportText = '';
+        latestReportData = null;
     } );
 
     function regenerateCompany() {
@@ -162,6 +181,10 @@ jQuery( function( $ ) {
             if ( resp.success ) {
                 container.find( '.rtbcb-section-content' ).text( resp.data.overview );
                 updateSectionMeta( 'company_overview', resp.data );
+                if ( latestReportData && latestReportData.sections ) {
+                    latestReportData.sections.company_overview = resp.data;
+                    assembleReportText();
+                }
             } else {
                 container.find( '.rtbcb-section-content' ).text( resp.data.message || rtbcbAdmin.strings.error );
             }
@@ -191,6 +214,10 @@ jQuery( function( $ ) {
             if ( resp.success ) {
                 container.find( '.rtbcb-section-content' ).text( resp.data.overview );
                 updateSectionMeta( 'treasury_tech_overview', resp.data );
+                if ( latestReportData && latestReportData.sections ) {
+                    latestReportData.sections.treasury_tech_overview = resp.data;
+                    assembleReportText();
+                }
             } else {
                 container.find( '.rtbcb-section-content' ).text( resp.data.message || rtbcbAdmin.strings.error );
             }
@@ -207,8 +234,13 @@ jQuery( function( $ ) {
             nonce: rtbcbAdmin.roi_nonce
         } ).done( function( resp ) {
             if ( resp.success ) {
-                container.find( '.rtbcb-section-content' ).text( JSON.stringify( resp.data.roi ) );
+                var content = resp.data.overview !== undefined ? resp.data.overview : JSON.stringify( resp.data.roi );
+                container.find( '.rtbcb-section-content' ).text( content );
                 updateSectionMeta( 'roi', resp.data );
+                if ( latestReportData && latestReportData.sections ) {
+                    latestReportData.sections.roi = resp.data;
+                    assembleReportText();
+                }
             } else {
                 container.find( '.rtbcb-section-content' ).text( resp.data.message || rtbcbAdmin.strings.error );
             }
