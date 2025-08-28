@@ -7,10 +7,10 @@ Stable tag: 2.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-A WordPress plugin that calculates the ROI of treasury technology, builds a narrative business case, and generates downloadable PDF reports.
+A WordPress plugin that calculates the ROI of treasury technology, builds a narrative business case, renders HTML reports that can be printed or saved as PDFs, and provides an analytics dashboard.
 
 == Description ==
-Real Treasury Business Case Builder helps treasury teams quantify the benefits of modern treasury tools. The plugin provides an ROI calculator, generates narrative summaries with large language models, integrates with the Real Treasury portal for vendor research, and exports comprehensive PDF reports.
+Real Treasury Business Case Builder helps treasury teams quantify the benefits of modern treasury tools. The plugin provides an ROI calculator, generates narrative summaries with large language models, integrates with the Real Treasury portal for vendor research, renders HTML reports that can be printed or saved as PDFs, and includes an analytics dashboard to visualize results.
 
 Use the `[rt_business_case_builder]` shortcode to embed the calculator on any page. Admin pages allow you to configure default assumptions, set OpenAI API keys with format validation, review captured leads, and monitor data health.
 
@@ -31,14 +31,15 @@ nonce such as `rtbcb_test_company_overview` to protect requests.
 Add the `[rt_business_case_builder]` shortcode to a post or page.
 
 = Does the plugin generate PDF reports? =
-Yes. The plugin generates downloadable PDF reports for each business case.
+Reports are rendered as HTML in the browser. Use your browser's print or save functionality to generate PDFs.
 
 = Why aren't charts showing in analytics? =
 The analytics dashboard uses Chart.js for its visualizations. The library is bundled with the plugin to reduce blocking by privacy tools, but strict ad blockers may still prevent it from loading. Allow the plugin's scripts in your browser to enable the charts.
 
 == Changelog ==
 = 2.1.0 =
-* Added PDF report generation capabilities.
+* Introduced HTML report rendering with print-to-PDF support.
+* Added an analytics dashboard with Chart.js visualizations.
 
 = 2.0.0 =
 * Integrated Real Treasury portal access and narrative summaries powered by AI.
