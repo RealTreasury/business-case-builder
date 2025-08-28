@@ -839,40 +839,41 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
         }
       });
     },
-    generateReportPreview: async function generateReportPreview(e) {
+    generateReportPreview: function generateReportPreview(e) {
       e.preventDefault();
       var form = e.currentTarget;
       var button = document.getElementById('rtbcb-generate-report');
       var original = button.textContent;
       button.textContent = rtbcbAdmin.strings.processing;
       button.disabled = true;
-      try {
-        var formData = new FormData(form);
-        var select = document.getElementById('rtbcb-sample-select');
-        var sampleKey = select && select.value ? select.value.trim() : '';
-        var action = 'rtbcb_generate_report_preview';
-        if (sampleKey === '') {
-          formData.set('action', action);
-        } else {
-          action = 'rtbcb_generate_sample_report';
-          formData.set('action', action);
-          formData.append('scenario_key', sampleKey);
-        }
-        var response = await fetch(rtbcbAdmin.ajax_url, {
-          method: 'POST',
-          body: formData
-        });
+      var formData = new FormData(form);
+      var select = document.getElementById('rtbcb-sample-select');
+      var sampleKey = select && select.value ? select.value.trim() : '';
+      var action = 'rtbcb_generate_report_preview';
+      if (sampleKey === '') {
+        formData.set('action', action);
+      } else {
+        action = 'rtbcb_generate_sample_report';
+        formData.set('action', action);
+        formData.append('scenario_key', sampleKey);
+      }
+      return fetch(rtbcbAdmin.ajax_url, {
+        method: 'POST',
+        body: formData
+      }).then(function (response) {
         if (!response.ok) {
-          var text = await response.text();
-          var requestDetails = {
-            action: action,
-            scenario_key: sampleKey
-          };
-          console.error('generateReportPreview failed:', response.status, text, requestDetails);
-          alert("".concat(rtbcbAdmin.strings.error, " ").concat(response.status, ": ").concat(text));
-          return;
+          return response.text().then(function (text) {
+            var error = new Error(text);
+            error.status = response.status;
+            error.requestDetails = {
+              action: action,
+              scenario_key: sampleKey
+            };
+            throw error;
+          });
         }
-        var data = await response.json();
+        return response.json();
+      }).then(function (data) {
         if (data.success) {
           var iframe = document.getElementById('rtbcb-report-iframe');
           if (iframe) {
@@ -884,13 +885,19 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
           var message = data.data && data.data.message ? data.data.message : rtbcbAdmin.strings.error;
           alert(message);
         }
-      } catch (err) {
-        console.error('generateReportPreview exception:', err);
-        alert("".concat(rtbcbAdmin.strings.error, " ").concat(err.message));
-      } finally {
         button.textContent = original;
         button.disabled = false;
-      }
+      }).catch(function (err) {
+        if (err && err.status) {
+          console.error('generateReportPreview failed:', err.status, err.message, err.requestDetails);
+          alert(rtbcbAdmin.strings.error + ' ' + err.status + ': ' + err.message);
+        } else {
+          console.error('generateReportPreview exception:', err);
+          alert(rtbcbAdmin.strings.error + ' ' + (err && err.message ? err.message : ''));
+        }
+        button.textContent = original;
+        button.disabled = false;
+      });
     },
     bindSampleReport: function bindSampleReport() {
       var button = document.getElementById('rtbcb-generate-sample-report');
