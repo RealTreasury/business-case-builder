@@ -1,1141 +1,875 @@
-// WordPress admin script - needs IE11+ compatibility
-// Convert all ES6+ features to ES5 syntax
-// Ensure proper minification compatibility
-"use strict";
+// WordPress admin script - Compatible with modern browsers
+(function($) {
+    'use strict';
 
-function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
-function _await(value, then, direct) {
-  if (direct) {
-    return then ? then(value) : value;
-  }
-  if (!value || !value.then) {
-    value = Promise.resolve(value);
-  }
-  return then ? value.then(then) : value;
-}
-function _catch(body, recover) {
-  try {
-    var result = body();
-  } catch (e) {
-    return recover(e);
-  }
-  if (result && result.then) {
-    return result.then(void 0, recover);
-  }
-  return result;
-}
-function _empty() {}
-function _invokeIgnored(body) {
-  var result = body();
-  if (result && result.then) {
-    return result.then(_empty);
-  }
-}
-function _continue(value, then) {
-  return value && value.then ? value.then(then) : then(value);
-}
-var _iteratorSymbol = /*#__PURE__*/typeof Symbol !== "undefined" ? Symbol.iterator || (Symbol.iterator = Symbol("Symbol.iterator")) : "@@iterator";
-function _settle(pact, state, value) {
-  if (!pact.s) {
-    if (value instanceof _Pact) {
-      if (value.s) {
-        if (state & 1) {
-          state = value.s;
-        }
-        value = value.v;
-      } else {
-        value.o = _settle.bind(null, pact, state);
-        return;
-      }
-    }
-    if (value && value.then) {
-      value.then(_settle.bind(null, pact, state), _settle.bind(null, pact, 2));
-      return;
-    }
-    pact.s = state;
-    pact.v = value;
-    var observer = pact.o;
-    if (observer) {
-      observer(pact);
-    }
-  }
-}
-var _Pact = /*#__PURE__*/function () {
-  function _Pact() {}
-  _Pact.prototype.then = function (onFulfilled, onRejected) {
-    var result = new _Pact();
-    var state = this.s;
-    if (state) {
-      var callback = state & 1 ? onFulfilled : onRejected;
-      if (callback) {
-        try {
-          _settle(result, 1, callback(this.v));
-        } catch (e) {
-          _settle(result, 2, e);
-        }
-        return result;
-      } else {
-        return this;
-      }
-    }
-    this.o = function (_this) {
-      try {
-        var value = _this.v;
-        if (_this.s & 1) {
-          _settle(result, 1, onFulfilled ? onFulfilled(value) : value);
-        } else if (onRejected) {
-          _settle(result, 1, onRejected(value));
-        } else {
-          _settle(result, 2, value);
-        }
-      } catch (e) {
-        _settle(result, 2, e);
-      }
-    };
-    return result;
-  };
-  return _Pact;
-}();
-function _isSettledPact(thenable) {
-  return thenable instanceof _Pact && thenable.s & 1;
-}
-function _forTo(array, body, check) {
-  var i = -1,
-    pact,
-    reject;
-  function _cycle(result) {
-    try {
-      while (++i < array.length && (!check || !check())) {
-        result = body(i);
-        if (result && result.then) {
-          if (_isSettledPact(result)) {
-            result = result.v;
-          } else {
-            result.then(_cycle, reject || (reject = _settle.bind(null, pact = new _Pact(), 2)));
-            return;
-          }
-        }
-      }
-      if (pact) {
-        _settle(pact, 1, result);
-      } else {
-        pact = result;
-      }
-    } catch (e) {
-      _settle(pact || (pact = new _Pact()), 2, e);
-    }
-  }
-  _cycle();
-  return pact;
-}
-function _forOf(target, body, check) {
-  if (typeof target[_iteratorSymbol] === "function") {
-    var _cycle2 = function _cycle(result) {
-      try {
-        while (!(step = iterator.next()).done && (!check || !check())) {
-          result = body(step.value);
-          if (result && result.then) {
-            if (_isSettledPact(result)) {
-              result = result.v;
-            } else {
-              result.then(_cycle2, reject || (reject = _settle.bind(null, pact = new _Pact(), 2)));
-              return;
-            }
-          }
-        }
-        if (pact) {
-          _settle(pact, 1, result);
-        } else {
-          pact = result;
-        }
-      } catch (e) {
-        _settle(pact || (pact = new _Pact()), 2, e);
-      }
-    };
-    var iterator = target[_iteratorSymbol](),
-      step,
-      pact,
-      reject;
-    _cycle2();
-    if (iterator["return"]) {
-      var _fixup = function _fixup(value) {
-        try {
-          if (!step.done) {
-            iterator["return"]();
-          }
-        } catch (e) {}
-        return value;
-      };
-      if (pact && pact.then) {
-        return pact.then(_fixup, function (e) {
-          throw _fixup(e);
-        });
-      }
-      _fixup();
-    }
-    return pact;
-  }
-  // No support for Symbol.iterator
-  if (!("length" in target)) {
-    throw new TypeError("Object is not iterable");
-  }
-  // Handle live collections properly
-  var values = [];
-  for (var i = 0; i < target.length; i++) {
-    values.push(target[i]);
-  }
-  return _forTo(values, function (i) {
-    return body(values[i]);
-  }, check);
-}
-function _awaitIgnored(value, direct) {
-  if (!direct) {
-    return value && value.then ? value.then(_empty) : Promise.resolve();
-  }
-}
-function _invoke(body, then) {
-  var result = body();
-  if (result && result.then) {
-    return result.then(then);
-  }
-  return then(result);
-}
-function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
-function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
-function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
-function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
-function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
-function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
-function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
-function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
-function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t["return"] && (u = t["return"](), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
-function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
-(function ($) {
-  'use strict';
-
-  var RTBCBAdmin = {
-    utils: {
-      setLoading: function setLoading(button, text) {
-        var original = button.text();
-        button.prop('disabled', true).text(text);
-        return original;
-      },
-      clearLoading: function clearLoading(button, original) {
-        button.prop('disabled', false).text(original);
-      },
-      buildResult: function buildResult(text, start, form) {
-        var meta = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
-        var wordCount = meta.word_count || (text.trim() ? text.trim().split(/\s+/).length : 0);
-        var duration = meta.elapsed || ((performance.now() - start) / 1000).toFixed(2);
-        var timestamp = meta.generated ? new Date(meta.generated).toLocaleTimeString() : new Date().toLocaleTimeString();
-        var container = $('<div class="rtbcb-results" />');
-        container.append($('<p />').text(text));
-        container.append($('<p class="rtbcb-result-meta" />').text('Word count: ' + wordCount + ' | Duration: ' + duration + 's | Time: ' + timestamp));
-        var actions = $('<p class="rtbcb-result-actions" />');
-        var regen = $('<button type="button" class="button" />').text(rtbcbAdmin.strings.regenerate || 'Regenerate');
-        var copy = $('<button type="button" class="button" />').text(rtbcbAdmin.strings.copy_text || 'Copy Text');
-        regen.on('click', function () {
-          form.trigger('submit');
-        });
-        copy.on('click', function () {
-          navigator.clipboard.writeText(text).then(function () {
-            alert(rtbcbAdmin.strings.copied);
-          })["catch"](function (err) {
-            alert(rtbcbAdmin.strings.error + ' ' + err.message);
-          });
-        });
-        actions.append(regen).append(' ').append(copy);
-        container.append(actions);
-        return container;
-      },
-      bindClear: function bindClear(clearBtn, results) {
-        if (clearBtn.length) {
-          clearBtn.on('click', function () {
-            results.empty();
-          });
-        }
-      }
-    },
-    runCommentaryTest: function runCommentaryTest(e) {
-      e.preventDefault();
-      var button = $(e.currentTarget);
-      var industry = $('#rtbcb-commentary-industry').val();
-      var nonce = rtbcbAdmin.company_overview_nonce;
-      var results = $('#rtbcb-commentary-results');
-      var original = button.text();
-      button.prop('disabled', true).text(rtbcbAdmin.strings.generating);
-      var formData = new FormData();
-      formData.append('action', 'rtbcb_test_company_overview');
-      formData.append('industry', industry);
-      formData.append('nonce', nonce);
-      fetch(rtbcbAdmin.ajax_url, {
-        method: 'POST',
-        body: formData
-      }).then(function (response) {
-        if (!response.ok) {
-          throw new Error('Server responded ' + response.status);
-        }
-        return response.json();
-      }).then(function (data) {
-        if (data.success) {
-          var overview = data.data.overview || '';
-          results.text(overview);
-          if (navigator.clipboard) {
-            navigator.clipboard.writeText(overview).then(function () {
-              alert(rtbcbAdmin.strings.copied);
-            })["catch"](function () {});
-          }
-        } else {
-          var message = data.data && data.data.message ? data.data.message : rtbcbAdmin.strings.error;
-          alert(message);
-        }
-      })["catch"](function (err) {
-        alert(rtbcbAdmin.strings.error + ' ' + err.message);
-      }).then(function () {
-        button.prop('disabled', false).text(original);
-      });
-    },
-    runCompanyOverviewTest: function runCompanyOverviewTest(e) {
-      e.preventDefault();
-      var form = $(e.currentTarget);
-      var results = $('#rtbcb-company-overview-results');
-      var submitBtn = form.find('button[type="submit"]');
-      var original = RTBCBAdmin.utils.setLoading(submitBtn, rtbcbAdmin.strings.processing);
-      // Company name field resides in Test Tools card; guard against missing input.
-      var companyInput = $('#rtbcb-company-name');
-      var company = companyInput.length ? companyInput.val() : '';
-      var nonce = form.find('[name="nonce"]').val();
-      var start = performance.now();
-      var formData = new FormData();
-      formData.append('action', 'rtbcb_test_company_overview');
-      formData.append('company', company);
-      formData.append('nonce', nonce);
-      fetch(rtbcbAdmin.ajax_url, {
-        method: 'POST',
-        body: formData
-      }).then(function (response) {
-        if (!response.ok) {
-          throw new Error('Server responded ' + response.status);
-        }
-        return response.json();
-        }).then(function (data) {
-          if (data.success) {
-            var text = data.data && data.data.overview ? data.data.overview : '';
-            results.html(RTBCBAdmin.utils.buildResult(text, start, form, data.data));
-            if (data.data) {
-              rtbcbAdmin.company = rtbcbAdmin.company || {};
-              if (data.data.focus_areas) {
-                rtbcbAdmin.company.focus_areas = data.data.focus_areas;
-              }
-              if (data.data.industry) {
-                rtbcbAdmin.company.industry = data.data.industry;
-              }
-              if (data.data.size) {
-                rtbcbAdmin.company.size = data.data.size;
-              }
-            }
-          } else {
-            var message = data.data && data.data.message ? data.data.message : rtbcbAdmin.strings.error;
-            results.html('<div class="notice notice-error"><p>' + message + '</p></div>');
-          }
-        })["catch"](function (err) {
-        results.html('<div class="notice notice-error"><p>' + rtbcbAdmin.strings.error + ' ' + err.message + '</p></div>');
-      }).then(function () {
-        RTBCBAdmin.utils.clearLoading(submitBtn, original);
-      });
-    },
-    runIndustryOverviewTest: function runIndustryOverviewTest(e) {
-      e.preventDefault();
-      var form = $(e.currentTarget);
-      var results = $('#rtbcb-industry-overview-results');
-      var submitBtn = form.find('button[type="submit"]');
-      var original = RTBCBAdmin.utils.setLoading(submitBtn, rtbcbAdmin.strings.processing);
-      var company = jQuery.extend({}, rtbcbAdmin.company || {});
-      company.industry = $('#rtbcb-industry-name').val();
-      var nonce = form.find('[name="nonce"]').val();
-      if (!company.industry) {
-        results.html('<div class="notice notice-error"><p>' + rtbcbAdmin.strings.error + '</p></div>');
-        RTBCBAdmin.utils.clearLoading(submitBtn, original);
-        return;
-      }
-      var start = performance.now();
-      var formData = new FormData();
-      formData.append('action', 'rtbcb_test_industry_overview');
-      formData.append('company_data', JSON.stringify(company));
-      formData.append('nonce', nonce);
-      fetch(rtbcbAdmin.ajax_url, {
-        method: 'POST',
-        body: formData
-      }).then(function (response) {
-        if (!response.ok) {
-          throw new Error('Server responded ' + response.status);
-        }
-        return response.json();
-      }).then(function (data) {
-        if (data.success) {
-          var text = data.data && data.data.overview ? data.data.overview : '';
-          results.html(RTBCBAdmin.utils.buildResult(text, start, form, data.data));
-        } else {
-          var message = data.data && data.data.message ? data.data.message : rtbcbAdmin.strings.error;
-          results.html('<div class="notice notice-error"><p>' + message + '</p></div>');
-        }
-      })["catch"](function (err) {
-        results.html('<div class="notice notice-error"><p>' + rtbcbAdmin.strings.error + ' ' + err.message + '</p></div>');
-      }).then(function () {
-        RTBCBAdmin.utils.clearLoading(submitBtn, original);
-      });
-    },
-    runBenefitsEstimateTest: function runBenefitsEstimateTest(e) {
-      e.preventDefault();
-      var results = $('#rtbcb-benefits-estimate-results');
-      results.text(rtbcbAdmin.strings.processing);
-      var data = {
-        action: 'rtbcb_test_estimated_benefits',
-        company_data: {
-          revenue: $('#rtbcb-test-revenue').val(),
-          staff_count: $('#rtbcb-test-staff-count').val(),
-          efficiency: $('#rtbcb-test-efficiency').val()
-        },
-        recommended_category: rtbcbAdmin.company && rtbcbAdmin.company.recommended_category ? rtbcbAdmin.company.recommended_category : $('#rtbcb-test-category').val(),
-        nonce: rtbcbAdmin.benefits_estimate_nonce
-      };
-      $.post(rtbcbAdmin.ajax_url, data).done(function (response) {
-        if (response && response.success) {
-          results.text(JSON.stringify(response.data.estimate || response.data));
-        } else {
-          var message = response && response.data && response.data.message ? response.data.message : rtbcbAdmin.strings.error;
-          results.text(message);
-        }
-      }).fail(function () {
-        results.text(rtbcbAdmin.strings.error);
-      });
-    },
-    init: function init() {
-      this.bindDashboardActions();
-      this.bindExportButtons();
-      this.initLeadsManager();
-      this.bindDiagnosticsButton();
-      this.bindSampleReport();
-      this.bindSyncLocal();
-      this.bindCommentaryTest();
-      this.bindCompanyOverviewTest();
-      this.bindIndustryOverviewTest();
-      this.bindBenefitsEstimateTest();
-      this.bindTestDashboard();
-    },
-    bindDashboardActions: function bindDashboardActions() {
-      $('#rtbcb-test-api').on('click', this.testApiConnection);
-      $('#rtbcb-rebuild-index').on('click', this.rebuildIndex);
-      $('#rtbcb-export-data').on('click', this.exportLeads);
-    },
-    bindExportButtons: function bindExportButtons() {
-      $('#rtbcb-export-leads').on('click', this.exportLeads);
-    },
-    bindDiagnosticsButton: function bindDiagnosticsButton() {
-      $('#rtbcb-run-tests').on('click', this.runDiagnostics);
-    },
-    bindSyncLocal: function bindSyncLocal() {
-      $('#rtbcb-sync-local').on('click', this.syncToLocal);
-    },
-    bindCommentaryTest: function bindCommentaryTest() {
-      var button = $('#rtbcb-generate-commentary');
-      if (!button.length) {
-        return;
-      }
-      button.on('click', RTBCBAdmin.runCommentaryTest);
-    },
-    bindCompanyOverviewTest: function bindCompanyOverviewTest() {
-      var form = $('#rtbcb-company-overview-form');
-      if (!form.length) {
-        return;
-      }
-      var results = $('#rtbcb-company-overview-results');
-      var clearBtn = $('#rtbcb-clear-results');
-      RTBCBAdmin.utils.bindClear(clearBtn, results);
-      form.on('submit', RTBCBAdmin.runCompanyOverviewTest);
-    },
-    bindIndustryOverviewTest: function bindIndustryOverviewTest() {
-      var form = $('#rtbcb-industry-overview-form');
-      if (!form.length) {
-        return;
-      }
-      var results = $('#rtbcb-industry-overview-results');
-      var clearBtn = $('#rtbcb-clear-results');
-      RTBCBAdmin.utils.bindClear(clearBtn, results);
-      form.on('submit', RTBCBAdmin.runIndustryOverviewTest);
-    },
-    bindBenefitsEstimateTest: function bindBenefitsEstimateTest() {
-      var form = $('#rtbcb-benefits-estimate-form');
-      if (!form.length) {
-        return;
-      }
-      form.on('submit', RTBCBAdmin.runBenefitsEstimateTest);
-    },
-    bindTestDashboard: function bindTestDashboard() {
-        if (!rtbcbAdmin || rtbcbAdmin.page !== 'rtbcb-test-dashboard') {
-            return;
-        }
-
-        var button = $('#rtbcb-test-all-sections');
-        if (!button.length) {
-            return;
-        }
-
-        var status = $('#rtbcb-test-status');
-        var tableBody = $('#rtbcb-test-results-summary tbody');
-        var originalText = button.text();
-
-        function runTests() {
-            var tests = [
-                {
-                    action: 'rtbcb_test_company_overview',
-                    nonce: rtbcbAdmin.company_overview_nonce,
-                    label: 'Company Overview'
-                },
-                {
-                    action: 'rtbcb_test_treasury_tech_overview',
-                    nonce: rtbcbAdmin.treasury_tech_overview_nonce,
-                    label: 'Treasury Tech Overview'
-                },
-                {
-                    action: 'rtbcb_test_industry_overview',
-                    nonce: rtbcbAdmin.industry_overview_nonce,
-                    label: 'Industry Overview'
+    var RTBCBAdmin = {
+        utils: {
+            setLoading: function(button, text) {
+                var original = button.text();
+                button.prop('disabled', true).text(text);
+                return original;
+            },
+            clearLoading: function(button, original) {
+                button.prop('disabled', false).text(original);
+            },
+            buildResult: function(text, start, form, meta) {
+                meta = meta || {};
+                var wordCount = meta.word_count || (text.trim() ? text.trim().split(/\s+/).length : 0);
+                var duration = meta.elapsed || ((performance.now() - start) / 1000).toFixed(2);
+                var timestamp = meta.generated ? new Date(meta.generated).toLocaleTimeString() : new Date().toLocaleTimeString();
+                
+                var container = $('<div class="rtbcb-results" />');
+                container.append($('<p />').text(text));
+                container.append($('<p class="rtbcb-result-meta" />').text(
+                    'Word count: ' + wordCount + ' | Duration: ' + duration + 's | Time: ' + timestamp
+                ));
+                
+                var actions = $('<p class="rtbcb-result-actions" />');
+                var regen = $('<button type="button" class="button" />').text(rtbcbAdmin.strings.regenerate || 'Regenerate');
+                var copy = $('<button type="button" class="button" />').text(rtbcbAdmin.strings.copy_text || 'Copy Text');
+                
+                regen.on('click', function() {
+                    form.trigger('submit');
+                });
+                
+                copy.on('click', function() {
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(text).then(function() {
+                            alert(rtbcbAdmin.strings.copied);
+                        }).catch(function(err) {
+                            alert(rtbcbAdmin.strings.error + ' ' + err.message);
+                        });
+                    }
+                });
+                
+                actions.append(regen).append(' ').append(copy);
+                container.append(actions);
+                return container;
+            },
+            bindClear: function(clearBtn, results) {
+                if (clearBtn.length) {
+                    clearBtn.on('click', function() {
+                        results.empty();
+                    });
                 }
-            ];
+            }
+        },
 
-            var results = [];
-            var currentTest = 0;
+        runCommentaryTest: function(e) {
+            e.preventDefault();
+            var button = $(e.currentTarget);
+            var industry = $('#rtbcb-commentary-industry').val();
+            var nonce = rtbcbAdmin.company_overview_nonce;
+            var results = $('#rtbcb-commentary-results');
+            var original = button.text();
+            
+            button.prop('disabled', true).text(rtbcbAdmin.strings.generating);
+            
+            $.post(rtbcbAdmin.ajax_url, {
+                action: 'rtbcb_test_commentary',
+                industry: industry,
+                nonce: nonce
+            }).done(function(data) {
+                if (data.success) {
+                    var overview = data.data.overview || '';
+                    results.text(overview);
+                    if (navigator.clipboard) {
+                        navigator.clipboard.writeText(overview).catch(function() {});
+                    }
+                } else {
+                    var message = data.data && data.data.message ? data.data.message : rtbcbAdmin.strings.error;
+                    alert(message);
+                }
+            }).fail(function(xhr) {
+                alert(rtbcbAdmin.strings.error + ' ' + xhr.statusText);
+            }).always(function() {
+                button.prop('disabled', false).text(original);
+            });
+        },
 
-            function runNextTest() {
-                if (currentTest >= tests.length) {
-                    // All tests completed, save results
-                    status.text('Saving results...');
+        runCompanyOverviewTest: function(e) {
+            e.preventDefault();
+            var form = $(e.currentTarget);
+            var results = $('#rtbcb-company-overview-results');
+            var submitBtn = form.find('button[type="submit"]');
+            var original = RTBCBAdmin.utils.setLoading(submitBtn, rtbcbAdmin.strings.processing);
+            
+            var companyInput = $('#rtbcb-company-name');
+            var company = companyInput.length ? companyInput.val() : '';
+            var nonce = form.find('[name="nonce"]').val();
+            var start = performance.now();
+            
+            $.post(rtbcbAdmin.ajax_url, {
+                action: 'rtbcb_test_company_overview',
+                company_name: company,
+                nonce: nonce
+            }).done(function(data) {
+                if (data.success) {
+                    var text = data.data && data.data.overview ? data.data.overview : '';
+                    results.html(RTBCBAdmin.utils.buildResult(text, start, form, data.data));
+                    
+                    if (data.data) {
+                        rtbcbAdmin.company = rtbcbAdmin.company || {};
+                        if (data.data.focus_areas) {
+                            rtbcbAdmin.company.focus_areas = data.data.focus_areas;
+                        }
+                        if (data.data.industry) {
+                            rtbcbAdmin.company.industry = data.data.industry;
+                        }
+                        if (data.data.size) {
+                            rtbcbAdmin.company.size = data.data.size;
+                        }
+                    }
+                } else {
+                    var message = data.data && data.data.message ? data.data.message : rtbcbAdmin.strings.error;
+                    results.html('<div class="notice notice-error"><p>' + message + '</p></div>');
+                }
+            }).fail(function(xhr) {
+                results.html('<div class="notice notice-error"><p>' + rtbcbAdmin.strings.error + ' ' + xhr.statusText + '</p></div>');
+            }).always(function() {
+                RTBCBAdmin.utils.clearLoading(submitBtn, original);
+            });
+        },
+
+        runIndustryOverviewTest: function(e) {
+            e.preventDefault();
+            var form = $(e.currentTarget);
+            var results = $('#rtbcb-industry-overview-results');
+            var submitBtn = form.find('button[type="submit"]');
+            var original = RTBCBAdmin.utils.setLoading(submitBtn, rtbcbAdmin.strings.processing);
+            
+            var company = $.extend({}, rtbcbAdmin.company || {});
+            company.industry = $('#rtbcb-industry-name').val();
+            var nonce = form.find('[name="nonce"]').val();
+            
+            if (!company.industry) {
+                results.html('<div class="notice notice-error"><p>' + rtbcbAdmin.strings.error + '</p></div>');
+                RTBCBAdmin.utils.clearLoading(submitBtn, original);
+                return;
+            }
+            
+            var start = performance.now();
+            
+            $.post(rtbcbAdmin.ajax_url, {
+                action: 'rtbcb_test_industry_overview',
+                company_data: JSON.stringify(company),
+                nonce: nonce
+            }).done(function(data) {
+                if (data.success) {
+                    var text = data.data && data.data.overview ? data.data.overview : '';
+                    results.html(RTBCBAdmin.utils.buildResult(text, start, form, data.data));
+                } else {
+                    var message = data.data && data.data.message ? data.data.message : rtbcbAdmin.strings.error;
+                    results.html('<div class="notice notice-error"><p>' + message + '</p></div>');
+                }
+            }).fail(function(xhr) {
+                results.html('<div class="notice notice-error"><p>' + rtbcbAdmin.strings.error + ' ' + xhr.statusText + '</p></div>');
+            }).always(function() {
+                RTBCBAdmin.utils.clearLoading(submitBtn, original);
+            });
+        },
+
+        runBenefitsEstimateTest: function(e) {
+            e.preventDefault();
+            var results = $('#rtbcb-benefits-estimate-results');
+            results.text(rtbcbAdmin.strings.processing);
+            
+            var data = {
+                action: 'rtbcb_test_estimated_benefits',
+                company_data: {
+                    revenue: $('#rtbcb-test-revenue').val(),
+                    staff_count: $('#rtbcb-test-staff-count').val(),
+                    efficiency: $('#rtbcb-test-efficiency').val()
+                },
+                recommended_category: rtbcbAdmin.company && rtbcbAdmin.company.recommended_category ? 
+                    rtbcbAdmin.company.recommended_category : $('#rtbcb-test-category').val(),
+                nonce: rtbcbAdmin.benefits_estimate_nonce
+            };
+            
+            $.post(rtbcbAdmin.ajax_url, data).done(function(response) {
+                if (response && response.success) {
+                    results.text(JSON.stringify(response.data.estimate || response.data));
+                } else {
+                    var message = response && response.data && response.data.message ? 
+                        response.data.message : rtbcbAdmin.strings.error;
+                    results.text(message);
+                }
+            }).fail(function() {
+                results.text(rtbcbAdmin.strings.error);
+            });
+        },
+
+        init: function() {
+            this.bindDashboardActions();
+            this.bindExportButtons();
+            this.initLeadsManager();
+            this.bindDiagnosticsButton();
+            this.bindSampleReport();
+            this.bindSyncLocal();
+            this.bindCommentaryTest();
+            this.bindCompanyOverviewTest();
+            this.bindIndustryOverviewTest();
+            this.bindBenefitsEstimateTest();
+            this.bindTestDashboard();
+        },
+
+        bindDashboardActions: function() {
+            $('#rtbcb-test-api').on('click', this.testApiConnection);
+            $('#rtbcb-rebuild-index').on('click', this.rebuildIndex);
+            $('#rtbcb-export-data').on('click', this.exportLeads);
+        },
+
+        bindExportButtons: function() {
+            $('#rtbcb-export-leads').on('click', this.exportLeads);
+        },
+
+        bindDiagnosticsButton: function() {
+            $('#rtbcb-run-tests').on('click', this.runDiagnostics);
+        },
+
+        bindSyncLocal: function() {
+            $('#rtbcb-sync-local').on('click', this.syncToLocal);
+        },
+
+        bindCommentaryTest: function() {
+            var button = $('#rtbcb-generate-commentary');
+            if (!button.length) {
+                return;
+            }
+            button.on('click', RTBCBAdmin.runCommentaryTest);
+        },
+
+        bindCompanyOverviewTest: function() {
+            var form = $('#rtbcb-company-overview-form');
+            if (!form.length) {
+                return;
+            }
+            var results = $('#rtbcb-company-overview-results');
+            var clearBtn = $('#rtbcb-clear-results');
+            RTBCBAdmin.utils.bindClear(clearBtn, results);
+            form.on('submit', RTBCBAdmin.runCompanyOverviewTest);
+        },
+
+        bindIndustryOverviewTest: function() {
+            var form = $('#rtbcb-industry-overview-form');
+            if (!form.length) {
+                return;
+            }
+            var results = $('#rtbcb-industry-overview-results');
+            var clearBtn = $('#rtbcb-clear-results');
+            RTBCBAdmin.utils.bindClear(clearBtn, results);
+            form.on('submit', RTBCBAdmin.runIndustryOverviewTest);
+        },
+
+        bindBenefitsEstimateTest: function() {
+            var form = $('#rtbcb-benefits-estimate-form');
+            if (!form.length) {
+                return;
+            }
+            form.on('submit', RTBCBAdmin.runBenefitsEstimateTest);
+        },
+
+        bindTestDashboard: function() {
+            if (!rtbcbAdmin || rtbcbAdmin.page !== 'rtbcb-test-dashboard') {
+                return;
+            }
+
+            var button = $('#rtbcb-test-all-sections');
+            if (!button.length) {
+                return;
+            }
+
+            var status = $('#rtbcb-test-status');
+            var tableBody = $('#rtbcb-test-results-summary tbody');
+            var originalText = button.text();
+
+            function runTests() {
+                var tests = [
+                    {
+                        action: 'rtbcb_test_company_overview',
+                        nonce: rtbcbAdmin.company_overview_nonce,
+                        label: 'Company Overview'
+                    },
+                    {
+                        action: 'rtbcb_test_treasury_tech_overview',
+                        nonce: rtbcbAdmin.treasury_tech_overview_nonce,
+                        label: 'Treasury Tech Overview'
+                    },
+                    {
+                        action: 'rtbcb_test_industry_overview',
+                        nonce: rtbcbAdmin.industry_overview_nonce,
+                        label: 'Industry Overview'
+                    }
+                ];
+
+                var results = [];
+                var currentTest = 0;
+
+                function runNextTest() {
+                    if (currentTest >= tests.length) {
+                        status.text('Saving results...');
+
+                        $.post(rtbcbAdmin.ajax_url, {
+                            action: 'rtbcb_save_test_results',
+                            nonce: rtbcbAdmin.test_dashboard_nonce,
+                            results: JSON.stringify(results)
+                        }).always(function() {
+                            tableBody.empty();
+                            for (var i = 0; i < results.length; i++) {
+                                var item = results[i];
+                                var row = '<tr><td>' + item.section + '</td><td>' + item.status + '</td><td>' + 
+                                    item.message + '</td><td>' + new Date().toLocaleString() + '</td></tr>';
+                                tableBody.append(row);
+                            }
+                            status.text('');
+                            button.prop('disabled', false).text(originalText);
+                        });
+                        return;
+                    }
+
+                    var test = tests[currentTest];
+                    status.text('Testing ' + test.label + '...');
 
                     $.post(rtbcbAdmin.ajax_url, {
-                        action: 'rtbcb_save_test_results',
-                        nonce: rtbcbAdmin.test_dashboard_nonce,
-                        results: JSON.stringify(results)
-                    }).always(function () {
-                        // Update UI with results
-                        tableBody.empty();
-                        for (var i = 0; i < results.length; i++) {
-                            var item = results[i];
-                            var row = '<tr><td>' + item.section + '</td><td>' + item.status + '</td><td>' + item.message + '</td><td>' + new Date().toLocaleString() + '</td></tr>';
-                            tableBody.append(row);
-                        }
-                        status.text('');
-                        button.prop('disabled', false).text(originalText);
+                        action: test.action,
+                        nonce: test.nonce
+                    }).done(function(response) {
+                        var message = response && response.data && response.data.message ? response.data.message : '';
+                        results.push({
+                            section: test.label,
+                            status: response.success ? 'success' : 'error',
+                            message: message
+                        });
+                    }).fail(function(err) {
+                        results.push({
+                            section: test.label,
+                            status: 'error',
+                            message: err.statusText || 'Request failed'
+                        });
+                    }).always(function() {
+                        currentTest++;
+                        runNextTest();
                     });
+                }
+
+                runNextTest();
+            }
+
+            button.on('click', function() {
+                button.prop('disabled', true).text(rtbcbAdmin.strings.testing);
+                runTests();
+            });
+        },
+
+        testApiConnection: function(e) {
+            e.preventDefault();
+            var button = $(this);
+            var label = button.find('h4');
+            var original = label.text();
+            
+            label.text(rtbcbAdmin.strings.processing);
+            button.prop('disabled', true);
+            
+            $.post(rtbcbAdmin.ajax_url, {
+                action: 'rtbcb_test_connection',
+                nonce: rtbcbAdmin.nonce
+            }).done(function(data) {
+                var errMsg = data.data && data.data.message ? data.data.message : '';
+                alert(data.success ? 'API connection successful!' : rtbcbAdmin.strings.error + errMsg);
+            }).fail(function(xhr) {
+                alert(rtbcbAdmin.strings.error + ' ' + xhr.statusText);
+            }).always(function() {
+                label.text(original);
+                button.prop('disabled', false);
+            });
+        },
+
+        rebuildIndex: function(e) {
+            e.preventDefault();
+            var button = $(this);
+            var original = button.text();
+            
+            button.text(rtbcbAdmin.strings.processing).prop('disabled', true);
+            
+            $.post(rtbcbAdmin.ajax_url, {
+                action: 'rtbcb_rebuild_index',
+                nonce: rtbcbAdmin.nonce
+            }).done(function(data) {
+                if (data.success) {
+                    alert('RAG index rebuilt successfully');
+                    location.reload();
+                } else {
+                    var message = data.data && data.data.message ? data.data.message : rtbcbAdmin.strings.error;
+                    alert(message);
+                }
+            }).fail(function(xhr) {
+                alert(rtbcbAdmin.strings.error + ' ' + xhr.statusText);
+            }).always(function() {
+                button.text(original).prop('disabled', false);
+            });
+        },
+
+        exportLeads: function(e) {
+            e.preventDefault();
+            var button = $(this);
+            var label = button.find('h4').length ? button.find('h4') : button;
+            var original = label.text();
+            
+            label.text(rtbcbAdmin.strings.processing);
+            button.prop('disabled', true);
+            
+            var params = new URLSearchParams(window.location.search);
+            
+            $.post(rtbcbAdmin.ajax_url, {
+                action: 'rtbcb_export_leads',
+                nonce: rtbcbAdmin.nonce,
+                search: params.get('search') || '',
+                category: params.get('category') || '',
+                date_from: params.get('date_from') || '',
+                date_to: params.get('date_to') || ''
+            }).done(function(data) {
+                if (data.success) {
+                    var blob = new Blob([data.data.content], { type: 'text/csv' });
+                    var url = URL.createObjectURL(blob);
+                    var a = document.createElement('a');
+                    a.href = url;
+                    a.download = data.data.filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                } else {
+                    var message = data.data && data.data.message ? data.data.message : rtbcbAdmin.strings.error;
+                    alert(message);
+                }
+            }).fail(function(xhr) {
+                alert(rtbcbAdmin.strings.error + ' ' + xhr.statusText);
+            }).always(function() {
+                label.text(original);
+                button.prop('disabled', false);
+            });
+        },
+
+        runDiagnostics: function(e) {
+            e.preventDefault();
+            var button = $(this);
+            button.prop('disabled', true);
+            
+            $.post(rtbcbAdmin.ajax_url, {
+                action: 'rtbcb_run_diagnostics',
+                nonce: $(this).data('nonce') || rtbcbAdmin.diagnostics_nonce
+            }).done(function(data) {
+                if (data.success) {
+                    var message = '';
+                    $.each(data.data, function(key, result) {
+                        message += key + ': ' + (result.passed ? 'PASS' : 'FAIL') + ' - ' + result.message + '\n';
+                    });
+                    alert(message);
+                    console.log('Diagnostics results:', data.data);
+                } else {
+                    var message = data.data && data.data.message ? data.data.message : rtbcbAdmin.strings.error;
+                    alert(message);
+                }
+            }).fail(function(xhr) {
+                console.error('Diagnostics error:', xhr);
+                alert(rtbcbAdmin.strings.error + ' ' + xhr.statusText);
+            }).always(function() {
+                button.prop('disabled', false);
+            });
+        },
+
+        syncToLocal: function(e) {
+            e.preventDefault();
+            var button = $(this);
+            var original = button.text();
+            
+            button.text(rtbcbAdmin.strings.processing).prop('disabled', true);
+            
+            var nonce = $('#rtbcb-sync-local-form').find('input[name="rtbcb_sync_local_nonce"]').val();
+            
+            $.post(rtbcbAdmin.ajax_url, {
+                action: 'rtbcb_sync_to_local',
+                nonce: nonce
+            }).done(function(data) {
+                var message = data.data && data.data.message ? data.data.message : rtbcbAdmin.strings.error;
+                alert(message);
+            }).fail(function(xhr) {
+                alert(rtbcbAdmin.strings.error + ' ' + xhr.statusText);
+            }).always(function() {
+                button.text(original).prop('disabled', false);
+            });
+        },
+
+        initLeadsManager: function() {
+            if (document.querySelector('#rtbcb-bulk-form')) {
+                new RTBCBLeadsManager();
+            }
+        },
+
+        bindReportPreview: function() {
+            document.addEventListener('DOMContentLoaded', function() {
+                var form = document.getElementById('rtbcb-report-preview-form');
+                if (!form) {
                     return;
                 }
-
-                var test = tests[currentTest];
-                status.text('Testing ' + test.label + '...');
-
-                $.post(rtbcbAdmin.ajax_url, {
-                    action: test.action,
-                    nonce: test.nonce
-                }).done(function (response) {
-                    var message = response && response.data && response.data.message ? response.data.message : '';
-                    results.push({
-                        section: test.label,
-                        status: response.success ? 'success' : 'error',
-                        message: message
+                
+                form.addEventListener('submit', function(e) {
+                    RTBCBAdmin.generateReportPreview(e).catch(function(err) {
+                        console.error(err);
                     });
-                }).fail(function (err) {
-                    results.push({
-                        section: test.label,
-                        status: 'error',
-                        message: err.message || 'Request failed'
+                });
+                
+                var downloadBtn = document.getElementById('rtbcb-download-pdf');
+                if (downloadBtn) {
+                    downloadBtn.addEventListener('click', function(e) {
+                        RTBCBAdmin.downloadReportPDF(e);
                     });
-                }).always(function () {
-                    currentTest++;
-                    runNextTest();
-                });
-            }
-
-            runNextTest();
-        }
-
-        button.on('click', function () {
-            button.prop('disabled', true).text(rtbcbAdmin.strings.testing);
-            runTests();
-        });
-    },
-    testApiConnection: function testApiConnection(e) {
-      try {
-        var _exit4 = false;
-        var _this = this;
-        e.preventDefault();
-        var button = $(_this);
-        var label = button.find('h4');
-        var original = label.text();
-        label.text(rtbcbAdmin.strings.processing);
-        button.prop('disabled', true);
-        return _await(_continue(_catch(function () {
-          var formData = new FormData();
-          formData.append('action', 'rtbcb_test_connection');
-          formData.append('nonce', rtbcbAdmin.nonce);
-          return _await(fetch(rtbcbAdmin.ajax_url, {
-            method: 'POST',
-            body: formData
-          }), function (response) {
-            if (!response.ok) {
-              throw new Error("Server responded ".concat(response.status));
-            }
-            return _await(response.json(), function (data) {
-              var errMsg = data.data && data.data.message ? data.data.message : '';
-              alert(data.success ? 'API connection successful!' : rtbcbAdmin.strings.error + errMsg);
-            });
-          });
-        }, function (err) {
-          alert("".concat(rtbcbAdmin.strings.error, " ").concat(err.message));
-        }), function (_result4) {
-          if (_exit4) return _result4;
-          label.text(original);
-          button.prop('disabled', false);
-        }));
-      } catch (e) {
-        return Promise.reject(e);
-      }
-    },
-    rebuildIndex: function rebuildIndex(e) {
-      try {
-        var _exit5 = false;
-        var _this2 = this;
-        e.preventDefault();
-        var button = $(_this2);
-        var original = button.text();
-        button.text(rtbcbAdmin.strings.processing).prop('disabled', true);
-        return _await(_continue(_catch(function () {
-          var formData = new FormData();
-          formData.append('action', 'rtbcb_rebuild_index');
-          formData.append('nonce', rtbcbAdmin.nonce);
-          return _await(fetch(rtbcbAdmin.ajax_url, {
-            method: 'POST',
-            body: formData
-          }), function (response) {
-            if (!response.ok) {
-              throw new Error("Server responded ".concat(response.status));
-            }
-            return _await(response.json(), function (data) {
-              if (data.success) {
-                alert('RAG index rebuilt successfully');
-                location.reload();
-              } else {
-                var message = data.data && data.data.message ? data.data.message : rtbcbAdmin.strings.error;
-                alert(message);
-              }
-            });
-          });
-        }, function (err) {
-          alert("".concat(rtbcbAdmin.strings.error, " ").concat(err.message));
-        }), function (_result5) {
-          if (_exit5) return _result5;
-          button.text(original).prop('disabled', false);
-        }));
-      } catch (e) {
-        return Promise.reject(e);
-      }
-    },
-    exportLeads: function exportLeads(e) {
-      try {
-        var _exit6 = false;
-        var _this3 = this;
-        e.preventDefault();
-        var button = $(_this3);
-        var label = button.find('h4').length ? button.find('h4') : button;
-        var original = label.text();
-        label.text(rtbcbAdmin.strings.processing);
-        button.prop('disabled', true);
-        return _await(_continue(_catch(function () {
-          var params = new URLSearchParams(window.location.search);
-          var formData = new FormData();
-          formData.append('action', 'rtbcb_export_leads');
-          formData.append('nonce', rtbcbAdmin.nonce);
-          formData.append('search', params.get('search') || '');
-          formData.append('category', params.get('category') || '');
-          formData.append('date_from', params.get('date_from') || '');
-          formData.append('date_to', params.get('date_to') || '');
-          return _await(fetch(rtbcbAdmin.ajax_url, {
-            method: 'POST',
-            body: formData
-          }), function (response) {
-            if (!response.ok) {
-              throw new Error("Server responded ".concat(response.status));
-            }
-            return _await(response.json(), function (data) {
-              if (data.success) {
-                var blob = new Blob([data.data.content], {
-                  type: 'text/csv'
-                });
-                var url = URL.createObjectURL(blob);
-                var a = document.createElement('a');
-                a.href = url;
-                a.download = data.data.filename;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-              } else {
-                var message = data.data && data.data.message ? data.data.message : rtbcbAdmin.strings.error;
-                alert(message);
-              }
-            });
-          });
-        }, function (err) {
-          alert("".concat(rtbcbAdmin.strings.error, " ").concat(err.message));
-        }), function (_result6) {
-          if (_exit6) return _result6;
-          label.text(original);
-          button.prop('disabled', false);
-        }));
-      } catch (e) {
-        return Promise.reject(e);
-      }
-    },
-    runDiagnostics: function runDiagnostics(e) {
-      try {
-        var _exit7 = false;
-        var _this4 = this;
-        e.preventDefault();
-        var button = $(_this4);
-        button.prop('disabled', true);
-        return _await(_continue(_catch(function () {
-          var formData = new FormData();
-          formData.append('action', 'rtbcb_run_tests');
-          formData.append('nonce', $(_this4).data('nonce') || rtbcbAdmin.nonce);
-          return _await(fetch(rtbcbAdmin.ajax_url, {
-            method: 'POST',
-            body: formData
-          }), function (response) {
-            if (!response.ok) {
-              throw new Error("Server responded ".concat(response.status));
-            }
-            return _await(response.json(), function (data) {
-              if (data.success) {
-                var message = '';
-                for (var _i = 0, _Object$entries = Object.entries(data.data); _i < _Object$entries.length; _i++) {
-                  var _Object$entries$_i = _slicedToArray(_Object$entries[_i], 2),
-                    key = _Object$entries$_i[0],
-                    result = _Object$entries$_i[1];
-                  message += "".concat(key, ": ").concat(result.passed ? 'PASS' : 'FAIL', " - ").concat(result.message, "\n");
                 }
-                alert(message);
-                console.log('Diagnostics results:', data.data);
-              } else {
-                var _message = data.data && data.data.message ? data.data.message : rtbcbAdmin.strings.error;
-                alert(_message);
-              }
+                
+                var select = document.getElementById('rtbcb-sample-select');
+                if (select) {
+                    var injectSample = function() {
+                        var key = select.value;
+                        var target = document.getElementById('rtbcb-sample-context');
+                        if (key && target && rtbcbAdmin.sampleForms && rtbcbAdmin.sampleForms[key]) {
+                            target.value = JSON.stringify(rtbcbAdmin.sampleForms[key], null, 2);
+                        }
+                    };
+                    
+                    select.addEventListener('change', function() {
+                        injectSample();
+                    });
+                    
+                    var loadSample = document.getElementById('rtbcb-load-sample');
+                    if (loadSample) {
+                        loadSample.addEventListener('click', function() {
+                            injectSample();
+                        });
+                    }
+                }
             });
-          });
-        }, function (err) {
-          console.error('Diagnostics error:', err);
-          alert("".concat(rtbcbAdmin.strings.error, " ").concat(err.message));
-        }), function (_result7) {
-          if (_exit7) return _result7;
-          button.prop('disabled', false);
-        }));
-      } catch (e) {
-        return Promise.reject(e);
-      }
-    },
-    syncToLocal: function syncToLocal(e) {
-      try {
-        var _exit8 = false;
-        var _this5 = this;
-        e.preventDefault();
-        var button = $(_this5);
-        var original = button.text();
-        button.text(rtbcbAdmin.strings.processing).prop('disabled', true);
-        return _await(_continue(_catch(function () {
-          var nonce = $('#rtbcb-sync-local-form').find('input[name="rtbcb_sync_local_nonce"]').val();
-          var formData = new FormData();
-          formData.append('action', 'rtbcb_sync_to_local');
-          formData.append('nonce', nonce);
-          return _await(fetch(rtbcbAdmin.ajax_url, {
-            method: 'POST',
-            body: formData
-          }), function (response) {
-            if (!response.ok) {
-              throw new Error("Server responded ".concat(response.status));
-            }
-            return _await(response.json(), function (data) {
-              var message = data.data && data.data.message ? data.data.message : rtbcbAdmin.strings.error;
-              alert(message);
-            });
-          });
-        }, function (err) {
-          alert("".concat(rtbcbAdmin.strings.error, " ").concat(err.message));
-        }), function (_result8) {
-          if (_exit8) return _result8;
-          button.text(original).prop('disabled', false);
-        }));
-      } catch (e) {
-        return Promise.reject(e);
-      }
-    },
-    initLeadsManager: function initLeadsManager() {
-      if (document.querySelector('#rtbcb-bulk-form')) {
-        new RTBCBLeadsManager();
-      }
-    },
-    bindReportPreview: function bindReportPreview() {
-      document.addEventListener('DOMContentLoaded', function () {
-        var form = document.getElementById('rtbcb-report-preview-form');
-        if (!form) {
-          return;
-        }
-        form.addEventListener('submit', function (e) {
-          RTBCBAdmin.generateReportPreview(e).catch(function (err) {
-            console.error(err);
-          });
-        });
-        var downloadBtn = document.getElementById('rtbcb-download-pdf');
-        if (downloadBtn) {
-          downloadBtn.addEventListener('click', function (e) {
-            RTBCBAdmin.downloadReportPDF(e);
-          });
-        }
-        var select = document.getElementById('rtbcb-sample-select');
-        if (select) {
-          var injectSample = function injectSample() {
-            var key = select.value;
-            var target = document.getElementById('rtbcb-sample-context');
-            if (key && target && rtbcbAdmin.sampleForms && rtbcbAdmin.sampleForms[key]) {
-              target.value = JSON.stringify(rtbcbAdmin.sampleForms[key], null, 2);
-            }
-          };
-          select.addEventListener('change', function () {
-            injectSample();
-          });
-          var loadSample = document.getElementById('rtbcb-load-sample');
-          if (loadSample) {
-            loadSample.addEventListener('click', function () {
-              injectSample();
-            });
-          }
-        }
-      });
-    },
-    generateReportPreview: function generateReportPreview(e) {
-      e.preventDefault();
-      var form = e.currentTarget;
-      var button = document.getElementById('rtbcb-generate-report');
-      var original = button.textContent;
-      button.textContent = rtbcbAdmin.strings.processing;
-      button.disabled = true;
-      var formData = new FormData(form);
-      var select = document.getElementById('rtbcb-sample-select');
-      var sampleKey = select && select.value ? select.value.trim() : '';
-      var action = 'rtbcb_generate_report_preview';
-      if (sampleKey === '') {
-        formData.set('action', action);
-      } else {
-        action = 'rtbcb_generate_sample_report';
-        formData.set('action', action);
-        formData.append('scenario_key', sampleKey);
-      }
-      return fetch(rtbcbAdmin.ajax_url, {
-        method: 'POST',
-        body: formData
-      }).then(function (response) {
-        if (!response.ok) {
-          return response.text().then(function (text) {
-            var error = new Error(text);
-            error.status = response.status;
-            error.requestDetails = {
-              action: action,
-              scenario_key: sampleKey
-            };
-            throw error;
-          });
-        }
-        return response.json();
-      }).then(function (data) {
-        if (data.success) {
-          var iframe = document.getElementById('rtbcb-report-iframe');
-          if (iframe) {
-            iframe.srcdoc = data.data.html || data.data.report_html;
-          }
-          document.getElementById('rtbcb-report-preview-card').style.display = 'block';
-          document.getElementById('rtbcb-download-pdf').style.display = 'inline-block';
-        } else {
-          var message = data.data && data.data.message ? data.data.message : rtbcbAdmin.strings.error;
-          alert(message);
-        }
-        button.textContent = original;
-        button.disabled = false;
-      }).catch(function (err) {
-        if (err && err.status) {
-          console.error('generateReportPreview failed:', err.status, err.message, err.requestDetails);
-          alert(rtbcbAdmin.strings.error + ' ' + err.status + ': ' + err.message);
-        } else {
-          console.error('generateReportPreview exception:', err);
-          alert(rtbcbAdmin.strings.error + ' ' + (err && err.message ? err.message : ''));
-        }
-        button.textContent = original;
-        button.disabled = false;
-      });
-    },
-    bindSampleReport: function bindSampleReport() {
-      var button = document.getElementById('rtbcb-generate-sample-report');
-      if (!button) {
-        return;
-      }
-      button.addEventListener('click', this.generateSampleReport.bind(this));
-    },
-    generateSampleReport: function generateSampleReport(e) {
-      try {
-        var _exit1 = false;
-        e.preventDefault();
-        var button = e.currentTarget;
-        var original = button.textContent;
-        button.textContent = rtbcbAdmin.strings.processing;
-        button.disabled = true;
-        return _await(_continue(_catch(function () {
-          var formData = new FormData();
-          var nonceField = document.getElementById('nonce');
-          var nonce = nonceField ? nonceField.value : rtbcbAdmin && rtbcbAdmin.report_preview_nonce ? rtbcbAdmin.report_preview_nonce : '';
-          var action = 'rtbcb_generate_sample_report';
-          formData.append('action', action);
-          formData.append('nonce', nonce);
-          return _await(fetch(rtbcbAdmin.ajax_url, {
-            method: 'POST',
-            body: formData
-          }), function (response) {
-            var _exit10 = false;
-            return _invoke(function () {
-              if (!response.ok) {
-                return _await(response.text(), function (text) {
-                  var requestDetails = {
-                    action: action,
-                    nonce: nonce
-                  };
-                  console.error('generateSampleReport failed:', response.status, text, requestDetails);
-                  alert("".concat(rtbcbAdmin.strings.error, " ").concat(response.status, ": ").concat(text));
-                  _exit1 = true;
-                });
-              }
-            }, function (_result10) {
-              return _exit10 ? _result10 : _await(response.json(), function (data) {
-                if (data.success) {
-                  var iframe = document.getElementById('rtbcb-sample-report-frame');
-                  if (iframe) {
-                    iframe.srcdoc = data.data.report_html;
-                  }
+        },
+
+        generateReportPreview: function(e) {
+            return new Promise(function(resolve, reject) {
+                e.preventDefault();
+                var form = e.currentTarget;
+                var button = document.getElementById('rtbcb-generate-report');
+                var original = button.textContent;
+                
+                button.textContent = rtbcbAdmin.strings.processing;
+                button.disabled = true;
+                
+                var formData = new FormData(form);
+                var select = document.getElementById('rtbcb-sample-select');
+                var sampleKey = select && select.value ? select.value.trim() : '';
+                
+                var action = 'rtbcb_generate_report_preview';
+                if (sampleKey === '') {
+                    formData.set('action', action);
                 } else {
-                  var message = data.data && data.data.message ? data.data.message : rtbcbAdmin.strings.error;
-                  alert(message);
+                    action = 'rtbcb_generate_sample_report';
+                    formData.set('action', action);
+                    formData.append('scenario_key', sampleKey);
                 }
-              });
+                
+                fetch(rtbcbAdmin.ajax_url, {
+                    method: 'POST',
+                    body: formData
+                }).then(function(response) {
+                    if (!response.ok) {
+                        return response.text().then(function(text) {
+                            var error = new Error(text);
+                            error.status = response.status;
+                            error.requestDetails = {
+                                action: action,
+                                scenario_key: sampleKey
+                            };
+                            throw error;
+                        });
+                    }
+                    return response.json();
+                }).then(function(data) {
+                    if (data.success) {
+                        var iframe = document.getElementById('rtbcb-report-iframe');
+                        if (iframe) {
+                            iframe.srcdoc = data.data.html || data.data.report_html;
+                        }
+                        document.getElementById('rtbcb-report-preview-card').style.display = 'block';
+                        document.getElementById('rtbcb-download-pdf').style.display = 'inline-block';
+                        resolve(data);
+                    } else {
+                        var message = data.data && data.data.message ? data.data.message : rtbcbAdmin.strings.error;
+                        alert(message);
+                        reject(new Error(message));
+                    }
+                }).catch(function(err) {
+                    if (err && err.status) {
+                        console.error('generateReportPreview failed:', err.status, err.message, err.requestDetails);
+                        alert(rtbcbAdmin.strings.error + ' ' + err.status + ': ' + err.message);
+                    } else {
+                        console.error('generateReportPreview exception:', err);
+                        alert(rtbcbAdmin.strings.error + ' ' + (err && err.message ? err.message : ''));
+                    }
+                    reject(err);
+                }).finally(function() {
+                    button.textContent = original;
+                    button.disabled = false;
+                });
             });
-          });
-        }, function (err) {
-          console.error('generateSampleReport exception:', err);
-          alert("".concat(rtbcbAdmin.strings.error, " ").concat(err.message));
-        }), function (_result1) {
-          if (_exit1) return _result1;
-          button.textContent = original;
-          button.disabled = false;
-        }));
-      } catch (e) {
-        return Promise.reject(e);
-      }
-    },
-    downloadReportPDF: function downloadReportPDF(e) {
-      e.preventDefault();
-      var iframe = document.getElementById('rtbcb-report-iframe');
-      if (iframe && iframe.contentWindow) {
-        iframe.contentWindow.focus();
-        iframe.contentWindow.print();
-      }
-    },
-    closeModal: function closeModal() {
-      var modal = document.getElementById('rtbcb-lead-modal');
-      if (modal) {
-        modal.style.display = 'none';
-      }
-    }
-  };
-  var RTBCBLeadsManager = /*#__PURE__*/function () {
-    function RTBCBLeadsManager() {
-      _classCallCheck(this, RTBCBLeadsManager);
-      this.bindEvents();
-      this.updateBulkActionButton();
-    }
-    return _createClass(RTBCBLeadsManager, [{
-      key: "bindEvents",
-      value: function bindEvents() {
-        var _this6 = this;
-        var selectAll = document.getElementById('rtbcb-select-all');
-        if (selectAll) {
-          selectAll.addEventListener('change', this.toggleSelectAll.bind(this));
-        }
-        document.querySelectorAll('.rtbcb-lead-checkbox').forEach(function (cb) {
-          cb.addEventListener('change', _this6.updateSelectAll.bind(_this6));
-          cb.addEventListener('change', _this6.updateBulkActionButton.bind(_this6));
-        });
-        var bulkForm = document.getElementById('rtbcb-bulk-form');
-        if (bulkForm) {
-          bulkForm.addEventListener('submit', this.handleBulkAction.bind(this));
-        }
-        Array.from(document.querySelectorAll('.rtbcb-view-lead')).forEach(function (btn) {
-          btn.addEventListener('click', _this6.viewLeadDetails.bind(_this6));
-        });
-        Array.from(document.querySelectorAll('.rtbcb-delete-lead')).forEach(function (btn) {
-          btn.addEventListener('click', _this6.deleteLead.bind(_this6));
-        });
-        var modalClose = document.querySelector('.rtbcb-modal-close');
-        if (modalClose) {
-          modalClose.addEventListener('click', RTBCBAdmin.closeModal.bind(RTBCBAdmin));
-        }
-        var leadModal = document.getElementById('rtbcb-lead-modal');
-        if (leadModal) {
-          leadModal.addEventListener('click', function (e) {
-            if (e.target.id === 'rtbcb-lead-modal') {
-              RTBCBAdmin.closeModal();
+        },
+
+        bindSampleReport: function() {
+            var button = document.getElementById('rtbcb-generate-sample-report');
+            if (!button) {
+                return;
             }
-          });
+            button.addEventListener('click', this.generateSampleReport.bind(this));
+        },
+
+        generateSampleReport: function(e) {
+            return new Promise(function(resolve, reject) {
+                e.preventDefault();
+                var button = e.currentTarget;
+                var original = button.textContent;
+                
+                button.textContent = rtbcbAdmin.strings.processing;
+                button.disabled = true;
+                
+                var formData = new FormData();
+                var nonceField = document.getElementById('nonce');
+                var nonce = nonceField ? nonceField.value : 
+                    (rtbcbAdmin && rtbcbAdmin.report_preview_nonce ? rtbcbAdmin.report_preview_nonce : '');
+                var action = 'rtbcb_generate_sample_report';
+                
+                formData.append('action', action);
+                formData.append('nonce', nonce);
+                
+                fetch(rtbcbAdmin.ajax_url, {
+                    method: 'POST',
+                    body: formData
+                }).then(function(response) {
+                    if (!response.ok) {
+                        return response.text().then(function(text) {
+                            var requestDetails = {
+                                action: action,
+                                nonce: nonce
+                            };
+                            console.error('generateSampleReport failed:', response.status, text, requestDetails);
+                            alert(rtbcbAdmin.strings.error + ' ' + response.status + ': ' + text);
+                            throw new Error(text);
+                        });
+                    }
+                    return response.json();
+                }).then(function(data) {
+                    if (data.success) {
+                        var iframe = document.getElementById('rtbcb-sample-report-frame');
+                        if (iframe) {
+                            iframe.srcdoc = data.data.report_html;
+                        }
+                        resolve(data);
+                    } else {
+                        var message = data.data && data.data.message ? data.data.message : rtbcbAdmin.strings.error;
+                        alert(message);
+                        reject(new Error(message));
+                    }
+                }).catch(function(err) {
+                    console.error('generateSampleReport exception:', err);
+                    alert(rtbcbAdmin.strings.error + ' ' + err.message);
+                    reject(err);
+                }).finally(function() {
+                    button.textContent = original;
+                    button.disabled = false;
+                });
+            });
+        },
+
+        downloadReportPDF: function(e) {
+            e.preventDefault();
+            var iframe = document.getElementById('rtbcb-report-iframe');
+            if (iframe && iframe.contentWindow) {
+                iframe.contentWindow.focus();
+                iframe.contentWindow.print();
+            }
+        },
+
+        closeModal: function() {
+            var modal = document.getElementById('rtbcb-lead-modal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
         }
-      }
-    }, {
-      key: "toggleSelectAll",
-      value: function toggleSelectAll(e) {
-        var checked = e.target.checked;
-        Array.from(document.querySelectorAll('.rtbcb-lead-checkbox')).forEach(function (cb) {
-          cb.checked = checked;
-        });
+    };
+
+    var RTBCBLeadsManager = function() {
+        this.bindEvents();
         this.updateBulkActionButton();
-      }
-    }, {
-      key: "updateSelectAll",
-      value: function updateSelectAll() {
-        var boxes = document.querySelectorAll('.rtbcb-lead-checkbox');
-        var checked = document.querySelectorAll('.rtbcb-lead-checkbox:checked');
-        var selectAll = document.getElementById('rtbcb-select-all');
-        if (selectAll) {
-          selectAll.checked = boxes.length === checked.length && boxes.length > 0;
-          selectAll.indeterminate = checked.length > 0 && checked.length < boxes.length;
-        }
-      }
-    }, {
-      key: "updateBulkActionButton",
-      value: function updateBulkActionButton() {
-        var count = document.querySelectorAll('.rtbcb-lead-checkbox:checked').length;
-        var button = document.querySelector('#rtbcb-bulk-form button[type="submit"]');
-        if (button) {
-          button.disabled = count === 0;
-        }
-      }
-    }, {
-      key: "handleBulkAction",
-      value: function handleBulkAction(e) {
-        try {
-          e.preventDefault();
-          var action = document.getElementById('rtbcb-bulk-action').value;
-          var ids = Array.from(document.querySelectorAll('.rtbcb-lead-checkbox:checked')).map(function (cb) {
-            return cb.value;
-          });
-          if (!action || ids.length === 0) {
-            return _await();
-          }
-          if (action === 'delete' && !confirm(rtbcbAdmin.strings.confirm_bulk_delete)) {
-            return _await();
-          }
-          return _await(_catch(function () {
-            var formData = new FormData();
-            formData.append('action', 'rtbcb_bulk_action_leads');
-            formData.append('nonce', rtbcbAdmin.nonce);
-            formData.append('bulk_action', action);
-            formData.append('lead_ids', JSON.stringify(ids));
-            return _await(fetch(rtbcbAdmin.ajax_url, {
-              method: 'POST',
-              body: formData
-            }), function (response) {
-              if (!response.ok) {
-                throw new Error("Server responded ".concat(response.status));
-              }
-              return _await(response.json(), function (data) {
+    };
+
+    RTBCBLeadsManager.prototype = {
+        bindEvents: function() {
+            var self = this;
+            
+            var selectAll = document.getElementById('rtbcb-select-all');
+            if (selectAll) {
+                selectAll.addEventListener('change', this.toggleSelectAll.bind(this));
+            }
+            
+            var checkboxes = document.querySelectorAll('.rtbcb-lead-checkbox');
+            for (var i = 0; i < checkboxes.length; i++) {
+                checkboxes[i].addEventListener('change', this.updateSelectAll.bind(this));
+                checkboxes[i].addEventListener('change', this.updateBulkActionButton.bind(this));
+            }
+            
+            var bulkForm = document.getElementById('rtbcb-bulk-form');
+            if (bulkForm) {
+                bulkForm.addEventListener('submit', this.handleBulkAction.bind(this));
+            }
+            
+            var viewButtons = document.querySelectorAll('.rtbcb-view-lead');
+            for (var j = 0; j < viewButtons.length; j++) {
+                viewButtons[j].addEventListener('click', this.viewLeadDetails.bind(this));
+            }
+            
+            var deleteButtons = document.querySelectorAll('.rtbcb-delete-lead');
+            for (var k = 0; k < deleteButtons.length; k++) {
+                deleteButtons[k].addEventListener('click', this.deleteLead.bind(this));
+            }
+            
+            var modalClose = document.querySelector('.rtbcb-modal-close');
+            if (modalClose) {
+                modalClose.addEventListener('click', RTBCBAdmin.closeModal.bind(RTBCBAdmin));
+            }
+            
+            var leadModal = document.getElementById('rtbcb-lead-modal');
+            if (leadModal) {
+                leadModal.addEventListener('click', function(e) {
+                    if (e.target.id === 'rtbcb-lead-modal') {
+                        RTBCBAdmin.closeModal();
+                    }
+                });
+            }
+        },
+
+        toggleSelectAll: function(e) {
+            var checked = e.target.checked;
+            var checkboxes = document.querySelectorAll('.rtbcb-lead-checkbox');
+            for (var i = 0; i < checkboxes.length; i++) {
+                checkboxes[i].checked = checked;
+            }
+            this.updateBulkActionButton();
+        },
+
+        updateSelectAll: function() {
+            var boxes = document.querySelectorAll('.rtbcb-lead-checkbox');
+            var checked = document.querySelectorAll('.rtbcb-lead-checkbox:checked');
+            var selectAll = document.getElementById('rtbcb-select-all');
+            
+            if (selectAll) {
+                selectAll.checked = boxes.length === checked.length && boxes.length > 0;
+                selectAll.indeterminate = checked.length > 0 && checked.length < boxes.length;
+            }
+        },
+
+        updateBulkActionButton: function() {
+            var count = document.querySelectorAll('.rtbcb-lead-checkbox:checked').length;
+            var button = document.querySelector('#rtbcb-bulk-form button[type="submit"]');
+            if (button) {
+                button.disabled = count === 0;
+            }
+        },
+
+        handleBulkAction: function(e) {
+            var self = this;
+            e.preventDefault();
+            
+            var action = document.getElementById('rtbcb-bulk-action').value;
+            var checkedBoxes = document.querySelectorAll('.rtbcb-lead-checkbox:checked');
+            var ids = [];
+            
+            for (var i = 0; i < checkedBoxes.length; i++) {
+                ids.push(checkedBoxes[i].value);
+            }
+            
+            if (!action || ids.length === 0) {
+                return;
+            }
+            
+            if (action === 'delete' && !confirm(rtbcbAdmin.strings.confirm_bulk_delete)) {
+                return;
+            }
+            
+            $.post(rtbcbAdmin.ajax_url, {
+                action: 'rtbcb_bulk_action_leads',
+                nonce: rtbcbAdmin.nonce,
+                bulk_action: action,
+                lead_ids: JSON.stringify(ids)
+            }).done(function(data) {
                 if (data.success) {
-                  location.reload();
+                    location.reload();
                 } else {
-                  var message = data.data && data.data.message ? data.data.message : rtbcbAdmin.strings.error;
-                  alert(message);
+                    var message = data.data && data.data.message ? data.data.message : rtbcbAdmin.strings.error;
+                    alert(message);
                 }
-              });
+            }).fail(function(xhr) {
+                alert(rtbcbAdmin.strings.error + ' ' + xhr.statusText);
             });
-          }, function (err) {
-            alert("".concat(rtbcbAdmin.strings.error, " ").concat(err.message));
-          }));
-        } catch (e) {
-          return Promise.reject(e);
-        }
-      }
-    }, {
-      key: "viewLeadDetails",
-      value: function viewLeadDetails(e) {
-        try {
-          e.preventDefault();
-          var row = e.currentTarget.closest('tr');
-          var email = row.querySelector('.column-email strong').textContent;
-          var companySize = row.querySelector('.column-company-size').textContent.trim();
-          var category = row.querySelector('.column-category').textContent.trim();
-          var roi = row.querySelector('.column-roi').textContent.trim();
-          var date = row.querySelector('.column-date').textContent.trim();
-          var detailsHtml = "\n                <div class=\"rtbcb-lead-detail-grid\">\n                    <div class=\"rtbcb-detail-item\"><label>Email:</label><span>".concat(email, "</span></div>\n                    <div class=\"rtbcb-detail-item\"><label>Company Size:</label><span>").concat(companySize, "</span></div>\n                    <div class=\"rtbcb-detail-item\"><label>Recommended Category:</label><span>").concat(category, "</span></div>\n                    <div class=\"rtbcb-detail-item\"><label>Base ROI:</label><span>").concat(roi, "</span></div>\n                    <div class=\"rtbcb-detail-item\"><label>Submitted:</label><span>").concat(date, "</span></div>\n                </div>");
-          document.getElementById('rtbcb-lead-details').innerHTML = detailsHtml;
-          document.getElementById('rtbcb-lead-modal').style.display = 'block';
-          return _await();
-        } catch (e) {
-          return Promise.reject(e);
-        }
-      }
-    }, {
-      key: "deleteLead",
-      value: function deleteLead(e) {
-        try {
-          var _this7 = this;
-          e.preventDefault();
-          if (!confirm(rtbcbAdmin.strings.confirm_delete)) {
-            return _await();
-          }
-          var id = e.currentTarget.dataset.leadId;
-          return _await(_catch(function () {
-            var formData = new FormData();
-            formData.append('action', 'rtbcb_delete_lead');
-            formData.append('nonce', rtbcbAdmin.nonce);
-            formData.append('lead_id', id);
-            return _await(fetch(rtbcbAdmin.ajax_url, {
-              method: 'POST',
-              body: formData
-            }), function (response) {
-              if (!response.ok) {
-                throw new Error("Server responded ".concat(response.status));
-              }
-              return _await(response.json(), function (data) {
+        },
+
+        viewLeadDetails: function(e) {
+            e.preventDefault();
+            var row = e.currentTarget.closest('tr');
+            var email = row.querySelector('.column-email strong').textContent;
+            var companySize = row.querySelector('.column-company-size').textContent.trim();
+            var category = row.querySelector('.column-category').textContent.trim();
+            var roi = row.querySelector('.column-roi').textContent.trim();
+            var date = row.querySelector('.column-date').textContent.trim();
+            
+            var detailsHtml = 
+                '<div class="rtbcb-lead-detail-grid">' +
+                    '<div class="rtbcb-detail-item"><label>Email:</label><span>' + email + '</span></div>' +
+                    '<div class="rtbcb-detail-item"><label>Company Size:</label><span>' + companySize + '</span></div>' +
+                    '<div class="rtbcb-detail-item"><label>Recommended Category:</label><span>' + category + '</span></div>' +
+                    '<div class="rtbcb-detail-item"><label>Base ROI:</label><span>' + roi + '</span></div>' +
+                    '<div class="rtbcb-detail-item"><label>Submitted:</label><span>' + date + '</span></div>' +
+                '</div>';
+            
+            document.getElementById('rtbcb-lead-details').innerHTML = detailsHtml;
+            document.getElementById('rtbcb-lead-modal').style.display = 'block';
+        },
+
+        deleteLead: function(e) {
+            var self = this;
+            e.preventDefault();
+            
+            if (!confirm(rtbcbAdmin.strings.confirm_delete)) {
+                return;
+            }
+            
+            var id = e.currentTarget.dataset.leadId;
+            
+            $.post(rtbcbAdmin.ajax_url, {
+                action: 'rtbcb_delete_lead',
+                nonce: rtbcbAdmin.nonce,
+                lead_id: id
+            }).done(function(data) {
                 if (data.success) {
-                  e.currentTarget.closest('tr').remove();
-                  _this7.updateBulkActionButton();
+                    e.currentTarget.closest('tr').remove();
+                    self.updateBulkActionButton();
                 } else {
-                  var message = data.data && data.data.message ? data.data.message : rtbcbAdmin.strings.error;
-                  alert(message);
+                    var message = data.data && data.data.message ? data.data.message : rtbcbAdmin.strings.error;
+                    alert(message);
                 }
-              });
+            }).fail(function(xhr) {
+                alert(rtbcbAdmin.strings.error + ' ' + xhr.statusText);
             });
-          }, function (err) {
-            alert("".concat(rtbcbAdmin.strings.error, " ").concat(err.message));
-          }));
-        } catch (e) {
-          return Promise.reject(e);
         }
-      }
-    }]);
-  }();
-  RTBCBAdmin.bindReportPreview();
-  document.addEventListener('DOMContentLoaded', function () {
-    RTBCBAdmin.init();
-  });
+    };
+
+    RTBCBAdmin.bindReportPreview();
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        RTBCBAdmin.init();
+    });
+
 })(jQuery);
