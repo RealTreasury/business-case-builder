@@ -650,13 +650,19 @@ class RTBCB_Admin {
             $word_count   = str_word_count( wp_strip_all_tags( $analysis ) );
             $elapsed_time = microtime( true ) - $start_time;
 
-            update_option( 'rtbcb_current_company', [
+            $existing = rtbcb_get_current_company();
+            $company_data = [
                 'name'            => $company_name,
                 'summary'         => sanitize_textarea_field( wp_strip_all_tags( $analysis ) ),
                 'recommendations' => $recommendations,
                 'references'      => $references,
                 'generated_at'    => current_time( 'mysql' ),
-            ] );
+                'focus_areas'     => array_map( 'sanitize_text_field', (array) ( $existing['focus_areas'] ?? [] ) ),
+                'industry'        => isset( $existing['industry'] ) ? sanitize_text_field( $existing['industry'] ) : '',
+                'size'            => isset( $existing['size'] ) ? sanitize_text_field( $existing['size'] ) : '',
+            ];
+
+            update_option( 'rtbcb_current_company', $company_data );
 
             wp_send_json_success(
                 [
@@ -667,6 +673,9 @@ class RTBCB_Admin {
                     'generated'       => current_time( 'mysql' ),
                     'recommendations' => $recommendations,
                     'references'      => $references,
+                    'focus_areas'     => $company_data['focus_areas'],
+                    'industry'        => $company_data['industry'],
+                    'size'            => $company_data['size'],
                 ]
             );
 
