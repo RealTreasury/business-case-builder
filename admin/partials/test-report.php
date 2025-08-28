@@ -38,6 +38,14 @@ if ( empty( $company ) ) {
 <table class="form-table">
     <tr>
         <th scope="row">
+            <label for="rtbcb-report-company-name"><?php esc_html_e( 'Company Name', 'rtbcb' ); ?></label>
+        </th>
+        <td>
+            <input type="text" id="rtbcb-report-company-name" class="regular-text" data-company-name value="<?php echo esc_attr( $company['name'] ?? '' ); ?>" />
+        </td>
+    </tr>
+    <tr>
+        <th scope="row">
             <label for="rtbcb-focus-areas"><?php esc_html_e( 'Focus Areas', 'rtbcb' ); ?></label>
         </th>
         <td>

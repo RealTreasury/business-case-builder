@@ -1,9 +1,9 @@
 jQuery( function( $ ) {
     var latestReportText = '';
 
-    // Company name input now lives in the Test Tools card; fetch safely.
+    // Company name input uses a data attribute to avoid ID conflicts.
     function getCompanyName() {
-        var input = $( '#rtbcb-company-name' );
+        var input = $( '[data-company-name]' );
         return input.length ? input.val().trim() : '';
     }
     function setStatus( message, isError, retryFn ) {
