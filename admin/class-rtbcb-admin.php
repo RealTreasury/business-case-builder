@@ -89,6 +89,14 @@ class RTBCB_Admin {
                     'geography'      => isset( $raw_company['geography'] ) ? sanitize_text_field( $raw_company['geography'] ) : '',
                     'business_model' => isset( $raw_company['business_model'] ) ? sanitize_text_field( $raw_company['business_model'] ) : '',
                 ];
+
+                $company_data['focus_areas'] = isset( $raw_company['focus_areas'] )
+                    ? array_filter( array_map( 'sanitize_text_field', (array) $raw_company['focus_areas'] ) )
+                    : [];
+                $company_data['complexity']  = isset( $raw_company['complexity'] ) ? sanitize_text_field( $raw_company['complexity'] ) : '';
+                $company_data['challenges']  = isset( $raw_company['challenges'] )
+                    ? array_filter( array_map( 'sanitize_text_field', (array) $raw_company['challenges'] ) )
+                    : [];
             }
         }
 
