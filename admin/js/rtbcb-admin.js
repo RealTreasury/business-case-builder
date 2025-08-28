@@ -25,23 +25,6 @@ function _catch(body, recover) {
   return result;
 }
 function _empty() {}
-function _continueIgnored(value) {
-  if (value && value.then) {
-    return value.then(_empty);
-  }
-}
-function _async(f) {
-  return function () {
-    for (var args = [], i = 0; i < arguments.length; i++) {
-      args[i] = arguments[i];
-    }
-    try {
-      return Promise.resolve(f.apply(this, args));
-    } catch (e) {
-      return Promise.reject(e);
-    }
-  };
-}
 function _invokeIgnored(body) {
   var result = body();
   if (result && result.then) {
@@ -255,15 +238,13 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
         regen.on('click', function () {
           form.trigger('submit');
         });
-        copy.on('click', _async(function () {
-          return _continueIgnored(_catch(function () {
-            return _await(navigator.clipboard.writeText(text), function () {
-              alert(rtbcbAdmin.strings.copied);
-            });
-          }, function (err) {
+        copy.on('click', function () {
+          navigator.clipboard.writeText(text).then(function () {
+            alert(rtbcbAdmin.strings.copied);
+          })["catch"](function (err) {
             alert(rtbcbAdmin.strings.error + ' ' + err.message);
-          }));
-        }));
+          });
+        });
         actions.append(regen).append(' ').append(copy);
         container.append(actions);
         return container;
