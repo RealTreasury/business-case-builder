@@ -391,9 +391,11 @@ jQuery(document).ready(function($) {
             $status.text('Running tests...');
             
             var tests = [
-                { action: 'rtbcb_test_company_overview', label: 'Company Overview' },
-                { action: 'rtbcb_test_treasury_tech_overview', label: 'Treasury Tech Overview' },
-                { action: 'rtbcb_test_industry_overview', label: 'Industry Overview' }
+                { action: 'rtbcb_test_company_overview', label: 'Company Overview', nonce: window.rtbcbAdmin.company_overview_nonce },
+                { action: 'rtbcb_test_maturity_model', label: 'Maturity Model', nonce: window.rtbcbAdmin.maturity_model_nonce },
+                { action: 'rtbcb_test_rag_market_analysis', label: 'RAG Market Analysis', nonce: window.rtbcbAdmin.rag_market_analysis_nonce },
+                { action: 'rtbcb_test_value_proposition', label: 'Value Proposition', nonce: window.rtbcbAdmin.value_proposition_nonce },
+                { action: 'rtbcb_test_industry_overview', label: 'Industry Overview', nonce: window.rtbcbAdmin.industry_overview_nonce }
             ];
             
             var results = [];
@@ -420,7 +422,7 @@ jQuery(document).ready(function($) {
                     method: 'POST',
                     data: {
                         action: test.action,
-                        nonce: window.rtbcbAdmin.test_dashboard_nonce
+                        nonce: test.nonce || window.rtbcbAdmin.test_dashboard_nonce
                     },
                     async: false,
                     success: function(response) {

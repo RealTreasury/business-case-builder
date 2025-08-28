@@ -34,9 +34,11 @@ class RTBCB_Admin {
         add_action( 'wp_ajax_nopriv_rtbcb_sync_to_local', [ $this, 'sync_to_local' ] );
         add_action( 'wp_ajax_rtbcb_test_commentary', [ $this, 'ajax_test_commentary' ] );
         add_action( 'wp_ajax_rtbcb_test_company_overview', [ $this, 'ajax_test_company_overview' ] );
-        add_action( 'wp_ajax_rtbcb_test_treasury_tech_overview', [ $this, 'ajax_test_treasury_tech_overview' ] );
         add_action( 'wp_ajax_rtbcb_test_industry_overview', [ $this, 'ajax_test_industry_overview' ] );
         add_action( 'wp_ajax_rtbcb_test_real_treasury_overview', [ $this, 'ajax_test_real_treasury_overview' ] );
+        add_action( 'wp_ajax_rtbcb_test_maturity_model', [ $this, 'ajax_test_maturity_model' ] );
+        add_action( 'wp_ajax_rtbcb_test_rag_market_analysis', [ $this, 'ajax_test_rag_market_analysis' ] );
+        add_action( 'wp_ajax_rtbcb_test_value_proposition', [ $this, 'ajax_test_value_proposition' ] );
         add_action( 'wp_ajax_rtbcb_get_company_data', [ $this, 'ajax_get_company_data' ] );
         add_action( 'wp_ajax_rtbcb_test_estimated_benefits', [ $this, 'ajax_test_estimated_benefits' ] );
         add_action( 'wp_ajax_rtbcb_save_test_results', [ $this, 'save_test_results' ] );
@@ -103,7 +105,9 @@ class RTBCB_Admin {
             'nonce'                      => wp_create_nonce( 'rtbcb_nonce' ),
             'diagnostics_nonce'          => wp_create_nonce( 'rtbcb_diagnostics' ),
             'company_overview_nonce'     => wp_create_nonce( 'rtbcb_test_company_overview' ),
-            'treasury_tech_overview_nonce' => wp_create_nonce( 'rtbcb_test_treasury_tech_overview' ),
+            'maturity_model_nonce'       => wp_create_nonce( 'rtbcb_test_maturity_model' ),
+            'rag_market_analysis_nonce'  => wp_create_nonce( 'rtbcb_test_rag_market_analysis' ),
+            'value_proposition_nonce'    => wp_create_nonce( 'rtbcb_test_value_proposition' ),
             'industry_overview_nonce'    => wp_create_nonce( 'rtbcb_test_industry_overview' ),
             'benefits_estimate_nonce'    => wp_create_nonce( 'rtbcb_test_estimated_benefits' ),
             'test_dashboard_nonce'       => wp_create_nonce( 'rtbcb_test_dashboard' ),
@@ -696,55 +700,89 @@ class RTBCB_Admin {
     }
 
     /**
-     * AJAX handler for treasury tech overview testing.
+     * AJAX handler for maturity model testing.
      *
      * @return void
      */
-    public function ajax_test_treasury_tech_overview() {
-        check_ajax_referer( 'rtbcb_test_treasury_tech_overview', 'nonce' );
+    public function ajax_test_maturity_model() {
+        check_ajax_referer( 'rtbcb_test_maturity_model', 'nonce' );
 
-        $focus_areas = isset( $_POST['focus_areas'] ) ? (array) wp_unslash( $_POST['focus_areas'] ) : [];
-        $focus_areas = array_map( 'sanitize_text_field', $focus_areas );
-        $focus_areas = array_filter( $focus_areas );
-        $complexity  = isset( $_POST['complexity'] ) ? sanitize_text_field( wp_unslash( $_POST['complexity'] ) ) : '';
-
-        $company_data = rtbcb_get_current_company();
-        if ( ! is_array( $company_data ) ) {
-            $company_data = [];
-        }
-        if ( ! empty( $focus_areas ) ) {
-            $company_data['focus_areas'] = $focus_areas;
-        }
-        if ( ! empty( $complexity ) ) {
-            $company_data['complexity'] = $complexity;
+        $company = rtbcb_get_current_company();
+        $result  = rtbcb_test_generate_maturity_model( $company );
+        if ( is_wp_error( $result ) ) {
+            wp_send_json_error( [ 'message' => $result->get_error_message() ] );
         }
 
-        if ( empty( $company_data['focus_areas'] ) ) {
-            wp_send_json_error( [ 'message' => __( 'Please select at least one focus area.', 'rtbcb' ) ] );
-        }
-
-        update_option( 'rtbcb_current_company', $company_data );
-
-        $start    = microtime( true );
-        $overview = rtbcb_test_generate_treasury_tech_overview( $company_data );
-        $elapsed  = round( microtime( true ) - $start, 2 );
-
-        if ( is_wp_error( $overview ) ) {
-            wp_send_json_error( [ 'message' => sanitize_text_field( $overview->get_error_message() ) ] );
-        }
-
-        $word_count = str_word_count( $overview );
+        update_option( 'rtbcb_maturity_model', $result['narrative'] );
 
         wp_send_json_success(
             [
-                'overview'   => sanitize_textarea_field( $overview ),
-                'word_count' => $word_count,
-                'elapsed'    => $elapsed,
+                'assessment' => sanitize_textarea_field( $result['narrative'] ),
+                'level'      => sanitize_text_field( $result['level'] ),
                 'generated'  => current_time( 'mysql' ),
+                'word_count' => str_word_count( $result['narrative'] ),
             ]
         );
     }
 
+    /**
+     * AJAX handler for RAG market analysis testing.
+     *
+     * @return void
+     */
+    public function ajax_test_rag_market_analysis() {
+        check_ajax_referer( 'rtbcb_test_rag_market_analysis', 'nonce' );
+
+        $query = isset( $_POST['query'] ) ? sanitize_text_field( wp_unslash( $_POST['query'] ) ) : '';
+        if ( empty( $query ) ) {
+            wp_send_json_error( [ 'message' => __( 'Query required.', 'rtbcb' ) ] );
+        }
+
+        $vendors = rtbcb_test_rag_market_analysis( $query );
+        if ( is_wp_error( $vendors ) ) {
+            wp_send_json_error( [ 'message' => $vendors->get_error_message() ] );
+        }
+
+        update_option( 'rtbcb_rag_market_analysis', $vendors );
+
+        wp_send_json_success(
+            [
+                'vendors'   => array_map( 'sanitize_text_field', $vendors ),
+                'generated' => current_time( 'mysql' ),
+            ]
+        );
+    }
+
+    /**
+     * AJAX handler for value proposition testing.
+     *
+     * @return void
+     */
+    public function ajax_test_value_proposition() {
+        check_ajax_referer( 'rtbcb_test_value_proposition', 'nonce' );
+
+        $company = rtbcb_get_current_company();
+        $paragraph = rtbcb_test_generate_value_proposition( $company );
+        if ( is_wp_error( $paragraph ) ) {
+            wp_send_json_error( [ 'message' => $paragraph->get_error_message() ] );
+        }
+
+        update_option( 'rtbcb_value_proposition', $paragraph );
+
+        wp_send_json_success(
+            [
+                'paragraph' => sanitize_textarea_field( $paragraph ),
+                'word_count'=> str_word_count( $paragraph ),
+                'generated' => current_time( 'mysql' ),
+            ]
+        );
+    }
+
+    /**
+     * AJAX handler for treasury tech overview testing.
+     *
+     * @return void
+     */
     /**
      * AJAX handler for real treasury overview testing.
      *
