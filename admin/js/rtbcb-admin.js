@@ -653,7 +653,8 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
         button.prop('disabled', true).text(rtbcbAdmin.strings.testing);
         runTests().catch(function (err) {
           alert("".concat(rtbcbAdmin.strings.error, " ").concat(err.message));
-        }).finally(function () {
+          return Promise.resolve();
+        }).then(function () {
           status.text('');
           button.text(originalText);
           toggleButtonState();
