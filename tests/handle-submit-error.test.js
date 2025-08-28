@@ -22,10 +22,10 @@ global.ajaxObj = { ajax_url: 'test-url' };
 
 global.DOMPurify = { sanitize: (html) => html };
 
-global.fetch = async () => ({
+global.fetch = () => Promise.resolve({
     ok: true,
-    json: async () => ({ success: false, data: { message: 'Bad narrative' } }),
-    text: async () => ''
+    json: () => Promise.resolve({ success: false, data: { message: 'Bad narrative' } }),
+    text: () => Promise.resolve('')
 });
 
 global.FormData = class { constructor() {} };
@@ -33,8 +33,12 @@ global.FormData = class { constructor() {} };
 const code = fs.readFileSync('public/js/rtbcb.js', 'utf8');
 vm.runInThisContext(code);
 
-(async () => {
-    await handleSubmit({ preventDefault() {}, target: {} });
-    assert.ok(progressContainer.innerHTML.includes('Bad narrative'));
-    console.log('Error path test passed.');
-})();
+handleSubmit({ preventDefault() {}, target: {} })
+    .then(() => {
+        assert.ok(progressContainer.innerHTML.includes('Bad narrative'));
+        console.log('Error path test passed.');
+    })
+    .catch((error) => {
+        console.error(error);
+        process.exit(1);
+    });

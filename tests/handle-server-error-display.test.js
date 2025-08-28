@@ -22,10 +22,10 @@ global.ajaxObj = { ajax_url: 'test-url' };
 
 global.DOMPurify = { sanitize: (html) => html };
 
-global.fetch = async () => ({
+global.fetch = () => Promise.resolve({
     ok: false,
     status: 500,
-    text: async () => JSON.stringify({ success: false, data: { message: 'Server exploded' } })
+    text: () => Promise.resolve(JSON.stringify({ success: false, data: { message: 'Server exploded' } }))
 });
 
 global.FormData = class { constructor() {} };
@@ -33,8 +33,12 @@ global.FormData = class { constructor() {} };
 const code = fs.readFileSync('public/js/rtbcb.js', 'utf8');
 vm.runInThisContext(code);
 
-(async () => {
-    await handleSubmit({ preventDefault() {}, target: {} });
-    assert.ok(progressContainer.innerHTML.includes('Server exploded'));
-    console.log('Server error display test passed.');
-})();
+handleSubmit({ preventDefault() {}, target: {} })
+    .then(() => {
+        assert.ok(progressContainer.innerHTML.includes('Server exploded'));
+        console.log('Server error display test passed.');
+    })
+    .catch((error) => {
+        console.error(error);
+        process.exit(1);
+    });
