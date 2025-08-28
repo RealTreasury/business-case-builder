@@ -1181,15 +1181,74 @@ class RTBCB_Admin {
             wp_send_json_error( [ 'message' => __( 'Invalid company name.', 'rtbcb' ) ], 400 );
         }
 
-        update_option( 'rtbcb_company_data', [ 'name' => $company_name ] );
-        delete_option( 'rtbcb_test_results' );
+        try {
+            $overview = rtbcb_test_generate_company_overview( $company_name );
 
-        wp_send_json_success(
-            [
-                'message' => __( 'Company saved.', 'rtbcb' ),
-                'name'    => $company_name,
-            ]
-        );
+            if ( is_wp_error( $overview ) ) {
+                wp_send_json_error(
+                    [
+                        'message' => sanitize_text_field( $overview->get_error_message() ),
+                    ]
+                );
+            }
+
+            $analysis        = $overview['analysis'] ?? '';
+            $recommendations = array_map( 'sanitize_text_field', $overview['recommendations'] ?? [] );
+            $references      = array_map( 'esc_url_raw', $overview['references'] ?? [] );
+            $metrics         = is_array( $overview['metrics'] ?? null ) ? $overview['metrics'] : [];
+            $revenue         = floatval( $metrics['revenue'] ?? 0 );
+            $staff_count     = intval( $metrics['staff_count'] ?? 0 );
+            $efficiency      = floatval( $metrics['baseline_efficiency'] ?? 0 );
+
+            $existing     = rtbcb_get_current_company();
+            $company_data = [
+                'name'            => $company_name,
+                'summary'         => sanitize_textarea_field( wp_strip_all_tags( $analysis ) ),
+                'recommendations' => $recommendations,
+                'references'      => $references,
+                'generated_at'    => current_time( 'mysql' ),
+                'focus_areas'     => array_map( 'sanitize_text_field', (array) ( $existing['focus_areas'] ?? [] ) ),
+                'industry'        => isset( $existing['industry'] ) ? sanitize_text_field( $existing['industry'] ) : '',
+                'size'            => isset( $existing['size'] ) ? sanitize_text_field( $existing['size'] ) : '',
+                'revenue'         => $revenue,
+                'staff_count'     => $staff_count,
+                'efficiency'      => $efficiency,
+            ];
+
+            update_option( 'rtbcb_current_company', $company_data );
+
+            $stored = get_option( 'rtbcb_company_data', [] );
+            if ( ! is_array( $stored ) ) {
+                $stored = [];
+            }
+            $stored['name']        = $company_name;
+            $stored['revenue']     = $revenue;
+            $stored['staff_count'] = $staff_count;
+            $stored['efficiency']  = $efficiency;
+            update_option( 'rtbcb_company_data', $stored );
+
+            delete_option( 'rtbcb_test_results' );
+
+            wp_send_json_success(
+                [
+                    'message' => __( 'Company saved.', 'rtbcb' ),
+                    'name'    => $company_name,
+                    'overview' => wp_kses_post( $analysis ),
+                    'metrics'  => [
+                        'revenue'     => $revenue,
+                        'staff_count' => $staff_count,
+                        'efficiency'  => $efficiency,
+                    ],
+                ]
+            );
+        } catch ( Exception $e ) {
+            error_log( 'RTBCB Set Test Company Error: ' . $e->getMessage() );
+            wp_send_json_error(
+                [
+                    'message' => __( 'An error occurred while retrieving company data.', 'rtbcb' ),
+                ]
+            );
+        }
     }
 
     /**
