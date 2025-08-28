@@ -25,8 +25,10 @@ function rtbcb_clear_current_company() {
     delete_option( 'rtbcb_current_company' );
     delete_option( 'rtbcb_company_overview' );
     delete_option( 'rtbcb_industry_insights' );
-    delete_option( 'rtbcb_treasury_tech_overview' );
     delete_option( 'rtbcb_treasury_challenges' );
+    delete_option( 'rtbcb_maturity_model' );
+    delete_option( 'rtbcb_rag_market_analysis' );
+    delete_option( 'rtbcb_value_proposition' );
 }
 
 /**
@@ -82,9 +84,21 @@ function rtbcb_get_dashboard_sections() {
             'requires' => [ 'rtbcb-test-company-overview' ],
             'phase'    => 1,
         ],
-        'rtbcb-test-treasury-tech-overview' => [
-            'label'    => __( 'Treasury Tech Overview', 'rtbcb' ),
-            'option'   => 'rtbcb_treasury_tech_overview',
+        'rtbcb-test-maturity-model'        => [
+            'label'    => __( 'Maturity Model', 'rtbcb' ),
+            'option'   => 'rtbcb_maturity_model',
+            'requires' => [ 'rtbcb-test-company-overview' ],
+            'phase'    => 2,
+        ],
+        'rtbcb-test-rag-market-analysis'   => [
+            'label'    => __( 'RAG Market Analysis', 'rtbcb' ),
+            'option'   => 'rtbcb_rag_market_analysis',
+            'requires' => [ 'rtbcb-test-company-overview' ],
+            'phase'    => 2,
+        ],
+        'rtbcb-test-value-proposition'     => [
+            'label'    => __( 'Value Proposition', 'rtbcb' ),
+            'option'   => 'rtbcb_value_proposition',
             'requires' => [ 'rtbcb-test-company-overview' ],
             'phase'    => 2,
         ],
@@ -511,11 +525,11 @@ function rtbcb_test_generate_category_recommendation( $analysis ) {
     $analysis = is_array( $analysis ) ? $analysis : [];
 
     $payload = [
-        'company_overview'       => sanitize_textarea_field( $analysis['company_overview'] ?? '' ),
-        'industry_insights'      => sanitize_textarea_field( $analysis['industry_insights'] ?? '' ),
-        'treasury_tech_overview' => sanitize_textarea_field( $analysis['treasury_tech_overview'] ?? '' ),
-        'treasury_challenges'    => sanitize_textarea_field( $analysis['treasury_challenges'] ?? '' ),
-        'extra_requirements'     => sanitize_textarea_field( $analysis['extra_requirements'] ?? '' ),
+        'company_overview'    => sanitize_textarea_field( $analysis['company_overview'] ?? '' ),
+        'industry_insights'   => sanitize_textarea_field( $analysis['industry_insights'] ?? '' ),
+        'maturity_model'      => sanitize_textarea_field( $analysis['maturity_model'] ?? '' ),
+        'treasury_challenges' => sanitize_textarea_field( $analysis['treasury_challenges'] ?? '' ),
+        'extra_requirements'  => sanitize_textarea_field( $analysis['extra_requirements'] ?? '' ),
     ];
 
     try {
@@ -530,7 +544,7 @@ function rtbcb_test_generate_category_recommendation( $analysis ) {
 
         $input = "Company Overview: {$payload['company_overview']}";
         $input .= "\nIndustry Insights: {$payload['industry_insights']}";
-        $input .= "\nTechnology Overview: {$payload['treasury_tech_overview']}";
+        $input .= "\nMaturity Assessment: {$payload['maturity_model']}";
         $input .= "\nTreasury Challenges: {$payload['treasury_challenges']}";
         if ( ! empty( $payload['extra_requirements'] ) ) {
             $input .= "\nExtra Requirements: {$payload['extra_requirements']}";
@@ -666,15 +680,85 @@ function rtbcb_test_generate_company_overview( $company_name ) {
  * @param array $company_data Company data including focus areas and complexity.
  * @return string|WP_Error Overview text or error object.
  */
-function rtbcb_test_generate_treasury_tech_overview( $company_data ) {
-    if ( ! class_exists( 'RTBCB_LLM' ) ) {
-        return new WP_Error( 'missing_class', __( 'LLM class not available', 'rtbcb' ) );
+/**
+ * Test assessing treasury maturity.
+ *
+ * @param array $company_data Company information.
+ * @return array|WP_Error Assessment data or error.
+ */
+function rtbcb_test_generate_maturity_model( $company_data ) {
+    if ( ! class_exists( 'RTBCB_Maturity_Model' ) ) {
+        return new WP_Error( 'missing_class', __( 'Maturity model class not available', 'rtbcb' ) );
     }
 
-    $company_data = rtbcb_sanitize_form_data( (array) $company_data );
+    $model       = new RTBCB_Maturity_Model();
+    $company_data = is_array( $company_data ) ? $company_data : [];
+    return $model->assess( $company_data );
+}
 
-    $llm = new RTBCB_LLM();
-    return $llm->generate_treasury_tech_overview( $company_data );
+/**
+ * Test running RAG market analysis.
+ *
+ * @param string $query Search query.
+ * @return array|WP_Error Vendor shortlist or error.
+ */
+function rtbcb_test_rag_market_analysis( $query ) {
+    if ( ! class_exists( 'RTBCB_RAG' ) ) {
+        return new WP_Error( 'missing_class', __( 'RAG class not available', 'rtbcb' ) );
+    }
+
+    $rag    = new RTBCB_RAG();
+    $query  = sanitize_text_field( $query );
+    $result = $rag->get_context( $query, 3 );
+
+    $vendors = [];
+    foreach ( $result as $meta ) {
+        if ( isset( $meta['name'] ) ) {
+            $vendors[] = sanitize_text_field( $meta['name'] );
+        }
+    }
+
+    return $vendors;
+}
+
+/**
+ * Test generating a value proposition.
+ *
+ * @param array $company_data Company information.
+ * @return string|WP_Error Opening paragraph or error.
+ */
+function rtbcb_test_generate_value_proposition( $company_data ) {
+    $company_data = is_array( $company_data ) ? $company_data : [];
+    $company_name = isset( $company_data['name'] ) ? sanitize_text_field( $company_data['name'] ) : '';
+
+    if ( class_exists( 'RTBCB_Maturity_Model' ) ) {
+        $model      = new RTBCB_Maturity_Model();
+        $assessment = $model->assess( $company_data );
+        $level      = $assessment['level'];
+    } else {
+        $level = __( 'basic', 'rtbcb' );
+    }
+
+    $business_case_data = [
+        'company_name'      => $company_name,
+        'executive_summary' => [
+            'strategic_positioning' => sprintf(
+                __( 'Real Treasury helps %1$s advance from %2$s maturity toward optimized performance.', 'rtbcb' ),
+                $company_name,
+                strtolower( $level )
+            ),
+        ],
+    ];
+
+    ob_start();
+    include RTBCB_DIR . 'templates/comprehensive-report-template.php';
+    $output = ob_get_clean();
+
+    if ( preg_match( '/<div class="rtbcb-strategic-positioning">\s*<h3>.*?<\/h3>\s*<p>(.*?)<\/p>/s', $output, $matches ) ) {
+        return sanitize_text_field( wp_strip_all_tags( $matches[1] ) );
+    }
+
+    return new WP_Error( 'no_paragraph', __( 'Unable to generate value proposition.', 'rtbcb' ) );
 }
 
 /**

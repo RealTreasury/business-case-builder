@@ -56,10 +56,12 @@ nonce such as `rtbcb_test_company_overview` to protect requests.
 │  │  ├── test-company-overview.php
 │  │  ├── test-estimated-benefits.php
 │  │  ├── test-industry-overview.php
+│  │  ├── test-maturity-model.php
+│  │  ├── test-rag-market-analysis.php
 │  │  ├── test-real-treasury-overview.php
 │  │  ├── test-recommended-category.php
 │  │  ├── test-report.php
-│  │  └── test-treasury-tech-overview.php
+│  │  └── test-value-proposition.php
 │  ├── settings-page.php
 │  └── test-dashboard-page.php
 ├── composer.json
