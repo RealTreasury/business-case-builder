@@ -48,19 +48,27 @@ if ( ! defined( 'ABSPATH' ) ) {
         var original = $btn.text();
         var $status = $('#rtbcb-connectivity-status');
         $btn.prop('disabled', true).text('<?php echo esc_js( __( 'Testing...', 'rtbcb' ) ); ?>');
-        $.post(ajaxurl, {
-            action: 'rtbcb_test_api',
-            nonce: '<?php echo wp_create_nonce( 'rtbcb_test_api' ); ?>'
-        }).done(function(response){
-            if (response.success) {
-                renderStatus($status, response.data.message || '<?php echo esc_js( __( 'Connection successful.', 'rtbcb' ) ); ?>', true);
-            } else {
-                renderStatus($status, response.data.message || '<?php echo esc_js( __( 'Connection failed.', 'rtbcb' ) ); ?>', false);
+        $.ajax({
+            url: ajaxurl,
+            method: 'POST',
+            data: {
+                action: 'rtbcb_test_api',
+                nonce: '<?php echo wp_create_nonce( 'rtbcb_test_api' ); ?>'
+            },
+            async: false,
+            success: function(response){
+                if (response.success) {
+                    renderStatus($status, response.data.message || '<?php echo esc_js( __( 'Connection successful.', 'rtbcb' ) ); ?>', true);
+                } else {
+                    renderStatus($status, response.data.message || '<?php echo esc_js( __( 'Connection failed.', 'rtbcb' ) ); ?>', false);
+                }
+            },
+            error: function(){
+                renderStatus($status, '<?php echo esc_js( __( 'Request failed.', 'rtbcb' ) ); ?>', false);
+            },
+            complete: function(){
+                $btn.prop('disabled', false).text(original);
             }
-        }).fail(function(){
-            renderStatus($status, '<?php echo esc_js( __( 'Request failed.', 'rtbcb' ) ); ?>', false);
-        }).always(function(){
-            $btn.prop('disabled', false).text(original);
         });
     });
 
@@ -69,20 +77,28 @@ if ( ! defined( 'ABSPATH' ) ) {
         var original = $btn.text();
         var $status = $('#rtbcb-connectivity-status');
         $btn.prop('disabled', true).text('<?php echo esc_js( __( 'Testing...', 'rtbcb' ) ); ?>');
-        $.post(ajaxurl, {
-            action: 'rtbcb_test_portal',
-            nonce: '<?php echo wp_create_nonce( 'rtbcb_test_portal' ); ?>'
-        }).done(function(response){
-            if (response.success) {
-                var msg = response.data && response.data.vendor_count !== undefined ? '<?php echo esc_js( __( 'Vendor count:', 'rtbcb' ) ); ?> ' + response.data.vendor_count : (response.data.message || '<?php echo esc_js( __( 'Portal test successful.', 'rtbcb' ) ); ?>');
-                renderStatus($status, msg, true);
-            } else {
-                renderStatus($status, (response.data && response.data.message) ? response.data.message : '<?php echo esc_js( __( 'Test failed.', 'rtbcb' ) ); ?>', false);
+        $.ajax({
+            url: ajaxurl,
+            method: 'POST',
+            data: {
+                action: 'rtbcb_test_portal',
+                nonce: '<?php echo wp_create_nonce( 'rtbcb_test_portal' ); ?>'
+            },
+            async: false,
+            success: function(response){
+                if (response.success) {
+                    var msg = response.data && response.data.vendor_count !== undefined ? '<?php echo esc_js( __( 'Vendor count:', 'rtbcb' ) ); ?> ' + response.data.vendor_count : (response.data.message || '<?php echo esc_js( __( 'Portal test successful.', 'rtbcb' ) ); ?>');
+                    renderStatus($status, msg, true);
+                } else {
+                    renderStatus($status, (response.data && response.data.message) ? response.data.message : '<?php echo esc_js( __( 'Test failed.', 'rtbcb' ) ); ?>', false);
+                }
+            },
+            error: function(){
+                renderStatus($status, '<?php echo esc_js( __( 'Request failed.', 'rtbcb' ) ); ?>', false);
+            },
+            complete: function(){
+                $btn.prop('disabled', false).text(original);
             }
-        }).fail(function(){
-            renderStatus($status, '<?php echo esc_js( __( 'Request failed.', 'rtbcb' ) ); ?>', false);
-        }).always(function(){
-            $btn.prop('disabled', false).text(original);
         });
     });
 
@@ -91,20 +107,28 @@ if ( ! defined( 'ABSPATH' ) ) {
         var original = $btn.text();
         var $status = $('#rtbcb-connectivity-status');
         $btn.prop('disabled', true).text('<?php echo esc_js( __( 'Testing...', 'rtbcb' ) ); ?>');
-        $.post(ajaxurl, {
-            action: 'rtbcb_test_rag',
-            nonce: '<?php echo wp_create_nonce( 'rtbcb_test_rag' ); ?>'
-        }).done(function(response){
-            if (response.success) {
-                var ragMsg = response.data && response.data.status ? response.data.status : '<?php echo esc_js( __( 'RAG index healthy.', 'rtbcb' ) ); ?>';
-                renderStatus($status, ragMsg, true);
-            } else {
-                renderStatus($status, (response.data && response.data.message) ? response.data.message : '<?php echo esc_js( __( 'Test failed.', 'rtbcb' ) ); ?>', false);
+        $.ajax({
+            url: ajaxurl,
+            method: 'POST',
+            data: {
+                action: 'rtbcb_test_rag',
+                nonce: '<?php echo wp_create_nonce( 'rtbcb_test_rag' ); ?>'
+            },
+            async: false,
+            success: function(response){
+                if (response.success) {
+                    var ragMsg = response.data && response.data.status ? response.data.status : '<?php echo esc_js( __( 'RAG index healthy.', 'rtbcb' ) ); ?>';
+                    renderStatus($status, ragMsg, true);
+                } else {
+                    renderStatus($status, (response.data && response.data.message) ? response.data.message : '<?php echo esc_js( __( 'Test failed.', 'rtbcb' ) ); ?>', false);
+                }
+            },
+            error: function(){
+                renderStatus($status, '<?php echo esc_js( __( 'Request failed.', 'rtbcb' ) ); ?>', false);
+            },
+            complete: function(){
+                $btn.prop('disabled', false).text(original);
             }
-        }).fail(function(){
-            renderStatus($status, '<?php echo esc_js( __( 'Request failed.', 'rtbcb' ) ); ?>', false);
-        }).always(function(){
-            $btn.prop('disabled', false).text(original);
         });
     });
 
@@ -116,21 +140,29 @@ if ( ! defined( 'ABSPATH' ) ) {
         var nameInput = $('#rtbcb-company-name');
         var name = nameInput.length ? nameInput.val() : '';
         $btn.prop('disabled', true).text('<?php echo esc_js( __( 'Saving...', 'rtbcb' ) ); ?>');
-        $.post(ajaxurl, {
-            action: 'rtbcb_set_test_company',
-            nonce: $('#rtbcb_set_test_company_nonce').val(),
-            company_name: name
-        }).done(function(response){
-            if (response.success) {
-                renderStatus($status, response.data.message, true);
-                $('#rtbcb-test-results-summary tbody').html('<tr><td colspan="5"><?php echo esc_js( __( 'No test results found.', 'rtbcb' ) ); ?></td></tr>');
-            } else {
-                renderStatus($status, (response.data && response.data.message) ? response.data.message : '<?php echo esc_js( __( 'Request failed.', 'rtbcb' ) ); ?>', false);
+        $.ajax({
+            url: ajaxurl,
+            method: 'POST',
+            data: {
+                action: 'rtbcb_set_test_company',
+                nonce: $('#rtbcb_set_test_company_nonce').val(),
+                company_name: name
+            },
+            async: false,
+            success: function(response){
+                if (response.success) {
+                    renderStatus($status, response.data.message, true);
+                    $('#rtbcb-test-results-summary tbody').html('<tr><td colspan="5"><?php echo esc_js( __( 'No test results found.', 'rtbcb' ) ); ?></td></tr>');
+                } else {
+                    renderStatus($status, (response.data && response.data.message) ? response.data.message : '<?php echo esc_js( __( 'Request failed.', 'rtbcb' ) ); ?>', false);
+                }
+            },
+            error: function(){
+                renderStatus($status, '<?php echo esc_js( __( 'Request failed.', 'rtbcb' ) ); ?>', false);
+            },
+            complete: function(){
+                $btn.prop('disabled', false).text(original);
             }
-        }).fail(function(){
-            renderStatus($status, '<?php echo esc_js( __( 'Request failed.', 'rtbcb' ) ); ?>', false);
-        }).always(function(){
-            $btn.prop('disabled', false).text(original);
         });
     });
 })(jQuery);

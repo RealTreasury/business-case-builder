@@ -75,21 +75,26 @@ jQuery(document).ready(function($) {
             ($label.length ? $label : $btn).text(window.rtbcbAdmin.strings.processing || 'Processing...');
             $btn.prop('disabled', true);
             
-            $.post(window.rtbcbAdmin.ajax_url, {
-                action: 'rtbcb_test_connection',
-                nonce: window.rtbcbAdmin.nonce
-            })
-            .done(function(response) {
-                var message = response.success ? 'API connection successful!' : 
-                    (response.data && response.data.message ? response.data.message : 'Connection failed');
-                alert(message);
-            })
-            .fail(function() {
-                alert('Request failed');
-            })
-            .always(function() {
-                ($label.length ? $label : $btn).text(original);
-                $btn.prop('disabled', false);
+            $.ajax({
+                url: window.rtbcbAdmin.ajax_url,
+                method: 'POST',
+                data: {
+                    action: 'rtbcb_test_connection',
+                    nonce: window.rtbcbAdmin.nonce
+                },
+                async: false,
+                success: function(response) {
+                    var message = response.success ? 'API connection successful!' :
+                        (response.data && response.data.message ? response.data.message : 'Connection failed');
+                    alert(message);
+                },
+                error: function() {
+                    alert('Request failed');
+                },
+                complete: function() {
+                    ($label.length ? $label : $btn).text(original);
+                    $btn.prop('disabled', false);
+                }
             });
         },
         
@@ -104,35 +109,40 @@ jQuery(document).ready(function($) {
             
             var params = new URLSearchParams(window.location.search);
             
-            $.post(window.rtbcbAdmin.ajax_url, {
-                action: 'rtbcb_export_leads',
-                nonce: window.rtbcbAdmin.nonce,
-                search: params.get('search') || '',
-                category: params.get('category') || '',
-                date_from: params.get('date_from') || '',
-                date_to: params.get('date_to') || ''
-            })
-            .done(function(response) {
-                if (response.success && response.data && response.data.content) {
-                    var blob = new Blob([response.data.content], { type: 'text/csv' });
-                    var url = URL.createObjectURL(blob);
-                    var a = document.createElement('a');
-                    a.href = url;
-                    a.download = response.data.filename || 'leads.csv';
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                } else {
-                    alert(response.data && response.data.message ? response.data.message : 'Export failed');
+            $.ajax({
+                url: window.rtbcbAdmin.ajax_url,
+                method: 'POST',
+                data: {
+                    action: 'rtbcb_export_leads',
+                    nonce: window.rtbcbAdmin.nonce,
+                    search: params.get('search') || '',
+                    category: params.get('category') || '',
+                    date_from: params.get('date_from') || '',
+                    date_to: params.get('date_to') || ''
+                },
+                async: false,
+                success: function(response) {
+                    if (response.success && response.data && response.data.content) {
+                        var blob = new Blob([response.data.content], { type: 'text/csv' });
+                        var url = URL.createObjectURL(blob);
+                        var a = document.createElement('a');
+                        a.href = url;
+                        a.download = response.data.filename || 'leads.csv';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                    } else {
+                        alert(response.data && response.data.message ? response.data.message : 'Export failed');
+                    }
+                },
+                error: function() {
+                    alert('Export request failed');
+                },
+                complete: function() {
+                    ($label.length ? $label : $btn).text(original);
+                    $btn.prop('disabled', false);
                 }
-            })
-            .fail(function() {
-                alert('Export request failed');
-            })
-            .always(function() {
-                ($label.length ? $label : $btn).text(original);
-                $btn.prop('disabled', false);
             });
         },
         
@@ -143,23 +153,28 @@ jQuery(document).ready(function($) {
             
             $btn.text(window.rtbcbAdmin.strings.processing || 'Processing...').prop('disabled', true);
             
-            $.post(window.rtbcbAdmin.ajax_url, {
-                action: 'rtbcb_rebuild_index',
-                nonce: window.rtbcbAdmin.nonce
-            })
-            .done(function(response) {
-                if (response.success) {
-                    alert('RAG index rebuilt successfully');
-                    location.reload();
-                } else {
-                    alert(response.data && response.data.message ? response.data.message : 'Rebuild failed');
+            $.ajax({
+                url: window.rtbcbAdmin.ajax_url,
+                method: 'POST',
+                data: {
+                    action: 'rtbcb_rebuild_index',
+                    nonce: window.rtbcbAdmin.nonce
+                },
+                async: false,
+                success: function(response) {
+                    if (response.success) {
+                        alert('RAG index rebuilt successfully');
+                        location.reload();
+                    } else {
+                        alert(response.data && response.data.message ? response.data.message : 'Rebuild failed');
+                    }
+                },
+                error: function() {
+                    alert('Rebuild request failed');
+                },
+                complete: function() {
+                    $btn.text(original).prop('disabled', false);
                 }
-            })
-            .fail(function() {
-                alert('Rebuild request failed');
-            })
-            .always(function() {
-                $btn.text(original).prop('disabled', false);
             });
         },
         
@@ -168,26 +183,31 @@ jQuery(document).ready(function($) {
             var $btn = $(this);
             $btn.prop('disabled', true);
             
-            $.post(window.rtbcbAdmin.ajax_url, {
-                action: 'rtbcb_run_diagnostics',
-                nonce: $btn.data('nonce') || window.rtbcbAdmin.diagnostics_nonce
-            })
-            .done(function(response) {
-                if (response.success) {
-                    var message = '';
-                    $.each(response.data, function(key, result) {
-                        message += key + ': ' + (result.passed ? 'PASS' : 'FAIL') + ' - ' + result.message + '\n';
-                    });
-                    alert(message);
-                } else {
-                    alert(response.data && response.data.message ? response.data.message : 'Diagnostics failed');
+            $.ajax({
+                url: window.rtbcbAdmin.ajax_url,
+                method: 'POST',
+                data: {
+                    action: 'rtbcb_run_diagnostics',
+                    nonce: $btn.data('nonce') || window.rtbcbAdmin.diagnostics_nonce
+                },
+                async: false,
+                success: function(response) {
+                    if (response.success) {
+                        var message = '';
+                        $.each(response.data, function(key, result) {
+                            message += key + ': ' + (result.passed ? 'PASS' : 'FAIL') + ' - ' + result.message + '\n';
+                        });
+                        alert(message);
+                    } else {
+                        alert(response.data && response.data.message ? response.data.message : 'Diagnostics failed');
+                    }
+                },
+                error: function() {
+                    alert('Diagnostics request failed');
+                },
+                complete: function() {
+                    $btn.prop('disabled', false);
                 }
-            })
-            .fail(function() {
-                alert('Diagnostics request failed');
-            })
-            .always(function() {
-                $btn.prop('disabled', false);
             });
         },
         
@@ -200,18 +220,23 @@ jQuery(document).ready(function($) {
             
             var nonce = $('#rtbcb-sync-local-form').find('input[name="rtbcb_sync_local_nonce"]').val();
             
-            $.post(window.rtbcbAdmin.ajax_url, {
-                action: 'rtbcb_sync_to_local',
-                nonce: nonce
-            })
-            .done(function(response) {
-                alert(response.data && response.data.message ? response.data.message : 'Sync completed');
-            })
-            .fail(function() {
-                alert('Sync request failed');
-            })
-            .always(function() {
-                $btn.text(original).prop('disabled', false);
+            $.ajax({
+                url: window.rtbcbAdmin.ajax_url,
+                method: 'POST',
+                data: {
+                    action: 'rtbcb_sync_to_local',
+                    nonce: nonce
+                },
+                async: false,
+                success: function(response) {
+                    alert(response.data && response.data.message ? response.data.message : 'Sync completed');
+                },
+                error: function() {
+                    alert('Sync request failed');
+                },
+                complete: function() {
+                    $btn.text(original).prop('disabled', false);
+                }
             });
         },
         
@@ -224,23 +249,28 @@ jQuery(document).ready(function($) {
             
             $btn.prop('disabled', true).text(window.rtbcbAdmin.strings.generating || 'Generating...');
             
-            $.post(window.rtbcbAdmin.ajax_url, {
-                action: 'rtbcb_test_commentary',
-                industry: industry,
-                nonce: window.rtbcbAdmin.company_overview_nonce
-            })
-            .done(function(response) {
-                if (response.success && response.data) {
-                    $results.text(response.data.overview || response.data.commentary || 'Generated successfully');
-                } else {
-                    $results.text(response.data && response.data.message ? response.data.message : 'Generation failed');
+            $.ajax({
+                url: window.rtbcbAdmin.ajax_url,
+                method: 'POST',
+                data: {
+                    action: 'rtbcb_test_commentary',
+                    industry: industry,
+                    nonce: window.rtbcbAdmin.company_overview_nonce
+                },
+                async: false,
+                success: function(response) {
+                    if (response.success && response.data) {
+                        $results.text(response.data.overview || response.data.commentary || 'Generated successfully');
+                    } else {
+                        $results.text(response.data && response.data.message ? response.data.message : 'Generation failed');
+                    }
+                },
+                error: function() {
+                    $results.text('Request failed');
+                },
+                complete: function() {
+                    $btn.prop('disabled', false).text(original);
                 }
-            })
-            .fail(function() {
-                $results.text('Request failed');
-            })
-            .always(function() {
-                $btn.prop('disabled', false).text(original);
             });
         },
         
@@ -256,25 +286,30 @@ jQuery(document).ready(function($) {
             var company = $('#rtbcb-test-company-name').val();
             var nonce = $form.find('[name="nonce"]').val() || window.rtbcbAdmin.company_overview_nonce;
             
-            $.post(window.rtbcbAdmin.ajax_url, {
-                action: 'rtbcb_test_company_overview',
-                company_name: company,
-                nonce: nonce
-            })
-            .done(function(response) {
-                if (response.success && response.data) {
-                    $results.html('<div class="notice notice-success"><p>' + 
-                        (response.data.overview || 'Generated successfully') + '</p></div>');
-                } else {
-                    $results.html('<div class="notice notice-error"><p>' + 
-                        (response.data && response.data.message ? response.data.message : 'Generation failed') + '</p></div>');
+            $.ajax({
+                url: window.rtbcbAdmin.ajax_url,
+                method: 'POST',
+                data: {
+                    action: 'rtbcb_test_company_overview',
+                    company_name: company,
+                    nonce: nonce
+                },
+                async: false,
+                success: function(response) {
+                    if (response.success && response.data) {
+                        $results.html('<div class="notice notice-success"><p>' +
+                            (response.data.overview || 'Generated successfully') + '</p></div>');
+                    } else {
+                        $results.html('<div class="notice notice-error"><p>' +
+                            (response.data && response.data.message ? response.data.message : 'Generation failed') + '</p></div>');
+                    }
+                },
+                error: function() {
+                    $results.html('<div class="notice notice-error"><p>Request failed</p></div>');
+                },
+                complete: function() {
+                    $btn.prop('disabled', false).text(original);
                 }
-            })
-            .fail(function() {
-                $results.html('<div class="notice notice-error"><p>Request failed</p></div>');
-            })
-            .always(function() {
-                $btn.prop('disabled', false).text(original);
             });
         },
         
@@ -294,25 +329,30 @@ jQuery(document).ready(function($) {
                 industry: industry
             };
             
-            $.post(window.rtbcbAdmin.ajax_url, {
-                action: 'rtbcb_test_industry_overview',
-                company_data: JSON.stringify(companyData),
-                nonce: nonce
-            })
-            .done(function(response) {
-                if (response.success && response.data) {
-                    $results.html('<div class="notice notice-success"><p>' + 
-                        (response.data.overview || 'Generated successfully') + '</p></div>');
-                } else {
-                    $results.html('<div class="notice notice-error"><p>' + 
-                        (response.data && response.data.message ? response.data.message : 'Generation failed') + '</p></div>');
+            $.ajax({
+                url: window.rtbcbAdmin.ajax_url,
+                method: 'POST',
+                data: {
+                    action: 'rtbcb_test_industry_overview',
+                    company_data: JSON.stringify(companyData),
+                    nonce: nonce
+                },
+                async: false,
+                success: function(response) {
+                    if (response.success && response.data) {
+                        $results.html('<div class="notice notice-success"><p>' +
+                            (response.data.overview || 'Generated successfully') + '</p></div>');
+                    } else {
+                        $results.html('<div class="notice notice-error"><p>' +
+                            (response.data && response.data.message ? response.data.message : 'Generation failed') + '</p></div>');
+                    }
+                },
+                error: function() {
+                    $results.html('<div class="notice notice-error"><p>Request failed</p></div>');
+                },
+                complete: function() {
+                    $btn.prop('disabled', false).text(original);
                 }
-            })
-            .fail(function() {
-                $results.html('<div class="notice notice-error"><p>Request failed</p></div>');
-            })
-            .always(function() {
-                $btn.prop('disabled', false).text(original);
             });
         },
         
@@ -322,25 +362,30 @@ jQuery(document).ready(function($) {
             
             $results.text(window.rtbcbAdmin.strings.processing || 'Processing...');
             
-            $.post(window.rtbcbAdmin.ajax_url, {
-                action: 'rtbcb_test_estimated_benefits',
-                company_data: {
-                    revenue: $('#rtbcb-test-revenue').val(),
-                    staff_count: $('#rtbcb-test-staff-count').val(),
-                    efficiency: $('#rtbcb-test-efficiency').val()
+            $.ajax({
+                url: window.rtbcbAdmin.ajax_url,
+                method: 'POST',
+                data: {
+                    action: 'rtbcb_test_estimated_benefits',
+                    company_data: {
+                        revenue: $('#rtbcb-test-revenue').val(),
+                        staff_count: $('#rtbcb-test-staff-count').val(),
+                        efficiency: $('#rtbcb-test-efficiency').val()
+                    },
+                    recommended_category: $('#rtbcb-test-category').val(),
+                    nonce: window.rtbcbAdmin.benefits_estimate_nonce
                 },
-                recommended_category: $('#rtbcb-test-category').val(),
-                nonce: window.rtbcbAdmin.benefits_estimate_nonce
-            })
-            .done(function(response) {
-                if (response.success && response.data) {
-                    $results.text(JSON.stringify(response.data.estimate || response.data, null, 2));
-                } else {
-                    $results.text(response.data && response.data.message ? response.data.message : 'Generation failed');
+                async: false,
+                success: function(response) {
+                    if (response.success && response.data) {
+                        $results.text(JSON.stringify(response.data.estimate || response.data, null, 2));
+                    } else {
+                        $results.text(response.data && response.data.message ? response.data.message : 'Generation failed');
+                    }
+                },
+                error: function() {
+                    $results.text('Request failed');
                 }
-            })
-            .fail(function() {
-                $results.text('Request failed');
             });
         },
         
@@ -378,25 +423,30 @@ jQuery(document).ready(function($) {
                 var test = tests[currentTest];
                 $status.text('Testing ' + test.label + '...');
                 
-                $.post(window.rtbcbAdmin.ajax_url, {
-                    action: test.action,
-                    nonce: window.rtbcbAdmin.test_dashboard_nonce
-                })
-                .done(function(response) {
-                    results.push({
-                        label: test.label,
-                        status: response.success ? 'SUCCESS' : 'FAILED'
-                    });
-                })
-                .fail(function() {
-                    results.push({
-                        label: test.label,
-                        status: 'ERROR'
-                    });
-                })
-                .always(function() {
-                    currentTest++;
-                    runNext();
+                $.ajax({
+                    url: window.rtbcbAdmin.ajax_url,
+                    method: 'POST',
+                    data: {
+                        action: test.action,
+                        nonce: window.rtbcbAdmin.test_dashboard_nonce
+                    },
+                    async: false,
+                    success: function(response) {
+                        results.push({
+                            label: test.label,
+                            status: response.success ? 'SUCCESS' : 'FAILED'
+                        });
+                    },
+                    error: function() {
+                        results.push({
+                            label: test.label,
+                            status: 'ERROR'
+                        });
+                    },
+                    complete: function() {
+                        currentTest++;
+                        runNext();
+                    }
                 });
             }
             
@@ -413,30 +463,32 @@ jQuery(document).ready(function($) {
             
             var formData = new FormData(form);
             
-            fetch(window.rtbcbAdmin.ajax_url, {
+            $.ajax({
+                url: window.rtbcbAdmin.ajax_url,
                 method: 'POST',
-                body: formData
-            })
-            .then(function(response) {
-                return response.json();
-            })
-            .then(function(data) {
-                if (data.success) {
-                    var iframe = document.getElementById('rtbcb-report-iframe');
-                    if (iframe) {
-                        iframe.srcdoc = data.data.html || data.data.report_html;
+                data: formData,
+                processData: false,
+                contentType: false,
+                async: false,
+                dataType: 'json',
+                success: function(data) {
+                    if (data.success) {
+                        var iframe = document.getElementById('rtbcb-report-iframe');
+                        if (iframe) {
+                            iframe.srcdoc = data.data.html || data.data.report_html;
+                        }
+                        $('#rtbcb-report-preview-card').show();
+                        $('#rtbcb-download-pdf').show();
+                    } else {
+                        alert(data.data && data.data.message ? data.data.message : 'Report generation failed');
                     }
-                    $('#rtbcb-report-preview-card').show();
-                    $('#rtbcb-download-pdf').show();
-                } else {
-                    alert(data.data && data.data.message ? data.data.message : 'Report generation failed');
+                },
+                error: function() {
+                    alert('Report generation request failed');
+                },
+                complete: function() {
+                    $btn.text(original).prop('disabled', false);
                 }
-            })
-            .catch(function() {
-                alert('Report generation request failed');
-            })
-            .finally(function() {
-                $btn.text(original).prop('disabled', false);
             });
         },
         
@@ -447,25 +499,30 @@ jQuery(document).ready(function($) {
             
             $btn.text(window.rtbcbAdmin.strings.processing || 'Processing...').prop('disabled', true);
             
-            $.post(window.rtbcbAdmin.ajax_url, {
-                action: 'rtbcb_generate_sample_report',
-                nonce: window.rtbcbAdmin.report_preview_nonce
-            })
-            .done(function(response) {
-                if (response.success) {
-                    var iframe = document.getElementById('rtbcb-sample-report-frame');
-                    if (iframe) {
-                        iframe.srcdoc = response.data.report_html;
+            $.ajax({
+                url: window.rtbcbAdmin.ajax_url,
+                method: 'POST',
+                data: {
+                    action: 'rtbcb_generate_sample_report',
+                    nonce: window.rtbcbAdmin.report_preview_nonce
+                },
+                async: false,
+                success: function(response) {
+                    if (response.success) {
+                        var iframe = document.getElementById('rtbcb-sample-report-frame');
+                        if (iframe) {
+                            iframe.srcdoc = response.data.report_html;
+                        }
+                    } else {
+                        alert(response.data && response.data.message ? response.data.message : 'Sample report generation failed');
                     }
-                } else {
-                    alert(response.data && response.data.message ? response.data.message : 'Sample report generation failed');
+                },
+                error: function() {
+                    alert('Sample report generation request failed');
+                },
+                complete: function() {
+                    $btn.text(original).prop('disabled', false);
                 }
-            })
-            .fail(function() {
-                alert('Sample report generation request failed');
-            })
-            .always(function() {
-                $btn.text(original).prop('disabled', false);
             });
         },
         
@@ -509,21 +566,26 @@ jQuery(document).ready(function($) {
                     return;
                 }
                 
-                $.post(window.rtbcbAdmin.ajax_url, {
-                    action: 'rtbcb_bulk_action_leads',
-                    nonce: window.rtbcbAdmin.nonce,
-                    bulk_action: action,
-                    lead_ids: JSON.stringify(ids)
-                })
-                .done(function(response) {
-                    if (response.success) {
-                        location.reload();
-                    } else {
-                        alert(response.data && response.data.message ? response.data.message : 'Bulk action failed');
+                $.ajax({
+                    url: window.rtbcbAdmin.ajax_url,
+                    method: 'POST',
+                    data: {
+                        action: 'rtbcb_bulk_action_leads',
+                        nonce: window.rtbcbAdmin.nonce,
+                        bulk_action: action,
+                        lead_ids: JSON.stringify(ids)
+                    },
+                    async: false,
+                    success: function(response) {
+                        if (response.success) {
+                            location.reload();
+                        } else {
+                            alert(response.data && response.data.message ? response.data.message : 'Bulk action failed');
+                        }
+                    },
+                    error: function() {
+                        alert('Bulk action request failed');
                     }
-                })
-                .fail(function() {
-                    alert('Bulk action request failed');
                 });
             });
             
@@ -559,21 +621,26 @@ jQuery(document).ready(function($) {
                 var id = $(this).data('lead-id');
                 var $row = $(this).closest('tr');
                 
-                $.post(window.rtbcbAdmin.ajax_url, {
-                    action: 'rtbcb_delete_lead',
-                    nonce: window.rtbcbAdmin.nonce,
-                    lead_id: id
-                })
-                .done(function(response) {
-                    if (response.success) {
-                        $row.remove();
-                        self.updateBulkButton();
-                    } else {
-                        alert(response.data && response.data.message ? response.data.message : 'Delete failed');
+                $.ajax({
+                    url: window.rtbcbAdmin.ajax_url,
+                    method: 'POST',
+                    data: {
+                        action: 'rtbcb_delete_lead',
+                        nonce: window.rtbcbAdmin.nonce,
+                        lead_id: id
+                    },
+                    async: false,
+                    success: function(response) {
+                        if (response.success) {
+                            $row.remove();
+                            self.updateBulkButton();
+                        } else {
+                            alert(response.data && response.data.message ? response.data.message : 'Delete failed');
+                        }
+                    },
+                    error: function() {
+                        alert('Delete request failed');
                     }
-                })
-                .fail(function() {
-                    alert('Delete request failed');
                 });
             });
             
