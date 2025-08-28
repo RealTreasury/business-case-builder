@@ -801,19 +801,21 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
         new RTBCBLeadsManager();
       }
     },
-    bindReportPreview: async function bindReportPreview() {
+    bindReportPreview: function bindReportPreview() {
       document.addEventListener('DOMContentLoaded', function () {
         var form = document.getElementById('rtbcb-report-preview-form');
         if (!form) {
           return;
         }
-        form.addEventListener('submit', async function (e) {
-          await RTBCBAdmin.generateReportPreview(e);
+        form.addEventListener('submit', function (e) {
+          RTBCBAdmin.generateReportPreview(e).catch(function (err) {
+            console.error(err);
+          });
         });
         var downloadBtn = document.getElementById('rtbcb-download-pdf');
         if (downloadBtn) {
-          downloadBtn.addEventListener('click', async function (e) {
-            await RTBCBAdmin.downloadReportPDF(e);
+          downloadBtn.addEventListener('click', function (e) {
+            RTBCBAdmin.downloadReportPDF(e);
           });
         }
         var select = document.getElementById('rtbcb-sample-select');
@@ -825,12 +827,12 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
               target.value = JSON.stringify(rtbcbAdmin.sampleForms[key], null, 2);
             }
           };
-          select.addEventListener('change', async function () {
+          select.addEventListener('change', function () {
             injectSample();
           });
           var loadSample = document.getElementById('rtbcb-load-sample');
           if (loadSample) {
-            loadSample.addEventListener('click', async function () {
+            loadSample.addEventListener('click', function () {
               injectSample();
             });
           }
