@@ -68,31 +68,37 @@ function rtbcb_get_dashboard_sections() {
             'label'    => __( 'Company Overview', 'rtbcb' ),
             'option'   => 'rtbcb_current_company',
             'requires' => [],
+            'phase'    => 1,
         ],
         'rtbcb-test-treasury-tech-overview' => [
             'label'    => __( 'Treasury Tech Overview', 'rtbcb' ),
             'option'   => 'rtbcb_treasury_tech_overview',
             'requires' => [ 'rtbcb-test-company-overview' ],
+            'phase'    => 2,
         ],
         'rtbcb-test-industry-overview'      => [
             'label'    => __( 'Industry Overview', 'rtbcb' ),
             'option'   => 'rtbcb_industry_insights',
             'requires' => [ 'rtbcb-test-company-overview' ],
+            'phase'    => 2,
         ],
         'rtbcb-test-real-treasury-overview' => [
             'label'    => __( 'Real Treasury Overview', 'rtbcb' ),
             'option'   => 'rtbcb_real_treasury_overview',
             'requires' => [ 'rtbcb-test-company-overview' ],
+            'phase'    => 2,
         ],
         'rtbcb-test-recommended-category'   => [
             'label'    => __( 'Recommended Category', 'rtbcb' ),
             'option'   => 'rtbcb_recommended_category',
             'requires' => [ 'rtbcb-test-company-overview' ],
+            'phase'    => 3,
         ],
         'rtbcb-test-estimated-benefits'     => [
             'label'    => __( 'Estimated Benefits', 'rtbcb' ),
             'option'   => 'rtbcb_estimated_benefits',
             'requires' => [ 'rtbcb-test-company-overview' ],
+            'phase'    => 3,
         ],
     ];
 
@@ -121,7 +127,9 @@ function rtbcb_require_completed_steps( $current_section ) {
 
     foreach ( $sections[ $current_section ]['requires'] as $dependency ) {
         if ( empty( $sections[ $dependency ]['completed'] ) ) {
-            $url = admin_url( 'admin.php?page=rtbcb-test-dashboard#' . $dependency );
+            $phase  = isset( $sections[ $dependency ]['phase'] ) ? (int) $sections[ $dependency ]['phase'] : 0;
+            $anchor = $phase ? 'rtbcb-phase' . $phase : $dependency;
+            $url    = admin_url( 'admin.php?page=rtbcb-test-dashboard#' . $anchor );
             echo '<div class="notice notice-error"><p>' .
                 sprintf(
                     __( 'Please complete %s first.', 'rtbcb' ),
@@ -170,7 +178,7 @@ function rtbcb_get_last_test_result( $section_id, $test_results = null ) {
  * @return void
  */
 function rtbcb_render_start_new_analysis_button() {
-    $url = admin_url( 'admin.php?page=rtbcb-test-dashboard#rtbcb-test-company-overview' );
+    $url = admin_url( 'admin.php?page=rtbcb-test-dashboard#rtbcb-phase1' );
     echo '<p><a href="' . esc_url( $url ) . '" class="button">' .
         esc_html__( 'Start New Analysis', 'rtbcb' ) . '</a></p>';
 }

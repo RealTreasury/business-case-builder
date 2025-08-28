@@ -17,17 +17,42 @@ $company_name = isset( $company_data['name'] ) ? sanitize_text_field( $company_d
 
     <?php
     $sections = rtbcb_get_dashboard_sections();
+    $phases   = [
+        1 => __( 'Phase 1: Data Collection & Enrichment', 'rtbcb' ),
+        2 => __( 'Phase 2: Analysis & Content Generation', 'rtbcb' ),
+        3 => __( 'Phase 3: ROI & Strategic Recommendation', 'rtbcb' ),
+        4 => __( 'Phase 4: Report Assembly & Delivery', 'rtbcb' ),
+        5 => __( 'Phase 5: Post-Delivery Engagement', 'rtbcb' ),
+    ];
+    $sections_by_phase = [];
+    foreach ( $sections as $id => $section ) {
+        $phase = isset( $section['phase'] ) ? (int) $section['phase'] : 0;
+        if ( $phase ) {
+            $sections_by_phase[ $phase ][ $id ] = $section;
+        }
+    }
     ?>
     <div class="card">
         <h2 class="title"><?php esc_html_e( 'Analysis Progress', 'rtbcb' ); ?></h2>
         <ul>
-            <?php foreach ( $sections as $id => $section ) : ?>
-                <?php $done = ! empty( $section['completed'] ); ?>
-                <li class="<?php echo $done ? 'completed' : 'missing'; ?>">
-                    <a href="#<?php echo esc_attr( $id ); ?>">
-                        <?php echo esc_html( $section['label'] ); ?>
-                    </a>
-                    - <?php echo $done ? esc_html__( 'Complete', 'rtbcb' ) : esc_html__( 'Incomplete', 'rtbcb' ); ?>
+            <?php foreach ( $phases as $phase_num => $phase_label ) : ?>
+                <li>
+                    <strong><?php echo esc_html( $phase_label ); ?></strong>
+                    <?php if ( ! empty( $sections_by_phase[ $phase_num ] ) ) : ?>
+                        <ul>
+                            <?php foreach ( $sections_by_phase[ $phase_num ] as $id => $section ) : ?>
+                                <?php $done = ! empty( $section['completed'] ); ?>
+                                <li class="<?php echo $done ? 'completed' : 'missing'; ?>">
+                                    <a href="#rtbcb-phase<?php echo esc_attr( $phase_num ); ?>" class="rtbcb-jump-tab">
+                                        <?php echo esc_html( $section['label'] ); ?>
+                                    </a>
+                                    - <?php echo $done ? esc_html__( 'Complete', 'rtbcb' ) : esc_html__( 'Incomplete', 'rtbcb' ); ?>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php else : ?>
+                        - <?php esc_html_e( 'No tests yet.', 'rtbcb' ); ?>
+                    <?php endif; ?>
                 </li>
             <?php endforeach; ?>
         </ul>
@@ -53,43 +78,33 @@ $company_name = isset( $company_data['name'] ) ? sanitize_text_field( $company_d
     <?php include RTBCB_DIR . 'admin/partials/dashboard-connectivity.php'; ?>
 
     <h2 class="nav-tab-wrapper" id="rtbcb-test-tabs">
-        <a href="#rtbcb-test-company-overview" class="nav-tab nav-tab-active"><?php esc_html_e( 'Company Overview', 'rtbcb' ); ?></a>
-        <a href="#rtbcb-test-treasury-tech-overview" class="nav-tab"><?php esc_html_e( 'Treasury Tech', 'rtbcb' ); ?></a>
-        <a href="#rtbcb-test-industry-overview" class="nav-tab"><?php esc_html_e( 'Industry', 'rtbcb' ); ?></a>
-        <a href="#rtbcb-test-real-treasury-overview" class="nav-tab"><?php esc_html_e( 'Real Treasury', 'rtbcb' ); ?></a>
-        <a href="#rtbcb-test-recommended-category" class="nav-tab"><?php esc_html_e( 'Recommended Category', 'rtbcb' ); ?></a>
-        <a href="#rtbcb-test-estimated-benefits" class="nav-tab"><?php esc_html_e( 'Estimated Benefits', 'rtbcb' ); ?></a>
+        <a href="#rtbcb-phase1" class="nav-tab nav-tab-active"><?php echo esc_html( $phases[1] ); ?></a>
+        <a href="#rtbcb-phase2" class="nav-tab"><?php echo esc_html( $phases[2] ); ?></a>
+        <a href="#rtbcb-phase3" class="nav-tab"><?php echo esc_html( $phases[3] ); ?></a>
+        <a href="#rtbcb-phase4" class="nav-tab"><?php echo esc_html( $phases[4] ); ?></a>
+        <a href="#rtbcb-phase5" class="nav-tab"><?php echo esc_html( $phases[5] ); ?></a>
     </h2>
 
-    <div id="rtbcb-test-company-overview" class="rtbcb-tab-panel" style="display:block;">
+    <div id="rtbcb-phase1" class="rtbcb-tab-panel" style="display:block;">
         <?php include RTBCB_DIR . 'admin/partials/test-company-overview.php'; ?>
     </div>
-    <div id="rtbcb-test-treasury-tech-overview" class="rtbcb-tab-panel" style="display:none;">
+    <div id="rtbcb-phase2" class="rtbcb-tab-panel" style="display:none;">
         <?php include RTBCB_DIR . 'admin/partials/test-treasury-tech-overview.php'; ?>
-    </div>
-    <div id="rtbcb-test-industry-overview" class="rtbcb-tab-panel" style="display:none;">
         <?php include RTBCB_DIR . 'admin/partials/test-industry-overview.php'; ?>
-    </div>
-    <div id="rtbcb-test-real-treasury-overview" class="rtbcb-tab-panel" style="display:none;">
         <?php include RTBCB_DIR . 'admin/partials/test-real-treasury-overview.php'; ?>
     </div>
-    <div id="rtbcb-test-recommended-category" class="rtbcb-tab-panel" style="display:none;">
+    <div id="rtbcb-phase3" class="rtbcb-tab-panel" style="display:none;">
         <?php include RTBCB_DIR . 'admin/partials/test-recommended-category.php'; ?>
-    </div>
-    <div id="rtbcb-test-estimated-benefits" class="rtbcb-tab-panel" style="display:none;">
         <?php include RTBCB_DIR . 'admin/partials/test-estimated-benefits.php'; ?>
+    </div>
+    <div id="rtbcb-phase4" class="rtbcb-tab-panel" style="display:none;">
+        <?php include RTBCB_DIR . 'admin/partials/test-report-assembly.php'; ?>
+    </div>
+    <div id="rtbcb-phase5" class="rtbcb-tab-panel" style="display:none;">
+        <?php include RTBCB_DIR . 'admin/partials/test-post-delivery.php'; ?>
     </div>
 
     <script>
-    jQuery(function($){
-        $('#rtbcb-test-tabs a').on('click', function(e){
-            e.preventDefault();
-            var target = $(this).attr('href');
-            $('#rtbcb-test-tabs a').removeClass('nav-tab-active');
-            $(this).addClass('nav-tab-active');
-            $('.rtbcb-tab-panel').hide();
-            $(target).show();
-        });
-    });
+    // Tabs handled in admin/js/rtbcb-admin.js
     </script>
 </div>
