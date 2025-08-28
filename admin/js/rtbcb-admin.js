@@ -487,14 +487,19 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       var tableBody = $('#rtbcb-test-results-summary tbody');
       var originalText = button.text();
       var runTests = _async(function () {
-        var company = rtbcbAdmin.company || {};
+        var company = rtbcbAdmin.company = rtbcbAdmin.company || {};
+        var companyName = company.name || $('#rtbcb-company-name').val() || 'Sample Company';
+        company.name = companyName;
+        if (typeof rtbcb_set_test_company === 'function') {
+          rtbcb_set_test_company({ name: companyName });
+        }
         var tests = [{
           id: 'rtbcb-test-company-overview',
           label: 'Company Overview',
           action: 'rtbcb_test_company_overview',
           nonce: rtbcbAdmin.company_overview_nonce,
           data: {
-            company_name: company.name || 'Sample Company'
+            company_name: companyName
           }
         }, {
           id: 'rtbcb-test-treasury-tech-overview',
