@@ -658,14 +658,17 @@ class RTBCB_Admin {
                 'generated_at'    => current_time( 'mysql' ),
             ] );
 
-            wp_send_json_success( [
-                'overview'        => wp_kses_post( $analysis ),
-                'word_count'      => $word_count,
-                'elapsed'         => round( $elapsed_time, 2 ),
-                'generated'       => current_time( 'mysql' ),
-                'recommendations' => $recommendations,
-                'references'      => $references,
-            ] );
+            wp_send_json_success(
+                [
+                    'message'         => __( 'Company overview generated.', 'rtbcb' ),
+                    'overview'        => wp_kses_post( $analysis ),
+                    'word_count'      => $word_count,
+                    'elapsed'         => round( $elapsed_time, 2 ),
+                    'generated'       => current_time( 'mysql' ),
+                    'recommendations' => $recommendations,
+                    'references'      => $references,
+                ]
+            );
 
         } catch ( Exception $e ) {
             error_log( 'RTBCB Company Overview Error: ' . $e->getMessage() );
@@ -991,7 +994,12 @@ class RTBCB_Admin {
         update_option( 'rtbcb_company_data', [ 'name' => $company_name ] );
         delete_option( 'rtbcb_test_results' );
 
-        wp_send_json_success( [ 'message' => __( 'Company saved.', 'rtbcb' ) ] );
+        wp_send_json_success(
+            [
+                'message' => __( 'Company saved.', 'rtbcb' ),
+                'name'    => $company_name,
+            ]
+        );
     }
 
     /**
