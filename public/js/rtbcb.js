@@ -82,56 +82,63 @@ function handleSubmit(e) {
     var loggedData = typeof formData.entries === 'function' ? Object.fromEntries(formData.entries()) : {};
     console.log('RTBCB: Submitting form data:', loggedData);
 
-    return fetch(ajaxObj.ajax_url, {
-        method: 'POST',
-        body: formData,
-    })
-        .then(function(response) {
-            if (!response.ok) {
-                return response.text().then(function(errorText) {
-                    var errorMessage = 'Server responded with status ' + response.status + '.';
-                    try {
-                        var errorJson = JSON.parse(errorText);
-                        errorMessage = errorJson.data.message || errorMessage;
-                    } catch (jsonError) {
-                        console.error('Could not parse error response as JSON.', jsonError);
-                        errorMessage = errorText || errorMessage;
-                    }
-                    throw new Error(errorMessage);
-                });
-            }
-            return response.json();
-        })
-        .then(function(result) {
-            if (!result.success) {
-                throw new Error(result.data.message || 'An unknown error occurred.');
-            }
+    var xhr = new XMLHttpRequest();
+    try {
+        xhr.open('POST', ajaxObj.ajax_url, false); // Synchronous request
+        xhr.send(formData);
+    } catch (networkError) {
+        handleSubmissionError('Network error. Please try again later.');
+        return;
+    }
 
-            // On success, display the report
-            var reportContainer = document.getElementById('rtbcb-report-container');
-            if (progressContainer) progressContainer.style.display = 'none';
-            if (reportContainer) {
-                // Sanitize server-provided HTML before injecting to prevent XSS.
-                // Only allow expected markup needed for business case output.
-                var allowedTags = [
-                    'a', 'p', 'br', 'strong', 'em', 'ul', 'ol', 'li',
-                    'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span',
-                    'table', 'thead', 'tbody', 'tr', 'th', 'td'
-                ];
-                var allowedAttr = { a: [ 'href', 'title', 'target', 'rel' ], '*': [ 'style' ] };
-                var sanitized = typeof DOMPurify !== 'undefined'
-                    ? DOMPurify.sanitize(
-                        result.data.report_html,
-                        { ALLOWED_TAGS: allowedTags, ALLOWED_ATTR: allowedAttr }
-                    )
-                    : result.data.report_html;
-                reportContainer.innerHTML = sanitized;
-                reportContainer.style.display = 'block';
-            }
-        })
-        .catch(function(error) {
-            handleSubmissionError(error.message);
-        });
+    var responseText = xhr.responseText;
+    if (xhr.status !== 200) {
+        var errorMessage = 'Server responded with status ' + xhr.status + '.';
+        try {
+            var errorJson = JSON.parse(responseText);
+            errorMessage = errorJson.data && errorJson.data.message ? errorJson.data.message : errorMessage;
+        } catch (jsonError) {
+            console.error('Could not parse error response as JSON.', jsonError);
+            errorMessage = responseText || errorMessage;
+        }
+        handleSubmissionError(errorMessage);
+        return;
+    }
+
+    var result;
+    try {
+        result = JSON.parse(responseText);
+    } catch (parseError) {
+        handleSubmissionError('Invalid server response.');
+        return;
+    }
+
+    if (!result.success) {
+        handleSubmissionError(result.data && result.data.message ? result.data.message : 'An unknown error occurred.');
+        return;
+    }
+
+    // On success, display the report
+    var reportContainer = document.getElementById('rtbcb-report-container');
+    if (progressContainer) progressContainer.style.display = 'none';
+    if (reportContainer) {
+        // Sanitize server-provided HTML before injecting to prevent XSS.
+        // Only allow expected markup needed for business case output.
+        var allowedTags = [
+            'a', 'p', 'br', 'strong', 'em', 'ul', 'ol', 'li',
+            'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span',
+            'table', 'thead', 'tbody', 'tr', 'th', 'td'
+        ];
+        var allowedAttr = { a: [ 'href', 'title', 'target', 'rel' ], '*': [ 'style' ] };
+        var sanitized = typeof DOMPurify !== 'undefined'
+            ? DOMPurify.sanitize(
+                result.data.report_html,
+                { ALLOWED_TAGS: allowedTags, ALLOWED_ATTR: allowedAttr }
+            )
+            : result.data.report_html;
+        reportContainer.innerHTML = sanitized;
+        reportContainer.style.display = 'block';
+    }
 }
 
 // Ensure the form submission is handled by our new function

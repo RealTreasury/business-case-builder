@@ -70,4 +70,3 @@ builder.showError = (msg) => { errorMessage = msg; };
 builder.handleSubmit();
 assert.ok(errorMessage.includes('Bad narrative'));
 console.log('Error path test passed.');
-

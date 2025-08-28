@@ -71,3 +71,12 @@ builder.handleSubmit();
 assert.ok(errorMessage.includes('Server exploded'));
 console.log('Server error display test passed.');
 
+
+try {
+    handleSubmit({ preventDefault() {}, target: {} });
+    assert.ok(progressContainer.innerHTML.includes('Server exploded'));
+    console.log('Server error display test passed.');
+} catch (error) {
+    console.error(error);
+    process.exit(1);
+}

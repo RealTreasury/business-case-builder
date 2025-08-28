@@ -70,4 +70,3 @@ builder.showError = () => {};
 builder.handleSubmit();
 assert.strictEqual(resultsData.report_html, '<div>Report</div>');
 console.log('Success path test passed.');
-
