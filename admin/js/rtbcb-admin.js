@@ -338,15 +338,27 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
           throw new Error('Server responded ' + response.status);
         }
         return response.json();
-      }).then(function (data) {
-        if (data.success) {
-          var text = data.data && data.data.overview ? data.data.overview : '';
-          results.html(RTBCBAdmin.utils.buildResult(text, start, form, data.data));
-        } else {
-          var message = data.data && data.data.message ? data.data.message : rtbcbAdmin.strings.error;
-          results.html('<div class="notice notice-error"><p>' + message + '</p></div>');
-        }
-      })["catch"](function (err) {
+        }).then(function (data) {
+          if (data.success) {
+            var text = data.data && data.data.overview ? data.data.overview : '';
+            results.html(RTBCBAdmin.utils.buildResult(text, start, form, data.data));
+            if (data.data) {
+              rtbcbAdmin.company = rtbcbAdmin.company || {};
+              if (data.data.focus_areas) {
+                rtbcbAdmin.company.focus_areas = data.data.focus_areas;
+              }
+              if (data.data.industry) {
+                rtbcbAdmin.company.industry = data.data.industry;
+              }
+              if (data.data.size) {
+                rtbcbAdmin.company.size = data.data.size;
+              }
+            }
+          } else {
+            var message = data.data && data.data.message ? data.data.message : rtbcbAdmin.strings.error;
+            results.html('<div class="notice notice-error"><p>' + message + '</p></div>');
+          }
+        })["catch"](function (err) {
         results.html('<div class="notice notice-error"><p>' + rtbcbAdmin.strings.error + ' ' + err.message + '</p></div>');
       }).then(function () {
         RTBCBAdmin.utils.clearLoading(submitBtn, original);
@@ -529,22 +541,22 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
           label: 'Treasury Tech Overview',
           action: 'rtbcb_test_treasury_tech_overview',
           nonce: rtbcbAdmin.treasury_tech_overview_nonce,
-          data: {
-            focus_areas: company.focus_areas || ['automation'],
-            complexity: company.complexity || 'basic'
-          }
-        }, {
-          id: 'rtbcb-test-industry-overview',
-          label: 'Industry Overview',
-          action: 'rtbcb_test_industry_overview',
-          nonce: rtbcbAdmin.industry_overview_nonce,
-          data: {
-            company_data: JSON.stringify({
-              industry: company.industry || 'Finance',
-              size: company.size || '100-500'
-            })
-          }
-        }, {
+            data: {
+              focus_areas: company.focus_areas || [],
+              complexity: company.complexity || 'basic'
+            }
+          }, {
+            id: 'rtbcb-test-industry-overview',
+            label: 'Industry Overview',
+            action: 'rtbcb_test_industry_overview',
+            nonce: rtbcbAdmin.industry_overview_nonce,
+            data: {
+              company_data: JSON.stringify({
+                industry: company.industry || '',
+                size: company.size || ''
+              })
+            }
+          }, {
           id: 'rtbcb-test-real-treasury-overview',
           label: 'Real Treasury Overview',
           action: 'rtbcb_test_real_treasury_overview',
@@ -584,18 +596,30 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
             if (test.id === 'rtbcb-test-estimated-benefits') {
               payload.recommended_category = rtbcbAdmin.company && rtbcbAdmin.company.recommended_category ? rtbcbAdmin.company.recommended_category : payload.recommended_category;
             }
-            return _await($.post(rtbcbAdmin.ajax_url, payload), function (response) {
-              if (response.success && test.id === 'rtbcb-test-recommended-category' && response.data && response.data.recommended) {
-                rtbcbAdmin.company = rtbcbAdmin.company || {};
-                rtbcbAdmin.company.recommended_category = response.data.recommended.key || response.data.recommended;
-              }
-              var message = response && response.data && response.data.message ? response.data.message : 'Unknown error';
-              results.push({
-                section: test.id,
-                status: response.success ? 'success' : 'error',
-                message: message
+              return _await($.post(rtbcbAdmin.ajax_url, payload), function (response) {
+                if (response.success && test.id === 'rtbcb-test-company-overview' && response.data) {
+                  rtbcbAdmin.company = rtbcbAdmin.company || {};
+                  if (response.data.focus_areas) {
+                    rtbcbAdmin.company.focus_areas = response.data.focus_areas;
+                  }
+                  if (response.data.industry) {
+                    rtbcbAdmin.company.industry = response.data.industry;
+                  }
+                  if (response.data.size) {
+                    rtbcbAdmin.company.size = response.data.size;
+                  }
+                }
+                if (response.success && test.id === 'rtbcb-test-recommended-category' && response.data && response.data.recommended) {
+                  rtbcbAdmin.company = rtbcbAdmin.company || {};
+                  rtbcbAdmin.company.recommended_category = response.data.recommended.key || response.data.recommended;
+                }
+                var message = response && response.data && response.data.message ? response.data.message : 'Unknown error';
+                results.push({
+                  section: test.id,
+                  status: response.success ? 'success' : 'error',
+                  message: message
+                });
               });
-            });
           }, function (err) {
             results.push({
               section: test.id,
