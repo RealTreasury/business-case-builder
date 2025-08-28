@@ -25,6 +25,11 @@
                 success: function(response) {
                     if (response.success) {
                         const rec = response.data;
+                        if (window.rtbcbAdmin) {
+                            rtbcbAdmin.company = rtbcbAdmin.company || {};
+                            rtbcbAdmin.company.recommended_category = rec.recommended.key || rec.recommended;
+                            $('#rtbcb-test-category').val(rtbcbAdmin.company.recommended_category);
+                        }
                         let html = '<h2>' + $('<div/>').text(rec.recommended.name || rec.recommended.key).html() + '</h2>';
                         if (rec.reasoning) {
                             html += '<p><strong>Reasoning:</strong> ' + $('<div/>').text(rec.reasoning).html() + '</p>';

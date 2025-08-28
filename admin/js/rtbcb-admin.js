@@ -402,7 +402,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
           staff_count: $('#rtbcb-test-staff-count').val(),
           efficiency: $('#rtbcb-test-efficiency').val()
         },
-        recommended_category: $('#rtbcb-test-category').val(),
+        recommended_category: rtbcbAdmin.company && rtbcbAdmin.company.recommended_category ? rtbcbAdmin.company.recommended_category : $('#rtbcb-test-category').val(),
         nonce: rtbcbAdmin.benefits_estimate_nonce
       };
       $.post(rtbcbAdmin.ajax_url, data).done(function (response) {
@@ -558,7 +558,14 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
               action: test.action,
               nonce: test.nonce
             }, test.data || {});
+            if (test.id === 'rtbcb-test-estimated-benefits') {
+              payload.recommended_category = rtbcbAdmin.company && rtbcbAdmin.company.recommended_category ? rtbcbAdmin.company.recommended_category : payload.recommended_category;
+            }
             return _await($.post(rtbcbAdmin.ajax_url, payload), function (response) {
+              if (response.success && test.id === 'rtbcb-test-recommended-category' && response.data && response.data.recommended) {
+                rtbcbAdmin.company = rtbcbAdmin.company || {};
+                rtbcbAdmin.company.recommended_category = response.data.recommended.key || response.data.recommended;
+              }
               var message = response && response.data && response.data.message ? response.data.message : '';
               results.push({
                 section: test.id,
