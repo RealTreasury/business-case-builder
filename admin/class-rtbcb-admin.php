@@ -736,6 +736,8 @@ class RTBCB_Admin {
             wp_send_json_error( [ 'message' => __( 'Please select at least one focus area.', 'rtbcb' ) ] );
         }
 
+        update_option( 'rtbcb_current_company', $company_data );
+
         $start    = microtime( true );
         $overview = rtbcb_test_generate_treasury_tech_overview( $company_data );
         $elapsed  = round( microtime( true ) - $start, 2 );
