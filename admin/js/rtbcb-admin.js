@@ -492,15 +492,21 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       form.on('submit', RTBCBAdmin.runBenefitsEstimateTest);
     },
     bindTestDashboard: function bindTestDashboard() {
-        if (!rtbcbAdmin || rtbcbAdmin.page !== 'rtbcb-test-dashboard') { return; }
-        const button = $('#rtbcb-test-all-sections');
-        if (!button.length) { return; }
-        const status = $('#rtbcb-test-status');
-        const tableBody = $('#rtbcb-test-results-summary tbody');
-        const originalText = button.text();
+        if (!rtbcbAdmin || rtbcbAdmin.page !== 'rtbcb-test-dashboard') {
+            return;
+        }
 
-        async function runTests() {
-            const tests = [
+        var button = $('#rtbcb-test-all-sections');
+        if (!button.length) {
+            return;
+        }
+
+        var status = $('#rtbcb-test-status');
+        var tableBody = $('#rtbcb-test-results-summary tbody');
+        var originalText = button.text();
+
+        function runTests() {
+            var tests = [
                 {
                     action: 'rtbcb_test_company_overview',
                     nonce: rtbcbAdmin.company_overview_nonce,
@@ -518,50 +524,61 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
                 }
             ];
 
-            const results = [];
-            for (const test of tests) {
-                status.text('Testing ' + test.label + '...');
-                try {
-                    const response = await $.post(rtbcbAdmin.ajax_url, {
-                        action: test.action,
-                        nonce: test.nonce
+            var results = [];
+            var currentTest = 0;
+
+            function runNextTest() {
+                if (currentTest >= tests.length) {
+                    // All tests completed, save results
+                    status.text('Saving results...');
+
+                    $.post(rtbcbAdmin.ajax_url, {
+                        action: 'rtbcb_save_test_results',
+                        nonce: rtbcbAdmin.test_dashboard_nonce,
+                        results: JSON.stringify(results)
+                    }).always(function () {
+                        // Update UI with results
+                        tableBody.empty();
+                        for (var i = 0; i < results.length; i++) {
+                            var item = results[i];
+                            var row = '<tr><td>' + item.section + '</td><td>' + item.status + '</td><td>' + item.message + '</td><td>' + new Date().toLocaleString() + '</td></tr>';
+                            tableBody.append(row);
+                        }
+                        status.text('');
+                        button.prop('disabled', false).text(originalText);
                     });
-                    const message = response && response.data && response.data.message ? response.data.message : '';
+                    return;
+                }
+
+                var test = tests[currentTest];
+                status.text('Testing ' + test.label + '...');
+
+                $.post(rtbcbAdmin.ajax_url, {
+                    action: test.action,
+                    nonce: test.nonce
+                }).done(function (response) {
+                    var message = response && response.data && response.data.message ? response.data.message : '';
                     results.push({
                         section: test.label,
                         status: response.success ? 'success' : 'error',
-                        message
+                        message: message
                     });
-                } catch (err) {
+                }).fail(function (err) {
                     results.push({
                         section: test.label,
                         status: 'error',
-                        message: err.message
+                        message: err.message || 'Request failed'
                     });
-                }
-            }
-
-            status.text('Saving results...');
-            try {
-                await $.post(rtbcbAdmin.ajax_url, {
-                    action: 'rtbcb_save_test_results',
-                    nonce: rtbcbAdmin.test_dashboard_nonce,
-                    results: JSON.stringify(results)
+                }).always(function () {
+                    currentTest++;
+                    runNextTest();
                 });
-            } catch (err) {
-                // Ignore save errors; proceed to update UI.
             }
 
-            tableBody.empty();
-            results.forEach(function(item) {
-                const row = '<tr><td>' + item.section + '</td><td>' + item.status + '</td><td>' + item.message + '</td><td>' + new Date().toLocaleString() + '</td></tr>';
-                tableBody.append(row);
-            });
-            status.text('');
-            button.prop('disabled', false).text(originalText);
+            runNextTest();
         }
 
-        button.on('click', function() {
+        button.on('click', function () {
             button.prop('disabled', true).text(rtbcbAdmin.strings.testing);
             runTests();
         });
