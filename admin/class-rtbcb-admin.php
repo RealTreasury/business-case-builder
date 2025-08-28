@@ -763,11 +763,26 @@ class RTBCB_Admin {
     public function ajax_test_rag_market_analysis() {
         check_ajax_referer( 'rtbcb_test_rag_market_analysis', 'nonce' );
 
-        $query = isset( $_POST['query'] ) ? sanitize_text_field( wp_unslash( $_POST['query'] ) ) : '';
-        if ( empty( $query ) ) {
-            wp_send_json_error( [ 'message' => __( 'Query required.', 'rtbcb' ) ] );
+        $company = rtbcb_get_current_company();
+        $terms   = [];
+
+        if ( ! empty( $company['industry'] ) ) {
+            $terms[] = sanitize_text_field( $company['industry'] );
         }
 
+        if ( ! empty( $company['focus_areas'] ) && is_array( $company['focus_areas'] ) ) {
+            $terms = array_merge( $terms, array_map( 'sanitize_text_field', $company['focus_areas'] ) );
+        }
+
+        if ( empty( $terms ) && ! empty( $company['summary'] ) ) {
+            $terms[] = sanitize_text_field( wp_trim_words( $company['summary'], 5, '' ) );
+        }
+
+        if ( empty( $terms ) ) {
+            wp_send_json_error( [ 'message' => __( 'Company data required for query.', 'rtbcb' ) ] );
+        }
+
+        $query   = sanitize_text_field( implode( ' ', $terms ) );
         $vendors = rtbcb_test_rag_market_analysis( $query );
         if ( is_wp_error( $vendors ) ) {
             wp_send_json_error( [ 'message' => $vendors->get_error_message() ] );
