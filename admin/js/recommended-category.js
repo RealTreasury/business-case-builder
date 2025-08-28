@@ -5,11 +5,12 @@
         const $generateBtn = $('#rtbcb-generate-category-recommendation');
         const $resultsDiv = $('#rtbcb-category-recommendation-results');
         const $card = $('#rtbcb-category-recommendation-card');
+        const api = window.rtbcbAdmin || window.rtbcb_ajax;
 
         function sendRequest() {
             const data = {
                 action: 'rtbcb_generate_category_recommendation',
-                nonce: rtbcb_ajax.nonce,
+                nonce: window.rtbcbAdmin ? rtbcbAdmin.category_recommendation_nonce : api.nonce,
                 extra_requirements: $('#rtbcb-extra-requirements').val()
             };
 
@@ -18,7 +19,7 @@
             $resultsDiv.html('<p>Generating recommendation...</p>');
 
             $.ajax({
-                url: rtbcb_ajax.ajax_url,
+                url: api.ajax_url,
                 type: 'POST',
                 data: data,
                 success: function(response) {
