@@ -22,23 +22,29 @@ global.ajaxObj = { ajax_url: 'test-url' };
 
 global.DOMPurify = { sanitize: (html) => html };
 
-global.fetch = () => Promise.resolve({
-    ok: true,
-    json: () => Promise.resolve({ success: false, data: { message: 'Bad narrative' } }),
-    text: () => Promise.resolve('')
-});
+
+global.XMLHttpRequest = function() {
+    this.open = function(method, url, async) {
+        this.method = method;
+        this.url = url;
+        this.async = async;
+    };
+    this.send = function() {
+        this.status = 200;
+        this.responseText = JSON.stringify({ success: false, data: { message: 'Bad narrative' } });
+    };
+};
 
 global.FormData = class { constructor() {} };
 
 const code = fs.readFileSync('public/js/rtbcb.js', 'utf8');
 vm.runInThisContext(code);
 
-handleSubmit({ preventDefault() {}, target: {} })
-    .then(() => {
-        assert.ok(progressContainer.innerHTML.includes('Bad narrative'));
-        console.log('Error path test passed.');
-    })
-    .catch((error) => {
-        console.error(error);
-        process.exit(1);
-    });
+try {
+    handleSubmit({ preventDefault() {}, target: {} });
+    assert.ok(progressContainer.innerHTML.includes('Bad narrative'));
+    console.log('Error path test passed.');
+} catch (error) {
+    console.error(error);
+    process.exit(1);
+}
