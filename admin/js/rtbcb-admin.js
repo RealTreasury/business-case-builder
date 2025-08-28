@@ -486,9 +486,22 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       var status = $('#rtbcb-test-status');
       var tableBody = $('#rtbcb-test-results-summary tbody');
       var originalText = button.text();
+      var nameInput = $('#rtbcb-company-name');
+      var toggleButtonState = function toggleButtonState() {};
+      if (nameInput.length) {
+        toggleButtonState = function toggleButtonState() {
+          button.prop('disabled', !nameInput.val().trim());
+        };
+        toggleButtonState();
+        nameInput.on('input', toggleButtonState);
+      }
       var runTests = _async(function () {
+        var companyName = $('#rtbcb-company-name').val().trim();
+        if (!companyName) {
+          alert(rtbcbAdmin.strings.company_required);
+          return _await();
+        }
         var company = rtbcbAdmin.company = rtbcbAdmin.company || {};
-        var companyName = company.name || $('#rtbcb-company-name').val() || 'Sample Company';
         company.name = companyName;
         if (typeof rtbcb_set_test_company === 'function') {
           rtbcb_set_test_company({ name: companyName });
@@ -608,7 +621,8 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
           alert("".concat(rtbcbAdmin.strings.error, " ").concat(err.message));
         }).finally(function () {
           status.text('');
-          button.prop('disabled', false).text(originalText);
+          button.text(originalText);
+          toggleButtonState();
         });
       });
     },
