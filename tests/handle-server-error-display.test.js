@@ -2,43 +2,48 @@ const fs = require('fs');
 const vm = require('vm');
 const assert = require('assert');
 
-const progressContainer = { innerHTML: '', style: {} };
-const formContainer = { style: {} };
-const reportContainer = { innerHTML: '', style: {} };
+const form = { fields: {} };
 
+global.window = {};
 global.document = {
-    readyState: 'complete',
     addEventListener: () => {},
-    getElementById: (id) => {
-        if (id === 'rtbcb-progress-container') return progressContainer;
-        if (id === 'rtbcb-form-container') return formContainer;
-        if (id === 'rtbcb-report-container') return reportContainer;
-        if (id === 'rtbcb-form') return {};
-        return null;
-    }
+    getElementById: (id) => (id === 'rtbcbForm' ? form : null),
+    body: { style: {} }
 };
 
 global.ajaxObj = { ajax_url: 'test-url' };
 
-global.DOMPurify = { sanitize: (html) => html };
+global.FormData = class {
+    constructor(form) {
+        this.store = form && form.fields ? { ...form.fields } : {};
+    }
+    append(key, value) { this.store[key] = value; }
+    entries() { return Object.entries(this.store); }
+    [Symbol.iterator]() { return this.entries()[Symbol.iterator](); }
+};
 
-global.fetch = () => Promise.resolve({
-    ok: false,
-    status: 500,
-    text: () => Promise.resolve(JSON.stringify({ success: false, data: { message: 'Server exploded' } }))
-});
+class MockXHR {
+    open() {}
+    send() {
+        this.status = 500;
+        this.responseText = JSON.stringify({ success: false, data: { message: 'Server exploded' } });
+    }
+}
+global.XMLHttpRequest = MockXHR;
 
-global.FormData = class { constructor() {} };
-
-const code = fs.readFileSync('public/js/rtbcb.js', 'utf8');
+const code = fs.readFileSync('public/js/rtbcb-wizard.js', 'utf8');
 vm.runInThisContext(code);
 
-handleSubmit({ preventDefault() {}, target: {} })
-    .then(() => {
-        assert.ok(progressContainer.innerHTML.includes('Server exploded'));
-        console.log('Server error display test passed.');
-    })
-    .catch((error) => {
-        console.error(error);
-        process.exit(1);
-    });
+BusinessCaseBuilder.prototype.init = function() {};
+const builder = new BusinessCaseBuilder();
+builder.form = form;
+builder.showProgress = () => {};
+
+let errorMessage = null;
+builder.showResults = () => {};
+builder.showError = (msg) => { errorMessage = msg; };
+
+builder.handleSubmit();
+assert.ok(errorMessage.includes('Server exploded'));
+console.log('Server error display test passed.');
+

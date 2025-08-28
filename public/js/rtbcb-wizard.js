@@ -10,7 +10,7 @@ window.openBusinessCaseModal = function() {
         overlay.classList.add('active');
         document.body.style.overflow = 'hidden';
 
-        // Force re-initialization without blocking rendering
+        // Force re-initialization immediately
         const initBuilder = () => {
             if (window.businessCaseBuilder) {
                 window.businessCaseBuilder.reinitialize();
@@ -19,11 +19,7 @@ window.openBusinessCaseModal = function() {
             }
         };
 
-        if (window.requestAnimationFrame) {
-            window.requestAnimationFrame(initBuilder);
-        } else {
-            setTimeout(initBuilder, 0);
-        }
+        initBuilder();
     }
 };
 
@@ -105,10 +101,12 @@ class BusinessCaseBuilder {
         this.form.addEventListener('submit', (e) => {
             e.preventDefault();
             if (this.validateStep(this.totalSteps)) {
-                this.handleSubmit().catch((error) => {
+                try {
+                    this.handleSubmit();
+                } catch (error) {
                     console.error('RTBCB: handleSubmit error:', error);
                     this.showError('An unexpected error occurred. Please try again.');
-                });
+                }
             }
         });
 
@@ -304,14 +302,6 @@ class BusinessCaseBuilder {
                 messageDiv.textContent = message;
                 messageDiv.style.display = 'block';
                 messageDiv.style.color = '#ef4444';
-
-                if (this.messageHideTimeout) {
-                    clearTimeout(this.messageHideTimeout);
-                }
-
-                this.messageHideTimeout = setTimeout(() => {
-                    messageDiv.style.display = 'none';
-                }, 5000);
             }
         }
     }
@@ -392,7 +382,7 @@ class BusinessCaseBuilder {
         this.showProgress();
         if (typeof ajaxObj === 'undefined' || !ajaxObj.ajax_url) {
             this.showError('Unable to submit form. Please refresh the page and try again.');
-            return Promise.resolve();
+            return;
         }
 
         const formData = new FormData();
@@ -411,59 +401,49 @@ class BusinessCaseBuilder {
 
         console.log('RTBCB: Submitting form data:', Object.fromEntries(formData));
 
-        const self = this;
-        return fetch(ajaxObj.ajax_url, {
-            method: 'POST',
-            body: formData
-        })
-            .then(function(response) {
-                console.log('RTBCB: Response status:', response.status);
-                console.log('RTBCB: Response headers:', response.headers ? Object.fromEntries(response.headers) : {});
+        try {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', ajaxObj.ajax_url, false);
+            xhr.send(formData);
 
-                if (!response.ok) {
-                    return response.text().then(function(errorText) {
-                        console.error('RTBCB: Server error response:', errorText);
+            console.log('RTBCB: Response status:', xhr.status);
 
-                        var errorMessage = 'Server responded with status ' + response.status;
-                        try {
-                            var errorJson = JSON.parse(errorText);
-                            errorMessage = errorJson.data?.message || errorMessage;
-                        } catch (parseError) {
-                            console.error('RTBCB: Could not parse error response as JSON:', parseError);
-                        }
-
-                        throw new Error(errorMessage);
-                    });
+            if (xhr.status >= 200 && xhr.status < 300) {
+                let result;
+                try {
+                    result = JSON.parse(xhr.responseText);
+                } catch (parseError) {
+                    console.error('RTBCB: Could not parse response as JSON:', parseError);
+                    this.showError('Invalid server response.');
+                    return;
                 }
-
-                return response.json();
-            })
-            .then(function(result) {
-                console.log('RTBCB: Parsed response:', result);
 
                 if (result.success) {
                     console.log('RTBCB: Business case generated successfully');
-                    self.showResults(result.data);
+                    this.showResults(result.data);
                 } else {
-                    var errorMessage = result.data?.message || 'Failed to generate business case';
+                    const errorMessage = result.data?.message || 'Failed to generate business case';
                     console.error('RTBCB: Business case generation failed:', errorMessage);
-                    throw new Error(errorMessage);
+                    this.showError(errorMessage);
                 }
-            })
-            .catch(function(error) {
-                console.error('RTBCB: Submission error details:', {
-                    message: error.message,
-                    stack: error.stack,
-                    type: error.constructor.name
-                });
-
-                var displayMessage = error.name === 'TypeError'
-                    ? 'Network error. Please check your connection and try again.'
-                    : error.message;
-
-                self.showError(displayMessage);
-                throw error;
+            } else {
+                let errorMessage = 'Server responded with status ' + xhr.status;
+                try {
+                    const errorJson = JSON.parse(xhr.responseText);
+                    errorMessage = errorJson.data?.message || errorMessage;
+                } catch (parseError) {
+                    console.error('RTBCB: Could not parse error response as JSON:', parseError);
+                }
+                this.showError(errorMessage);
+            }
+        } catch (error) {
+            console.error('RTBCB: Submission error details:', {
+                message: error.message,
+                stack: error.stack,
+                type: error.constructor.name
             });
+            this.showError('Network error. Please check your connection and try again.');
+        }
     }
 
     showProgress() {
@@ -491,42 +471,21 @@ class BusinessCaseBuilder {
             modalBody.insertAdjacentHTML('beforeend', progressHTML);
         }
 
-        // Animate progress steps
+        // Update progress text
         this.animateProgressSteps();
     }
 
     animateProgressSteps() {
         const companyName = this.form.querySelector('[name="company_name"]')?.value || 'your company';
-
-        const steps = [
-            `Analyzing ${companyName}'s treasury operations...`,
-            `Calculating ROI projections for ${companyName}...`,
-            `Generating personalized recommendations...`,
-            `Preparing ${companyName}'s business case report...`
-        ];
-
-        let currentStep = 0;
         const stepElement = document.querySelector('.rtbcb-progress-step-text');
 
         if (stepElement) {
-            this.progressInterval = setInterval(() => {
-                currentStep = (currentStep + 1) % steps.length;
-                stepElement.textContent = steps[currentStep];
-                stepElement.parentElement.classList.add('rtbcb-progress-step-animation');
-
-                setTimeout(() => {
-                    stepElement.parentElement.classList.remove('rtbcb-progress-step-animation');
-                }, 500);
-            }, 2500); // Increased interval for longer messages
+            stepElement.textContent = `Preparing ${companyName}'s business case report...`;
+            stepElement.parentElement.classList.add('rtbcb-progress-step-animation');
         }
     }
 
     showResults(data) {
-        // Clear progress interval
-        if (this.progressInterval) {
-            clearInterval(this.progressInterval);
-        }
-
         // Close modal
         window.closeBusinessCaseModal();
 
