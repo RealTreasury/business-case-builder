@@ -127,6 +127,7 @@ class RTBCB_Admin {
                 'retry'               => __( 'Retry', 'rtbcb' ),
                 'view'                => __( 'View', 'rtbcb' ),
                 'rerun'               => __( 'Re-run', 'rtbcb' ),
+                'company_required'    => __( 'Company name is required.', 'rtbcb' ),
             ],
         ] );
 
