@@ -164,7 +164,6 @@ Add the shortcode to any page or post:
 ├── inc
 │  ├── AGENTS.md
 │  ├── class-rtbcb-api-tester.php
-│  ├── class-rtbcb-async-jobs.php
 │  ├── class-rtbcb-calculator.php
 │  ├── class-rtbcb-category-recommender.php
 │  ├── class-rtbcb-db.php

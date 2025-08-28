@@ -267,7 +267,7 @@ Ensure the report is:
 `;
 }
 
-async function generateProfessionalReport(businessContext) {
+function generateProfessionalReport(businessContext) {
     const cfg = {
         ...RTBCB_GPT5_DEFAULTS,
         ...(typeof rtbcbReport !== 'undefined' ? rtbcbReport : {})
@@ -299,54 +299,62 @@ async function generateProfessionalReport(businessContext) {
     const maxAttempts = cfg.max_retries || 3;
     const baseDelay = 500;
     let lastError;
+    let attempt = 1;
 
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-        try {
-            const formData = new FormData();
-            formData.append('action', 'rtbcb_openai_responses');
-            formData.append('body', JSON.stringify(requestBody));
+    function attemptRequest() {
+        const formData = new FormData();
+        formData.append('action', 'rtbcb_openai_responses');
+        formData.append('body', JSON.stringify(requestBody));
 
-            const response = await fetch(rtbcbReport.ajax_url, {
-                method: 'POST',
-                body: formData
-            });
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                if (rtbcbReport?.debug) {
-                    console.error(`Attempt ${attempt} failed:`, errorText);
-                    console.error('RTBCB request body:', requestBody);
+        return fetch(rtbcbReport.ajax_url, {
+            method: 'POST',
+            body: formData
+        })
+            .then(function(response) {
+                if (!response.ok) {
+                    return response.text().then(function(errorText) {
+                        if (rtbcbReport && rtbcbReport.debug) {
+                            console.error('Attempt ' + attempt + ' failed:', errorText);
+                            console.error('RTBCB request body:', requestBody);
+                        }
+                        throw new Error('HTTP ' + response.status);
+                    });
                 }
-                throw new Error(`HTTP ${response.status}`);
-            }
-
-            const data = await response.json();
-
-            if (data.error) {
-                console.error(`Attempt ${attempt} API error details:`, data.error);
-                const errorMessage = data.error.message || 'Responses API error';
-                throw new Error(errorMessage);
-            }
-
-            const htmlContent = data.output_text;
-            const cleanedHTML = htmlContent
-                .replace(/```html\n?/g, '')
-                .replace(/```\n?/g, '')
-                .trim();
-
-            return cleanedHTML;
-        } catch (error) {
-            console.error(`Error generating report (attempt ${attempt}):`, error);
-            lastError = error;
-            if (attempt < maxAttempts) {
-                const delay = baseDelay * (2 ** (attempt - 1));
-                await new Promise((resolve) => setTimeout(resolve, delay));
-            }
-        }
+                return response.json();
+            })
+            .then(function(data) {
+                if (data.error) {
+                    console.error('Attempt ' + attempt + ' API error details:', data.error);
+                    const errorMessage = data.error.message || 'Responses API error';
+                    throw new Error(errorMessage);
+                }
+                const htmlContent = data.output_text;
+                const cleanedHTML = htmlContent
+                    .replace(/```html\n?/g, '')
+                    .replace(/```\n?/g, '')
+                    .trim();
+                return cleanedHTML;
+            })
+            .catch(function(error) {
+                console.error('Error generating report (attempt ' + attempt + '):', error);
+                lastError = error;
+                if (attempt < maxAttempts) {
+                    const delay = baseDelay * Math.pow(2, attempt - 1);
+                    return new Promise(function(resolve) {
+                        setTimeout(resolve, delay);
+                    }).then(function() {
+                        attempt++;
+                        return attemptRequest();
+                    });
+                }
+                throw error;
+            });
     }
 
-    console.error('All attempts to generate report failed:', lastError);
-    throw new Error('Unable to generate report at this time. Please try again later.');
+    return attemptRequest().catch(function() {
+        console.error('All attempts to generate report failed:', lastError);
+        throw new Error('Unable to generate report at this time. Please try again later.');
+    });
 }
 
 function sanitizeReportHTML(htmlContent) {
@@ -389,35 +397,35 @@ function exportToPDF(htmlContent) {
     }
 }
 
-async function generateAndDisplayReport(businessContext) {
+function generateAndDisplayReport(businessContext) {
     const loadingElement = document.getElementById('loading');
     const errorElement = document.getElementById('error');
     const reportContainer = document.getElementById('report-container');
 
-    try {
-        loadingElement.style.display = 'block';
-        errorElement.style.display = 'none';
-        reportContainer.innerHTML = '';
+    loadingElement.style.display = 'block';
+    errorElement.style.display = 'none';
+    reportContainer.innerHTML = '';
 
-        const htmlReport = await generateProfessionalReport(businessContext);
+    return generateProfessionalReport(businessContext)
+        .then(function(htmlReport) {
+            if (!htmlReport.includes('<!DOCTYPE html>')) {
+                throw new Error('Invalid HTML response from API');
+            }
 
-        if (!htmlReport.includes('<!DOCTYPE html>')) {
-            throw new Error('Invalid HTML response from API');
-        }
+            const safeReport = sanitizeReportHTML(htmlReport);
+            displayReport(safeReport);
 
-        const safeReport = sanitizeReportHTML(htmlReport);
-        displayReport(safeReport);
-
-        const exportBtn = document.createElement('button');
-        exportBtn.textContent = 'Export to PDF';
-        exportBtn.className = 'export-btn';
-        exportBtn.onclick = () => exportToPDF(safeReport);
-        reportContainer.appendChild(exportBtn);
-
-    } catch (error) {
-        errorElement.textContent = `Error: ${error.message}`;
-        errorElement.style.display = 'block';
-    } finally {
-        loadingElement.style.display = 'none';
-    }
+            const exportBtn = document.createElement('button');
+            exportBtn.textContent = 'Export to PDF';
+            exportBtn.className = 'export-btn';
+            exportBtn.onclick = function() { exportToPDF(safeReport); };
+            reportContainer.appendChild(exportBtn);
+        })
+        .catch(function(error) {
+            errorElement.textContent = 'Error: ' + error.message;
+            errorElement.style.display = 'block';
+        })
+        .then(function() {
+            loadingElement.style.display = 'none';
+        });
 }
