@@ -592,14 +592,17 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
               var row = '<tr><td>' + label + '</td><td>' + item.status + '</td><td>' + item.message + '</td><td>' + new Date().toLocaleString() + '</td><td>' + actions + '</td></tr>';
               tableBody.append(row);
             });
-            status.text('');
-            button.prop('disabled', false).text(originalText);
           });
         });
       });
       button.on('click', function () {
         button.prop('disabled', true).text(rtbcbAdmin.strings.testing);
-        runTests();
+        runTests().catch(function (err) {
+          alert("".concat(rtbcbAdmin.strings.error, " ").concat(err.message));
+        }).finally(function () {
+          status.text('');
+          button.prop('disabled', false).text(originalText);
+        });
       });
     },
     testApiConnection: function testApiConnection(e) {
