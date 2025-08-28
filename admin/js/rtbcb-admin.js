@@ -507,7 +507,14 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
         var company = rtbcbAdmin.company = rtbcbAdmin.company || {};
         company.name = companyName;
         if (typeof rtbcb_set_test_company === 'function') {
-          rtbcb_set_test_company({ name: companyName });
+          var setCompany = rtbcb_set_test_company({ name: companyName });
+          if (setCompany && typeof setCompany.then === 'function') {
+            setCompany.then(function (response) {
+              if (response && response.success && response.data && response.data.name) {
+                rtbcbAdmin.company.name = response.data.name;
+              }
+            })["catch"](function () {});
+          }
         }
         var tests = [{
           id: 'rtbcb-test-company-overview',
@@ -582,7 +589,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
                 rtbcbAdmin.company = rtbcbAdmin.company || {};
                 rtbcbAdmin.company.recommended_category = response.data.recommended.key || response.data.recommended;
               }
-              var message = response && response.data && response.data.message ? response.data.message : '';
+              var message = response && response.data && response.data.message ? response.data.message : 'Unknown error';
               results.push({
                 section: test.id,
                 status: response.success ? 'success' : 'error',
