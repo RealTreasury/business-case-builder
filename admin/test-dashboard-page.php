@@ -8,8 +8,8 @@
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
-
-$company = rtbcb_get_current_company();
+$company_data = get_option( 'rtbcb_company_data', [] );
+$company_name = isset( $company_data['name'] ) ? sanitize_text_field( $company_data['name'] ) : '';
 ?>
 <div class="wrap rtbcb-admin-page">
     <h1><?php esc_html_e( 'Treasury Report Section Testing Dashboard', 'rtbcb' ); ?></h1>
@@ -35,6 +35,12 @@ $company = rtbcb_get_current_company();
 
     <div class="card">
         <h2 class="title"><?php esc_html_e( 'Test Tools', 'rtbcb' ); ?></h2>
+        <p>
+            <label for="rtbcb-company-name"><?php esc_html_e( 'Company Name', 'rtbcb' ); ?></label>
+            <input type="text" id="rtbcb-company-name" class="regular-text" value="<?php echo esc_attr( $company_name ); ?>" />
+            <button type="button" id="rtbcb-set-company" class="button"><?php esc_html_e( 'Set Company', 'rtbcb' ); ?></button>
+            <?php wp_nonce_field( 'rtbcb_set_test_company', 'rtbcb_set_test_company_nonce' ); ?>
+        </p>
         <p class="submit">
             <button type="button" id="rtbcb-test-all-sections" class="button button-primary">
                 <?php esc_html_e( 'Test All Sections', 'rtbcb' ); ?>

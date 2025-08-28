@@ -8,9 +8,6 @@
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
-
-$company_data = get_option( 'rtbcb_company_data', [] );
-$company_name = isset( $company_data['name'] ) ? sanitize_text_field( $company_data['name'] ) : '';
 ?>
 <div class="card">
     <h2 class="title"><?php esc_html_e( 'Connectivity Tests & Status', 'rtbcb' ); ?></h2>
@@ -34,12 +31,6 @@ $company_name = isset( $company_data['name'] ) ? sanitize_text_field( $company_d
         <button type="button" id="rtbcb-test-openai" class="button"><?php esc_html_e( 'Test OpenAI API', 'rtbcb' ); ?></button>
         <button type="button" id="rtbcb-test-portal" class="button"><?php esc_html_e( 'Test Portal Connection', 'rtbcb' ); ?></button>
         <button type="button" id="rtbcb-test-rag" class="button"><?php esc_html_e( 'Test RAG Index', 'rtbcb' ); ?></button>
-    </p>
-    <p>
-        <label for="rtbcb-company-name"><?php esc_html_e( 'Company Name', 'rtbcb' ); ?></label>
-        <input type="text" id="rtbcb-company-name" class="regular-text" value="<?php echo esc_attr( $company_name ); ?>" />
-        <button type="button" id="rtbcb-set-company" class="button"><?php esc_html_e( 'Set Company', 'rtbcb' ); ?></button>
-        <?php wp_nonce_field( 'rtbcb_set_test_company', 'rtbcb_set_test_company_nonce' ); ?>
     </p>
     <p id="rtbcb-connectivity-status"></p>
 
