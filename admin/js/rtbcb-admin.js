@@ -502,19 +502,27 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       var originalText = button.text();
       // Company name input moved to Test Tools card; cache for reuse.
       var nameInput = $('#rtbcb-company-name');
-      var toggleButtonState = function toggleButtonState() {};
       if (nameInput.length) {
-        toggleButtonState = function toggleButtonState() {
-          button.prop('disabled', !nameInput.val().trim());
-        };
-        toggleButtonState();
-        nameInput.on('input', toggleButtonState);
+        nameInput.on('input', function () {
+          $(this).next('.rtbcb-error-message').remove();
+        });
       }
       var runTests = _async(function () {
         var companyName = nameInput.length ? nameInput.val().trim() : '';
         if (!companyName) {
           alert(rtbcbAdmin.strings.company_required);
+          if (nameInput.length) {
+            var error = nameInput.next('.rtbcb-error-message');
+            if (!error.length) {
+              error = $('<span class="rtbcb-error-message" />').insertAfter(nameInput);
+            }
+            error.text(rtbcbAdmin.strings.company_required);
+            nameInput.focus();
+          }
           return _await();
+        }
+        if (nameInput.length) {
+          nameInput.next('.rtbcb-error-message').remove();
         }
         var company = rtbcbAdmin.company = rtbcbAdmin.company || {};
         company.name = companyName;
@@ -660,8 +668,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
           return Promise.resolve();
         }).then(function () {
           status.text('');
-          button.text(originalText);
-          toggleButtonState();
+          button.text(originalText).prop('disabled', false);
         });
       });
     },

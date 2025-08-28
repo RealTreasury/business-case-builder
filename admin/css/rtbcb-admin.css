@@ -14,6 +14,11 @@
     pointer-events: none;
 }
 
+.rtbcb-error-message {
+    color: #d63638;
+    margin-left: 5px;
+}
+
 #rtbcb-report-preview {
     margin-top: 20px;
 }
