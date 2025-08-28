@@ -234,7 +234,12 @@ Respond with a JSON object conforming to:
 {
   "analysis": string, // In-depth analysis covering company background, recent news, size, financial highlights, treasury challenges/opportunities, and market position.
   "recommendations": [string], // Treasury technology recommendations specific to this company.
-  "references": [string] // List of reputable sources backing your analysis.
+  "references": [string], // List of reputable sources backing your analysis.
+  "metrics": {
+    "revenue": number, // Annual revenue in millions USD
+    "staff_count": number, // Number of treasury staff
+    "baseline_efficiency": number // Current process efficiency percentage
+  }
 }
 
 # Example Structure
@@ -247,7 +252,12 @@ Respond with a JSON object conforming to:
   "references": [
     "https://www.sec.gov/edgar/browse/?CIK=320193",
     "https://www.apple.com/investor/"
-  ]
+  ],
+  "metrics": {
+    "revenue": 390000,
+    "staff_count": 100,
+    "baseline_efficiency": 65
+  }
 }';
 
         // Enhanced user prompt with comprehensive company analysis request
@@ -282,6 +292,7 @@ If available from your knowledge, include relevant details about:
 - Consider implementation complexity relative to company size and resources
 - Address the most pressing treasury challenges identified in the analysis
 - Include both immediate quick-wins and strategic long-term initiatives
+- Provide numeric metrics for revenue, treasury staff count, and baseline efficiency within the "metrics" object
 
 Respond with valid JSON only, following the specified schema exactly. Ensure all fields are populated with substantive content.';
 
@@ -314,7 +325,7 @@ Respond with valid JSON only, following the specified schema exactly. Ensure all
         }
 
         // Validate required fields
-        $required_fields = [ 'analysis', 'recommendations', 'references' ];
+        $required_fields = [ 'analysis', 'recommendations', 'references', 'metrics' ];
         $missing_fields  = array_diff( $required_fields, array_keys( $json ) );
 
         if ( ! empty( $missing_fields ) ) {
@@ -334,12 +345,23 @@ Respond with valid JSON only, following the specified schema exactly. Ensure all
             return new WP_Error( 'llm_missing_recommendations', __( 'No recommendations provided.', 'rtbcb' ) );
         }
 
+        if ( empty( $json['metrics'] ) || ! is_array( $json['metrics'] ) ) {
+            return new WP_Error( 'llm_missing_metrics', __( 'No metrics provided.', 'rtbcb' ) );
+        }
+
         // Sanitize and structure the response
+        $metrics = [
+            'revenue'            => floatval( $json['metrics']['revenue'] ?? 0 ),
+            'staff_count'        => intval( $json['metrics']['staff_count'] ?? 0 ),
+            'baseline_efficiency' => floatval( $json['metrics']['baseline_efficiency'] ?? 0 ),
+        ];
+
         return [
             'company_name'   => $company_name,
             'analysis'       => sanitize_textarea_field( $json['analysis'] ),
             'recommendations' => array_map( 'sanitize_text_field', array_filter( (array) $json['recommendations'] ) ),
             'references'     => array_map( 'esc_url_raw', array_filter( (array) $json['references'] ) ),
+            'metrics'        => $metrics,
             'generated_at'   => current_time( 'Y-m-d H:i:s' ),
             'analysis_type'  => 'comprehensive_company_overview',
         ];
