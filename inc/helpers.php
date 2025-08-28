@@ -132,6 +132,12 @@ function rtbcb_get_dashboard_sections() {
             'requires' => [ 'rtbcb-test-company-overview' ],
             'phase'    => 3,
         ],
+        'rtbcb-test-report-assembly'        => [
+            'label'    => __( 'Report Assembly & Delivery', 'rtbcb' ),
+            'option'   => 'rtbcb_executive_summary',
+            'requires' => [ 'rtbcb-test-estimated-benefits' ],
+            'phase'    => 4,
+        ],
     ];
 
     foreach ( $sections as $id => &$section ) {
@@ -849,6 +855,40 @@ function rtbcb_test_generate_benefits_estimate( $company_data, $recommended_cate
     }
 
     return $estimate;
+}
+
+/**
+ * Test generating executive summary via the LLM.
+ *
+ * @return array|WP_Error Summary data or error object.
+ */
+function rtbcb_test_generate_executive_summary() {
+    if ( ! class_exists( 'RTBCB_LLM' ) ) {
+        return new WP_Error( 'missing_class', __( 'LLM class not available', 'rtbcb' ) );
+    }
+
+    $company = rtbcb_get_current_company();
+    $roi     = get_option( 'rtbcb_roi_results', [] );
+
+    $llm    = new RTBCB_LLM();
+    $result = $llm->generate_comprehensive_business_case( $company, $roi );
+
+    if ( is_wp_error( $result ) ) {
+        return $result;
+    }
+
+    $summary = isset( $result['executive_summary'] ) ? $result['executive_summary'] : [];
+
+    $summary = [
+        'strategic_positioning'   => sanitize_text_field( $summary['strategic_positioning'] ?? '' ),
+        'business_case_strength'  => sanitize_text_field( $summary['business_case_strength'] ?? '' ),
+        'key_value_drivers'       => array_map( 'sanitize_text_field', $summary['key_value_drivers'] ?? [] ),
+        'executive_recommendation'=> sanitize_text_field( $summary['executive_recommendation'] ?? '' ),
+    ];
+
+    update_option( 'rtbcb_executive_summary', $summary );
+
+    return $summary;
 }
 
 /**

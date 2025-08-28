@@ -48,6 +48,7 @@ class RTBCB_Admin {
         add_action( 'wp_ajax_rtbcb_test_rag', [ $this, 'ajax_test_rag' ] );
         add_action( 'wp_ajax_rtbcb_test_data_enrichment', [ $this, 'ajax_test_data_enrichment' ] );
         add_action( 'wp_ajax_rtbcb_test_data_storage', [ $this, 'ajax_test_data_storage' ] );
+        add_action( 'wp_ajax_rtbcb_test_report_assembly', [ $this, 'ajax_test_report_assembly' ] );
     }
 
     /**
@@ -114,6 +115,7 @@ class RTBCB_Admin {
             'roi_nonce'                  => wp_create_nonce( 'rtbcb_test_calculate_roi' ),
             'real_treasury_overview_nonce' => wp_create_nonce( 'rtbcb_test_real_treasury_overview' ),
             'category_recommendation_nonce' => wp_create_nonce( 'rtbcb_test_category_recommendation' ),
+            'report_assembly_nonce'      => wp_create_nonce( 'rtbcb_test_report_assembly' ),
             'page'                       => $page,
             'company'                    => $company_data,
             'strings'                    => [
@@ -994,6 +996,38 @@ class RTBCB_Admin {
             [
                 'lead_id'    => intval( $lead_id ),
                 'lead_email' => sanitize_email( $lead['email'] ),
+            ]
+        );
+    }
+
+    /**
+     * AJAX handler for report assembly testing.
+     *
+     * @return void
+     */
+    public function ajax_test_report_assembly() {
+        check_ajax_referer( 'rtbcb_test_report_assembly', 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'rtbcb' ) ] );
+        }
+
+        $summary = rtbcb_test_generate_executive_summary();
+
+        if ( is_wp_error( $summary ) ) {
+            wp_send_json_error( [ 'message' => $summary->get_error_message() ] );
+        }
+
+        $combined = $summary['strategic_positioning'] . ' ' .
+            implode( ' ', $summary['key_value_drivers'] ) . ' ' .
+            $summary['executive_recommendation'];
+        $word_count = str_word_count( wp_strip_all_tags( $combined ) );
+
+        wp_send_json_success(
+            [
+                'summary'   => $summary,
+                'word_count'=> $word_count,
+                'generated' => current_time( 'mysql' ),
             ]
         );
     }
