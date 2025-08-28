@@ -60,7 +60,6 @@ $company_name = isset( $company_data['name'] ) ? sanitize_text_field( $company_d
         <a href="#rtbcb-test-recommended-category" class="nav-tab"><?php esc_html_e( 'Recommended Category', 'rtbcb' ); ?></a>
         <a href="#rtbcb-test-estimated-benefits" class="nav-tab"><?php esc_html_e( 'Estimated Benefits', 'rtbcb' ); ?></a>
         <a href="#rtbcb-api-test" class="nav-tab"><?php esc_html_e( 'API Test', 'rtbcb' ); ?></a>
-        <a href="#rtbcb-report-preview" class="nav-tab"><?php esc_html_e( 'Report Preview', 'rtbcb' ); ?></a>
         <a href="#rtbcb-report-test" class="nav-tab"><?php esc_html_e( 'Report Test', 'rtbcb' ); ?></a>
     </h2>
 
@@ -84,9 +83,6 @@ $company_name = isset( $company_data['name'] ) ? sanitize_text_field( $company_d
     </div>
     <div id="rtbcb-api-test" class="rtbcb-tab-panel" style="display:none;">
         <?php include RTBCB_DIR . 'admin/partials/test-api.php'; ?>
-    </div>
-    <div id="rtbcb-report-preview" class="rtbcb-tab-panel" style="display:none;">
-        <?php include RTBCB_DIR . 'admin/partials/test-report-preview.php'; ?>
     </div>
     <div id="rtbcb-report-test" class="rtbcb-tab-panel" style="display:none;">
         <?php include RTBCB_DIR . 'admin/partials/test-report.php'; ?>

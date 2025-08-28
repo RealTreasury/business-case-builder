@@ -59,7 +59,6 @@ nonce such as `rtbcb_test_company_overview` to protect requests.
 │  │  ├── test-industry-overview.php
 │  │  ├── test-real-treasury-overview.php
 │  │  ├── test-recommended-category.php
-│  │  ├── test-report-preview.php
 │  │  ├── test-report.php
 │  │  └── test-treasury-tech-overview.php
 │  ├── settings-page.php

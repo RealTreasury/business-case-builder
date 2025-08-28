@@ -47,12 +47,8 @@ php tests/openai-api-key-validation.test.php
 echo "11. Running AJAX error handling test..."
 phpunit tests/RTBCB_AjaxGenerateComprehensiveCaseErrorTest.php
 
-# Admin AJAX report generation tests
-echo "12. Running admin AJAX report generation tests..."
-phpunit tests/RTBCB_AdminAjaxReportTest.php
-
 # JavaScript tests
-echo "13. Running JavaScript tests..."
+echo "12. Running JavaScript tests..."
 node tests/handle-submit-error.test.js
 node tests/render-results-no-narrative.test.js
 node tests/handle-submit-success.test.js
@@ -61,10 +57,10 @@ node tests/temperature-model.test.js
 
 # WordPress coding standards (if installed)
 if command -v phpcs &> /dev/null; then
-    echo "14. Running WordPress coding standards check..."
+    echo "13. Running WordPress coding standards check..."
     phpcs --standard=WordPress --ignore=vendor .
 else
-    echo "14. Skipping WordPress coding standards (phpcs not installed)"
+    echo "13. Skipping WordPress coding standards (phpcs not installed)"
 fi
 
 echo "================================================"

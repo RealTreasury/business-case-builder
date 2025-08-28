@@ -152,7 +152,6 @@ Add the shortcode to any page or post:
 │  │  ├── test-industry-overview.php
 │  │  ├── test-real-treasury-overview.php
 │  │  ├── test-recommended-category.php
-│  │  ├── test-report-preview.php
 │  │  ├── test-report.php
 │  │  └── test-treasury-tech-overview.php
 │  ├── settings-page.php
