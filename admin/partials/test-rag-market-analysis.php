@@ -31,16 +31,6 @@ if ( ! rtbcb_require_completed_steps( 'rtbcb-test-rag-market-analysis' ) ) {
 <?php endif; ?>
 <div class="card">
     <h3 class="title"><?php esc_html_e( 'Run Market Analysis', 'rtbcb' ); ?></h3>
-    <table class="form-table">
-        <tr>
-            <th scope="row">
-                <label for="rtbcb-rag-query"><?php esc_html_e( 'Search Query', 'rtbcb' ); ?></label>
-            </th>
-            <td>
-                <input type="text" id="rtbcb-rag-query" class="regular-text" value="treasury technology" />
-            </td>
-        </tr>
-    </table>
     <?php wp_nonce_field( 'rtbcb_test_rag_market_analysis', 'rtbcb_test_rag_market_analysis_nonce' ); ?>
     <p class="submit">
         <button type="button" id="rtbcb-run-rag-analysis" class="button button-primary">
@@ -63,8 +53,7 @@ var ajaxurl = '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>';
     const original = rtbcbTestUtils.showLoading(btn);
     jQuery.post(ajaxurl, {
         action: 'rtbcb_test_rag_market_analysis',
-        nonce: jQuery('#rtbcb_test_rag_market_analysis_nonce').val(),
-        query: jQuery('#rtbcb-rag-query').val()
+        nonce: jQuery('#rtbcb_test_rag_market_analysis_nonce').val()
     }).done(function(response){
         if (response.success) {
             const list = jQuery('#rtbcb-rag-market-analysis-results').empty();
