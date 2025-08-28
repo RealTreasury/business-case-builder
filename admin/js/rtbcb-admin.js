@@ -549,22 +549,22 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
           label: 'Treasury Tech Overview',
           action: 'rtbcb_test_treasury_tech_overview',
           nonce: rtbcbAdmin.treasury_tech_overview_nonce,
-            data: {
-              focus_areas: company.focus_areas || [],
-              complexity: company.complexity || 'basic'
-            }
-          }, {
-            id: 'rtbcb-test-industry-overview',
-            label: 'Industry Overview',
-            action: 'rtbcb_test_industry_overview',
-            nonce: rtbcbAdmin.industry_overview_nonce,
-            data: {
-              company_data: JSON.stringify({
-                industry: company.industry || '',
-                size: company.size || ''
-              })
-            }
-          }, {
+          data: {
+            focus_areas: company.focus_areas || [],
+            complexity: company.complexity || 'basic'
+          }
+        }, {
+          id: 'rtbcb-test-industry-overview',
+          label: 'Industry Overview',
+          action: 'rtbcb_test_industry_overview',
+          nonce: rtbcbAdmin.industry_overview_nonce,
+          data: {
+            company_data: JSON.stringify({
+              industry: company.industry || '',
+              size: company.size || ''
+            })
+          }
+        }, {
           id: 'rtbcb-test-real-treasury-overview',
           label: 'Real Treasury Overview',
           action: 'rtbcb_test_real_treasury_overview',
