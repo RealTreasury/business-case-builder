@@ -9,6 +9,8 @@ jQuery(document).ready(function($) {
     window.RTBCB = RTBCB;
     
     RTBCB.Admin = {
+        phaseChart: null,
+
         init: function() {
             this.bindEvents();
             this.initComponents();
@@ -58,6 +60,10 @@ jQuery(document).ready(function($) {
             // Initialize tabs if present
             if ($('#rtbcb-test-tabs').length) {
                 this.initTabs();
+            }
+
+            if ($('#rtbcb-progress-chart').length) {
+                this.initPhaseChart();
             }
 
             if ($('#rtbcb-test-all-sections').length) {
@@ -633,6 +639,7 @@ jQuery(document).ready(function($) {
             }
 
             $('#rtbcb-section-tests').slideDown();
+            RTBCB.Admin.refreshPhaseChart();
         },
         
         initLeadsManager: function() {
@@ -766,27 +773,88 @@ jQuery(document).ready(function($) {
             var count = $('.rtbcb-lead-checkbox:checked').length;
             $('#rtbcb-bulk-form button[type="submit"]').prop('disabled', count === 0);
         },
-        
-         initTabs: function() {
-             function showTab(target) {
-                 $('#rtbcb-test-tabs a').removeClass('nav-tab-active');
-                 $('#rtbcb-test-tabs a[href="' + target + '"]').addClass('nav-tab-active');
-                 $('.rtbcb-tab-panel').hide();
-                 $(target).show();
-             }
-             $('#rtbcb-test-tabs a').on('click', function(e) {
-                 e.preventDefault();
-                 showTab($(this).attr('href'));
-             });
-             $('.rtbcb-jump-tab').on('click', function(e) {
-                 e.preventDefault();
-                 showTab($(this).attr('href'));
-             });
-             if (window.location.hash && $('#rtbcb-test-tabs a[href="' + window.location.hash + '"]').length) {
-                 showTab(window.location.hash);
-             }
-         }
 
+        initTabs: function() {
+            function showTab(target) {
+                $('#rtbcb-test-tabs a').removeClass('nav-tab-active');
+                $('#rtbcb-test-tabs a[href="' + target + '"]').addClass('nav-tab-active');
+                $('.rtbcb-tab-panel').hide();
+                $(target).show();
+            }
+            $('#rtbcb-test-tabs a').on('click', function(e) {
+                e.preventDefault();
+                showTab($(this).attr('href'));
+            });
+            $('.rtbcb-jump-tab').on('click', function(e) {
+                e.preventDefault();
+                showTab($(this).attr('href'));
+            });
+            if (window.location.hash && $('#rtbcb-test-tabs a[href="' + window.location.hash + '"]').length) {
+                showTab(window.location.hash);
+            }
+        },
+
+        initPhaseChart: function() {
+            if (typeof Chart === 'undefined') {
+                return;
+            }
+            var ctx = document.getElementById('rtbcb-progress-chart');
+            if (!ctx || !window.rtbcbAdmin || !window.rtbcbAdmin.phaseLabels) {
+                return;
+            }
+            var labels = window.rtbcbAdmin.phaseLabels;
+            var keys = window.rtbcbAdmin.phaseKeys || [];
+            var data = keys.map(function(k) {
+                return window.rtbcbAdmin.phaseCompletion[k] || 0;
+            });
+            this.phaseChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: (window.rtbcbAdmin.strings && window.rtbcbAdmin.strings.completion) ? window.rtbcbAdmin.strings.completion : 'Completion %',
+                        data: data,
+                        backgroundColor: '#0073aa'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+        },
+
+        refreshPhaseChart: async function() {
+            if (!this.phaseChart) {
+                return;
+            }
+            try {
+                var response = await $.ajax({
+                    url: window.rtbcbAdmin.ajax_url,
+                    method: 'POST',
+                    data: {
+                        action: 'rtbcb_get_phase_completion',
+                        nonce: window.rtbcbAdmin.test_dashboard_nonce
+                    }
+                });
+                if (response.success && response.data && response.data.percentages) {
+                    window.rtbcbAdmin.phaseCompletion = response.data.percentages;
+                    var keys = window.rtbcbAdmin.phaseKeys || [];
+                    var data = keys.map(function(k) {
+                        return window.rtbcbAdmin.phaseCompletion[k] || 0;
+                    });
+                    this.phaseChart.data.datasets[0].data = data;
+                    this.phaseChart.update();
+                }
+            } catch (error) {
+                console.error('Failed to refresh progress chart', error);
+            }
+        }
     };
     
     // Initialize when ready

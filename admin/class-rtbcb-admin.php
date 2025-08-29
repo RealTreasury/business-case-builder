@@ -51,6 +51,7 @@ class RTBCB_Admin {
         add_action( 'wp_ajax_rtbcb_test_report_assembly', [ $this, 'ajax_test_report_assembly' ] );
         add_action( 'wp_ajax_rtbcb_test_tracking_script', [ $this, 'ajax_test_tracking_script' ] );
         add_action( 'wp_ajax_rtbcb_test_follow_up_email', [ $this, 'ajax_test_follow_up_email' ] );
+        add_action( 'wp_ajax_rtbcb_get_phase_completion', [ $this, 'ajax_get_phase_completion' ] );
     }
 
     /**
@@ -137,6 +138,7 @@ class RTBCB_Admin {
                 'view'                => __( 'View', 'rtbcb' ),
                 'rerun'               => __( 'Re-run', 'rtbcb' ),
                 'company_required'    => __( 'Company name is required.', 'rtbcb' ),
+                'completion'          => __( 'Completion %', 'rtbcb' ),
             ],
         ] );
 
@@ -1635,6 +1637,40 @@ class RTBCB_Admin {
         }
 
         return $diagnostics;
+    }
+
+    /**
+     * AJAX handler to fetch phase completion percentages.
+     *
+     * @return void
+     */
+    public function ajax_get_phase_completion() {
+        check_ajax_referer( 'rtbcb_test_dashboard', 'nonce' );
+
+        $sections = rtbcb_get_dashboard_sections();
+        $totals   = [];
+        $done     = [];
+
+        foreach ( $sections as $section ) {
+            $phase = isset( $section['phase'] ) ? (int) $section['phase'] : 0;
+            if ( $phase ) {
+                if ( ! isset( $totals[ $phase ] ) ) {
+                    $totals[ $phase ] = 0;
+                    $done[ $phase ]   = 0;
+                }
+                $totals[ $phase ]++;
+                if ( ! empty( $section['completed'] ) ) {
+                    $done[ $phase ]++;
+                }
+            }
+        }
+
+        $percentages = [];
+        foreach ( $totals as $phase => $total ) {
+            $percentages[ $phase ] = $total ? round( ( $done[ $phase ] / $total ) * 100 ) : 0;
+        }
+
+        wp_send_json_success( [ 'percentages' => $percentages ] );
     }
 
     /**
