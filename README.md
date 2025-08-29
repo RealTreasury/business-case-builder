@@ -5,7 +5,7 @@ A comprehensive WordPress plugin that helps treasury teams quantify the benefits
 ## 🚀 What's New in Version 2.1.2
 
 ### 🔧 Test Dashboard Improvements
-- `Set Company` reads from both company name inputs, providing a fallback if one is empty.
+- `Set Company` uses the main company name input for all tests.
 - First and last name fields stay synchronized across interactions.
 - "Test All Sections" now includes the company name parameter for complete coverage.
 

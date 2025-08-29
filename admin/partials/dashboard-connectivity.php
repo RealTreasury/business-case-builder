@@ -151,13 +151,9 @@ if ( ! defined( 'ABSPATH' ) ) {
         var $btn = $(this);
         var original = $btn.text();
         var $status = $('#rtbcb-connectivity-status');
-        // Fetch company name from dashboard input; fall back to test tool field if empty.
-        var primaryInput = $('#rtbcb-company-name');
-        var secondaryInput = $('#rtbcb-test-company-name');
-        var name = primaryInput.length ? primaryInput.val().trim() : '';
-        if (!name && secondaryInput.length) {
-            name = secondaryInput.val().trim();
-        }
+        // Fetch company name from dashboard input.
+        var $companyInput = $('#rtbcb-company-name');
+        var name = $companyInput.val().trim();
         $btn.prop('disabled', true).text('<?php echo esc_js( __( 'Saving...', 'rtbcb' ) ); ?>');
         $.ajax({
             url: ajaxurl,
@@ -173,8 +169,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                     renderStatus($status, response.data.message, true);
                     $('#rtbcb-test-results-summary tbody').html('<tr><td colspan="7"><?php echo esc_js( __( 'No test results found.', 'rtbcb' ) ); ?></td></tr>');
                     if (response.data.name) {
-                        primaryInput.val(response.data.name);
-                        secondaryInput.val(response.data.name);
+                        $companyInput.val(response.data.name);
                     }
                 } else {
                     renderStatus($status, (response.data && response.data.message) ? response.data.message : '<?php echo esc_js( __( 'Request failed.', 'rtbcb' ) ); ?>', false);

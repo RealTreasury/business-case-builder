@@ -26,20 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 <?php endif; ?>
 <div class="card">
     <h3 class="title"><?php esc_html_e( 'Generate Company Overview', 'rtbcb' ); ?></h3>
-    <p><?php esc_html_e( 'Enter a company name to generate an AI-powered overview using the configured LLM.', 'rtbcb' ); ?></p>
-    <table class="form-table">
-        <tr>
-            <th scope="row">
-                <label for="rtbcb-test-company-name">
-                    <?php esc_html_e( 'Company Name', 'rtbcb' ); ?>
-                </label>
-            </th>
-            <td>
-                <input type="text" id="rtbcb-test-company-name" class="regular-text" placeholder="<?php esc_attr_e( 'Enter company name...', 'rtbcb' ); ?>" />
-                <?php wp_nonce_field( 'rtbcb_test_company_overview', 'rtbcb_test_company_overview_nonce' ); ?>
-            </td>
-        </tr>
-    </table>
+    <p><?php esc_html_e( 'Use the company name set above to generate an AI-powered overview using the configured LLM.', 'rtbcb' ); ?></p>
     <p class="submit">
         <button type="button" id="rtbcb-generate-company-overview" class="button button-primary">
             <?php esc_html_e( 'Generate Overview', 'rtbcb' ); ?>
