@@ -928,7 +928,27 @@ jQuery(document).ready(function($) {
     
     // Initialize when ready
     RTBCB.Admin.init();
-    
+
+    // Horizontal scroll indicator for results table
+    var $rtbcbResultsWrapper = $('.rtbcb-results-table-wrapper');
+    function rtbcbUpdateScrollIndicator($el) {
+        if ($el[0].scrollWidth > $el[0].clientWidth) {
+            $el.addClass('rtbcb-scrollable');
+            if ($el[0].scrollLeft + $el[0].clientWidth >= $el[0].scrollWidth - 1) {
+                $el.addClass('rtbcb-scrolled-end');
+            } else {
+                $el.removeClass('rtbcb-scrolled-end');
+            }
+        } else {
+            $el.removeClass('rtbcb-scrollable rtbcb-scrolled-end');
+        }
+    }
+    $rtbcbResultsWrapper.each(function(){ rtbcbUpdateScrollIndicator($(this)); });
+    $rtbcbResultsWrapper.on('scroll', function(){ rtbcbUpdateScrollIndicator($(this)); });
+    $(window).on('resize', function(){
+        $rtbcbResultsWrapper.each(function(){ rtbcbUpdateScrollIndicator($(this)); });
+    });
+
     // Export for external use
     window.RTBCBAdmin = RTBCB.Admin;
 });
