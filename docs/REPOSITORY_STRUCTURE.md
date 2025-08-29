@@ -6,18 +6,19 @@ Output of `find . -maxdepth 2 -type d -not -path './.git*'`:
 
 ```
 .
-./admin
-./admin/css
-./admin/js
-./admin/partials
+./docs
+./vendor
+./templates
+./tests
+./tests/helpers
 ./inc
 ./public
 ./public/css
 ./public/js
-./templates
-./tests
-./tests/helpers
-./vendor
+./admin
+./admin/partials
+./admin/css
+./admin/js
 ```
 
 ## Coding Guidelines
