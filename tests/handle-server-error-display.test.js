@@ -31,7 +31,7 @@ global.fetch = function() {
         ok: false,
         status: 500,
         json: async () => ({
-            data: { message: 'Server exploded' }
+            data: { message: 'Server exploded', error_code: 'AI_CONFIG_ERROR' }
         })
     });
 };
@@ -69,6 +69,8 @@ builder.showError = (msg) => { errorMessage = msg; };
 (async () => {
     await builder.handleSubmit();
     assert.ok(errorMessage.includes('Server exploded'));
+    assert.ok(errorMessage.includes('AI_CONFIG_ERROR'));
+    assert.ok(errorMessage.includes('try again later'));
     console.log('Server error display test passed.');
 })().catch(err => {
     console.error(err);
