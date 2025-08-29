@@ -624,7 +624,7 @@ jQuery(document).ready(function($) {
             var $step = $('#rtbcb-test-step');
             var $config = $('#rtbcb-test-config');
             $('#rtbcb-copy-debug').remove();
-        
+
             $btn.prop('disabled', true).text(window.rtbcbAdmin.strings.testing || 'Testing...');
             $progress.val(0).attr({ 'aria-valuenow': 0 }).removeClass('rtbcb-complete');
             $status.text(window.rtbcbAdmin.strings.starting_tests || 'Starting tests...');
@@ -633,7 +633,17 @@ jQuery(document).ready(function($) {
             var sections = (window.rtbcbAdmin.sections || []).filter(function(s) {
                 return s.action;
             });
+
+            var $stepsList = $('#rtbcb-progress-steps');
+            if (!$stepsList.length) {
+                $stepsList = $('<ol id="rtbcb-progress-steps" class="rtbcb-progress-steps"></ol>');
+                $config.after($stepsList);
+            } else {
+                $stepsList.empty();
+            }
+
             var sectionMap = {};
+            var stepItems = {};
             sections.forEach(function(s) {
                 var $el = $('.rtbcb-section-item').filter(function() {
                     return $(this).find('.rtbcb-section-label').text() === s.label;
@@ -643,7 +653,13 @@ jQuery(document).ready(function($) {
                     $el.removeClass('completed').addClass('pending');
                     $el.find('.rtbcb-section-status').text('⚪ ' + (window.rtbcbAdmin.strings.queued || 'Queued'));
                 }
+                var $li = $('<li></li>')
+                    .attr('data-section', s.id)
+                    .text(s.label + ' - ' + (window.rtbcbAdmin.strings.queued || 'Queued'));
+                $stepsList.append($li);
+                stepItems[s.id] = $li;
             });
+
             var results = [];
             $progress.attr({
                 max: sections.length,
@@ -654,11 +670,17 @@ jQuery(document).ready(function($) {
             for (var i = 0; i < sections.length; i++) {
                 var section = sections[i];
                 var $item = sectionMap[section.id];
+                var $stepItem = stepItems[section.id];
                 $step.text(section.label);
                 if ($item && $item.length) {
                     $item.find('.rtbcb-section-status').text('⏳ ' + (window.rtbcbAdmin.strings.running || 'Running'));
                 }
+                if ($stepItem && $stepItem.length) {
+                    $stepItem.text(section.label + ' - ' + (window.rtbcbAdmin.strings.running || 'Running...'));
+                }
                 $status.text(section.label + ' - ' + (window.rtbcbAdmin.strings.running || 'Running'));
+                var startTime = new Date().toISOString();
+                var startPerf = performance.now();
                 try {
                     var resp = await $.ajax({
                         url: window.rtbcbAdmin.ajax_url,
@@ -669,11 +691,16 @@ jQuery(document).ready(function($) {
                             company_name: companyName
                         }
                     });
+                    var endTime = new Date().toISOString();
+                    var durationSec = (performance.now() - startPerf) / 1000;
 
                     results.push({
                         section: section.id,
                         status: resp.success ? 'success' : 'error',
-                        message: resp.data && resp.data.message ? resp.data.message : ''
+                        message: resp.data && resp.data.message ? resp.data.message : '',
+                        start_time: startTime,
+                        end_time: endTime,
+                        duration: parseFloat(durationSec.toFixed(3))
                     });
 
                     try {
@@ -718,20 +745,32 @@ jQuery(document).ready(function($) {
                         $item.removeClass('pending').addClass('completed');
                         $item.find('.rtbcb-section-status').text('✅ ' + (window.rtbcbAdmin.strings.passed || 'Passed'));
                     }
+                    if ($stepItem && $stepItem.length) {
+                        var label = resp.success ? (window.rtbcbAdmin.strings.passed || 'Passed') : (window.rtbcbAdmin.strings.failed || 'Failed');
+                        $stepItem.text(section.label + ' - ' + label + ' (' + durationSec.toFixed(1) + 's)');
+                    }
                     $status.text('✅ ' + section.label + ' - ' + (window.rtbcbAdmin.strings.passed || 'Passed'));
                 } catch (err) {
+                    var endTime = new Date().toISOString();
+                    var durationSec = (performance.now() - startPerf) / 1000;
                     results.push({
                         section: section.id,
                         status: 'error',
-                        message: err && err.message ? err.message : 'Request failed'
+                        message: err && err.message ? err.message : 'Request failed',
+                        start_time: startTime,
+                        end_time: endTime,
+                        duration: parseFloat(durationSec.toFixed(3))
                     });
                     if ($item && $item.length) {
                         $item.removeClass('completed').addClass('pending');
                         $item.find('.rtbcb-section-status').text('❌ ' + (window.rtbcbAdmin.strings.failed || 'Failed'));
                     }
+                    if ($stepItem && $stepItem.length) {
+                        $stepItem.text(section.label + ' - ' + (window.rtbcbAdmin.strings.failed || 'Failed') + ' (' + durationSec.toFixed(1) + 's)');
+                    }
                     $status.text('❌ ' + section.label + ' - ' + (window.rtbcbAdmin.strings.failed || 'Failed'));
                 }
-        
+
                 var current = i + 1;
                 $progress.val(current).attr({
                     'aria-valuenow': current,
@@ -741,6 +780,7 @@ jQuery(document).ready(function($) {
             }
 
             await RTBCB.Admin.saveTestResults(results);
+            await RTBCB.Admin.fetchTestSummary();
             $progress
                 .val(sections.length)
                 .attr({
@@ -750,7 +790,7 @@ jQuery(document).ready(function($) {
                 .addClass('rtbcb-complete');
             $status.text('✅ ' + (window.rtbcbAdmin.strings.all_sections_done || 'All sections completed'));
             $('#rtbcb-section-tests').slideDown();
-        
+
             $btn.prop('disabled', false).text(original);
         },
         
@@ -983,6 +1023,29 @@ jQuery(document).ready(function($) {
                 var safeMessage = $('<div>').text(message).html();
                 $('#rtbcb-test-status').after('<div class="notice notice-error"><p>' + safeMessage + '</p></div>');
                 console.error('Failed to save test results', error);
+            }
+        },
+
+        fetchTestSummary: async function() {
+            try {
+                var response = await $.ajax({
+                    url: window.rtbcbAdmin.ajax_url,
+                    method: 'POST',
+                    data: {
+                        action: 'rtbcb_get_test_summary_html',
+                        nonce: window.rtbcbAdmin.test_dashboard_nonce
+                    }
+                });
+                if (response.success && response.data && response.data.html) {
+                    var $summary = $('#rtbcb-test-summary');
+                    if (!$summary.length) {
+                        $summary = $('<div id="rtbcb-test-summary"></div>');
+                        $('#rtbcb-test-status').after($summary);
+                    }
+                    $summary.html(response.data.html);
+                }
+            } catch (error) {
+                console.error('Failed to fetch test summary', error);
             }
         },
 
