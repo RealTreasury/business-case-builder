@@ -413,7 +413,8 @@ capability. AJAX actions from the dashboard require nonces such as
 `rtbcb_test_company_overview`, `rtbcb_test_estimated_benefits`, and
 `rtbcb_test_dashboard` when saving results. Click **Run Diagnostics** to execute
 the full test suite defined in `tests/run-tests.sh` and display the latest
-results. A visual overview of the end-to-end reporting flow and diagnostics is
+results. Diagnostics may take up to two minutes to complete due to longer API
+timeouts. A visual overview of the end-to-end reporting flow and diagnostics is
 available in [docs/TEST_DASHBOARD_FLOW.md](docs/TEST_DASHBOARD_FLOW.md).
 
 ### Automated Tests
