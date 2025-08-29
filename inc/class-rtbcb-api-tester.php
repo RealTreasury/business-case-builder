@@ -56,13 +56,15 @@ class RTBCB_API_Tester {
             $body['temperature'] = 0.1;
         }
 
+        $timeout = intval( get_option( 'rtbcb_gpt5_timeout', 180 ) );
+
         $args = [
             'headers' => [
                 'Authorization' => 'Bearer ' . $api_key,
                 'Content-Type' => 'application/json',
             ],
-            'body' => wp_json_encode( $body ),
-            'timeout' => 30,
+            'body'    => wp_json_encode( $body ),
+            'timeout' => $timeout,
         ];
 
         $response = wp_remote_post( 'https://api.openai.com/v1/responses', $args );
