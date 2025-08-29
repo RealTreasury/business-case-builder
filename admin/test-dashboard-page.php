@@ -58,11 +58,26 @@ $company_name = isset( $company_data['name'] ) ? sanitize_text_field( $company_d
     <?php
     $sections = rtbcb_get_dashboard_sections();
     $phases   = [
-        1 => __( 'Phase 1: Data Collection & Enrichment', 'rtbcb' ),
-        2 => __( 'Phase 2: Analysis & Content Generation', 'rtbcb' ),
-        3 => __( 'Phase 3: ROI & Strategic Recommendation', 'rtbcb' ),
-        4 => __( 'Phase 4: Report Assembly & Delivery', 'rtbcb' ),
-        5 => __( 'Phase 5: Post-Delivery Engagement', 'rtbcb' ),
+        1 => [
+            'label'       => __( 'Phase 1: Data Collection & Enrichment', 'rtbcb' ),
+            'description' => __( 'Gather company information and enrich it for analysis.', 'rtbcb' ),
+        ],
+        2 => [
+            'label'       => __( 'Phase 2: Analysis & Content Generation', 'rtbcb' ),
+            'description' => __( 'Generate insights and draft report content.', 'rtbcb' ),
+        ],
+        3 => [
+            'label'       => __( 'Phase 3: ROI & Strategic Recommendation', 'rtbcb' ),
+            'description' => __( 'Build the business case and recommendations.', 'rtbcb' ),
+        ],
+        4 => [
+            'label'       => __( 'Phase 4: Report Assembly & Delivery', 'rtbcb' ),
+            'description' => __( 'Assemble results into a sharable report.', 'rtbcb' ),
+        ],
+        5 => [
+            'label'       => __( 'Phase 5: Post-Delivery Engagement', 'rtbcb' ),
+            'description' => __( 'Engage recipients and track interactions.', 'rtbcb' ),
+        ],
     ];
     $sections_by_phase = [];
     foreach ( $sections as $id => $section ) {
@@ -74,22 +89,24 @@ $company_name = isset( $company_data['name'] ) ? sanitize_text_field( $company_d
     $phase_keys        = array_keys( $phases );
     $phase_percentages = rtbcb_calculate_phase_completion( $sections, $phase_keys );
     ?>
-    <div class="card">
+    <div class="card rtbcb-progress-card">
         <h2 class="title"><?php esc_html_e( 'Analysis Progress', 'rtbcb' ); ?></h2>
         <canvas id="rtbcb-progress-chart" width="400" height="200"></canvas>
-        <ul>
-            <?php foreach ( $phases as $phase_num => $phase_label ) : ?>
-                <li>
-                    <strong><?php echo esc_html( $phase_label ); ?></strong>
+        <ul class="rtbcb-progress-list">
+            <?php foreach ( $phases as $phase_num => $phase ) : ?>
+                <li class="rtbcb-progress-phase">
+                    <strong><?php echo esc_html( $phase['label'] ); ?></strong>
+                    <span class="rtbcb-phase-desc"><?php echo esc_html( $phase['description'] ); ?></span>
+                    <span class="rtbcb-phase-percent"><?php echo esc_html( $phase_percentages[ $phase_num ] ); ?>%</span>
                     <?php if ( ! empty( $sections_by_phase[ $phase_num ] ) ) : ?>
                         <ul>
                             <?php foreach ( $sections_by_phase[ $phase_num ] as $id => $section ) : ?>
                                 <?php $done = ! empty( $section['completed'] ); ?>
-                                <li class="<?php echo $done ? 'completed' : 'missing'; ?>">
+                                <li class="rtbcb-progress-item <?php echo $done ? 'completed' : 'pending'; ?>">
                                     <a href="#rtbcb-phase<?php echo esc_attr( $phase_num ); ?>" class="rtbcb-jump-tab">
                                         <?php echo esc_html( $section['label'] ); ?>
                                     </a>
-                                    - <?php echo $done ? esc_html__( 'Complete', 'rtbcb' ) : esc_html__( 'Incomplete', 'rtbcb' ); ?>
+                                    - <?php echo $done ? esc_html__( '✓ Tested', 'rtbcb' ) : esc_html__( '⚪ Pending', 'rtbcb' ); ?>
                                 </li>
                             <?php endforeach; ?>
                         </ul>
@@ -103,7 +120,7 @@ $company_name = isset( $company_data['name'] ) ? sanitize_text_field( $company_d
 
     <script>
     window.rtbcbAdmin = window.rtbcbAdmin || {};
-    window.rtbcbAdmin.phaseLabels = <?php echo wp_json_encode( array_values( $phases ) ); ?>;
+    window.rtbcbAdmin.phaseLabels = <?php echo wp_json_encode( wp_list_pluck( $phases, 'label' ) ); ?>;
     window.rtbcbAdmin.phaseKeys = <?php echo wp_json_encode( $phase_keys ); ?>;
     window.rtbcbAdmin.phaseCompletion = <?php echo wp_json_encode( $phase_percentages ); ?>;
     </script>
@@ -115,11 +132,11 @@ $company_name = isset( $company_data['name'] ) ? sanitize_text_field( $company_d
         <p><?php esc_html_e( 'These tools are optional and available after running all tests.', 'rtbcb' ); ?></p>
 
         <h2 class="nav-tab-wrapper" id="rtbcb-test-tabs">
-            <a href="#rtbcb-phase1" class="nav-tab nav-tab-active"><?php echo esc_html( $phases[1] ); ?></a>
-            <a href="#rtbcb-phase2" class="nav-tab"><?php echo esc_html( $phases[2] ); ?></a>
-            <a href="#rtbcb-phase3" class="nav-tab"><?php echo esc_html( $phases[3] ); ?></a>
-            <a href="#rtbcb-phase4" class="nav-tab"><?php echo esc_html( $phases[4] ); ?></a>
-            <a href="#rtbcb-phase5" class="nav-tab"><?php echo esc_html( $phases[5] ); ?></a>
+            <a href="#rtbcb-phase1" class="nav-tab nav-tab-active"><?php echo esc_html( $phases[1]['label'] ); ?></a>
+            <a href="#rtbcb-phase2" class="nav-tab"><?php echo esc_html( $phases[2]['label'] ); ?></a>
+            <a href="#rtbcb-phase3" class="nav-tab"><?php echo esc_html( $phases[3]['label'] ); ?></a>
+            <a href="#rtbcb-phase4" class="nav-tab"><?php echo esc_html( $phases[4]['label'] ); ?></a>
+            <a href="#rtbcb-phase5" class="nav-tab"><?php echo esc_html( $phases[5]['label'] ); ?></a>
         </h2>
 
         <div id="rtbcb-phase1" class="rtbcb-tab-panel" style="display:block;">
