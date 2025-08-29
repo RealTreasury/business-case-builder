@@ -160,6 +160,31 @@ function rtbcb_get_dashboard_sections() {
 }
 
 /**
+ * Get the first incomplete dependency for a section.
+ *
+ * Recursively checks the dependency chain and returns the earliest section
+ * that has not been completed.
+ *
+ * @param string $section_id Section identifier to check.
+ * @param array  $sections   All dashboard sections.
+ * @return string|null The first incomplete dependency or null if all met.
+ */
+function rtbcb_get_first_incomplete_dependency( $section_id, $sections ) {
+    if ( empty( $sections[ $section_id ]['requires'] ) ) {
+        return null;
+    }
+
+    foreach ( $sections[ $section_id ]['requires'] as $dependency ) {
+        if ( empty( $sections[ $dependency ]['completed'] ) ) {
+            $deep = rtbcb_get_first_incomplete_dependency( $dependency, $sections );
+            return $deep ? $deep : $dependency;
+        }
+    }
+
+    return null;
+}
+
+/**
  * Ensure required sections are complete before rendering a dashboard section.
  *
  * Outputs a warning linking to the first incomplete section when prerequisites
@@ -169,29 +194,30 @@ function rtbcb_get_dashboard_sections() {
  * @return bool True when allowed, false otherwise.
  */
 function rtbcb_require_completed_steps( $current_section ) {
-    $sections = rtbcb_get_dashboard_sections();
+    static $displayed = [];
 
-    if ( empty( $sections[ $current_section ]['requires'] ) ) {
+    $sections   = rtbcb_get_dashboard_sections();
+    $dependency = rtbcb_get_first_incomplete_dependency( $current_section, $sections );
+
+    if ( null === $dependency ) {
         return true;
     }
 
-    foreach ( $sections[ $current_section ]['requires'] as $dependency ) {
-        if ( empty( $sections[ $dependency ]['completed'] ) ) {
-            $phase  = isset( $sections[ $dependency ]['phase'] ) ? (int) $sections[ $dependency ]['phase'] : 0;
-            $anchor = $phase ? 'rtbcb-phase' . $phase : $dependency;
-            $url    = admin_url( 'admin.php?page=rtbcb-test-dashboard#' . $anchor );
-            echo '<div class="notice notice-error"><p>' .
-                sprintf(
-                    __( 'Please complete %s first.', 'rtbcb' ),
-                    '<a href="' . esc_url( $url ) . '">' .
-                    esc_html( $sections[ $dependency ]['label'] ) . '</a>'
-                ) .
-                '</p></div>';
-            return false;
-        }
+    if ( ! in_array( $dependency, $displayed, true ) ) {
+        $phase  = isset( $sections[ $dependency ]['phase'] ) ? (int) $sections[ $dependency ]['phase'] : 0;
+        $anchor = $phase ? 'rtbcb-phase' . $phase : $dependency;
+        $url    = admin_url( 'admin.php?page=rtbcb-test-dashboard#' . $anchor );
+        echo '<div class="notice notice-error"><p>' .
+            sprintf(
+                __( 'Please complete %s first.', 'rtbcb' ),
+                '<a href="' . esc_url( $url ) . '">' .
+                esc_html( $sections[ $dependency ]['label'] ) . '</a>'
+            ) .
+            '</p></div>';
+        $displayed[] = $dependency;
     }
 
-    return true;
+    return false;
 }
 
 /**
