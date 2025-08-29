@@ -514,10 +514,16 @@ jQuery(document).ready(function($) {
         runAllTests: async function(e) {
             e.preventDefault();
             var $btn = $(this);
+            var original = $btn.text();
+            var companyName = $('#rtbcb-company-name').val().trim();
+
+            if (!companyName) {
+                alert(window.rtbcbAdmin.strings.company_required || 'Please enter a company name before running tests');
+                return;
+            }
+
             var $status = $('#rtbcb-test-status');
             var $progress = $('#rtbcb-test-progress');
-            var original = $btn.text();
-            var companyName = $('#rtbcb-company-name').val();
             var companyNameTests = ['rtbcb_test_company_overview'];
             $btn.prop('disabled', true).text(window.rtbcbAdmin.strings.testing || 'Testing...');
             $progress.val(0).removeClass('rtbcb-complete');
