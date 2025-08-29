@@ -307,7 +307,7 @@ Respond with valid JSON only, following the specified schema exactly. Ensure all
         $response = $this->call_openai_with_retry( $model, $context, 3 ); // Reduce retries
 
         if ( is_wp_error( $response ) ) {
-            return new WP_Error( 'llm_failure', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
+            return new WP_Error( 'llm_failure', $response->get_error_message() );
         }
 
         $parsed  = rtbcb_parse_gpt5_response( $response );
@@ -1323,13 +1323,24 @@ Respond with valid JSON only, following the specified schema exactly. Ensure all
                 'Authorization' => 'Bearer ' . $this->api_key,
                 'Content-Type' => 'application/json',
             ],
-            'body' => wp_json_encode( $body ),
-            'timeout' => 300, // 5 minutes for comprehensive analysis
+            'body'    => wp_json_encode( $body ),
+            'timeout' => 60, // Reasonable timeout for model requests
         ];
 
         $this->last_request = $body;
         $response           = wp_remote_post( $endpoint, $args );
         $this->last_response = $response;
+
+        if ( is_wp_error( $response ) ) {
+            if ( 'timeout' === $response->get_error_code() || false !== strpos( $response->get_error_message(), 'timed out' ) ) {
+                return new WP_Error( 'llm_timeout', __( 'The language model request timed out. Please try again.', 'rtbcb' ) );
+            }
+
+            return new WP_Error(
+                'llm_http_error',
+                sprintf( __( 'Language model request failed: %s', 'rtbcb' ), $response->get_error_message() )
+            );
+        }
 
         return $response;
     }
