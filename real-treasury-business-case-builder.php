@@ -388,9 +388,10 @@ class Real_Treasury_BCB {
             true
         );
 
+        $wizard_file = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? 'rtbcb-wizard.js' : 'rtbcb-wizard.min.js';
         wp_enqueue_script(
             'rtbcb-wizard',
-            RTBCB_URL . 'public/js/rtbcb-wizard.js',
+            RTBCB_URL . 'public/js/' . $wizard_file,
             [ 'jquery' ],
             RTBCB_VERSION,
             true
