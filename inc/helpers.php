@@ -17,27 +17,29 @@ function rtbcb_get_current_company() {
 }
 
 /**
- * Clear stored company data.
+ * Clear stored company data and reset test progress.
  *
- * @return bool True on success, false on failure.
+ * @return void
  */
 function rtbcb_clear_current_company() {
-    delete_option( 'rtbcb_current_company' );
-    delete_option( 'rtbcb_company_overview' );
-    delete_option( 'rtbcb_industry_insights' );
-    delete_option( 'rtbcb_treasury_challenges' );
-    delete_option( 'rtbcb_maturity_model' );
-    delete_option( 'rtbcb_rag_market_analysis' );
-    delete_option( 'rtbcb_value_proposition' );
-    delete_option( 'rtbcb_data_enrichment' );
-    delete_option( 'rtbcb_data_storage' );
-    delete_option( 'rtbcb_real_treasury_overview' );
-    delete_option( 'rtbcb_roadmap_plan' );
-    delete_option( 'rtbcb_roi_results' );
-    delete_option( 'rtbcb_estimated_benefits' );
-    delete_option( 'rtbcb_executive_summary' );
-    delete_option( 'rtbcb_tracking_script' );
-    delete_option( 'rtbcb_follow_up_queue' );
+    $sections = rtbcb_get_dashboard_sections( [] );
+
+    $options = [
+        'rtbcb_company_overview',
+        'rtbcb_treasury_challenges',
+        'rtbcb_company_data',
+        'rtbcb_test_results',
+    ];
+
+    foreach ( $sections as $section ) {
+        if ( ! empty( $section['option'] ) ) {
+            $options[] = $section['option'];
+        }
+    }
+
+    foreach ( array_unique( $options ) as $option ) {
+        delete_option( $option );
+    }
 }
 
 /**
@@ -71,9 +73,14 @@ function rtbcb_model_supports_temperature( $model ) {
  * related option key, AJAX action, dependencies, and whether the section has
  * been completed.
  *
+ * @param array|null $test_results Optional preloaded test results.
  * @return array[] Section data keyed by section ID.
  */
-function rtbcb_get_dashboard_sections() {
+function rtbcb_get_dashboard_sections( $test_results = null ) {
+    if ( null === $test_results ) {
+        $test_results = get_option( 'rtbcb_test_results', [] );
+    }
+
     $sections = [
         'rtbcb-test-company-overview'      => [
             'label'    => __( 'Company Overview', 'rtbcb' ),
@@ -175,7 +182,9 @@ function rtbcb_get_dashboard_sections() {
     ];
 
     foreach ( $sections as $id => &$section ) {
-        $section['completed'] = ! empty( get_option( $section['option'] ) );
+        $result               = rtbcb_get_last_test_result( $id, $test_results );
+        $status               = $result['status'] ?? '';
+        $section['completed'] = ( 'success' === $status );
     }
 
     return $sections;
