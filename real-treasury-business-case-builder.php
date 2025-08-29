@@ -475,6 +475,7 @@ class Real_Treasury_BCB {
                 'defaults'           => $config_localized,
                 'model_capabilities' => $model_capabilities,
                 'ajax_url'           => admin_url( 'admin-ajax.php' ),
+                'template_url'       => RTBCB_URL . 'public/templates/report-template.html',
             ]
         );
     }
