@@ -74,7 +74,7 @@ function handleSubmit(e) {
     // Show progress indicator
     if (formContainer) formContainer.style.display = 'none';
     if (progressContainer) progressContainer.style.display = 'block';
-    if (typeof ajaxObj === 'undefined' || !ajaxObj.ajax_url) {
+    if (typeof rtbcbAjax === 'undefined' || !rtbcbAjax.ajax_url) {
         handleSubmissionError('Unable to submit form. Please refresh the page and try again.');
         return;
     }
@@ -84,7 +84,7 @@ function handleSubmit(e) {
 
     var xhr = new XMLHttpRequest();
     try {
-        xhr.open('POST', ajaxObj.ajax_url, false); // Synchronous request
+        xhr.open('POST', rtbcbAjax.ajax_url, false); // Synchronous request
         xhr.send(formData);
     } catch (networkError) {
         handleSubmissionError('Network error. Please try again later.');

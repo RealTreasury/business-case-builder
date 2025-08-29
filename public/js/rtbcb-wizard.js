@@ -375,7 +375,7 @@ class BusinessCaseBuilder {
     handleSubmit() {
         // Show loading state
         this.showProgress();
-        if (typeof ajaxObj === 'undefined' || !ajaxObj.ajax_url) {
+        if (typeof rtbcbAjax === 'undefined' || !rtbcbAjax.ajax_url) {
             this.showError('Unable to submit form. Please refresh the page and try again.');
             return;
         }
@@ -398,7 +398,7 @@ class BusinessCaseBuilder {
 
         try {
             const xhr = new XMLHttpRequest();
-            xhr.open('POST', ajaxObj.ajax_url, false);
+            xhr.open('POST', rtbcbAjax.ajax_url, false);
             xhr.send(formData);
 
             if (xhr.status >= 200 && xhr.status < 300) {
