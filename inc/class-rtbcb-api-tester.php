@@ -16,7 +16,7 @@ class RTBCB_API_Tester {
      * @return array Test result.
      */
     public static function test_connection( $api_key = null ) {
-        $api_key = $api_key ?: get_option( 'rtbcb_openai_api_key' );
+        $api_key = $api_key ?: rtbcb_get_openai_api_key();
 
         if ( empty( $api_key ) ) {
             return [

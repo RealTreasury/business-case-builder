@@ -8,6 +8,25 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
+ * Retrieve the OpenAI API key from a secure source.
+ *
+ * Checks for a defined constant first to allow configuration via
+ * environment variables or wp-config.php. Falls back to the value stored
+ * in the WordPress options table.
+ *
+ * @return string Sanitized API key.
+ */
+function rtbcb_get_openai_api_key() {
+    if ( defined( 'RTBCB_OPENAI_API_KEY' ) && ! empty( RTBCB_OPENAI_API_KEY ) ) {
+        return sanitize_text_field( RTBCB_OPENAI_API_KEY );
+    }
+
+    $api_key = get_option( 'rtbcb_openai_api_key', '' );
+
+    return sanitize_text_field( $api_key );
+}
+
+/**
  * Retrieve current company data.
  *
  * @return array Current company data.
