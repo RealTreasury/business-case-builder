@@ -59,8 +59,8 @@ function rtbcb_model_supports_temperature( $model ) {
  * Get testing dashboard sections and their completion state.
  *
  * The returned array is keyed by section ID and contains the section label,
- * related option key, dependencies, and whether the section has been
- * completed.
+ * related option key, AJAX action, dependencies, and whether the section has
+ * been completed.
  *
  * @return array[] Section data keyed by section ID.
  */
@@ -71,48 +71,56 @@ function rtbcb_get_dashboard_sections() {
             'option'   => 'rtbcb_current_company',
             'requires' => [],
             'phase'    => 1,
+            'action'   => 'rtbcb_test_company_overview',
         ],
         'rtbcb-test-data-enrichment'       => [
             'label'    => __( 'Data Enrichment', 'rtbcb' ),
             'option'   => 'rtbcb_data_enrichment',
             'requires' => [ 'rtbcb-test-company-overview' ],
             'phase'    => 1,
+            'action'   => 'rtbcb_test_data_enrichment',
         ],
         'rtbcb-test-data-storage'          => [
             'label'    => __( 'Data Storage', 'rtbcb' ),
             'option'   => 'rtbcb_data_storage',
             'requires' => [ 'rtbcb-test-company-overview' ],
             'phase'    => 1,
+            'action'   => 'rtbcb_test_data_storage',
         ],
         'rtbcb-test-maturity-model'        => [
             'label'    => __( 'Maturity Model', 'rtbcb' ),
             'option'   => 'rtbcb_maturity_model',
             'requires' => [ 'rtbcb-test-company-overview' ],
             'phase'    => 2,
+            'action'   => 'rtbcb_test_maturity_model',
         ],
         'rtbcb-test-rag-market-analysis'   => [
             'label'    => __( 'RAG Market Analysis', 'rtbcb' ),
             'option'   => 'rtbcb_rag_market_analysis',
             'requires' => [ 'rtbcb-test-company-overview' ],
             'phase'    => 2,
+            'action'   => 'rtbcb_test_rag_market_analysis',
         ],
         'rtbcb-test-value-proposition'     => [
             'label'    => __( 'Value Proposition', 'rtbcb' ),
             'option'   => 'rtbcb_value_proposition',
             'requires' => [ 'rtbcb-test-company-overview' ],
             'phase'    => 2,
+            'action'   => 'rtbcb_test_value_proposition',
         ],
         'rtbcb-test-industry-overview'      => [
             'label'    => __( 'Industry Overview', 'rtbcb' ),
             'option'   => 'rtbcb_industry_insights',
             'requires' => [ 'rtbcb-test-company-overview' ],
             'phase'    => 2,
+            'action'   => 'rtbcb_test_industry_overview',
         ],
         'rtbcb-test-real-treasury-overview' => [
             'label'    => __( 'Real Treasury Overview', 'rtbcb' ),
             'option'   => 'rtbcb_real_treasury_overview',
             'requires' => [ 'rtbcb-test-company-overview' ],
             'phase'    => 2,
+            'action'   => 'rtbcb_test_real_treasury_overview',
         ],
         'rtbcb-test-roadmap-generator'      => [
             'label'    => __( 'Roadmap Generator', 'rtbcb' ),
@@ -125,30 +133,35 @@ function rtbcb_get_dashboard_sections() {
             'option'   => 'rtbcb_roi_results',
             'requires' => [ 'rtbcb-test-company-overview' ],
             'phase'    => 3,
+            'action'   => 'rtbcb_test_calculate_roi',
         ],
         'rtbcb-test-estimated-benefits'     => [
             'label'    => __( 'Estimated Benefits', 'rtbcb' ),
             'option'   => 'rtbcb_estimated_benefits',
             'requires' => [ 'rtbcb-test-company-overview' ],
             'phase'    => 3,
+            'action'   => 'rtbcb_test_estimated_benefits',
         ],
         'rtbcb-test-report-assembly'        => [
             'label'    => __( 'Report Assembly & Delivery', 'rtbcb' ),
             'option'   => 'rtbcb_executive_summary',
             'requires' => [ 'rtbcb-test-estimated-benefits' ],
             'phase'    => 4,
+            'action'   => 'rtbcb_test_report_assembly',
         ],
         'rtbcb-test-tracking-script'        => [
             'label'    => __( 'Tracking Scripts', 'rtbcb' ),
             'option'   => 'rtbcb_tracking_script',
             'requires' => [ 'rtbcb-test-report-assembly' ],
             'phase'    => 5,
+            'action'   => 'rtbcb_test_tracking_script',
         ],
         'rtbcb-test-follow-up-email'        => [
             'label'    => __( 'Follow-up Emails', 'rtbcb' ),
             'option'   => 'rtbcb_follow_up_queue',
             'requires' => [ 'rtbcb-test-report-assembly' ],
             'phase'    => 5,
+            'action'   => 'rtbcb_test_follow_up_email',
         ],
     ];
 

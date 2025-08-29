@@ -107,6 +107,27 @@ class RTBCB_Admin {
             }
         }
 
+        $sections_js = [];
+        if ( function_exists( 'rtbcb_get_dashboard_sections' ) ) {
+            $raw_sections = rtbcb_get_dashboard_sections();
+            foreach ( $raw_sections as $id => $section ) {
+                $section_data = [
+                    'id'        => sanitize_key( $id ),
+                    'label'     => isset( $section['label'] ) ? sanitize_text_field( $section['label'] ) : '',
+                    'option'    => isset( $section['option'] ) ? sanitize_key( $section['option'] ) : '',
+                    'requires'  => isset( $section['requires'] ) ? array_map( 'sanitize_key', (array) $section['requires'] ) : [],
+                    'phase'     => isset( $section['phase'] ) ? (int) $section['phase'] : 0,
+                    'completed' => ! empty( $section['completed'] ),
+                ];
+                if ( ! empty( $section['action'] ) ) {
+                    $action = sanitize_key( $section['action'] );
+                    $section_data['action'] = $action;
+                    $section_data['nonce']  = wp_create_nonce( $action );
+                }
+                $sections_js[] = $section_data;
+            }
+        }
+
         wp_localize_script( 'rtbcb-admin', 'rtbcbAdmin', [
             'ajax_url'                   => admin_url( 'admin-ajax.php' ),
             'nonce'                      => wp_create_nonce( 'rtbcb_nonce' ),
@@ -126,6 +147,7 @@ class RTBCB_Admin {
             'follow_up_email_nonce'      => wp_create_nonce( 'rtbcb_test_follow_up_email' ),
             'page'                       => $page,
             'company'                    => $company_data,
+            'sections'                   => $sections_js,
             'strings'                    => [
                 'confirm_delete'      => __( 'Are you sure you want to delete this lead?', 'rtbcb' ),
                 'confirm_bulk_delete' => __( 'Are you sure you want to delete the selected leads?', 'rtbcb' ),
