@@ -216,7 +216,7 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                     <div class="rtbcb-pain-points-grid">
                         <div class="rtbcb-pain-point-card">
                             <label class="rtbcb-pain-point-label">
-                                <input type="checkbox" name="pain_points[]" value="manual_processes" required />
+                                <input type="checkbox" name="pain_points[]" value="manual_processes" />
                                 <div class="rtbcb-pain-point-content">
                                     <div class="rtbcb-pain-point-icon">⚙️</div>
                                     <div class="rtbcb-pain-point-title"><?php esc_html_e( 'Manual Processes', 'rtbcb' ); ?></div>

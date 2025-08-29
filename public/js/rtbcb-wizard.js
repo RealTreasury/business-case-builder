@@ -112,6 +112,10 @@ class BusinessCaseBuilder {
             if (checkbox) {
                 checkbox.addEventListener('change', () => {
                     card.classList.toggle('rtbcb-selected', checkbox.checked);
+                    const checkedBoxes = this.form.querySelectorAll('input[name="pain_points[]"]:checked');
+                    if (checkedBoxes.length > 0) {
+                        this.clearStepError(3);
+                    }
                 });
             }
         });
@@ -164,6 +168,7 @@ class BusinessCaseBuilder {
                 this.showStepError(3, 'Please select at least one challenge');
                 return false;
             }
+            this.clearStepError(3);
         } else {
             // Standard field validation
             fieldsToValidate.forEach(fieldName => {
@@ -297,6 +302,19 @@ class BusinessCaseBuilder {
                 messageDiv.textContent = message;
                 messageDiv.style.display = 'block';
                 messageDiv.style.color = '#ef4444';
+            }
+        }
+    }
+
+    clearStepError(stepNumber) {
+        const step = this.steps[stepNumber - 1];
+        if (!step) return;
+
+        const validationDiv = step.querySelector('.rtbcb-pain-points-validation');
+        if (validationDiv) {
+            const messageDiv = validationDiv.querySelector('.rtbcb-validation-message');
+            if (messageDiv) {
+                messageDiv.style.display = 'none';
             }
         }
     }
