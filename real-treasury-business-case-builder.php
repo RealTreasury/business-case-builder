@@ -444,7 +444,13 @@ class Real_Treasury_BCB {
         $api_key      = sanitize_text_field( get_option( 'rtbcb_openai_api_key', '' ) );
         $report_model = sanitize_text_field( get_option( 'rtbcb_advanced_model', 'gpt-5-mini' ) );
 
-        $config = rtbcb_get_gpt5_config( get_option( 'rtbcb_gpt5_config', [] ) );
+        $timeout = intval( get_option( 'rtbcb_gpt5_timeout', 180 ) );
+        $config  = rtbcb_get_gpt5_config(
+            array_merge(
+                get_option( 'rtbcb_gpt5_config', [] ),
+                [ 'timeout' => $timeout ]
+            )
+        );
 
         $config_localized = [
             'model'              => sanitize_text_field( $config['model'] ),
