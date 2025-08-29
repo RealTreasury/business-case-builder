@@ -408,6 +408,7 @@ class Real_Treasury_BCB {
             'rtbcbAjax',
             [
                 'ajax_url'    => admin_url( 'admin-ajax.php' ),
+                'nonce'       => wp_create_nonce( 'rtbcb_generate' ),
                 'strings'     => [
                     'error'                   => __( 'An error occurred. Please try again.', 'rtbcb' ),
                     'generating'              => __( 'Generating your comprehensive business case...', 'rtbcb' ),

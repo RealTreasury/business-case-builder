@@ -393,6 +393,7 @@ class BusinessCaseBuilder {
             }
         }
         formData.append('action', 'rtbcb_generate_case');
+        formData.append('rtbcb_nonce', rtbcbAjax.nonce);
 
         console.log('RTBCB: Submitting form data:', Object.fromEntries(formData));
 
