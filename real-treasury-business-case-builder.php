@@ -880,21 +880,21 @@ class Real_Treasury_BCB {
 
                     rtbcb_log_memory_usage( 'before_llm_generation' );
 
-                    if ( empty( get_option( 'rtbcb_openai_api_key' ) ) ) {
-                        $error_code = 'E_NO_API_KEY';
-                        rtbcb_log_error( $error_code . ': OpenAI API key not configured' );
-                        $guidance        = __( 'Check the OpenAI API key setting in plugin options.', 'rtbcb' );
-                        $response_message = __( 'Our AI analysis service is temporarily unavailable.', 'rtbcb' ) . ' ' . $guidance;
-                        if ( function_exists( 'wp_get_environment_type' ) && 'production' !== wp_get_environment_type() ) {
-                            $response_message = __( 'OpenAI API key not configured.', 'rtbcb' ) . ' ' . $guidance;
+                    $api_key = rtbcb_get_openai_api_key();
+                    if ( class_exists( 'RTBCB_API_Tester' ) ) {
+                        $connection_test = RTBCB_API_Tester::test_connection( $api_key );
+                        if ( empty( $connection_test['success'] ) ) {
+                            $error_code = 'E_API_TEST_FAILURE';
+                            rtbcb_log_error( $error_code . ': ' . $connection_test['message'] );
+                            wp_send_json_error(
+                                [
+                                    'message'    => $connection_test['message'],
+                                    'details'    => $connection_test['details'] ?? '',
+                                    'error_code' => $error_code,
+                                ],
+                                500
+                            );
                         }
-                        wp_send_json_error(
-                            [
-                                'message'    => $response_message,
-                                'error_code' => $error_code,
-                            ],
-                            500
-                        );
                     }
 
                     rtbcb_log_api_debug( 'Calling LLM for comprehensive business case' );

@@ -34,7 +34,7 @@ class RTBCB_LLM {
     protected $last_response;
 
     public function __construct() {
-        $this->api_key = get_option( 'rtbcb_openai_api_key' );
+        $this->api_key = rtbcb_get_openai_api_key();
 
         $timeout = intval( get_option( 'rtbcb_gpt5_timeout', 180 ) );
         $config  = rtbcb_get_gpt5_config(
