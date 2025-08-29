@@ -29,7 +29,8 @@ $company_name = isset( $company_data['name'] ) ? sanitize_text_field( $company_d
             </button>
             <?php wp_nonce_field( 'rtbcb_test_dashboard', 'rtbcb_test_dashboard_nonce' ); ?>
         </p>
-        <p id="rtbcb-test-status"></p>
+        <progress id="rtbcb-test-progress" class="rtbcb-test-progress" max="100" value="0" aria-label="<?php esc_attr_e( 'Test progress', 'rtbcb' ); ?>"></progress>
+        <p id="rtbcb-test-status" role="status" aria-live="polite"></p>
     </div>
 
     <?php

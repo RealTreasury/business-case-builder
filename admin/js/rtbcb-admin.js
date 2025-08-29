@@ -515,11 +515,13 @@ jQuery(document).ready(function($) {
             e.preventDefault();
             var $btn = $(this);
             var $status = $('#rtbcb-test-status');
+            var $progress = $('#rtbcb-test-progress');
             var original = $btn.text();
             var companyName = $('#rtbcb-company-name').val();
             var companyNameTests = ['rtbcb_test_company_overview'];
 
             $btn.prop('disabled', true).text(window.rtbcbAdmin.strings.testing || 'Testing...');
+            $progress.val(0).removeClass('rtbcb-complete');
             $status.text('Running tests...');
 
             var tests = [
@@ -539,10 +541,12 @@ jQuery(document).ready(function($) {
             ];
 
             var results = [];
-
+            var total = tests.length;
+            $progress.attr('max', total);
+            $status.text('Running tests... (0/' + total + ')');
             for (var i = 0; i < tests.length; i++) {
                 var test = tests[i];
-                $status.text('Testing ' + test.label + '...');
+                $status.text('Testing ' + test.label + ' (' + (i + 1) + '/' + total + ')');
 
                 try {
                     var requestData = {
@@ -578,9 +582,15 @@ jQuery(document).ready(function($) {
                         data: errData
                     });
                 }
+
+                var completed = i + 1;
+                $progress.val(completed);
+                var percent = Math.round((completed / total) * 100);
+                $status.text('Completed ' + completed + ' of ' + total + ' (' + percent + '%)');
             }
 
-            $status.text('Tests completed');
+            $progress.addClass('rtbcb-complete');
+            $status.text('Tests completed (' + total + '/' + total + ')');
             $btn.prop('disabled', false).text(original);
 
             var message = 'Test Results:\n';

@@ -8,6 +8,7 @@ A comprehensive WordPress plugin that helps treasury teams quantify the benefits
 - `Set Company` uses the main company name input for all tests.
 - First and last name fields stay synchronized across interactions.
 - "Run All Tests" now includes the company name parameter for complete coverage and appears before individual test tools.
+- A progress bar tracks overall completion of the test suite.
 
 ### ✨ Major Enhancements
 

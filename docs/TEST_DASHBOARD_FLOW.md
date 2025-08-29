@@ -101,7 +101,7 @@ Objective: Convert the report into an ongoing conversation and nurture the lead.
 
 ## 🧪 Test Dashboard
 
-The WordPress admin includes a dedicated **Test Dashboard** (`admin/test-dashboard-page.php`) for validating key dependencies and running diagnostics:
+The WordPress admin includes a dedicated **Test Dashboard** (`admin/test-dashboard-page.php`) for validating key dependencies and running diagnostics. A progress bar displays overall completion as each test finishes:
 
 The **Set Company** button uses the company name input and applies it to all tests. Begin with **Run All Tests** to validate the entire flow—the selected company name is passed to every test for accurate coverage. Individual tools can be used afterward if deeper inspection is needed.
 
