@@ -63,7 +63,7 @@ The plugin automatically creates required database tables on activation:
 - `wp_rtbcb_rag_index` - Retrieval-augmented generation index
 
 ### Step 4: Display the Form
-Add the shortcode to any page or post:
+Add the shortcode to any page or post to display a “Generate Business Case” button that launches the form in a modal:
 ```
 [rt_business_case_builder]
 ```

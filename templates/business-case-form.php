@@ -5,6 +5,10 @@
  * @package RealTreasuryBusinessCaseBuilder
  */
 ?>
+<button type="button" class="rtbcb-open-modal button button-primary" onclick="window.openBusinessCaseModal()">
+    <?php esc_html_e( 'Generate Business Case', 'rtbcb' ); ?>
+</button>
+
 <div id="rtbcbModalOverlay" class="rtbcb-modal-overlay">
     <div class="rtbcb-modal">
         <div class="rtbcb-modal-header">
@@ -69,13 +73,3 @@
 </div>
 
 <div id="rtbcbResults" style="display:none;"></div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const button = document.createElement('button');
-    button.textContent = <?php echo wp_json_encode( __( 'Generate Business Case', 'rtbcb' ) ); ?>;
-    button.className = 'button button-primary';
-    button.onclick = window.openBusinessCaseModal;
-    document.body.appendChild(button);
-});
-</script>
