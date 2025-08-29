@@ -519,10 +519,27 @@ jQuery(document).ready(function($) {
             var original = $btn.text();
             var companyName = $('#rtbcb-company-name').val();
             var companyNameTests = ['rtbcb_test_company_overview'];
-
             $btn.prop('disabled', true).text(window.rtbcbAdmin.strings.testing || 'Testing...');
             $progress.val(0).removeClass('rtbcb-complete');
             $status.text('Running tests...');
+
+            var companyData = {};
+            try {
+                var companyResponse = await $.ajax({
+                    url: window.rtbcbAdmin.ajax_url,
+                    method: 'POST',
+                    data: {
+                        action: 'rtbcb_get_company_data',
+                        nonce: window.rtbcbAdmin.real_treasury_overview_nonce
+                    }
+                });
+                if (companyResponse.success) {
+                    companyData = companyResponse.data || {};
+                    window.rtbcbAdmin.company = companyData;
+                }
+            } catch (error) {
+                console.error('Failed to fetch company data', error);
+            }
 
             var tests = [
                 { action: 'rtbcb_test_company_overview', label: 'Company Overview', nonce: window.rtbcbAdmin.company_overview_nonce },
@@ -539,11 +556,11 @@ jQuery(document).ready(function($) {
                 { action: 'rtbcb_test_tracking_script', label: 'Tracking Scripts', nonce: window.rtbcbAdmin.tracking_script_nonce || $('#rtbcb_test_tracking_script_nonce').val() },
                 { action: 'rtbcb_test_follow_up_email', label: 'Follow-up Emails', nonce: window.rtbcbAdmin.follow_up_email_nonce || $('#rtbcb_test_follow_up_email_nonce').val() }
             ];
-
             var results = [];
             var total = tests.length;
             $progress.attr('max', total);
             $status.text('Running tests... (0/' + total + ')');
+            var companyDataTests = ['rtbcb_test_industry_overview', 'rtbcb_test_estimated_benefits', 'rtbcb_test_report_assembly'];
             for (var i = 0; i < tests.length; i++) {
                 var test = tests[i];
                 $status.text('Testing ' + test.label + ' (' + (i + 1) + '/' + total + ')');
@@ -556,6 +573,21 @@ jQuery(document).ready(function($) {
 
                     if (companyName && companyNameTests.indexOf(test.action) !== -1) {
                         requestData.company_name = companyName;
+                    }
+
+                    if (Object.keys(companyData).length && companyDataTests.indexOf(test.action) !== -1) {
+                        if (test.action === 'rtbcb_test_estimated_benefits') {
+                            requestData.company_data = {
+                                revenue: companyData.revenue,
+                                staff_count: companyData.staff_count,
+                                efficiency: companyData.efficiency
+                            };
+                            if (companyData.recommended_category) {
+                                requestData.recommended_category = companyData.recommended_category;
+                            }
+                        } else {
+                            requestData.company_data = JSON.stringify(companyData);
+                        }
                     }
 
                     var response = await $.ajax({
