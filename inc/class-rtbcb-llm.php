@@ -11,6 +11,12 @@ require_once __DIR__ . '/helpers.php';
 class RTBCB_LLM {
     private $api_key;
     private $current_inputs = [];
+
+    /**
+     * GPT-5 configuration settings.
+     *
+     * @var array
+     */
     private $gpt5_config;
 
     /**
@@ -30,7 +36,13 @@ class RTBCB_LLM {
     public function __construct() {
         $this->api_key = get_option( 'rtbcb_openai_api_key' );
 
-        $config     = rtbcb_get_gpt5_config( get_option( 'rtbcb_gpt5_config', [] ) );
+        $timeout = intval( get_option( 'rtbcb_gpt5_timeout', 180 ) );
+        $config  = rtbcb_get_gpt5_config(
+            array_merge(
+                get_option( 'rtbcb_gpt5_config', [] ),
+                [ 'timeout' => $timeout ]
+            )
+        );
         $this->gpt5_config = $config;
 
         if ( empty( $this->api_key ) ) {
@@ -1330,13 +1342,15 @@ Respond with valid JSON only, following the specified schema exactly. Ensure all
             $body['store'] = (bool) $this->gpt5_config['store'];
         }
 
+        $timeout = intval( $this->gpt5_config['timeout'] ?? 180 );
+
         $args = [
             'headers' => [
                 'Authorization' => 'Bearer ' . $this->api_key,
                 'Content-Type' => 'application/json',
             ],
             'body'    => wp_json_encode( $body ),
-            'timeout' => 60, // Reasonable timeout for model requests
+            'timeout' => $timeout,
         ];
 
         $this->last_request = $body;

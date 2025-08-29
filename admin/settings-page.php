@@ -15,6 +15,7 @@ $advanced_model  = get_option( 'rtbcb_advanced_model', rtbcb_get_default_model( 
 $embedding_model = get_option( 'rtbcb_embedding_model', rtbcb_get_default_model( 'embedding' ) );
 $labor_cost      = get_option( 'rtbcb_labor_cost_per_hour', '' );
 $bank_fee        = get_option( 'rtbcb_bank_fee_baseline', '' );
+$gpt5_timeout    = get_option( 'rtbcb_gpt5_timeout', 180 );
 
 $chat_models = [
     'gpt-5'             => 'gpt-5',
@@ -90,6 +91,15 @@ $embedding_models = [
                             <option value="<?php echo esc_attr( $value ); ?>" <?php selected( $advanced_model, $value ); ?>><?php echo esc_html( $label ); ?></option>
                         <?php endforeach; ?>
                     </select>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="rtbcb_gpt5_timeout"><?php echo esc_html__( 'API Request Timeout (seconds)', 'rtbcb' ); ?></label>
+                </th>
+                <td>
+                    <input type="number" id="rtbcb_gpt5_timeout" name="rtbcb_gpt5_timeout" value="<?php echo esc_attr( $gpt5_timeout ); ?>" class="small-text" />
+                    <p class="description"><?php echo esc_html__( 'Maximum time to wait for OpenAI responses.', 'rtbcb' ); ?></p>
                 </td>
             </tr>
             <tr>
