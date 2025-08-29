@@ -8,9 +8,11 @@
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
-$company_data  = get_option( 'rtbcb_company_data', [] );
-$company_name  = isset( $company_data['name'] ) ? sanitize_text_field( $company_data['name'] ) : '';
-$test_results = get_option( 'rtbcb_test_results', [] );
+$company_data   = get_option( 'rtbcb_company_data', [] );
+$company_name   = isset( $company_data['name'] ) ? sanitize_text_field( $company_data['name'] ) : '';
+$test_results  = get_option( 'rtbcb_test_results', [] );
+$sections      = rtbcb_get_dashboard_sections( $test_results );
+$total_sections = count( $sections );
 ?>
 <div class="wrap rtbcb-admin-page">
     <h1><?php esc_html_e( 'Treasury Report Section Testing Dashboard', 'rtbcb' ); ?></h1>
@@ -30,7 +32,7 @@ $test_results = get_option( 'rtbcb_test_results', [] );
             </button>
             <?php wp_nonce_field( 'rtbcb_test_dashboard', 'rtbcb_test_dashboard_nonce' ); ?>
         </p>
-        <progress id="rtbcb-test-progress" class="rtbcb-test-progress" max="100" value="0" aria-label="<?php esc_attr_e( 'Test progress', 'rtbcb' ); ?>"></progress>
+        <progress id="rtbcb-test-progress" class="rtbcb-test-progress" max="<?php echo esc_attr( $total_sections ); ?>" value="0" role="progressbar" aria-valuemin="0" aria-valuemax="<?php echo esc_attr( $total_sections ); ?>" aria-valuenow="0" aria-label="<?php esc_attr_e( 'Test progress', 'rtbcb' ); ?>"></progress>
         <p id="rtbcb-test-status" role="status" aria-live="polite"></p>
         <p id="rtbcb-test-step"></p>
         <pre id="rtbcb-test-config" class="rtbcb-config-snippet"></pre>
@@ -59,7 +61,6 @@ $test_results = get_option( 'rtbcb_test_results', [] );
     </div>
 
     <?php
-    $sections = rtbcb_get_dashboard_sections( $test_results );
     $phases   = [
         1 => [
             'label'       => __( 'Phase 1: Data Collection & Enrichment', 'rtbcb' ),
