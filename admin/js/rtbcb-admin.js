@@ -509,6 +509,8 @@ jQuery(document).ready(function($) {
             var $btn = $(this);
             var $status = $('#rtbcb-test-status');
             var original = $btn.text();
+            var companyName = $('#rtbcb-company-name').val();
+            var companyNameTests = ['rtbcb_test_company_overview'];
 
             $btn.prop('disabled', true).text(window.rtbcbAdmin.strings.testing || 'Testing...');
             $status.text('Running tests...');
@@ -536,13 +538,19 @@ jQuery(document).ready(function($) {
                 $status.text('Testing ' + test.label + '...');
 
                 try {
+                    var requestData = {
+                        action: test.action,
+                        nonce: test.nonce || window.rtbcbAdmin.test_dashboard_nonce
+                    };
+
+                    if (companyName && companyNameTests.indexOf(test.action) !== -1) {
+                        requestData.company_name = companyName;
+                    }
+
                     var response = await $.ajax({
                         url: window.rtbcbAdmin.ajax_url,
                         method: 'POST',
-                        data: {
-                            action: test.action,
-                            nonce: test.nonce || window.rtbcbAdmin.test_dashboard_nonce
-                        }
+                        data: requestData
                     });
 
                     results.push({
