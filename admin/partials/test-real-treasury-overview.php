@@ -112,10 +112,7 @@ $overview_url = admin_url( 'admin.php?page=rtbcb-test-dashboard#rtbcb-phase1' );
 }
 </style>
 <script>
-<?php if ( ! isset( $GLOBALS['ajaxurl'] ) || empty( $GLOBALS['ajaxurl'] ) ) : ?>
-var ajaxurl = '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>';
-<?php endif; ?>
-document.getElementById( 'rtbcb-rerun-real-treasury' )?.addEventListener( 'click', function() {
-    document.getElementById( 'rtbcb-generate-real-treasury-overview' ).click();
-});
+    document.getElementById( 'rtbcb-rerun-real-treasury' )?.addEventListener( 'click', function() {
+        document.getElementById( 'rtbcb-generate-real-treasury-overview' ).click();
+    });
 </script>

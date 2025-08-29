@@ -45,19 +45,16 @@ if ( ! rtbcb_require_completed_steps( 'rtbcb-test-maturity-model' ) ) {
     </details>
 </div>
 <script>
-<?php if ( ! isset( $GLOBALS['ajaxurl'] ) || empty( $GLOBALS['ajaxurl'] ) ) : ?>
-var ajaxurl = '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>';
-<?php endif; ?>
- jQuery('#rtbcb-generate-maturity-model').on('click', function(){
-    const btn = jQuery(this);
-    const original = rtbcbTestUtils.showLoading(btn);
-    jQuery.post(ajaxurl, {
-        action: 'rtbcb_test_maturity_model',
-        nonce: jQuery('#rtbcb_test_maturity_model_nonce').val()
-    }).done(function(response){
-        if (response.success) {
-            const data = response.data;
-            rtbcbTestUtils.renderSuccess(jQuery('#rtbcb-maturity-model-results'), data.assessment, null, data);
+    jQuery('#rtbcb-generate-maturity-model').on('click', function(){
+        const btn = jQuery(this);
+        const original = rtbcbTestUtils.showLoading(btn);
+        jQuery.post(ajaxurl, {
+            action: 'rtbcb_test_maturity_model',
+            nonce: jQuery('#rtbcb_test_maturity_model_nonce').val()
+        }).done(function(response){
+            if (response.success) {
+                const data = response.data;
+                rtbcbTestUtils.renderSuccess(jQuery('#rtbcb-maturity-model-results'), data.assessment, null, data);
             jQuery('#rtbcb-maturity-model-card').show();
         } else {
             rtbcbTestUtils.renderError(jQuery('#rtbcb-maturity-model-results'), response.data.message);
