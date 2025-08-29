@@ -661,6 +661,7 @@ jQuery(document).ready(function($) {
                     $progress.val(1).addClass('rtbcb-complete');
                     $status.text('✅ Generated ' + data.components_generated + ' analysis components - view results below');
                     $('#rtbcb-section-tests').slideDown();
+                    await RTBCB.Admin.saveTestResults(data.results);
                 } else {
                     $status.text(response.data && response.data.message ? response.data.message : 'Generation failed');
                 }
@@ -901,8 +902,28 @@ jQuery(document).ready(function($) {
             } catch (error) {
                 console.error('Failed to refresh progress chart', error);
             }
-        }
-        ,
+        },
+
+        saveTestResults: async function(results) {
+            try {
+                var response = await $.ajax({
+                    url: window.rtbcbAdmin.ajax_url,
+                    method: 'POST',
+                    data: {
+                        action: 'rtbcb_save_test_results',
+                        nonce: window.rtbcbAdmin.test_dashboard_nonce,
+                        results: JSON.stringify(results)
+                    }
+                });
+                if (response.success) {
+                    console.log('Test results saved');
+                } else {
+                    console.error(response.data && response.data.message ? response.data.message : 'Failed to save test results');
+                }
+            } catch (error) {
+                console.error('Failed to save test results', error);
+            }
+        },
 
         clearAnalysis: async function(e) {
             e.preventDefault();
