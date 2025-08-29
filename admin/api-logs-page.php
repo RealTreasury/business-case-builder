@@ -5,9 +5,7 @@
  * @package RealTreasuryBusinessCaseBuilder
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-    exit;
-}
+defined( 'ABSPATH' ) || exit;
 ?>
 <div class="wrap">
     <h1><?php echo esc_html__( 'API Logs', 'rtbcb' ); ?></h1>
@@ -16,53 +14,55 @@ if ( ! defined( 'ABSPATH' ) ) {
             <?php esc_html_e( 'Clear All Logs', 'rtbcb' ); ?>
         </button>
     </p>
-    <table class="widefat fixed striped">
-        <thead>
-            <tr>
-                <th><?php esc_html_e( 'ID', 'rtbcb' ); ?></th>
-                <th><?php esc_html_e( 'Request', 'rtbcb' ); ?></th>
-                <th><?php esc_html_e( 'Tokens', 'rtbcb' ); ?></th>
-                <th><?php esc_html_e( 'Status', 'rtbcb' ); ?></th>
-                <th><?php esc_html_e( 'Timestamp', 'rtbcb' ); ?></th>
-                <th><?php esc_html_e( 'Actions', 'rtbcb' ); ?></th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php if ( ! empty( $logs_data['logs'] ) ) : ?>
-                <?php foreach ( $logs_data['logs'] as $log ) :
-                    $request  = json_decode( $log['request_json'], true );
-                    $response = json_decode( $log['response_json'], true );
-                    $summary  = '';
-                    if ( isset( $request['messages'][0]['content'] ) ) {
-                        $summary = wp_trim_words( $request['messages'][0]['content'], 10, '...' );
-                    } else {
-                        $summary = wp_trim_words( $log['request_json'], 10, '...' );
-                    }
-                    $status = isset( $response['error'] ) ? __( 'Error', 'rtbcb' ) : __( 'OK', 'rtbcb' );
-                ?>
-                <tr data-id="<?php echo esc_attr( $log['id'] ); ?>" data-request="<?php echo esc_attr( $log['request_json'] ); ?>" data-response="<?php echo esc_attr( $log['response_json'] ); ?>">
-                    <td><?php echo esc_html( $log['id'] ); ?></td>
-                    <td><?php echo esc_html( $summary ); ?></td>
-                    <td><?php echo esc_html( $log['total_tokens'] ); ?></td>
-                    <td><?php echo esc_html( $status ); ?></td>
-                    <td><?php echo esc_html( $log['created_at'] ); ?></td>
-                    <td>
-                        <button class="button rtbcb-view-log">
-                            <?php esc_html_e( 'View', 'rtbcb' ); ?>
-                        </button>
-                        <button class="button rtbcb-delete-log" data-id="<?php echo esc_attr( $log['id'] ); ?>" data-nonce="<?php echo esc_attr( $nonce ); ?>">
-                            <?php esc_html_e( 'Delete', 'rtbcb' ); ?>
-                        </button>
-                    </td>
-                </tr>
-                <?php endforeach; ?>
-            <?php else : ?>
+    <div class="rtbcb-log-table-wrapper">
+        <table class="widefat fixed striped">
+            <thead>
                 <tr>
-                    <td colspan="6"><?php esc_html_e( 'No logs found.', 'rtbcb' ); ?></td>
+                    <th><?php esc_html_e( 'ID', 'rtbcb' ); ?></th>
+                    <th><?php esc_html_e( 'Request', 'rtbcb' ); ?></th>
+                    <th><?php esc_html_e( 'Tokens', 'rtbcb' ); ?></th>
+                    <th><?php esc_html_e( 'Status', 'rtbcb' ); ?></th>
+                    <th><?php esc_html_e( 'Timestamp', 'rtbcb' ); ?></th>
+                    <th><?php esc_html_e( 'Actions', 'rtbcb' ); ?></th>
                 </tr>
-            <?php endif; ?>
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                <?php if ( ! empty( $logs_data['logs'] ) ) : ?>
+                    <?php foreach ( $logs_data['logs'] as $log ) :
+                        $request  = json_decode( $log['request_json'], true );
+                        $response = json_decode( $log['response_json'], true );
+                        $summary  = '';
+                        if ( isset( $request['messages'][0]['content'] ) ) {
+                            $summary = wp_trim_words( $request['messages'][0]['content'], 10, '...' );
+                        } else {
+                            $summary = wp_trim_words( $log['request_json'], 10, '...' );
+                        }
+                        $status = isset( $response['error'] ) ? __( 'Error', 'rtbcb' ) : __( 'OK', 'rtbcb' );
+                    ?>
+                    <tr data-id="<?php echo esc_attr( $log['id'] ); ?>" data-request="<?php echo esc_attr( $log['request_json'] ); ?>" data-response="<?php echo esc_attr( $log['response_json'] ); ?>">
+                        <td><?php echo esc_html( $log['id'] ); ?></td>
+                        <td><?php echo esc_html( $summary ); ?></td>
+                        <td><?php echo esc_html( $log['total_tokens'] ); ?></td>
+                        <td><?php echo esc_html( $status ); ?></td>
+                        <td><?php echo esc_html( $log['created_at'] ); ?></td>
+                        <td>
+                            <button class="button rtbcb-view-log">
+                                <?php esc_html_e( 'View', 'rtbcb' ); ?>
+                            </button>
+                            <button class="button rtbcb-delete-log" data-id="<?php echo esc_attr( $log['id'] ); ?>" data-nonce="<?php echo esc_attr( $nonce ); ?>">
+                                <?php esc_html_e( 'Delete', 'rtbcb' ); ?>
+                            </button>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                <?php else : ?>
+                    <tr>
+                        <td colspan="6"><?php esc_html_e( 'No logs found.', 'rtbcb' ); ?></td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
     <?php
     $total_pages = ceil( $logs_data['total'] / $per_page );
     if ( $total_pages > 1 ) :
