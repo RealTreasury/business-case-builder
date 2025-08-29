@@ -9,6 +9,11 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+$allowed = rtbcb_require_completed_steps( 'rtbcb-test-report-assembly' );
+if ( ! $allowed ) {
+    return;
+}
+
 $summary = get_option( 'rtbcb_executive_summary', [] );
 ?>
 <h2><?php esc_html_e( 'Report Assembly & Delivery', 'rtbcb' ); ?></h2>

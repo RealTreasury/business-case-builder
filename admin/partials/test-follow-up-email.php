@@ -8,6 +8,11 @@
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
+
+if ( ! rtbcb_require_completed_steps( 'rtbcb-test-follow-up-email' ) ) {
+    return;
+}
+
 ?>
 <h2><?php esc_html_e( 'Follow-up Email Queue', 'rtbcb' ); ?></h2>
 <p class="description"><?php esc_html_e( 'Trigger personalized follow-up emails and inspect queued messages.', 'rtbcb' ); ?></p>
