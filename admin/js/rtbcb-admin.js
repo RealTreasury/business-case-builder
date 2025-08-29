@@ -47,6 +47,18 @@ jQuery(document).ready(function($) {
             // Report Assembly Test
             $('#rtbcb-report-assembly-form').on('submit', this.testReportAssembly);
 
+            // Tracking Script Test
+            $('#rtbcb-rerun-tracking-script').on('click', function() {
+                $('#rtbcb-run-tracking-script').trigger('click');
+            });
+            $('#rtbcb-run-tracking-script').on('click', this.testTrackingScript);
+
+            // Follow-up Email Test
+            $('#rtbcb-rerun-follow-up').on('click', function() {
+                $('#rtbcb-run-follow-up').trigger('click');
+            });
+            $('#rtbcb-run-follow-up').on('click', this.testFollowUpEmail);
+
             // Test Dashboard
             $('#rtbcb-test-all-sections').on('click', this.runAllTests);
         },
@@ -492,6 +504,79 @@ jQuery(document).ready(function($) {
             } finally {
                 $btn.prop('disabled', false).text(original);
             }
+        },
+
+        testTrackingScript: function(e) {
+            e.preventDefault();
+            var $btn = $(this);
+            var nonce = $('#rtbcb_test_tracking_script_nonce').val();
+            var snippet = $('#rtbcb-tracking-snippet').val();
+            var original = $btn.text();
+            $btn.prop('disabled', true).text(window.rtbcbAdmin.strings.testing || 'Testing...');
+            $('#rtbcb-tracking-script-result').html('');
+            try {
+                var script = document.createElement('script');
+                script.text = snippet + "\n document.dispatchEvent(new CustomEvent('rtbcbTrackingEvent'));";
+                document.body.appendChild(script);
+            } catch (err) {
+                $('#rtbcb-tracking-script-result').html('<div class="notice notice-error"><p>' + err.message + '</p></div>');
+                $btn.prop('disabled', false).text(original);
+                return;
+            }
+            $(document).one('rtbcbTrackingEvent', function() {
+                $.ajax({
+                    url: window.rtbcbAdmin.ajax_url,
+                    method: 'POST',
+                    data: {
+                        action: 'rtbcb_test_tracking_script',
+                        nonce: nonce
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            $('#rtbcb-tracking-script-result').html('<div class="notice notice-success"><p>Event captured.</p></div>');
+                        } else {
+                            $('#rtbcb-tracking-script-result').html('<div class="notice notice-error"><p>' + (response.data && response.data.message ? response.data.message : 'Test failed.') + '</p></div>');
+                        }
+                    },
+                    error: function() {
+                        $('#rtbcb-tracking-script-result').html('<div class="notice notice-error"><p>Request failed.</p></div>');
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', false).text(original);
+                    }
+                });
+            });
+        },
+
+        testFollowUpEmail: function(e) {
+            e.preventDefault();
+            var $btn = $(this);
+            var nonce = $('#rtbcb_test_follow_up_email_nonce').val();
+            var original = $btn.text();
+            $btn.prop('disabled', true).text(window.rtbcbAdmin.strings.testing || 'Testing...');
+            $('#rtbcb-follow-up-result').html('');
+            $.ajax({
+                url: window.rtbcbAdmin.ajax_url,
+                method: 'POST',
+                data: {
+                    action: 'rtbcb_test_follow_up_email',
+                    nonce: nonce
+                },
+                success: function(response) {
+                    if (response.success) {
+                        var queue = response.data.queue || [];
+                        $('#rtbcb-follow-up-result').html('<pre>' + JSON.stringify(queue, null, 2) + '</pre>');
+                    } else {
+                        $('#rtbcb-follow-up-result').html('<div class="notice notice-error"><p>' + (response.data && response.data.message ? response.data.message : 'Test failed.') + '</p></div>');
+                    }
+                },
+                error: function() {
+                    $('#rtbcb-follow-up-result').html('<div class="notice notice-error"><p>Request failed.</p></div>');
+                },
+                complete: function() {
+                    $btn.prop('disabled', false).text(original);
+                }
+            });
         },
 
         runAllTests: async function(e) {
