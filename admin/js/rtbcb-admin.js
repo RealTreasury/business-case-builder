@@ -36,7 +36,7 @@ jQuery(document).ready(function($) {
             $('#rtbcb-run-tests').on('click', this.runDiagnostics);
             
             // Sync Local
-            $('#rtbcb-sync-local').on('click', this.syncLocal);
+            $('#rtbcb-sync-to-local').on('click', this.syncLocal);
             
             // Commentary Test
             $('#rtbcb-generate-commentary').on('click', this.testCommentary);
@@ -229,6 +229,7 @@ jQuery(document).ready(function($) {
             e.preventDefault();
             var $btn = $(this);
             var original = $btn.text();
+            var $status = $('#rtbcb-connectivity-status');
 
             $btn.text(window.rtbcbAdmin.strings.processing || 'Processing...').prop('disabled', true);
 
@@ -243,9 +244,12 @@ jQuery(document).ready(function($) {
                         nonce: nonce
                     }
                 });
-                alert(response.data && response.data.message ? response.data.message : 'Sync completed');
+                var message = response.data && response.data.message ? response.data.message : 'Sync completed';
+                var cls = response.success ? 'notice notice-success' : 'notice notice-error';
+                $status.html('<div class="' + cls + '"><p>' + message + '</p></div>');
             } catch (error) {
-                alert('Sync request failed');
+                var err = (window.rtbcbAdmin.strings && window.rtbcbAdmin.strings.error) ? window.rtbcbAdmin.strings.error : 'Sync request failed';
+                $status.html('<div class="notice notice-error"><p>' + err + '</p></div>');
             } finally {
                 $btn.text(original).prop('disabled', false);
             }
