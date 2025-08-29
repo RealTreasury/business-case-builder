@@ -1233,23 +1233,25 @@ class RTBCB_Admin {
         }
 
         try {
-            $overview = rtbcb_test_generate_company_overview( $company_name );
+            $overview       = rtbcb_test_generate_company_overview( $company_name );
+            $overview_error = false;
 
             if ( is_wp_error( $overview ) ) {
-                wp_send_json_error(
-                    [
-                        'message' => sanitize_text_field( $overview->get_error_message() ),
-                    ]
-                );
+                error_log( 'RTBCB Company Overview Error: ' . $overview->get_error_message() );
+                $overview_error = true;
+                $analysis       = '';
+                $recommendations = [];
+                $references      = [];
+                $metrics         = [];
+            } else {
+                $analysis        = $overview['analysis'] ?? '';
+                $recommendations = array_map( 'sanitize_text_field', $overview['recommendations'] ?? [] );
+                $references      = array_map( 'esc_url_raw', $overview['references'] ?? [] );
+                $metrics         = is_array( $overview['metrics'] ?? null ) ? $overview['metrics'] : [];
             }
-
-            $analysis        = $overview['analysis'] ?? '';
-            $recommendations = array_map( 'sanitize_text_field', $overview['recommendations'] ?? [] );
-            $references      = array_map( 'esc_url_raw', $overview['references'] ?? [] );
-            $metrics         = is_array( $overview['metrics'] ?? null ) ? $overview['metrics'] : [];
-            $revenue         = floatval( $metrics['revenue'] ?? 0 );
-            $staff_count     = intval( $metrics['staff_count'] ?? 0 );
-            $efficiency      = floatval( $metrics['baseline_efficiency'] ?? 0 );
+            $revenue     = floatval( $metrics['revenue'] ?? 0 );
+            $staff_count = intval( $metrics['staff_count'] ?? 0 );
+            $efficiency  = floatval( $metrics['baseline_efficiency'] ?? 0 );
 
             $existing     = rtbcb_get_current_company();
             $company_data = [
@@ -1280,18 +1282,22 @@ class RTBCB_Admin {
 
             delete_option( 'rtbcb_test_results' );
 
-            wp_send_json_success(
-                [
-                    'message' => __( 'Company saved.', 'rtbcb' ),
-                    'name'    => $company_name,
-                    'overview' => wp_kses_post( $analysis ),
-                    'metrics'  => [
-                        'revenue'     => $revenue,
-                        'staff_count' => $staff_count,
-                        'efficiency'  => $efficiency,
-                    ],
-                ]
-            );
+            $response = [
+                'message'  => __( 'Company saved.', 'rtbcb' ),
+                'name'     => $company_name,
+                'overview' => wp_kses_post( $analysis ),
+                'metrics'  => [
+                    'revenue'     => $revenue,
+                    'staff_count' => $staff_count,
+                    'efficiency'  => $efficiency,
+                ],
+            ];
+
+            if ( $overview_error ) {
+                $response['notice'] = __( 'Company overview generation failed.', 'rtbcb' );
+            }
+
+            wp_send_json_success( $response );
         } catch ( Exception $e ) {
             error_log( 'RTBCB Set Test Company Error: ' . $e->getMessage() );
             wp_send_json_error(
