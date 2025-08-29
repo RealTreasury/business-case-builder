@@ -194,4 +194,78 @@ class RTBCB_API_Log {
             )
         );
     }
+
+    /**
+     * Delete a single log entry.
+     *
+     * @param int $id Log ID.
+     * @return int Rows deleted.
+     */
+    public static function delete_log( $id ) {
+        global $wpdb;
+
+        if ( empty( self::$table_name ) ) {
+            self::init();
+        }
+
+        $id = intval( $id );
+        if ( $id <= 0 ) {
+            return 0;
+        }
+
+        return $wpdb->delete( self::$table_name, [ 'id' => $id ], [ '%d' ] );
+    }
+
+    /**
+     * Clear all log entries.
+     *
+     * @return int Rows deleted.
+     */
+    public static function clear_logs() {
+        global $wpdb;
+
+        if ( empty( self::$table_name ) ) {
+            self::init();
+        }
+
+        return $wpdb->query( 'TRUNCATE TABLE ' . self::$table_name );
+    }
+
+    /**
+     * Retrieve logs with pagination support.
+     *
+     * @param int $paged    Current page number.
+     * @param int $per_page Items per page.
+     * @return array{
+     *     logs: array,
+     *     total: int
+     * }
+     */
+    public static function get_logs_paginated( $paged = 1, $per_page = 20 ) {
+        global $wpdb;
+
+        if ( empty( self::$table_name ) ) {
+            self::init();
+        }
+
+        $paged    = max( 1, intval( $paged ) );
+        $per_page = max( 1, intval( $per_page ) );
+        $offset   = ( $paged - 1 ) * $per_page;
+
+        $logs = $wpdb->get_results(
+            $wpdb->prepare(
+                'SELECT * FROM ' . self::$table_name . ' ORDER BY created_at DESC LIMIT %d OFFSET %d',
+                $per_page,
+                $offset
+            ),
+            ARRAY_A
+        );
+
+        $total = (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . self::$table_name );
+
+        return [
+            'logs'  => $logs,
+            'total' => $total,
+        ];
+    }
 }

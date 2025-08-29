@@ -54,6 +54,8 @@ class RTBCB_Admin {
         add_action( 'wp_ajax_rtbcb_get_phase_completion', [ $this, 'ajax_get_phase_completion' ] );
         add_action( 'wp_ajax_rtbcb_generate_comprehensive_analysis', [ $this, 'ajax_generate_comprehensive_analysis' ] );
         add_action( 'wp_ajax_rtbcb_clear_analysis_data', [ $this, 'ajax_clear_analysis_data' ] );
+        add_action( 'wp_ajax_rtbcb_delete_log', [ $this, 'ajax_delete_log' ] );
+        add_action( 'wp_ajax_rtbcb_clear_logs', [ $this, 'ajax_clear_logs' ] );
     }
 
     /**
@@ -238,6 +240,15 @@ class RTBCB_Admin {
             [ $this, 'render_test_dashboard' ]
         );
 
+        add_submenu_page(
+            'rtbcb-dashboard',
+            __( 'API Logs', 'rtbcb' ),
+            __( 'API Logs', 'rtbcb' ),
+            'manage_options',
+            'rtbcb-api-logs',
+            [ $this, 'render_api_logs' ]
+        );
+
     }
 
     /**
@@ -338,6 +349,24 @@ class RTBCB_Admin {
         $vendor_count   = $this->get_vendor_count();
 
         include RTBCB_DIR . 'admin/test-dashboard-page.php';
+    }
+
+    /**
+     * Render API logs page.
+     *
+     * @return void
+     */
+    public function render_api_logs() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+
+        $paged     = isset( $_GET['paged'] ) ? intval( wp_unslash( $_GET['paged'] ) ) : 1;
+        $per_page  = 20;
+        $logs_data = RTBCB_API_Log::get_logs_paginated( $paged, $per_page );
+        $nonce     = wp_create_nonce( 'rtbcb_api_logs' );
+
+        include RTBCB_DIR . 'admin/api-logs-page.php';
     }
 
     /**
@@ -1785,6 +1814,49 @@ class RTBCB_Admin {
         }
 
         wp_send_json_success( [ 'message' => __( 'Stored analysis data cleared.', 'rtbcb' ) ] );
+    }
+
+    /**
+     * AJAX handler for deleting a single log entry.
+     *
+     * @return void
+     */
+    public function ajax_delete_log() {
+        check_ajax_referer( 'rtbcb_api_logs', 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'message' => __( 'Unauthorized', 'rtbcb' ) ] );
+        }
+
+        $id = isset( $_POST['id'] ) ? intval( $_POST['id'] ) : 0;
+        if ( $id <= 0 ) {
+            wp_send_json_error( [ 'message' => __( 'Invalid log ID.', 'rtbcb' ) ] );
+        }
+
+        $deleted = RTBCB_API_Log::delete_log( $id );
+
+        if ( $deleted ) {
+            wp_send_json_success();
+        }
+
+        wp_send_json_error( [ 'message' => __( 'Failed to delete log.', 'rtbcb' ) ] );
+    }
+
+    /**
+     * AJAX handler for clearing all log entries.
+     *
+     * @return void
+     */
+    public function ajax_clear_logs() {
+        check_ajax_referer( 'rtbcb_api_logs', 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'message' => __( 'Unauthorized', 'rtbcb' ) ] );
+        }
+
+        RTBCB_API_Log::clear_logs();
+
+        wp_send_json_success();
     }
 
     /**
