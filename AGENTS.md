@@ -8,3 +8,5 @@
 - Wrap user visible strings in translation functions like `__( 'text', 'rtbcb' )`.
 - Do not modify code in the `vendor/` directory; it contains third-party dependencies.
 - After making changes to PHP files, run `find . -name "*.php" -not -path "./vendor/*" -print0 | xargs -0 -n1 php -l` to check for syntax errors.
+- Run `bash tests/run-tests.sh` to execute PHP and JS tests as well as optional `phpcs` checks.
+- Ensure `phpcs --standard=WordPress` passes when available.
