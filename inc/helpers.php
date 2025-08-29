@@ -159,7 +159,7 @@ function rtbcb_get_dashboard_sections() {
         'rtbcb-test-follow-up-email'        => [
             'label'    => __( 'Follow-up Emails', 'rtbcb' ),
             'option'   => 'rtbcb_follow_up_queue',
-            'requires' => [ 'rtbcb-test-report-assembly' ],
+            'requires' => [ 'rtbcb-test-tracking-script' ],
             'phase'    => 5,
             'action'   => 'rtbcb_test_follow_up_email',
         ],
