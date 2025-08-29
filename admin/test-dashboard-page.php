@@ -92,31 +92,30 @@ $test_results = get_option( 'rtbcb_test_results', [] );
     ?>
     <div class="card rtbcb-progress-card">
         <h2 class="title"><?php esc_html_e( 'Analysis Progress', 'rtbcb' ); ?></h2>
-        <canvas id="rtbcb-progress-chart" width="400" height="200"></canvas>
-        <ul class="rtbcb-progress-list">
+        <div id="rtbcb-progress-steps" class="rtbcb-progress-steps">
             <?php foreach ( $phases as $phase_num => $phase ) : ?>
-                <li class="rtbcb-progress-phase">
-                    <strong><?php echo esc_html( $phase['label'] ); ?></strong>
-                    <span class="rtbcb-phase-desc"><?php echo esc_html( $phase['description'] ); ?></span>
-                    <span class="rtbcb-phase-percent"><?php echo esc_html( $phase_percentages[ $phase_num ] ); ?>%</span>
-                    <?php if ( ! empty( $sections_by_phase[ $phase_num ] ) ) : ?>
-                        <ul>
+                <div class="rtbcb-progress-phase" data-phase="<?php echo esc_attr( $phase_num ); ?>">
+                    <button type="button" class="rtbcb-phase-toggle" aria-expanded="false" aria-controls="rtbcb-phase-content-<?php echo esc_attr( $phase_num ); ?>">
+                        <span class="rtbcb-phase-label"><?php echo esc_html( $phase['label'] ); ?></span>
+                        <span class="rtbcb-phase-percent"><?php echo esc_html( $phase_percentages[ $phase_num ] ); ?>%</span>
+                    </button>
+                    <div id="rtbcb-phase-content-<?php echo esc_attr( $phase_num ); ?>" class="rtbcb-phase-content">
+                        <span class="rtbcb-phase-desc"><?php echo esc_html( $phase['description'] ); ?></span>
+                        <?php if ( ! empty( $sections_by_phase[ $phase_num ] ) ) : ?>
                             <?php foreach ( $sections_by_phase[ $phase_num ] as $id => $section ) : ?>
                                 <?php $done = ! empty( $section['completed'] ); ?>
-                                <li class="rtbcb-progress-item <?php echo $done ? 'completed' : 'pending'; ?>">
-                                    <a href="#rtbcb-phase<?php echo esc_attr( $phase_num ); ?>" class="rtbcb-jump-tab">
-                                        <?php echo esc_html( $section['label'] ); ?>
-                                    </a>
-                                    - <?php echo $done ? esc_html__( '✓ Tested', 'rtbcb' ) : esc_html__( '⚪ Pending', 'rtbcb' ); ?>
-                                </li>
+                                <div class="rtbcb-section-item <?php echo $done ? 'completed' : 'pending'; ?>" data-completed="<?php echo $done ? '1' : '0'; ?>">
+                                    <span class="rtbcb-section-label"><?php echo esc_html( $section['label'] ); ?></span>
+                                    <span class="rtbcb-section-status"><?php echo $done ? esc_html__( '✓ Tested', 'rtbcb' ) : esc_html__( '⚪ Pending', 'rtbcb' ); ?></span>
+                                </div>
                             <?php endforeach; ?>
-                        </ul>
-                    <?php else : ?>
-                        - <?php esc_html_e( 'No tests yet.', 'rtbcb' ); ?>
-                    <?php endif; ?>
-                </li>
+                        <?php else : ?>
+                            <p class="rtbcb-no-tests"><?php esc_html_e( 'No tests yet.', 'rtbcb' ); ?></p>
+                        <?php endif; ?>
+                    </div>
+                </div>
             <?php endforeach; ?>
-        </ul>
+        </div>
     </div>
 
     <script>
