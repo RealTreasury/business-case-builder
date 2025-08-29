@@ -7,6 +7,14 @@
         const card = $('#rtbcb-company-overview-card');
         const metaDiv = $('#rtbcb-company-overview-meta');
 
+        function syncCompanyName() {
+            const name = $('#rtbcb-test-company-name').val().trim();
+            $('#rtbcb-company-name').val(name);
+            return name;
+        }
+
+        $('#rtbcb-test-company-name').on('input', syncCompanyName);
+
         function sendRequest(companyName) {
             console.log('Starting simple company overview request');
 
@@ -83,12 +91,14 @@
 
         generateBtn.on('click', function(e) {
             e.preventDefault();
-            const companyName = $('#rtbcb-test-company-name').val().trim();
+            const companyName = syncCompanyName();
             if (!companyName) {
                 alert('Please enter a company name.');
                 return;
             }
             sendRequest(companyName);
         });
+
+        syncCompanyName();
     });
 })(jQuery);
