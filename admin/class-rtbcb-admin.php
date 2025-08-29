@@ -373,9 +373,9 @@ class RTBCB_Admin {
      * Save test results from dashboard.
      *
      * @return void
-     */
+    */
     public function save_test_results() {
-        check_ajax_referer( 'rtbcb_test_rag', 'nonce' );
+        check_ajax_referer( 'rtbcb_test_dashboard', 'nonce' );
 
         if ( ! current_user_can( 'manage_options' ) ) {
             wp_send_json_error( [ 'message' => __( 'Unauthorized', 'rtbcb' ) ] );
