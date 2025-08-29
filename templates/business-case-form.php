@@ -1,4 +1,6 @@
 <?php
+defined( 'ABSPATH' ) || exit;
+
 /**
  * Enhanced template for the business case form.
  *
@@ -25,7 +27,7 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 
 <!-- Modal Overlay -->
 <div class="rtbcb-modal-overlay" id="rtbcbModalOverlay">
-    <div class="rtbcb-modal-container">
+    <div class="rtbcb-modal-container rtbcb-modal">
         <!-- Modal Header -->
         <div class="rtbcb-modal-header">
             <button type="button" class="rtbcb-modal-close" onclick="closeBusinessCaseModal()">&times;</button>
