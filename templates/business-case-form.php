@@ -432,7 +432,7 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                 <span class="rtbcb-nav-icon">→</span>
             </button>
 
-            <?php wp_nonce_field( 'rtbcb_generate', 'rtbcb_nonce' ); ?>
+            <?php wp_nonce_field( 'rtbcb_form_action', 'rtbcb_nonce' ); ?>
 
             <button type="submit" id="rtbcb-submit-button" class="rtbcb-nav-btn rtbcb-nav-submit" style="display: none;">
                 <span class="rtbcb-nav-icon">🚀</span>
