@@ -259,9 +259,11 @@ function rtbcb_get_first_incomplete_dependency( $section_id, $sections, $visited
  * are missing.
  *
  * @param string $current_section Current section ID.
+ * @param bool   $display_notice  Optional. Whether to show an admin notice.
+ *                                Defaults to true.
  * @return bool True when allowed, false otherwise.
  */
-function rtbcb_require_completed_steps( $current_section ) {
+function rtbcb_require_completed_steps( $current_section, $display_notice = true ) {
     static $displayed = [];
 
     $sections   = rtbcb_get_dashboard_sections();
@@ -271,7 +273,7 @@ function rtbcb_require_completed_steps( $current_section ) {
         return true;
     }
 
-    if ( ! in_array( $dependency, $displayed, true ) ) {
+    if ( $display_notice && ! in_array( $dependency, $displayed, true ) ) {
         $phase  = isset( $sections[ $dependency ]['phase'] ) ? (int) $sections[ $dependency ]['phase'] : 0;
         $anchor = $phase ? 'rtbcb-phase' . $phase : $dependency;
         $url    = admin_url( 'admin.php?page=rtbcb-test-dashboard#' . $anchor );
