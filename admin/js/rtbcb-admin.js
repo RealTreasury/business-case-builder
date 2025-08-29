@@ -546,13 +546,21 @@ jQuery(document).ready(function($) {
                     });
 
                     results.push({
-                        label: test.label,
-                        status: response.success ? 'SUCCESS' : 'FAILED'
+                        section: test.label,
+                        status: response.success ? 'SUCCESS' : 'FAILED',
+                        message: response.data && response.data.message ? response.data.message : '',
+                        data: response.data ? response.data : null
                     });
                 } catch (error) {
+                    var errMsg = ( error && error.responseJSON && error.responseJSON.data && error.responseJSON.data.message )
+                        ? error.responseJSON.data.message
+                        : ( error && error.message ? error.message : 'Request failed' );
+                    var errData = ( error && error.responseJSON && error.responseJSON.data ) ? error.responseJSON.data : null;
                     results.push({
-                        label: test.label,
-                        status: 'ERROR'
+                        section: test.label,
+                        status: 'ERROR',
+                        message: errMsg,
+                        data: errData
                     });
                 }
             }
@@ -562,9 +570,27 @@ jQuery(document).ready(function($) {
 
             var message = 'Test Results:\n';
             for (var j = 0; j < results.length; j++) {
-                message += results[j].label + ': ' + results[j].status + '\n';
+                message += results[j].section + ': ' + results[j].status + '\n';
             }
             alert(message);
+
+            try {
+                var saveResponse = await $.ajax({
+                    url: window.rtbcbAdmin.ajax_url,
+                    method: 'POST',
+                    data: {
+                        action: 'rtbcb_save_test_results',
+                        nonce: window.rtbcbAdmin.test_dashboard_nonce,
+                        results: JSON.stringify(results)
+                    }
+                });
+
+                if (saveResponse.success) {
+                    $('#rtbcb-test-results-summary').load(window.location.href + ' #rtbcb-test-results-summary > *');
+                }
+            } catch (error) {
+                console.error('Failed to save test results', error);
+            }
         },
         
         initLeadsManager: function() {
