@@ -8,6 +8,13 @@
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
+
+if ( ! rtbcb_require_completed_steps( 'rtbcb-test-company-overview', false ) ) {
+    echo '<div class="notice notice-warning inline"><p>' .
+        esc_html__( 'Please complete previous steps before accessing this section.', 'rtbcb' ) .
+        '</p></div>';
+    return;
+}
 ?>
 <h2><?php esc_html_e( 'Test Company Overview', 'rtbcb' ); ?></h2>
 <p class="description"><?php esc_html_e( 'Generate a concise company profile using your configured AI model.', 'rtbcb' ); ?></p>

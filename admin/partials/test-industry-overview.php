@@ -9,8 +9,11 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-$allowed = rtbcb_require_completed_steps( 'rtbcb-test-industry-overview' );
+$allowed = rtbcb_require_completed_steps( 'rtbcb-test-industry-overview', false );
 if ( ! $allowed ) {
+    echo '<div class="notice notice-warning inline"><p>' .
+        esc_html__( 'Please complete previous steps before accessing this section.', 'rtbcb' ) .
+        '</p></div>';
     return;
 }
 

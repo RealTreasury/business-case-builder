@@ -9,7 +9,10 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-if ( ! rtbcb_require_completed_steps( 'rtbcb-test-follow-up-email' ) ) {
+if ( ! rtbcb_require_completed_steps( 'rtbcb-test-follow-up-email', false ) ) {
+    echo '<div class="notice notice-warning inline"><p>' .
+        esc_html__( 'Please complete previous steps before accessing this section.', 'rtbcb' ) .
+        '</p></div>';
     return;
 }
 
