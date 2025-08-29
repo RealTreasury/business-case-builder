@@ -254,7 +254,7 @@
     }
 
     .rtbcb-pain-points-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr !important;
     }
 
     .rtbcb-progress-steps {
