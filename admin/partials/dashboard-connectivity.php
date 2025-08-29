@@ -47,6 +47,7 @@ if ( ! defined( 'ABSPATH' ) ) {
         <button type="button" id="rtbcb-test-openai" class="button"><?php esc_html_e( 'Test OpenAI API', 'rtbcb' ); ?></button>
         <button type="button" id="rtbcb-test-portal" class="button"><?php esc_html_e( 'Test Portal Connection', 'rtbcb' ); ?></button>
         <button type="button" id="rtbcb-test-rag" class="button"><?php esc_html_e( 'Test RAG Index', 'rtbcb' ); ?></button>
+        <button type="button" id="rtbcb-rebuild-rag" class="button"><?php esc_html_e( 'Rebuild RAG Index', 'rtbcb' ); ?></button>
     </p>
     <form id="rtbcb-sync-local-form" class="submit">
         <?php wp_nonce_field( 'rtbcb_sync_local', 'rtbcb_sync_local_nonce' ); ?>
@@ -158,6 +159,36 @@ if ( ! defined( 'ABSPATH' ) ) {
                 } else {
                     var errMsg = (response.data && response.data.message) ? escHtml(response.data.message) : '<?php echo esc_js( esc_html__( 'Test failed.', 'rtbcb' ) ); ?>';
                     renderStatus($status, errMsg, false);
+                }
+            },
+            error: function(){
+                renderStatus($status, '<?php echo esc_js( esc_html__( 'Request failed.', 'rtbcb' ) ); ?>', false);
+            },
+            complete: function(){
+                $btn.prop('disabled', false).text(original);
+            }
+        });
+    });
+
+    $('#rtbcb-rebuild-rag').on('click', function(){
+        var $btn = $(this);
+        var original = $btn.text();
+        var $status = $('#rtbcb-connectivity-status');
+        $btn.prop('disabled', true).text('<?php echo esc_js( __( 'Rebuilding...', 'rtbcb' ) ); ?>');
+        $.ajax({
+            url: ajaxurl,
+            method: 'POST',
+            data: {
+                action: 'rtbcb_rebuild_index',
+                nonce: '<?php echo wp_create_nonce( 'rtbcb_nonce' ); ?>'
+            },
+            success: function(response){
+                if (response.success) {
+                    var msg = (response.data && response.data.message) ? escHtml(response.data.message) : '<?php echo esc_js( esc_html__( 'RAG index rebuilt successfully.', 'rtbcb' ) ); ?>';
+                    renderStatus($status, msg, true);
+                } else {
+                    var err = (response.data && response.data.message) ? escHtml(response.data.message) : '<?php echo esc_js( esc_html__( 'Rebuild failed.', 'rtbcb' ) ); ?>';
+                    renderStatus($status, err, false);
                 }
             },
             error: function(){

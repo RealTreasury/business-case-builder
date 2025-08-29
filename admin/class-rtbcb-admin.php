@@ -331,8 +331,9 @@ class RTBCB_Admin {
         $test_results   = get_option( 'rtbcb_test_results', [] );
         $openai_key     = get_option( 'rtbcb_openai_api_key', '' );
         $openai_status  = empty( $openai_key ) ? false : true;
-        $portal_active  = $this->check_portal_integration();
-        $rag_health     = $this->check_rag_health();
+        $portal_active   = $this->check_portal_integration();
+        $rag_health_info = $this->check_rag_health();
+        $rag_health      = ( 'healthy' === ( $rag_health_info['status'] ?? '' ) );
         $last_indexed   = get_option( 'rtbcb_last_indexed', '' );
         $vendor_count   = $this->get_vendor_count();
 
@@ -345,7 +346,7 @@ class RTBCB_Admin {
      * @return void
      */
     public function save_test_results() {
-        check_ajax_referer( 'rtbcb_test_dashboard', 'nonce' );
+        check_ajax_referer( 'rtbcb_test_rag', 'nonce' );
 
         if ( ! current_user_can( 'manage_options' ) ) {
             wp_send_json_error( [ 'message' => __( 'Unauthorized', 'rtbcb' ) ] );
@@ -1231,8 +1232,16 @@ class RTBCB_Admin {
             wp_send_json_error( [ 'message' => __( 'Permission denied.', 'rtbcb' ) ], 403 );
         }
 
-        $rag = new RTBCB_RAG();
-        $rag->rebuild_index();
+        if ( ! class_exists( 'RTBCB_RAG' ) ) {
+            wp_send_json_error( [ 'message' => __( 'RAG system not available.', 'rtbcb' ) ] );
+        }
+
+        try {
+            $rag = new RTBCB_RAG();
+            $rag->rebuild_index();
+        } catch ( Exception $e ) {
+            wp_send_json_error( [ 'message' => sanitize_text_field( $e->getMessage() ) ] );
+        }
 
         wp_send_json_success( [ 'message' => __( 'RAG index rebuilt successfully.', 'rtbcb' ) ] );
     }
@@ -1341,7 +1350,7 @@ class RTBCB_Admin {
      * @return void
      */
     public function ajax_test_rag() {
-        check_ajax_referer( 'rtbcb_test_dashboard', 'nonce' );
+        check_ajax_referer( 'rtbcb_test_rag', 'nonce' );
 
         if ( ! current_user_can( 'manage_options' ) ) {
             wp_send_json_error( [ 'message' => __( 'Unauthorized', 'rtbcb' ) ] );
@@ -1349,9 +1358,19 @@ class RTBCB_Admin {
 
         $health = $this->check_rag_health();
 
+        if ( 'healthy' !== ( $health['status'] ?? '' ) ) {
+            $message = isset( $health['message'] ) ? sanitize_text_field( $health['message'] ) : __( 'RAG index needs attention.', 'rtbcb' );
+            wp_send_json_error(
+                [
+                    'status'  => sanitize_text_field( $health['status'] ?? '' ),
+                    'message' => $message,
+                ]
+            );
+        }
+
         wp_send_json_success(
             [
-                'status'        => sanitize_text_field( $health['status'] ?? '' ),
+                'status'        => 'healthy',
                 'indexed_items' => isset( $health['indexed_items'] ) ? intval( $health['indexed_items'] ) : 0,
                 'last_updated'  => isset( $health['last_updated'] ) ? sanitize_text_field( $health['last_updated'] ) : '',
             ]
@@ -1425,13 +1444,39 @@ class RTBCB_Admin {
         global $wpdb;
         $table_name = $wpdb->prefix . 'rtbcb_rag_index';
 
-        $count = $wpdb->get_var( "SELECT COUNT(*) FROM {$table_name}" );
+        $table_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) );
+        if ( $table_exists !== $table_name ) {
+            return [
+                'status'        => 'missing',
+                'message'       => __( 'RAG index table missing. Use the rebuild button to create it.', 'rtbcb' ),
+                'indexed_items' => 0,
+                'last_updated'  => '',
+            ];
+        }
+
+        $count       = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table_name}" );
         $last_updated = $wpdb->get_var( "SELECT MAX(updated_at) FROM {$table_name}" );
 
+        if ( $wpdb->last_error ) {
+            return [
+                'status'  => 'error',
+                'message' => sprintf( __( 'Database error: %s', 'rtbcb' ), $wpdb->last_error ),
+            ];
+        }
+
+        if ( 0 === $count ) {
+            return [
+                'status'        => 'empty',
+                'message'       => __( 'RAG index is empty. Rebuild the index to add data.', 'rtbcb' ),
+                'indexed_items' => 0,
+                'last_updated'  => $last_updated,
+            ];
+        }
+
         return [
-            'indexed_items' => intval( $count ),
+            'status'        => 'healthy',
+            'indexed_items' => $count,
             'last_updated'  => $last_updated,
-            'status'        => $count > 0 ? 'healthy' : 'needs_rebuild',
         ];
     }
 
