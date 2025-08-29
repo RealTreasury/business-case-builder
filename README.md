@@ -1,52 +1,12 @@
-# Real Treasury Business Case Builder - Enhanced Version 2.1.2
+# Real Treasury Business Case Builder - Enhanced Version 2.1.3
 
 A comprehensive WordPress plugin that helps treasury teams quantify the benefits of modern treasury tools, generate professional business case reports, and track lead engagement with advanced analytics.
 
-## 🚀 What's New in Version 2.1.2
+## 🚀 What's New in Version 2.1.3
 
-### 🔧 Test Dashboard Improvements
-- `Set Company` uses the main company name input for all tests.
-- First and last name fields stay synchronized across interactions.
-- "Run All Tests" now includes the company name parameter for complete coverage and appears before individual test tools.
-- A progress bar tracks overall completion of the test suite.
-
-### ✨ Major Enhancements
-
-**📊 Smart Categorization System**
-- Automatically recommends **Cash Tools**, **TMS-Lite**, or **TRMS** based on company profile
-- Intelligent scoring algorithm considers company size, complexity, and pain points
-- Detailed reasoning provided for each recommendation
-
-**📄 HTML Reports with Optional Print-to-PDF**
-- Generates comprehensive business case reports as HTML with charts and visualizations
-- Executive summary, ROI analysis, and implementation roadmap
-- Responsive formatting ready for stakeholder presentations
-- Report HTML returned via AJAX for immediate viewing or browser print-to-PDF
-
-**📈 Advanced Analytics Dashboard**
-- Real-time lead tracking with detailed metrics
-- Interactive charts showing category distribution and trends
-- Company size analysis and ROI benchmarking
-- Monthly lead generation trends with Chart.js visualizations
-
-**🗃️ Complete Lead Management**
-- Full database tracking of all form submissions
-- Advanced filtering and search capabilities
-- CSV export functionality for lead data
-- Individual lead detail views with action history
-
-**🎯 Enhanced User Experience**
-- Multi-step form with progress indicators
-- Real-time form validation and error handling
-- Interactive pain point selection with visual cards
-- Immediate report rendering via a single AJAX request—no polling needed
-- Responsive design optimized for all devices
-
-**🔍 Improved ROI Calculations**
-- More sophisticated calculation methodology
-- Industry-specific benchmarks and assumptions
-- Three scenario modeling (Conservative, Base, Optimistic)
-- Detailed benefit breakdown with visualizations
+### 🔧 Maintenance Release
+- Bumped plugin version and updated documentation.
+- Minor improvements and fixes.
 
 ## 📋 Installation & Setup
 

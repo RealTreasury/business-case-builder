@@ -3,7 +3,7 @@ Contributors: realtreasury
 Tags: business, case, builder, roi, treasury
 Requires at least: 6.0
 Tested up to: 6.0
-Stable tag: 2.1.2
+Stable tag: 2.1.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -141,6 +141,8 @@ Reports are rendered as HTML in the browser. Use your browser's print or save fu
 The analytics dashboard uses Chart.js for its visualizations. The library is bundled with the plugin to reduce blocking by privacy tools, but strict ad blockers may still prevent it from loading. Allow the plugin's scripts in your browser to enable the charts.
 
 == Changelog ==
+= 2.1.3 =
+* Bump plugin version to 2.1.3 and update documentation.
 = 2.1.2 =
 * Improved Test Dashboard: `Set Company` uses a single company name input.
 * "Run All Tests" now includes the company name parameter for comprehensive checks.
