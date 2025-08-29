@@ -19,7 +19,8 @@ $sections     = rtbcb_get_dashboard_sections();
 ?>
 
 <h2 class="title"><?php esc_html_e( 'Recent Test Results', 'rtbcb' ); ?></h2>
-<table class="widefat striped" id="rtbcb-test-results-summary">
+<div class="rtbcb-results-table-wrapper">
+<table class="widefat striped rtbcb-test-results-table" id="rtbcb-test-results-summary">
     <thead>
         <tr>
             <th><?php esc_html_e( 'Section', 'rtbcb' ); ?></th>
@@ -69,17 +70,16 @@ $sections     = rtbcb_get_dashboard_sections();
             }
             ?>
             <tr>
-                <td><?php echo esc_html( $section_label ); ?></td>
-                <td><?php echo esc_html( $result['status'] ); ?></td>
-                <td><?php echo esc_html( $result['message'] ); ?></td>
-                <td><?php echo '' !== $word_count ? esc_html( $word_count ) : esc_html__( 'N/A', 'rtbcb' ); ?></td>
-                <td><?php echo '' !== $elapsed ? esc_html( $elapsed ) : esc_html__( 'N/A', 'rtbcb' ); ?></td>
-                <td><?php echo esc_html( $result['timestamp'] ); ?></td>
-                <td>
+                <td data-label="<?php echo esc_attr__( 'Section', 'rtbcb' ); ?>"><?php echo esc_html( $section_label ); ?></td>
+                <td data-label="<?php echo esc_attr__( 'Status', 'rtbcb' ); ?>"><?php echo esc_html( $result['status'] ); ?></td>
+                <td data-label="<?php echo esc_attr__( 'Message', 'rtbcb' ); ?>"><?php echo esc_html( $result['message'] ); ?></td>
+                <td class="rtbcb-word-count" data-label="<?php echo esc_attr__( 'Word Count', 'rtbcb' ); ?>"><?php echo '' !== $word_count ? esc_html( $word_count ) : esc_html__( 'N/A', 'rtbcb' ); ?></td>
+                <td class="rtbcb-elapsed" data-label="<?php echo esc_attr__( 'Elapsed (s)', 'rtbcb' ); ?>"><?php echo '' !== $elapsed ? esc_html( $elapsed ) : esc_html__( 'N/A', 'rtbcb' ); ?></td>
+                <td data-label="<?php echo esc_attr__( 'Timestamp', 'rtbcb' ); ?>"><?php echo esc_html( $result['timestamp'] ); ?></td>
+                <td class="rtbcb-actions" data-label="<?php echo esc_attr__( 'Actions', 'rtbcb' ); ?>">
                     <?php if ( $section_id ) : ?>
-                        <a href="#<?php echo esc_attr( $section_id ); ?>" class="rtbcb-jump-tab"><?php esc_html_e( 'View', 'rtbcb' ); ?></a>
-                        |
-                        <a href="#" class="rtbcb-rerun-test" data-section="<?php echo esc_attr( $section_id ); ?>"><?php esc_html_e( 'Re-run', 'rtbcb' ); ?></a>
+                        <a href="#<?php echo esc_attr( $section_id ); ?>" class="button button-secondary rtbcb-action rtbcb-jump-tab"><?php esc_html_e( 'View', 'rtbcb' ); ?></a>
+                        <a href="#" class="button button-secondary rtbcb-action rtbcb-rerun-test" data-section="<?php echo esc_attr( $section_id ); ?>"><?php esc_html_e( 'Re-run', 'rtbcb' ); ?></a>
                     <?php endif; ?>
                 </td>
             </tr>
@@ -91,6 +91,7 @@ $sections     = rtbcb_get_dashboard_sections();
     <?php endif; ?>
     </tbody>
 </table>
+</div>
 <script>
 (function($){
     $('#rtbcb-test-results-summary').on('click', '.rtbcb-jump-tab', function(e){
