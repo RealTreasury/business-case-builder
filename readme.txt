@@ -21,9 +21,10 @@ Use the `[rt_business_case_builder]` shortcode to embed the calculator on any pa
 
 == Testing Dashboard ==
 From the WordPress admin, go to **Real Treasury → Test Dashboard** and click
-**Run All Tests** to execute the full suite. Individual section tools appear
-after this pass and can be used as needed. The dashboard replaces the individual
-test pages from earlier versions. Access requires the `manage_options`
+**Run All Tests** to execute the full suite. A progress bar indicates overall
+completion as each test finishes. Individual section tools appear after this
+pass and can be used as needed. The dashboard replaces the individual test
+pages from earlier versions. Access requires the `manage_options`
 capability and each test action uses a dedicated nonce such as
 `rtbcb_test_company_overview` to protect requests.
 
