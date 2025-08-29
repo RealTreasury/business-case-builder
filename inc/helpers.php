@@ -324,9 +324,11 @@ function rtbcb_get_last_test_result( $section_id, $test_results = null ) {
  * @return void
  */
 function rtbcb_render_start_new_analysis_button() {
-    $url = admin_url( 'admin.php?page=rtbcb-test-dashboard#rtbcb-phase1' );
-    echo '<p><a href="' . esc_url( $url ) . '" class="button">' .
-        esc_html__( 'Start New Analysis', 'rtbcb' ) . '</a></p>';
+    echo '<p>';
+    echo '<button type="button" id="rtbcb-start-new-analysis" class="button">' .
+        esc_html__( 'Start New Analysis', 'rtbcb' ) . '</button>';
+    wp_nonce_field( 'rtbcb_test_company_overview', 'rtbcb_clear_current_company_nonce' );
+    echo '</p>';
 }
 
 function rtbcb_check_database_health() {
