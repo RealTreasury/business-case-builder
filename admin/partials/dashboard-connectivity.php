@@ -154,6 +154,12 @@ if ( ! defined( 'ABSPATH' ) ) {
         // Fetch company name from dashboard input.
         var $companyInput = $('#rtbcb-company-name');
         var name = $companyInput.val().trim();
+        if (!name) {
+            renderStatus($status, '<?php echo esc_js( __( 'Please enter a company name.', 'rtbcb' ) ); ?>', false);
+            $companyInput.focus();
+            return;
+        }
+
         $btn.prop('disabled', true).text('<?php echo esc_js( __( 'Saving...', 'rtbcb' ) ); ?>');
         $.ajax({
             url: ajaxurl,
@@ -163,7 +169,6 @@ if ( ! defined( 'ABSPATH' ) ) {
                 nonce: $('#rtbcb_set_test_company_nonce').val(),
                 company_name: name
             },
-            async: false,
             success: function(response){
                 if (response.success) {
                     renderStatus($status, response.data.message, true);
