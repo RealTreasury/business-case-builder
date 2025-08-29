@@ -406,9 +406,11 @@ Use the unified testing dashboard to verify each report component. Begin by
 clicking **Run All Tests** to execute the complete suite; individual test tools
 will appear afterward if needed. This dashboard replaces individual test pages
 from earlier versions. Navigate to **Real Treasury → Test Dashboard** in the
-WordPress admin to access it. The page is restricted to users with the
-`manage_options` capability. AJAX actions from the dashboard require nonces such
-as `rtbcb_test_company_overview`, `rtbcb_test_estimated_benefits`, and
+WordPress admin to access it. The **Connectivity Tests & Status** section
+consolidates OpenAI, portal, and RAG index checks—removing the standalone Data
+Health page. The page is restricted to users with the `manage_options`
+capability. AJAX actions from the dashboard require nonces such as
+`rtbcb_test_company_overview`, `rtbcb_test_estimated_benefits`, and
 `rtbcb_test_dashboard` when saving results. Click **Run Diagnostics** to execute
 the full test suite defined in `tests/run-tests.sh` and display the latest
 results. A visual overview of the end-to-end reporting flow and diagnostics is
