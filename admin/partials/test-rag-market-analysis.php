@@ -45,19 +45,16 @@ if ( ! rtbcb_require_completed_steps( 'rtbcb-test-rag-market-analysis' ) ) {
     </details>
 </div>
 <script>
-<?php if ( ! isset( $GLOBALS['ajaxurl'] ) || empty( $GLOBALS['ajaxurl'] ) ) : ?>
-var ajaxurl = '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>';
-<?php endif; ?>
- jQuery('#rtbcb-run-rag-analysis').on('click', function(){
-    const btn = jQuery(this);
-    const original = rtbcbTestUtils.showLoading(btn);
-    jQuery.post(ajaxurl, {
-        action: 'rtbcb_test_rag_market_analysis',
-        nonce: jQuery('#rtbcb_test_rag_market_analysis_nonce').val()
-    }).done(function(response){
-        if (response.success) {
-            const list = jQuery('#rtbcb-rag-market-analysis-results').empty();
-            response.data.vendors.forEach(function(v){
+    jQuery('#rtbcb-run-rag-analysis').on('click', function(){
+        const btn = jQuery(this);
+        const original = rtbcbTestUtils.showLoading(btn);
+        jQuery.post(ajaxurl, {
+            action: 'rtbcb_test_rag_market_analysis',
+            nonce: jQuery('#rtbcb_test_rag_market_analysis_nonce').val()
+        }).done(function(response){
+            if (response.success) {
+                const list = jQuery('#rtbcb-rag-market-analysis-results').empty();
+                response.data.vendors.forEach(function(v){
                 list.append('<li>' + v + '</li>');
             });
             jQuery('#rtbcb-rag-market-analysis-card').show();

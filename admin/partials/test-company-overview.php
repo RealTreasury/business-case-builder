@@ -64,10 +64,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 </style>
 <script>
-<?php if ( ! isset( $GLOBALS['ajaxurl'] ) || empty( $GLOBALS['ajaxurl'] ) ) : ?>
-var ajaxurl = '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>';
-<?php endif; ?>
-document.getElementById( 'rtbcb-rerun-company-overview' )?.addEventListener( 'click', function() {
-    document.getElementById( 'rtbcb-generate-company-overview' ).click();
-});
+    document.getElementById( 'rtbcb-rerun-company-overview' )?.addEventListener( 'click', function() {
+        document.getElementById( 'rtbcb-generate-company-overview' ).click();
+    });
 </script>

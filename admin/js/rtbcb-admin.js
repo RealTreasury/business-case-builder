@@ -1,4 +1,10 @@
 /* Real Treasury Business Case Builder Admin JS */
+
+// Ensure ajaxurl is defined for AJAX requests.
+if ( typeof ajaxurl === 'undefined' ) {
+    var ajaxurl = window.location.origin + '/wp-admin/admin-ajax.php';
+}
+
 jQuery(document).ready(function($) {
     'use strict';
     
