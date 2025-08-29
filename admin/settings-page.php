@@ -34,6 +34,12 @@ $embedding_models = [
 ];
 ?>
 
+<?php if ( ! rtbcb_has_openai_api_key() ) : ?>
+    <div class="notice notice-warning is-dismissible">
+        <p><?php echo esc_html__( 'OpenAI API key is missing. Please enter a valid key to enable AI features.', 'rtbcb' ); ?></p>
+    </div>
+<?php endif; ?>
+
 <div class="wrap">
     <h1><?php echo esc_html__( 'Business Case Builder Settings', 'rtbcb' ); ?></h1>
     <form action="options.php" method="post">

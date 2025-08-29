@@ -27,6 +27,15 @@ function rtbcb_get_openai_api_key() {
 }
 
 /**
+ * Determine if an OpenAI API key is configured.
+ *
+ * @return bool True if the API key is present.
+ */
+function rtbcb_has_openai_api_key() {
+    return ! empty( rtbcb_get_openai_api_key() );
+}
+
+/**
  * Retrieve current company data.
  *
  * @return array Current company data.
