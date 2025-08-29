@@ -13,35 +13,7 @@ class RTBCB_RAG {
      * Constructor.
      */
     public function __construct() {
-        $this->init_database();
-    }
-
-    /**
-     * Initialize the database table for RAG index.
-     *
-     * @return void
-     */
-    private function init_database() {
-        global $wpdb;
-        $table_name      = $wpdb->prefix . 'rtbcb_rag_index';
-        $charset_collate = $wpdb->get_charset_collate();
-
-        $sql = "CREATE TABLE $table_name (
-            id mediumint(9) NOT NULL AUTO_INCREMENT,
-            type varchar(20) NOT NULL,
-            ref_id varchar(100) NOT NULL,
-            text_hash varchar(64) NOT NULL,
-            embedding longtext NOT NULL,
-            metadata longtext NOT NULL,
-            embedding_norm float NOT NULL,
-            updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            PRIMARY KEY (id),
-            UNIQUE KEY hash_key (text_hash),
-            KEY type_ref (type, ref_id)
-        ) $charset_collate;";
-
-        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-        dbDelta( $sql );
+        RTBCB_DB::init();
     }
 
     /**
@@ -50,7 +22,10 @@ class RTBCB_RAG {
      * @return void
      */
     public function rebuild_index() {
-        // Get vendor data from Portal
+        // Ensure the index table exists.
+        RTBCB_DB::init();
+
+        // Get vendor data from Portal.
         $vendors = apply_filters( 'rt_portal_get_vendors', [] );
         $notes   = apply_filters( 'rt_portal_get_vendor_notes', [] );
 
@@ -60,6 +35,16 @@ class RTBCB_RAG {
 
         foreach ( $notes as $note ) {
             $this->index_note( $note );
+        }
+
+        // Seed sample data when no real data is available.
+        if ( empty( $vendors ) && empty( $notes ) ) {
+            $this->index_note(
+                [
+                    'id'      => 'sample',
+                    'content' => 'Sample RAG data. Use the rebuild button after configuring the portal to refresh.',
+                ]
+            );
         }
 
         update_option( 'rtbcb_last_indexed', current_time( 'mysql' ) );
@@ -224,6 +209,11 @@ class RTBCB_RAG {
     private function cosine_similarity_search( $query_embedding, $top_k ) {
         global $wpdb;
         $table_name = $wpdb->prefix . 'rtbcb_rag_index';
+
+        $table_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) );
+        if ( $table_exists !== $table_name ) {
+            return [];
+        }
 
         $query_norm = $this->calculate_embedding_norm( $query_embedding );
         $limit      = max( $top_k * 10, $top_k );
