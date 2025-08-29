@@ -74,7 +74,7 @@ function handleSubmit(e) {
     var form = e.target;
     var formData = new FormData(form);
     var progressContainer = document.getElementById('rtbcb-progress-container');
-    var formContainer = document.getElementById('rtbcb-form-container');
+    var formContainer = document.querySelector('.rtbcb-form-container');
 
     // Show progress indicator
     if (formContainer) formContainer.style.display = 'none';
@@ -153,7 +153,7 @@ function handleSubmit(e) {
 // Ensure the form submission is handled by our new function
 // eslint-disable-next-line @wordpress/no-global-event-listener
 document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('rtbcb-form');
+    const form = document.getElementById('rtbcbForm');
     if (form) {
         form.addEventListener('submit', handleSubmit);
     }
