@@ -38,6 +38,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 </div>
 <script>
 (function($){
+    function escHtml(text) {
+        return $('<div />').text(text).html();
+    }
+
     function renderStatus($el, message, success){
         var cls = success ? 'notice notice-success' : 'notice notice-error';
         $el.html('<div class="' + cls + '"><p>' + message + '</p></div>');
@@ -114,17 +118,28 @@ if ( ! defined( 'ABSPATH' ) ) {
                 action: 'rtbcb_test_rag',
                 nonce: '<?php echo wp_create_nonce( 'rtbcb_test_rag' ); ?>'
             },
-            async: false,
             success: function(response){
                 if (response.success) {
-                    var ragMsg = response.data && response.data.status ? response.data.status : '<?php echo esc_js( __( 'RAG index healthy.', 'rtbcb' ) ); ?>';
+                    var ragMsg = response.data && response.data.status ? escHtml(response.data.status) : '<?php echo esc_js( esc_html__( 'RAG index healthy.', 'rtbcb' ) ); ?>';
+
+                    if (response.data) {
+                        if (typeof response.data.indexed_items !== 'undefined') {
+                            ragMsg += '<br><?php echo esc_js( esc_html__( 'Indexed items:', 'rtbcb' ) ); ?> ' + escHtml(response.data.indexed_items);
+                        }
+
+                        if (response.data.last_updated) {
+                            ragMsg += '<br><?php echo esc_js( esc_html__( 'Last updated:', 'rtbcb' ) ); ?> ' + escHtml(response.data.last_updated);
+                        }
+                    }
+
                     renderStatus($status, ragMsg, true);
                 } else {
-                    renderStatus($status, (response.data && response.data.message) ? response.data.message : '<?php echo esc_js( __( 'Test failed.', 'rtbcb' ) ); ?>', false);
+                    var errMsg = (response.data && response.data.message) ? escHtml(response.data.message) : '<?php echo esc_js( esc_html__( 'Test failed.', 'rtbcb' ) ); ?>';
+                    renderStatus($status, errMsg, false);
                 }
             },
             error: function(){
-                renderStatus($status, '<?php echo esc_js( __( 'Request failed.', 'rtbcb' ) ); ?>', false);
+                renderStatus($status, '<?php echo esc_js( esc_html__( 'Request failed.', 'rtbcb' ) ); ?>', false);
             },
             complete: function(){
                 $btn.prop('disabled', false).text(original);
