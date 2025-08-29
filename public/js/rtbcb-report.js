@@ -22,10 +22,13 @@ async function buildEnhancedPrompt(businessContext) {
     const template = await response.text();
     const companyName = businessContext && businessContext.companyName ? businessContext.companyName : 'Company';
     const currentDate = businessContext && businessContext.currentDate ? businessContext.currentDate : new Date().toLocaleDateString();
-    const contextText = typeof businessContext === 'string' ? businessContext : (businessContext && businessContext.context ? businessContext.context : '');
+    const contextText = typeof businessContext === 'string'
+        ? businessContext
+        : (businessContext && businessContext.context ? businessContext.context : '');
     const filledTemplate = template
         .replace(/{{COMPANY_NAME}}/g, companyName)
-        .replace(/{{CURRENT_DATE}}/g, currentDate);
+        .replace(/{{CURRENT_DATE}}/g, currentDate)
+        .replace(/{{BUSINESS_CONTEXT}}/g, contextText);
     return `
 Generate a professional business consulting report in HTML format with the following requirements:
 
@@ -34,8 +37,6 @@ IMPORTANT: Output ONLY valid HTML code starting with <!DOCTYPE html>. Do not inc
 The report should follow this exact structure:
 
 ${filledTemplate}
-
-Context for analysis: ${contextText}
 
 Ensure the report is:
 - Exactly 2 pages when printed (approximately 800-1000 words)
