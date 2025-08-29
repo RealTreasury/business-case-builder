@@ -372,7 +372,7 @@ class BusinessCaseBuilder {
         }
     }
 
-    handleSubmit() {
+    async handleSubmit() {
         // Show loading state
         this.showProgress();
         if (typeof rtbcbAjax === 'undefined' || !rtbcbAjax.ajax_url) {
@@ -397,18 +397,19 @@ class BusinessCaseBuilder {
         console.log('RTBCB: Submitting form data:', Object.fromEntries(formData));
 
         try {
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', rtbcbAjax.ajax_url, false);
-            xhr.send(formData);
+            const response = await fetch(rtbcbAjax.ajax_url, {
+                method: 'POST',
+                body: formData
+            });
 
-            if (xhr.status >= 200 && xhr.status < 300) {
-                let result;
-                try {
-                    result = JSON.parse(xhr.responseText);
-                } catch (e) {
-                    throw new Error('Invalid server response');
-                }
+            let result;
+            try {
+                result = await response.json();
+            } catch (e) {
+                throw new Error('Invalid server response');
+            }
 
+            if (response.ok) {
                 if (result && result.success) {
                     console.log('RTBCB: Business case generated successfully');
                     this.showResults(result.data);
@@ -417,13 +418,7 @@ class BusinessCaseBuilder {
                     throw new Error(errorMessage);
                 }
             } else {
-                let errorMessage = 'Server responded with status ' + xhr.status;
-                try {
-                    const errorJson = JSON.parse(xhr.responseText);
-                    errorMessage = errorJson.data?.message || errorMessage;
-                } catch (parseError) {
-                    console.error('RTBCB: Could not parse error response as JSON:', parseError);
-                }
+                const errorMessage = result?.data?.message || 'Server responded with status ' + response.status;
                 throw new Error(errorMessage);
             }
         } catch (error) {
