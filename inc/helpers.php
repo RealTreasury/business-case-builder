@@ -29,6 +29,15 @@ function rtbcb_clear_current_company() {
     delete_option( 'rtbcb_maturity_model' );
     delete_option( 'rtbcb_rag_market_analysis' );
     delete_option( 'rtbcb_value_proposition' );
+    delete_option( 'rtbcb_data_enrichment' );
+    delete_option( 'rtbcb_data_storage' );
+    delete_option( 'rtbcb_real_treasury_overview' );
+    delete_option( 'rtbcb_roadmap_plan' );
+    delete_option( 'rtbcb_roi_results' );
+    delete_option( 'rtbcb_estimated_benefits' );
+    delete_option( 'rtbcb_executive_summary' );
+    delete_option( 'rtbcb_tracking_script' );
+    delete_option( 'rtbcb_follow_up_queue' );
 }
 
 /**
@@ -83,62 +92,62 @@ function rtbcb_get_dashboard_sections() {
         'rtbcb-test-data-storage'          => [
             'label'    => __( 'Data Storage', 'rtbcb' ),
             'option'   => 'rtbcb_data_storage',
-            'requires' => [ 'rtbcb-test-company-overview' ],
+            'requires' => [ 'rtbcb-test-data-enrichment' ],
             'phase'    => 1,
             'action'   => 'rtbcb_test_data_storage',
         ],
         'rtbcb-test-maturity-model'        => [
             'label'    => __( 'Maturity Model', 'rtbcb' ),
             'option'   => 'rtbcb_maturity_model',
-            'requires' => [ 'rtbcb-test-company-overview' ],
+            'requires' => [ 'rtbcb-test-data-storage' ],
             'phase'    => 2,
             'action'   => 'rtbcb_test_maturity_model',
         ],
         'rtbcb-test-rag-market-analysis'   => [
             'label'    => __( 'RAG Market Analysis', 'rtbcb' ),
             'option'   => 'rtbcb_rag_market_analysis',
-            'requires' => [ 'rtbcb-test-company-overview' ],
+            'requires' => [ 'rtbcb-test-maturity-model' ],
             'phase'    => 2,
             'action'   => 'rtbcb_test_rag_market_analysis',
         ],
         'rtbcb-test-value-proposition'     => [
             'label'    => __( 'Value Proposition', 'rtbcb' ),
             'option'   => 'rtbcb_value_proposition',
-            'requires' => [ 'rtbcb-test-company-overview' ],
+            'requires' => [ 'rtbcb-test-rag-market-analysis' ],
             'phase'    => 2,
             'action'   => 'rtbcb_test_value_proposition',
         ],
         'rtbcb-test-industry-overview'      => [
             'label'    => __( 'Industry Overview', 'rtbcb' ),
             'option'   => 'rtbcb_industry_insights',
-            'requires' => [ 'rtbcb-test-company-overview' ],
+            'requires' => [ 'rtbcb-test-value-proposition' ],
             'phase'    => 2,
             'action'   => 'rtbcb_test_industry_overview',
         ],
         'rtbcb-test-real-treasury-overview' => [
             'label'    => __( 'Real Treasury Overview', 'rtbcb' ),
             'option'   => 'rtbcb_real_treasury_overview',
-            'requires' => [ 'rtbcb-test-company-overview' ],
+            'requires' => [ 'rtbcb-test-industry-overview' ],
             'phase'    => 2,
             'action'   => 'rtbcb_test_real_treasury_overview',
         ],
         'rtbcb-test-roadmap-generator'      => [
             'label'    => __( 'Roadmap Generator', 'rtbcb' ),
             'option'   => 'rtbcb_roadmap_plan',
-            'requires' => [ 'rtbcb-test-company-overview' ],
+            'requires' => [ 'rtbcb-test-real-treasury-overview' ],
             'phase'    => 3,
         ],
         'rtbcb-test-roi-calculator'         => [
             'label'    => __( 'ROI Calculator', 'rtbcb' ),
             'option'   => 'rtbcb_roi_results',
-            'requires' => [ 'rtbcb-test-company-overview' ],
+            'requires' => [ 'rtbcb-test-roadmap-generator' ],
             'phase'    => 3,
             'action'   => 'rtbcb_test_calculate_roi',
         ],
         'rtbcb-test-estimated-benefits'     => [
             'label'    => __( 'Estimated Benefits', 'rtbcb' ),
             'option'   => 'rtbcb_estimated_benefits',
-            'requires' => [ 'rtbcb-test-company-overview' ],
+            'requires' => [ 'rtbcb-test-roi-calculator' ],
             'phase'    => 3,
             'action'   => 'rtbcb_test_estimated_benefits',
         ],
@@ -219,15 +228,24 @@ function rtbcb_calculate_phase_completion( $sections, $phases = [] ) {
  * @param array  $sections   All dashboard sections.
  * @return string|null The first incomplete dependency or null if all met.
  */
-function rtbcb_get_first_incomplete_dependency( $section_id, $sections ) {
+function rtbcb_get_first_incomplete_dependency( $section_id, $sections, $visited = [] ) {
+    if ( in_array( $section_id, $visited, true ) ) {
+        return null;
+    }
+
+    $visited[] = $section_id;
+
     if ( empty( $sections[ $section_id ]['requires'] ) ) {
         return null;
     }
 
     foreach ( $sections[ $section_id ]['requires'] as $dependency ) {
         if ( empty( $sections[ $dependency ]['completed'] ) ) {
-            $deep = rtbcb_get_first_incomplete_dependency( $dependency, $sections );
-            return $deep ? $deep : $dependency;
+            $deep = rtbcb_get_first_incomplete_dependency( $dependency, $sections, $visited );
+            if ( $deep ) {
+                return $deep;
+            }
+            return $dependency;
         }
     }
 
@@ -259,7 +277,7 @@ function rtbcb_require_completed_steps( $current_section ) {
         $url    = admin_url( 'admin.php?page=rtbcb-test-dashboard#' . $anchor );
         echo '<div class="notice notice-error"><p>' .
             sprintf(
-                __( 'Please complete %s first.', 'rtbcb' ),
+                esc_html__( 'Please complete %s first.', 'rtbcb' ),
                 '<a href="' . esc_url( $url ) . '">' .
                 esc_html( $sections[ $dependency ]['label'] ) . '</a>'
             ) .
