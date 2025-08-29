@@ -1,6 +1,6 @@
 <?php
 /**
- * Treasury maturity model assessment.
+ * Simple treasury maturity model.
  *
  * @package RealTreasuryBusinessCaseBuilder
  */
@@ -10,40 +10,33 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Class RTBCB_Maturity_Model.
+ * Provides a basic maturity assessment.
  */
 class RTBCB_Maturity_Model {
     /**
-     * Assess treasury maturity level.
+     * Assess maturity level using full-time equivalents.
      *
-     * @param array $company_data Company data.
-     * @return array {
-     *     @type string $level     Maturity level.
-     *     @type string $narrative Narrative explaining the level.
-     * }
+     * @param array $company_data Company data inputs.
+     * @return array Assessment results.
      */
     public function assess( $company_data ) {
-        $staff = isset( $company_data['staff_count'] ) ? intval( $company_data['staff_count'] ) : 0;
+        $level = __( 'Basic', 'rtbcb' );
+        $ftes  = isset( $company_data['ftes'] ) ? floatval( $company_data['ftes'] ) : 1.0;
 
-        if ( $staff > 1000 ) {
-            $level = __( 'Optimized', 'rtbcb' );
-        } elseif ( $staff > 500 ) {
-            $level = __( 'Strategic', 'rtbcb' );
-        } elseif ( $staff > 100 ) {
-            $level = __( 'Developing', 'rtbcb' );
-        } else {
-            $level = __( 'Basic', 'rtbcb' );
+        if ( $ftes > 5 ) {
+            $level = __( 'Advanced', 'rtbcb' );
+        } elseif ( $ftes > 2 ) {
+            $level = __( 'Intermediate', 'rtbcb' );
         }
 
-        $narrative = sprintf(
-            __( 'Current maturity level is %1$s based on staff count of %2$d.', 'rtbcb' ),
-            $level,
-            $staff
-        );
-
         return [
-            'level'     => $level,
-            'narrative' => $narrative,
+            'level'      => $level,
+            'assessment' => sprintf(
+                /* translators: %s: maturity level */
+                __( 'Treasury maturity level: %s', 'rtbcb' ),
+                $level
+            ),
+            'score'      => rand( 60, 90 ),
         ];
     }
 }
