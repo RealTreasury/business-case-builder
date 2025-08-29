@@ -46,8 +46,9 @@ vm.runInThisContext(code);
 
 generateProfessionalReport = () => '<!DOCTYPE html><html><body>Report</body></html>';
 
-generateAndDisplayReport({});
-
-const exportBtn = container.childNodes.find(node => node.textContent === 'Export to PDF');
-assert.ok(exportBtn, 'Export button not created');
-console.log('Report interactivity test passed.');
+(async () => {
+    await generateAndDisplayReport({});
+    const exportBtn = container.childNodes.find(node => node.textContent === 'Export to PDF');
+    assert.ok(exportBtn, 'Export button not created');
+    console.log('Report interactivity test passed.');
+})();

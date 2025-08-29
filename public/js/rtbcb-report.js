@@ -267,7 +267,7 @@ Ensure the report is:
 `;
 }
 
-function generateProfessionalReport(businessContext) {
+async function generateProfessionalReport(businessContext) {
     const cfg = {
         ...RTBCB_GPT5_DEFAULTS,
         ...(typeof rtbcbReport !== 'undefined' ? rtbcbReport : {})
@@ -305,14 +305,15 @@ function generateProfessionalReport(businessContext) {
         formData.append('body', JSON.stringify(requestBody));
 
         try {
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', rtbcbReport.ajax_url, false);
-            xhr.send(formData);
+            const response = await fetch(rtbcbReport.ajax_url, {
+                method: 'POST',
+                body: formData
+            });
 
-            if (xhr.status >= 200 && xhr.status < 300) {
+            if (response.ok) {
                 let data;
                 try {
-                    data = JSON.parse(xhr.responseText);
+                    data = await response.json();
                 } catch (parseError) {
                     lastError = parseError;
                     continue;
@@ -333,10 +334,11 @@ function generateProfessionalReport(businessContext) {
             }
 
             if (rtbcbReport && rtbcbReport.debug) {
-                console.error('Attempt ' + attempt + ' failed:', xhr.responseText);
+                const responseText = await response.text();
+                console.error('Attempt ' + attempt + ' failed:', responseText);
                 console.error('RTBCB request body:', requestBody);
             }
-            lastError = new Error('HTTP ' + xhr.status);
+            lastError = new Error('HTTP ' + response.status + ' ' + response.statusText);
         } catch (error) {
             console.error('Error generating report (attempt ' + attempt + '):', error);
             lastError = error;
@@ -344,7 +346,7 @@ function generateProfessionalReport(businessContext) {
     }
 
     console.error('All attempts to generate report failed:', lastError);
-    throw new Error('Unable to generate report at this time. Please try again later.');
+    throw new Error(lastError && lastError.message ? lastError.message : 'Unable to generate report at this time. Please try again later.');
 }
 
 function sanitizeReportHTML(htmlContent) {
@@ -378,7 +380,7 @@ function exportToPDF(htmlContent) {
     printWindow.print();
 }
 
-function generateAndDisplayReport(businessContext) {
+async function generateAndDisplayReport(businessContext) {
     const loadingElement = document.getElementById('loading');
     const errorElement = document.getElementById('error');
     const reportContainer = document.getElementById('report-container');
@@ -388,7 +390,7 @@ function generateAndDisplayReport(businessContext) {
     reportContainer.innerHTML = '';
 
     try {
-        const htmlReport = generateProfessionalReport(businessContext);
+        const htmlReport = await generateProfessionalReport(businessContext);
 
         if (!htmlReport.includes('<!DOCTYPE html>')) {
             throw new Error('Invalid HTML response from API');
@@ -405,7 +407,7 @@ function generateAndDisplayReport(businessContext) {
     } catch (error) {
         errorElement.textContent = 'Error: ' + error.message;
         errorElement.style.display = 'block';
+    } finally {
+        loadingElement.style.display = 'none';
     }
-
-    loadingElement.style.display = 'none';
 }

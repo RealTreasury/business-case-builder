@@ -3,7 +3,7 @@ const fs = require('fs');
 const vm = require('vm');
 const { execSync } = require('child_process');
 
-function runTests() {
+async function runTests() {
     const code = fs.readFileSync('public/js/rtbcb-report.js', 'utf8');
     vm.runInThisContext(code);
 
@@ -18,27 +18,25 @@ function runTests() {
 
     const models = [...unsupportedModels, ...supportedModels];
 
-    models.forEach((model) => {
+    for (const model of models) {
         let capturedBody;
         global.rtbcbReport = { report_model: model, model_capabilities: capabilities, ajax_url: 'https://example.com' };
 
-        global.XMLHttpRequest = function() {
-            this.open = function(method, url, async) {
-                this.method = method;
-                this.url = url;
-                this.async = async;
-            };
-            this.send = function(formData) {
-                capturedBody = JSON.parse(formData.store.body);
-                this.status = 200;
-                this.responseText = JSON.stringify({ output_text: '<html></html>' });
-            };
+        global.fetch = (url, options) => {
+            capturedBody = JSON.parse(options.body.store.body);
+            return Promise.resolve({
+                ok: true,
+                json: () => Promise.resolve({ output_text: '<html></html>' }),
+                status: 200,
+                statusText: 'OK',
+                text: () => Promise.resolve('')
+            });
         };
 
         global.document = { getElementById: () => null };
         global.DOMPurify = { sanitize: (html) => html };
 
-        generateProfessionalReport('context');
+        await generateProfessionalReport('context');
         const shouldInclude = supportedModels.includes(model);
 
         assert.strictEqual(
@@ -83,8 +81,10 @@ function runTests() {
                 `Server request body for ${model} should not include temperature`
             );
         }
-    });
+    }
 }
-runTests();
-console.log('Model temperature test passed.');
+
+runTests().then(() => {
+    console.log('Model temperature test passed.');
+});
 
