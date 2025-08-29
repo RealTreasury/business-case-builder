@@ -129,6 +129,7 @@ class Real_Treasury_BCB {
         require_once RTBCB_DIR . 'inc/class-rtbcb-llm.php';
         require_once RTBCB_DIR . 'inc/class-rtbcb-rag.php';
         require_once RTBCB_DIR . 'inc/class-rtbcb-leads.php';
+        require_once RTBCB_DIR . 'inc/class-rtbcb-api-log.php';
         require_once RTBCB_DIR . 'inc/class-rtbcb-db.php';
         require_once RTBCB_DIR . 'inc/class-rtbcb-category-recommender.php';
         require_once RTBCB_DIR . 'inc/class-rtbcb-tests.php';

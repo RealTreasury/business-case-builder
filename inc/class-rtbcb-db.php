@@ -29,6 +29,9 @@ class RTBCB_DB {
 
         // Ensure required tables exist.
         RTBCB_Leads::init();
+        if ( class_exists( 'RTBCB_API_Log' ) ) {
+            RTBCB_API_Log::init();
+        }
         self::create_rag_table();
         self::seed_rag_sample_data();
     }
@@ -42,6 +45,9 @@ class RTBCB_DB {
     private static function upgrade( $from_version ) {
         // Run table creation/migration for leads.
         RTBCB_Leads::init();
+        if ( class_exists( 'RTBCB_API_Log' ) ) {
+            RTBCB_API_Log::init();
+        }
 
         // Ensure RAG index table is present during upgrades.
         self::create_rag_table();

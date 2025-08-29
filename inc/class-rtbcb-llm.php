@@ -1343,6 +1343,20 @@ Respond with valid JSON only, following the specified schema exactly. Ensure all
         $response           = wp_remote_post( $endpoint, $args );
         $this->last_response = $response;
 
+        if ( class_exists( 'RTBCB_API_Log' ) ) {
+            $decoded = [];
+            if ( is_wp_error( $response ) ) {
+                $decoded = [ 'error' => $response->get_error_message() ];
+            } else {
+                $decoded = json_decode( wp_remote_retrieve_body( $response ), true );
+                if ( ! is_array( $decoded ) ) {
+                    $decoded = [];
+                }
+            }
+
+            RTBCB_API_Log::save_log( $body, $decoded, get_current_user_id() );
+        }
+
         if ( is_wp_error( $response ) ) {
             if ( 'timeout' === $response->get_error_code() || false !== strpos( $response->get_error_message(), 'timed out' ) ) {
                 return new WP_Error( 'llm_timeout', __( 'The language model request timed out. Please try again.', 'rtbcb' ) );
