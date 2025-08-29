@@ -82,6 +82,7 @@ Add the shortcode to any page or post:
 - `inc/` – Core classes and helper functions.
 - `public/` – Front-end hooks, shortcodes, and assets.
 - `templates/` – PHP templates rendered for reports and forms.
+- `docs/` – Project documentation including [End-to-End Workflow](docs/END_TO_END_WORKFLOW.md).
 - `tests/` – Automated tests and diagnostics.
 - `vendor/` – Composer-managed third-party libraries (do not modify).
 
