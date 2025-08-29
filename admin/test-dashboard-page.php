@@ -14,6 +14,23 @@ $company_name = isset( $company_data['name'] ) ? sanitize_text_field( $company_d
 <div class="wrap rtbcb-admin-page">
     <h1><?php esc_html_e( 'Treasury Report Section Testing Dashboard', 'rtbcb' ); ?></h1>
     <?php rtbcb_render_start_new_analysis_button(); ?>
+    <div class="card">
+        <h2 class="title"><?php esc_html_e( 'Run All Tests', 'rtbcb' ); ?></h2>
+        <p>
+            <label for="rtbcb-company-name"><?php esc_html_e( 'Company Name', 'rtbcb' ); ?></label>
+            <input type="text" id="rtbcb-company-name" class="regular-text" value="<?php echo esc_attr( $company_name ); ?>" />
+            <button type="button" id="rtbcb-set-company" class="button"><?php esc_html_e( 'Set Company', 'rtbcb' ); ?></button>
+            <?php wp_nonce_field( 'rtbcb_set_test_company', 'rtbcb_set_test_company_nonce' ); ?>
+        </p>
+        <p class="description"><?php esc_html_e( 'Run the complete test suite. Individual test tools will be available after completion.', 'rtbcb' ); ?></p>
+        <p class="submit">
+            <button type="button" id="rtbcb-test-all-sections" class="button button-primary">
+                <?php esc_html_e( 'Run All Tests', 'rtbcb' ); ?>
+            </button>
+            <?php wp_nonce_field( 'rtbcb_test_dashboard', 'rtbcb_test_dashboard_nonce' ); ?>
+        </p>
+        <p id="rtbcb-test-status"></p>
+    </div>
 
     <?php
     $sections = rtbcb_get_dashboard_sections();
@@ -58,83 +75,71 @@ $company_name = isset( $company_data['name'] ) ? sanitize_text_field( $company_d
         </ul>
     </div>
 
-    <div class="card">
-        <h2 class="title"><?php esc_html_e( 'Test Tools', 'rtbcb' ); ?></h2>
-        <p>
-            <label for="rtbcb-company-name"><?php esc_html_e( 'Company Name', 'rtbcb' ); ?></label>
-            <input type="text" id="rtbcb-company-name" class="regular-text" value="<?php echo esc_attr( $company_name ); ?>" />
-            <button type="button" id="rtbcb-set-company" class="button"><?php esc_html_e( 'Set Company', 'rtbcb' ); ?></button>
-            <?php wp_nonce_field( 'rtbcb_set_test_company', 'rtbcb_set_test_company_nonce' ); ?>
-        </p>
-        <p class="submit">
-            <button type="button" id="rtbcb-test-all-sections" class="button button-primary">
-                <?php esc_html_e( 'Test All Sections', 'rtbcb' ); ?>
-            </button>
-            <?php wp_nonce_field( 'rtbcb_test_dashboard', 'rtbcb_test_dashboard_nonce' ); ?>
-        </p>
-        <p id="rtbcb-test-status"></p>
-    </div>
-
     <?php include RTBCB_DIR . 'admin/partials/dashboard-connectivity.php'; ?>
 
-    <h2 class="nav-tab-wrapper" id="rtbcb-test-tabs">
-        <a href="#rtbcb-phase1" class="nav-tab nav-tab-active"><?php echo esc_html( $phases[1] ); ?></a>
-        <a href="#rtbcb-phase2" class="nav-tab"><?php echo esc_html( $phases[2] ); ?></a>
-        <a href="#rtbcb-phase3" class="nav-tab"><?php echo esc_html( $phases[3] ); ?></a>
-        <a href="#rtbcb-phase4" class="nav-tab"><?php echo esc_html( $phases[4] ); ?></a>
-        <a href="#rtbcb-phase5" class="nav-tab"><?php echo esc_html( $phases[5] ); ?></a>
-    </h2>
+    <div id="rtbcb-section-tests" style="display:none;">
+        <h2 class="title"><?php esc_html_e( 'Individual Test Tools', 'rtbcb' ); ?></h2>
+        <p><?php esc_html_e( 'These tools are optional and available after running all tests.', 'rtbcb' ); ?></p>
 
-    <div id="rtbcb-phase1" class="rtbcb-tab-panel" style="display:block;">
-        <?php include RTBCB_DIR . 'admin/partials/test-company-overview.php'; ?>
-        <?php include RTBCB_DIR . 'admin/partials/test-data-enrichment.php'; ?>
-        <?php include RTBCB_DIR . 'admin/partials/test-data-storage.php'; ?>
-    </div>
-    <div id="rtbcb-phase2" class="rtbcb-tab-panel" style="display:none;">
-        <?php include RTBCB_DIR . 'admin/partials/test-maturity-model.php'; ?>
-        <?php include RTBCB_DIR . 'admin/partials/test-rag-market-analysis.php'; ?>
-        <?php include RTBCB_DIR . 'admin/partials/test-value-proposition.php'; ?>
-        <?php include RTBCB_DIR . 'admin/partials/test-industry-overview.php'; ?>
-        <?php include RTBCB_DIR . 'admin/partials/test-real-treasury-overview.php'; ?>
-    </div>
-    <div id="rtbcb-phase3" class="rtbcb-tab-panel" style="display:none;">
-        <?php include RTBCB_DIR . 'admin/partials/test-roadmap-generator.php'; ?>
-        <?php include RTBCB_DIR . 'admin/partials/test-roi-calculator.php'; ?>
-        <?php include RTBCB_DIR . 'admin/partials/test-estimated-benefits.php'; ?>
-    </div>
-    <div id="rtbcb-phase4" class="rtbcb-tab-panel" style="display:none;">
-        <?php
-        $dependency = rtbcb_get_first_incomplete_dependency( 'rtbcb-test-report-assembly', $sections );
-        if ( null === $dependency ) {
-            include RTBCB_DIR . 'admin/partials/test-report-assembly.php';
-        } else {
-            $phase  = isset( $sections[ $dependency ]['phase'] ) ? (int) $sections[ $dependency ]['phase'] : 0;
-            $anchor = $phase ? '#rtbcb-phase' . $phase : '#';
-            echo '<div class="rtbcb-warning"><p>' .
-                sprintf(
-                    esc_html__( 'Please complete %s first.', 'rtbcb' ),
-                    '<a href="' . esc_url( $anchor ) . '" class="rtbcb-jump-tab">' . esc_html( $sections[ $dependency ]['label'] ) . '</a>'
-                ) .
-                '</p></div>';
-        }
-        ?>
-    </div>
-    <div id="rtbcb-phase5" class="rtbcb-tab-panel" style="display:none;">
-        <?php
-        $dependency = rtbcb_get_first_incomplete_dependency( 'rtbcb-test-tracking-script', $sections );
-        if ( null === $dependency ) {
-            include RTBCB_DIR . 'admin/partials/test-post-delivery.php';
-        } else {
-            $phase  = isset( $sections[ $dependency ]['phase'] ) ? (int) $sections[ $dependency ]['phase'] : 0;
-            $anchor = $phase ? '#rtbcb-phase' . $phase : '#';
-            echo '<div class="rtbcb-warning"><p>' .
-                sprintf(
-                    esc_html__( 'Please complete %s first.', 'rtbcb' ),
-                    '<a href="' . esc_url( $anchor ) . '" class="rtbcb-jump-tab">' . esc_html( $sections[ $dependency ]['label'] ) . '</a>'
-                ) .
-                '</p></div>';
-        }
-        ?>
+        <h2 class="nav-tab-wrapper" id="rtbcb-test-tabs">
+            <a href="#rtbcb-phase1" class="nav-tab nav-tab-active"><?php echo esc_html( $phases[1] ); ?></a>
+            <a href="#rtbcb-phase2" class="nav-tab"><?php echo esc_html( $phases[2] ); ?></a>
+            <a href="#rtbcb-phase3" class="nav-tab"><?php echo esc_html( $phases[3] ); ?></a>
+            <a href="#rtbcb-phase4" class="nav-tab"><?php echo esc_html( $phases[4] ); ?></a>
+            <a href="#rtbcb-phase5" class="nav-tab"><?php echo esc_html( $phases[5] ); ?></a>
+        </h2>
+
+        <div id="rtbcb-phase1" class="rtbcb-tab-panel" style="display:block;">
+            <?php include RTBCB_DIR . 'admin/partials/test-company-overview.php'; ?>
+            <?php include RTBCB_DIR . 'admin/partials/test-data-enrichment.php'; ?>
+            <?php include RTBCB_DIR . 'admin/partials/test-data-storage.php'; ?>
+        </div>
+        <div id="rtbcb-phase2" class="rtbcb-tab-panel" style="display:none;">
+            <?php include RTBCB_DIR . 'admin/partials/test-maturity-model.php'; ?>
+            <?php include RTBCB_DIR . 'admin/partials/test-rag-market-analysis.php'; ?>
+            <?php include RTBCB_DIR . 'admin/partials/test-value-proposition.php'; ?>
+            <?php include RTBCB_DIR . 'admin/partials/test-industry-overview.php'; ?>
+            <?php include RTBCB_DIR . 'admin/partials/test-real-treasury-overview.php'; ?>
+        </div>
+        <div id="rtbcb-phase3" class="rtbcb-tab-panel" style="display:none;">
+            <?php include RTBCB_DIR . 'admin/partials/test-roadmap-generator.php'; ?>
+            <?php include RTBCB_DIR . 'admin/partials/test-roi-calculator.php'; ?>
+            <?php include RTBCB_DIR . 'admin/partials/test-estimated-benefits.php'; ?>
+        </div>
+        <div id="rtbcb-phase4" class="rtbcb-tab-panel" style="display:none;">
+            <?php
+            $dependency = rtbcb_get_first_incomplete_dependency( 'rtbcb-test-report-assembly', $sections );
+            if ( null === $dependency ) {
+                include RTBCB_DIR . 'admin/partials/test-report-assembly.php';
+            } else {
+                $phase  = isset( $sections[ $dependency ]['phase'] ) ? (int) $sections[ $dependency ]['phase'] : 0;
+                $anchor = $phase ? '#rtbcb-phase' . $phase : '#';
+                echo '<div class="rtbcb-warning"><p>' .
+                    sprintf(
+                        esc_html__( 'Please complete %s first.', 'rtbcb' ),
+                        '<a href="' . esc_url( $anchor ) . '" class="rtbcb-jump-tab">' . esc_html( $sections[ $dependency ]['label'] ) . '</a>'
+                    ) .
+                    '</p></div>';
+            }
+            ?>
+        </div>
+        <div id="rtbcb-phase5" class="rtbcb-tab-panel" style="display:none;">
+            <?php
+            $dependency = rtbcb_get_first_incomplete_dependency( 'rtbcb-test-tracking-script', $sections );
+            if ( null === $dependency ) {
+                include RTBCB_DIR . 'admin/partials/test-post-delivery.php';
+            } else {
+                $phase  = isset( $sections[ $dependency ]['phase'] ) ? (int) $sections[ $dependency ]['phase'] : 0;
+                $anchor = $phase ? '#rtbcb-phase' . $phase : '#';
+                echo '<div class="rtbcb-warning"><p>' .
+                    sprintf(
+                        esc_html__( 'Please complete %s first.', 'rtbcb' ),
+                        '<a href="' . esc_url( $anchor ) . '" class="rtbcb-jump-tab">' . esc_html( $sections[ $dependency ]['label'] ) . '</a>'
+                    ) .
+                    '</p></div>';
+            }
+            ?>
+        </div>
     </div>
 
     <script>

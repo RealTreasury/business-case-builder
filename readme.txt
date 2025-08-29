@@ -20,11 +20,12 @@ Use the `[rt_business_case_builder]` shortcode to embed the calculator on any pa
 3. Navigate to **Real Treasury → Settings** to configure ROI defaults and API keys.
 
 == Testing Dashboard ==
-From the WordPress admin, go to **Real Treasury → Test Dashboard** to run
-section tests for company overview, recommended category, and more. The
-dashboard replaces the individual test pages from earlier versions. Access
-requires the `manage_options` capability and each test action uses a dedicated
-nonce such as `rtbcb_test_company_overview` to protect requests.
+From the WordPress admin, go to **Real Treasury → Test Dashboard** and click
+**Run All Tests** to execute the full suite. Individual section tools appear
+after this pass and can be used as needed. The dashboard replaces the individual
+test pages from earlier versions. Access requires the `manage_options`
+capability and each test action uses a dedicated nonce such as
+`rtbcb_test_company_overview` to protect requests.
 
 == Repository Structure ==
 
@@ -141,7 +142,7 @@ The analytics dashboard uses Chart.js for its visualizations. The library is bun
 == Changelog ==
 = 2.1.2 =
 * Improved Test Dashboard: `Set Company` uses a single company name input.
-* "Test All Sections" now includes the company name parameter for comprehensive checks.
+* "Run All Tests" now includes the company name parameter for comprehensive checks.
 = 2.1.1 =
 * Bump plugin version to 2.1.1.
 

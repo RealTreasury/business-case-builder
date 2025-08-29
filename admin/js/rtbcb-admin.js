@@ -59,6 +59,13 @@ jQuery(document).ready(function($) {
             if ($('#rtbcb-test-tabs').length) {
                 this.initTabs();
             }
+
+            if ($('#rtbcb-test-all-sections').length) {
+                $('#rtbcb-test-all-sections').addClass('rtbcb-primary-action').focus();
+                if (window.rtbcbAdmin && window.rtbcbAdmin.auto_run_all) {
+                    $('#rtbcb-test-all-sections').trigger('click');
+                }
+            }
         },
         
         testApi: function(e) {
@@ -599,6 +606,8 @@ jQuery(document).ready(function($) {
             } catch (error) {
                 console.error('Failed to save test results', error);
             }
+
+            $('#rtbcb-section-tests').slideDown();
         },
         
         initLeadsManager: function() {
