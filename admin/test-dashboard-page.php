@@ -30,7 +30,7 @@ $test_results = get_option( 'rtbcb_test_results', [] );
             </button>
             <?php wp_nonce_field( 'rtbcb_test_dashboard', 'rtbcb_test_dashboard_nonce' ); ?>
         </p>
-        <progress id="rtbcb-test-progress" class="rtbcb-test-progress" max="100" value="0" aria-label="<?php esc_attr_e( 'Test progress', 'rtbcb' ); ?>"></progress>
+        <progress id="rtbcb-test-progress" class="rtbcb-test-progress" max="100" value="0" role="progressbar" aria-label="<?php esc_attr_e( 'Test progress', 'rtbcb' ); ?>" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></progress>
         <p id="rtbcb-test-status" role="status" aria-live="polite"></p>
         <p id="rtbcb-test-step"></p>
         <pre id="rtbcb-test-config" class="rtbcb-config-snippet"></pre>

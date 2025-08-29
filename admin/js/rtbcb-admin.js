@@ -624,7 +624,7 @@ jQuery(document).ready(function($) {
             var $config = $('#rtbcb-test-config');
         
             $btn.prop('disabled', true).text(window.rtbcbAdmin.strings.testing || 'Testing...');
-            $progress.val(0).removeClass('rtbcb-complete');
+            $progress.val(0).attr('aria-valuenow', 0).removeClass('rtbcb-complete');
             $status.text(window.rtbcbAdmin.strings.starting_tests || 'Starting tests...');
             $step.text('');
             $config.text('');
@@ -684,12 +684,12 @@ jQuery(document).ready(function($) {
                 }
         
                 var pct = Math.round(((i + 1) / sections.length) * 100);
-                $progress.val(pct);
+                $progress.val(pct).attr('aria-valuenow', pct);
                 await RTBCB.Admin.refreshPhaseChart();
             }
-        
+
             await RTBCB.Admin.saveTestResults(results);
-            $progress.addClass('rtbcb-complete');
+            $progress.val(100).attr('aria-valuenow', 100).addClass('rtbcb-complete');
             $status.text('✅ ' + (window.rtbcbAdmin.strings.all_sections_done || 'All sections completed'));
             $('#rtbcb-section-tests').slideDown();
         
