@@ -20,7 +20,7 @@ class RTBCB_Router {
         // Nonce verification.
         if (
             ! isset( $_POST['rtbcb_nonce'] )
-            || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['rtbcb_nonce'] ) ), 'rtbcb_form_action' )
+            || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['rtbcb_nonce'] ) ), 'rtbcb_generate' )
         ) {
             wp_send_json_error( [ 'message' => __( 'Nonce verification failed.', 'rtbcb' ) ], 403 );
             return;
