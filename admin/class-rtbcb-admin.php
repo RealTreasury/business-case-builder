@@ -265,11 +265,11 @@ class RTBCB_Admin {
      * Render enhanced dashboard with statistics.
      *
      * @return void
-     */
+    */
     public function render_dashboard() {
         $stats = RTBCB_Leads::get_statistics();
-        $recent_leads = RTBCB_Leads::get_all_leads( [ 'per_page' => 5, 'orderby' => 'created_at', 'order' => 'DESC' ] );
-        
+        $recent_leads_data = RTBCB_Leads::get_all_leads( [ 'per_page' => 5, 'orderby' => 'created_at', 'order' => 'DESC' ] );
+
         include RTBCB_DIR . 'admin/dashboard-page.php';
     }
 
