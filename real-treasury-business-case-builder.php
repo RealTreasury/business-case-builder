@@ -978,16 +978,21 @@ class Real_Treasury_BCB {
                     );
                 } catch ( Error $e ) {
                     // Developers: check server logs for E_LLM_FATAL stack trace.
-                    $error_code = 'E_LLM_FATAL';
-                    rtbcb_log_error(
-                        $error_code . ': ' . $e->getMessage(),
-                        $e->getTraceAsString()
-                    );
-                    $guidance        = __( 'Check the OpenAI API key setting in plugin options.', 'rtbcb' );
-                    $response_message = __( 'Our AI analysis service is temporarily unavailable.', 'rtbcb' ) . ' ' . $guidance;
+                    $error_code    = 'E_LLM_FATAL';
+                    $error_message = $e->getMessage();
+
+                    rtbcb_log_error( $error_code . ': ' . $error_message, $e->getTraceAsString() );
+
+                    $guidance          = __( 'Check the OpenAI API key setting in plugin options.', 'rtbcb' );
+                    $sanitized_message = esc_html( $error_message );
+                    $response_message  = __( 'Our AI analysis service is temporarily unavailable.', 'rtbcb' ) . ' ' . $guidance;
+
                     if ( function_exists( 'wp_get_environment_type' ) && 'production' !== wp_get_environment_type() ) {
-                        $response_message = $e->getMessage() . ' ' . $guidance;
+                        $response_message = $sanitized_message . ' ' . $guidance;
+                    } elseif ( current_user_can( 'manage_options' ) ) {
+                        $response_message .= ' ' . $sanitized_message;
                     }
+
                     wp_send_json_error(
                         [
                             'message'    => $response_message,
