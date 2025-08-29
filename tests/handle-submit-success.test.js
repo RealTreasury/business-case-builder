@@ -26,15 +26,15 @@ class SimpleFormData {
 
 global.FormData = SimpleFormData;
 
-global.XMLHttpRequest = function() {
-    this.open = function(method, url, async) {};
-    this.send = function() {
-        this.status = 200;
-        this.responseText = JSON.stringify({
+global.fetch = function() {
+    return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: async () => ({
             success: true,
             data: { report_html: '<div>Report</div>' }
-        });
-    };
+        })
+    });
 };
 
 const form = {
@@ -67,6 +67,11 @@ builder.showProgress = () => {};
 builder.showResults = (data) => { resultsData = data; };
 builder.showError = () => {};
 
-builder.handleSubmit();
-assert.strictEqual(resultsData.report_html, '<div>Report</div>');
-console.log('Success path test passed.');
+(async () => {
+    await builder.handleSubmit();
+    assert.strictEqual(resultsData.report_html, '<div>Report</div>');
+    console.log('Success path test passed.');
+})().catch(err => {
+    console.error(err);
+    process.exit(1);
+});

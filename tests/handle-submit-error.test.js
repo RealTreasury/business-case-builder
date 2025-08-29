@@ -26,15 +26,15 @@ class SimpleFormData {
 
 global.FormData = SimpleFormData;
 
-global.XMLHttpRequest = function() {
-    this.open = function(method, url, async) {};
-    this.send = function() {
-        this.status = 200;
-        this.responseText = JSON.stringify({
+global.fetch = function() {
+    return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: async () => ({
             success: false,
             data: { message: 'Bad narrative' }
-        });
-    };
+        })
+    });
 };
 
 const form = {
@@ -67,6 +67,11 @@ builder.showProgress = () => {};
 builder.showResults = () => {};
 builder.showError = (msg) => { errorMessage = msg; };
 
-builder.handleSubmit();
-assert.ok(errorMessage.includes('Bad narrative'));
-console.log('Error path test passed.');
+(async () => {
+    await builder.handleSubmit();
+    assert.ok(errorMessage.includes('Bad narrative'));
+    console.log('Error path test passed.');
+})().catch(err => {
+    console.error(err);
+    process.exit(1);
+});

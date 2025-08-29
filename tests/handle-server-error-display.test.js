@@ -26,15 +26,14 @@ class SimpleFormData {
 
 global.FormData = SimpleFormData;
 
-global.XMLHttpRequest = function() {
-    this.open = function(method, url, async) {};
-    this.send = function() {
-        this.status = 500;
-        this.responseText = JSON.stringify({
-            success: false,
+global.fetch = function() {
+    return Promise.resolve({
+        ok: false,
+        status: 500,
+        json: async () => ({
             data: { message: 'Server exploded' }
-        });
-    };
+        })
+    });
 };
 
 const form = {
@@ -67,16 +66,11 @@ builder.showProgress = () => {};
 builder.showResults = () => {};
 builder.showError = (msg) => { errorMessage = msg; };
 
-builder.handleSubmit();
-assert.ok(errorMessage.includes('Server exploded'));
-console.log('Server error display test passed.');
-
-
-try {
-    handleSubmit({ preventDefault() {}, target: {} });
-    assert.ok(progressContainer.innerHTML.includes('Server exploded'));
+(async () => {
+    await builder.handleSubmit();
+    assert.ok(errorMessage.includes('Server exploded'));
     console.log('Server error display test passed.');
-} catch (error) {
-    console.error(error);
+})().catch(err => {
+    console.error(err);
     process.exit(1);
-}
+});
