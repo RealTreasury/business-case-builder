@@ -32,6 +32,8 @@ $test_results = get_option( 'rtbcb_test_results', [] );
         </p>
         <progress id="rtbcb-test-progress" class="rtbcb-test-progress" max="100" value="0" aria-label="<?php esc_attr_e( 'Test progress', 'rtbcb' ); ?>"></progress>
         <p id="rtbcb-test-status" role="status" aria-live="polite"></p>
+        <p id="rtbcb-test-step"></p>
+        <pre id="rtbcb-test-config" class="rtbcb-config-snippet"></pre>
     </div>
 
     <div id="rtbcb-comprehensive-analysis" class="card" style="display:none;">
