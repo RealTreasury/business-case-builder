@@ -281,3 +281,37 @@
         flex: 1 1 auto;
     }
 }
+
+/* API logs page */
+.rtbcb-log-table-wrapper {
+    overflow-x: auto;
+}
+
+.rtbcb-log-table-wrapper table {
+    min-width: 600px;
+}
+
+#rtbcb-log-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    z-index: 1000;
+}
+
+#rtbcb-log-modal .rtbcb-modal-content {
+    background: #fff;
+    margin: 5% auto;
+    padding: 20px;
+    max-width: 600px;
+    width: 90%;
+}
+
+#rtbcb-log-modal pre {
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
