@@ -915,6 +915,13 @@ class RTBCB_Admin {
      *
      * @return void
      */
+    /**
+     * AJAX handler to generate estimated benefits.
+     *
+     * Stores sanitized results to mark the section complete.
+     *
+     * @return void
+     */
     public function ajax_test_estimated_benefits() {
         check_ajax_referer( 'rtbcb_test_estimated_benefits', 'nonce' );
 
@@ -931,7 +938,26 @@ class RTBCB_Admin {
             wp_send_json_error( [ 'message' => sanitize_text_field( $estimate->get_error_message() ) ] );
         }
 
-        wp_send_json_success( [ 'estimate' => $estimate ] );
+        $sanitize_recursive = function ( $data ) use ( &$sanitize_recursive ) {
+            $sanitized = [];
+            foreach ( (array) $data as $key => $value ) {
+                $clean_key = sanitize_key( $key );
+                if ( is_array( $value ) ) {
+                    $sanitized[ $clean_key ] = $sanitize_recursive( $value );
+                } elseif ( is_numeric( $value ) ) {
+                    $sanitized[ $clean_key ] = floatval( $value );
+                } else {
+                    $sanitized[ $clean_key ] = sanitize_text_field( $value );
+                }
+            }
+
+            return $sanitized;
+        };
+
+        $sanitized_estimate = $sanitize_recursive( $estimate );
+        update_option( 'rtbcb_estimated_benefits', $sanitized_estimate );
+
+        wp_send_json_success( [ 'estimate' => $sanitized_estimate ] );
     }
 
     /**
