@@ -418,8 +418,19 @@ class BusinessCaseBuilder {
                     throw new Error(errorMessage);
                 }
             } else {
-                const errorMessage = result?.data?.message || 'Server responded with status ' + response.status;
-                throw new Error(errorMessage);
+                let errorMessage = result?.data?.message;
+                if (!errorMessage) {
+                    if (response.status >= 500) {
+                        errorMessage = 'Server error. Please try again later.';
+                    } else if (response.status >= 400) {
+                        errorMessage = 'Invalid input. Please check your entries and try again.';
+                    } else {
+                        errorMessage = 'Server responded with status ' + response.status;
+                    }
+                }
+                const error = new Error(errorMessage);
+                error.status = response.status;
+                throw error;
             }
         } catch (error) {
             console.error('RTBCB: Submission error details:', {
