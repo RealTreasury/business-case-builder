@@ -881,13 +881,18 @@ class Real_Treasury_BCB {
                     rtbcb_log_memory_usage( 'before_llm_generation' );
 
                     if ( empty( get_option( 'rtbcb_openai_api_key' ) ) ) {
-                        rtbcb_log_api_debug( 'OpenAI API key not configured' );
-                        $response_message = __( 'Our AI analysis service is temporarily unavailable. Your submission has been saved and our team will follow up with a personalized business case.', 'rtbcb' );
+                        $error_code = 'E_NO_API_KEY';
+                        rtbcb_log_error( $error_code . ': OpenAI API key not configured' );
+                        $guidance        = __( 'Check the OpenAI API key setting in plugin options.', 'rtbcb' );
+                        $response_message = __( 'Our AI analysis service is temporarily unavailable.', 'rtbcb' ) . ' ' . $guidance;
                         if ( function_exists( 'wp_get_environment_type' ) && 'production' !== wp_get_environment_type() ) {
-                            $response_message = __( 'OpenAI API key not configured.', 'rtbcb' );
+                            $response_message = __( 'OpenAI API key not configured.', 'rtbcb' ) . ' ' . $guidance;
                         }
                         wp_send_json_error(
-                            [ 'message' => $response_message ],
+                            [
+                                'message'    => $response_message,
+                                'error_code' => $error_code,
+                            ],
                             200
                         );
                     }
@@ -903,66 +908,87 @@ class Real_Treasury_BCB {
                     rtbcb_log_memory_usage( 'after_llm_generation' );
 
                     if ( is_wp_error( $comprehensive_analysis ) ) {
-                        $error_message = $comprehensive_analysis->get_error_message();
-                        rtbcb_log_api_debug( 'LLM generation failed', $error_message );
-                        $error_code    = method_exists( $comprehensive_analysis, 'get_error_code' ) ? $comprehensive_analysis->get_error_code() : '';
-                        if ( 'no_api_key' === $error_code ) {
-                            $response_message = __( 'Our AI analysis service is temporarily unavailable. Your submission has been saved and our team will follow up with a personalized business case.', 'rtbcb' );
-                            if ( function_exists( 'wp_get_environment_type' ) && 'production' !== wp_get_environment_type() ) {
-                                $response_message = $error_message;
-                            }
-                            wp_send_json_error( [ 'message' => $response_message ], 200 );
-                        }
-                        $response_message = __( 'Our AI analysis service is temporarily unavailable. Your submission has been saved and our team will follow up with a personalized business case.', 'rtbcb' );
+                        $error_message   = $comprehensive_analysis->get_error_message();
+                        $llm_error_code  = method_exists( $comprehensive_analysis, 'get_error_code' ) ? $comprehensive_analysis->get_error_code() : '';
+                        $error_code      = 'no_api_key' === $llm_error_code ? 'E_NO_API_KEY' : 'E_LLM_WP_ERROR';
+                        rtbcb_log_error( $error_code . ': ' . $error_message, [ 'wp_error_code' => $llm_error_code ] );
+                        $guidance        = __( 'Check the OpenAI API key setting in plugin options.', 'rtbcb' );
+                        $response_message = __( 'Our AI analysis service is temporarily unavailable.', 'rtbcb' ) . ' ' . $guidance;
                         if ( function_exists( 'wp_get_environment_type' ) && 'production' !== wp_get_environment_type() ) {
-                            $response_message = $error_message;
+                            $response_message = $error_message . ' ' . $guidance;
                         }
-                        wp_send_json_error( [ 'message' => $response_message ], 200 );
+                        wp_send_json_error(
+                            [
+                                'message'    => $response_message,
+                                'error_code' => $error_code,
+                            ],
+                            200
+                        );
                     }
 
                     if ( isset( $comprehensive_analysis['error'] ) ) {
-                        rtbcb_log_api_debug( 'LLM generation returned error', $comprehensive_analysis['error'] );
-                        $response_message = __( 'Our AI analysis service is temporarily unavailable. Your submission has been saved and our team will follow up with a personalized business case.', 'rtbcb' );
+                        $error_code = 'E_LLM_RESPONSE_ERROR';
+                        rtbcb_log_error( $error_code . ': ' . $comprehensive_analysis['error'] );
+                        $guidance        = __( 'Check the OpenAI API key setting in plugin options.', 'rtbcb' );
+                        $response_message = __( 'Our AI analysis service is temporarily unavailable.', 'rtbcb' ) . ' ' . $guidance;
                         if ( function_exists( 'wp_get_environment_type' ) && 'production' !== wp_get_environment_type() ) {
-                            $response_message = $comprehensive_analysis['error'];
+                            $response_message = $comprehensive_analysis['error'] . ' ' . $guidance;
                         }
                         wp_send_json_error(
-                            [ 'message' => $response_message ],
+                            [
+                                'message'    => $response_message,
+                                'error_code' => $error_code,
+                            ],
                             200
                         );
                     }
                     rtbcb_log_api_debug( 'LLM generation succeeded' );
                 } catch ( Exception $e ) {
-                    rtbcb_log_error( 'LLM generation failed', $e->getMessage() );
-                    $response_message = __( 'Our AI analysis service is temporarily unavailable. Your submission has been saved and our team will follow up with a personalized business case.', 'rtbcb' );
+                    $error_code = 'E_LLM_EXCEPTION';
+                    rtbcb_log_error( $error_code . ': ' . $e->getMessage() );
+                    $guidance        = __( 'Check the OpenAI API key setting in plugin options.', 'rtbcb' );
+                    $response_message = __( 'Our AI analysis service is temporarily unavailable.', 'rtbcb' ) . ' ' . $guidance;
                     if ( function_exists( 'wp_get_environment_type' ) && 'production' !== wp_get_environment_type() ) {
-                        $response_message = $e->getMessage();
+                        $response_message = $e->getMessage() . ' ' . $guidance;
                     }
                     wp_send_json_error(
-                        [ 'message' => $response_message ],
+                        [
+                            'message'    => $response_message,
+                            'error_code' => $error_code,
+                        ],
                         200
                     );
                 } catch ( Error $e ) {
-                    rtbcb_log_error( 'LLM generation fatal error', $e->getMessage() );
-                    $response_message = __( 'Our AI analysis service is temporarily unavailable. Your submission has been saved and our team will follow up with a personalized business case.', 'rtbcb' );
+                    $error_code = 'E_LLM_FATAL';
+                    rtbcb_log_error( $error_code . ': ' . $e->getMessage() );
+                    $guidance        = __( 'Check the OpenAI API key setting in plugin options.', 'rtbcb' );
+                    $response_message = __( 'Our AI analysis service is temporarily unavailable.', 'rtbcb' ) . ' ' . $guidance;
                     if ( function_exists( 'wp_get_environment_type' ) && 'production' !== wp_get_environment_type() ) {
-                        $response_message = $e->getMessage();
+                        $response_message = $e->getMessage() . ' ' . $guidance;
                     }
                     wp_send_json_error(
-                        [ 'message' => $response_message ],
+                        [
+                            'message'    => $response_message,
+                            'error_code' => $error_code,
+                        ],
                         200
                     );
                 }
             }
 
             if ( empty( $comprehensive_analysis ) ) {
-                rtbcb_log_error( 'LLM returned empty analysis', $user_inputs );
-                $response_message = __( 'Our AI analysis service is temporarily unavailable. Your submission has been saved and our team will follow up with a personalized business case.', 'rtbcb' );
+                $error_code = 'E_LLM_EMPTY';
+                rtbcb_log_error( $error_code . ': LLM returned empty analysis', $user_inputs );
+                $guidance        = __( 'Check the OpenAI API key setting in plugin options.', 'rtbcb' );
+                $response_message = __( 'Our AI analysis service is temporarily unavailable.', 'rtbcb' ) . ' ' . $guidance;
                 if ( function_exists( 'wp_get_environment_type' ) && 'production' !== wp_get_environment_type() ) {
-                    $response_message = __( 'LLM returned empty analysis.', 'rtbcb' );
+                    $response_message = __( 'LLM returned empty analysis.', 'rtbcb' ) . ' ' . $guidance;
                 }
                 wp_send_json_error(
-                    [ 'message' => $response_message ],
+                    [
+                        'message'    => $response_message,
+                        'error_code' => $error_code,
+                    ],
                     200
                 );
             }

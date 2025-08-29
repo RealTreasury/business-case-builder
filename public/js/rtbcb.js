@@ -1,9 +1,10 @@
 /**
  * Handles the display of submission errors on the frontend.
  * @param {string} errorMessage - The error message to display.
+ * @param {string} [errorCode] - Optional error code for debugging.
  */
-function handleSubmissionError(errorMessage) {
-    console.error('Submission Error:', errorMessage);
+function handleSubmissionError(errorMessage, errorCode) {
+    console.error('Submission Error:', errorCode ? errorCode + ': ' + errorMessage : errorMessage);
     const progressContainer = document.getElementById('rtbcb-progress-container');
     if (progressContainer) {
         progressContainer.style.display = 'block';
@@ -37,6 +38,9 @@ function handleSubmissionError(errorMessage) {
             strong.textContent = 'Error Details:';
 
             details.appendChild(strong);
+            if (errorCode) {
+                details.appendChild(document.createTextNode(' [' + errorCode + ']'));
+            }
             details.appendChild(document.createTextNode(' ' + errorMessage));
 
             errorContent.appendChild(heading);
@@ -53,6 +57,7 @@ function handleSubmissionError(errorMessage) {
                 '<h3 style="color: #dc3545;">Generation Failed</h3>' +
                 "<p>We're sorry, but we couldn't generate your business case. Please try again later.</p>" +
                 '<p style="font-size: 0.9em; color: #6c757d; margin-top: 15px;"><strong>Error Details:</strong> ' +
+                (errorCode ? '[' + escapeHtml(errorCode) + '] ' : '') +
                 escapeHtml(errorMessage) +
                 '</p>' +
                 '</div>';
@@ -75,7 +80,7 @@ function handleSubmit(e) {
     if (formContainer) formContainer.style.display = 'none';
     if (progressContainer) progressContainer.style.display = 'block';
     if (typeof rtbcbAjax === 'undefined' || !rtbcbAjax.ajax_url) {
-        handleSubmissionError('Unable to submit form. Please refresh the page and try again.');
+        handleSubmissionError('Unable to submit form. Please refresh the page and try again.', '');
         return;
     }
 
@@ -87,21 +92,23 @@ function handleSubmit(e) {
         xhr.open('POST', rtbcbAjax.ajax_url, false); // Synchronous request
         xhr.send(formData);
     } catch (networkError) {
-        handleSubmissionError('Network error. Please try again later.');
+        handleSubmissionError('Network error. Please try again later.', '');
         return;
     }
 
     var responseText = xhr.responseText;
     if (xhr.status !== 200) {
         var errorMessage = 'Server responded with status ' + xhr.status + '.';
+        var errorCode = '';
         try {
             var errorJson = JSON.parse(responseText);
             errorMessage = errorJson.data && errorJson.data.message ? errorJson.data.message : errorMessage;
+            errorCode = errorJson.data && errorJson.data.error_code ? errorJson.data.error_code : '';
         } catch (jsonError) {
             console.error('Could not parse error response as JSON.', jsonError);
             errorMessage = responseText || errorMessage;
         }
-        handleSubmissionError(errorMessage);
+        handleSubmissionError(errorMessage, errorCode);
         return;
     }
 
@@ -109,12 +116,14 @@ function handleSubmit(e) {
     try {
         result = JSON.parse(responseText);
     } catch (parseError) {
-        handleSubmissionError('Invalid server response.');
+        handleSubmissionError('Invalid server response.', '');
         return;
     }
 
     if (!result.success) {
-        handleSubmissionError(result.data && result.data.message ? result.data.message : 'An unknown error occurred.');
+        var errorMessage = result.data && result.data.message ? result.data.message : 'An unknown error occurred.';
+        var errorCode = result.data && result.data.error_code ? result.data.error_code : '';
+        handleSubmissionError(errorMessage, errorCode);
         return;
     }
 
