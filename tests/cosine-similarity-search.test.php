@@ -20,6 +20,11 @@ class WPDB_Stub {
         return $this->last_query;
     }
 
+    public function get_var( $sql ) {
+        $this->last_query = $sql;
+        return 'rtbcb_rag_index';
+    }
+
     public function get_results( $sql, $output ) {
         $this->last_query = $sql;
         return [

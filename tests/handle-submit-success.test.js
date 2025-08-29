@@ -2,7 +2,7 @@ const fs = require('fs');
 const vm = require('vm');
 const assert = require('assert');
 
-global.ajaxObj = { ajax_url: 'test-url' };
+global.rtbcbAjax = { ajax_url: 'test-url' };
 
 class SimpleFormData {
     constructor(form) {
