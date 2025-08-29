@@ -780,7 +780,7 @@ jQuery(document).ready(function($) {
             }
 
             await RTBCB.Admin.saveTestResults(results);
-            await RTBCB.Admin.fetchTestSummary();
+            RTBCB.Admin.fetchTestSummary();
             $progress
                 .val(sections.length)
                 .attr({
@@ -1036,16 +1036,58 @@ jQuery(document).ready(function($) {
                         nonce: window.rtbcbAdmin.test_dashboard_nonce
                     }
                 });
+
                 if (response.success && response.data && response.data.html) {
-                    var $summary = $('#rtbcb-test-summary');
+                    var $summary = $('#rtbcb-final-summary');
                     if (!$summary.length) {
-                        $summary = $('<div id="rtbcb-test-summary"></div>');
+                        $summary = $('<div id="rtbcb-final-summary"></div>');
                         $('#rtbcb-test-status').after($summary);
                     }
                     $summary.html(response.data.html);
+                } else {
+                    var msg = (response.data && response.data.message) ? response.data.message : (window.rtbcbAdmin.strings && window.rtbcbAdmin.strings.error ? window.rtbcbAdmin.strings.error : 'Failed to fetch test summary');
+                    var safeMsg = $('<div>').text(msg).html();
+                    var $notice = $('<div class="notice notice-error"><p>' + safeMsg + '</p></div>');
+                    $('#rtbcb-test-status').after($notice);
+                    if (response.data && response.data.debug) {
+                        var debug = response.data.debug;
+                        var $btn = $('<button type="button" class="button"></button>').text(window.rtbcbAdmin.strings && window.rtbcbAdmin.strings.copy_debug_packet ? window.rtbcbAdmin.strings.copy_debug_packet : 'Copy Debug Packet');
+                        $btn.on('click', function() {
+                            if (navigator.clipboard && navigator.clipboard.writeText) {
+                                navigator.clipboard.writeText(debug).then(function() {
+                                    alert(window.rtbcbAdmin.strings && window.rtbcbAdmin.strings.copied || 'Copied to clipboard.');
+                                });
+                            } else if (window.rtbcbTestUtils && window.rtbcbTestUtils.copyToClipboard) {
+                                window.rtbcbTestUtils.copyToClipboard(debug).then(function() {
+                                    alert(window.rtbcbAdmin.strings && window.rtbcbAdmin.strings.copied || 'Copied to clipboard.');
+                                });
+                            }
+                        });
+                        $notice.append($btn);
+                    }
                 }
             } catch (error) {
-                console.error('Failed to fetch test summary', error);
+                var data = error && error.responseJSON && error.responseJSON.data ? error.responseJSON.data : {};
+                var msg = data.message || (window.rtbcbAdmin.strings && window.rtbcbAdmin.strings.error ? window.rtbcbAdmin.strings.error : 'Failed to fetch test summary');
+                var safeMsg = $('<div>').text(msg).html();
+                var $notice = $('<div class="notice notice-error"><p>' + safeMsg + '</p></div>');
+                $('#rtbcb-test-status').after($notice);
+                if (data.debug) {
+                    var debug = data.debug;
+                    var $btn = $('<button type="button" class="button"></button>').text(window.rtbcbAdmin.strings && window.rtbcbAdmin.strings.copy_debug_packet ? window.rtbcbAdmin.strings.copy_debug_packet : 'Copy Debug Packet');
+                    $btn.on('click', function() {
+                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                            navigator.clipboard.writeText(debug).then(function() {
+                                alert(window.rtbcbAdmin.strings && window.rtbcbAdmin.strings.copied || 'Copied to clipboard.');
+                            });
+                        } else if (window.rtbcbTestUtils && window.rtbcbTestUtils.copyToClipboard) {
+                            window.rtbcbTestUtils.copyToClipboard(debug).then(function() {
+                                alert(window.rtbcbAdmin.strings && window.rtbcbAdmin.strings.copied || 'Copied to clipboard.');
+                            });
+                        }
+                    });
+                    $notice.append($btn);
+                }
             }
         },
 
