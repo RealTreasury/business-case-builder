@@ -173,6 +173,43 @@ function rtbcb_get_dashboard_sections() {
 }
 
 /**
+ * Calculate completion percentages for each phase.
+ *
+ * @param array $sections Dashboard sections.
+ * @param array $phases   Optional phase numbers to include in the result.
+ * @return array Percentages keyed by phase number.
+ */
+function rtbcb_calculate_phase_completion( $sections, $phases = [] ) {
+    $totals = [];
+    $done   = [];
+
+    foreach ( $sections as $section ) {
+        $phase = isset( $section['phase'] ) ? (int) $section['phase'] : 0;
+        if ( $phase ) {
+            if ( ! isset( $totals[ $phase ] ) ) {
+                $totals[ $phase ] = 0;
+                $done[ $phase ]   = 0;
+            }
+            $totals[ $phase ]++;
+            if ( ! empty( $section['completed'] ) ) {
+                $done[ $phase ]++;
+            }
+        }
+    }
+
+    $phase_keys  = $phases ? $phases : array_keys( $totals );
+    $percentages = array_fill_keys( $phase_keys, 0 );
+
+    foreach ( $totals as $phase => $total ) {
+        $percentages[ $phase ] = $total ? round( ( $done[ $phase ] / $total ) * 100 ) : 0;
+    }
+
+    ksort( $percentages );
+
+    return $percentages;
+}
+
+/**
  * Get the first incomplete dependency for a section.
  *
  * Recursively checks the dependency chain and returns the earliest section

@@ -1669,28 +1669,8 @@ class RTBCB_Admin {
     public function ajax_get_phase_completion() {
         check_ajax_referer( 'rtbcb_test_dashboard', 'nonce' );
 
-        $sections = rtbcb_get_dashboard_sections();
-        $totals   = [];
-        $done     = [];
-
-        foreach ( $sections as $section ) {
-            $phase = isset( $section['phase'] ) ? (int) $section['phase'] : 0;
-            if ( $phase ) {
-                if ( ! isset( $totals[ $phase ] ) ) {
-                    $totals[ $phase ] = 0;
-                    $done[ $phase ]   = 0;
-                }
-                $totals[ $phase ]++;
-                if ( ! empty( $section['completed'] ) ) {
-                    $done[ $phase ]++;
-                }
-            }
-        }
-
-        $percentages = [];
-        foreach ( $totals as $phase => $total ) {
-            $percentages[ $phase ] = $total ? round( ( $done[ $phase ] / $total ) * 100 ) : 0;
-        }
+        $sections    = rtbcb_get_dashboard_sections();
+        $percentages = rtbcb_calculate_phase_completion( $sections );
 
         wp_send_json_success( [ 'percentages' => $percentages ] );
     }

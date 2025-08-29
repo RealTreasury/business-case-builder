@@ -42,24 +42,15 @@ $company_name = isset( $company_data['name'] ) ? sanitize_text_field( $company_d
         4 => __( 'Phase 4: Report Assembly & Delivery', 'rtbcb' ),
         5 => __( 'Phase 5: Post-Delivery Engagement', 'rtbcb' ),
     ];
-    $sections_by_phase   = [];
-    $phase_totals        = array_fill_keys( array_keys( $phases ), 0 );
-    $phase_completed     = array_fill_keys( array_keys( $phases ), 0 );
+    $sections_by_phase = [];
     foreach ( $sections as $id => $section ) {
         $phase = isset( $section['phase'] ) ? (int) $section['phase'] : 0;
         if ( $phase ) {
             $sections_by_phase[ $phase ][ $id ] = $section;
-            $phase_totals[ $phase ]++;
-            if ( ! empty( $section['completed'] ) ) {
-                $phase_completed[ $phase ]++;
-            }
         }
     }
-    $phase_percentages = [];
-    foreach ( $phase_totals as $phase_num => $total ) {
-        $phase_percentages[ $phase_num ] = $total ? round( ( $phase_completed[ $phase_num ] / $total ) * 100 ) : 0;
-    }
-    $phase_keys = array_keys( $phases );
+    $phase_keys        = array_keys( $phases );
+    $phase_percentages = rtbcb_calculate_phase_completion( $sections, $phase_keys );
     ?>
     <div class="card">
         <h2 class="title"><?php esc_html_e( 'Analysis Progress', 'rtbcb' ); ?></h2>
