@@ -54,8 +54,9 @@ echo "12. Running report interactivity test..."
 node tests/report-interactivity.test.js
 
 # AJAX error handling test (PHPUnit)
-echo "13. Running AJAX error handling test..."
+echo "13. Running AJAX error handling tests..."
 phpunit tests/RTBCB_AjaxGenerateComprehensiveCaseErrorTest.php
+phpunit tests/RTBCB_AjaxGenerateComprehensiveCaseFatalErrorTest.php
 
 # JavaScript tests
 echo "14. Running JavaScript tests..."
