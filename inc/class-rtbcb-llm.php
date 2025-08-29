@@ -493,21 +493,21 @@ USER,
         }
 
         $model  = $this->get_model( 'mini' );
-        $prompt = 'Provide a Real Treasury platform overview for a ' . ( $company_size ?: __( 'company', 'rtbcb' ) ) . ' in the ' . ( $industry ?: __( 'unspecified', 'rtbcb' ) ) . ' industry.';
+        $prompt = 'Provide an overview of Real Treasury, a treasury consulting company that helps organizations optimize treasury operations, benchmark market practices, and evaluate technology options for a ' . ( $company_size ?: __( 'company', 'rtbcb' ) ) . ' in the ' . ( $industry ?: __( 'unspecified', 'rtbcb' ) ) . ' industry.';
 
         if ( ! empty( $challenges ) ) {
             $prompt .= ' Address these challenges: ' . implode( ', ', $challenges ) . '.';
         }
 
         if ( ! empty( $categories ) ) {
-            $prompt .= ' Highlight vendor categories: ' . implode( ', ', $categories ) . '.';
+            $prompt .= ' Highlight how Real Treasury advises on vendor categories: ' . implode( ', ', $categories ) . '.';
         }
 
         if ( $include_portal ) {
-            $prompt .= ' Include how the Real Treasury portal complements the platform.';
+            $prompt .= ' Include how clients access Real Treasury research and tools through a client portal.';
         }
 
-        $prompt .= ' Provide sections for platform capabilities, portal integration benefits, vendor ecosystem overview, Real Treasury differentiators, implementation approach, and support/community aspects.';
+        $prompt .= ' Provide sections for consulting services, vendor ecosystem advisory, Real Treasury differentiators, implementation approach, and support/community aspects.';
 
         $history  = [
             [
