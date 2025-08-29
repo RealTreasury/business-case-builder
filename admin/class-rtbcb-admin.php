@@ -939,12 +939,42 @@ class RTBCB_Admin {
     public function ajax_test_estimated_benefits() {
         check_ajax_referer( 'rtbcb_test_estimated_benefits', 'nonce' );
 
-        $company_data = [
-            'revenue'     => isset( $_POST['company_data']['revenue'] ) ? floatval( wp_unslash( $_POST['company_data']['revenue'] ) ) : 0,
-            'staff_count' => isset( $_POST['company_data']['staff_count'] ) ? intval( wp_unslash( $_POST['company_data']['staff_count'] ) ) : 0,
-            'efficiency'  => isset( $_POST['company_data']['efficiency'] ) ? floatval( wp_unslash( $_POST['company_data']['efficiency'] ) ) : 0,
-        ];
+        $company_data = [];
+
+        if ( isset( $_POST['company_data'] ) && is_array( $_POST['company_data'] ) ) {
+            $company_data = [
+                'revenue'     => isset( $_POST['company_data']['revenue'] ) ? floatval( wp_unslash( $_POST['company_data']['revenue'] ) ) : 0,
+                'staff_count' => isset( $_POST['company_data']['staff_count'] ) ? intval( wp_unslash( $_POST['company_data']['staff_count'] ) ) : 0,
+                'efficiency'  => isset( $_POST['company_data']['efficiency'] ) ? floatval( wp_unslash( $_POST['company_data']['efficiency'] ) ) : 0,
+            ];
+        }
+
+        if ( empty( $company_data ) && function_exists( 'rtbcb_get_current_company' ) ) {
+            $current = rtbcb_get_current_company();
+            if ( is_array( $current ) ) {
+                $company_data = [
+                    'revenue'     => isset( $current['revenue'] ) ? floatval( $current['revenue'] ) : 0,
+                    'staff_count' => isset( $current['staff_count'] ) ? intval( $current['staff_count'] ) : 0,
+                    'efficiency'  => isset( $current['efficiency'] ) ? floatval( $current['efficiency'] ) : 0,
+                ];
+            }
+        }
+
         $category = isset( $_POST['recommended_category'] ) ? sanitize_text_field( wp_unslash( $_POST['recommended_category'] ) ) : '';
+        if ( empty( $category ) ) {
+            $stored_category = get_option( 'rtbcb_last_recommended_category', '' );
+            if ( ! empty( $stored_category ) ) {
+                $category = sanitize_text_field( $stored_category );
+            }
+        }
+
+        if ( empty( $company_data ) ) {
+            wp_send_json_error( [ 'message' => __( 'Company data is required to estimate benefits.', 'rtbcb' ) ] );
+        }
+
+        if ( empty( $category ) ) {
+            wp_send_json_error( [ 'message' => __( 'Recommended category is required to estimate benefits.', 'rtbcb' ) ] );
+        }
 
         $estimate = rtbcb_test_generate_benefits_estimate( $company_data, $category );
 
