@@ -56,9 +56,9 @@
 }
 
 /* Reset and isolate modal container */
+
 .rtbcb-modal {
     all: unset;
-    display: block !important;
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 248, 248, 0.98) 50%, rgba(255, 255, 255, 0.95)) !important;
     backdrop-filter: blur(25px) saturate(140%) !important;
     -webkit-backdrop-filter: blur(25px) saturate(140%) !important;
@@ -71,6 +71,14 @@
     overflow: auto !important;
     max-height: 85vh !important;
     position: relative !important;
+}
+
+#rtbcbModalOverlay .rtbcb-modal {
+    display: block !important;
+}
+
+#rtbcb-category-modal {
+    display: none;
 }
 
     /* Form field styling fixes */
