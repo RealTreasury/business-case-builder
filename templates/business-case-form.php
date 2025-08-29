@@ -17,7 +17,7 @@
         </div>
         <div class="rtbcb-modal-body">
             <div class="rtbcb-form-container">
-                <form id="rtbcbForm" class="rtbcb-wizard-form">
+                <form id="rtbcbForm" class="rtbcb-wizard-form rtbcb-form">
                     <?php wp_nonce_field( 'rtbcb_generate', 'rtbcb_nonce' ); ?>
 
                     <!-- Step 1: Company Info -->
