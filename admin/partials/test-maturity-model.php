@@ -16,6 +16,12 @@ if ( ! rtbcb_require_completed_steps( 'rtbcb-test-maturity-model' ) ) {
 ?>
 <h2><?php esc_html_e( 'Test Maturity Model', 'rtbcb' ); ?></h2>
 <p class="description"><?php esc_html_e( 'Assess treasury maturity based on company data.', 'rtbcb' ); ?></p>
+<p class="rtbcb-data-source">
+    <span class="rtbcb-data-status rtbcb-status-treasury-maturity">⚪ <?php esc_html_e( 'Generate new', 'rtbcb' ); ?></span>
+    <a href="#rtbcb-comprehensive-analysis" class="rtbcb-view-source" style="display:none;">
+        <?php esc_html_e( 'View Source Data', 'rtbcb' ); ?>
+    </a>
+</p>
 <?php $rtbcb_last = rtbcb_get_last_test_result( 'rtbcb-test-maturity-model', $test_results ?? [] ); ?>
 <?php if ( $rtbcb_last ) : ?>
     <div class="notice notice-info" role="status">
@@ -24,7 +30,7 @@ if ( ! rtbcb_require_completed_steps( 'rtbcb-test-maturity-model' ) ) {
         <p><strong><?php esc_html_e( 'Timestamp:', 'rtbcb' ); ?></strong> <?php echo esc_html( $rtbcb_last['timestamp'] ); ?></p>
         <p class="submit">
             <button type="button" class="button" id="rtbcb-rerun-maturity-model" data-section="rtbcb-test-maturity-model">
-                <?php esc_html_e( 'Regenerate', 'rtbcb' ); ?>
+                <?php esc_html_e( 'Regenerate This Section Only', 'rtbcb' ); ?>
             </button>
         </p>
     </div>

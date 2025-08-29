@@ -16,6 +16,12 @@ if ( ! rtbcb_require_completed_steps( 'rtbcb-test-value-proposition' ) ) {
 ?>
 <h2><?php esc_html_e( 'Test Value Proposition', 'rtbcb' ); ?></h2>
 <p class="description"><?php esc_html_e( 'Generate a personalized opening paragraph for the report.', 'rtbcb' ); ?></p>
+<p class="rtbcb-data-source">
+    <span class="rtbcb-data-status rtbcb-status-value-proposition">⚪ <?php esc_html_e( 'Generate new', 'rtbcb' ); ?></span>
+    <a href="#rtbcb-comprehensive-analysis" class="rtbcb-view-source" style="display:none;">
+        <?php esc_html_e( 'View Source Data', 'rtbcb' ); ?>
+    </a>
+</p>
 <?php $rtbcb_last = rtbcb_get_last_test_result( 'rtbcb-test-value-proposition', $test_results ?? [] ); ?>
 <?php if ( $rtbcb_last ) : ?>
     <div class="notice notice-info" role="status">
@@ -24,7 +30,7 @@ if ( ! rtbcb_require_completed_steps( 'rtbcb-test-value-proposition' ) ) {
         <p><strong><?php esc_html_e( 'Timestamp:', 'rtbcb' ); ?></strong> <?php echo esc_html( $rtbcb_last['timestamp'] ); ?></p>
         <p class="submit">
             <button type="button" class="button" id="rtbcb-rerun-value-proposition" data-section="rtbcb-test-value-proposition">
-                <?php esc_html_e( 'Regenerate', 'rtbcb' ); ?>
+                <?php esc_html_e( 'Regenerate This Section Only', 'rtbcb' ); ?>
             </button>
         </p>
     </div>

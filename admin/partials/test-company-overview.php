@@ -11,6 +11,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 ?>
 <h2><?php esc_html_e( 'Test Company Overview', 'rtbcb' ); ?></h2>
 <p class="description"><?php esc_html_e( 'Generate a concise company profile using your configured AI model.', 'rtbcb' ); ?></p>
+<p class="rtbcb-data-source">
+    <span class="rtbcb-data-status rtbcb-status-company-overview">⚪ <?php esc_html_e( 'Generate new', 'rtbcb' ); ?></span>
+    <a href="#rtbcb-comprehensive-analysis" class="rtbcb-view-source" style="display:none;">
+        <?php esc_html_e( 'View Source Data', 'rtbcb' ); ?>
+    </a>
+</p>
 <?php $rtbcb_last = rtbcb_get_last_test_result( 'rtbcb-test-company-overview', $test_results ?? [] ); ?>
 <?php if ( $rtbcb_last ) : ?>
     <div class="notice notice-info" role="status">
@@ -19,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
         <p><strong><?php esc_html_e( 'Timestamp:', 'rtbcb' ); ?></strong> <?php echo esc_html( $rtbcb_last['timestamp'] ); ?></p>
         <p class="submit">
             <button type="button" class="button" id="rtbcb-rerun-company-overview" data-section="rtbcb-test-company-overview">
-                <?php esc_html_e( 'Regenerate', 'rtbcb' ); ?>
+                <?php esc_html_e( 'Regenerate This Section Only', 'rtbcb' ); ?>
             </button>
         </p>
     </div>
@@ -43,7 +49,7 @@ if ( ! defined( 'ABSPATH' ) ) {
         <div id="<?php echo esc_attr( 'rtbcb-company-overview-meta' ); ?>" class="rtbcb-meta"></div>
         <p class="rtbcb-actions">
             <button type="button" id="rtbcb-regenerate-company-overview" class="button">
-                <?php esc_html_e( 'Regenerate', 'rtbcb' ); ?>
+                <?php esc_html_e( 'Regenerate This Section Only', 'rtbcb' ); ?>
             </button>
             <button type="button" id="rtbcb-copy-company-overview" class="button">
                 <?php esc_html_e( 'Copy to Clipboard', 'rtbcb' ); ?>

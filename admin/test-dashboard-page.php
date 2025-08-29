@@ -33,6 +33,28 @@ $company_name = isset( $company_data['name'] ) ? sanitize_text_field( $company_d
         <p id="rtbcb-test-status" role="status" aria-live="polite"></p>
     </div>
 
+    <div id="rtbcb-comprehensive-analysis" class="card" style="display:none;">
+        <h2 class="title"><?php esc_html_e( 'Comprehensive Analysis Results', 'rtbcb' ); ?></h2>
+        <div id="rtbcb-comprehensive-results"></div>
+        <div id="rtbcb-usage-map-wrapper" style="display:none;">
+            <table id="rtbcb-usage-map"></table>
+        </div>
+        <p class="rtbcb-actions">
+            <button type="button" id="rtbcb-regenerate-analysis" class="button">
+                <?php esc_html_e( 'Regenerate Full Analysis', 'rtbcb' ); ?>
+            </button>
+            <button type="button" id="rtbcb-export-analysis" class="button">
+                <?php esc_html_e( 'Export Results', 'rtbcb' ); ?>
+            </button>
+            <button type="button" id="rtbcb-show-usage-map" class="button">
+                <?php esc_html_e( 'Show Usage Map', 'rtbcb' ); ?>
+            </button>
+            <button type="button" id="rtbcb-clear-analysis" class="button">
+                <?php esc_html_e( 'Clear All Stored Data', 'rtbcb' ); ?>
+            </button>
+        </p>
+    </div>
+
     <?php
     $sections = rtbcb_get_dashboard_sections();
     $phases   = [

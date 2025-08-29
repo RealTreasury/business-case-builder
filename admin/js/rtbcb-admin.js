@@ -67,6 +67,26 @@ jQuery(document).ready(function($) {
 
             // Test Dashboard
             $('#rtbcb-test-all-sections').on('click', this.runAllTests);
+            $('#rtbcb-regenerate-analysis').on('click', function(e){
+                e.preventDefault();
+                $('#rtbcb-test-all-sections').trigger('click');
+            });
+            $('#rtbcb-show-usage-map').on('click', function(){
+                $('#rtbcb-usage-map-wrapper').toggle();
+            });
+            $('#rtbcb-export-analysis').on('click', function(){
+                if (window.rtbcbAdmin.comprehensive) {
+                    var txt = JSON.stringify(window.rtbcbAdmin.comprehensive, null, 2);
+                    navigator.clipboard.writeText(txt);
+                    alert('Results copied to clipboard');
+                }
+            });
+            $('#rtbcb-clear-analysis').on('click', this.clearAnalysis);
+            $('#rtbcb-company-name').on('change', function(){
+                if (window.rtbcbAdmin.comprehensive) {
+                    alert('Stored analysis may be outdated for new company.');
+                }
+            });
         },
         
         initComponents: function() {
@@ -602,128 +622,53 @@ jQuery(document).ready(function($) {
 
             var $status = $('#rtbcb-test-status');
             var $progress = $('#rtbcb-test-progress');
-            var companyNameTests = ['rtbcb_test_company_overview'];
             $btn.prop('disabled', true).text(window.rtbcbAdmin.strings.testing || 'Testing...');
             $progress.val(0).removeClass('rtbcb-complete');
-            $status.text('Running tests...');
+            $status.text('Generating comprehensive analysis (3-5 minutes estimated)...');
 
-            var companyData = {};
             try {
-                var companyResponse = await $.ajax({
+                var response = await $.ajax({
                     url: window.rtbcbAdmin.ajax_url,
                     method: 'POST',
                     data: {
-                        action: 'rtbcb_get_company_data',
-                        nonce: window.rtbcbAdmin.real_treasury_overview_nonce
-                    }
-                });
-                if (companyResponse.success) {
-                    companyData = companyResponse.data || {};
-                    window.rtbcbAdmin.company = companyData;
-                }
-            } catch (error) {
-                console.error('Failed to fetch company data', error);
-            }
-
-            var tests = Array.isArray(window.rtbcbAdmin.sections)
-                ? window.rtbcbAdmin.sections.filter(function(section) {
-                    return section.action;
-                })
-                : [];
-            var results = [];
-            var total = tests.length;
-            $progress.attr('max', total);
-            $status.text('Running tests... (0/' + total + ')');
-            var companyDataTests = ['rtbcb_test_industry_overview', 'rtbcb_test_estimated_benefits', 'rtbcb_test_report_assembly'];
-            for (var i = 0; i < tests.length; i++) {
-                var test = tests[i];
-                $status.text('Testing ' + test.label + ' (' + (i + 1) + '/' + total + ')');
-
-                try {
-                    var requestData = {
-                        action: test.action,
-                        nonce: test.nonce || window.rtbcbAdmin.test_dashboard_nonce
-                    };
-
-                    if (companyName && companyNameTests.indexOf(test.action) !== -1) {
-                        requestData.company_name = companyName;
-                    }
-
-                    if (Object.keys(companyData).length && companyDataTests.indexOf(test.action) !== -1) {
-                        if (test.action === 'rtbcb_test_estimated_benefits') {
-                            requestData.company_data = {
-                                revenue: companyData.revenue,
-                                staff_count: companyData.staff_count,
-                                efficiency: companyData.efficiency
-                            };
-                            if (companyData.recommended_category) {
-                                requestData.recommended_category = companyData.recommended_category;
-                            }
-                        } else {
-                            requestData.company_data = JSON.stringify(companyData);
-                        }
-                    }
-
-                    var response = await $.ajax({
-                        url: window.rtbcbAdmin.ajax_url,
-                        method: 'POST',
-                        data: requestData
-                    });
-
-                    results.push({
-                        section: test.label,
-                        status: response.success ? 'SUCCESS' : 'FAILED',
-                        message: response.data && response.data.message ? response.data.message : '',
-                        data: response.data ? response.data : null
-                    });
-                } catch (error) {
-                    var errMsg = ( error && error.responseJSON && error.responseJSON.data && error.responseJSON.data.message )
-                        ? error.responseJSON.data.message
-                        : ( error && error.message ? error.message : 'Request failed' );
-                    var errData = ( error && error.responseJSON && error.responseJSON.data ) ? error.responseJSON.data : null;
-                    results.push({
-                        section: test.label,
-                        status: 'ERROR',
-                        message: errMsg,
-                        data: errData
-                    });
-                }
-
-                var completed = i + 1;
-                $progress.val(completed);
-                var percent = Math.round((completed / total) * 100);
-                $status.text('Completed ' + completed + ' of ' + total + ' (' + percent + '%)');
-            }
-
-            $progress.addClass('rtbcb-complete');
-            $status.text('Tests completed (' + total + '/' + total + ')');
-            $btn.prop('disabled', false).text(original);
-
-            var message = 'Test Results:\n';
-            for (var j = 0; j < results.length; j++) {
-                message += results[j].section + ': ' + results[j].status + '\n';
-            }
-            alert(message);
-
-            try {
-                var saveResponse = await $.ajax({
-                    url: window.rtbcbAdmin.ajax_url,
-                    method: 'POST',
-                    data: {
-                        action: 'rtbcb_save_test_results',
+                        action: 'rtbcb_generate_comprehensive_analysis',
                         nonce: window.rtbcbAdmin.test_dashboard_nonce,
-                        results: JSON.stringify(results)
+                        company_name: companyName
                     }
                 });
 
-                if (saveResponse.success) {
-                    $('#rtbcb-test-results-summary').load(window.location.href + ' #rtbcb-test-results-summary > *');
+                if (response.success) {
+                    var data = response.data;
+                    window.rtbcbAdmin.comprehensive = data;
+                    var ts = data.timestamp;
+                    var html = '<p><em>' + ts + '</em></p>';
+                    $.each(data.results, function(key, item) {
+                        html += '<details><summary>✅ ' + key.replace(/_/g, ' ') + '</summary>' +
+                            '<pre>' + $('<div>').text(JSON.stringify(item.summary, null, 2)).html() + '</pre></details>';
+                        var selector = '.rtbcb-status-' + key.replace(/_/g, '-');
+                        $(selector).text('✅ Using stored data (' + ts + ')');
+                        $(selector).siblings('.rtbcb-view-source').show();
+                    });
+                    $('#rtbcb-comprehensive-results').html(html);
+                    $('#rtbcb-comprehensive-analysis').show();
+
+                    var mapHtml = '<thead><tr><th>Data Component</th><th>Used In Test Section</th><th>Stored In Option</th></tr></thead><tbody>';
+                    $.each(data.usage_map, function(_, row) {
+                        mapHtml += '<tr><td>' + row.component + '</td><td>' + row.used_in + '</td><td>' + row.option + '</td></tr>';
+                    });
+                    $('#rtbcb-usage-map').html(mapHtml + '</tbody>');
+
+                    $progress.val(1).addClass('rtbcb-complete');
+                    $status.text('✅ Generated ' + data.components_generated + ' analysis components - view results below');
+                    $('#rtbcb-section-tests').slideDown();
+                } else {
+                    $status.text(response.data && response.data.message ? response.data.message : 'Generation failed');
                 }
             } catch (error) {
-                console.error('Failed to save test results', error);
+                $status.text('Generation failed');
             }
 
-            $('#rtbcb-section-tests').slideDown();
+            $btn.prop('disabled', false).text(original);
             RTBCB.Admin.refreshPhaseChart();
         },
         
@@ -938,6 +883,28 @@ jQuery(document).ready(function($) {
                 }
             } catch (error) {
                 console.error('Failed to refresh progress chart', error);
+            }
+        }
+        ,
+
+        clearAnalysis: async function(e) {
+            e.preventDefault();
+            try {
+                var response = await $.ajax({
+                    url: window.rtbcbAdmin.ajax_url,
+                    method: 'POST',
+                    data: {
+                        action: 'rtbcb_clear_analysis_data',
+                        nonce: window.rtbcbAdmin.test_dashboard_nonce
+                    }
+                });
+                if (response.success) {
+                    $('#rtbcb-comprehensive-analysis').hide();
+                    $('.rtbcb-view-source').hide();
+                    $('.rtbcb-data-status').text('⚪ Generate new');
+                }
+            } catch (error) {
+                alert('Clear failed');
             }
         }
     };

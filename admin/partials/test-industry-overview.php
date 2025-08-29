@@ -31,6 +31,12 @@ $company_size = isset( $company['size'] ) ? sanitize_text_field( $company['size'
 ?>
 <h2><?php esc_html_e( 'Test Industry Overview', 'rtbcb' ); ?></h2>
 <p class="description"><?php esc_html_e( 'Generate insights about the company\'s industry to inform later recommendations.', 'rtbcb' ); ?></p>
+<p class="rtbcb-data-source">
+    <span class="rtbcb-data-status rtbcb-status-industry-analysis">⚪ <?php esc_html_e( 'Generate new', 'rtbcb' ); ?></span>
+    <a href="#rtbcb-comprehensive-analysis" class="rtbcb-view-source" style="display:none;">
+        <?php esc_html_e( 'View Source Data', 'rtbcb' ); ?>
+    </a>
+</p>
 <?php $rtbcb_last = rtbcb_get_last_test_result( 'rtbcb-test-industry-overview', $test_results ?? [] ); ?>
 <?php if ( $rtbcb_last ) : ?>
     <div class="notice notice-info" role="status">
@@ -39,7 +45,7 @@ $company_size = isset( $company['size'] ) ? sanitize_text_field( $company['size'
         <p><strong><?php esc_html_e( 'Timestamp:', 'rtbcb' ); ?></strong> <?php echo esc_html( $rtbcb_last['timestamp'] ); ?></p>
         <p class="submit">
             <button type="button" class="button" id="rtbcb-rerun-industry-overview" data-section="rtbcb-test-industry-overview">
-                <?php esc_html_e( 'Regenerate', 'rtbcb' ); ?>
+                <?php esc_html_e( 'Regenerate This Section Only', 'rtbcb' ); ?>
             </button>
         </p>
     </div>

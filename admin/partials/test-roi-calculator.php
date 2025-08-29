@@ -34,6 +34,12 @@ $results = ! empty( $results ) ? $results : get_option( 'rtbcb_roi_results', [] 
 ?>
 <h2><?php esc_html_e( 'Test ROI Calculator', 'rtbcb' ); ?></h2>
 <p class="description"><?php esc_html_e( 'Calculate three-year ROI scenarios for the recommended solution.', 'rtbcb' ); ?></p>
+<p class="rtbcb-data-source">
+    <span class="rtbcb-data-status rtbcb-status-financial-analysis">⚪ <?php esc_html_e( 'Generate new', 'rtbcb' ); ?></span>
+    <a href="#rtbcb-comprehensive-analysis" class="rtbcb-view-source" style="display:none;">
+        <?php esc_html_e( 'View Source Data', 'rtbcb' ); ?>
+    </a>
+</p>
 <form method="post">
     <?php wp_nonce_field( 'rtbcb_calculate_roi', 'rtbcb_calculate_roi_nonce' ); ?>
     <p class="submit">

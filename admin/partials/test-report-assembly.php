@@ -20,6 +20,12 @@ $summary = get_option( 'rtbcb_executive_summary', [] );
 <p class="description">
     <?php esc_html_e( 'Generate an executive summary to verify report assembly.', 'rtbcb' ); ?>
 </p>
+<p class="rtbcb-data-source">
+    <span class="rtbcb-data-status rtbcb-status-executive-summary">⚪ <?php esc_html_e( 'Generate new', 'rtbcb' ); ?></span>
+    <a href="#rtbcb-comprehensive-analysis" class="rtbcb-view-source" style="display:none;">
+        <?php esc_html_e( 'View Source Data', 'rtbcb' ); ?>
+    </a>
+</p>
 <div class="card">
     <h3 class="title"><?php esc_html_e( 'Executive Summary', 'rtbcb' ); ?></h3>
     <form id="rtbcb-report-assembly-form">

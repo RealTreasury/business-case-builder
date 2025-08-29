@@ -700,7 +700,19 @@ Respond with valid JSON only, following the specified schema exactly. Ensure all
             return new WP_Error( 'llm_parse_error', $parsed['error'] );
         }
 
-        return $this->enhance_with_research( $parsed, $company_research, $industry_analysis );
+        $analysis = $this->enhance_with_research( $parsed, $company_research, $industry_analysis );
+
+        return [
+            'executive_summary'      => $analysis['executive_summary'] ?? [],
+            'company_overview'       => $analysis['research']['company']['company_profile'] ?? [],
+            'industry_analysis'      => $analysis['industry_insights'] ?? [],
+            'treasury_maturity'      => $analysis['research']['company']['treasury_maturity'] ?? '',
+            'financial_analysis'     => $analysis['financial_analysis'] ?? [],
+            'implementation_roadmap' => $analysis['technology_recommendations'] ?? [],
+            'risk_mitigation'        => $analysis['risk_mitigation'] ?? [],
+            'next_steps'             => $analysis['next_steps'] ?? [],
+            'raw'                    => $analysis,
+        ];
     }
 
     /**
