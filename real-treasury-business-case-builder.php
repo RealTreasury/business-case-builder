@@ -880,6 +880,18 @@ class Real_Treasury_BCB {
 
                     rtbcb_log_memory_usage( 'before_llm_generation' );
 
+                    if ( ! rtbcb_has_openai_api_key() ) {
+                        $error_code = 'E_API_KEY_MISSING';
+                        rtbcb_log_error( $error_code . ': ' . __( 'OpenAI API key not configured.', 'rtbcb' ) );
+                        wp_send_json_error(
+                            [
+                                'message'    => __( 'OpenAI API key not configured.', 'rtbcb' ),
+                                'error_code' => $error_code,
+                            ],
+                            500
+                        );
+                    }
+
                     $api_key = rtbcb_get_openai_api_key();
                     if ( class_exists( 'RTBCB_API_Tester' ) ) {
                         $connection_test = RTBCB_API_Tester::test_connection( $api_key );
