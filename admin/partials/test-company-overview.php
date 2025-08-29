@@ -52,8 +52,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 <div id="rtbcb-company-overview-card" class="rtbcb-result-card" style="display:none;">
     <details>
         <summary><?php esc_html_e( 'Generated Overview', 'rtbcb' ); ?></summary>
-        <div id="rtbcb-company-overview-results"></div>
-        <div id="rtbcb-company-overview-meta" class="rtbcb-meta"></div>
+        <div id="<?php echo esc_attr( 'rtbcb-company-overview-results' ); ?>"></div>
+        <div id="<?php echo esc_attr( 'rtbcb-company-overview-meta' ); ?>" class="rtbcb-meta"></div>
         <p class="rtbcb-actions">
             <button type="button" id="rtbcb-regenerate-company-overview" class="button">
                 <?php esc_html_e( 'Regenerate', 'rtbcb' ); ?>

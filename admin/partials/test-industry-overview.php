@@ -72,7 +72,9 @@ $company_size = isset( $company['size'] ) ? sanitize_text_field( $company['size'
 <div id="rtbcb-industry-overview-card" class="rtbcb-result-card">
     <details>
         <summary><?php esc_html_e( 'Generated Overview', 'rtbcb' ); ?></summary>
-        <div id="rtbcb-industry-overview-results"></div>
+        <div id="<?php echo esc_attr( 'rtbcb-industry-overview-results' ); ?>">
+            <div id="<?php echo esc_attr( 'rtbcb-industry-overview-meta' ); ?>" class="rtbcb-meta"></div>
+        </div>
     </details>
 </div>
 <script>

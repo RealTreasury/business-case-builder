@@ -289,11 +289,45 @@ jQuery(document).ready(function($) {
                     company_name: company,
                     nonce: nonce
                 },
-                async: false,
                 success: function(response) {
                     if (response.success && response.data) {
                         $results.html('<div class="notice notice-success"><p>' +
                             (response.data.overview || 'Generated successfully') + '</p></div>');
+
+                        var $meta = $('#rtbcb-company-overview-meta');
+                        if ($meta.length) {
+                            var labels = window.rtbcbAdmin.strings || {};
+                            $meta.empty();
+                            if (response.data.word_count) {
+                                $('<p/>').text((labels.word_count || 'Word Count') + ': ' + response.data.word_count).appendTo($meta);
+                            }
+                            if (response.data.elapsed) {
+                                $('<p/>').text((labels.elapsed || 'Elapsed') + ': ' + response.data.elapsed + 's').appendTo($meta);
+                            }
+                            if (response.data.recommendations && response.data.recommendations.length) {
+                                $('<p/>').text((labels.recommendations || 'Recommendations') + ':').appendTo($meta);
+                                var $ul = $('<ul/>');
+                                response.data.recommendations.forEach(function(rec) {
+                                    $('<li/>').text(rec).appendTo($ul);
+                                });
+                                $meta.append($ul);
+                            }
+                            if (response.data.references && response.data.references.length) {
+                                $('<p/>').text((labels.references || 'References') + ':').appendTo($meta);
+                                var $ulRef = $('<ul/>');
+                                response.data.references.forEach(function(ref) {
+                                    $('<li/>').append(
+                                        $('<a/>', {
+                                            text: ref,
+                                            href: ref,
+                                            target: '_blank',
+                                            rel: 'noopener noreferrer'
+                                        })
+                                    ).appendTo($ulRef);
+                                });
+                                $meta.append($ulRef);
+                            }
+                        }
 
                         if (response.data.metrics) {
                             window.rtbcbAdmin = window.rtbcbAdmin || {};
@@ -342,11 +376,47 @@ jQuery(document).ready(function($) {
                     company_data: JSON.stringify(companyData),
                     nonce: nonce
                 },
-                async: false,
                 success: function(response) {
                     if (response.success && response.data) {
-                        $results.html('<div class="notice notice-success"><p>' +
-                            (response.data.overview || 'Generated successfully') + '</p></div>');
+                        var $meta = $('#rtbcb-industry-overview-meta');
+                        $results.empty();
+                        $('<div class="notice notice-success" />')
+                            .append($('<p/>').text(response.data.overview || 'Generated successfully'))
+                            .appendTo($results);
+                        if ($meta.length) {
+                            var labels = window.rtbcbAdmin.strings || {};
+                            $meta.empty();
+                            if (response.data.word_count) {
+                                $('<p/>').text((labels.word_count || 'Word Count') + ': ' + response.data.word_count).appendTo($meta);
+                            }
+                            if (response.data.elapsed) {
+                                $('<p/>').text((labels.elapsed || 'Elapsed') + ': ' + response.data.elapsed + 's').appendTo($meta);
+                            }
+                            if (response.data.recommendations && response.data.recommendations.length) {
+                                $('<p/>').text((labels.recommendations || 'Recommendations') + ':').appendTo($meta);
+                                var $ul = $('<ul/>');
+                                response.data.recommendations.forEach(function(rec) {
+                                    $('<li/>').text(rec).appendTo($ul);
+                                });
+                                $meta.append($ul);
+                            }
+                            if (response.data.references && response.data.references.length) {
+                                $('<p/>').text((labels.references || 'References') + ':').appendTo($meta);
+                                var $ulRef = $('<ul/>');
+                                response.data.references.forEach(function(ref) {
+                                    $('<li/>').append(
+                                        $('<a/>', {
+                                            text: ref,
+                                            href: ref,
+                                            target: '_blank',
+                                            rel: 'noopener noreferrer'
+                                        })
+                                    ).appendTo($ulRef);
+                                });
+                                $meta.append($ulRef);
+                            }
+                            $results.append($meta);
+                        }
                     } else {
                         $results.html('<div class="notice notice-error"><p>' +
                             (response.data && response.data.message ? response.data.message : 'Generation failed') + '</p></div>');
