@@ -41,7 +41,7 @@ class RTBCB_Admin {
         add_action( 'wp_ajax_rtbcb_test_value_proposition', [ $this, 'ajax_test_value_proposition' ] );
         add_action( 'wp_ajax_rtbcb_get_company_data', [ $this, 'ajax_get_company_data' ] );
         add_action( 'wp_ajax_rtbcb_test_estimated_benefits', [ $this, 'ajax_test_estimated_benefits' ] );
-        add_action( 'wp_ajax_rtbcb_save_test_results', [ $this, 'save_test_results' ] );
+        add_action( 'wp_ajax_rtbcb_save_test_results', [ $this, 'ajax_save_test_results' ] );
         add_action( 'wp_ajax_rtbcb_set_test_company', [ $this, 'ajax_set_test_company' ] );
         add_action( 'wp_ajax_rtbcb_test_calculate_roi', [ $this, 'ajax_test_calculate_roi' ] );
         add_action( 'wp_ajax_rtbcb_test_portal', [ $this, 'ajax_test_portal' ] );
@@ -374,11 +374,11 @@ class RTBCB_Admin {
     }
 
     /**
-     * Save test results from dashboard.
+     * AJAX handler to save test results from dashboard.
      *
      * @return void
-    */
-    public function save_test_results() {
+     */
+    public function ajax_save_test_results() {
         check_ajax_referer( 'rtbcb_test_dashboard', 'nonce' );
 
         if ( ! current_user_can( 'manage_options' ) ) {
@@ -402,12 +402,19 @@ class RTBCB_Admin {
                 }
             }
 
+            $start_time = isset( $item['start_time'] ) ? sanitize_text_field( $item['start_time'] ) : '';
+            $end_time   = isset( $item['end_time'] ) ? sanitize_text_field( $item['end_time'] ) : '';
+            $duration   = isset( $item['duration'] ) ? floatval( $item['duration'] ) : 0;
+
             $sanitized[] = [
-                'section'   => isset( $item['section'] ) ? sanitize_text_field( $item['section'] ) : '',
-                'status'    => isset( $item['status'] ) ? sanitize_text_field( $item['status'] ) : '',
-                'message'   => isset( $item['message'] ) ? sanitize_text_field( $item['message'] ) : '',
-                'timestamp' => current_time( 'mysql' ),
-                'data'      => $data,
+                'section'    => isset( $item['section'] ) ? sanitize_text_field( $item['section'] ) : '',
+                'status'     => isset( $item['status'] ) ? sanitize_text_field( $item['status'] ) : '',
+                'message'    => isset( $item['message'] ) ? sanitize_text_field( $item['message'] ) : '',
+                'timestamp'  => current_time( 'mysql' ),
+                'start_time' => $start_time,
+                'end_time'   => $end_time,
+                'duration'   => $duration,
+                'data'       => $data,
             ];
         }
 
