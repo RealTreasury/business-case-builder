@@ -135,7 +135,7 @@ requests.
 
 == Frequently Asked Questions ==
 = How do I display the calculator? =
-Add the `[rt_business_case_builder]` shortcode to a post or page.
+Add the `[rt_business_case_builder]` shortcode to a post or page to show a button that opens the form in a modal window.
 
 = Does the plugin generate PDF reports? =
 Reports are rendered as HTML in the browser. Use your browser's print or save functionality to generate PDFs.
