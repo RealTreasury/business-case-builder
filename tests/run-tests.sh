@@ -5,7 +5,6 @@ echo "================================================"
 
 # Ensure required environment variables for tests
 export OPENAI_API_KEY="${OPENAI_API_KEY:-sk-test}"
-export RTBCB_OPENAI_API_KEY="${RTBCB_OPENAI_API_KEY:-sk-test}"
 export RTBCB_TEST_MODEL="${RTBCB_TEST_MODEL:-gpt-5-mini}"
 
 # PHP Lint

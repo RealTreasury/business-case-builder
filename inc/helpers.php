@@ -17,8 +17,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return string Sanitized API key.
  */
 function rtbcb_get_openai_api_key() {
-    if ( defined( 'RTBCB_OPENAI_API_KEY' ) && ! empty( RTBCB_OPENAI_API_KEY ) ) {
-        return sanitize_text_field( RTBCB_OPENAI_API_KEY );
+    if ( defined( 'OPENAI_API_KEY' ) && ! empty( OPENAI_API_KEY ) ) {
+        return sanitize_text_field( OPENAI_API_KEY );
     }
 
     $api_key = get_option( 'rtbcb_openai_api_key', '' );

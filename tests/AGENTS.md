@@ -6,6 +6,5 @@
     - JavaScript tests using Node.js.
 - Ensure the following environment variables are set when running tests:
     - `OPENAI_API_KEY`
-    - `RTBCB_OPENAI_API_KEY`
     - `RTBCB_TEST_MODEL`
     - Any other variables required by the test suite.
