@@ -82,6 +82,7 @@ jQuery(document).ready(function($) {
                 }
             });
             $('#rtbcb-clear-analysis').on('click', this.clearAnalysis);
+            $('#rtbcb-start-new-analysis').on('click', this.startNewAnalysis);
             $('#rtbcb-company-name').on('change', function(){
                 if (window.rtbcbAdmin.comprehensive) {
                     alert('Stored analysis may be outdated for new company.');
@@ -928,6 +929,28 @@ jQuery(document).ready(function($) {
                 var safeMessage = $('<div>').text(message).html();
                 $('#rtbcb-test-status').after('<div class="notice notice-error"><p>' + safeMessage + '</p></div>');
                 console.error('Failed to save test results', error);
+            }
+        },
+
+        startNewAnalysis: async function(e) {
+            e.preventDefault();
+            var nonce = $('#rtbcb_clear_current_company_nonce').val();
+            try {
+                var response = await $.ajax({
+                    url: window.rtbcbAdmin.ajax_url,
+                    method: 'POST',
+                    data: {
+                        action: 'rtbcb_clear_current_company',
+                        nonce: nonce
+                    }
+                });
+                if (response.success) {
+                    window.location.href = 'admin.php?page=rtbcb-test-dashboard#rtbcb-phase1';
+                } else {
+                    alert('Request failed');
+                }
+            } catch (error) {
+                alert('Request failed');
             }
         },
 
