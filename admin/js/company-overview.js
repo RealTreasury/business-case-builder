@@ -83,11 +83,19 @@
 
         generateBtn.on('click', function(e) {
             e.preventDefault();
-            const companyName = $('#rtbcb-company-name').val().trim();
+            var $companyInput = $('#rtbcb-company-name');
+            var companyName = '';
+
+            if ($companyInput.length && typeof $companyInput.val === 'function') {
+                var value = $companyInput.val();
+                companyName = value ? value.trim() : '';
+            }
+
             if (!companyName) {
                 alert('Please enter a company name.');
                 return;
             }
+
             sendRequest(companyName);
         });
     });

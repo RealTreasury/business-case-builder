@@ -612,8 +612,14 @@ jQuery(document).ready(function($) {
             e.preventDefault();
             var $btn = $(this);
             var original = $btn.text();
-            var companyName = $('#rtbcb-company-name').val().trim();
-        
+            var $companyInput = $('#rtbcb-company-name');
+            var companyName = '';
+
+            if ($companyInput.length && typeof $companyInput.val === 'function') {
+                var value = $companyInput.val();
+                companyName = value ? value.trim() : '';
+            }
+
             if (!companyName) {
                 alert(window.rtbcbAdmin.strings.company_required || 'Please enter a company name before running tests');
                 return;
