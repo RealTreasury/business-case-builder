@@ -40,6 +40,12 @@ $roadmap = ! empty( $roadmap ) ? $roadmap : get_option( 'rtbcb_roadmap_plan', []
 ?>
 <h2><?php esc_html_e( 'Test Roadmap Generator', 'rtbcb' ); ?></h2>
 <p class="description"><?php esc_html_e( 'Build a multi-phase implementation roadmap based on the recommended category.', 'rtbcb' ); ?></p>
+<p class="rtbcb-data-source">
+    <span class="rtbcb-data-status rtbcb-status-implementation-roadmap">⚪ <?php esc_html_e( 'Generate new', 'rtbcb' ); ?></span>
+    <a href="#rtbcb-comprehensive-analysis" class="rtbcb-view-source" style="display:none;">
+        <?php esc_html_e( 'View Source Data', 'rtbcb' ); ?>
+    </a>
+</p>
 <form method="post">
     <?php wp_nonce_field( 'rtbcb_generate_roadmap', 'rtbcb_generate_roadmap_nonce' ); ?>
     <p class="submit">

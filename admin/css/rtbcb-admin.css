@@ -9,6 +9,26 @@
     border-color: #7216f4;
 }
 
+#rtbcb-comprehensive-results details {
+    margin-bottom: 10px;
+}
+
+.rtbcb-data-status {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+#rtbcb-usage-map {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#rtbcb-usage-map th,
+#rtbcb-usage-map td {
+    border: 1px solid #ddd;
+    padding: 4px;
+}
+
 .rtbcb-loading {
     opacity: 0.6;
     pointer-events: none;

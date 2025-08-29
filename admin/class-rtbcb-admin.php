@@ -52,6 +52,8 @@ class RTBCB_Admin {
         add_action( 'wp_ajax_rtbcb_test_tracking_script', [ $this, 'ajax_test_tracking_script' ] );
         add_action( 'wp_ajax_rtbcb_test_follow_up_email', [ $this, 'ajax_test_follow_up_email' ] );
         add_action( 'wp_ajax_rtbcb_get_phase_completion', [ $this, 'ajax_get_phase_completion' ] );
+        add_action( 'wp_ajax_rtbcb_generate_comprehensive_analysis', [ $this, 'ajax_generate_comprehensive_analysis' ] );
+        add_action( 'wp_ajax_rtbcb_clear_analysis_data', [ $this, 'ajax_clear_analysis_data' ] );
     }
 
     /**
@@ -1619,6 +1621,125 @@ class RTBCB_Admin {
         $percentages = rtbcb_calculate_phase_completion( $sections );
 
         wp_send_json_success( [ 'percentages' => $percentages ] );
+    }
+
+    /**
+     * AJAX handler to generate comprehensive analysis.
+     *
+     * @return void
+     */
+    public function ajax_generate_comprehensive_analysis() {
+        check_ajax_referer( 'rtbcb_test_dashboard', 'nonce' );
+
+        $company_name = isset( $_POST['company_name'] ) ? sanitize_text_field( wp_unslash( $_POST['company_name'] ) ) : '';
+        if ( '' === $company_name ) {
+            $stored       = get_option( 'rtbcb_company_data', [] );
+            $company_name = isset( $stored['name'] ) ? sanitize_text_field( $stored['name'] ) : '';
+        }
+
+        if ( '' === $company_name ) {
+            wp_send_json_error( [ 'message' => __( 'Company name is required.', 'rtbcb' ) ] );
+        }
+
+        $llm      = new RTBCB_LLM();
+        $analysis = $llm->generate_comprehensive_business_case( [ 'company_name' => $company_name ], [], [] );
+
+        if ( is_wp_error( $analysis ) ) {
+            wp_send_json_error( [ 'message' => $analysis->get_error_message() ] );
+        }
+
+        $timestamp = current_time( 'mysql' );
+
+        update_option( 'rtbcb_current_company', $analysis['company_overview'] );
+        update_option( 'rtbcb_industry_insights', $analysis['industry_analysis'] );
+        update_option( 'rtbcb_maturity_model', $analysis['treasury_maturity'] );
+        update_option( 'rtbcb_rag_market_analysis', $analysis['implementation_roadmap'] );
+        update_option( 'rtbcb_roadmap_plan', $analysis['implementation_roadmap'] );
+        update_option( 'rtbcb_value_proposition', $analysis['executive_summary']['executive_recommendation'] ?? '' );
+        update_option( 'rtbcb_estimated_benefits', $analysis['financial_analysis'] );
+        update_option( 'rtbcb_executive_summary', $analysis['executive_summary'] );
+
+        $results = [
+            'company_overview' => [
+                'summary'   => $analysis['company_overview'],
+                'stored_in' => 'rtbcb_current_company',
+            ],
+            'industry_analysis' => [
+                'summary'   => $analysis['industry_analysis'],
+                'stored_in' => 'rtbcb_industry_insights',
+            ],
+            'treasury_maturity' => [
+                'summary'   => $analysis['treasury_maturity'],
+                'stored_in' => 'rtbcb_maturity_model',
+            ],
+            'market_analysis' => [
+                'summary'   => $analysis['implementation_roadmap'],
+                'stored_in' => 'rtbcb_rag_market_analysis',
+            ],
+            'implementation_roadmap' => [
+                'summary'   => $analysis['implementation_roadmap'],
+                'stored_in' => 'rtbcb_roadmap_plan',
+            ],
+            'value_proposition' => [
+                'summary'   => $analysis['executive_summary'],
+                'stored_in' => 'rtbcb_value_proposition',
+            ],
+            'financial_analysis' => [
+                'summary'   => $analysis['financial_analysis'],
+                'stored_in' => 'rtbcb_estimated_benefits',
+            ],
+            'executive_summary' => [
+                'summary'   => $analysis['executive_summary'],
+                'stored_in' => 'rtbcb_executive_summary',
+            ],
+        ];
+
+        $usage_map = [
+            [ 'component' => __( 'Company Overview & Metrics', 'rtbcb' ), 'used_in' => __( 'Company Overview Test', 'rtbcb' ), 'option' => 'rtbcb_current_company' ],
+            [ 'component' => __( 'Industry Analysis', 'rtbcb' ), 'used_in' => __( 'Industry Overview Test', 'rtbcb' ), 'option' => 'rtbcb_industry_insights' ],
+            [ 'component' => __( 'Treasury Maturity Assessment', 'rtbcb' ), 'used_in' => __( 'Maturity Model Test', 'rtbcb' ), 'option' => 'rtbcb_maturity_model' ],
+            [ 'component' => __( 'Market Analysis & Vendors', 'rtbcb' ), 'used_in' => __( 'RAG Market Analysis Test', 'rtbcb' ), 'option' => 'rtbcb_rag_market_analysis' ],
+            [ 'component' => __( 'Value Proposition Paragraph', 'rtbcb' ), 'used_in' => __( 'Value Proposition Test', 'rtbcb' ), 'option' => 'rtbcb_value_proposition' ],
+            [ 'component' => __( 'Financial Benefits Breakdown', 'rtbcb' ), 'used_in' => __( 'Estimated Benefits Test', 'rtbcb' ), 'option' => 'rtbcb_estimated_benefits' ],
+            [ 'component' => __( 'Executive Summary', 'rtbcb' ), 'used_in' => __( 'Report Assembly Test', 'rtbcb' ), 'option' => 'rtbcb_executive_summary' ],
+            [ 'component' => __( 'Implementation Roadmap', 'rtbcb' ), 'used_in' => __( 'Roadmap Generator Test', 'rtbcb' ), 'option' => 'rtbcb_roadmap_plan' ],
+        ];
+
+        wp_send_json_success(
+            [
+                'message'               => __( 'Comprehensive analysis generated', 'rtbcb' ),
+                'components_generated'  => 7,
+                'timestamp'             => $timestamp,
+                'results'               => $results,
+                'usage_map'             => $usage_map,
+            ]
+        );
+    }
+
+    /**
+     * Clear stored comprehensive analysis data.
+     *
+     * @return void
+     */
+    public function ajax_clear_analysis_data() {
+        check_ajax_referer( 'rtbcb_test_dashboard', 'nonce' );
+
+        $options = [
+            'rtbcb_current_company',
+            'rtbcb_industry_insights',
+            'rtbcb_maturity_model',
+            'rtbcb_rag_market_analysis',
+            'rtbcb_value_proposition',
+            'rtbcb_estimated_benefits',
+            'rtbcb_executive_summary',
+            'rtbcb_roadmap_plan',
+        ];
+
+        foreach ( $options as $opt ) {
+            delete_option( $opt );
+        }
+
+        wp_send_json_success( [ 'message' => __( 'Stored analysis data cleared.', 'rtbcb' ) ] );
     }
 
     /**
