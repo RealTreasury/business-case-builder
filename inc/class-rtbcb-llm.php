@@ -229,51 +229,34 @@ class RTBCB_LLM {
         $model = $this->get_model( 'mini' );
 
         // System prompt optimized for comprehensive company analysis
-        $system_prompt = 'You are a senior treasury technology consultant. Your role is to provide a detailed, research-based company analysis strictly using the specified JSON schema—respond with valid JSON only, matching the required structure exactly.
-
-# Role and Objective
-Analyze companies thoroughly from a treasury technology perspective, supplying actionable insights with reputable citations. Format all outputs strictly as valid JSON using the provided schema.
-
-# Instructions
-- Begin by reviewing the company information and planning your response as a conceptual checklist (3-7 bullets) internally.
-- Responses must use the provided JSON schema and be fully valid JSON. Do not include text or formatting outside of the required JSON object.
-- Base all analysis on reputable research and cite credible sources where possible.
-- Focus on treasury-relevant aspects: financial position, operational challenges, technology adoption potential, and market dynamics.
-- After generating the JSON output, quickly validate that it is structurally correct and all required fields are populated.
-
-# Output Format
-Respond with a JSON object conforming to:
+        $system_prompt = <<<'SYSTEM'
+You are a senior treasury technology consultant.
+Return only valid JSON matching this schema:
 {
-  "analysis": string, // In-depth analysis covering company background, recent news, size, financial highlights, treasury challenges/opportunities, and market position.
-  "recommendations": [string], // Treasury technology recommendations specific to this company.
-  "references": [string], // List of reputable sources backing your analysis.
-  "metrics": {
-    "revenue": number, // Annual revenue in millions USD
-    "staff_count": number, // Number of treasury staff
-    "baseline_efficiency": number // Current process efficiency percentage
-  }
+  "type": "object",
+  "properties": {
+    "analysis": {"type": "string", "minLength": 200},
+    "recommendations": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "references": {"type": "array", "items": {"type": "string", "format": "uri"}},
+    "metrics": {
+      "type": "object",
+      "properties": {
+        "revenue": {"type": "number"},
+        "staff_count": {"type": "number"},
+        "baseline_efficiency": {"type": "number"}
+      },
+      "required": ["revenue", "staff_count", "baseline_efficiency"]
+    }
+  },
+  "required": ["analysis", "recommendations", "references", "metrics"]
 }
-
-# Example Structure
-{
-  "analysis": "Apple Inc. is a multinational technology corporation with annual revenue exceeding $390 billion. The company maintains strong cash positions but faces treasury challenges in managing global cash flows across multiple currencies and regulatory jurisdictions. Recent developments include increased focus on services revenue and supply chain diversification.",
-  "recommendations": [
-    "Implement advanced multi-currency cash management systems to optimize global liquidity",
-    "Deploy automated FX hedging solutions to manage currency exposure across international operations"
-  ],
-  "references": [
-    "https://www.sec.gov/edgar/browse/?CIK=320193",
-    "https://www.apple.com/investor/"
-  ],
-  "metrics": {
-    "revenue": 390000,
-    "staff_count": 100,
-    "baseline_efficiency": 65
-  }
-}';
+No explanatory text outside the JSON. If any field is unknown, use null.
+SYSTEM;
 
         // Enhanced user prompt with comprehensive company analysis request
-        $user_prompt = 'Provide a comprehensive company overview and treasury technology analysis for ' . $company_name . '.
+        $user_prompt = sprintf(
+            <<<'USER'
+Provide a comprehensive company overview and treasury technology analysis for %s.
 
 # Required Analysis Coverage:
 - Company background and business model overview
@@ -304,9 +287,19 @@ If available from your knowledge, include relevant details about:
 - Consider implementation complexity relative to company size and resources
 - Address the most pressing treasury challenges identified in the analysis
 - Include both immediate quick-wins and strategic long-term initiatives
-- Provide numeric metrics for revenue, treasury staff count, and baseline efficiency within the "metrics" object
 
-Respond with valid JSON only, following the specified schema exactly. Ensure all fields are populated with substantive content.';
+# Output Requirements:
+- The "analysis" field must contain at least 200 characters.
+- "recommendations" must be a non-empty array of strings.
+- "references" must be an array of URLs.
+- "metrics.revenue", "metrics.staff_count", and "metrics.baseline_efficiency" must be numeric.
+- Do not include any text outside the JSON object.
+- If any field is unknown, use null.
+
+Respond with valid JSON only, following the specified schema exactly.
+USER,
+            $company_name
+        );
 
         $history = [
             [
