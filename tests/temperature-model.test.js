@@ -10,6 +10,7 @@ async function runTests() {
     const capabilities = JSON.parse(execSync("php -r \"echo json_encode(include 'inc/model-capabilities.php');\"").toString());
     const unsupportedModels = [...capabilities.temperature.unsupported, 'gpt-5-mini'];
     const supportedModels = ['gpt-4o', 'gpt-4.1-preview'];
+    const templateHtml = fs.readFileSync('public/templates/report-template.html', 'utf8');
 
     global.FormData = class {
         constructor() { this.store = {}; }
@@ -20,9 +21,12 @@ async function runTests() {
 
     for (const model of models) {
         let capturedBody;
-        global.rtbcbReport = { report_model: model, model_capabilities: capabilities, ajax_url: 'https://example.com' };
+        global.rtbcbReport = { report_model: model, model_capabilities: capabilities, ajax_url: 'https://example.com', template_url: 'template.html' };
 
         global.fetch = (url, options) => {
+            if (!options) {
+                return Promise.resolve({ ok: true, text: () => Promise.resolve(templateHtml) });
+            }
             capturedBody = JSON.parse(options.body.store.body);
             return Promise.resolve({
                 ok: true,

@@ -17,7 +17,15 @@ function supportsTemperature(model) {
     return !unsupported.includes(model);
 }
 
-function buildEnhancedPrompt(businessContext) {
+async function buildEnhancedPrompt(businessContext) {
+    const response = await fetch(rtbcbReport.template_url);
+    const template = await response.text();
+    const companyName = businessContext && businessContext.companyName ? businessContext.companyName : 'Company';
+    const currentDate = businessContext && businessContext.currentDate ? businessContext.currentDate : new Date().toLocaleDateString();
+    const contextText = typeof businessContext === 'string' ? businessContext : (businessContext && businessContext.context ? businessContext.context : '');
+    const filledTemplate = template
+        .replace(/{{COMPANY_NAME}}/g, companyName)
+        .replace(/{{CURRENT_DATE}}/g, currentDate);
     return `
 Generate a professional business consulting report in HTML format with the following requirements:
 
@@ -25,239 +33,9 @@ IMPORTANT: Output ONLY valid HTML code starting with <!DOCTYPE html>. Do not inc
 
 The report should follow this exact structure:
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BCG Strategic Analysis Report</title>
-    <style>
-        /* Professional Report Styling */
-        @page {
-            size: A4;
-            margin: 2cm;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-            line-height: 1.6;
-            color: #2c3e50;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background: white;
-        }
-        
-        .header {
-            border-bottom: 3px solid #0066cc;
-            padding-bottom: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .report-title {
-            color: #0066cc;
-            font-size: 28px;
-            font-weight: 700;
-            margin: 0 0 10px 0;
-        }
-        
-        .report-subtitle {
-            color: #666;
-            font-size: 16px;
-            margin: 5px 0;
-        }
-        
-        .report-date {
-            color: #999;
-            font-size: 14px;
-            margin-top: 10px;
-        }
-        
-        .executive-summary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 25px;
-            border-radius: 8px;
-            margin: 30px 0;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        
-        .executive-summary h2 {
-            margin-top: 0;
-            font-size: 20px;
-            border-bottom: 2px solid rgba(255,255,255,0.3);
-            padding-bottom: 10px;
-        }
-        
-        .key-findings {
-            background: #f8f9fa;
-            border-left: 4px solid #0066cc;
-            padding: 20px;
-            margin: 25px 0;
-            border-radius: 4px;
-        }
-        
-        .key-findings h3 {
-            color: #0066cc;
-            margin-top: 0;
-            font-size: 18px;
-        }
-        
-        .key-findings ul {
-            margin: 10px 0;
-            padding-left: 20px;
-        }
-        
-        .key-findings li {
-            margin: 8px 0;
-            line-height: 1.5;
-        }
-        
-        .recommendation-box {
-            background: white;
-            border: 2px solid #0066cc;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 25px 0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        
-        .recommendation-box h3 {
-            color: #0066cc;
-            margin-top: 0;
-            display: flex;
-            align-items: center;
-        }
-        
-        .recommendation-number {
-            background: #0066cc;
-            color: white;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 10px;
-            font-weight: bold;
-        }
-        
-        .metric-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin: 20px 0;
-        }
-        
-        .metric-card {
-            background: white;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 15px;
-            text-align: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        
-        .metric-value {
-            font-size: 32px;
-            font-weight: bold;
-            color: #0066cc;
-            margin: 10px 0;
-        }
-        
-        .metric-label {
-            color: #666;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        h2 {
-            color: #2c3e50;
-            font-size: 22px;
-            margin-top: 35px;
-            margin-bottom: 15px;
-            padding-bottom: 8px;
-            border-bottom: 2px solid #e0e0e0;
-        }
-        
-        h3 {
-            color: #34495e;
-            font-size: 18px;
-            margin-top: 25px;
-            margin-bottom: 12px;
-        }
-        
-        p {
-            margin: 12px 0;
-            text-align: justify;
-        }
-        
-        .footer {
-            margin-top: 50px;
-            padding-top: 20px;
-            border-top: 2px solid #e0e0e0;
-            text-align: center;
-            color: #999;
-            font-size: 12px;
-        }
-        
-        .highlight {
-            background: #fffacd;
-            padding: 2px 4px;
-            border-radius: 3px;
-        }
-        
-        strong {
-            color: #2c3e50;
-            font-weight: 600;
-        }
-        
-        @media print {
-            body {
-                padding: 0;
-            }
-            .executive-summary {
-                page-break-after: avoid;
-            }
-            .recommendation-box {
-                page-break-inside: avoid;
-            }
-        }
-    </style>
-</head>
-<body>
-    [GENERATE THE REPORT CONTENT HERE FOLLOWING THIS STRUCTURE:]
-    
-    <div class="header">
-        <h1 class="report-title">[Company Name] Strategic Analysis</h1>
-        <div class="report-subtitle">Boston Consulting Group Assessment</div>
-        <div class="report-date">[Current Date]</div>
-    </div>
-    
-    <div class="executive-summary">
-        <h2>Executive Summary</h2>
-        <p>[Provide a concise 2-3 sentence overview of the strategic position and main recommendations]</p>
-    </div>
-    
-    <div class="key-findings">
-        <h3>Key Strategic Findings</h3>
-        <ul>
-            <li><strong>[Finding 1]:</strong> [Brief explanation]</li>
-            <li><strong>[Finding 2]:</strong> [Brief explanation]</li>
-            <li><strong>[Finding 3]:</strong> [Brief explanation]</li>
-        </ul>
-    </div>
-    
-    [Continue with main content sections - Analysis, Recommendations, etc.]
-    
-    <div class="footer">
-        <p>© 2024 Strategic Analysis Report | Confidential</p>
-    </div>
-</body>
-</html>
+${filledTemplate}
 
-Context for analysis: ${businessContext}
+Context for analysis: ${contextText}
 
 Ensure the report is:
 - Exactly 2 pages when printed (approximately 800-1000 words)
@@ -285,7 +63,7 @@ async function generateProfessionalReport(businessContext) {
             },
             {
                 role: 'user',
-                content: buildEnhancedPrompt(businessContext)
+                content: await buildEnhancedPrompt(businessContext)
             }
         ],
         max_output_tokens: cfg.max_output_tokens,
