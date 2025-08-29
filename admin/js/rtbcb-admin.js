@@ -68,212 +68,194 @@ jQuery(document).ready(function($) {
             }
         },
         
-        testApi: function(e) {
+        testApi: async function(e) {
             e.preventDefault();
             var $btn = $(this);
             var $label = $btn.find('h4');
             var original = $label.length ? $label.text() : $btn.text();
-            
+
             ($label.length ? $label : $btn).text(window.rtbcbAdmin.strings.processing || 'Processing...');
             $btn.prop('disabled', true);
-            
-            $.ajax({
-                url: window.rtbcbAdmin.ajax_url,
-                method: 'POST',
-                data: {
-                    action: 'rtbcb_test_connection',
-                    nonce: window.rtbcbAdmin.nonce
-                },
-                async: false,
-                success: function(response) {
-                    var message = response.success ? 'API connection successful!' :
-                        (response.data && response.data.message ? response.data.message : 'Connection failed');
-                    alert(message);
-                },
-                error: function() {
-                    alert('Request failed');
-                },
-                complete: function() {
-                    ($label.length ? $label : $btn).text(original);
-                    $btn.prop('disabled', false);
-                }
-            });
+
+            try {
+                var response = await $.ajax({
+                    url: window.rtbcbAdmin.ajax_url,
+                    method: 'POST',
+                    data: {
+                        action: 'rtbcb_test_connection',
+                        nonce: window.rtbcbAdmin.nonce
+                    }
+                });
+                var message = response.success ? 'API connection successful!' :
+                    (response.data && response.data.message ? response.data.message : 'Connection failed');
+                alert(message);
+            } catch (error) {
+                alert('Request failed');
+            } finally {
+                ($label.length ? $label : $btn).text(original);
+                $btn.prop('disabled', false);
+            }
         },
         
-        exportLeads: function(e) {
+        exportLeads: async function(e) {
             e.preventDefault();
             var $btn = $(this);
             var $label = $btn.find('h4');
             var original = $label.length ? $label.text() : $btn.text();
-            
+
             ($label.length ? $label : $btn).text(window.rtbcbAdmin.strings.processing || 'Processing...');
             $btn.prop('disabled', true);
-            
+
             var params = new URLSearchParams(window.location.search);
-            
-            $.ajax({
-                url: window.rtbcbAdmin.ajax_url,
-                method: 'POST',
-                data: {
-                    action: 'rtbcb_export_leads',
-                    nonce: window.rtbcbAdmin.nonce,
-                    search: params.get('search') || '',
-                    category: params.get('category') || '',
-                    date_from: params.get('date_from') || '',
-                    date_to: params.get('date_to') || ''
-                },
-                async: false,
-                success: function(response) {
-                    if (response.success && response.data && response.data.content) {
-                        var blob = new Blob([response.data.content], { type: 'text/csv' });
-                        var url = URL.createObjectURL(blob);
-                        var a = document.createElement('a');
-                        a.href = url;
-                        a.download = response.data.filename || 'leads.csv';
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                        URL.revokeObjectURL(url);
-                    } else {
-                        alert(response.data && response.data.message ? response.data.message : 'Export failed');
+
+            try {
+                var response = await $.ajax({
+                    url: window.rtbcbAdmin.ajax_url,
+                    method: 'POST',
+                    data: {
+                        action: 'rtbcb_export_leads',
+                        nonce: window.rtbcbAdmin.nonce,
+                        search: params.get('search') || '',
+                        category: params.get('category') || '',
+                        date_from: params.get('date_from') || '',
+                        date_to: params.get('date_to') || ''
                     }
-                },
-                error: function() {
-                    alert('Export request failed');
-                },
-                complete: function() {
-                    ($label.length ? $label : $btn).text(original);
-                    $btn.prop('disabled', false);
+                });
+                if (response.success && response.data && response.data.content) {
+                    var blob = new Blob([response.data.content], { type: 'text/csv' });
+                    var url = URL.createObjectURL(blob);
+                    var a = document.createElement('a');
+                    a.href = url;
+                    a.download = response.data.filename || 'leads.csv';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                } else {
+                    alert(response.data && response.data.message ? response.data.message : 'Export failed');
                 }
-            });
+            } catch (error) {
+                alert('Export request failed');
+            } finally {
+                ($label.length ? $label : $btn).text(original);
+                $btn.prop('disabled', false);
+            }
         },
         
-        rebuildIndex: function(e) {
+        rebuildIndex: async function(e) {
             e.preventDefault();
             var $btn = $(this);
             var original = $btn.text();
-            
+
             $btn.text(window.rtbcbAdmin.strings.processing || 'Processing...').prop('disabled', true);
-            
-            $.ajax({
-                url: window.rtbcbAdmin.ajax_url,
-                method: 'POST',
-                data: {
-                    action: 'rtbcb_rebuild_index',
-                    nonce: window.rtbcbAdmin.nonce
-                },
-                async: false,
-                success: function(response) {
-                    if (response.success) {
-                        alert('RAG index rebuilt successfully');
-                        location.reload();
-                    } else {
-                        alert(response.data && response.data.message ? response.data.message : 'Rebuild failed');
+
+            try {
+                var response = await $.ajax({
+                    url: window.rtbcbAdmin.ajax_url,
+                    method: 'POST',
+                    data: {
+                        action: 'rtbcb_rebuild_index',
+                        nonce: window.rtbcbAdmin.nonce
                     }
-                },
-                error: function() {
-                    alert('Rebuild request failed');
-                },
-                complete: function() {
-                    $btn.text(original).prop('disabled', false);
+                });
+                if (response.success) {
+                    alert('RAG index rebuilt successfully');
+                    location.reload();
+                } else {
+                    alert(response.data && response.data.message ? response.data.message : 'Rebuild failed');
                 }
-            });
+            } catch (error) {
+                alert('Rebuild request failed');
+            } finally {
+                $btn.text(original).prop('disabled', false);
+            }
         },
         
-        runDiagnostics: function(e) {
+        runDiagnostics: async function(e) {
             e.preventDefault();
             var $btn = $(this);
             $btn.prop('disabled', true);
-            
-            $.ajax({
-                url: window.rtbcbAdmin.ajax_url,
-                method: 'POST',
-                data: {
-                    action: 'rtbcb_run_diagnostics',
-                    nonce: $btn.data('nonce') || window.rtbcbAdmin.diagnostics_nonce
-                },
-                async: false,
-                success: function(response) {
-                    if (response.success) {
-                        var message = '';
-                        $.each(response.data, function(key, result) {
-                            message += key + ': ' + (result.passed ? 'PASS' : 'FAIL') + ' - ' + result.message + '\n';
-                        });
-                        alert(message);
-                    } else {
-                        alert(response.data && response.data.message ? response.data.message : 'Diagnostics failed');
+
+            try {
+                var response = await $.ajax({
+                    url: window.rtbcbAdmin.ajax_url,
+                    method: 'POST',
+                    data: {
+                        action: 'rtbcb_run_diagnostics',
+                        nonce: $btn.data('nonce') || window.rtbcbAdmin.diagnostics_nonce
                     }
-                },
-                error: function() {
-                    alert('Diagnostics request failed');
-                },
-                complete: function() {
-                    $btn.prop('disabled', false);
+                });
+                if (response.success) {
+                    var message = '';
+                    $.each(response.data, function(key, result) {
+                        message += key + ': ' + (result.passed ? 'PASS' : 'FAIL') + ' - ' + result.message + '\n';
+                    });
+                    alert(message);
+                } else {
+                    alert(response.data && response.data.message ? response.data.message : 'Diagnostics failed');
                 }
-            });
+            } catch (error) {
+                alert('Diagnostics request failed');
+            } finally {
+                $btn.prop('disabled', false);
+            }
         },
         
-        syncLocal: function(e) {
+        syncLocal: async function(e) {
             e.preventDefault();
             var $btn = $(this);
             var original = $btn.text();
-            
+
             $btn.text(window.rtbcbAdmin.strings.processing || 'Processing...').prop('disabled', true);
-            
+
             var nonce = $('#rtbcb-sync-local-form').find('input[name="rtbcb_sync_local_nonce"]').val();
-            
-            $.ajax({
-                url: window.rtbcbAdmin.ajax_url,
-                method: 'POST',
-                data: {
-                    action: 'rtbcb_sync_to_local',
-                    nonce: nonce
-                },
-                async: false,
-                success: function(response) {
-                    alert(response.data && response.data.message ? response.data.message : 'Sync completed');
-                },
-                error: function() {
-                    alert('Sync request failed');
-                },
-                complete: function() {
-                    $btn.text(original).prop('disabled', false);
-                }
-            });
+
+            try {
+                var response = await $.ajax({
+                    url: window.rtbcbAdmin.ajax_url,
+                    method: 'POST',
+                    data: {
+                        action: 'rtbcb_sync_to_local',
+                        nonce: nonce
+                    }
+                });
+                alert(response.data && response.data.message ? response.data.message : 'Sync completed');
+            } catch (error) {
+                alert('Sync request failed');
+            } finally {
+                $btn.text(original).prop('disabled', false);
+            }
         },
         
-        testCommentary: function(e) {
+        testCommentary: async function(e) {
             e.preventDefault();
             var $btn = $(this);
             var industry = $('#rtbcb-commentary-industry').val();
             var $results = $('#rtbcb-commentary-results');
             var original = $btn.text();
-            
+
             $btn.prop('disabled', true).text(window.rtbcbAdmin.strings.generating || 'Generating...');
-            
-            $.ajax({
-                url: window.rtbcbAdmin.ajax_url,
-                method: 'POST',
-                data: {
-                    action: 'rtbcb_test_commentary',
-                    industry: industry,
-                    nonce: window.rtbcbAdmin.company_overview_nonce
-                },
-                async: false,
-                success: function(response) {
-                    if (response.success && response.data) {
-                        $results.text(response.data.overview || response.data.commentary || 'Generated successfully');
-                    } else {
-                        $results.text(response.data && response.data.message ? response.data.message : 'Generation failed');
+
+            try {
+                var response = await $.ajax({
+                    url: window.rtbcbAdmin.ajax_url,
+                    method: 'POST',
+                    data: {
+                        action: 'rtbcb_test_commentary',
+                        industry: industry,
+                        nonce: window.rtbcbAdmin.company_overview_nonce
                     }
-                },
-                error: function() {
-                    $results.text('Request failed');
-                },
-                complete: function() {
-                    $btn.prop('disabled', false).text(original);
+                });
+                if (response.success && response.data) {
+                    $results.text(response.data.overview || response.data.commentary || 'Generated successfully');
+                } else {
+                    $results.text(response.data && response.data.message ? response.data.message : 'Generation failed');
                 }
-            });
+            } catch (error) {
+                $results.text('Request failed');
+            } finally {
+                $btn.prop('disabled', false).text(original);
+            }
         },
         
         testCompanyOverview: function(e) {
@@ -438,42 +420,40 @@ jQuery(document).ready(function($) {
             });
         },
         
-        testBenefits: function(e) {
+        testBenefits: async function(e) {
             e.preventDefault();
             var $results = $('#rtbcb-benefits-estimate-results');
-            
+
             $results.text(window.rtbcbAdmin.strings.processing || 'Processing...');
-            
+
             var company = window.rtbcbAdmin.company || {};
 
-            $.ajax({
-                url: window.rtbcbAdmin.ajax_url,
-                method: 'POST',
-                data: {
-                    action: 'rtbcb_test_estimated_benefits',
-                    company_data: {
-                        revenue: company.revenue,
-                        staff_count: company.staff_count,
-                        efficiency: company.efficiency
-                    },
-                    recommended_category: $('#rtbcb-test-category').val(),
-                    nonce: window.rtbcbAdmin.benefits_estimate_nonce
-                },
-                async: false,
-                success: function(response) {
-                    if (response.success && response.data) {
-                        $results.text(JSON.stringify(response.data.estimate || response.data, null, 2));
-                    } else {
-                        $results.text(response.data && response.data.message ? response.data.message : 'Generation failed');
+            try {
+                var response = await $.ajax({
+                    url: window.rtbcbAdmin.ajax_url,
+                    method: 'POST',
+                    data: {
+                        action: 'rtbcb_test_estimated_benefits',
+                        company_data: {
+                            revenue: company.revenue,
+                            staff_count: company.staff_count,
+                            efficiency: company.efficiency
+                        },
+                        recommended_category: $('#rtbcb-test-category').val(),
+                        nonce: window.rtbcbAdmin.benefits_estimate_nonce
                     }
-                },
-                error: function() {
-                    $results.text('Request failed');
+                });
+                if (response.success && response.data) {
+                    $results.text(JSON.stringify(response.data.estimate || response.data, null, 2));
+                } else {
+                    $results.text(response.data && response.data.message ? response.data.message : 'Generation failed');
                 }
-            });
+            } catch (error) {
+                $results.text('Request failed');
+            }
         },
 
-        testReportAssembly: function(e) {
+        testReportAssembly: async function(e) {
             e.preventDefault();
             var $form = $(this);
             var $results = $('#rtbcb-report-assembly-results');
@@ -482,33 +462,30 @@ jQuery(document).ready(function($) {
 
             $btn.prop('disabled', true).text(window.rtbcbAdmin.strings.processing || 'Processing...');
 
-            $.ajax({
-                url: window.rtbcbAdmin.ajax_url,
-                method: 'POST',
-                data: {
-                    action: 'rtbcb_test_report_assembly',
-                    nonce: $form.find('[name="nonce"]').val() || window.rtbcbAdmin.report_assembly_nonce
-                },
-                async: false,
-                success: function(response) {
-                    if (response.success && response.data && response.data.summary) {
-                        var notice = $('<div class="notice notice-success" />');
-                        var pre = $('<pre />').text(JSON.stringify(response.data.summary, null, 2));
-                        notice.append(pre);
-                        $results.html(notice);
-                    } else {
-                        $results.html('<div class="notice notice-error"><p>' +
-                            (response.data && response.data.message ? response.data.message : 'Generation failed') +
-                            '</p></div>');
+            try {
+                var response = await $.ajax({
+                    url: window.rtbcbAdmin.ajax_url,
+                    method: 'POST',
+                    data: {
+                        action: 'rtbcb_test_report_assembly',
+                        nonce: $form.find('[name="nonce"]').val() || window.rtbcbAdmin.report_assembly_nonce
                     }
-                },
-                error: function() {
-                    $results.html('<div class="notice notice-error"><p>Request failed</p></div>');
-                },
-                complete: function() {
-                    $btn.prop('disabled', false).text(original);
+                });
+                if (response.success && response.data && response.data.summary) {
+                    var notice = $('<div class="notice notice-success" />');
+                    var pre = $('<pre />').text(JSON.stringify(response.data.summary, null, 2));
+                    notice.append(pre);
+                    $results.html(notice);
+                } else {
+                    $results.html('<div class="notice notice-error"><p>' +
+                        (response.data && response.data.message ? response.data.message : 'Generation failed') +
+                        '</p></div>');
                 }
-            });
+            } catch (error) {
+                $results.html('<div class="notice notice-error"><p>Request failed</p></div>');
+            } finally {
+                $btn.prop('disabled', false).text(original);
+            }
         },
 
         runAllTests: async function(e) {
@@ -675,41 +652,39 @@ jQuery(document).ready(function($) {
             });
             
             // Bulk form submission
-            $('#rtbcb-bulk-form').on('submit', function(e) {
+            $('#rtbcb-bulk-form').on('submit', async function(e) {
                 e.preventDefault();
                 var action = $('#rtbcb-bulk-action').val();
                 var ids = [];
                 $('.rtbcb-lead-checkbox:checked').each(function() {
                     ids.push(this.value);
                 });
-                
+
                 if (!action || !ids.length) return;
-                
+
                 if (action === 'delete' && !confirm(window.rtbcbAdmin.strings.confirm_bulk_delete || 'Are you sure?')) {
                     return;
                 }
-                
-                $.ajax({
-                    url: window.rtbcbAdmin.ajax_url,
-                    method: 'POST',
-                    data: {
-                        action: 'rtbcb_bulk_action_leads',
-                        nonce: window.rtbcbAdmin.nonce,
-                        bulk_action: action,
-                        lead_ids: JSON.stringify(ids)
-                    },
-                    async: false,
-                    success: function(response) {
-                        if (response.success) {
-                            location.reload();
-                        } else {
-                            alert(response.data && response.data.message ? response.data.message : 'Bulk action failed');
+
+                try {
+                    var response = await $.ajax({
+                        url: window.rtbcbAdmin.ajax_url,
+                        method: 'POST',
+                        data: {
+                            action: 'rtbcb_bulk_action_leads',
+                            nonce: window.rtbcbAdmin.nonce,
+                            bulk_action: action,
+                            lead_ids: JSON.stringify(ids)
                         }
-                    },
-                    error: function() {
-                        alert('Bulk action request failed');
+                    });
+                    if (response.success) {
+                        location.reload();
+                    } else {
+                        alert(response.data && response.data.message ? response.data.message : 'Bulk action failed');
                     }
-                });
+                } catch (error) {
+                    alert('Bulk action request failed');
+                }
             });
             
             // View lead details
@@ -736,36 +711,34 @@ jQuery(document).ready(function($) {
             });
             
             // Delete individual lead
-            $('.rtbcb-delete-lead').on('click', function(e) {
+            $('.rtbcb-delete-lead').on('click', async function(e) {
                 e.preventDefault();
                 if (!confirm(window.rtbcbAdmin.strings.confirm_delete || 'Are you sure?')) {
                     return;
                 }
-                
+
                 var id = $(this).data('lead-id');
                 var $row = $(this).closest('tr');
-                
-                $.ajax({
-                    url: window.rtbcbAdmin.ajax_url,
-                    method: 'POST',
-                    data: {
-                        action: 'rtbcb_delete_lead',
-                        nonce: window.rtbcbAdmin.nonce,
-                        lead_id: id
-                    },
-                    async: false,
-                    success: function(response) {
-                        if (response.success) {
-                            $row.remove();
-                            self.updateBulkButton();
-                        } else {
-                            alert(response.data && response.data.message ? response.data.message : 'Delete failed');
+
+                try {
+                    var response = await $.ajax({
+                        url: window.rtbcbAdmin.ajax_url,
+                        method: 'POST',
+                        data: {
+                            action: 'rtbcb_delete_lead',
+                            nonce: window.rtbcbAdmin.nonce,
+                            lead_id: id
                         }
-                    },
-                    error: function() {
-                        alert('Delete request failed');
+                    });
+                    if (response.success) {
+                        $row.remove();
+                        self.updateBulkButton();
+                    } else {
+                        alert(response.data && response.data.message ? response.data.message : 'Delete failed');
                     }
-                });
+                } catch (error) {
+                    alert('Delete request failed');
+                }
             });
             
             // Modal close
