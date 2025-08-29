@@ -893,7 +893,7 @@ class Real_Treasury_BCB {
                                 'message'    => $response_message,
                                 'error_code' => $error_code,
                             ],
-                            200
+                            500
                         );
                     }
 
@@ -922,7 +922,7 @@ class Real_Treasury_BCB {
                                 'message'    => $response_message,
                                 'error_code' => $error_code,
                             ],
-                            200
+                            500
                         );
                     }
 
@@ -939,7 +939,7 @@ class Real_Treasury_BCB {
                                 'message'    => $response_message,
                                 'error_code' => $error_code,
                             ],
-                            200
+                            500
                         );
                     }
                     rtbcb_log_api_debug( 'LLM generation succeeded' );
@@ -956,7 +956,7 @@ class Real_Treasury_BCB {
                             'message'    => $response_message,
                             'error_code' => $error_code,
                         ],
-                        200
+                        500
                     );
                 } catch ( Error $e ) {
                     $error_code = 'E_LLM_FATAL';
@@ -971,7 +971,7 @@ class Real_Treasury_BCB {
                             'message'    => $response_message,
                             'error_code' => $error_code,
                         ],
-                        200
+                        500
                     );
                 }
             }
@@ -989,7 +989,7 @@ class Real_Treasury_BCB {
                         'message'    => $response_message,
                         'error_code' => $error_code,
                     ],
-                    200
+                    500
                 );
             }
 
