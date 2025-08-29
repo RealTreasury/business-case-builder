@@ -7,7 +7,7 @@ A comprehensive WordPress plugin that helps treasury teams quantify the benefits
 ### 🔧 Test Dashboard Improvements
 - `Set Company` uses the main company name input for all tests.
 - First and last name fields stay synchronized across interactions.
-- "Test All Sections" now includes the company name parameter for complete coverage.
+- "Run All Tests" now includes the company name parameter for complete coverage and appears before individual test tools.
 
 ### ✨ Major Enhancements
 
@@ -442,16 +442,17 @@ add_filter('rtbcb_category_scores', function($scores, $inputs) {
 ## 🧪 Testing and Quality Assurance
 
 ### Testing Dashboard
-Use the unified testing dashboard to verify each report component. This
-dashboard replaces individual test pages from earlier versions. Navigate to
-**Real Treasury → Test Dashboard** in the WordPress admin to access it. The
-page is restricted to users with the `manage_options` capability. AJAX
-actions from the dashboard require nonces such as `rtbcb_test_company_overview`,
-`rtbcb_test_estimated_benefits`, and `rtbcb_test_dashboard` when saving
-results. Click **Run Diagnostics** to execute the full test suite defined in
-`tests/run-tests.sh` and display the latest results. A visual overview of the
-end-to-end reporting flow and diagnostics is available in
-[docs/TEST_DASHBOARD_FLOW.md](docs/TEST_DASHBOARD_FLOW.md).
+Use the unified testing dashboard to verify each report component. Begin by
+clicking **Run All Tests** to execute the complete suite; individual test tools
+will appear afterward if needed. This dashboard replaces individual test pages
+from earlier versions. Navigate to **Real Treasury → Test Dashboard** in the
+WordPress admin to access it. The page is restricted to users with the
+`manage_options` capability. AJAX actions from the dashboard require nonces such
+as `rtbcb_test_company_overview`, `rtbcb_test_estimated_benefits`, and
+`rtbcb_test_dashboard` when saving results. Click **Run Diagnostics** to execute
+the full test suite defined in `tests/run-tests.sh` and display the latest
+results. A visual overview of the end-to-end reporting flow and diagnostics is
+available in [docs/TEST_DASHBOARD_FLOW.md](docs/TEST_DASHBOARD_FLOW.md).
 
 ### Automated Tests
 The plugin includes integration tests for all major components. These can be run from the settings page via the **Run Diagnostics** button or programmatically:
