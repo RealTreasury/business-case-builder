@@ -716,7 +716,11 @@ class RTBCB_Admin {
         $company_data = json_decode( $raw_data, true );
 
         if ( empty( $company_data ) || ! is_array( $company_data ) ) {
-            wp_send_json_error( [ 'message' => __( 'Invalid company data.', 'rtbcb' ) ] );
+            $company_data = rtbcb_get_current_company();
+
+            if ( empty( $company_data ) || ! is_array( $company_data ) ) {
+                wp_send_json_error( [ 'message' => __( 'Invalid company data.', 'rtbcb' ) ] );
+            }
         }
 
         $start    = microtime( true );
