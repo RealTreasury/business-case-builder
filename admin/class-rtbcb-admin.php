@@ -52,6 +52,7 @@ class RTBCB_Admin {
         add_action( 'wp_ajax_rtbcb_test_tracking_script', [ $this, 'ajax_test_tracking_script' ] );
         add_action( 'wp_ajax_rtbcb_test_follow_up_email', [ $this, 'ajax_test_follow_up_email' ] );
         add_action( 'wp_ajax_rtbcb_get_phase_completion', [ $this, 'ajax_get_phase_completion' ] );
+        add_action( 'wp_ajax_rtbcb_get_section_config', [ $this, 'ajax_get_section_config' ] );
         add_action( 'wp_ajax_rtbcb_generate_comprehensive_analysis', [ $this, 'ajax_generate_comprehensive_analysis' ] );
         add_action( 'wp_ajax_rtbcb_clear_analysis_data', [ $this, 'ajax_clear_analysis_data' ] );
         add_action( 'wp_ajax_rtbcb_delete_log', [ $this, 'ajax_delete_log' ] );
@@ -166,6 +167,8 @@ class RTBCB_Admin {
                 'rerun'               => __( 'Re-run', 'rtbcb' ),
                 'company_required'    => __( 'Company name is required.', 'rtbcb' ),
                 'completion'          => __( 'Completion %', 'rtbcb' ),
+                'starting_tests'      => __( 'Starting tests...', 'rtbcb' ),
+                'all_sections_done'   => __( 'All sections completed', 'rtbcb' ),
             ],
         ] );
 
@@ -1702,6 +1705,57 @@ class RTBCB_Admin {
         $percentages  = rtbcb_calculate_phase_completion( $sections );
 
         wp_send_json_success( [ 'percentages' => $percentages ] );
+    }
+
+    /**
+     * AJAX handler to fetch sanitized configuration for a section.
+     *
+     * @return void
+     */
+    public function ajax_get_section_config() {
+        check_ajax_referer( 'rtbcb_test_dashboard', 'nonce' );
+
+        $section_id = isset( $_POST['section'] ) ? sanitize_key( wp_unslash( $_POST['section'] ) ) : '';
+        if ( '' === $section_id ) {
+            wp_send_json_error( [ 'message' => __( 'Invalid section.', 'rtbcb' ) ] );
+        }
+
+        $sections = rtbcb_get_dashboard_sections();
+        if ( ! isset( $sections[ $section_id ]['option'] ) ) {
+            wp_send_json_error( [ 'message' => __( 'Unknown section.', 'rtbcb' ) ] );
+        }
+
+        $option_name = sanitize_key( $sections[ $section_id ]['option'] );
+        $raw         = get_option( $option_name, [] );
+        $sanitized   = $this->sanitize_section_config( $raw );
+        $snippet     = wp_json_encode( $sanitized );
+        if ( strlen( $snippet ) > 200 ) {
+            $snippet = substr( $snippet, 0, 200 ) . '...';
+        }
+
+        wp_send_json_success( [ 'config' => $snippet ] );
+    }
+
+    /**
+     * Recursively sanitize configuration data.
+     *
+     * @param mixed $data Configuration value.
+     * @return mixed
+     */
+    private function sanitize_section_config( $data ) {
+        if ( is_array( $data ) ) {
+            $clean = [];
+            foreach ( $data as $key => $value ) {
+                $clean[ sanitize_key( $key ) ] = $this->sanitize_section_config( $value );
+            }
+            return $clean;
+        }
+
+        if ( is_scalar( $data ) ) {
+            return sanitize_text_field( (string) $data );
+        }
+
+        return '';
     }
 
     /**

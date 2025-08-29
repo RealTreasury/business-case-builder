@@ -607,69 +607,93 @@ jQuery(document).ready(function($) {
                 }
             });
         },
-
         runAllTests: async function(e) {
             e.preventDefault();
             var $btn = $(this);
             var original = $btn.text();
             var companyName = $('#rtbcb-company-name').val().trim();
-
+        
             if (!companyName) {
                 alert(window.rtbcbAdmin.strings.company_required || 'Please enter a company name before running tests');
                 return;
             }
-
+        
             var $status = $('#rtbcb-test-status');
             var $progress = $('#rtbcb-test-progress');
+            var $step = $('#rtbcb-test-step');
+            var $config = $('#rtbcb-test-config');
+        
             $btn.prop('disabled', true).text(window.rtbcbAdmin.strings.testing || 'Testing...');
             $progress.val(0).removeClass('rtbcb-complete');
-            $status.text('Generating comprehensive analysis (3-5 minutes estimated)...');
-
-            try {
-                var response = await $.ajax({
-                    url: window.rtbcbAdmin.ajax_url,
-                    method: 'POST',
-                    data: {
-                        action: 'rtbcb_generate_comprehensive_analysis',
-                        nonce: window.rtbcbAdmin.test_dashboard_nonce,
-                        company_name: companyName
+            $status.text(window.rtbcbAdmin.strings.starting_tests || 'Starting tests...');
+            $step.text('');
+            $config.text('');
+        
+            var sections = (window.rtbcbAdmin.sections || []).filter(function(s) {
+                return s.action;
+            });
+            var results = [];
+        
+            for (var i = 0; i < sections.length; i++) {
+                var section = sections[i];
+                $step.text(section.label);
+                try {
+                    var resp = await $.ajax({
+                        url: window.rtbcbAdmin.ajax_url,
+                        method: 'POST',
+                        data: {
+                            action: section.action,
+                            nonce: section.nonce,
+                            company_name: companyName
+                        }
+                    });
+        
+                    results.push({
+                        section: section.id,
+                        status: resp.success ? 'success' : 'error',
+                        message: resp.data && resp.data.message ? resp.data.message : ''
+                    });
+        
+                    try {
+                        var cfg = await $.ajax({
+                            url: window.rtbcbAdmin.ajax_url,
+                            method: 'POST',
+                            data: {
+                                action: 'rtbcb_get_section_config',
+                                nonce: window.rtbcbAdmin.test_dashboard_nonce,
+                                section: section.id
+                            }
+                        });
+                        if (cfg.success && cfg.data && cfg.data.config) {
+                            $config.text(cfg.data.config);
+                        } else {
+                            $config.text('');
+                        }
+                    } catch (cfgErr) {
+                        $config.text('');
                     }
-                });
-
-                if (response.success) {
-                    var data = response.data;
-                    window.rtbcbAdmin.comprehensive = data;
-                    var ts = data.timestamp;
-                    var html = '<p><em>' + ts + '</em></p>';
-                    $.each(data.results, function(key, item) {
-                        html += '<details><summary>✅ ' + key.replace(/_/g, ' ') + '</summary>' +
-                            '<pre>' + $('<div>').text(JSON.stringify(item.summary, null, 2)).html() + '</pre></details>';
-                        var selector = '.rtbcb-status-' + key.replace(/_/g, '-');
-                        $(selector).text('✅ Using stored data (' + ts + ')');
-                        $(selector).siblings('.rtbcb-view-source').show();
+        
+                    $status.text('✅ ' + section.label);
+                } catch (err) {
+                    results.push({
+                        section: section.id,
+                        status: 'error',
+                        message: err && err.message ? err.message : 'Request failed'
                     });
-                    $('#rtbcb-comprehensive-results').html(html);
-                    $('#rtbcb-comprehensive-analysis').show();
-
-                    var mapHtml = '<thead><tr><th>Data Component</th><th>Used In Test Section</th><th>Stored In Option</th></tr></thead><tbody>';
-                    $.each(data.usage_map, function(_, row) {
-                        mapHtml += '<tr><td>' + row.component + '</td><td>' + row.used_in + '</td><td>' + row.option + '</td></tr>';
-                    });
-                    $('#rtbcb-usage-map').html(mapHtml + '</tbody>');
-
-                    $progress.val(1).addClass('rtbcb-complete');
-                    $status.text('✅ Generated ' + data.components_generated + ' analysis components - view results below');
-                    $('#rtbcb-section-tests').slideDown();
-                    await RTBCB.Admin.saveTestResults(data.results);
-                } else {
-                    $status.text(response.data && response.data.message ? response.data.message : 'Generation failed');
+                    $status.text('❌ ' + section.label);
                 }
-            } catch (error) {
-                $status.text('Generation failed');
+        
+                var pct = Math.round(((i + 1) / sections.length) * 100);
+                $progress.val(pct);
+                await RTBCB.Admin.refreshPhaseChart();
             }
-
+        
+            await RTBCB.Admin.saveTestResults(results);
+            $progress.addClass('rtbcb-complete');
+            $status.text('✅ ' + (window.rtbcbAdmin.strings.all_sections_done || 'All sections completed'));
+            $('#rtbcb-section-tests').slideDown();
+        
             $btn.prop('disabled', false).text(original);
-            RTBCB.Admin.refreshPhaseChart();
         },
         
         initLeadsManager: function() {
