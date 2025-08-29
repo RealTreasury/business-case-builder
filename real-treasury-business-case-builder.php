@@ -977,8 +977,12 @@ class Real_Treasury_BCB {
                         500
                     );
                 } catch ( Error $e ) {
+                    // Developers: check server logs for E_LLM_FATAL stack trace.
                     $error_code = 'E_LLM_FATAL';
-                    rtbcb_log_error( $error_code . ': ' . $e->getMessage() );
+                    rtbcb_log_error(
+                        $error_code . ': ' . $e->getMessage(),
+                        $e->getTraceAsString()
+                    );
                     $guidance        = __( 'Check the OpenAI API key setting in plugin options.', 'rtbcb' );
                     $response_message = __( 'Our AI analysis service is temporarily unavailable.', 'rtbcb' ) . ' ' . $guidance;
                     if ( function_exists( 'wp_get_environment_type' ) && 'production' !== wp_get_environment_type() ) {
