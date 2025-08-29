@@ -75,6 +75,17 @@ Add the shortcode to any page or post to display a “Generate Business Case” 
    style="modern"]
 ```
 
+The wizard requires `public/js/rtbcb-wizard.js` to be loaded before the button is clicked.
+In WordPress this happens automatically when `enqueue_assets()` runs and your theme
+calls both `wp_head()` and `wp_footer()` so enqueued scripts render.
+If testing the template outside WordPress, manually include:
+
+```html
+<script src="/path/to/public/js/rtbcb-wizard.js"></script>
+```
+
+before the closing `</body>` tag.
+
 ## 🗂️ Repository Structure
 
 - `admin/` – WordPress dashboard pages, settings, and nonces.
