@@ -8,6 +8,11 @@
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
+
+if ( ! rtbcb_require_completed_steps( 'rtbcb-test-tracking-script' ) ) {
+    return;
+}
+
 ?>
 <h2><?php esc_html_e( 'Tracking Script Injection', 'rtbcb' ); ?></h2>
 <p class="description"><?php esc_html_e( 'Paste a tracking script snippet and verify it fires a test event.', 'rtbcb' ); ?></p>

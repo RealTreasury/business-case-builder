@@ -127,52 +127,11 @@ $company_name = isset( $company_data['name'] ) ? sanitize_text_field( $company_d
             <?php include RTBCB_DIR . 'admin/partials/test-estimated-benefits.php'; ?>
         </div>
         <div id="rtbcb-phase4" class="rtbcb-tab-panel" style="display:none;">
-            <?php
-            $dependency = rtbcb_get_first_incomplete_dependency( 'rtbcb-test-report-assembly', $sections );
-            if ( null === $dependency ) {
-                include RTBCB_DIR . 'admin/partials/test-report-assembly.php';
-            } else {
-                $phase  = isset( $sections[ $dependency ]['phase'] ) ? (int) $sections[ $dependency ]['phase'] : 0;
-                $anchor = $phase ? '#rtbcb-phase' . $phase : '#';
-                echo '<div class="rtbcb-warning"><p>' .
-                    sprintf(
-                        esc_html__( 'Please complete %s first.', 'rtbcb' ),
-                        '<a href="' . esc_url( $anchor ) . '" class="rtbcb-jump-tab">' . esc_html( $sections[ $dependency ]['label'] ) . '</a>'
-                    ) .
-                    '</p></div>';
-            }
-            ?>
+            <?php include RTBCB_DIR . 'admin/partials/test-report-assembly.php'; ?>
         </div>
         <div id="rtbcb-phase5" class="rtbcb-tab-panel" style="display:none;">
-            <?php
-            $dependency = rtbcb_get_first_incomplete_dependency( 'rtbcb-test-tracking-script', $sections );
-            if ( null === $dependency ) {
-                include RTBCB_DIR . 'admin/partials/test-tracking-script.php';
-            } else {
-                $phase  = isset( $sections[ $dependency ]['phase'] ) ? (int) $sections[ $dependency ]['phase'] : 0;
-                $anchor = $phase ? '#rtbcb-phase' . $phase : '#';
-                echo '<div class="rtbcb-warning"><p>' .
-                    sprintf(
-                        esc_html__( 'Please complete %s first.', 'rtbcb' ),
-                        '<a href="' . esc_url( $anchor ) . '" class="rtbcb-jump-tab">' . esc_html( $sections[ $dependency ]['label'] ) . '</a>'
-                    ) .
-                    '</p></div>';
-            }
-
-            $dependency = rtbcb_get_first_incomplete_dependency( 'rtbcb-test-follow-up-email', $sections );
-            if ( null === $dependency ) {
-                include RTBCB_DIR . 'admin/partials/test-follow-up-email.php';
-            } else {
-                $phase  = isset( $sections[ $dependency ]['phase'] ) ? (int) $sections[ $dependency ]['phase'] : 0;
-                $anchor = $phase ? '#rtbcb-phase' . $phase : '#';
-                echo '<div class="rtbcb-warning"><p>' .
-                    sprintf(
-                        esc_html__( 'Please complete %s first.', 'rtbcb' ),
-                        '<a href="' . esc_url( $anchor ) . '" class="rtbcb-jump-tab">' . esc_html( $sections[ $dependency ]['label'] ) . '</a>'
-                    ) .
-                    '</p></div>';
-            }
-            ?>
+            <?php include RTBCB_DIR . 'admin/partials/test-tracking-script.php'; ?>
+            <?php include RTBCB_DIR . 'admin/partials/test-follow-up-email.php'; ?>
         </div>
     </div>
 
