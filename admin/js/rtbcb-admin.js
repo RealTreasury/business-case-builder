@@ -231,7 +231,8 @@ jQuery(document).ready(function($) {
                 if (response.success) {
                     var message = '';
                     $.each(response.data, function(key, result) {
-                        message += key + ': ' + (result.passed ? 'PASS' : 'FAIL') + ' - ' + result.message + '\n';
+                        var statusText = result.passed ? (window.rtbcbAdmin.strings.passed || 'Passed') : (window.rtbcbAdmin.strings.failed || 'Failed');
+                        message += key + ': ' + statusText + ' - ' + result.message + '\n';
                     });
                     alert(message);
                 } else {
@@ -622,6 +623,7 @@ jQuery(document).ready(function($) {
             var $progress = $('#rtbcb-test-progress');
             var $step = $('#rtbcb-test-step');
             var $config = $('#rtbcb-test-config');
+            $('#rtbcb-copy-debug').remove();
         
             $btn.prop('disabled', true).text(window.rtbcbAdmin.strings.testing || 'Testing...');
             $progress.val(0).attr({ 'aria-valuenow': 0 }).removeClass('rtbcb-complete');
@@ -631,16 +633,32 @@ jQuery(document).ready(function($) {
             var sections = (window.rtbcbAdmin.sections || []).filter(function(s) {
                 return s.action;
             });
+            var sectionMap = {};
+            sections.forEach(function(s) {
+                var $el = $('.rtbcb-section-item').filter(function() {
+                    return $(this).find('.rtbcb-section-label').text() === s.label;
+                });
+                sectionMap[s.id] = $el;
+                if ($el.length) {
+                    $el.removeClass('completed').addClass('pending');
+                    $el.find('.rtbcb-section-status').text('⚪ ' + (window.rtbcbAdmin.strings.queued || 'Queued'));
+                }
+            });
             var results = [];
             $progress.attr({
                 max: sections.length,
                 'aria-valuemax': sections.length,
                 'aria-valuetext': '0 of ' + sections.length
             });
-        
+
             for (var i = 0; i < sections.length; i++) {
                 var section = sections[i];
+                var $item = sectionMap[section.id];
                 $step.text(section.label);
+                if ($item && $item.length) {
+                    $item.find('.rtbcb-section-status').text('⏳ ' + (window.rtbcbAdmin.strings.running || 'Running'));
+                }
+                $status.text(section.label + ' - ' + (window.rtbcbAdmin.strings.running || 'Running'));
                 try {
                     var resp = await $.ajax({
                         url: window.rtbcbAdmin.ajax_url,
@@ -651,13 +669,13 @@ jQuery(document).ready(function($) {
                             company_name: companyName
                         }
                     });
-        
+
                     results.push({
                         section: section.id,
                         status: resp.success ? 'success' : 'error',
                         message: resp.data && resp.data.message ? resp.data.message : ''
                     });
-        
+
                     try {
                         var cfg = await $.ajax({
                             url: window.rtbcbAdmin.ajax_url,
@@ -670,21 +688,48 @@ jQuery(document).ready(function($) {
                         });
                         if (cfg.success && cfg.data && cfg.data.config) {
                             $config.text(cfg.data.config);
+                            var $copyBtn = $('#rtbcb-copy-debug');
+                            if (!$copyBtn.length) {
+                                $copyBtn = $('<button type="button" id="rtbcb-copy-debug" class="button"></button>');
+                                $copyBtn.text(window.rtbcbAdmin.strings.copy_debug || 'Copy Debug');
+                                $copyBtn.on('click', function() {
+                                    var text = $config.text();
+                                    if (window.rtbcbTestUtils && window.rtbcbTestUtils.copyToClipboard) {
+                                        window.rtbcbTestUtils.copyToClipboard(text).then(function() {
+                                            alert(window.rtbcbAdmin.strings.copied || 'Copied to clipboard.');
+                                        });
+                                    } else if (navigator.clipboard && navigator.clipboard.writeText) {
+                                        navigator.clipboard.writeText(text).then(function() {
+                                            alert(window.rtbcbAdmin.strings.copied || 'Copied to clipboard.');
+                                        });
+                                    }
+                                });
+                                $config.after($copyBtn);
+                            }
                         } else {
                             $config.text('');
+                            $('#rtbcb-copy-debug').remove();
                         }
                     } catch (cfgErr) {
                         $config.text('');
+                        $('#rtbcb-copy-debug').remove();
                     }
-        
-                    $status.text('✅ ' + section.label);
+                    if ($item && $item.length) {
+                        $item.removeClass('pending').addClass('completed');
+                        $item.find('.rtbcb-section-status').text('✅ ' + (window.rtbcbAdmin.strings.passed || 'Passed'));
+                    }
+                    $status.text('✅ ' + section.label + ' - ' + (window.rtbcbAdmin.strings.passed || 'Passed'));
                 } catch (err) {
                     results.push({
                         section: section.id,
                         status: 'error',
                         message: err && err.message ? err.message : 'Request failed'
                     });
-                    $status.text('❌ ' + section.label);
+                    if ($item && $item.length) {
+                        $item.removeClass('completed').addClass('pending');
+                        $item.find('.rtbcb-section-status').text('❌ ' + (window.rtbcbAdmin.strings.failed || 'Failed'));
+                    }
+                    $status.text('❌ ' + section.label + ' - ' + (window.rtbcbAdmin.strings.failed || 'Failed'));
                 }
         
                 var current = i + 1;
