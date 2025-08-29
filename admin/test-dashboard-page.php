@@ -8,8 +8,9 @@
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
-$company_data = get_option( 'rtbcb_company_data', [] );
-$company_name = isset( $company_data['name'] ) ? sanitize_text_field( $company_data['name'] ) : '';
+$company_data  = get_option( 'rtbcb_company_data', [] );
+$company_name  = isset( $company_data['name'] ) ? sanitize_text_field( $company_data['name'] ) : '';
+$test_results = get_option( 'rtbcb_test_results', [] );
 ?>
 <div class="wrap rtbcb-admin-page">
     <h1><?php esc_html_e( 'Treasury Report Section Testing Dashboard', 'rtbcb' ); ?></h1>
@@ -56,7 +57,7 @@ $company_name = isset( $company_data['name'] ) ? sanitize_text_field( $company_d
     </div>
 
     <?php
-    $sections = rtbcb_get_dashboard_sections();
+    $sections = rtbcb_get_dashboard_sections( $test_results );
     $phases   = [
         1 => [
             'label'       => __( 'Phase 1: Data Collection & Enrichment', 'rtbcb' ),

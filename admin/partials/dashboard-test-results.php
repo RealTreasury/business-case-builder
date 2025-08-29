@@ -15,7 +15,7 @@ if ( ! empty( $test_results ) && is_array( $test_results ) ) {
     $recent_results = array_slice( $test_results, 0, $max_results );
 }
 
-$sections     = rtbcb_get_dashboard_sections();
+$sections     = rtbcb_get_dashboard_sections( $test_results );
 ?>
 
 <h2 class="title"><?php esc_html_e( 'Recent Test Results', 'rtbcb' ); ?></h2>

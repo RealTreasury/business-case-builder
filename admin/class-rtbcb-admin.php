@@ -113,7 +113,8 @@ class RTBCB_Admin {
 
         $sections_js = [];
         if ( function_exists( 'rtbcb_get_dashboard_sections' ) ) {
-            $raw_sections = rtbcb_get_dashboard_sections();
+            $test_results = get_option( 'rtbcb_test_results', [] );
+            $raw_sections = rtbcb_get_dashboard_sections( $test_results );
             foreach ( $raw_sections as $id => $section ) {
                 $section_data = [
                     'id'        => sanitize_key( $id ),
@@ -1696,8 +1697,9 @@ class RTBCB_Admin {
     public function ajax_get_phase_completion() {
         check_ajax_referer( 'rtbcb_test_dashboard', 'nonce' );
 
-        $sections    = rtbcb_get_dashboard_sections();
-        $percentages = rtbcb_calculate_phase_completion( $sections );
+        $test_results = get_option( 'rtbcb_test_results', [] );
+        $sections     = rtbcb_get_dashboard_sections( $test_results );
+        $percentages  = rtbcb_calculate_phase_completion( $sections );
 
         wp_send_json_success( [ 'percentages' => $percentages ] );
     }
