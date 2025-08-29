@@ -278,8 +278,8 @@ jQuery(document).ready(function($) {
             
             $btn.prop('disabled', true).text(window.rtbcbAdmin.strings.processing || 'Processing...');
             
-            var company = $('#rtbcb-test-company-name').val();
-            var nonce = $form.find('[name="nonce"]').val() || window.rtbcbAdmin.company_overview_nonce;
+            var company = $('#rtbcb-company-name').val();
+            var nonce = window.rtbcbAdmin.company_overview_nonce;
             
             $.ajax({
                 url: window.rtbcbAdmin.ajax_url,
@@ -516,7 +516,7 @@ jQuery(document).ready(function($) {
             $status.text('Running tests...');
 
             var tests = [
-                { action: 'rtbcb_test_company_overview', label: 'Company Overview', nonce: window.rtbcbAdmin.company_overview_nonce || $('#rtbcb_test_company_overview_nonce').val() },
+                { action: 'rtbcb_test_company_overview', label: 'Company Overview', nonce: window.rtbcbAdmin.company_overview_nonce },
                 { action: 'rtbcb_test_data_enrichment', label: 'Data Enrichment', nonce: $('#rtbcb_test_data_enrichment_nonce').val() },
                 { action: 'rtbcb_test_data_storage', label: 'Data Storage', nonce: $('#rtbcb_test_data_storage_nonce').val() },
                 { action: 'rtbcb_test_maturity_model', label: 'Maturity Model', nonce: window.rtbcbAdmin.maturity_model_nonce || $('#rtbcb_test_maturity_model_nonce').val() },

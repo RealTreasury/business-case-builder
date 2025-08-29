@@ -140,7 +140,7 @@ The analytics dashboard uses Chart.js for its visualizations. The library is bun
 
 == Changelog ==
 = 2.1.2 =
-* Improved Test Dashboard: `Set Company` reads from both company name inputs and keeps name fields in sync.
+* Improved Test Dashboard: `Set Company` uses a single company name input.
 * "Test All Sections" now includes the company name parameter for comprehensive checks.
 = 2.1.1 =
 * Bump plugin version to 2.1.1.
