@@ -108,33 +108,87 @@
 }
 
 /* Progress overview */
-.rtbcb-progress-list {
-    list-style: none;
-    margin: 0;
-    padding-left: 0;
+.rtbcb-progress-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .rtbcb-progress-phase {
-    margin-bottom: 10px;
+    border-left: 4px solid #ddd;
+    padding-left: 12px;
+    position: relative;
+    transition: border-color 0.3s ease;
+}
+
+.rtbcb-progress-phase.completed {
+    border-color: #46b450;
+}
+
+.rtbcb-phase-toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 8px 0;
+    font-size: 16px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.rtbcb-phase-toggle:focus {
+    outline: none;
+    box-shadow: 0 0 0 1px #007cba;
+}
+
+.rtbcb-phase-toggle::before {
+    content: '\f347';
+    font-family: 'dashicons';
+    margin-right: 8px;
+    transition: transform 0.2s ease;
+}
+
+.rtbcb-progress-phase.expanded .rtbcb-phase-toggle::before {
+    transform: rotate(-180deg);
+}
+
+.rtbcb-phase-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.rtbcb-progress-phase.expanded .rtbcb-phase-content {
+    max-height: 500px;
 }
 
 .rtbcb-phase-desc {
     display: block;
     font-style: italic;
     font-size: 13px;
+    margin-bottom: 6px;
 }
 
-.rtbcb-phase-percent {
-    margin-left: 5px;
-    font-weight: normal;
+.rtbcb-section-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
 }
 
-.rtbcb-progress-item.completed {
+.rtbcb-section-item.completed .rtbcb-section-label::before {
+    content: '\f147';
+    font-family: 'dashicons';
     color: #46b450;
+    margin-right: 5px;
 }
 
-.rtbcb-progress-item.pending {
+.rtbcb-section-item.pending .rtbcb-section-label::before {
+    content: '\f534';
+    font-family: 'dashicons';
     color: #555d66;
+    margin-right: 5px;
 }
 
 .rtbcb-company-overview .spinner {

@@ -15,8 +15,6 @@ jQuery(document).ready(function($) {
     window.RTBCB = RTBCB;
     
     RTBCB.Admin = {
-        phaseChart: null,
-
         init: function() {
             this.bindEvents();
             this.initComponents();
@@ -101,7 +99,7 @@ jQuery(document).ready(function($) {
                 this.initTabs();
             }
 
-            if ($('#rtbcb-progress-chart').length) {
+            if ($('#rtbcb-progress-steps').length) {
                 this.initPhaseChart();
             }
 
@@ -835,53 +833,32 @@ jQuery(document).ready(function($) {
         },
 
         initPhaseChart: function() {
-            if (typeof Chart === 'undefined') {
+            if (!window.rtbcbAdmin || !window.rtbcbAdmin.phaseKeys) {
                 return;
             }
-            var ctx = document.getElementById('rtbcb-progress-chart');
-            if (!ctx || !window.rtbcbAdmin || !window.rtbcbAdmin.phaseLabels) {
-                return;
-            }
-            var labels = window.rtbcbAdmin.phaseLabels;
-            var keys = window.rtbcbAdmin.phaseKeys || [];
-            var data = keys.map(function(k) {
-                return window.rtbcbAdmin.phaseCompletion[k] || 0;
+            var keys = window.rtbcbAdmin.phaseKeys;
+            keys.forEach(function(k) {
+                var pct = window.rtbcbAdmin.phaseCompletion[k] || 0;
+                var $phase = $('.rtbcb-progress-phase[data-phase="' + k + '"]');
+                $phase.find('.rtbcb-phase-percent').text(pct + '%');
+                $phase.toggleClass('completed', pct >= 100);
             });
-            this.phaseChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: (window.rtbcbAdmin.strings && window.rtbcbAdmin.strings.completion) ? window.rtbcbAdmin.strings.completion : 'Completion %',
-                        data: data,
-                        backgroundColor: '#0073aa'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return context.parsed.y + '%';
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 100
-                        }
-                    }
-                }
+
+            $('.rtbcb-section-item').each(function() {
+                var done = $(this).data('completed') === 1 || $(this).data('completed') === '1';
+                $(this).toggleClass('completed', done);
+                $(this).toggleClass('pending', !done);
+            });
+
+            $('.rtbcb-phase-toggle').off('click').on('click', function() {
+                var $btn = $(this);
+                var expanded = $btn.attr('aria-expanded') === 'true';
+                $btn.attr('aria-expanded', expanded ? 'false' : 'true');
+                $btn.closest('.rtbcb-progress-phase').toggleClass('expanded');
             });
         },
 
         refreshPhaseChart: async function() {
-            if (!this.phaseChart) {
-                return;
-            }
             try {
                 var response = await $.ajax({
                     url: window.rtbcbAdmin.ajax_url,
@@ -893,15 +870,10 @@ jQuery(document).ready(function($) {
                 });
                 if (response.success && response.data && response.data.percentages) {
                     window.rtbcbAdmin.phaseCompletion = response.data.percentages;
-                    var keys = window.rtbcbAdmin.phaseKeys || [];
-                    var data = keys.map(function(k) {
-                        return window.rtbcbAdmin.phaseCompletion[k] || 0;
-                    });
-                    this.phaseChart.data.datasets[0].data = data;
-                    this.phaseChart.update();
+                    this.initPhaseChart();
                 }
             } catch (error) {
-                console.error('Failed to refresh progress chart', error);
+                console.error('Failed to refresh progress', error);
             }
         },
 
