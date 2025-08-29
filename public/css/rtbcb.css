@@ -120,6 +120,44 @@
     margin: 0 auto !important;
 }
 
+/* Form field styling fixes */
+.rtbcb-wizard-form input[type="text"],
+.rtbcb-wizard-form input[type="email"],
+.rtbcb-wizard-form input[type="number"],
+.rtbcb-wizard-form select {
+    all: unset !important;
+    display: block !important;
+    width: 100% !important;
+    padding: 12px 16px !important;
+    border: 2px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    font-size: 16px !important;
+    font-family: inherit !important;
+    background: #ffffff !important;
+    color: #1f2937 !important;
+    transition: all 0.2s ease !important;
+    box-sizing: border-box !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+}
+
+/* Select dropdown arrow */
+.rtbcb-wizard-form select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M10.293 3.293L6 7.586 1.707 3.293A1 1 0 00.293 4.707l5 5a1 1 0 001.414 0l5-5a1 1 0 10-1.414-1.414z'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 12px center !important;
+    background-size: 16px !important;
+    padding-right: 40px !important;
+}
+
+.rtbcb-wizard-form input:focus,
+.rtbcb-wizard-form select:focus {
+    border-color: #7216f4 !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(114, 22, 244, 0.1) !important;
+    z-index: 10 !important;
+}
 
 /* Pain Points Grid Layout Fix */
 .rtbcb-pain-points-grid {
@@ -790,12 +828,12 @@
     border: 2px solid var(--border-light);
     border-radius: 8px;
     font-size: 16px;
-    line-height: 1.4;
     background: #ffffff;
-    color: var(--rtbcb-text-color, var(--dark-text));
+    color: var(--dark-text);
     transition: all 0.2s ease;
     box-sizing: border-box;
 }
+
 
 .rtbcb-wizard-form input:focus,
 .rtbcb-wizard-form select:focus {
@@ -1361,8 +1399,13 @@
 .rtbcb-field input {
     color: #1f2937;
 }
+.rtbcb-wizard-form select,
 .rtbcb-field select {
+    font-size: 16px;
+    line-height: 1.4;
+    padding: 12px 16px;
     padding-right: 40px;
+    color: var(--rtbcb-text-color, var(--dark-text));
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
