@@ -415,7 +415,11 @@ class RTBCB_Admin {
             $combined = array_slice( $combined, 0, $max_results );
         }
 
-        update_option( 'rtbcb_test_results', $combined );
+        $updated = update_option( 'rtbcb_test_results', $combined );
+
+        if ( false === $updated ) {
+            wp_send_json_error( [ 'message' => __( 'Failed to save test results.', 'rtbcb' ) ] );
+        }
 
         wp_send_json_success();
     }

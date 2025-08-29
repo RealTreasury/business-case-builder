@@ -918,9 +918,15 @@ jQuery(document).ready(function($) {
                 if (response.success) {
                     console.log('Test results saved');
                 } else {
-                    console.error(response.data && response.data.message ? response.data.message : 'Failed to save test results');
+                    var message = response.data && response.data.message ? response.data.message : (window.rtbcbAdmin.strings && window.rtbcbAdmin.strings.error ? window.rtbcbAdmin.strings.error : 'Failed to save test results');
+                    var safeMessage = $('<div>').text(message).html();
+                    $('#rtbcb-test-status').after('<div class="notice notice-error"><p>' + safeMessage + '</p></div>');
+                    console.error(safeMessage);
                 }
             } catch (error) {
+                var message = (error.responseJSON && error.responseJSON.data && error.responseJSON.data.message) ? error.responseJSON.data.message : (window.rtbcbAdmin.strings && window.rtbcbAdmin.strings.error ? window.rtbcbAdmin.strings.error : 'Failed to save test results');
+                var safeMessage = $('<div>').text(message).html();
+                $('#rtbcb-test-status').after('<div class="notice notice-error"><p>' + safeMessage + '</p></div>');
                 console.error('Failed to save test results', error);
             }
         },
