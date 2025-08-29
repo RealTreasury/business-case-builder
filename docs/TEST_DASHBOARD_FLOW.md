@@ -103,6 +103,8 @@ Objective: Convert the report into an ongoing conversation and nurture the lead.
 
 The WordPress admin includes a dedicated **Test Dashboard** (`admin/test-dashboard-page.php`) for validating key dependencies and running diagnostics:
 
+The **Set Company** button now reads from both available company name inputs and keeps the values synchronized. When running **Test All Sections**, the selected company name is passed to every test for accurate coverage.
+
 1. **OpenAI connectivity** — verifies API key configuration.
 2. **Portal integration** — checks the content portal connection.
 3. **RAG health** — ensures the retrieval index is available.
