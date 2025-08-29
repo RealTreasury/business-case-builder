@@ -167,7 +167,7 @@ if ( ! defined( 'ABSPATH' ) ) {
             success: function(response){
                 if (response.success) {
                     renderStatus($status, response.data.message, true);
-                    $('#rtbcb-test-results-summary tbody').html('<tr><td colspan="5"><?php echo esc_js( __( 'No test results found.', 'rtbcb' ) ); ?></td></tr>');
+                    $('#rtbcb-test-results-summary tbody').html('<tr><td colspan="7"><?php echo esc_js( __( 'No test results found.', 'rtbcb' ) ); ?></td></tr>');
                 } else {
                     renderStatus($status, (response.data && response.data.message) ? response.data.message : '<?php echo esc_js( __( 'Request failed.', 'rtbcb' ) ); ?>', false);
                 }
