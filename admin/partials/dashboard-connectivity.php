@@ -50,7 +50,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     </p>
     <form id="rtbcb-sync-local-form" class="submit">
         <?php wp_nonce_field( 'rtbcb_sync_local', 'rtbcb_sync_local_nonce' ); ?>
-        <button type="button" class="button" id="rtbcb-sync-local">
+        <button type="button" class="button" id="rtbcb-sync-to-local">
             <?php esc_html_e( 'Sync to Local', 'rtbcb' ); ?>
         </button>
     </form>
