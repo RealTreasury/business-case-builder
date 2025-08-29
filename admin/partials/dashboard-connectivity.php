@@ -173,19 +173,22 @@ if ( ! defined( 'ABSPATH' ) ) {
         var $btn = $(this);
         var original = $btn.text();
         var $status = $('#rtbcb-connectivity-status');
-        // Fetch company name from dashboard input.
         var $companyInput = $('#rtbcb-company-name');
         var name = $companyInput.val().trim();
+
         if (!name) {
             renderStatus($status, '<?php echo esc_js( __( 'Please enter a company name.', 'rtbcb' ) ); ?>', false);
             $companyInput.focus();
             return;
         }
 
+        var $spinner = $('<span class="spinner is-active"></span>').insertAfter($btn);
         $btn.prop('disabled', true).text('<?php echo esc_js( __( 'Saving...', 'rtbcb' ) ); ?>');
+
         $.ajax({
             url: ajaxurl,
             method: 'POST',
+            timeout: 30000,
             data: {
                 action: 'rtbcb_set_test_company',
                 nonce: $('#rtbcb_set_test_company_nonce').val(),
@@ -193,22 +196,59 @@ if ( ! defined( 'ABSPATH' ) ) {
             },
             success: function(response){
                 if (response.success) {
-                    renderStatus($status, response.data.message, true);
+                    renderStatus($status, escHtml(response.data.message), true);
                     $('#rtbcb-test-results-summary tbody').html('<tr><td colspan="7"><?php echo esc_js( __( 'No test results found.', 'rtbcb' ) ); ?></td></tr>');
-                    if (response.data.name) {
-                        $companyInput.val(response.data.name);
-                    }
+                    generateOverview(name, original, $btn, $spinner, $status);
                 } else {
-                    renderStatus($status, (response.data && response.data.message) ? response.data.message : '<?php echo esc_js( __( 'Request failed.', 'rtbcb' ) ); ?>', false);
+                    renderStatus($status, (response.data && response.data.message) ? escHtml(response.data.message) : '<?php echo esc_js( __( 'Request failed.', 'rtbcb' ) ); ?>', false);
+                    $btn.prop('disabled', false).text(original);
+                    $spinner.remove();
                 }
             },
-            error: function(){
-                renderStatus($status, '<?php echo esc_js( __( 'Request failed.', 'rtbcb' ) ); ?>', false);
-            },
-            complete: function(){
+            error: function(xhr, textStatus){
+                var msg = '<?php echo esc_js( __( 'Request failed.', 'rtbcb' ) ); ?>';
+                if (textStatus === 'timeout') {
+                    msg = '<?php echo esc_js( __( 'Request timed out.', 'rtbcb' ) ); ?>';
+                }
+                renderStatus($status, msg, false);
                 $btn.prop('disabled', false).text(original);
+                $spinner.remove();
             }
         });
     });
+
+    function generateOverview(name, original, $btn, $spinner, $status){
+        $btn.text('<?php echo esc_js( __( 'Generating overview...', 'rtbcb' ) ); ?>');
+
+        $.ajax({
+            url: ajaxurl,
+            method: 'POST',
+            timeout: 60000,
+            data: {
+                action: 'rtbcb_generate_company_overview',
+                nonce: '<?php echo wp_create_nonce( 'rtbcb_test_company_overview' ); ?>',
+                company_name: name
+            },
+            success: function(response){
+                if (response.success) {
+                    renderStatus($status, '<?php echo esc_js( __( 'Company overview generated.', 'rtbcb' ) ); ?>', true);
+                } else {
+                    var msg = (response.data && response.data.message) ? escHtml(response.data.message) : '<?php echo esc_js( __( 'Overview generation failed.', 'rtbcb' ) ); ?>';
+                    renderStatus($status, msg, false);
+                }
+            },
+            error: function(xhr, textStatus){
+                var msg = '<?php echo esc_js( __( 'Overview request failed.', 'rtbcb' ) ); ?>';
+                if (textStatus === 'timeout') {
+                    msg = '<?php echo esc_js( __( 'Overview request timed out.', 'rtbcb' ) ); ?>';
+                }
+                renderStatus($status, msg, false);
+            },
+            complete: function(){
+                $btn.prop('disabled', false).text(original);
+                $spinner.remove();
+            }
+        });
+    }
 })(jQuery);
 </script>
