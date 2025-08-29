@@ -25,6 +25,22 @@ if ( ! defined( 'ABSPATH' ) ) {
                 <th><?php esc_html_e( 'RAG Index', 'rtbcb' ); ?></th>
                 <td><?php echo $rag_health ? esc_html__( 'Healthy', 'rtbcb' ) : esc_html__( 'Needs attention', 'rtbcb' ); ?></td>
             </tr>
+            <tr>
+                <th><?php esc_html_e( 'Last RAG Index', 'rtbcb' ); ?></th>
+                <td>
+                    <?php
+                    if ( ! empty( $last_indexed ) ) {
+                        echo esc_html( $last_indexed );
+                    } else {
+                        esc_html_e( 'Never', 'rtbcb' );
+                    }
+                    ?>
+                </td>
+            </tr>
+            <tr>
+                <th><?php esc_html_e( 'Vendor Count', 'rtbcb' ); ?></th>
+                <td><?php echo esc_html( intval( $vendor_count ) ); ?></td>
+            </tr>
         </tbody>
     </table>
     <p class="submit">
@@ -32,6 +48,12 @@ if ( ! defined( 'ABSPATH' ) ) {
         <button type="button" id="rtbcb-test-portal" class="button"><?php esc_html_e( 'Test Portal Connection', 'rtbcb' ); ?></button>
         <button type="button" id="rtbcb-test-rag" class="button"><?php esc_html_e( 'Test RAG Index', 'rtbcb' ); ?></button>
     </p>
+    <form id="rtbcb-sync-local-form" class="submit">
+        <?php wp_nonce_field( 'rtbcb_sync_local', 'rtbcb_sync_local_nonce' ); ?>
+        <button type="button" class="button" id="rtbcb-sync-local">
+            <?php esc_html_e( 'Sync to Local', 'rtbcb' ); ?>
+        </button>
+    </form>
     <p id="rtbcb-connectivity-status"></p>
 
     <?php include RTBCB_DIR . 'admin/partials/dashboard-test-results.php'; ?>

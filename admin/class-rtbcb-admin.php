@@ -220,15 +220,6 @@ class RTBCB_Admin {
 
         add_submenu_page(
             'rtbcb-dashboard',
-            __( 'Data Health', 'rtbcb' ),
-            __( 'Data Health', 'rtbcb' ),
-            'manage_options',
-            'rtbcb-data-health',
-            [ $this, 'render_data_health' ]
-        );
-
-        add_submenu_page(
-            'rtbcb-dashboard',
             __( 'Calculation Info', 'rtbcb' ),
             __( 'Calculation Info', 'rtbcb' ),
             'manage_options',
@@ -321,20 +312,6 @@ class RTBCB_Admin {
     }
 
     /**
-     * Render data health page.
-     *
-     * @return void
-     */
-    public function render_data_health() {
-        $portal_active = $this->check_portal_integration();
-        $last_indexed = get_option( 'rtbcb_last_indexed', '' );
-       $vendor_count = $this->get_vendor_count();
-        $rag_health = $this->check_rag_health();
-
-        include RTBCB_DIR . 'admin/data-health-page.php';
-    }
-
-    /**
      * Render calculation info page.
      *
      * @return void
@@ -354,6 +331,8 @@ class RTBCB_Admin {
         $openai_status  = empty( $openai_key ) ? false : true;
         $portal_active  = $this->check_portal_integration();
         $rag_health     = $this->check_rag_health();
+        $last_indexed   = get_option( 'rtbcb_last_indexed', '' );
+        $vendor_count   = $this->get_vendor_count();
 
         include RTBCB_DIR . 'admin/test-dashboard-page.php';
     }
