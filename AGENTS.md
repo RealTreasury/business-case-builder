@@ -4,6 +4,7 @@
 - Use four spaces for indentation.
 - Prefix global functions with `rtbcb_`.
 - Prefix class names with `RTBCB_`.
+- Start each PHP file with `defined('ABSPATH') || exit;`.
 - Sanitize and escape all input and output with the appropriate `esc_*` function.
 - Wrap user visible strings in translation functions like `__( 'text', 'rtbcb' )`.
 - Do not modify code in the `vendor/` directory; it contains third-party dependencies.
