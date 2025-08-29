@@ -390,6 +390,7 @@ class Real_Treasury_BCB {
 
         // Load wizard script early so modal helpers are available before user interaction.
         $wizard_file = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? 'rtbcb-wizard.js' : 'rtbcb-wizard.min.js';
+        // Load the wizard script in the header so modal functions are available before interaction.
         wp_enqueue_script(
             'rtbcb-wizard',
             RTBCB_URL . 'public/js/' . $wizard_file,
