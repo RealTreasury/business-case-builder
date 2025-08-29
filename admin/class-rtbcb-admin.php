@@ -1715,8 +1715,41 @@ class RTBCB_Admin {
             wp_send_json_error( [ 'message' => __( 'Company name is required.', 'rtbcb' ) ] );
         }
 
+        $rag_context = [];
+        $vendor_list = [];
+
+        if ( function_exists( 'rtbcb_test_rag_market_analysis' ) && function_exists( 'rtbcb_get_current_company' ) ) {
+            $company = rtbcb_get_current_company();
+            $terms   = [];
+
+            if ( ! empty( $company['industry'] ) ) {
+                $terms[] = sanitize_text_field( $company['industry'] );
+            }
+
+            if ( ! empty( $company['focus_areas'] ) && is_array( $company['focus_areas'] ) ) {
+                $terms = array_merge( $terms, array_map( 'sanitize_text_field', $company['focus_areas'] ) );
+            }
+
+            if ( empty( $terms ) && ! empty( $company['summary'] ) ) {
+                $terms[] = sanitize_text_field( wp_trim_words( $company['summary'], 5, '' ) );
+            }
+
+            if ( empty( $terms ) ) {
+                $terms[] = $company_name;
+            }
+
+            $query       = sanitize_text_field( implode( ' ', $terms ) );
+            $vendor_list = rtbcb_test_rag_market_analysis( $query );
+
+            if ( is_wp_error( $vendor_list ) ) {
+                $vendor_list = [];
+            }
+
+            $rag_context = array_map( 'sanitize_text_field', $vendor_list );
+        }
+
         $llm      = new RTBCB_LLM();
-        $analysis = $llm->generate_comprehensive_business_case( [ 'company_name' => $company_name ], [], [] );
+        $analysis = $llm->generate_comprehensive_business_case( [ 'company_name' => $company_name ], [], $rag_context );
 
         if ( is_wp_error( $analysis ) ) {
             wp_send_json_error( [ 'message' => $analysis->get_error_message() ] );
@@ -1727,7 +1760,7 @@ class RTBCB_Admin {
         update_option( 'rtbcb_current_company', $analysis['company_overview'] );
         update_option( 'rtbcb_industry_insights', $analysis['industry_analysis'] );
         update_option( 'rtbcb_maturity_model', $analysis['treasury_maturity'] );
-        update_option( 'rtbcb_rag_market_analysis', $analysis['implementation_roadmap'] );
+        update_option( 'rtbcb_rag_market_analysis', $vendor_list );
         update_option( 'rtbcb_roadmap_plan', $analysis['implementation_roadmap'] );
         update_option( 'rtbcb_value_proposition', $analysis['executive_summary']['executive_recommendation'] ?? '' );
         update_option( 'rtbcb_estimated_benefits', $analysis['financial_analysis'] );
@@ -1747,7 +1780,7 @@ class RTBCB_Admin {
                 'stored_in' => 'rtbcb_maturity_model',
             ],
             'market_analysis' => [
-                'summary'   => $analysis['implementation_roadmap'],
+                'summary'   => $vendor_list,
                 'stored_in' => 'rtbcb_rag_market_analysis',
             ],
             'implementation_roadmap' => [
