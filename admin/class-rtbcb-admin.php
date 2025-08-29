@@ -318,7 +318,10 @@ class RTBCB_Admin {
 
         $leads_data = RTBCB_Leads::get_all_leads( $args );
         $categories = RTBCB_Category_Recommender::get_all_categories();
-        
+        if ( ! is_array( $categories ) ) {
+            $categories = [];
+        }
+
         include RTBCB_DIR . 'admin/leads-page-enhanced.php';
     }
 
