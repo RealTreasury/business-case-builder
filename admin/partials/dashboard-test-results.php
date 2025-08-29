@@ -25,6 +25,8 @@ $sections     = rtbcb_get_dashboard_sections();
             <th><?php esc_html_e( 'Section', 'rtbcb' ); ?></th>
             <th><?php esc_html_e( 'Status', 'rtbcb' ); ?></th>
             <th><?php esc_html_e( 'Message', 'rtbcb' ); ?></th>
+            <th><?php esc_html_e( 'Word Count', 'rtbcb' ); ?></th>
+            <th><?php esc_html_e( 'Elapsed (s)', 'rtbcb' ); ?></th>
             <th><?php esc_html_e( 'Timestamp', 'rtbcb' ); ?></th>
             <th><?php esc_html_e( 'Actions', 'rtbcb' ); ?></th>
         </tr>
@@ -49,11 +51,29 @@ $sections     = rtbcb_get_dashboard_sections();
                     $section_label = $section_id;
                 }
             }
+
+            $word_count = '';
+            if ( isset( $result['word_count'] ) ) {
+                $word_count = (int) $result['word_count'];
+            } elseif ( isset( $result['data']['word_count'] ) ) {
+                $word_count = (int) $result['data']['word_count'];
+            }
+
+            $elapsed = '';
+            if ( isset( $result['elapsed'] ) ) {
+                $elapsed = (float) $result['elapsed'];
+            } elseif ( isset( $result['data']['elapsed'] ) ) {
+                $elapsed = (float) $result['data']['elapsed'];
+            } elseif ( isset( $result['data']['elapsed_time'] ) ) {
+                $elapsed = (float) $result['data']['elapsed_time'];
+            }
             ?>
             <tr>
                 <td><?php echo esc_html( $section_label ); ?></td>
                 <td><?php echo esc_html( $result['status'] ); ?></td>
                 <td><?php echo esc_html( $result['message'] ); ?></td>
+                <td><?php echo '' !== $word_count ? esc_html( $word_count ) : esc_html__( 'N/A', 'rtbcb' ); ?></td>
+                <td><?php echo '' !== $elapsed ? esc_html( $elapsed ) : esc_html__( 'N/A', 'rtbcb' ); ?></td>
                 <td><?php echo esc_html( $result['timestamp'] ); ?></td>
                 <td>
                     <?php if ( $section_id ) : ?>
@@ -66,7 +86,7 @@ $sections     = rtbcb_get_dashboard_sections();
         <?php endforeach; ?>
     <?php else : ?>
         <tr>
-            <td colspan="5"><?php esc_html_e( 'No test results found.', 'rtbcb' ); ?></td>
+            <td colspan="7"><?php esc_html_e( 'No test results found.', 'rtbcb' ); ?></td>
         </tr>
     <?php endif; ?>
     </tbody>

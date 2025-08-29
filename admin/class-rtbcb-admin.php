@@ -354,11 +354,21 @@ class RTBCB_Admin {
 
         $sanitized = [];
         foreach ( $decoded as $item ) {
+            $data = [];
+            if ( isset( $item['data'] ) && is_array( $item['data'] ) ) {
+                foreach ( $item['data'] as $key => $value ) {
+                    if ( is_scalar( $value ) ) {
+                        $data[ sanitize_key( $key ) ] = is_numeric( $value ) ? ( 0 + $value ) : sanitize_text_field( $value );
+                    }
+                }
+            }
+
             $sanitized[] = [
                 'section'   => isset( $item['section'] ) ? sanitize_text_field( $item['section'] ) : '',
                 'status'    => isset( $item['status'] ) ? sanitize_text_field( $item['status'] ) : '',
                 'message'   => isset( $item['message'] ) ? sanitize_text_field( $item['message'] ) : '',
                 'timestamp' => current_time( 'mysql' ),
+                'data'      => $data,
             ];
         }
 
