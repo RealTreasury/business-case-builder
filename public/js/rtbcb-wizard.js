@@ -415,7 +415,11 @@ class BusinessCaseBuilder {
                     this.showResults(result.data);
                 } else {
                     const errorMessage = result?.data?.message || 'Failed to generate business case';
-                    throw new Error(errorMessage);
+                    const error = new Error(errorMessage);
+                    if (result?.data?.error_code) {
+                        error.code = result.data.error_code;
+                    }
+                    throw error;
                 }
             } else {
                 let errorMessage = result?.data?.message;
@@ -430,18 +434,28 @@ class BusinessCaseBuilder {
                 }
                 const error = new Error(errorMessage);
                 error.status = response.status;
+                if (result?.data?.error_code) {
+                    error.code = result.data.error_code;
+                }
                 throw error;
             }
         } catch (error) {
             console.error('RTBCB: Submission error details:', {
                 message: error.message,
                 stack: error.stack,
-                type: error.constructor.name
+                type: error.constructor.name,
+                code: error.code || error.error_code
             });
 
-            const displayMessage = error.name === 'TypeError'
+            let displayMessage = error.name === 'TypeError'
                 ? 'Network error. Please check your connection and try again.'
                 : error.message;
+
+            const errorCode = error.code || error.error_code;
+            if (errorCode) {
+                displayMessage += ` (Error code: ${errorCode})`;
+            }
+            displayMessage += ' Please check your AI configuration or try again later.';
 
             this.showError(displayMessage);
         }
@@ -703,9 +717,14 @@ class BusinessCaseBuilder {
                     <div class="rtbcb-error-icon" style="font-size: 48px; color: #ef4444; margin-bottom: 20px;">⚠️</div>
                     <h3 style="color: #ef4444; margin-bottom: 16px;">Unable to Generate Business Case</h3>
                     <p style="color: #4b5563; margin-bottom: 24px;">${safeMessage}</p>
-                    <button type="button" class="rtbcb-action-btn rtbcb-btn-primary" onclick="location.reload()">
-                        Try Again
-                    </button>
+                    <div class="rtbcb-error-actions">
+                        <button type="button" class="rtbcb-action-btn rtbcb-btn-primary" onclick="location.reload()">
+                            Try Again
+                        </button>
+                        <a href="mailto:contact@realtreasury.com" class="rtbcb-action-btn rtbcb-btn-secondary" style="text-decoration: none;">
+                            Contact Support
+                        </a>
+                    </div>
                 </div>
             `;
             modalBody.innerHTML = errorHTML;

@@ -32,7 +32,7 @@ global.fetch = function() {
         status: 200,
         json: async () => ({
             success: false,
-            data: { message: 'Bad narrative' }
+            data: { message: 'Bad narrative', error_code: 'BAD_NARRATIVE' }
         })
     });
 };
@@ -70,6 +70,8 @@ builder.showError = (msg) => { errorMessage = msg; };
 (async () => {
     await builder.handleSubmit();
     assert.ok(errorMessage.includes('Bad narrative'));
+    assert.ok(errorMessage.includes('BAD_NARRATIVE'));
+    assert.ok(errorMessage.includes('check your AI configuration'));
     console.log('Error path test passed.');
 })().catch(err => {
     console.error(err);
