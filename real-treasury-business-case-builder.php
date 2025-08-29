@@ -885,9 +885,13 @@ class Real_Treasury_BCB {
 
                     if ( empty( get_option( 'rtbcb_openai_api_key' ) ) ) {
                         rtbcb_log_api_debug( 'OpenAI API key not configured' );
+                        $response_message = __( 'Our AI analysis service is temporarily unavailable. Your submission has been saved and our team will follow up with a personalized business case.', 'rtbcb' );
+                        if ( function_exists( 'wp_get_environment_type' ) && 'production' !== wp_get_environment_type() ) {
+                            $response_message = __( 'OpenAI API key not configured.', 'rtbcb' );
+                        }
                         wp_send_json_error(
-                            [ 'message' => __( 'OpenAI API key not configured.', 'rtbcb' ) ],
-                            500
+                            [ 'message' => $response_message ],
+                            200
                         );
                     }
 
@@ -906,43 +910,63 @@ class Real_Treasury_BCB {
                         rtbcb_log_api_debug( 'LLM generation failed', $error_message );
                         $error_code    = method_exists( $comprehensive_analysis, 'get_error_code' ) ? $comprehensive_analysis->get_error_code() : '';
                         if ( 'no_api_key' === $error_code ) {
-                            wp_send_json_error( [ 'message' => $error_message ], 500 );
+                            $response_message = __( 'Our AI analysis service is temporarily unavailable. Your submission has been saved and our team will follow up with a personalized business case.', 'rtbcb' );
+                            if ( function_exists( 'wp_get_environment_type' ) && 'production' !== wp_get_environment_type() ) {
+                                $response_message = $error_message;
+                            }
+                            wp_send_json_error( [ 'message' => $response_message ], 200 );
                         }
-                        $response_message = __( 'Failed to generate business case analysis.', 'rtbcb' );
+                        $response_message = __( 'Our AI analysis service is temporarily unavailable. Your submission has been saved and our team will follow up with a personalized business case.', 'rtbcb' );
                         if ( function_exists( 'wp_get_environment_type' ) && 'production' !== wp_get_environment_type() ) {
                             $response_message = $error_message;
                         }
-                        wp_send_json_error( [ 'message' => $response_message ], 500 );
+                        wp_send_json_error( [ 'message' => $response_message ], 200 );
                     }
 
                     if ( isset( $comprehensive_analysis['error'] ) ) {
                         rtbcb_log_api_debug( 'LLM generation returned error', $comprehensive_analysis['error'] );
+                        $response_message = __( 'Our AI analysis service is temporarily unavailable. Your submission has been saved and our team will follow up with a personalized business case.', 'rtbcb' );
+                        if ( function_exists( 'wp_get_environment_type' ) && 'production' !== wp_get_environment_type() ) {
+                            $response_message = $comprehensive_analysis['error'];
+                        }
                         wp_send_json_error(
-                            [ 'message' => __( 'Failed to generate business case analysis.', 'rtbcb' ) ],
-                            500
+                            [ 'message' => $response_message ],
+                            200
                         );
                     }
                     rtbcb_log_api_debug( 'LLM generation succeeded' );
                 } catch ( Exception $e ) {
                     rtbcb_log_error( 'LLM generation failed', $e->getMessage() );
+                    $response_message = __( 'Our AI analysis service is temporarily unavailable. Your submission has been saved and our team will follow up with a personalized business case.', 'rtbcb' );
+                    if ( function_exists( 'wp_get_environment_type' ) && 'production' !== wp_get_environment_type() ) {
+                        $response_message = $e->getMessage();
+                    }
                     wp_send_json_error(
-                        [ 'message' => __( 'Failed to generate business case analysis.', 'rtbcb' ) ],
-                        500
+                        [ 'message' => $response_message ],
+                        200
                     );
                 } catch ( Error $e ) {
                     rtbcb_log_error( 'LLM generation fatal error', $e->getMessage() );
+                    $response_message = __( 'Our AI analysis service is temporarily unavailable. Your submission has been saved and our team will follow up with a personalized business case.', 'rtbcb' );
+                    if ( function_exists( 'wp_get_environment_type' ) && 'production' !== wp_get_environment_type() ) {
+                        $response_message = $e->getMessage();
+                    }
                     wp_send_json_error(
-                        [ 'message' => __( 'Failed to generate business case analysis.', 'rtbcb' ) ],
-                        500
+                        [ 'message' => $response_message ],
+                        200
                     );
                 }
             }
 
             if ( empty( $comprehensive_analysis ) ) {
                 rtbcb_log_error( 'LLM returned empty analysis', $user_inputs );
+                $response_message = __( 'Our AI analysis service is temporarily unavailable. Your submission has been saved and our team will follow up with a personalized business case.', 'rtbcb' );
+                if ( function_exists( 'wp_get_environment_type' ) && 'production' !== wp_get_environment_type() ) {
+                    $response_message = __( 'LLM returned empty analysis.', 'rtbcb' );
+                }
                 wp_send_json_error(
-                    [ 'message' => __( 'Failed to generate business case analysis.', 'rtbcb' ) ],
-                    500
+                    [ 'message' => $response_message ],
+                    200
                 );
             }
 

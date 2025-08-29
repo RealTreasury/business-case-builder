@@ -113,13 +113,17 @@ if ( ! class_exists( 'Real_Treasury_BCB' ) ) {
                 $error_message = $comprehensive_analysis->get_error_message();
                 $error_code    = $comprehensive_analysis->get_error_code();
                 if ( 'no_api_key' === $error_code ) {
-                    wp_send_json_error( [ 'message' => $error_message ], 500 );
+                    $response_message = __( 'Our AI analysis service is temporarily unavailable. Your submission has been saved and our team will follow up with a personalized business case.', 'rtbcb' );
+                    if ( function_exists( 'wp_get_environment_type' ) && 'production' !== wp_get_environment_type() ) {
+                        $response_message = $error_message;
+                    }
+                    wp_send_json_error( [ 'message' => $response_message ], 200 );
                 }
-                $response_message = __( 'Failed to generate business case analysis.', 'rtbcb' );
+                $response_message = __( 'Our AI analysis service is temporarily unavailable. Your submission has been saved and our team will follow up with a personalized business case.', 'rtbcb' );
                 if ( function_exists( 'wp_get_environment_type' ) && 'production' !== wp_get_environment_type() ) {
                     $response_message = $error_message;
                 }
-                wp_send_json_error( [ 'message' => $response_message ], 500 );
+                wp_send_json_error( [ 'message' => $response_message ], 200 );
             }
         }
     }
@@ -133,11 +137,11 @@ final class RTBCB_AjaxGenerateComprehensiveCaseErrorTest extends TestCase {
             $plugin->ajax_generate_comprehensive_case();
             $this->fail( 'Expected RTBCB_JSON_Error was not thrown.' );
         } catch ( RTBCB_JSON_Error $e ) {
-            $this->assertSame( 500, $e->status );
+            $this->assertSame( 200, $e->status );
             $this->assertSame(
                 [
                     'success' => false,
-                    'data'    => [ 'message' => 'Failed to generate business case analysis.' ],
+                    'data'    => [ 'message' => 'Our AI analysis service is temporarily unavailable. Your submission has been saved and our team will follow up with a personalized business case.' ],
                 ],
                 $e->data
             );
@@ -151,11 +155,11 @@ final class RTBCB_AjaxGenerateComprehensiveCaseErrorTest extends TestCase {
             $plugin->ajax_generate_comprehensive_case();
             $this->fail( 'Expected RTBCB_JSON_Error was not thrown.' );
         } catch ( RTBCB_JSON_Error $e ) {
-            $this->assertSame( 500, $e->status );
+            $this->assertSame( 200, $e->status );
             $this->assertSame(
                 [
                     'success' => false,
-                    'data'    => [ 'message' => 'OpenAI API key not configured.' ],
+                    'data'    => [ 'message' => 'Our AI analysis service is temporarily unavailable. Your submission has been saved and our team will follow up with a personalized business case.' ],
                 ],
                 $e->data
             );
