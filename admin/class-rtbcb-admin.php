@@ -53,6 +53,7 @@ class RTBCB_Admin {
         add_action( 'wp_ajax_rtbcb_test_follow_up_email', [ $this, 'ajax_test_follow_up_email' ] );
         add_action( 'wp_ajax_rtbcb_get_phase_completion', [ $this, 'ajax_get_phase_completion' ] );
         add_action( 'wp_ajax_rtbcb_get_section_config', [ $this, 'ajax_get_section_config' ] );
+        add_action( 'wp_ajax_rtbcb_get_test_summary_html', [ $this, 'ajax_get_test_summary_html' ] );
         add_action( 'wp_ajax_rtbcb_generate_comprehensive_analysis', [ $this, 'ajax_generate_comprehensive_analysis' ] );
         add_action( 'wp_ajax_rtbcb_clear_analysis_data', [ $this, 'ajax_clear_analysis_data' ] );
         add_action( 'wp_ajax_rtbcb_delete_log', [ $this, 'ajax_delete_log' ] );
@@ -1741,6 +1742,57 @@ class RTBCB_Admin {
         }
 
         wp_send_json_success( [ 'config' => $snippet ] );
+    }
+
+    /**
+     * AJAX handler to build test summary HTML.
+     *
+     * @return void
+     */
+    public function ajax_get_test_summary_html() {
+        check_ajax_referer( 'rtbcb_test_dashboard', 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'message' => __( 'Unauthorized', 'rtbcb' ) ] );
+        }
+
+        $test_results = get_option( 'rtbcb_test_results', [] );
+        if ( empty( $test_results ) ) {
+            wp_send_json_error( [ 'message' => __( 'No test results found.', 'rtbcb' ) ] );
+        }
+
+        ob_start();
+        echo '<div class="rtbcb-summary-panel">';
+        echo '<table class="rtbcb-summary-table">';
+        echo '<thead><tr>';
+        echo '<th>' . esc_html__( 'Section', 'rtbcb' ) . '</th>';
+        echo '<th>' . esc_html__( 'Status', 'rtbcb' ) . '</th>';
+        echo '<th>' . esc_html__( 'Message', 'rtbcb' ) . '</th>';
+        echo '<th>' . esc_html__( 'Duration', 'rtbcb' ) . '</th>';
+        echo '<th>' . esc_html__( 'Finished', 'rtbcb' ) . '</th>';
+        echo '</tr></thead><tbody>';
+
+        foreach ( $test_results as $result ) {
+            $section  = isset( $result['section'] ) ? $result['section'] : '';
+            $status   = isset( $result['status'] ) ? $result['status'] : '';
+            $message  = isset( $result['message'] ) ? $result['message'] : '';
+            $duration = isset( $result['duration'] ) ? $result['duration'] : '';
+            $end_time = isset( $result['end_time'] ) ? $result['end_time'] : '';
+
+            echo '<tr>';
+            echo '<td>' . esc_html( $section ) . '</td>';
+            echo '<td>' . esc_html( $status ) . '</td>';
+            echo '<td>' . esc_html( $message ) . '</td>';
+            echo '<td>' . esc_html( $duration ) . '</td>';
+            echo '<td>' . esc_html( $end_time ) . '</td>';
+            echo '</tr>';
+        }
+
+        echo '</tbody></table></div>';
+
+        $html = ob_get_clean();
+
+        wp_send_json_success( [ 'html' => $html ] );
     }
 
     /**
