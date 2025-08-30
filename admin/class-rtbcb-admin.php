@@ -1831,13 +1831,17 @@ class RTBCB_Admin {
 		] );
 	}
 
-	public function ajax_clear_workflow_history() {
-		check_ajax_referer( 'rtbcb_workflow_visualizer', 'nonce' );
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions', 'rtbcb' ) );
+		public function ajax_clear_workflow_history() {
+			check_ajax_referer( 'rtbcb_workflow_visualizer', 'nonce' );
+			if ( ! current_user_can( 'manage_options' ) ) {
+				wp_send_json_error( __( 'Insufficient permissions', 'rtbcb' ) );
+			}
+			$cleared = delete_option( 'rtbcb_workflow_history' );
+			if ( ! $cleared ) {
+				wp_send_json_error( __( 'Failed to clear workflow history', 'rtbcb' ) );
+			}
+			wp_send_json_success( __( 'Workflow history cleared', 'rtbcb' ) );
 		}
-		wp_send_json_success();
-	}
 
        private function get_workflow_history_from_logs() {
                $history = get_option( 'rtbcb_workflow_history', [] );
