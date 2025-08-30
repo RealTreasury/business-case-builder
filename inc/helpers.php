@@ -1,11 +1,9 @@
 <?php
+defined( 'ABSPATH' ) || exit;
+
 /**
  * Helper functions for the Real Treasury Business Case Builder plugin.
  */
-
-if ( ! defined( 'ABSPATH' ) ) {
-    exit;
-}
 
 require_once __DIR__ . '/config.php';
 

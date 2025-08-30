@@ -1,11 +1,11 @@
 <?php
+defined( 'ABSPATH' ) || exit;
+
 /**
  * Enhanced LLM integration with comprehensive business analysis
  *
  * @package RealTreasuryBusinessCaseBuilder
  */
-
-defined( 'ABSPATH' ) || exit;
 
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/helpers.php';

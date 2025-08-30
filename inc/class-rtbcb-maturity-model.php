@@ -1,13 +1,11 @@
 <?php
+defined( 'ABSPATH' ) || exit;
+
 /**
  * Simple treasury maturity model.
  *
  * @package RealTreasuryBusinessCaseBuilder
  */
-
-if ( ! defined( 'ABSPATH' ) ) {
-    exit;
-}
 
 /**
  * Provides a basic maturity assessment.
