@@ -764,11 +764,22 @@ return $use_comprehensive;
 	
 	$recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
 	
-	// Get RAG context if available
-	$rag_context = $this->get_rag_context( $user_inputs, $recommendation );
-	
+	// Prepare RAG context loader
+	$rag_context = [];
+	$max_time    = (int) ini_get( 'max_execution_time' );
+	$deadline    = $_SERVER['REQUEST_TIME_FLOAT'] + ( $max_time > 0 ? $max_time : 30 );
+	$rag_loader  = function() use ( $user_inputs, $recommendation, &$rag_context, $deadline ) {
+		if ( microtime( true ) >= $deadline - 1 ) {
+			return [];
+		}
+		if ( empty( $rag_context ) ) {
+			$rag_context = $this->get_rag_context( $user_inputs, $recommendation );
+		}
+		return $rag_context;
+	};
+
 	// Generate business case analysis
-	$comprehensive_analysis = $this->generate_business_analysis( $user_inputs, $scenarios, $rag_context );
+	$comprehensive_analysis = $this->generate_business_analysis( $user_inputs, $scenarios, $rag_loader );
 	
 	if ( is_wp_error( $comprehensive_analysis ) ) {
 	wp_send_json_error( [ 'message' => $comprehensive_analysis->get_error_message() ], 500 );
@@ -943,24 +954,30 @@ return $use_comprehensive;
 	}
 	
 	/**
-	 * Generate comprehensive business analysis using LLM.
-	 */
-        private function generate_business_analysis( $user_inputs, $scenarios, $rag_context ) {
-        if ( ! class_exists( 'RTBCB_LLM' ) ) {
-        return new WP_Error( 'llm_unavailable', __( 'AI analysis service unavailable.', 'rtbcb' ) );
-        }
+	* Generate comprehensive business analysis using LLM.
+	*
+	* @param array          $user_inputs       Sanitized user inputs.
+	* @param array          $scenarios         ROI scenarios.
+	* @param callable|array $rag_context_loader Context provider or array.
+	*
+	* @return array|WP_Error Analysis data or error.
+	*/
+	private function generate_business_analysis( $user_inputs, $scenarios, $rag_context_loader ) {
+	if ( ! class_exists( 'RTBCB_LLM' ) ) {
+	return new WP_Error( 'llm_unavailable', __( 'AI analysis service unavailable.', 'rtbcb' ) );
+	}
 
-        if ( ! rtbcb_has_openai_api_key() ) {
-        // Return fallback analysis instead of failing.
-        return $this->generate_fallback_analysis( $user_inputs, $scenarios );
-        }
+	if ( ! rtbcb_has_openai_api_key() ) {
+	// Return fallback analysis instead of failing.
+	return $this->generate_fallback_analysis( $user_inputs, $scenarios );
+	}
 
-        try {
-        $llm    = new RTBCB_LLM();
-        $result = $llm->generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context );
+	try {
+	$llm    = new RTBCB_LLM();
+	$result = $llm->generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context_loader );
 
-        if ( is_wp_error( $result ) ) {
-        // Fall back to structured analysis.
+	if ( is_wp_error( $result ) ) {
+	// Fall back to structured analysis.
         return $this->generate_fallback_analysis( $user_inputs, $scenarios );
         }
 

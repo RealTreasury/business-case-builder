@@ -55,7 +55,10 @@ if ( ! function_exists( 'rtbcb_is_openai_configuration_error' ) ) {
 if ( ! class_exists( 'RTBCB_LLM' ) ) {
     class RTBCB_LLM {
         public static $mode = 'ok';
-        public function generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context ) {
+        public function generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_loader ) {
+            if ( is_callable( $rag_loader ) ) {
+                $rag_loader();
+            }
             if ( 'fatal_config' === self::$mode ) {
                 throw new Error( 'Missing API key' );
             }

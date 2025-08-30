@@ -107,7 +107,10 @@ public function generate_business_case( $form_data, $calculations, $rag_context,
 return [ 'roi_base' => 1000 ];
 }
 
-public function generate_comprehensive_business_case( $form_data, $calculations, $rag_context ) {
+public function generate_comprehensive_business_case( $form_data, $calculations, $rag_loader ) {
+if ( is_callable( $rag_loader ) ) {
+$rag_loader();
+}
 return [ 'roi_base' => 1000 ];
 }
 }

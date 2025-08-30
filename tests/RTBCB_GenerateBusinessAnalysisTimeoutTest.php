@@ -51,7 +51,10 @@ function rtbcb_log_error( $message, $details = '' ) {
 }
 
 class RTBCB_LLM {
-public function generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context ) {
+public function generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_loader ) {
+if ( is_callable( $rag_loader ) ) {
+$rag_loader();
+}
 return $this->call_openai_with_retry( '', '', 0 );
 }
 
@@ -61,7 +64,7 @@ return new WP_Error( 'llm_timeout', 'Request timed out' );
 }
 
 class Real_Treasury_BCB {
-private function generate_business_analysis( $user_inputs, $scenarios, $rag_context ) {
+private function generate_business_analysis( $user_inputs, $scenarios, $rag_loader ) {
 if ( ! class_exists( 'RTBCB_LLM' ) ) {
 return new WP_Error( 'llm_unavailable', __( 'AI analysis service unavailable.', 'rtbcb' ) );
 }
@@ -72,7 +75,7 @@ return $this->generate_fallback_analysis( $user_inputs, $scenarios );
 
 try {
 $llm    = new RTBCB_LLM();
-$result = $llm->generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context );
+$result = $llm->generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_loader );
 
 if ( is_wp_error( $result ) ) {
 return $this->generate_fallback_analysis( $user_inputs, $scenarios );
@@ -130,7 +133,7 @@ $method->setAccessible( true );
 $user_inputs = [ 'company_name' => 'Test Co' ];
 $scenarios   = [ 'base' => [ 'total_annual_benefit' => 1000 ] ];
 
-$result = $method->invoke( $plugin, $user_inputs, $scenarios, [] );
+$result = $method->invoke( $plugin, $user_inputs, $scenarios, function() { return []; } );
 
 $this->assertIsArray( $result );
 $this->assertArrayHasKey( 'enhanced_fallback', $result );

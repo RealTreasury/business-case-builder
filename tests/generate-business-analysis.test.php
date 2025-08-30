@@ -49,8 +49,11 @@ if ( ! function_exists( 'rtbcb_has_openai_api_key' ) ) {
 if ( ! class_exists( 'RTBCB_LLM' ) ) {
     class RTBCB_LLM {
         public static $called = false;
-        public function generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context ) {
+        public function generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_loader ) {
             self::$called = true;
+            if ( is_callable( $rag_loader ) ) {
+                $rag_loader();
+            }
             return [ 'result' => 'llm' ];
         }
     }
@@ -59,7 +62,7 @@ if ( ! class_exists( 'RTBCB_LLM' ) ) {
 class Real_Treasury_BCB {
     public $fallback_called = false;
 
-    private function generate_business_analysis( $user_inputs, $scenarios, $rag_context ) {
+    private function generate_business_analysis( $user_inputs, $scenarios, $rag_loader ) {
         if ( ! class_exists( 'RTBCB_LLM' ) ) {
             return new WP_Error( 'llm_unavailable', __( 'AI analysis service unavailable.', 'rtbcb' ) );
         }
@@ -70,7 +73,7 @@ class Real_Treasury_BCB {
 
         try {
             $llm    = new RTBCB_LLM();
-            $result = $llm->generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context );
+            $result = $llm->generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_loader );
 
             if ( is_wp_error( $result ) ) {
                 return $this->generate_fallback_analysis( $user_inputs, $scenarios );
@@ -100,7 +103,7 @@ final class Generate_Business_Analysis_Test extends TestCase {
         $reflection = new ReflectionClass( $this->plugin );
         $method     = $reflection->getMethod( 'generate_business_analysis' );
         $method->setAccessible( true );
-        return $method->invoke( $this->plugin, [], [], [] );
+        return $method->invoke( $this->plugin, [], [], function() { return []; } );
     }
 
     public function test_llm_called_when_api_key_exists() {

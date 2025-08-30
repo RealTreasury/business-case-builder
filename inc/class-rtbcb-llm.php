@@ -709,13 +709,18 @@ USER,
      * call or response parsing fails.
      *
      * @param array $user_inputs    Sanitized user inputs.
-     * @param array $roi_data       ROI calculation data.
-     * @param array $context_chunks Optional context strings for the prompt.
+     * @param array          $roi_data       ROI calculation data.
+     * @param callable|array $context_chunks Optional context provider or strings.
      *
      * @return array|WP_Error Comprehensive analysis array or error object.
      */
     public function generate_comprehensive_business_case( $user_inputs, $roi_data, $context_chunks = [] ) {
         $this->current_inputs = $user_inputs;
+
+        if ( is_callable( $context_chunks ) ) {
+            $use_rag       = function_exists( 'apply_filters' ) ? apply_filters( 'rtbcb_use_rag', true ) : true;
+            $context_chunks = $use_rag ? call_user_func( $context_chunks ) : [];
+        }
 
         if ( empty( $this->api_key ) ) {
             return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
