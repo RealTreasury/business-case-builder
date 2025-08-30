@@ -29,12 +29,35 @@ class RTBCB_Ajax {
 	}
 
 	/**
+	 * Process the basic ROI step and update job status.
+	 *
+	 * @param array  $user_inputs Sanitized user inputs.
+	 * @param string $job_id      Job identifier.
+	 * @return array ROI scenarios.
+	 */
+	public static function process_basic_roi_step( $user_inputs, $job_id ) {
+		$roi_block = RTBCB_Calculator::calculate_roi( $user_inputs );
+
+		set_transient(
+			$job_id,
+			[
+				'status'    => 'processing',
+				'basic_roi' => $roi_block,
+			],
+			HOUR_IN_SECONDS
+		);
+
+		return $roi_block;
+	}
+
+	/**
 	 * Process comprehensive case generation.
 	 *
-	 * @param array $user_inputs User inputs.
+	 * @param array  $user_inputs User inputs.
+	 * @param string $job_id      Job identifier.
 	 * @return array|WP_Error Result data or error.
 	 */
-	public static function process_comprehensive_case( $user_inputs ) {
+	public static function process_comprehensive_case( $user_inputs, $job_id ) {
 		$request_start    = microtime( true );
 		$workflow_tracker = new RTBCB_Workflow_Tracker();
 
@@ -46,6 +69,7 @@ class RTBCB_Ajax {
 		);
 
 		try {
+			self::process_basic_roi_step( $user_inputs, $job_id );
 			$workflow_tracker->start_step( 'ai_enrichment' );
 			$enriched_profile = new WP_Error( 'llm_missing', 'LLM service unavailable.' );
 			if ( class_exists( 'RTBCB_LLM' ) ) {
@@ -165,14 +189,14 @@ class RTBCB_Ajax {
 	}
 
        private static function collect_and_validate_user_inputs() {
-               $validator = new RTBCB_Validator();
-               $validated = $validator->validate( $_POST );
+	       $validator = new RTBCB_Validator();
+	       $validated = $validator->validate( $_POST );
 
-               if ( isset( $validated['error'] ) ) {
-                       return new WP_Error( 'validation_error', $validated['error'] );
-               }
+	       if ( isset( $validated['error'] ) ) {
+		       return new WP_Error( 'validation_error', $validated['error'] );
+	       }
 
-               return $validated;
+	       return $validated;
        }
 
 	private static function create_fallback_profile( $user_inputs ) {

@@ -82,7 +82,21 @@ if ( ! defined( 'ABSPATH' ) ) {
 if ( ! class_exists( 'RTBCB_Ajax' ) ) {
     class RTBCB_Ajax {
         public static $mode = 'success';
-        public static function process_comprehensive_case( $user_inputs ) {
+
+        public static function process_basic_roi_step( $user_inputs, $job_id ) {
+            set_transient(
+                $job_id,
+                [
+                    'status'    => 'processing',
+                    'basic_roi' => [ 'roi' => 'block' ],
+                ],
+                HOUR_IN_SECONDS
+            );
+            return [ 'roi' => 'block' ];
+        }
+
+        public static function process_comprehensive_case( $user_inputs, $job_id ) {
+            self::process_basic_roi_step( $user_inputs, $job_id );
             if ( 'error' === self::$mode ) {
                 return new WP_Error( 'failed', 'Processing failed.' );
             }
@@ -109,7 +123,7 @@ RTBCB_Background_Job::process_job( $job_id, $user_inputs );
 
 global $transient_log;
 $statuses = array_column( $transient_log[ $job_id ], 'status' );
-assert_true( $statuses === [ 'queued', 'processing', 'completed' ], 'Status flow incorrect: ' . json_encode( $statuses ) );
+assert_true( $statuses === [ 'queued', 'processing', 'processing', 'completed' ], 'Status flow incorrect: ' . json_encode( $statuses ) );
 assert_true( 'completed' === get_transient( $job_id )['status'], 'Job not completed' );
 
 // Error job flow.
@@ -118,7 +132,7 @@ $job_id2          = RTBCB_Background_Job::enqueue( $user_inputs );
 RTBCB_Background_Job::process_job( $job_id2, $user_inputs );
 $status   = get_transient( $job_id2 );
 $statuses = array_column( $transient_log[ $job_id2 ], 'status' );
-assert_true( $statuses === [ 'queued', 'processing', 'error' ], 'Error status flow incorrect: ' . json_encode( $statuses ) );
+assert_true( $statuses === [ 'queued', 'processing', 'processing', 'error' ], 'Error status flow incorrect: ' . json_encode( $statuses ) );
 assert_true( 'error' === $status['status'], 'Job did not error' );
 assert_true( 'Processing failed.' === $status['message'], 'Error message missing' );
 

@@ -25,19 +25,19 @@ class RTBCB_Background_Job {
 			HOUR_IN_SECONDS
 		);
 
-                wp_schedule_single_event(
-                        time(),
-                        'rtbcb_process_job',
-                        [ $job_id, $user_inputs ]
-                );
+		wp_schedule_single_event(
+			time(),
+			'rtbcb_process_job',
+			[ $job_id, $user_inputs ]
+		);
 
 		// Trigger cron immediately in a non-blocking way.
 		if ( function_exists( 'spawn_cron' ) && ! wp_doing_cron() ) {
 			spawn_cron();
 		}
 
-                return $job_id;
-        }
+		return $job_id;
+	}
 
 	/**
 	 * Process a queued job.
@@ -55,14 +55,18 @@ class RTBCB_Background_Job {
 			HOUR_IN_SECONDS
 		);
 
-		$result = RTBCB_Ajax::process_comprehensive_case( $user_inputs );
+		$result = RTBCB_Ajax::process_comprehensive_case( $user_inputs, $job_id );
+
+		$existing  = get_transient( $job_id );
+		$basic_roi = $existing['basic_roi'] ?? null;
 
 		if ( is_wp_error( $result ) ) {
 			set_transient(
 				$job_id,
 				[
-					'status'  => 'error',
-					'message' => $result->get_error_message(),
+					'status'    => 'error',
+					'message'   => $result->get_error_message(),
+					'basic_roi' => $basic_roi,
 				],
 				HOUR_IN_SECONDS
 			);
@@ -70,8 +74,9 @@ class RTBCB_Background_Job {
 			set_transient(
 				$job_id,
 				[
-					'status' => 'completed',
-					'result' => $result,
+					'status'    => 'completed',
+					'basic_roi' => $basic_roi,
+					'result'    => $result,
 				],
 				HOUR_IN_SECONDS
 			);
