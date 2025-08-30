@@ -7,6 +7,9 @@ echo "================================================"
 export OPENAI_API_KEY="${OPENAI_API_KEY:-sk-test}"
 export RTBCB_TEST_MODEL="${RTBCB_TEST_MODEL:-gpt-5-mini}"
 
+# Install JS dependencies for headless browser tests
+npm install --no-save --no-package-lock jsdom >/dev/null 2>&1
+
 # PHP Lint
 echo "1. Running PHP syntax check..."
 find . -name "*.php" -not -path "./vendor/*" -print0 | xargs -0 -n1 php -l
@@ -74,6 +77,7 @@ node tests/handle-string-error-response.test.js
 node tests/temperature-model.test.js
 node tests/min-output-tokens.test.js
 node tests/gpt5-config-defaults.test.js
+node tests/wizard-report-flow.test.js
 npx --yes jest tests/poll-job-completed.test.js --config '{"testEnvironment":"node"}'
 npx --yes jest tests/poll-job-show-results.test.js --config '{"testEnvironment":"node"}'
 
