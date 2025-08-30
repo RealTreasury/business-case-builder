@@ -96,8 +96,13 @@ async function handleSubmit(e) {
         formContainer.style.display = 'none';
     }
     if (progressContainer) {
+        var progressText = progressContainer.querySelector('.rtbcb-progress-text');
         if (rtbcbAjax && rtbcbAjax.strings && rtbcbAjax.strings.generating) {
-            progressContainer.textContent = rtbcbAjax.strings.generating;
+            if (progressText) {
+                progressText.textContent = rtbcbAjax.strings.generating;
+            } else {
+                progressContainer.textContent = rtbcbAjax.strings.generating;
+            }
         }
         progressContainer.style.display = 'block';
     }
@@ -157,12 +162,22 @@ async function handleSubmit(e) {
         return;
     }
 
-    // On success, show confirmation message
+    // On success, show confirmation message then hide progress indicator
     if (progressContainer) {
+        var progressTextSuccess = progressContainer.querySelector('.rtbcb-progress-text');
         if (rtbcbAjax && rtbcbAjax.strings && rtbcbAjax.strings.email_confirmation) {
-            progressContainer.textContent = rtbcbAjax.strings.email_confirmation;
+            if (progressTextSuccess) {
+                progressTextSuccess.textContent = rtbcbAjax.strings.email_confirmation;
+            } else {
+                progressContainer.textContent = rtbcbAjax.strings.email_confirmation;
+            }
         }
-        progressContainer.style.display = 'block';
+        setTimeout(() => {
+            progressContainer.style.display = 'none';
+            if (formContainer) {
+                formContainer.style.display = 'block';
+            }
+        }, 3000);
     }
 
     rtbcbIsSubmitting = false;

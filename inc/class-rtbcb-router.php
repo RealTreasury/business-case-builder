@@ -94,22 +94,28 @@ class RTBCB_Router {
             $leads   = new RTBCB_Leads();
             $lead_id = $leads->save_lead( $form_data, $business_case_data );
 
-            // Write report HTML to temporary file.
+            // Write report HTML to temporary file in uploads directory.
             $upload_dir  = wp_upload_dir();
             $reports_dir = trailingslashit( $upload_dir['basedir'] ) . 'rtbcb-reports';
             if ( ! file_exists( $reports_dir ) ) {
                 wp_mkdir_p( $reports_dir );
             }
 
-            $report_path = trailingslashit( $reports_dir ) . 'report-' . $lead_id . '.html';
-            file_put_contents( $report_path, $report_html );
+            $filepath = trailingslashit( $reports_dir ) . 'report-' . $lead_id . '.html';
+            file_put_contents( $filepath, $report_html );
 
-            // Send report email.
-            rtbcb_send_report_email( $form_data, $report_path );
+            // Prepare and send the report email.
+            $to      = sanitize_email( $form_data['email'] );
+            $subject = sprintf(
+                __( 'Your Business Case from %s', 'rtbcb' ),
+                get_bloginfo( 'name' )
+            );
+            $message = __( 'Thank you for using the Business Case Builder. Your report is attached.', 'rtbcb' );
+            wp_mail( $to, $subject, $message, [], [ $filepath ] );
 
             // Clean up temporary file.
-            if ( file_exists( $report_path ) ) {
-                unlink( $report_path );
+            if ( file_exists( $filepath ) ) {
+                unlink( $filepath );
             }
 
             // Send success response.
