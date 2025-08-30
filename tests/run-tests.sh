@@ -50,23 +50,27 @@ php tests/reasoning-first-output.test.php
 echo "10. Running OpenAI API key validation test..."
 php tests/openai-api-key-validation.test.php
 
-echo "11. Rendering comprehensive report template..."
+# Lead storage test
+echo "11. Running lead storage test..."
+php tests/lead-storage.test.php
+
+echo "12. Rendering comprehensive report template..."
 php tests/render-comprehensive-template.test.php
 
-echo "12. Running report memory usage test..."
+echo "13. Running report memory usage test..."
 php tests/report-memory-usage.test.php
 
-echo "13. Running report interactivity test..."
+echo "14. Running report interactivity test..."
 node tests/report-interactivity.test.js
 
 # AJAX error handling test (PHPUnit)
-echo "14. Running AJAX error handling tests..."
+echo "15. Running AJAX error handling tests..."
 phpunit tests/RTBCB_AjaxGenerateComprehensiveCaseErrorTest.php
 phpunit tests/RTBCB_AjaxGenerateComprehensiveCaseFatalErrorTest.php
 phpunit tests/RTBCB_GenerateBusinessAnalysisTimeoutTest.php
 
 # JavaScript tests
-echo "15. Running JavaScript tests..."
+echo "16. Running JavaScript tests..."
 node tests/handle-submit-error.test.js
 node tests/handle-submit-no-ajax-url.test.js
 node tests/render-results-no-narrative.test.js
@@ -83,16 +87,16 @@ npx --yes jest tests/poll-job-show-results.test.js --config '{"testEnvironment":
 
 # WordPress coding standards (if installed)
 if command -v phpcs &> /dev/null; then
-    echo "16. Running WordPress coding standards check..."
+    echo "17. Running WordPress coding standards check..."
     phpcs --standard=WordPress --ignore=vendor .
 else
-    echo "16. Skipping WordPress coding standards (phpcs not installed)"
+    echo "17. Skipping WordPress coding standards (phpcs not installed)"
 fi
 
-echo "17. Running project growth path test..."
+echo "18. Running project growth path test..."
 php tests/project-growth-path.test.php
 
-echo "17. Running validator tests..."
+echo "19. Running validator tests..."
 phpunit -c phpunit.xml
 
 echo "================================================"
