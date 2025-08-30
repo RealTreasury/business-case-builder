@@ -95,7 +95,7 @@ global.window = {};
 (async () => {
     await builder.handleSubmit();
     assert.strictEqual(resultsData.report_html, '<div>Report</div>');
-    assert.strictEqual(receivedHeaders['Accept'], 'application/json');
+    assert.strictEqual(receivedHeaders['Accept'], 'application/json, text/html');
     assert.strictEqual(warnCalled, false);
     console.warn = originalWarn;
     console.log('Success path test passed.');
