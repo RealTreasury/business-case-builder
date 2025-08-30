@@ -230,27 +230,244 @@ class RTBCB_Router {
         return wp_kses_post( $html );
     }
 
-    /**
-     * Generate comprehensive report HTML.
-     *
-     * @param array $business_case_data Business case data.
-     *
-     * @return string Report HTML.
-     */
-    private function get_comprehensive_report_html( $business_case_data ) {
-        $template_path = RTBCB_DIR . 'templates/comprehensive-report-template.php';
+   /**
+    * Generate comprehensive report HTML from template with proper data transformation.
+    *
+    * @param array $business_case_data Business case data.
+    *
+    * @return string
+    */
+   private function get_comprehensive_report_html( $business_case_data ) {
+       $template_path = RTBCB_DIR . 'templates/comprehensive-report-template.php';
 
-        if ( ! file_exists( $template_path ) ) {
-            return $this->get_report_html( $business_case_data );
-        }
+       if ( ! file_exists( $template_path ) ) {
+           return $this->get_report_html( $business_case_data );
+       }
 
-        $business_case_data = is_array( $business_case_data ) ? $business_case_data : [];
+       $business_case_data = is_array( $business_case_data ) ? $business_case_data : [];
 
-        ob_start();
-        include $template_path;
-        $html = ob_get_clean();
+       // Transform data structure for comprehensive template.
+       $report_data = $this->transform_data_for_template( $business_case_data );
 
-        return wp_kses_post( $html );
-    }
+       ob_start();
+       include $template_path;
+       $html = ob_get_clean();
+
+       return wp_kses_post( $html );
+   }
+
+   /**
+    * Transform LLM response data into the structure expected by comprehensive template.
+    *
+    * @param array $business_case_data Business case data.
+    *
+    * @return array
+    */
+   private function transform_data_for_template( $business_case_data ) {
+       // Get current company data.
+       $company      = rtbcb_get_current_company();
+       $company_name = $business_case_data['company_name'] ?? $company['name'] ?? __( 'Your Company', 'rtbcb' );
+
+       // Create structured data format expected by template.
+       $report_data = [
+           'metadata'            => [
+               'company_name'    => $company_name,
+               'analysis_date'   => current_time( 'Y-m-d' ),
+               'confidence_level'=> $business_case_data['confidence'] ?? 0.85,
+               'processing_time' => $business_case_data['processing_time'] ?? 0,
+           ],
+           'executive_summary'  => [
+               'strategic_positioning'   => $business_case_data['executive_summary'] ?? $business_case_data['narrative'] ?? '',
+               'key_value_drivers'      => $this->extract_value_drivers( $business_case_data ),
+               'executive_recommendation'=> $business_case_data['executive_recommendation'] ?? $business_case_data['recommendation'] ?? '',
+               'business_case_strength' => $this->determine_business_case_strength( $business_case_data ),
+           ],
+           'financial_analysis' => [
+               'roi_scenarios'      => $this->format_roi_scenarios( $business_case_data ),
+               'payback_analysis'   => [
+                   'payback_months' => $business_case_data['payback_months'] ?? 'N/A',
+               ],
+               'sensitivity_analysis' => $business_case_data['sensitivity_analysis'] ?? [],
+           ],
+           'company_intelligence' => [
+               'enriched_profile' => [
+                   'enhanced_description' => $business_case_data['company_analysis'] ?? '',
+                   'maturity_level'       => $business_case_data['maturity_level'] ?? 'intermediate',
+                   'treasury_maturity'    => [
+                       'current_state'    => $business_case_data['current_state_analysis'] ?? '',
+                   ],
+               ],
+               'industry_context' => [
+                   'sector_analysis' => [
+                       'market_dynamics' => $business_case_data['market_analysis'] ?? '',
+                   ],
+                   'benchmarking'   => [
+                       'technology_penetration' => $business_case_data['tech_adoption_level'] ?? 'medium',
+                   ],
+               ],
+           ],
+           'technology_strategy' => [
+               'recommended_category' => $business_case_data['recommended_category'] ?? 'treasury_management_system',
+               'category_details'     => $business_case_data['category_info'] ?? [],
+           ],
+           'operational_insights' => $business_case_data['operational_analysis'] ?? [],
+           'risk_analysis'        => [
+               'implementation_risks' => $business_case_data['risks'] ?? [],
+           ],
+           'action_plan'          => [
+               'immediate_steps'   => $this->extract_immediate_steps( $business_case_data ),
+               'short_term_milestones' => $this->extract_short_term_steps( $business_case_data ),
+               'long_term_objectives'  => $this->extract_long_term_steps( $business_case_data ),
+           ],
+       ];
+
+       return $report_data;
+   }
+
+   /**
+    * Extract value drivers from business case data.
+    *
+    * @param array $data Business case data.
+    *
+    * @return array
+    */
+   private function extract_value_drivers( $data ) {
+       $drivers = [];
+
+       // Extract from various possible sources.
+       if ( ! empty( $data['value_drivers'] ) ) {
+           $drivers = (array) $data['value_drivers'];
+       } elseif ( ! empty( $data['key_benefits'] ) ) {
+           $drivers = (array) $data['key_benefits'];
+       } else {
+           // Default value drivers.
+           $drivers = [
+               __( 'Automated cash management processes', 'rtbcb' ),
+               __( 'Enhanced financial visibility and reporting', 'rtbcb' ),
+               __( 'Reduced operational risk and errors', 'rtbcb' ),
+               __( 'Improved regulatory compliance', 'rtbcb' ),
+           ];
+       }
+
+       return array_slice( $drivers, 0, 4 );
+   }
+
+   /**
+    * Format ROI scenarios for template.
+    *
+    * @param array $data Business case data.
+    *
+    * @return array
+    */
+   private function format_roi_scenarios( $data ) {
+       // Try to get ROI data from various possible locations.
+       if ( ! empty( $data['scenarios'] ) ) {
+           return $data['scenarios'];
+       }
+
+       if ( ! empty( $data['roi_scenarios'] ) ) {
+           return $data['roi_scenarios'];
+       }
+
+       // Fallback to default structure.
+       return [
+           'conservative' => [
+               'total_annual_benefit' => $data['roi_low'] ?? 0,
+               'labor_savings'        => ( $data['roi_low'] ?? 0 ) * 0.6,
+               'fee_savings'          => ( $data['roi_low'] ?? 0 ) * 0.3,
+               'error_reduction'      => ( $data['roi_low'] ?? 0 ) * 0.1,
+           ],
+           'base' => [
+               'total_annual_benefit' => $data['roi_base'] ?? 0,
+               'labor_savings'        => ( $data['roi_base'] ?? 0 ) * 0.6,
+               'fee_savings'          => ( $data['roi_base'] ?? 0 ) * 0.3,
+               'error_reduction'      => ( $data['roi_base'] ?? 0 ) * 0.1,
+           ],
+           'optimistic' => [
+               'total_annual_benefit' => $data['roi_high'] ?? 0,
+               'labor_savings'        => ( $data['roi_high'] ?? 0 ) * 0.6,
+               'fee_savings'          => ( $data['roi_high'] ?? 0 ) * 0.3,
+               'error_reduction'      => ( $data['roi_high'] ?? 0 ) * 0.1,
+           ],
+       ];
+   }
+
+   /**
+    * Determine business case strength based on ROI.
+    *
+    * @param array $data Business case data.
+    *
+    * @return string
+    */
+   private function determine_business_case_strength( $data ) {
+       $base_roi = $data['roi_base'] ?? $data['scenarios']['base']['total_annual_benefit'] ?? 0;
+
+       if ( $base_roi > 500000 ) {
+           return 'Compelling';
+       } elseif ( $base_roi > 200000 ) {
+           return 'Strong';
+       } elseif ( $base_roi > 50000 ) {
+           return 'Moderate';
+       } else {
+           return 'Developing';
+       }
+   }
+
+   /**
+    * Extract action steps from business case data.
+    *
+    * @param array $data Business case data.
+    *
+    * @return array
+    */
+   private function extract_immediate_steps( $data ) {
+       if ( ! empty( $data['next_actions'] ) ) {
+           $all_actions = (array) $data['next_actions'];
+           return array_slice( $all_actions, 0, 3 );
+       }
+
+       return [
+           __( 'Secure executive sponsorship and budget approval', 'rtbcb' ),
+           __( 'Form project steering committee', 'rtbcb' ),
+           __( 'Conduct detailed requirements gathering', 'rtbcb' ),
+       ];
+   }
+
+   /**
+    * Extract short term action steps.
+    *
+    * @param array $data Business case data.
+    *
+    * @return array
+    */
+   private function extract_short_term_steps( $data ) {
+       if ( ! empty( $data['implementation_steps'] ) ) {
+           $steps = (array) $data['implementation_steps'];
+           return array_slice( $steps, 0, 4 );
+       }
+
+       return [
+           __( 'Issue RFP to qualified vendors', 'rtbcb' ),
+           __( 'Conduct vendor demonstrations and evaluations', 'rtbcb' ),
+           __( 'Negotiate contracts and terms', 'rtbcb' ),
+           __( 'Begin system implementation planning', 'rtbcb' ),
+       ];
+   }
+
+   /**
+    * Extract long term action steps.
+    *
+    * @param array $data Business case data.
+    *
+    * @return array
+    */
+   private function extract_long_term_steps( $data ) {
+       return [
+           __( 'Complete system implementation and testing', 'rtbcb' ),
+           __( 'Conduct user training and change management', 'rtbcb' ),
+           __( 'Measure and optimize system performance', 'rtbcb' ),
+           __( 'Expand functionality and integration capabilities', 'rtbcb' ),
+       ];
+   }
 }
 
