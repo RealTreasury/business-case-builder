@@ -632,6 +632,7 @@ class BusinessCaseBuilder {
             resultsContainer = document.createElement('div');
             resultsContainer.id = 'rtbcb-results-enhanced';
             resultsContainer.className = 'rtbcb-enhanced-results-container';
+            console.log('RTBCB: Results container created');
 
             // Insert after the modal
             const modal = document.getElementById('rtbcbModalOverlay');
@@ -640,27 +641,29 @@ class BusinessCaseBuilder {
             } else {
                 document.body.appendChild(resultsContainer);
             }
+            console.log('RTBCB: Results container inserted into DOM');
+        } else {
+            console.log('RTBCB: Reusing existing results container');
         }
 
         // Set content and make visible
         resultsContainer.innerHTML = htmlContent;
         resultsContainer.style.display = 'block';
+        console.log('RTBCB: Report content injected');
 
         // Initialize interactive features for the enhanced report
         this.initializeEnhancedReport(resultsContainer);
 
         // Smooth scroll to results
-        resultsContainer.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'start' 
+        resultsContainer.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
         });
     }
 
     initializeEnhancedReport(container) {
-        // Initialize Chart.js charts if available
-        if (typeof Chart !== 'undefined') {
-            this.initializeReportCharts(container);
-        }
+        // Initialize Chart.js charts
+        this.initializeReportCharts(container);
 
         // Initialize collapsible sections
         this.initializeCollapsibleSections(container);
@@ -673,16 +676,27 @@ class BusinessCaseBuilder {
     }
 
     initializeReportCharts(container) {
+        console.log('RTBCB: Starting chart initialization');
+        if (typeof Chart === 'undefined') {
+            console.warn('RTBCB: Chart.js is undefined; skipping chart creation');
+            return;
+        }
+
         const chartCanvas = container.querySelector('#rtbcb-roi-chart');
         if (!chartCanvas) return;
 
         try {
             // Get chart data from the page or from localized data
             const roiData = this.extractROIDataFromReport(container);
+            console.log('RTBCB: Chart data extraction complete', roiData);
 
-            if (roiData && Object.keys(roiData).length > 0) {
-                this.createROIChart(chartCanvas, roiData);
+            if (!roiData || Object.keys(roiData).length === 0) {
+                console.warn('RTBCB: ROI data is empty; skipping chart creation');
+                return;
             }
+
+            this.createROIChart(chartCanvas, roiData);
+            console.log('RTBCB: Chart creation complete');
         } catch (error) {
             console.error('Failed to initialize chart:', error);
         }
