@@ -137,6 +137,7 @@ class Real_Treasury_BCB {
         require_once RTBCB_DIR . 'inc/class-rtbcb-validator.php';
         require_once RTBCB_DIR . 'inc/class-rtbcb-api-tester.php';
         require_once RTBCB_DIR . 'inc/helpers.php';
+        require_once RTBCB_DIR . 'inc/class-rtbcb-logger.php';
 
         // Admin functionality
         if ( is_admin() ) {
@@ -694,6 +695,10 @@ class Real_Treasury_BCB {
      * Enhanced AJAX handler with memory management
      */
     public function ajax_generate_comprehensive_case() {
+        $request_start   = microtime( true );
+        $request_payload = rtbcb_recursive_sanitize_text_field( wp_unslash( $_POST ) );
+        register_shutdown_function( [ 'RTBCB_Logger', 'log_shutdown' ], $request_start, $request_payload );
+
         rtbcb_setup_ajax_logging();
 
         // STEP 1: Increase memory limit and log initial state
