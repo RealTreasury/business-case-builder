@@ -30,9 +30,6 @@ jQuery(document).ready(function($) {
             // Rebuild Index
             $('#rtbcb-rebuild-index').on('click', this.rebuildIndex);
             
-            // Run Diagnostics
-            $('#rtbcb-run-tests').on('click', this.runDiagnostics);
-            
             // Sync Local
             $('#rtbcb-sync-to-local').on('click', this.syncLocal);
             
@@ -211,37 +208,6 @@ jQuery(document).ready(function($) {
                 alert('Rebuild request failed');
             } finally {
                 $btn.text(original).prop('disabled', false);
-            }
-        },
-        
-        runDiagnostics: async function(e) {
-            e.preventDefault();
-            var $btn = $(this);
-            $btn.prop('disabled', true);
-
-            try {
-                var response = await $.ajax({
-                    url: window.rtbcbAdmin.ajax_url,
-                    method: 'POST',
-                    data: {
-                        action: 'rtbcb_run_diagnostics',
-                        nonce: $btn.data('nonce') || window.rtbcbAdmin.diagnostics_nonce
-                    }
-                });
-                if (response.success) {
-                    var message = '';
-                    $.each(response.data, function(key, result) {
-                        var statusText = result.passed ? (window.rtbcbAdmin.strings.passed || 'Passed') : (window.rtbcbAdmin.strings.failed || 'Failed');
-                        message += key + ': ' + statusText + ' - ' + result.message + '\n';
-                    });
-                    alert(message);
-                } else {
-                    alert(response.data && response.data.message ? response.data.message : 'Diagnostics failed');
-                }
-            } catch (error) {
-                alert('Diagnostics request failed');
-            } finally {
-                $btn.prop('disabled', false);
             }
         },
         
