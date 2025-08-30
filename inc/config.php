@@ -1,11 +1,11 @@
 <?php
+defined( 'ABSPATH' ) || exit;
+
 /**
  * Configuration defaults for Real Treasury Business Case Builder.
  *
  * @package RealTreasuryBusinessCaseBuilder
  */
-
-defined( 'ABSPATH' ) || exit;
 
 /**
  * Retrieve the default model for a given tier.
@@ -38,11 +38,12 @@ function rtbcb_get_default_model( $tier ) {
 function rtbcb_get_gpt5_config( $overrides = [] ) {
     $defaults = [
         'model'             => 'gpt-5-mini',
-        'max_output_tokens' => 20000,
+        'max_output_tokens' => 8000,
         'temperature'       => 0.7,
         'store'             => true,
         'timeout'           => 180,
         'max_retries'       => 2,
+        'max_retry_time'    => 60,
         'reasoning_effort'  => 'medium',
         'text_verbosity'    => 'medium',
     ];
@@ -69,7 +70,8 @@ function rtbcb_get_gpt5_config( $overrides = [] ) {
     $overrides = array_merge( $file_overrides, $overrides );
 
     $config = array_merge( $defaults, array_intersect_key( $overrides, $defaults ) );
-    $config['max_output_tokens'] = min( 50000, max( 256, intval( $config['max_output_tokens'] ) ) );
+    $config['max_output_tokens'] = min( 128000, max( 256, intval( $config['max_output_tokens'] ) ) );
+    $config['max_retry_time']    = max( 1, intval( $config['max_retry_time'] ) );
 
     return $config;
 }

@@ -1,11 +1,11 @@
 <?php
+defined( 'ABSPATH' ) || exit;
+
 /**
  * Structured logging utilities.
  *
  * @package RealTreasuryBusinessCaseBuilder
  */
-
-defined( 'ABSPATH' ) || exit;
 
 /**
  * Structured logging for API interactions.

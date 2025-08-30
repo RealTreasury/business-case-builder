@@ -4,8 +4,12 @@ A comprehensive WordPress plugin that helps treasury teams quantify the benefits
 
 ## 🚀 What's New in Version 2.1.7
 
+
 ### 🔧 Maintenance Release
 - Updated documentation references for the 2.1.7 release.
+
+- 📚 Added detailed wizard and API flow documentation in [docs/WIZARD_FORM_API_FLOW.md](docs/WIZARD_FORM_API_FLOW.md).
+
 
 ## 📋 Installation & Setup
 
@@ -40,15 +44,15 @@ A comprehensive WordPress plugin that helps treasury teams quantify the benefits
 
    The API tester uses this value to verify connectivity.
 
-   By default, the plugin configures `max_output_tokens` to `20000` for GPT-5 models.
-   You can adjust this value up to `50000` tokens via the plugin settings,
-   by setting an environment variable, or by creating a configuration file:
+By default, the plugin configures `max_output_tokens` to `8000` for GPT-5 models.
+You can adjust this value up to `128000` tokens via the plugin settings,
+by setting an environment variable, or by creating a configuration file:
 
-   - **Environment variable**: `RTBCB_MAX_OUTPUT_TOKENS=50000`
-   - **Config file**: create `rtbcb-config.json` in the project root with
-     `{ "max_output_tokens": 50000 }`
+- **Environment variable**: `RTBCB_MAX_OUTPUT_TOKENS=128000`
+- **Config file**: create `rtbcb-config.json` in the project root with
+`{ "max_output_tokens": 128000 }`
 
-   Values outside the `256`–`50000` range are ignored.
+Values outside the `256`–`128000` range are ignored.
 
 #### Model Temperature Support
 
@@ -100,7 +104,7 @@ before the closing `</body>` tag.
 - `inc/` – Core classes and helper functions.
 - `public/` – Front-end hooks, shortcodes, and assets.
 - `templates/` – PHP templates rendered for reports and forms.
-- `docs/` – Project documentation including [End-to-End Workflow](docs/END_TO_END_WORKFLOW.md).
+- `docs/` – Project documentation including [End-to-End Workflow](docs/END_TO_END_WORKFLOW.md) and [Wizard Form & API Flow](docs/WIZARD_FORM_API_FLOW.md).
 - `tests/` – Automated tests and diagnostics.
 - `vendor/` – Composer-managed third-party libraries (do not modify).
 

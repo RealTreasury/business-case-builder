@@ -1,6 +1,6 @@
 # End-to-End Workflow
 
-This document summarizes the workflow from internal company research to delivering the public report. It reflects the current implementation in the LLM classes and related components.
+This document summarizes the workflow from internal company research to delivering the public report. It reflects the current implementation in the LLM classes and related components. For a detailed walkthrough of the public wizard and API interactions, see [Wizard Form & API Flow](WIZARD_FORM_API_FLOW.md).
 
 ## 1. Admin Research (Internal)
 

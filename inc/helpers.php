@@ -1,11 +1,9 @@
 <?php
+defined( 'ABSPATH' ) || exit;
+
 /**
  * Helper functions for the Real Treasury Business Case Builder plugin.
  */
-
-if ( ! defined( 'ABSPATH' ) ) {
-    exit;
-}
 
 require_once __DIR__ . '/config.php';
 
@@ -125,6 +123,20 @@ function rtbcb_model_supports_temperature( $model ) {
     $capabilities = include RTBCB_DIR . 'inc/model-capabilities.php';
     $unsupported = $capabilities['temperature']['unsupported'] ?? [];
     return ! in_array( $model, $unsupported, true );
+}
+
+/**
+ * Sanitize the max output tokens option.
+ *
+ * Ensures the value stays within the allowed 256-128000 token range.
+ *
+ * @param mixed $value Raw option value.
+ * @return int Sanitized token count.
+ */
+function rtbcb_sanitize_max_output_tokens( $value ) {
+    $value = intval( $value );
+
+    return min( 128000, max( 256, $value ) );
 }
 
 /**
@@ -1194,20 +1206,107 @@ function rtbcb_proxy_openai_responses() {
         wp_send_json_error( [ 'message' => __( 'OpenAI API key not configured.', 'rtbcb' ) ], 500 );
     }
 
+    if ( isset( $_POST['nonce'] ) ) {
+        check_ajax_referer( 'rtbcb_openai_responses', 'nonce' );
+    }
+
     $body = isset( $_POST['body'] ) ? wp_unslash( $_POST['body'] ) : '';
-    if ( empty( $body ) ) {
+    if ( '' === $body ) {
         wp_send_json_error( [ 'message' => __( 'Missing request body.', 'rtbcb' ) ], 400 );
     }
+
     $body_array = json_decode( $body, true );
     if ( ! is_array( $body_array ) ) {
         $body_array = [];
     }
 
-    $config              = rtbcb_get_gpt5_config();
-    $max_output_tokens   = intval( $body_array['max_output_tokens'] ?? $config['max_output_tokens'] );
-    $max_output_tokens   = min( 50000, max( 256, $max_output_tokens ) );
+    $config            = rtbcb_get_gpt5_config();
+    $max_output_tokens = intval( $body_array['max_output_tokens'] ?? $config['max_output_tokens'] );
+    $max_output_tokens = min( 128000, max( 256, $max_output_tokens ) );
     $body_array['max_output_tokens'] = $max_output_tokens;
-    $body              = wp_json_encode( $body_array );
+    $body_array['stream']            = true;
+    $payload                         = wp_json_encode( $body_array );
+
+    nocache_headers();
+    header( 'Content-Type: text/event-stream' );
+    header( 'Cache-Control: no-cache' );
+    header( 'Connection: keep-alive' );
+
+    $timeout = intval( get_option( 'rtbcb_responses_timeout', 120 ) );
+    if ( $timeout <= 0 ) {
+        $timeout = 120;
+    }
+
+    $ch = curl_init( 'https://api.openai.com/v1/responses' );
+    curl_setopt( $ch, CURLOPT_POST, true );
+    curl_setopt( $ch, CURLOPT_POSTFIELDS, $payload );
+    curl_setopt( $ch, CURLOPT_HTTPHEADER, [
+        'Content-Type: application/json',
+        'Authorization: Bearer ' . $api_key,
+    ] );
+    curl_setopt( $ch, CURLOPT_TIMEOUT, $timeout );
+    curl_setopt( $ch, CURLOPT_WRITEFUNCTION, function ( $curl, $data ) {
+        echo $data;
+        if ( function_exists( 'flush' ) ) {
+            flush();
+        }
+        return strlen( $data );
+    } );
+
+    $ok    = curl_exec( $ch );
+    $error = curl_error( $ch );
+    curl_close( $ch );
+
+    if ( false === $ok && '' !== $error ) {
+        $msg = sanitize_text_field( $error );
+        echo 'data: ' . wp_json_encode( [ 'error' => $msg ] ) . "\n\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+    }
+
+    exit;
+}
+
+/**
+ * Background handler for OpenAI response jobs.
+ *
+ * @param string $job_id  Job identifier.
+ * @param int    $user_id User identifier.
+ * @return void
+ */
+function rtbcb_handle_openai_responses_job( $job_id, $user_id ) {
+    $job_id  = sanitize_key( $job_id );
+    $user_id = intval( $user_id );
+
+    $api_key = get_option( 'rtbcb_openai_api_key' );
+    if ( empty( $api_key ) ) {
+        set_transient(
+            'rtbcb_openai_job_' . $job_id,
+            [
+                'status'  => 'error',
+                'message' => __( 'OpenAI API key not configured.', 'rtbcb' ),
+            ],
+            HOUR_IN_SECONDS
+        );
+        return;
+    }
+
+    $body = get_transient( 'rtbcb_openai_job_' . $job_id . '_body' );
+    if ( false === $body ) {
+        set_transient(
+            'rtbcb_openai_job_' . $job_id,
+            [
+                'status'  => 'error',
+                'message' => __( 'Job request not found.', 'rtbcb' ),
+            ],
+            HOUR_IN_SECONDS
+        );
+        return;
+    }
+    delete_transient( 'rtbcb_openai_job_' . $job_id . '_body' );
+
+    $body_array = json_decode( $body, true );
+    if ( ! is_array( $body_array ) ) {
+        $body_array = [];
+    }
 
     $timeout = intval( get_option( 'rtbcb_responses_timeout', 120 ) );
     if ( $timeout <= 0 ) {
@@ -1226,13 +1325,19 @@ function rtbcb_proxy_openai_responses() {
         ]
     );
 
-    $decoded = [];
     if ( is_wp_error( $response ) ) {
-        $decoded = [ 'error' => $response->get_error_message() ];
         if ( class_exists( 'RTBCB_API_Log' ) ) {
-            RTBCB_API_Log::save_log( $body_array, $decoded, get_current_user_id() );
+            RTBCB_API_Log::save_log( $body_array, [ 'error' => $response->get_error_message() ], $user_id );
         }
-        wp_send_json_error( [ 'message' => $response->get_error_message() ], 500 );
+        set_transient(
+            'rtbcb_openai_job_' . $job_id,
+            [
+                'status'  => 'error',
+                'message' => $response->get_error_message(),
+            ],
+            HOUR_IN_SECONDS
+        );
+        return;
     }
 
     $code      = wp_remote_retrieve_response_code( $response );
@@ -1243,10 +1348,45 @@ function rtbcb_proxy_openai_responses() {
     }
 
     if ( class_exists( 'RTBCB_API_Log' ) ) {
-        RTBCB_API_Log::save_log( $body_array, $decoded, get_current_user_id() );
+        RTBCB_API_Log::save_log( $body_array, $decoded, $user_id );
     }
 
-    wp_send_json( $decoded, $code );
+    set_transient(
+        'rtbcb_openai_job_' . $job_id,
+        [
+            'status'   => 'complete',
+            'code'     => $code,
+            'response' => $decoded,
+        ],
+        HOUR_IN_SECONDS
+    );
+}
+if ( function_exists( 'add_action' ) ) {
+    add_action( 'rtbcb_run_openai_responses_job', 'rtbcb_handle_openai_responses_job', 10, 2 );
+}
+
+/**
+ * Retrieve the status or result of an OpenAI response job.
+ *
+ * @return void
+ */
+function rtbcb_get_openai_responses_status() {
+    $job_id = isset( $_REQUEST['job_id'] ) ? sanitize_key( wp_unslash( $_REQUEST['job_id'] ) ) : '';
+    if ( '' === $job_id ) {
+        wp_send_json_error( [ 'message' => __( 'Missing job ID.', 'rtbcb' ) ], 400 );
+    }
+
+    $result = get_transient( 'rtbcb_openai_job_' . $job_id );
+    if ( false === $result ) {
+        wp_send_json_error( [ 'message' => __( 'Job not found or expired.', 'rtbcb' ) ], 404 );
+    }
+
+    if ( isset( $result['status'] ) && 'pending' === $result['status'] ) {
+        wp_send_json_success( $result );
+    }
+
+    delete_transient( 'rtbcb_openai_job_' . $job_id );
+    wp_send_json_success( $result );
 }
 
 /**
@@ -1411,5 +1551,77 @@ if ( function_exists( 'add_action' ) ) {
 function rtbcb_get_analysis_job_result( $job_id ) {
     $job_id = sanitize_key( $job_id );
     return get_option( 'rtbcb_analysis_job_' . $job_id, null );
+}
+
+/**
+ * Build a cache key for LLM research results.
+ *
+ * @param string $company  Company name.
+ * @param string $industry Industry name.
+ * @param string $type     Cache segment identifier.
+ *
+ * @return string Cache key.
+ */
+function rtbcb_get_research_cache_key( $company, $industry, $type ) {
+    $company  = sanitize_title( $company );
+    $industry = sanitize_title( $industry );
+    $type     = sanitize_key( $type );
+
+    return 'rtbcb_' . $type . '_' . md5( $company . '_' . $industry );
+}
+
+/**
+ * Retrieve cached LLM research data.
+ *
+ * @param string $company  Company name.
+ * @param string $industry Industry name.
+ * @param string $type     Cache segment identifier.
+ *
+ * @return mixed Cached data or false when not found.
+ */
+function rtbcb_get_research_cache( $company, $industry, $type ) {
+    $key = rtbcb_get_research_cache_key( $company, $industry, $type );
+    return get_transient( $key );
+}
+
+/**
+ * Store LLM research data in cache.
+ *
+ * @param string $company  Company name.
+ * @param string $industry Industry name.
+ * @param string $type     Cache segment identifier.
+ * @param mixed  $data     Data to cache.
+ * @param int    $ttl      Optional TTL in seconds.
+ */
+function rtbcb_set_research_cache( $company, $industry, $type, $data, $ttl = 0 ) {
+    $key = rtbcb_get_research_cache_key( $company, $industry, $type );
+    $ttl = (int) $ttl;
+    if ( 0 === $ttl ) {
+        $ttl = DAY_IN_SECONDS;
+    }
+
+    /**
+     * Filter the research cache TTL.
+     *
+     * @param int $ttl Cache duration in seconds.
+     * @param string $type Cache segment identifier.
+     * @param string $company Sanitized company name.
+     * @param string $industry Sanitized industry.
+     */
+    $ttl = apply_filters( 'rtbcb_research_cache_ttl', $ttl, $type, $company, $industry );
+
+    set_transient( $key, $data, $ttl );
+}
+
+/**
+ * Delete cached LLM research data.
+ *
+ * @param string $company  Company name.
+ * @param string $industry Industry name.
+ * @param string $type     Cache segment identifier.
+ */
+function rtbcb_delete_research_cache( $company, $industry, $type ) {
+    $key = rtbcb_get_research_cache_key( $company, $industry, $type );
+    delete_transient( $key );
 }
 

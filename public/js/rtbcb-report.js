@@ -2,14 +2,20 @@
  * Generate and display professional reports using OpenAI.
  */
 
+const RTBCB_GPT5_MAX_TOKENS = 128000;
 const RTBCB_GPT5_DEFAULTS = {
-    max_output_tokens: 20000,
+    max_output_tokens: RTBCB_GPT5_MAX_TOKENS,
     text: { verbosity: 'medium' },
     temperature: 0.7,
     store: true,
     timeout: 180,
-    max_retries: 3
+    max_retries: 3,
+    max_retry_time: 60
 };
+
+function estimateTokens(words) {
+    return Math.ceil(words * 1.5);
+}
 
 function supportsTemperature(model) {
     const capabilities = rtbcbReport.model_capabilities || {};
@@ -46,14 +52,16 @@ Ensure the report is:
 `;
 }
 
-async function generateProfessionalReport(businessContext) {
+async function generateProfessionalReport(businessContext, onChunk) {
     const cfg = {
         ...RTBCB_GPT5_DEFAULTS,
         ...(typeof rtbcbReport !== 'undefined' ? rtbcbReport : {})
     };
     cfg.model = rtbcbReport.report_model;
-    cfg.max_output_tokens = Math.min(50000, Math.max(256, parseInt(cfg.max_output_tokens, 10) || 20000));
-    if ( !supportsTemperature( cfg.model ) ) {
+    const adminLimit = Math.min(RTBCB_GPT5_MAX_TOKENS, parseInt(cfg.max_output_tokens, 10) || RTBCB_GPT5_MAX_TOKENS);
+    const desiredWords = 1000;
+    cfg.max_output_tokens = Math.min(adminLimit, estimateTokens(desiredWords));
+    if (!supportsTemperature(cfg.model)) {
         delete cfg.temperature;
     }
     const requestBody = {
@@ -70,63 +78,65 @@ async function generateProfessionalReport(businessContext) {
         ],
         max_output_tokens: cfg.max_output_tokens,
         text: cfg.text,
-        store: cfg.store
+        store: cfg.store,
+        stream: true
     };
-    if ( supportsTemperature( cfg.model ) ) {
+    if (supportsTemperature(cfg.model)) {
         requestBody.temperature = cfg.temperature;
     }
 
-    const maxAttempts = cfg.max_retries || 3;
-    let lastError;
+    const formData = new FormData();
+    formData.append('action', 'rtbcb_openai_responses');
+    formData.append('body', JSON.stringify(requestBody));
+    if (rtbcbReport.nonce) {
+        formData.append('nonce', rtbcbReport.nonce);
+    }
 
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-        const formData = new FormData();
-        formData.append('action', 'rtbcb_openai_responses');
-        formData.append('body', JSON.stringify(requestBody));
+    const response = await fetch(rtbcbReport.ajax_url, {
+        method: 'POST',
+        body: formData
+    });
+    if (!response.ok || !response.body) {
+        throw new Error('HTTP ' + response.status + ' ' + response.statusText);
+    }
 
-        try {
-            const response = await fetch(rtbcbReport.ajax_url, {
-                method: 'POST',
-                body: formData
-            });
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let html = '';
 
-            if (response.ok) {
-                let data;
-                try {
-                    data = await response.json();
-                } catch (parseError) {
-                    lastError = parseError;
-                    continue;
-                }
-
-                if (data.error) {
-                    console.error('Attempt ' + attempt + ' API error details:', data.error);
-                    lastError = new Error(data.error.message || 'Responses API error');
-                    continue;
-                }
-
-                const htmlContent = data.output_text;
-                const cleanedHTML = htmlContent
-                    .replace(/```html\n?/g, '')
-                    .replace(/```\n?/g, '')
-                    .trim();
-                return cleanedHTML;
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+            break;
+        }
+        buffer += decoder.decode(value, { stream: true });
+        const parts = buffer.split('\n\n');
+        buffer = parts.pop();
+        for (const part of parts) {
+            const line = part.trim();
+            if (!line.startsWith('data:')) {
+                continue;
             }
-
-            if (rtbcbReport && rtbcbReport.debug) {
-                const responseText = await response.text();
-                console.error('Attempt ' + attempt + ' failed:', responseText);
-                console.error('RTBCB request body:', requestBody);
+            const data = line.replace(/^data:\s*/, '');
+            if (data === '[DONE]') {
+                continue;
             }
-            lastError = new Error('HTTP ' + response.status + ' ' + response.statusText);
-        } catch (error) {
-            console.error('Error generating report (attempt ' + attempt + '):', error);
-            lastError = error;
+            try {
+                const json = JSON.parse(data);
+                if (json.type === 'response.output_text.delta') {
+                    html += json.delta;
+                    if (onChunk) {
+                        onChunk(html);
+                    }
+                }
+            } catch (e) {
+                // Ignore parse errors for incomplete chunks.
+            }
         }
     }
 
-    console.error('All attempts to generate report failed:', lastError);
-    throw new Error(lastError && lastError.message ? lastError.message : 'Unable to generate report at this time. Please try again later.');
+    return html.trim();
 }
 
 function sanitizeReportHTML(htmlContent) {
@@ -170,13 +180,16 @@ async function generateAndDisplayReport(businessContext) {
     reportContainer.innerHTML = '';
 
     try {
-        const htmlReport = await generateProfessionalReport(businessContext);
+        const htmlReport = await generateProfessionalReport(businessContext, partial => {
+            reportContainer.textContent = partial;
+        });
 
         if (!htmlReport.includes('<!DOCTYPE html>')) {
             throw new Error('Invalid HTML response from API');
         }
 
         const safeReport = sanitizeReportHTML(htmlReport);
+        reportContainer.innerHTML = '';
         displayReport(safeReport);
 
         const exportBtn = document.createElement('button');

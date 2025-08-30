@@ -1,4 +1,6 @@
 <?php
+defined( 'ABSPATH' ) || exit;
+
 /**
  * Implements Retrieval-Augmented Generation logic for the plugin.
  *

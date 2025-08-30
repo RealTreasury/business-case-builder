@@ -39,6 +39,13 @@ class Real_Treasury_BCB {
     private $plugin_data = [];
 
     /**
+     * Request start time.
+     *
+     * @var float
+     */
+    private $request_start_time = 0.0;
+
+    /**
      * Get plugin instance.
      *
      * @return Real_Treasury_BCB
@@ -95,10 +102,12 @@ class Real_Treasury_BCB {
         add_filter( 'plugin_action_links_' . plugin_basename( RTBCB_FILE ), [ $this, 'plugin_action_links' ] );
 
         // AJAX handlers
-        add_action( 'wp_ajax_rtbcb_generate_case', [ $this, 'ajax_generate_comprehensive_case_debug' ] );
-        add_action( 'wp_ajax_nopriv_rtbcb_generate_case', [ $this, 'ajax_generate_comprehensive_case_debug' ] );
+        add_action( 'wp_ajax_rtbcb_generate_case', [ 'RTBCB_Ajax', 'generate_comprehensive_case' ] );
+        add_action( 'wp_ajax_nopriv_rtbcb_generate_case', [ 'RTBCB_Ajax', 'generate_comprehensive_case' ] );
         add_action( 'wp_ajax_rtbcb_openai_responses', 'rtbcb_proxy_openai_responses' );
         add_action( 'wp_ajax_nopriv_rtbcb_openai_responses', 'rtbcb_proxy_openai_responses' );
+        add_action( 'wp_ajax_rtbcb_openai_responses_status', 'rtbcb_get_openai_responses_status' );
+        add_action( 'wp_ajax_nopriv_rtbcb_openai_responses_status', 'rtbcb_get_openai_responses_status' );
 
         $this->init_hooks_debug();
     }
@@ -136,6 +145,10 @@ class Real_Treasury_BCB {
         require_once RTBCB_DIR . 'inc/class-rtbcb-maturity-model.php';
         require_once RTBCB_DIR . 'inc/class-rtbcb-validator.php';
         require_once RTBCB_DIR . 'inc/class-rtbcb-api-tester.php';
+        require_once RTBCB_DIR . 'inc/class-rtbcb-workflow-tracker.php';
+        require_once RTBCB_DIR . 'inc/class-rtbcb-enhanced-calculator.php';
+        require_once RTBCB_DIR . 'inc/class-rtbcb-intelligent-recommender.php';
+        require_once RTBCB_DIR . 'inc/class-rtbcb-ajax.php';
         require_once RTBCB_DIR . 'inc/helpers.php';
         require_once RTBCB_DIR . 'inc/class-rtbcb-logger.php';
 
@@ -448,7 +461,7 @@ class Real_Treasury_BCB {
         $report_model = sanitize_text_field( get_option( 'rtbcb_advanced_model', 'gpt-5-mini' ) );
 
         $timeout           = rtbcb_get_api_timeout();
-        $max_output_tokens = intval( get_option( 'rtbcb_gpt5_max_output_tokens', 20000 ) );
+        $max_output_tokens = intval( get_option( 'rtbcb_gpt5_max_output_tokens', 8000 ) );
         $config            = rtbcb_get_gpt5_config(
             array_merge(
                 get_option( 'rtbcb_gpt5_config', [] ),
@@ -466,13 +479,14 @@ class Real_Treasury_BCB {
             'store'              => (bool) $config['store'],
             'timeout'            => intval( $config['timeout'] ),
             'max_retries'        => intval( $config['max_retries'] ),
+            'max_retry_time'     => intval( $config['max_retry_time'] ),
         ];
 
         if ( rtbcb_model_supports_temperature( $config['model'] ) ) {
             $config_localized['temperature'] = floatval( $config['temperature'] );
         }
 
-        $supported = [ 'model', 'max_output_tokens', 'text', 'temperature', 'store', 'timeout', 'max_retries' ];
+        $supported = [ 'model', 'max_output_tokens', 'text', 'temperature', 'store', 'timeout', 'max_retries', 'max_retry_time' ];
         $config_localized = array_intersect_key( $config_localized, array_flip( $supported ) );
 
         $model_capabilities = rtbcb_get_model_capabilities();
@@ -683,7 +697,7 @@ class Real_Treasury_BCB {
         }
 
         try {
-            $this->ajax_generate_comprehensive_case();
+            RTBCB_Ajax::generate_comprehensive_case();
         } catch ( Exception $e ) {
             error_log( 'RTBCB Exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine() );
             wp_send_json_error( __( 'An error occurred. Please try again later.', 'rtbcb' ), 500 );
@@ -699,7 +713,7 @@ class Real_Treasury_BCB {
     /**
      * Enhanced AJAX handler with memory management
      */
-    public function ajax_generate_comprehensive_case() {
+    public function ajax_generate_comprehensive_case_legacy() {
         $request_start   = microtime( true );
         $request_payload = rtbcb_recursive_sanitize_text_field( wp_unslash( $_POST ) );
         register_shutdown_function( [ 'RTBCB_Logger', 'log_shutdown' ], $request_start, $request_payload );
@@ -753,8 +767,20 @@ class Real_Treasury_BCB {
                     ];
                     update_option( 'rtbcb_current_company', $company );
                 } else {
-                    wp_send_json_error( __( 'No company data found. Please run the company overview first.', 'rtbcb' ), 400 );
-                    return;
+                    if ( empty( $company_name ) ) {
+                        wp_send_json_error( __( 'Please enter your company name.', 'rtbcb' ), 400 );
+                        return;
+                    }
+
+                    if ( empty( $company_size ) ) {
+                        wp_send_json_error( __( 'Please select your company size.', 'rtbcb' ), 400 );
+                        return;
+                    }
+
+                    if ( empty( $industry ) ) {
+                        wp_send_json_error( __( 'Please select your industry.', 'rtbcb' ), 400 );
+                        return;
+                    }
                 }
             }
 

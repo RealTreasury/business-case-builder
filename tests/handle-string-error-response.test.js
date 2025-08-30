@@ -27,7 +27,7 @@ class SimpleFormData {
 global.FormData = SimpleFormData;
 
 global.fetch = function() {
-    const payload = { success: false, data: 'No company data found.' };
+    const payload = { success: false, data: 'Please enter your company name.' };
     const response = {
         ok: false,
         status: 400,
@@ -71,7 +71,7 @@ builder.showError = (msg) => { errorMessage = msg; };
 
 (async () => {
     await builder.handleSubmit();
-    assert.ok(errorMessage.includes('No company data found'));
+    assert.ok(errorMessage.includes('Please enter your company name'));
     assert.ok(errorMessage.includes('AI configuration'));
     console.log('String error response test passed.');
 })().catch(err => {

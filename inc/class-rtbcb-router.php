@@ -1,11 +1,11 @@
 <?php
+defined( 'ABSPATH' ) || exit;
+
 /**
  * Routes model selection based on request complexity.
  *
  * @package RealTreasuryBusinessCaseBuilder
  */
-
-defined( 'ABSPATH' ) || exit;
 
 /**
  * Class RTBCB_Router.

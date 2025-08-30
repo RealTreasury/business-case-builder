@@ -1,10 +1,10 @@
 # AI Coding Guidelines for Real Treasury Business Case Builder
 
 - Follow [WordPress PHP coding standards](https://developer.wordpress.org/coding-standards/wordpress-coding-standards/php/).
-- Use four spaces for indentation.
+- Use tabs for indentation; spaces only for alignment per WordPress PHP standards.
 - Prefix global functions with `rtbcb_`.
 - Prefix class names with `RTBCB_`.
-- Start each PHP file with `defined('ABSPATH') || exit;`.
+- Start each PHP file with `defined( 'ABSPATH' ) || exit;`.
 - Sanitize and escape all input and output with the appropriate `esc_*` function.
 - Wrap user visible strings in translation functions like `__( 'text', 'rtbcb' )`.
 - Do not modify code in the `vendor/` directory; it contains third-party dependencies.
