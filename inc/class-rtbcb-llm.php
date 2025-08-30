@@ -42,8 +42,16 @@ class RTBCB_LLM {
      */
     protected $last_company_research;
 
+    /**
+     * Time-to-live for cached research results.
+     *
+     * @var int
+     */
+    private $cache_ttl;
+
     public function __construct() {
-        $this->api_key = rtbcb_get_openai_api_key();
+        $this->api_key   = rtbcb_get_openai_api_key();
+        $this->cache_ttl = defined( 'DAY_IN_SECONDS' ) ? DAY_IN_SECONDS : 86400;
 
         $timeout           = rtbcb_get_api_timeout();
         $max_output_tokens = intval( get_option( 'rtbcb_gpt5_max_output_tokens', 20000 ) );
@@ -96,6 +104,20 @@ class RTBCB_LLM {
      */
     public function get_last_response() {
         return $this->last_response;
+    }
+
+    /**
+     * Build a cache key for research results.
+     *
+     * @param string $type        Cache segment identifier.
+     * @param array  $user_inputs User supplied inputs.
+     * @return string Cache key.
+     */
+    private function build_cache_key( $type, $user_inputs ) {
+        $company  = sanitize_key( $user_inputs['company_name'] ?? 'unknown' );
+        $industry = sanitize_key( $user_inputs['industry'] ?? 'general' );
+
+        return "rtbcb_{$type}_{$company}_{$industry}";
     }
 
     /**
@@ -660,36 +682,56 @@ USER,
      * @param array $user_inputs    Sanitized user inputs.
      * @param array $roi_data       ROI calculation data.
      * @param array $context_chunks Optional context strings for the prompt.
+     * @param bool  $force_refresh  Optional. Force refresh of cached research. Default false.
      *
      * @return array|WP_Error Comprehensive analysis array or error object.
      */
-    public function generate_comprehensive_business_case( $user_inputs, $roi_data, $context_chunks = [] ) {
+    public function generate_comprehensive_business_case( $user_inputs, $roi_data, $context_chunks = [], $force_refresh = false ) {
         $this->current_inputs = $user_inputs;
 
         if ( empty( $this->api_key ) ) {
             return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
         }
 
-        // Enhanced company research
-        $company_research = $this->conduct_company_research( $user_inputs );
-        
-        // Industry analysis
-        $industry_analysis = $this->analyze_industry_context( $user_inputs );
-        if ( is_wp_error( $industry_analysis ) ) {
-            return $industry_analysis;
+        $company_key  = $this->build_cache_key( 'company_research', $user_inputs );
+        $industry_key = $this->build_cache_key( 'industry_analysis', $user_inputs );
+        $tech_key     = $this->build_cache_key( 'tech_landscape', $user_inputs );
+
+        if ( $force_refresh ) {
+            delete_transient( $company_key );
+            delete_transient( $industry_key );
+            delete_transient( $tech_key );
         }
 
-        // Technology landscape research
-        $tech_landscape = $this->research_treasury_solutions( $user_inputs, $context_chunks );
-        if ( is_wp_error( $tech_landscape ) ) {
-            return $tech_landscape;
+        $company_research = get_transient( $company_key );
+        if ( false === $company_research ) {
+            $company_research = $this->conduct_company_research( $user_inputs );
+            set_transient( $company_key, $company_research, $this->cache_ttl );
         }
-        
+
+        $industry_analysis = get_transient( $industry_key );
+        if ( false === $industry_analysis ) {
+            $industry_analysis = $this->analyze_industry_context( $user_inputs );
+            if ( is_wp_error( $industry_analysis ) ) {
+                return $industry_analysis;
+            }
+            set_transient( $industry_key, $industry_analysis, $this->cache_ttl );
+        }
+
+        $tech_landscape = get_transient( $tech_key );
+        if ( false === $tech_landscape ) {
+            $tech_landscape = $this->research_treasury_solutions( $user_inputs, $context_chunks );
+            if ( is_wp_error( $tech_landscape ) ) {
+                return $tech_landscape;
+            }
+            set_transient( $tech_key, $tech_landscape, $this->cache_ttl );
+        }
+
         // Generate comprehensive report
         $model = $this->select_optimal_model( $user_inputs, $context_chunks );
-        $prompt = $this->build_comprehensive_prompt( 
-            $user_inputs, 
-            $roi_data, 
+        $prompt = $this->build_comprehensive_prompt(
+            $user_inputs,
+            $roi_data,
             $company_research,
             $industry_analysis,
             $tech_landscape

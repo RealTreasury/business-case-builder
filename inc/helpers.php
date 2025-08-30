@@ -1413,3 +1413,19 @@ function rtbcb_get_analysis_job_result( $job_id ) {
     return get_option( 'rtbcb_analysis_job_' . $job_id, null );
 }
 
+/**
+ * Invalidate cached research results for a company and industry.
+ *
+ * @param string $company  Company name.
+ * @param string $industry Industry name.
+ * @return void
+ */
+function rtbcb_invalidate_research_cache( $company, $industry ) {
+    $company  = sanitize_key( $company );
+    $industry = sanitize_key( $industry );
+
+    delete_transient( "rtbcb_company_research_{$company}_{$industry}" );
+    delete_transient( "rtbcb_industry_analysis_{$company}_{$industry}" );
+    delete_transient( "rtbcb_tech_landscape_{$company}_{$industry}" );
+}
+
