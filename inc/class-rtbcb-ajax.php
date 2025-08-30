@@ -140,39 +140,50 @@ class RTBCB_Ajax {
 
 		$status = RTBCB_Background_Job::get_status( $job_id );
 		if ( is_wp_error( $status ) ) {
-			wp_send_json_error( $status->get_error_message(), 404 );
-			return;
+			$status = [
+			       'status'  => 'error',
+			       'message' => sanitize_text_field( $status->get_error_message() ),
+			];
+		}
+
+		$response = [
+			'status' => $status['status'] ?? '',
+		];
+
+		foreach ( [ 'step', 'message', 'percent' ] as $field ) {
+			if ( isset( $status[ $field ] ) ) {
+			       $response[ $field ] = 'percent' === $field ? floatval( $status[ $field ] ) : sanitize_text_field( $status[ $field ] );
+			}
 		}
 
 		if (
-			'completed' === ( $status['status'] ?? '' ) &&
+			'completed' === ( $response['status'] ?? '' ) &&
 			! empty( $status['result']['report_data'] )
 		) {
-			$result                = $status['result'];
-			$status['report_data'] = $result['report_data'];
+			$result                  = $status['result'];
+			$response['report_data'] = $result['report_data'];
 			if ( is_array( $result ) ) {
-				foreach ( $result as $key => $value ) {
-					if ( 'report_data' === $key ) {
-						continue;
-					}
-					$status[ $key ] = $value;
-				}
+			       foreach ( $result as $key => $value ) {
+			               if ( 'report_data' === $key ) {
+			                       continue;
+			               }
+			               $response[ $key ] = $value;
+			       }
 			}
-			unset( $status['result'] );
 		}
 
-		wp_send_json_success( $status );
-	}
+		wp_send_json_success( $response );
+       }
 
        private static function collect_and_validate_user_inputs() {
-               $validator = new RTBCB_Validator();
-               $validated = $validator->validate( $_POST );
+		$validator = new RTBCB_Validator();
+		$validated = $validator->validate( $_POST );
 
-               if ( isset( $validated['error'] ) ) {
-                       return new WP_Error( 'validation_error', $validated['error'] );
-               }
+		if ( isset( $validated['error'] ) ) {
+			return new WP_Error( 'validation_error', $validated['error'] );
+		}
 
-               return $validated;
+		return $validated;
        }
 
 	private static function create_fallback_profile( $user_inputs ) {

@@ -81,8 +81,12 @@ phpunit tests/report-error-handling.test.php
 echo "14. Running background job tests..."
 php tests/background-job.test.php
 
+# Job status test
+echo "14b. Running job status tests..."
+php tests/job-status.test.php
+
 # Business analysis generation test
-echo "14. Running business analysis generation test..."
+echo "14c. Running business analysis generation test..."
 phpunit tests/generate-business-analysis.test.php
 
 # JavaScript tests

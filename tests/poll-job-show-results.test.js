@@ -30,7 +30,7 @@ describe('pollJob completion', () => {
                 success: true,
                 data: {
                     status: 'completed',
-                    result: { report_data: reportData }
+                    report_data: reportData
                 }
             })
         });

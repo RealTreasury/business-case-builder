@@ -176,7 +176,8 @@ async function pollJobStatus(jobId, progressContainer, formContainer) {
             return;
         }
 
-        const status = data.data.status;
+        const statusData = data.data;
+        const status = statusData.status;
         if (status === 'completed') {
             if (progressContainer) {
                 var progressTextSuccess = progressContainer.querySelector('.rtbcb-progress-text');
@@ -196,7 +197,7 @@ async function pollJobStatus(jobId, progressContainer, formContainer) {
             }
             rtbcbIsSubmitting = false;
         } else if (status === 'error') {
-            handleSubmissionError(data.data.message || 'Job failed.', '');
+            handleSubmissionError(statusData.message || 'Job failed.', '');
             rtbcbIsSubmitting = false;
         } else {
             setTimeout(() => pollJobStatus(jobId, progressContainer, formContainer), 2000);
