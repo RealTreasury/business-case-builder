@@ -250,6 +250,7 @@ before the closing `</body>` tag.
 - **API Configuration**: OpenAI models and authentication
 - **ROI Assumptions**: Labor costs, efficiency rates, fee baselines
 - **Portal Integration**: Real Treasury portal connectivity
+- **API Timeout**: Adjust external request duration via the `rtbcb_api_timeout` filter and match server-level `proxy_read_timeout`/`fastcgi_read_timeout`.
 
 ## 🔧 Technical Architecture
 

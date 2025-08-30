@@ -184,7 +184,7 @@ class RTBCB_RAG {
                     'input' => $text,
                 ]
             ),
-            'timeout' => 60,
+            'timeout' => rtbcb_get_api_timeout(),
         ];
 
         $response = wp_remote_post( $endpoint, $args );

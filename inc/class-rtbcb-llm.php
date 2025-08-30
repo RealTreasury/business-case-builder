@@ -45,7 +45,7 @@ class RTBCB_LLM {
     public function __construct() {
         $this->api_key = rtbcb_get_openai_api_key();
 
-        $timeout = intval( get_option( 'rtbcb_gpt5_timeout', 180 ) );
+        $timeout = intval( get_option( 'rtbcb_gpt5_timeout', rtbcb_get_api_timeout() ) );
         $config  = rtbcb_get_gpt5_config(
             array_merge(
                 get_option( 'rtbcb_gpt5_config', [] ),
@@ -1574,7 +1574,7 @@ USER,
             $body['store'] = (bool) $this->gpt5_config['store'];
         }
 
-        $timeout = intval( $this->gpt5_config['timeout'] ?? 180 );
+        $timeout = intval( $this->gpt5_config['timeout'] ?? rtbcb_get_api_timeout() );
 
         $args = [
             'headers' => [

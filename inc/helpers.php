@@ -32,6 +32,28 @@ function rtbcb_has_openai_api_key() {
 }
 
 /**
+ * Retrieve the timeout for external API requests.
+ *
+ * Allows customization via the `rtbcb_api_timeout` filter so site owners can
+ * increase execution limits when necessary.
+ *
+ * @return int Timeout in seconds.
+ */
+function rtbcb_get_api_timeout() {
+    /**
+     * Filter the timeout value for outbound API requests.
+     *
+     * @param int $timeout Default timeout in seconds.
+     */
+    $timeout = 60;
+    if ( function_exists( 'apply_filters' ) ) {
+        $timeout = (int) apply_filters( 'rtbcb_api_timeout', $timeout );
+    }
+
+    return max( 1, $timeout );
+}
+
+/**
  * Determine if an error indicates an OpenAI configuration issue.
  *
  * Checks for common phrases like a missing API key or invalid model.
@@ -733,7 +755,7 @@ function rtbcb_test_generate_category_recommendation( $analysis ) {
                         'input'        => $input,
                     ]
                 ),
-                'timeout' => 60,
+                'timeout' => rtbcb_get_api_timeout(),
             ]
         );
 
@@ -1148,9 +1170,9 @@ function rtbcb_proxy_openai_responses() {
     $body_array['max_output_tokens'] = $max_output_tokens;
     $body              = wp_json_encode( $body_array );
 
-    $timeout = intval( get_option( 'rtbcb_responses_timeout', 120 ) );
+    $timeout = intval( get_option( 'rtbcb_responses_timeout', rtbcb_get_api_timeout() ) );
     if ( $timeout <= 0 ) {
-        $timeout = 120;
+        $timeout = rtbcb_get_api_timeout();
     }
 
     $response = wp_remote_post(
