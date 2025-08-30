@@ -750,6 +750,20 @@ class BusinessCaseBuilder {
 
     createROIChart(canvas, roiData) {
         const ctx = canvas.getContext('2d');
+        if (!ctx) {
+            console.error('RTBCB: Unable to get 2D context for ROI chart');
+            const container = canvas.parentElement;
+            if (container) {
+                const message = ( window.wp?.i18n?.__ )
+                    ? wp.i18n.__('Unable to render chart', 'rtbcb')
+                    : 'Unable to render chart';
+                const msgEl = document.createElement('p');
+                msgEl.textContent = message;
+                msgEl.className = 'rtbcb-chart-error';
+                container.appendChild(msgEl);
+            }
+            return;
+        }
 
         const chartData = {
             labels: ['Labor Savings', 'Fee Savings', 'Error Reduction', 'Total Benefit'],
