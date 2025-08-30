@@ -539,7 +539,12 @@ class BusinessCaseBuilder {
             }
             const status = data.data.status;
             if (status === 'completed') {
-                const report = data.data.report_data;
+                const result = data.data.result;
+                if (!result) {
+                    this.handleError({ message: 'Result data missing', type: 'job_error' });
+                    return;
+                }
+                const report = result.report_data;
                 if (report) {
                     this.handleSuccess(report);
                 } else {

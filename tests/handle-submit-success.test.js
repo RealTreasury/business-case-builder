@@ -35,7 +35,7 @@ global.fetch = function(url, options) {
     receivedHeaders = options.headers;
     const payload = {
         success: true,
-        data: { report_html: '<div>Report</div>' }
+        data: { job_id: '123' }
     };
     const response = {
         ok: true,
@@ -86,14 +86,14 @@ vm.runInThisContext(code);
 
 const builder = new BusinessCaseBuilder();
 builder.form = form;
-let resultsData = null;
+let polledJobId = null;
 builder.showProgress = () => {};
-builder.showResults = (data) => { resultsData = data; };
+builder.pollJob = (jobId) => { polledJobId = jobId; };
 builder.showError = () => {};
 
 (async () => {
     await builder.handleSubmit();
-    assert.strictEqual(resultsData.report_html, '<div>Report</div>');
+    assert.strictEqual(polledJobId, '123');
     assert.strictEqual(receivedHeaders['Accept'], 'application/json');
     assert.strictEqual(warnCalled, false);
     console.warn = originalWarn;
