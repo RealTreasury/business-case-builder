@@ -539,7 +539,7 @@ class BusinessCaseBuilder {
             }
             const status = data.data.status;
             if (status === 'completed') {
-                this.handleSuccess(data.data.result);
+                this.handleSuccess(data.data.report_data);
             } else if (status === 'error') {
                 this.handleError({ message: data.data.message || 'Job failed', type: 'job_error' });
             } else {
@@ -676,23 +676,42 @@ class BusinessCaseBuilder {
             progressContainer.innerHTML = '';
         }
 
+        // Map nested report data
+        const mapped = {
+            companyName: data.metadata?.company_name || 'Your Company',
+            scenarios: data.financial_analysis?.roi_scenarios || {},
+            recommendation: {
+                category_info: data.technology_strategy?.category_details || {},
+                confidence: data.metadata?.confidence_level || 0.75,
+                reasoning: data.technology_strategy?.recommended_category || ''
+            },
+            narrative: {
+                narrative: data.executive_summary?.executive_recommendation || '',
+                next_actions: [
+                    ...(data.action_plan?.immediate_steps || []),
+                    ...(data.action_plan?.short_term_milestones || []),
+                    ...(data.action_plan?.long_term_objectives || [])
+                ]
+            },
+            risks: data.risk_analysis?.implementation_risks || []
+        };
+
         // Close modal
         window.closeBusinessCaseModal();
 
         // Render results
         const resultsContainer = document.getElementById('rtbcbResults');
         if (resultsContainer) {
-            resultsContainer.innerHTML = this.renderResults(data);
-            this.populateRiskAssessment(data.narrative?.risks || []);
+            resultsContainer.innerHTML = this.renderResults(mapped);
+            this.populateRiskAssessment(mapped.risks);
             resultsContainer.style.display = 'block';
             resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     }
 
     renderResults(data) {
-        const { scenarios, recommendation, company_name } = data;
-        const narrative = data.narrative || {};
-        const displayName = company_name || 'Your Company';
+        const { scenarios, recommendation, companyName, narrative } = data;
+        const displayName = companyName || 'Your Company';
 
         return `
             <div class="rtbcb-results-container">
