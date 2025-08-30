@@ -610,6 +610,11 @@ class BusinessCaseBuilder {
     handleSuccess(data) {
         console.log('RTBCB: Success data received:', data);
 
+        if (typeof data === 'string') {
+            this.showEnhancedHTMLReport(data);
+            return;
+        }
+
         // Check if we have HTML report data
         if (data.report_html && data.report_html.trim()) {
             this.showEnhancedHTMLReport(data.report_html);
