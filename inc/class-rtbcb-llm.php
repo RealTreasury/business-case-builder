@@ -35,6 +35,13 @@ class RTBCB_LLM {
      */
     protected $last_response;
 
+    /**
+     * Serialized company research from the last request.
+     *
+     * @var string|null
+     */
+    protected $last_company_research;
+
     public function __construct() {
         $this->api_key = rtbcb_get_openai_api_key();
 
@@ -843,22 +850,27 @@ USER,
     }
 
     /**
-     * Conduct company-specific research
+     * Conduct company-specific research.
+     *
+     * @param array $user_inputs User-provided company details.
+     * @return array Structured research data.
      */
     private function conduct_company_research( $user_inputs ) {
-        $company_name = $user_inputs['company_name'] ?? '';
-        $industry = $user_inputs['industry'] ?? '';
-        $company_size = $user_inputs['company_size'] ?? '';
-        
+        $company_name = sanitize_text_field( $user_inputs['company_name'] ?? '' );
+        $industry     = sanitize_text_field( $user_inputs['industry'] ?? '' );
+        $company_size = sanitize_text_field( $user_inputs['company_size'] ?? '' );
+
         // Simulate company research (in real implementation, this could query APIs, databases, etc.)
         $research = [
-            'company_profile' => $this->build_company_profile( $company_name, $industry, $company_size ),
-            'industry_positioning' => $this->analyze_market_position( $industry, $company_size ),
-            'treasury_maturity' => $this->assess_treasury_maturity( $user_inputs ),
+            'company_profile'       => $this->build_company_profile( $company_name, $industry, $company_size ),
+            'industry_positioning'  => $this->analyze_market_position( $industry, $company_size ),
+            'treasury_maturity'     => $this->assess_treasury_maturity( $user_inputs ),
             'competitive_landscape' => $this->analyze_competitive_context( $industry ),
-            'growth_trajectory' => $this->project_growth_path( $company_size, $industry ),
+            'growth_trajectory'     => $this->project_growth_path( $company_size, $industry ),
         ];
-        
+
+        $this->last_company_research = wp_json_encode( $research );
+
         return $research;
     }
 
@@ -1117,6 +1129,46 @@ USER,
         return [
             'level'     => sanitize_text_field( $level ),
             'rationale' => sanitize_text_field( $rationale ),
+        ];
+    }
+
+    /**
+     * Project growth trajectory based on company size and industry.
+     *
+     * @param string $company_size Company size descriptor.
+     * @param string $industry     Industry name or slug.
+     * @return array {
+     *     @type string $size_outlook    Growth outlook based on company size.
+     *     @type string $industry_outlook Growth outlook based on industry.
+     *     @type string $summary         Combined sanitized summary.
+     * }
+     */
+    private function project_growth_path( $company_size, $industry ) {
+        $company_size = sanitize_text_field( $company_size );
+        $industry     = sanitize_text_field( $industry );
+
+        $size_outlooks = [
+            '<$50M'      => __( 'high growth potential', 'rtbcb' ),
+            '$50M-$500M' => __( 'scaling trajectory', 'rtbcb' ),
+            '$500M-$2B'  => __( 'steady expansion', 'rtbcb' ),
+            '>$2B'       => __( 'mature growth', 'rtbcb' ),
+        ];
+
+        $industry_outlooks = [
+            'technology'    => __( 'rapid expansion', 'rtbcb' ),
+            'manufacturing' => __( 'stable outlook', 'rtbcb' ),
+            'retail'        => __( 'moderate growth', 'rtbcb' ),
+            'finance'       => __( 'regulated stability', 'rtbcb' ),
+        ];
+
+        $size_outlook     = $size_outlooks[ $company_size ] ?? __( 'stable', 'rtbcb' );
+        $industry_key     = strtolower( $industry );
+        $industry_outlook = $industry_outlooks[ $industry_key ] ?? __( 'neutral', 'rtbcb' );
+
+        return [
+            'size_outlook'     => sanitize_text_field( $size_outlook ),
+            'industry_outlook' => sanitize_text_field( $industry_outlook ),
+            'summary'          => sanitize_text_field( $size_outlook . '; ' . $industry_outlook ),
         ];
     }
 

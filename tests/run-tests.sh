@@ -74,5 +74,8 @@ else
     echo "15. Skipping WordPress coding standards (phpcs not installed)"
 fi
 
+echo "16. Running project growth path test..."
+php tests/project-growth-path.test.php
+
 echo "================================================"
 echo "Tests complete!"
