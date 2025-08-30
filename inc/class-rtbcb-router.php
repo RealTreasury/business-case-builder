@@ -269,75 +269,99 @@ class RTBCB_Router {
     * @return array
     */
    private function transform_data_for_template( $business_case_data ) {
+       $defaults = [
+           'company_name'           => '',
+           'base_roi'               => 0,
+           'roi_base'               => 0,
+           'recommended_category'   => '',
+           'category_info'          => [],
+           'executive_summary'      => '',
+           'narrative'              => '',
+           'executive_recommendation' => '',
+           'recommendation'         => '',
+           'payback_months'         => 'N/A',
+           'sensitivity_analysis'   => [],
+           'company_analysis'       => '',
+           'maturity_level'         => 'intermediate',
+           'current_state_analysis' => '',
+           'market_analysis'        => '',
+           'tech_adoption_level'    => 'medium',
+           'operational_analysis'   => [],
+           'risks'                  => [],
+           'confidence'             => 0.85,
+           'processing_time'        => 0,
+       ];
+       $business_case_data = wp_parse_args( (array) $business_case_data, $defaults );
+
        // Get current company data.
        $company      = rtbcb_get_current_company();
-       $company_name = $business_case_data['company_name'] ?? $company['name'] ?? __( 'Your Company', 'rtbcb' );
+       $company_name = sanitize_text_field( $business_case_data['company_name'] ?: ( $company['name'] ?? __( 'Your Company', 'rtbcb' ) ) );
 
        // Derive recommended category and details from recommendation if not provided.
-       $recommended_category = $business_case_data['recommended_category'] ?? ( $business_case_data['recommendation']['recommended'] ?? 'treasury_management_system' );
-       $category_details     = $business_case_data['category_info'] ?? ( $business_case_data['recommendation']['category_info'] ?? [] );
+       $recommended_category = sanitize_text_field( $business_case_data['recommended_category'] ?: ( $business_case_data['recommendation']['recommended'] ?? 'treasury_management_system' ) );
+       $category_details     = $business_case_data['category_info'] ?: ( $business_case_data['recommendation']['category_info'] ?? [] );
 
-	// Prepare operational and risk data with fallbacks.
-	$operational_analysis = (array) ( $business_case_data['operational_analysis'] ?? [] );
-	if ( empty( $operational_analysis ) ) {
-	$operational_analysis = [ __( 'No data provided', 'rtbcb' ) ];
-	}
-	
-	$implementation_risks = (array) ( $business_case_data['risks'] ?? [] );
-	if ( empty( $implementation_risks ) ) {
-	$implementation_risks = [ __( 'No data provided', 'rtbcb' ) ];
-	}
-	
-	// Create structured data format expected by template.
-	$report_data = [
-           'metadata'            => [
-               'company_name'    => $company_name,
-               'analysis_date'   => current_time( 'Y-m-d' ),
-               'confidence_level'=> $business_case_data['confidence'] ?? 0.85,
-               'processing_time' => $business_case_data['processing_time'] ?? 0,
+       // Prepare operational and risk data with fallbacks.
+       $operational_analysis = array_map( 'sanitize_text_field', (array) $business_case_data['operational_analysis'] );
+       if ( empty( $operational_analysis ) ) {
+           $operational_analysis = [ __( 'No data provided', 'rtbcb' ) ];
+       }
+
+       $implementation_risks = array_map( 'sanitize_text_field', (array) $business_case_data['risks'] );
+       if ( empty( $implementation_risks ) ) {
+           $implementation_risks = [ __( 'No data provided', 'rtbcb' ) ];
+       }
+
+       // Create structured data format expected by template.
+       $report_data = [
+           'metadata'           => [
+               'company_name'     => $company_name,
+               'analysis_date'    => current_time( 'Y-m-d' ),
+               'confidence_level' => floatval( $business_case_data['confidence'] ),
+               'processing_time'  => intval( $business_case_data['processing_time'] ),
            ],
            'executive_summary'  => [
-               'strategic_positioning'   => $business_case_data['executive_summary'] ?? $business_case_data['narrative'] ?? '',
-               'key_value_drivers'      => $this->extract_value_drivers( $business_case_data ),
-               'executive_recommendation'=> $business_case_data['executive_recommendation'] ?? $business_case_data['recommendation'] ?? '',
-               'business_case_strength' => $this->determine_business_case_strength( $business_case_data ),
+               'strategic_positioning'    => wp_kses_post( $business_case_data['executive_summary'] ?: $business_case_data['narrative'] ),
+               'key_value_drivers'       => $this->extract_value_drivers( $business_case_data ),
+               'executive_recommendation' => wp_kses_post( $business_case_data['executive_recommendation'] ?: $business_case_data['recommendation'] ),
+               'business_case_strength'  => $this->determine_business_case_strength( $business_case_data ),
            ],
            'financial_analysis' => [
                'roi_scenarios'      => $this->format_roi_scenarios( $business_case_data ),
                'payback_analysis'   => [
-                   'payback_months' => $business_case_data['payback_months'] ?? 'N/A',
+                   'payback_months' => sanitize_text_field( $business_case_data['payback_months'] ),
                ],
-               'sensitivity_analysis' => $business_case_data['sensitivity_analysis'] ?? [],
+               'sensitivity_analysis' => $business_case_data['sensitivity_analysis'],
            ],
            'company_intelligence' => [
                'enriched_profile' => [
-                   'enhanced_description' => $business_case_data['company_analysis'] ?? '',
-                   'maturity_level'       => $business_case_data['maturity_level'] ?? 'intermediate',
+                   'enhanced_description' => wp_kses_post( $business_case_data['company_analysis'] ),
+                   'maturity_level'       => sanitize_text_field( $business_case_data['maturity_level'] ),
                    'treasury_maturity'    => [
-                       'current_state'    => $business_case_data['current_state_analysis'] ?? '',
+                       'current_state' => wp_kses_post( $business_case_data['current_state_analysis'] ),
                    ],
                ],
                'industry_context' => [
                    'sector_analysis' => [
-                       'market_dynamics' => $business_case_data['market_analysis'] ?? '',
+                       'market_dynamics' => wp_kses_post( $business_case_data['market_analysis'] ),
                    ],
                    'benchmarking'   => [
-                       'technology_penetration' => $business_case_data['tech_adoption_level'] ?? 'medium',
+                       'technology_penetration' => sanitize_text_field( $business_case_data['tech_adoption_level'] ),
                    ],
                ],
            ],
-			'technology_strategy' => [
-				'recommended_category' => $recommended_category,
-				'category_details'     => $category_details,
-			],
-			'operational_insights' => $operational_analysis,
-			'risk_analysis'        => [
-				'implementation_risks' => $implementation_risks,
-			],
-	           'action_plan'          => [
-               'immediate_steps'   => $this->extract_immediate_steps( $business_case_data ),
-               'short_term_milestones' => $this->extract_short_term_steps( $business_case_data ),
-               'long_term_objectives'  => $this->extract_long_term_steps( $business_case_data ),
+           'technology_strategy' => [
+               'recommended_category' => $recommended_category,
+               'category_details'     => $category_details,
+           ],
+           'operational_insights' => $operational_analysis,
+           'risk_analysis'        => [
+               'implementation_risks' => $implementation_risks,
+           ],
+           'action_plan'          => [
+               'immediate_steps'      => $this->extract_immediate_steps( $business_case_data ),
+               'short_term_milestones'=> $this->extract_short_term_steps( $business_case_data ),
+               'long_term_objectives' => $this->extract_long_term_steps( $business_case_data ),
            ],
        ];
 
