@@ -33,6 +33,30 @@ async function runTests() {
 
     await generateProfessionalReport('context');
     assert.strictEqual(capturedBody.max_output_tokens, 4000, 'Should apply min_output_tokens');
+
+    global.rtbcbReport = {
+        report_model: 'gpt-5-mini',
+        model_capabilities: {},
+        ajax_url: 'https://example.com',
+        template_url: 'template.html',
+        min_output_tokens: 5000,
+        max_output_tokens: 2500
+    };
+
+    await generateProfessionalReport('context');
+    assert.strictEqual(capturedBody.max_output_tokens, 2500, 'Should not exceed max_output_tokens');
+
+    global.rtbcbReport = {
+        report_model: 'gpt-5-mini',
+        model_capabilities: {},
+        ajax_url: 'https://example.com',
+        template_url: 'template.html',
+        min_output_tokens: 1,
+        max_output_tokens: 8000
+    };
+
+    await generateProfessionalReport('context');
+    assert.strictEqual(capturedBody.max_output_tokens, 3000, 'Should include buffer in token estimate');
 }
 
 runTests().then(() => console.log('Min output tokens test passed.'));

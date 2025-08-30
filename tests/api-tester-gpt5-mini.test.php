@@ -26,6 +26,12 @@ if ( ! function_exists( 'get_option' ) ) {
         if ( 'rtbcb_gpt5_config' === $name ) {
             return [];
         }
+        if ( 'rtbcb_gpt5_max_output_tokens' === $name ) {
+            return 25000;
+        }
+        if ( 'rtbcb_gpt5_min_output_tokens' === $name ) {
+            return 5000;
+        }
         return $default;
     }
 }
@@ -95,9 +101,12 @@ $mock_response = [
     ] ),
 ];
 
+$captured_args = [];
+
 if ( ! function_exists( 'wp_remote_post' ) ) {
     function wp_remote_post( $url, $args ) {
-        global $mock_response;
+        global $mock_response, $captured_args;
+        $captured_args = $args;
         return $mock_response;
     }
 }
@@ -123,6 +132,12 @@ if ( ! function_exists( 'rtbcb_model_supports_temperature' ) ) {
 $method = new ReflectionMethod( RTBCB_API_Tester::class, 'test_completion' );
 $method->setAccessible( true );
 $result = $method->invoke( null, 'test-key' );
+
+$sent = json_decode( $captured_args['body'] ?? '{}', true );
+if ( 25000 !== ( $sent['max_output_tokens'] ?? 0 ) ) {
+    echo "API tester did not respect configured max tokens\n";
+    exit( 1 );
+}
 
 if ( ! $result['success'] ) {
     echo "API tester did not report success\n";
