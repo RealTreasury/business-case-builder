@@ -1662,66 +1662,76 @@ SYSTEM;
             $body['store'] = (bool) $this->gpt5_config['store'];
         }
 
+        // Enable streaming so we can process partial chunks.
+        $body['stream'] = true;
+
         $timeout = intval( $this->gpt5_config['timeout'] ?? 180 );
 
-        $args = [
-            'headers' => [
-                'Authorization' => 'Bearer ' . $this->api_key,
-                'Content-Type' => 'application/json',
-            ],
-            'body'    => wp_json_encode( $body ),
-            'timeout' => $timeout,
+        $request_body       = wp_json_encode( $body );
+        $this->last_request = $body;
+
+        $response_body = '';
+        $final_json    = [];
+        $stream_buffer = '';
+
+        $ch = curl_init( $endpoint );
+        curl_setopt( $ch, CURLOPT_HTTPHEADER, [
+            'Authorization: Bearer ' . $this->api_key,
+            'Content-Type: application/json',
+        ] );
+        curl_setopt( $ch, CURLOPT_POST, true );
+        curl_setopt( $ch, CURLOPT_POSTFIELDS, $request_body );
+        curl_setopt( $ch, CURLOPT_TIMEOUT, $timeout );
+        curl_setopt( $ch, CURLOPT_WRITEFUNCTION, function( $curl, $chunk ) use ( &$response_body, &$final_json, &$stream_buffer ) {
+            $response_body .= $chunk;
+            $stream_buffer .= $chunk;
+            while ( strpos( $stream_buffer, "\n" ) !== false ) {
+                $line        = substr( $stream_buffer, 0, strpos( $stream_buffer, "\n" ) );
+                $stream_buffer = substr( $stream_buffer, strpos( $stream_buffer, "\n" ) + 1 );
+                $line        = trim( $line );
+                if ( '' === $line || 0 !== strpos( $line, 'data:' ) ) {
+                    continue;
+                }
+                $payload = trim( substr( $line, 5 ) );
+                if ( '[DONE]' === $payload ) {
+                    continue;
+                }
+                $decoded = json_decode( $payload, true );
+                if ( isset( $decoded['output_text'] ) ) {
+                    $final_json = $decoded;
+                } elseif ( isset( $decoded['delta'] ) ) {
+                    $final_json['output_text'] = ( $final_json['output_text'] ?? '' ) . $decoded['delta'];
+                }
+            }
+
+            return strlen( $chunk );
+        } );
+
+        $exec = curl_exec( $ch );
+        $code = curl_getinfo( $ch, CURLINFO_HTTP_CODE );
+        if ( false === $exec ) {
+            $error = curl_error( $ch );
+            curl_close( $ch );
+            return new WP_Error( 'llm_http_error', sprintf( __( 'Language model request failed: %s', 'rtbcb' ), $error ) );
+        }
+        curl_close( $ch );
+
+        if ( $code >= 400 ) {
+            $message = isset( $final_json['error']['message'] ) ? $final_json['error']['message'] : __( 'Unexpected error from language model.', 'rtbcb' );
+            $message = sanitize_text_field( $message );
+            return new WP_Error( 'llm_http_status', $message, [ 'status' => $code ] );
+        }
+
+        $response = [
+            'body'     => wp_json_encode( $final_json ),
+            'response' => [ 'code' => $code, 'message' => get_status_header_desc( $code ) ],
+            'headers'  => [],
         ];
 
-        $this->last_request = $body;
-        $response           = wp_remote_post( $endpoint, $args );
         $this->last_response = $response;
 
         if ( class_exists( 'RTBCB_API_Log' ) ) {
-            $decoded = [];
-            if ( is_wp_error( $response ) ) {
-                $decoded = [ 'error' => $response->get_error_message() ];
-            } else {
-                $decoded = json_decode( wp_remote_retrieve_body( $response ), true );
-                if ( ! is_array( $decoded ) ) {
-                    $decoded = [];
-                }
-            }
-
-            RTBCB_API_Log::save_log( $body, $decoded, get_current_user_id() );
-        }
-
-        if ( is_wp_error( $response ) ) {
-            if ( 'timeout' === $response->get_error_code() || false !== strpos( $response->get_error_message(), 'timed out' ) ) {
-                return new WP_Error( 'llm_timeout', __( 'The language model request timed out. Please try again.', 'rtbcb' ) );
-            }
-
-            return new WP_Error(
-                'llm_http_error',
-                sprintf( __( 'Language model request failed: %s', 'rtbcb' ), $response->get_error_message() )
-            );
-        }
-
-        $code = intval( wp_remote_retrieve_response_code( $response ) );
-        if ( $code >= 400 ) {
-            $body_response = wp_remote_retrieve_body( $response );
-            $decoded       = json_decode( $body_response, true );
-
-            if ( is_array( $decoded ) ) {
-                if ( isset( $decoded['error']['message'] ) ) {
-                    $message = $decoded['error']['message'];
-                } elseif ( isset( $decoded['message'] ) ) {
-                    $message = $decoded['message'];
-                } else {
-                    $message = wp_json_encode( $decoded );
-                }
-            } else {
-                $message = $body_response;
-            }
-
-            $message = sanitize_text_field( $message );
-
-            return new WP_Error( 'llm_http_status', $message, [ 'status' => $code ] );
+            RTBCB_API_Log::save_log( $body, $final_json, get_current_user_id() );
         }
 
         return $response;

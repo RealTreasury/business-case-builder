@@ -1221,46 +1221,93 @@ function rtbcb_proxy_openai_responses() {
     $max_output_tokens = intval( $body_array['max_output_tokens'] ?? $config['max_output_tokens'] );
     $max_output_tokens = min( 8000, max( 256, $max_output_tokens ) );
     $body_array['max_output_tokens'] = $max_output_tokens;
-    $body              = wp_json_encode( $body_array );
+    $body_array['stream']            = true;
+    $body                            = wp_json_encode( $body_array );
 
     $timeout = intval( get_option( 'rtbcb_responses_timeout', 120 ) );
     if ( $timeout <= 0 ) {
         $timeout = 120;
     }
 
-    $response = wp_remote_post(
-        'https://api.openai.com/v1/responses',
-        [
-            'headers' => [
-                'Content-Type'  => 'application/json',
-                'Authorization' => 'Bearer ' . $api_key,
-            ],
-            'body'    => $body,
-            'timeout' => $timeout,
-        ]
-    );
+    header( 'Content-Type: text/event-stream' );
+    header( 'Cache-Control: no-cache' );
 
-    $decoded = [];
-    if ( is_wp_error( $response ) ) {
-        $decoded = [ 'error' => $response->get_error_message() ];
-        if ( class_exists( 'RTBCB_API_Log' ) ) {
-            RTBCB_API_Log::save_log( $body_array, $decoded, get_current_user_id() );
+    $response_body = '';
+    $final_json    = [];
+    $buffer        = '';
+    $http_status   = 0;
+
+    $ch = curl_init( 'https://api.openai.com/v1/responses' );
+    curl_setopt( $ch, CURLOPT_HTTPHEADER, [
+        'Content-Type: application/json',
+        'Authorization: Bearer ' . $api_key,
+    ] );
+    curl_setopt( $ch, CURLOPT_POST, true );
+    curl_setopt( $ch, CURLOPT_POSTFIELDS, $body );
+    curl_setopt( $ch, CURLOPT_TIMEOUT, $timeout );
+    curl_setopt( $ch, CURLOPT_HEADERFUNCTION, function( $curl, $header ) use ( &$http_status ) {
+        if ( preg_match( '#HTTP/\d+\.\d\s+(\d+)#', $header, $matches ) ) {
+            $http_status = intval( $matches[1] );
         }
-        wp_send_json_error( [ 'message' => $response->get_error_message() ], 500 );
-    }
+        return strlen( $header );
+    } );
+    curl_setopt( $ch, CURLOPT_WRITEFUNCTION, function( $curl, $chunk ) use ( &$response_body, &$final_json, &$buffer, &$http_status ) {
+        $response_body .= $chunk;
 
-    $code      = wp_remote_retrieve_response_code( $response );
-    $resp_body = wp_remote_retrieve_body( $response );
-    $decoded   = json_decode( $resp_body, true );
-    if ( ! is_array( $decoded ) ) {
-        $decoded = [];
+        if ( 200 === $http_status ) {
+            echo $chunk;
+            @ob_flush();
+            flush();
+        }
+
+        $buffer .= $chunk;
+        while ( strpos( $buffer, "\n" ) !== false ) {
+            $line  = substr( $buffer, 0, strpos( $buffer, "\n" ) );
+            $buffer = substr( $buffer, strpos( $buffer, "\n" ) + 1 );
+            $line  = trim( $line );
+            if ( '' === $line || 0 !== strpos( $line, 'data:' ) ) {
+                continue;
+            }
+            $payload = trim( substr( $line, 5 ) );
+            if ( '[DONE]' === $payload ) {
+                continue;
+            }
+            $decoded_line = json_decode( $payload, true );
+            if ( isset( $decoded_line['output_text'] ) ) {
+                $final_json = $decoded_line;
+            } elseif ( isset( $decoded_line['delta'] ) ) {
+                $final_json['output_text'] = ( $final_json['output_text'] ?? '' ) . $decoded_line['delta'];
+            }
+        }
+
+        return strlen( $chunk );
+    } );
+
+    $exec  = curl_exec( $ch );
+    $error = curl_error( $ch );
+    curl_close( $ch );
+
+    if ( false === $exec || 200 !== $http_status ) {
+        $message = __( 'Language model request failed.', 'rtbcb' );
+        if ( false === $exec && ! empty( $error ) ) {
+            $message = $error;
+        } elseif ( isset( $final_json['error']['message'] ) ) {
+            $message = $final_json['error']['message'];
+        }
+        $message = sanitize_text_field( $message );
+
+        if ( class_exists( 'RTBCB_API_Log' ) ) {
+            RTBCB_API_Log::save_log( $body_array, [ 'error' => $message ], get_current_user_id() );
+        }
+
+        wp_send_json_error( [ 'message' => $message ], $http_status ? $http_status : 500 );
     }
 
     if ( class_exists( 'RTBCB_API_Log' ) ) {
-        RTBCB_API_Log::save_log( $body_array, $decoded, get_current_user_id() );
+        RTBCB_API_Log::save_log( $body_array, $final_json, get_current_user_id() );
     }
 
-    wp_send_json( $decoded, $code );
+    exit;
 }
 
 /**

@@ -51,7 +51,7 @@ Ensure the report is:
 `;
 }
 
-async function generateProfessionalReport(businessContext) {
+async function generateProfessionalReport(businessContext, onChunk) {
     const cfg = {
         ...RTBCB_GPT5_DEFAULTS,
         ...(typeof rtbcbReport !== 'undefined' ? rtbcbReport : {})
@@ -98,26 +98,121 @@ async function generateProfessionalReport(businessContext) {
             });
 
             if (response.ok) {
-                let data;
-                try {
-                    data = await response.json();
-                } catch (parseError) {
-                    lastError = parseError;
-                    continue;
+                const headers = response.headers || {};
+                let contentType = '';
+                if (typeof headers.get === 'function') {
+                    contentType = headers.get('content-type') || '';
+                } else if (headers['content-type']) {
+                    contentType = headers['content-type'];
+                }
+                if (contentType.includes('application/json')) {
+                    let data;
+                    try {
+                        data = await response.json();
+                    } catch (e) {
+                        lastError = e;
+                        continue;
+                    }
+                    if (data.error) {
+                        lastError = new Error(data.error.message || 'Responses API error');
+                        continue;
+                    }
+                    const htmlContent = data.output_text || '';
+                    const cleanedHTML = htmlContent
+                        .replace(/```html\n?/g, '')
+                        .replace(/```\n?/g, '')
+                        .trim();
+                    return cleanedHTML;
                 }
 
-                if (data.error) {
-                    console.error('Attempt ' + attempt + ' API error details:', data.error);
-                    lastError = new Error(data.error.message || 'Responses API error');
-                    continue;
-                }
+                if (response.body) {
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+                    let buffer = '';
+                    let result = '';
 
-                const htmlContent = data.output_text;
-                const cleanedHTML = htmlContent
-                    .replace(/```html\n?/g, '')
-                    .replace(/```\n?/g, '')
-                    .trim();
-                return cleanedHTML;
+                    while (true) {
+                        const { value, done } = await reader.read();
+                        if (done) {
+                            break;
+                        }
+                        buffer += decoder.decode(value, { stream: true });
+                        const lines = buffer.split('\n');
+                        buffer = lines.pop();
+                        for (const line of lines) {
+                            const trimmed = line.trim();
+                            if (!trimmed.startsWith('data:')) {
+                                continue;
+                            }
+                            const payload = trimmed.slice(5).trim();
+                            if (payload === '[DONE]') {
+                                continue;
+                            }
+                            let json;
+                            try {
+                                json = JSON.parse(payload);
+                            } catch (e) {
+                                continue;
+                            }
+                            if (json.delta) {
+                                result += json.delta;
+                                if (typeof onChunk === 'function') {
+                                    onChunk(result);
+                                }
+                            } else if (json.output_text) {
+                                result = json.output_text;
+                            } else if (json.error) {
+                                lastError = new Error(json.error.message || 'Responses API error');
+                                break;
+                            }
+                        }
+                    }
+
+                    if (result) {
+                        const cleanedHTML = result
+                            .replace(/```html\n?/g, '')
+                            .replace(/```\n?/g, '')
+                            .trim();
+                        return cleanedHTML;
+                    }
+                } else {
+                    if (typeof response.json === 'function') {
+                        try {
+                            const data = await response.json();
+                            if (data.error) {
+                                lastError = new Error(data.error.message || 'Responses API error');
+                                continue;
+                            }
+                            const htmlContent = data.output_text || '';
+                            const cleanedHTML = htmlContent
+                                .replace(/```html\n?/g, '')
+                                .replace(/```\n?/g, '')
+                                .trim();
+                            return cleanedHTML;
+                        } catch (e) {
+                            lastError = e;
+                            continue;
+                        }
+                    }
+
+                    try {
+                        const text = await response.text();
+                        const data = JSON.parse(text);
+                        if (data.error) {
+                            lastError = new Error(data.error.message || 'Responses API error');
+                            continue;
+                        }
+                        const htmlContent = data.output_text || '';
+                        const cleanedHTML = htmlContent
+                            .replace(/```html\n?/g, '')
+                            .replace(/```\n?/g, '')
+                            .trim();
+                        return cleanedHTML;
+                    } catch (e) {
+                        lastError = e;
+                        continue;
+                    }
+                }
             }
 
             if (rtbcbReport && rtbcbReport.debug) {
@@ -177,13 +272,16 @@ async function generateAndDisplayReport(businessContext) {
     reportContainer.innerHTML = '';
 
     try {
-        const htmlReport = await generateProfessionalReport(businessContext);
+        const htmlReport = await generateProfessionalReport(businessContext, partial => {
+            reportContainer.textContent = partial;
+        });
 
         if (!htmlReport.includes('<!DOCTYPE html>')) {
             throw new Error('Invalid HTML response from API');
         }
 
         const safeReport = sanitizeReportHTML(htmlReport);
+        reportContainer.textContent = '';
         displayReport(safeReport);
 
         const exportBtn = document.createElement('button');
