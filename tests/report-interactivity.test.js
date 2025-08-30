@@ -37,7 +37,16 @@ global.document = {
     }
 };
 
-global.window = {};
+let printCalled = false;
+global.window = {
+    open() {
+        return {
+            document: { documentElement: { innerHTML: '' } },
+            focus() {},
+            print() { printCalled = true; }
+        };
+    }
+};
 
 global.rtbcbReport = { ajax_url: '', model_capabilities: {}, template_url: '' };
 
@@ -50,5 +59,7 @@ generateProfessionalReport = () => '<!DOCTYPE html><html><body>Report</body></ht
     await generateAndDisplayReport({});
     const exportBtn = container.childNodes.find(node => node.textContent === 'Export to PDF');
     assert.ok(exportBtn, 'Export button not created');
+    exportBtn.onclick();
+    assert.ok(printCalled, 'window.print not triggered');
     console.log('Report interactivity test passed.');
 })();

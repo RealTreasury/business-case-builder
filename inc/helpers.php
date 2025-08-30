@@ -566,7 +566,8 @@ function rtbcb_send_report_email( $form_data, $report_path ) {
 	$subject = __( 'Your Business Case Report', 'rtbcb' );
 	$message = __( 'Please find your business case report attached.', 'rtbcb' );
 
-	wp_mail( $email, $subject, $message, [], [ $report_path ] );
+	$mailer = function_exists( 'apply_filters' ) ? apply_filters( 'rtbcb_mailer', 'wp_mail' ) : 'wp_mail';
+	call_user_func( $mailer, $email, $subject, $message, [], [ $report_path ] );
 }
 
 /**
