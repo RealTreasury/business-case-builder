@@ -40,18 +40,29 @@ if ( ! function_exists( 'rtbcb_log_error' ) ) {
 }
 
 $GLOBALS['rtbcb_has_key'] = true;
+$GLOBALS['rtbcb_timeout'] = 100;
 if ( ! function_exists( 'rtbcb_has_openai_api_key' ) ) {
     function rtbcb_has_openai_api_key() {
         return $GLOBALS['rtbcb_has_key'];
     }
 }
 
+if ( ! function_exists( 'rtbcb_get_api_timeout' ) ) {
+    function rtbcb_get_api_timeout() {
+        return $GLOBALS['rtbcb_timeout'];
+    }
+}
+
 if ( ! class_exists( 'RTBCB_LLM' ) ) {
     class RTBCB_LLM {
         public static $called = false;
+        public static $sleep  = 0;
         public function generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context ) {
             self::$called = true;
-            return [ 'result' => 'llm' ];
+            if ( self::$sleep > 0 ) {
+                usleep( self::$sleep );
+            }
+            return [ 'executive_summary' => 'summary' ];
         }
     }
 }
@@ -60,11 +71,21 @@ class Real_Treasury_BCB {
     public $fallback_called = false;
 
     private function generate_business_analysis( $user_inputs, $scenarios, $rag_context ) {
+        $start_time = microtime( true );
+        $timeout    = rtbcb_get_api_timeout();
+        $time_remaining = static function() use ( $start_time, $timeout ) {
+            return $timeout - ( microtime( true ) - $start_time );
+        };
+
         if ( ! class_exists( 'RTBCB_LLM' ) ) {
             return new WP_Error( 'llm_unavailable', __( 'AI analysis service unavailable.', 'rtbcb' ) );
         }
 
         if ( ! rtbcb_has_openai_api_key() ) {
+            return $this->generate_fallback_analysis( $user_inputs, $scenarios );
+        }
+
+        if ( $time_remaining() < 5 ) {
             return $this->generate_fallback_analysis( $user_inputs, $scenarios );
         }
 
@@ -74,6 +95,13 @@ class Real_Treasury_BCB {
 
             if ( is_wp_error( $result ) ) {
                 return $this->generate_fallback_analysis( $user_inputs, $scenarios );
+            }
+
+            if ( $time_remaining() < 2 ) {
+                return [
+                    'executive_summary' => $result['executive_summary'] ?? '',
+                    'partial'          => true,
+                ];
             }
 
             return $result;
@@ -105,6 +133,7 @@ final class Generate_Business_Analysis_Test extends TestCase {
 
     public function test_llm_called_when_api_key_exists() {
         $GLOBALS['rtbcb_has_key'] = true;
+        $GLOBALS['rtbcb_timeout'] = 100;
         RTBCB_LLM::$called        = false;
         $this->plugin->fallback_called = false;
 
@@ -116,6 +145,7 @@ final class Generate_Business_Analysis_Test extends TestCase {
 
     public function test_fallback_called_when_no_api_key() {
         $GLOBALS['rtbcb_has_key'] = false;
+        $GLOBALS['rtbcb_timeout'] = 100;
         RTBCB_LLM::$called        = false;
         $this->plugin->fallback_called = false;
 
@@ -123,6 +153,31 @@ final class Generate_Business_Analysis_Test extends TestCase {
 
         $this->assertFalse( RTBCB_LLM::$called, 'LLM should not be called without API key.' );
         $this->assertTrue( $this->plugin->fallback_called, 'Fallback should be called when no API key.' );
+    }
+
+    public function test_llm_skipped_when_timeout_low() {
+        $GLOBALS['rtbcb_has_key'] = true;
+        $GLOBALS['rtbcb_timeout'] = 3;
+        RTBCB_LLM::$called        = false;
+        $this->plugin->fallback_called = false;
+
+        $this->invoke_generate_business_analysis();
+
+        $this->assertFalse( RTBCB_LLM::$called, 'LLM should be skipped when timeout low.' );
+        $this->assertTrue( $this->plugin->fallback_called, 'Fallback should run when timeout low.' );
+    }
+
+    public function test_partial_return_when_time_runs_out_after_llm() {
+        $GLOBALS['rtbcb_has_key'] = true;
+        $GLOBALS['rtbcb_timeout'] = 6;
+        RTBCB_LLM::$sleep         = 5000000; // 5 seconds
+        RTBCB_LLM::$called        = false;
+        $this->plugin->fallback_called = false;
+
+        $result = $this->invoke_generate_business_analysis();
+
+        $this->assertTrue( RTBCB_LLM::$called, 'LLM should be called when time permits.' );
+        $this->assertArrayHasKey( 'partial', $result, 'Partial result expected when time runs out.' );
     }
 }
 

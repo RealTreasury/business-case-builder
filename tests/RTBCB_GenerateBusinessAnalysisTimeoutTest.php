@@ -45,6 +45,12 @@ return true;
 }
 }
 
+if ( ! function_exists( 'rtbcb_get_api_timeout' ) ) {
+function rtbcb_get_api_timeout() {
+return 100;
+}
+}
+
 if ( ! function_exists( 'rtbcb_log_error' ) ) {
 function rtbcb_log_error( $message, $details = '' ) {
 }
@@ -62,11 +68,21 @@ return new WP_Error( 'llm_timeout', 'Request timed out' );
 
 class Real_Treasury_BCB {
 private function generate_business_analysis( $user_inputs, $scenarios, $rag_context ) {
+$start_time = microtime( true );
+$timeout    = rtbcb_get_api_timeout();
+$time_remaining = static function() use ( $start_time, $timeout ) {
+return $timeout - ( microtime( true ) - $start_time );
+};
+
 if ( ! class_exists( 'RTBCB_LLM' ) ) {
 return new WP_Error( 'llm_unavailable', __( 'AI analysis service unavailable.', 'rtbcb' ) );
 }
 
 if ( ! rtbcb_has_openai_api_key() ) {
+return $this->generate_fallback_analysis( $user_inputs, $scenarios );
+}
+
+if ( $time_remaining() < 5 ) {
 return $this->generate_fallback_analysis( $user_inputs, $scenarios );
 }
 
