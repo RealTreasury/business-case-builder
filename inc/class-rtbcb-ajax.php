@@ -91,10 +91,14 @@ class RTBCB_Ajax {
 			$structured_report_data = self::structure_report_data( $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, $request_start );
 			$workflow_tracker->complete_step( 'data_structuring', $structured_report_data );
 
-			$lead_id = self::save_lead_data_async( $user_inputs, $structured_report_data );
+$lead_id = self::save_lead_data_async( $user_inputs, $structured_report_data );
 
-			$debug_info = $workflow_tracker->get_debug_info();
-			self::store_workflow_history( $debug_info );
+$debug_info          = $workflow_tracker->get_debug_info();
+$debug_info['lead'] = [
+'id'    => $lead_id,
+'email' => $user_inputs['email'] ?? '',
+];
+self::store_workflow_history( $debug_info );
 
 			return [
 				'report_data'   => $structured_report_data,

@@ -107,6 +107,7 @@ class RTBCB_Admin {
                                 'clear_success'   => __( 'Workflow history cleared', 'rtbcb' ),
                                 'error'           => __( 'An error occurred', 'rtbcb' ),
                                 'no_history'      => __( 'No workflow history available.', 'rtbcb' ),
+                                'lead_label'      => __( 'Lead', 'rtbcb' ),
                         ],
                 ]
             );
@@ -1815,21 +1816,45 @@ class RTBCB_Admin {
             include RTBCB_DIR . 'admin/workflow-visualizer-page.php';
     }
 
-	public function ajax_get_workflow_history() {
-		check_ajax_referer( 'rtbcb_workflow_visualizer', 'nonce' );
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions', 'rtbcb' ) );
-		}
-		$history = $this->get_workflow_history_from_logs();
-		wp_send_json_success( [
-			'history' => $history,
-			'summary' => [
-				'total_executions' => count( $history ),
-				'avg_duration' => $this->calculate_average_duration( $history ),
-				'success_rate' => $this->calculate_success_rate( $history ),
-			],
-		] );
-	}
+    public function ajax_get_workflow_history() {
+        check_ajax_referer( 'rtbcb_workflow_visualizer', 'nonce' );
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( __( 'Insufficient permissions', 'rtbcb' ) );
+        }
+        $raw_history = $this->get_workflow_history_from_logs();
+        $history     = array_map(
+            function ( $entry ) {
+                $lead = [
+                    'id'    => isset( $entry['lead']['id'] ) ? sanitize_text_field( $entry['lead']['id'] ) : '',
+                    'email' => isset( $entry['lead']['email'] ) ? sanitize_email( $entry['lead']['email'] ) : '',
+                ];
+                $steps = [];
+                if ( ! empty( $entry['steps'] ) && is_array( $entry['steps'] ) ) {
+                    foreach ( $entry['steps'] as $step ) {
+                        $steps[] = [
+                            'name'   => sanitize_text_field( $step['name'] ?? '' ),
+                            'status' => sanitize_text_field( $step['status'] ?? '' ),
+                        ];
+                    }
+                }
+                return [
+                    'lead'  => $lead,
+                    'steps' => $steps,
+                ];
+            },
+            $raw_history
+        );
+        wp_send_json_success(
+            [
+                'history' => $history,
+                'summary' => [
+                    'total_executions' => count( $raw_history ),
+                    'avg_duration'     => $this->calculate_average_duration( $raw_history ),
+                    'success_rate'     => $this->calculate_success_rate( $raw_history ),
+                ],
+            ]
+        );
+    }
 
 	public function ajax_clear_workflow_history() {
 		check_ajax_referer( 'rtbcb_workflow_visualizer', 'nonce' );
