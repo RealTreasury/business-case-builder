@@ -402,6 +402,10 @@ class BusinessCaseBuilder {
         if (event && event.preventDefault) {
             event.preventDefault();
         }
+        if (!this.ajaxUrl) {
+            this.showError('Service unavailable. Please reload the page.');
+            return;
+        }
 
         try {
             console.log('RTBCB: Starting form submission');
