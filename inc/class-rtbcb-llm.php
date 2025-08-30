@@ -720,15 +720,44 @@ USER,
             return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
         }
 
-        // Run preliminary research in a single LLM batch call.
-        $research = $this->run_batched_research( $user_inputs, $context_chunks );
-        if ( is_wp_error( $research ) ) {
-            return $research;
+        $company_name = sanitize_text_field( $user_inputs['company_name'] ?? '' );
+        $industry     = sanitize_text_field( $user_inputs['industry'] ?? '' );
+
+        $company_research = rtbcb_get_research_cache( $company_name, $industry, 'company' );
+        if ( false === $company_research ) {
+            $company_research = $this->conduct_company_research( $user_inputs );
+            if ( ! is_wp_error( $company_research ) ) {
+                rtbcb_set_research_cache( $company_name, $industry, 'company', $company_research );
+            }
         }
 
-        $company_research  = $research['company_research'] ?? [];
-        $industry_analysis  = $research['industry_analysis'] ?? [];
-        $tech_landscape     = $research['tech_landscape'] ?? '';
+        if ( is_wp_error( $company_research ) ) {
+            return $company_research;
+        }
+
+        $industry_analysis = rtbcb_get_research_cache( $company_name, $industry, 'industry' );
+        if ( false === $industry_analysis ) {
+            $industry_analysis = $this->analyze_industry_context( $user_inputs );
+            if ( ! is_wp_error( $industry_analysis ) ) {
+                rtbcb_set_research_cache( $company_name, $industry, 'industry', $industry_analysis );
+            }
+        }
+
+        if ( is_wp_error( $industry_analysis ) ) {
+            return $industry_analysis;
+        }
+
+        $tech_landscape = rtbcb_get_research_cache( $company_name, $industry, 'treasury' );
+        if ( false === $tech_landscape ) {
+            $tech_landscape = $this->research_treasury_solutions( $user_inputs, $context_chunks );
+            if ( ! is_wp_error( $tech_landscape ) ) {
+                rtbcb_set_research_cache( $company_name, $industry, 'treasury', $tech_landscape );
+            }
+        }
+
+        if ( is_wp_error( $tech_landscape ) ) {
+            return $tech_landscape;
+        }
         
         // Generate comprehensive report
         $model = $this->select_optimal_model( $user_inputs, $context_chunks );

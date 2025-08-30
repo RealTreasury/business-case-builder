@@ -1524,3 +1524,75 @@ function rtbcb_get_analysis_job_result( $job_id ) {
     return get_option( 'rtbcb_analysis_job_' . $job_id, null );
 }
 
+/**
+ * Build a cache key for LLM research results.
+ *
+ * @param string $company  Company name.
+ * @param string $industry Industry name.
+ * @param string $type     Cache segment identifier.
+ *
+ * @return string Cache key.
+ */
+function rtbcb_get_research_cache_key( $company, $industry, $type ) {
+    $company  = sanitize_title( $company );
+    $industry = sanitize_title( $industry );
+    $type     = sanitize_key( $type );
+
+    return 'rtbcb_' . $type . '_' . md5( $company . '_' . $industry );
+}
+
+/**
+ * Retrieve cached LLM research data.
+ *
+ * @param string $company  Company name.
+ * @param string $industry Industry name.
+ * @param string $type     Cache segment identifier.
+ *
+ * @return mixed Cached data or false when not found.
+ */
+function rtbcb_get_research_cache( $company, $industry, $type ) {
+    $key = rtbcb_get_research_cache_key( $company, $industry, $type );
+    return get_transient( $key );
+}
+
+/**
+ * Store LLM research data in cache.
+ *
+ * @param string $company  Company name.
+ * @param string $industry Industry name.
+ * @param string $type     Cache segment identifier.
+ * @param mixed  $data     Data to cache.
+ * @param int    $ttl      Optional TTL in seconds.
+ */
+function rtbcb_set_research_cache( $company, $industry, $type, $data, $ttl = 0 ) {
+    $key = rtbcb_get_research_cache_key( $company, $industry, $type );
+    $ttl = (int) $ttl;
+    if ( 0 === $ttl ) {
+        $ttl = DAY_IN_SECONDS;
+    }
+
+    /**
+     * Filter the research cache TTL.
+     *
+     * @param int $ttl Cache duration in seconds.
+     * @param string $type Cache segment identifier.
+     * @param string $company Sanitized company name.
+     * @param string $industry Sanitized industry.
+     */
+    $ttl = apply_filters( 'rtbcb_research_cache_ttl', $ttl, $type, $company, $industry );
+
+    set_transient( $key, $data, $ttl );
+}
+
+/**
+ * Delete cached LLM research data.
+ *
+ * @param string $company  Company name.
+ * @param string $industry Industry name.
+ * @param string $type     Cache segment identifier.
+ */
+function rtbcb_delete_research_cache( $company, $industry, $type ) {
+    $key = rtbcb_get_research_cache_key( $company, $industry, $type );
+    delete_transient( $key );
+}
+
