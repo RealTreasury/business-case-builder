@@ -45,11 +45,15 @@ class RTBCB_LLM {
     public function __construct() {
         $this->api_key = rtbcb_get_openai_api_key();
 
-        $timeout = intval( get_option( 'rtbcb_gpt5_timeout', 180 ) );
-        $config  = rtbcb_get_gpt5_config(
+        $timeout           = intval( get_option( 'rtbcb_gpt5_timeout', 180 ) );
+        $max_output_tokens = intval( get_option( 'rtbcb_gpt5_max_output_tokens', 20000 ) );
+        $config            = rtbcb_get_gpt5_config(
             array_merge(
                 get_option( 'rtbcb_gpt5_config', [] ),
-                [ 'timeout' => $timeout ]
+                [
+                    'timeout'           => $timeout,
+                    'max_output_tokens' => $max_output_tokens,
+                ]
             )
         );
         $this->gpt5_config = $config;

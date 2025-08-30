@@ -20,9 +20,9 @@ Use the `[rt_business_case_builder]` shortcode to embed the calculator on any pa
 3. Navigate to **Real Treasury → Settings** to configure ROI defaults and API keys.
 
 == Configuration ==
-By default, OpenAI responses are limited to 20,000 tokens. You can raise this limit
-to a maximum of 50,000 tokens by setting the `RTBCB_MAX_OUTPUT_TOKENS` environment
-variable or by creating a `rtbcb-config.json` file in the plugin directory with:
+By default, OpenAI responses are limited to 20,000 tokens. You can adjust this limit
+up to a maximum of 50,000 tokens through the plugin settings, by setting the `RTBCB_MAX_OUTPUT_TOKENS`
+environment variable, or by creating a `rtbcb-config.json` file in the plugin directory with:
 
 ```
 { "max_output_tokens": 50000 }
