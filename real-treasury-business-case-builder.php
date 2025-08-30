@@ -792,15 +792,19 @@ class Real_Treasury_BCB {
 	$company_name = $company['name'];
 	}
 	
-	$user_inputs = [
+        $hours_cash_positioning_raw = wp_unslash( $_POST['hours_cash_positioning'] ?? '' );
+        $num_banks_raw              = wp_unslash( $_POST['num_banks'] ?? '' );
+        $ftes_raw                   = wp_unslash( $_POST['ftes'] ?? '' );
+
+        $user_inputs = [
 	'email'                  => sanitize_email( wp_unslash( $_POST['email'] ?? '' ) ),
 	'company_name'           => $company_name,
 	'company_size'           => sanitize_text_field( wp_unslash( $_POST['company_size'] ?? $company['size'] ?? '' ) ),
 	'industry'               => sanitize_text_field( wp_unslash( $_POST['industry'] ?? $company['industry'] ?? '' ) ),
 	'hours_reconciliation'   => floatval( wp_unslash( $_POST['hours_reconciliation'] ?? 0 ) ),
-	'hours_cash_positioning' => floatval( wp_unslash( $_POST['hours_cash_positioning'] ?? 0 ) ),
-	'num_banks'              => intval( wp_unslash( $_POST['num_banks'] ?? 0 ) ),
-	'ftes'                   => floatval( wp_unslash( $_POST['ftes'] ?? 0 ) ),
+        'hours_cash_positioning' => max( 0, floatval( $hours_cash_positioning_raw ) ),
+        'num_banks'              => max( 0, intval( $num_banks_raw ) ),
+        'ftes'                   => max( 0, floatval( $ftes_raw ) ),
 	'pain_points'            => array_map( 'sanitize_text_field', (array) wp_unslash( $_POST['pain_points'] ?? [] ) ),
 	'business_objective'     => sanitize_text_field( wp_unslash( $_POST['business_objective'] ?? '' ) ),
 	'implementation_timeline'=> sanitize_text_field( wp_unslash( $_POST['implementation_timeline'] ?? '' ) ),
@@ -818,13 +822,25 @@ class Real_Treasury_BCB {
 	$validation_errors[] = __( 'Please enter your company name.', 'rtbcb' );
 	}
 	
-	if ( $user_inputs['hours_reconciliation'] <= 0 ) {
-	$validation_errors[] = __( 'Please enter valid reconciliation hours.', 'rtbcb' );
-	}
-	
-	if ( empty( $user_inputs['pain_points'] ) ) {
-	$validation_errors[] = __( 'Please select at least one challenge.', 'rtbcb' );
-	}
+        if ( $user_inputs['hours_reconciliation'] <= 0 ) {
+        $validation_errors[] = __( 'Please enter valid reconciliation hours.', 'rtbcb' );
+        }
+
+        if ( ! is_numeric( $hours_cash_positioning_raw ) ) {
+        $validation_errors[] = __( 'Please enter valid cash positioning hours.', 'rtbcb' );
+        }
+
+        if ( ! is_numeric( $num_banks_raw ) ) {
+        $validation_errors[] = __( 'Please enter a valid number of banks.', 'rtbcb' );
+        }
+
+        if ( ! is_numeric( $ftes_raw ) ) {
+        $validation_errors[] = __( 'Please enter a valid number of FTEs.', 'rtbcb' );
+        }
+
+        if ( empty( $user_inputs['pain_points'] ) ) {
+        $validation_errors[] = __( 'Please select at least one challenge.', 'rtbcb' );
+        }
 	
 	if ( ! empty( $validation_errors ) ) {
 	return new WP_Error( 'validation_failed', implode( ' ', $validation_errors ) );
