@@ -63,7 +63,8 @@ async function generateProfessionalReport(businessContext, onChunk) {
     const adminLimit = Math.min(RTBCB_GPT5_MAX_TOKENS, parseInt(cfg.max_output_tokens, 10) || RTBCB_GPT5_MAX_TOKENS);
     const adminMin = Math.max(RTBCB_GPT5_MIN_TOKENS, parseInt(cfg.min_output_tokens, 10) || RTBCB_GPT5_MIN_TOKENS);
     const desiredWords = 1000;
-    cfg.max_output_tokens = Math.max(adminMin, Math.min(adminLimit, estimateTokens(desiredWords)));
+    const bufferedTokens = estimateTokens(desiredWords) * 2;
+    cfg.max_output_tokens = Math.min(adminLimit, Math.max(adminMin, bufferedTokens));
     if (!supportsTemperature(cfg.model)) {
         delete cfg.temperature;
     }
