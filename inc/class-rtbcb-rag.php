@@ -220,14 +220,17 @@ class RTBCB_RAG {
         $query_norm = $this->calculate_embedding_norm( $query_embedding );
         $limit      = max( $top_k * 10, $top_k );
 
-        $rows = $wpdb->get_results(
-            $wpdb->prepare(
-                "SELECT type, ref_id, embedding, metadata FROM {$table_name} ORDER BY ABS( embedding_norm - %f ) ASC LIMIT %d",
-                $query_norm,
-                $limit
-            ),
-            ARRAY_A
-        );
+		$range = 1;
+		$rows  = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT type, ref_id, embedding, metadata FROM {$table_name} WHERE embedding_norm BETWEEN %f AND %f ORDER BY ABS( embedding_norm - %f ) ASC LIMIT %d",
+				$query_norm - $range,
+				$query_norm + $range,
+				$query_norm,
+				$limit
+			),
+			ARRAY_A
+		);
 
         $scores = [];
         foreach ( $rows as $row ) {
