@@ -344,6 +344,10 @@
     box-shadow: 0 8px 24px var(--shadow-medium);
 }
 /* Enhanced Progress Indicator */
+#rtbcb-progress-container {
+    display: none;
+    text-align: center;
+}
 .rtbcb-progress-overlay {
     position: fixed;
     top: 0;
