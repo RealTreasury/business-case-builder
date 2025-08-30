@@ -35,7 +35,7 @@ global.fetch = function(url, options) {
     receivedHeaders = options.headers;
     const payload = {
         success: true,
-        data: { report_html: '<div>Report</div>' }
+        data: { report_data: { report_html: '<div>Report</div>' } }
     };
     const response = {
         ok: true,

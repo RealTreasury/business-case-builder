@@ -17,7 +17,8 @@ const builder = new BusinessCaseBuilder();
 const data = {
     scenarios: {},
     recommendation: {},
-    company_name: 'Test Co'
+    companyName: 'Test Co',
+    narrative: {}
 };
 
 const html = builder.renderResults(data);
