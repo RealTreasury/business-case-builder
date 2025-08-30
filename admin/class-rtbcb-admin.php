@@ -18,7 +18,8 @@ class RTBCB_Admin {
         add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
         add_action( 'admin_init', [ $this, 'register_settings' ] );
         add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );
-        
+        add_action( 'admin_notices', [ $this, 'maybe_show_timeout_notice' ] );
+
         // AJAX handlers
         add_action( 'wp_ajax_rtbcb_test_connection', [ $this, 'test_api_connection' ] );
         add_action( 'wp_ajax_rtbcb_rebuild_index', [ $this, 'rebuild_rag_index' ] );
@@ -1848,16 +1849,46 @@ class RTBCB_Admin {
 		return $total / count( $history );
 	}
 
-	private function calculate_success_rate( $history ) {
-		if ( empty( $history ) ) {
-			return 0;
-		}
-		$success = 0;
-		foreach ( $history as $item ) {
-			if ( ! empty( $item['success'] ) ) {
-				$success++;
-			}
-		}
-		return ( $success / count( $history ) ) * 100;
-	}
+        private function calculate_success_rate( $history ) {
+                if ( empty( $history ) ) {
+                        return 0;
+                }
+                $success = 0;
+                foreach ( $history as $item ) {
+                        if ( ! empty( $item['success'] ) ) {
+                                $success++;
+                        }
+                }
+                return ( $success / count( $history ) ) * 100;
+        }
+
+        /**
+         * Display notice if PHP max execution time is lower than GPT-5 timeout.
+         *
+         * @return void
+         */
+        public function maybe_show_timeout_notice() {
+                $php_limit   = (int) ini_get( 'max_execution_time' );
+                $gpt_timeout = (int) get_option( 'rtbcb_gpt5_timeout' );
+
+                if ( $php_limit > 0 && $gpt_timeout > 0 && $php_limit < $gpt_timeout ) {
+                        $doc_url = esc_url( RTBCB_URL . 'docs/timeout-config.md' );
+                        echo '<div class="notice notice-warning is-dismissible"><p>';
+                        printf(
+                                wp_kses(
+                                        __( 'Your PHP max execution time (%1$s seconds) is lower than the GPT-5 timeout (%2$s seconds). <a href="%3$s" target="_blank">Learn how to increase it</a>.', 'rtbcb' ),
+                                        [
+                                                'a' => [
+                                                        'href'   => [],
+                                                        'target' => [],
+                                                ],
+                                        ]
+                                ),
+                                esc_html( (string) $php_limit ),
+                                esc_html( (string) $gpt_timeout ),
+                                $doc_url
+                        );
+                        echo '</p></div>';
+                }
+        }
 }
