@@ -80,7 +80,7 @@ builder.showError = (msg) => { errorMessage = msg; };
 
 (async () => {
     await builder.handleSubmit();
-    assert.strictEqual(errorMessage, 'Server communication error. Please try again.');
+    assert.strictEqual(errorMessage, 'An error occurred while processing your request. Please try again.');
     console.log('Invalid server response test passed.');
 })().catch(err => {
     console.error(err);
