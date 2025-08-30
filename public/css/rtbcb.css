@@ -2,79 +2,85 @@
 @import url("rtbcb-variables.css");
 
 /* Theme conflict prevention */
-.rtbcb-modal-overlay * {
-    margin: 0 !important;
-    padding: 0 !important;
-    box-sizing: border-box !important;
-}
-
-.rtbcb-modal-overlay *:not(input):not(select):not(textarea):not(button) {
-    background: transparent !important;
-    border: none !important;
-    outline: none !important;
+.rtbcb-modal-overlay h1,
+.rtbcb-modal-overlay h2,
+.rtbcb-modal-overlay h3,
+.rtbcb-modal-overlay h4,
+.rtbcb-modal-overlay h5,
+.rtbcb-modal-overlay h6,
+.rtbcb-modal-overlay p,
+.rtbcb-modal-overlay ul,
+.rtbcb-modal-overlay ol,
+.rtbcb-modal-overlay li {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
+    outline: none;
+    box-sizing: border-box;
 }
 
 /* Prevent theme typography overrides */
 .rtbcb-modal-overlay {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-    font-size: 16px !important;
-    line-height: 1.5 !important;
-    color: var(--text-primary) !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--text-primary);
 }
 
 .rtbcb-modal-overlay h1,
 .rtbcb-modal-overlay h2,
 .rtbcb-modal-overlay h3,
 .rtbcb-modal-overlay h4 {
-    font-family: inherit !important;
-    font-weight: 600 !important;
-    line-height: 1.2 !important;
-    margin: 0 0 12px 0 !important;
+    font-family: inherit;
+    font-weight: 600;
+    line-height: 1.2;
+    margin: 0 0 12px 0;
 }
 
 /* Add at the top of rtbcb.css - Higher specificity wrapper */
 .rtbcb-modal-overlay,
 .rtbcb-modal-overlay * {
-    box-sizing: border-box !important;
+    box-sizing: border-box;
 }
 
 .rtbcb-modal-overlay {
     all: initial;
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    overflow: hidden !important;
-    z-index: 999999 !important;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-    color: var(--text-primary) !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    padding: 20px !important;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    z-index: 999999;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
 }
 
 /* Reset and isolate modal container */
 
 .rtbcb-modal {
     all: unset;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 248, 248, 0.98) 50%, rgba(255, 255, 255, 0.95)) !important;
-    backdrop-filter: blur(25px) saturate(140%) !important;
-    -webkit-backdrop-filter: blur(25px) saturate(140%) !important;
-    border: 2px solid rgba(199, 125, 255, 0.3) !important;
-    border-radius: 20px !important;
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25), 0 8px 32px rgba(114, 22, 244, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
-    width: 100% !important;
-    max-width: 800px !important;
-    margin: 0 auto !important;
-    overflow: auto !important;
-    max-height: 85vh !important;
-    position: relative !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 248, 248, 0.98) 50%, rgba(255, 255, 255, 0.95));
+    backdrop-filter: blur(25px) saturate(140%);
+    -webkit-backdrop-filter: blur(25px) saturate(140%);
+    border: 2px solid rgba(199, 125, 255, 0.3);
+    border-radius: 20px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25), 0 8px 32px rgba(114, 22, 244, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    overflow: auto;
+    max-height: 85vh;
+    position: relative;
 }
 
 #rtbcbModalOverlay .rtbcb-modal {
-    display: block !important;
+    display: block;
 }
 
 #rtbcb-category-modal {
@@ -86,134 +92,134 @@
     .rtbcb-form input[type="email"],
     .rtbcb-form input[type="number"],
 .rtbcb-form select {
-    all: unset !important;
-    display: block !important;
-    width: 100% !important;
-    padding: 12px 16px !important;
-    border: 2px solid #e2e8f0 !important;
-    border-radius: 8px !important;
-    font-size: 16px !important;
-    font-family: inherit !important;
-    background: #ffffff !important;
-    color: #1f2937 !important;
-    transition: all 0.2s ease !important;
-    box-sizing: border-box !important;
-    appearance: none !important;
-    -webkit-appearance: none !important;
-    -moz-appearance: none !important;
+    all: unset;
+    display: block;
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 16px;
+    font-family: inherit;
+    background: #ffffff;
+    color: #1f2937;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
 }
 
 /* Select dropdown arrow */
 .rtbcb-form select {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M10.293 3.293L6 7.586 1.707 3.293A1 1 0 00.293 4.707l5 5a1 1 0 001.414 0l5-5a1 1 0 10-1.414-1.414z'/%3E%3C/svg%3E") !important;
-    background-repeat: no-repeat !important;
-    background-position: right 12px center !important;
-    background-size: 16px !important;
-    padding-right: 40px !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M10.293 3.293L6 7.586 1.707 3.293A1 1 0 00.293 4.707l5 5a1 1 0 001.414 0l5-5a1 1 0 10-1.414-1.414z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    padding-right: 40px;
 }
 
 .rtbcb-form input:focus,
 .rtbcb-form select:focus {
-    border-color: #7216f4 !important;
-    outline: none !important;
-    box-shadow: 0 0 0 3px rgba(114, 22, 244, 0.1) !important;
-    z-index: 10 !important;
+    border-color: #7216f4;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(114, 22, 244, 0.1);
+    z-index: 10;
 }
 
 /* Pain Points Grid Layout Fix */
 .rtbcb-pain-points-grid {
-    display: grid !important;
+    display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 16px !important;
-    margin: 24px 0 !important;
+    gap: 16px;
+    margin: 24px 0;
 }
 
 .rtbcb-pain-point-card {
-    all: unset !important;
-    display: block !important;
-    background: #ffffff !important;
-    border: 2px solid #cbd5e1 !important;
-    border-radius: 12px !important;
-    overflow: hidden !important;
-    transition: all 0.2s ease !important;
-    cursor: pointer !important;
-    position: relative !important;
+    all: unset;
+    display: block;
+    background: #ffffff;
+    border: 2px solid #cbd5e1;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    position: relative;
 }
 
 .rtbcb-pain-point-card:hover {
-    border-color: #c77dff !important;
-    box-shadow: 0 4px 12px rgba(114, 22, 244, 0.1) !important;
-    transform: translateY(-2px) !important;
+    border-color: #c77dff;
+    box-shadow: 0 4px 12px rgba(114, 22, 244, 0.1);
+    transform: translateY(-2px);
 }
 
 .rtbcb-pain-point-card.rtbcb-selected {
-    border-color: #7216f4 !important;
-    background: linear-gradient(135deg, #f8f9ff, #ffffff) !important;
-    box-shadow: 0 4px 20px rgba(114, 22, 244, 0.2) !important;
+    border-color: #7216f4;
+    background: linear-gradient(135deg, #f8f9ff, #ffffff);
+    box-shadow: 0 4px 20px rgba(114, 22, 244, 0.2);
 }
 
 .rtbcb-pain-point-label {
-    all: unset !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
-    padding: 20px !important;
-    cursor: pointer !important;
-    width: 100% !important;
-    height: 100% !important;
-    text-align: center !important;
+    all: unset;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+    text-align: center;
 }
 
 .rtbcb-pain-point-label input[type="checkbox"] {
-    position: absolute !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
-    width: 0 !important;
-    height: 0 !important;
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    width: 0;
+    height: 0;
 }
 
 /* Navigation Buttons Fix */
 .rtbcb-wizard-navigation {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    padding: 16px 32px !important;
-    border-top: 1px solid #e2e8f0 !important;
-    background: #f9fafb !important;
-    border-radius: 0 0 20px 20px !important;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 32px;
+    border-top: 1px solid #e2e8f0;
+    background: #f9fafb;
+    border-radius: 0 0 20px 20px;
 }
 
 .rtbcb-nav-btn {
-    all: unset !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 8px !important;
-    padding: 12px 20px !important;
-    border-radius: 8px !important;
-    font-size: 15px !important;
-    font-weight: 600 !important;
-    border: none !important;
-    cursor: pointer !important;
-    transition: all 0.2s ease !important;
-    background: #7216f4 !important;
-    color: #ffffff !important;
-    text-decoration: none !important;
-    min-width: 120px !important;
+    all: unset;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: #7216f4;
+    color: #ffffff;
+    text-decoration: none;
+    min-width: 120px;
 }
 
 .rtbcb-nav-btn:hover:not(:disabled) {
-    transform: translateY(-1px) !important;
-    box-shadow: 0 4px 12px rgba(114, 22, 244, 0.3) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(114, 22, 244, 0.3);
 }
 
 .rtbcb-nav-btn:disabled {
-    background: #d1d5db !important;
-    color: #9ca3af !important;
-    cursor: not-allowed !important;
-    transform: none !important;
-    box-shadow: none !important;
+    background: #d1d5db;
+    color: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
 }
 
 /* Mobile Responsive Fixes */
@@ -254,7 +260,7 @@
     }
 
     .rtbcb-pain-points-grid {
-        grid-template-columns: 1fr !important;
+        grid-template-columns: 1fr;
     }
 
     .rtbcb-progress-steps {
@@ -285,11 +291,11 @@
 }
 
 .rtbcb-modal-overlay.active .rtbcb-modal {
-    animation: rtbcb-fadeIn 0.3s ease-out !important;
+    animation: rtbcb-fadeIn 0.3s ease-out;
 }
 
     .rtbcb-modal-overlay:focus-within {
-        outline: none !important;
+        outline: none;
     }
 
 /* Base Container Styles */
@@ -794,30 +800,30 @@
 
 /* Submit Button */
 .rtbcb-submit-btn {
-    background: linear-gradient(135deg, var(--secondary-purple), var(--primary-purple)) !important;
-    color: #ffffff !important;
-    padding: 16px 28px !important;
-    border: none !important;
-    border-radius: 12px !important;
-    font-size: 18px !important;
-    font-weight: 600 !important;
-    cursor: pointer !important;
-    width: 100% !important;
-    transition: all 0.3s ease !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.5px !important;
-    box-shadow: 0 8px 32px var(--shadow-medium) !important;
+    background: linear-gradient(135deg, var(--secondary-purple), var(--primary-purple));
+    color: #ffffff;
+    padding: 16px 28px;
+    border: none;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 8px 32px var(--shadow-medium);
 }
 
 .rtbcb-submit-btn:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 12px 40px var(--shadow-medium) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px var(--shadow-medium);
 }
 
 .rtbcb-submit-btn:disabled {
     opacity: 0.7;
     cursor: not-allowed;
-    transform: none !important;
+    transform: none;
 }
 
 .rtbcb-submit-btn.loading {
@@ -980,8 +986,8 @@
     }
     
     .rtbcb-submit-btn {
-        font-size: 16px !important;
-        padding: 14px 24px !important;
+        font-size: 16px;
+        padding: 14px 24px;
     }
     
     .rtbcb-progress-content {
@@ -1089,7 +1095,7 @@
 /* Modal Header - Glassmorphic enhancement */
 .rtbcb-modal-header {
     background: linear-gradient(135deg, rgba(114, 22, 244, 0.1), rgba(143, 71, 246, 0.15));
-    color: var(--text-primary) !important;
+    color: var(--text-primary);
     padding: 32px 40px 20px 40px;
     position: relative;
     text-align: center;
@@ -1102,7 +1108,7 @@
     font-weight: 700;
     margin: 0 0 8px 0;
     line-height: 1.2;
-    color: var(--text-primary) !important;
+    color: var(--text-primary);
 }
 
 .rtbcb-modal-subtitle {
@@ -1278,7 +1284,7 @@
 .rtbcb-step-header h3 {
     font-size: 18px;
     margin: 0 0 6px 0;
-    color: var(--text-primary) !important;
+    color: var(--text-primary);
     font-weight: 600;
 }
 
@@ -1304,10 +1310,10 @@
 .rtbcb-field label,
 .rtbcb-form label {
     display: block;
-    margin-bottom: 8px !important;
-    font-weight: 600 !important;
-    color: var(--text-primary) !important;
-    font-size: 15px !important;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 15px;
 }
 
 .rtbcb-field input,
@@ -1348,18 +1354,18 @@
 
 .rtbcb-field input:focus,
 .rtbcb-field select:focus {
-    border-color: #7216f4 !important;
-    outline: 2px solid #7216f4 !important;
-    outline-offset: 2px !important;
-    box-shadow: 0 0 0 3px rgba(114, 22, 244, 0.2) !important;
+    border-color: #7216f4;
+    outline: 2px solid #7216f4;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px rgba(114, 22, 244, 0.2);
     z-index: 20;
 }
 
 .rtbcb-field-help {
-    font-size: 14px !important;
-    color: var(--text-secondary) !important;
-    margin-top: 6px !important;
-    line-height: 1.4 !important;
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-top: 6px;
+    line-height: 1.4;
 }
 
 .rtbcb-field-required label::after {
@@ -1369,19 +1375,19 @@
 }
 
 .rtbcb-field-invalid {
-    border-color: #ef4444 !important;
-    background: #fef2f2 !important;
-    box-shadow: 0 0 0 3px rgba(239,68,68,0.1) !important;
+    border-color: #ef4444;
+    background: #fef2f2;
+    box-shadow: 0 0 0 3px rgba(239,68,68,0.1);
 }
 
 .rtbcb-field-error {
-    color: #dc2626 !important;
-    font-size: 13px !important;
+    color: #dc2626;
+    font-size: 13px;
     margin-top: 4px;
     display: flex;
     align-items: center;
     gap: 4px;
-    font-weight: 500 !important;
+    font-weight: 500;
 }
 
 .rtbcb-field-error::before {
@@ -1463,11 +1469,11 @@
 }
 
 .rtbcb-pain-point-card.rtbcb-selected .rtbcb-pain-point-title {
-    color: var(--dark-text) !important;
+    color: var(--dark-text);
 }
 
 .rtbcb-pain-point-card.rtbcb-selected .rtbcb-pain-point-description {
-    color: var(--gray-text) !important;
+    color: var(--gray-text);
 }
 
 /* Navigation - Compact */
@@ -1486,7 +1492,7 @@
 }
 
 .rtbcb-nav-btn {
-    display: inline-flex !important;
+    display: inline-flex;
     align-items: center;
     gap: 8px;
     padding: 12px 20px;
@@ -1566,7 +1572,7 @@
     }
 
     .rtbcb-pain-points-grid {
-        grid-template-columns: 1fr !important;
+        grid-template-columns: 1fr;
     }
 }
 
@@ -1667,7 +1673,7 @@
 
 .rtbcb-results-preview h4 {
     margin: 0 0 16px 0;
-    color: var(--text-primary) !important;
+    color: var(--text-primary);
     font-size: 16px;
     font-weight: 600;
 }
@@ -1695,11 +1701,11 @@
     .rtbcb-trigger-container,
     .rtbcb-modal-overlay,
     .rtbcb-actions-section {
-        display: none !important;
+        display: none;
     }
     
     .rtbcb-results {
-        display: block !important;
+        display: block;
         padding: 0;
         margin: 0;
     }
@@ -1799,69 +1805,69 @@
 
 /* Modal subtitle - make much darker */
 .rtbcb-modal-subtitle {
-    color: var(--text-secondary) !important;  /* Was #7e7e7e - too light */
-    font-size: 16px !important;               /* Increase from 16px for emphasis */
-    font-weight: 500 !important;              /* Add weight for better visibility */
+    color: var(--text-secondary);  /* Was #7e7e7e - too light */
+    font-size: 16px;               /* Increase from 16px for emphasis */
+    font-weight: 500;              /* Add weight for better visibility */
 }
 
 /* Step descriptions - improve contrast */
 .rtbcb-step-header p {
-    color: var(--text-secondary) !important;  /* Was #6b7280 - too light */
-    font-size: 15px !important;               /* Increase from 14px */
-    line-height: 1.5 !important;
+    color: var(--text-secondary);  /* Was #6b7280 - too light */
+    font-size: 15px;               /* Increase from 14px */
+    line-height: 1.5;
 }
 
 /* 4. PROGRESS INDICATOR IMPROVEMENTS */
 
 /* Progress step labels - much more visible */
 .rtbcb-progress-label {
-    color: #ffffff !important;  /* Future steps white */
-    font-size: 14px !important;               /* Increase from 12px */
-    font-weight: 600 !important;              /* Add weight */
+    color: #ffffff;  /* Future steps white */
+    font-size: 14px;               /* Increase from 12px */
+    font-weight: 600;              /* Add weight */
     text-align: center;
 }
 
 /* Active progress step label */
 .rtbcb-progress-step.active .rtbcb-progress-label,
 .rtbcb-progress-step.completed .rtbcb-progress-label {
-    color: var(--success-green) !important;
-    font-weight: 700 !important;
+    color: var(--success-green);
+    font-weight: 700;
 }
 
 /* 5. PAIN POINT CARDS IMPROVEMENTS */
 
 /* Pain point titles - darker and larger */
 .rtbcb-pain-point-title {
-    font-size: 14px !important;               /* Increase from 13px */
-    font-weight: 600 !important;
-    color: var(--text-primary) !important;    /* Was #374151 - make darker */
-    margin-bottom: 6px !important;
-    line-height: 1.3 !important;
+    font-size: 14px;               /* Increase from 13px */
+    font-weight: 600;
+    color: var(--text-primary);    /* Was #374151 - make darker */
+    margin-bottom: 6px;
+    line-height: 1.3;
 }
 
 /* Pain point descriptions - improve readability */
 .rtbcb-pain-point-description {
-    font-size: 13px !important;               /* Increase from 11px */
-    color: var(--text-secondary) !important;  /* Was #6b7280 - too light */
-    line-height: 1.4 !important;
+    font-size: 13px;               /* Increase from 11px */
+    color: var(--text-secondary);  /* Was #6b7280 - too light */
+    line-height: 1.4;
 }
 
 /* 6. BUTTON TEXT IMPROVEMENTS */
 
 /* Navigation button text */
 .rtbcb-nav-btn {
-    font-size: 15px !important;               /* Increase from 14px */
-    font-weight: 600 !important;
-    padding: 12px 20px !important;            /* More padding for larger touch targets */
+    font-size: 15px;               /* Increase from 14px */
+    font-weight: 600;
+    padding: 12px 20px;            /* More padding for larger touch targets */
 }
 
 /* 8. CONSENT TEXT IMPROVEMENTS */
 
 /* Consent checkbox text */
 .rtbcb-consent-text {
-    font-size: 15px !important;               /* Increase from 14px */
-    line-height: 1.6 !important;              /* Better line spacing */
-    color: var(--text-primary) !important;    /* Was #4b5563 - make darker */
+    font-size: 15px;               /* Increase from 14px */
+    line-height: 1.6;              /* Better line spacing */
+    color: var(--text-primary);    /* Was #4b5563 - make darker */
 }
 
 /* 9. MOBILE RESPONSIVENESS IMPROVEMENTS */
@@ -1869,50 +1875,50 @@
 @media (max-width: 768px) {
     /* Increase all text sizes on mobile */
     .rtbcb-modal-title {
-        font-size: 22px !important;           /* Increase from 20px */
+        font-size: 22px;           /* Increase from 20px */
     }
     
     .rtbcb-modal-subtitle {
-        font-size: 17px !important;           /* Increase for mobile */
+        font-size: 17px;           /* Increase for mobile */
     }
     
     .rtbcb-step-header h3 {
-        font-size: 19px !important;           /* Increase from 16px */
+        font-size: 19px;           /* Increase from 16px */
     }
     
     .rtbcb-step-header p {
-        font-size: 16px !important;           /* Increase for mobile */
+        font-size: 16px;           /* Increase for mobile */
     }
     
     .rtbcb-field label {
-        font-size: 16px !important;           /* Larger labels on mobile */
+        font-size: 16px;           /* Larger labels on mobile */
     }
     
     .rtbcb-progress-label {
-        font-size: 13px !important;           /* Slightly larger on mobile */
-        font-weight: 600 !important;
+        font-size: 13px;           /* Slightly larger on mobile */
+        font-weight: 600;
     }
     
     /* Ensure minimum touch targets */
     .rtbcb-pain-point-label {
-        padding: 16px !important;             /* Larger touch area */
+        padding: 16px;             /* Larger touch area */
     }
 }
 
 @media (max-width: 480px) {
     /* Further mobile improvements */
     .rtbcb-pain-point-title {
-        font-size: 15px !important;
+        font-size: 15px;
     }
     
     .rtbcb-pain-point-description {
-        font-size: 14px !important;
+        font-size: 14px;
     }
     
     .rtbcb-field input,
     .rtbcb-field select {
-        font-size: 16px !important;           /* Prevent zoom on iOS */
-        padding: 14px 16px !important;        /* Larger touch targets */
+        font-size: 16px;           /* Prevent zoom on iOS */
+        padding: 14px 16px;        /* Larger touch targets */
     }
 }
 
@@ -1920,8 +1926,8 @@
 
 /* Button focus states */
 .rtbcb-nav-btn:focus {
-    outline: 2px solid #ffffff !important;
-    outline-offset: 2px !important;
+    outline: 2px solid #ffffff;
+    outline-offset: 2px;
 }
 
 /* 11. HIGH CONTRAST MODE SUPPORT */
@@ -1935,11 +1941,11 @@
     
     .rtbcb-field input,
     .rtbcb-field select {
-        border-width: 2px !important;
+        border-width: 2px;
     }
     
     .rtbcb-pain-point-card {
-        border-width: 2px !important;
+        border-width: 2px;
     }
 }
 
@@ -1947,8 +1953,8 @@
 
 @media (prefers-reduced-motion: reduce) {
     * {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms;
+        animation-iteration-count: 1;
+        transition-duration: 0.01ms;
     }
 }
