@@ -957,15 +957,17 @@ return $use_comprehensive;
 	__( 'User adoption and change management challenges', 'rtbcb' ),
 	__( 'Integration complexity with existing systems', 'rtbcb' ),
 	],
-	'next_actions'      => [
-	__( 'Secure executive sponsorship and project funding', 'rtbcb' ),
-	__( 'Conduct detailed requirements analysis', 'rtbcb' ),
-	__( 'Evaluate treasury technology vendors', 'rtbcb' ),
-	__( 'Develop implementation roadmap and timeline', 'rtbcb' ),
-	],
-	'confidence'        => 0.75,
-	'enhanced_fallback' => true,
-	];
+        'next_actions'      => [
+        __( 'Secure executive sponsorship and project funding', 'rtbcb' ),
+        __( 'Conduct detailed requirements analysis', 'rtbcb' ),
+        __( 'Evaluate treasury technology vendors', 'rtbcb' ),
+        __( 'Develop implementation roadmap and timeline', 'rtbcb' ),
+        ],
+       'company_name'      => $company_name,
+       'base_roi'          => $base_roi,
+        'confidence'        => 0.75,
+        'enhanced_fallback' => true,
+        ];
 	}
 	
 	/**
@@ -1702,6 +1704,8 @@ return wp_kses_post( $html );
        // Get current company data.
        $company      = rtbcb_get_current_company();
        $company_name = $business_case_data['company_name'] ?? $company['name'] ?? __( 'Your Company', 'rtbcb' );
+       $base_roi     = $business_case_data['base_roi'] ?? $business_case_data['roi_base'] ?? 0;
+       $business_case_data['roi_base'] = $base_roi;
 
        // Create structured data format expected by template.
        $report_data = [
