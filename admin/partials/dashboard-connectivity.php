@@ -219,7 +219,7 @@ if ( ! defined( 'ABSPATH' ) ) {
         $.ajax({
             url: ajaxurl,
             method: 'POST',
-            timeout: 30000,
+            timeout: rtbcb_ajax.timeout,
             data: {
                 action: 'rtbcb_set_test_company',
                 nonce: $('#rtbcb_set_test_company_nonce').val(),
@@ -254,7 +254,7 @@ if ( ! defined( 'ABSPATH' ) ) {
         $.ajax({
             url: ajaxurl,
             method: 'POST',
-            timeout: 60000,
+            timeout: rtbcb_ajax.timeout,
             data: {
                 action: 'rtbcb_generate_company_overview',
                 nonce: '<?php echo wp_create_nonce( 'rtbcb_test_company_overview' ); ?>',
