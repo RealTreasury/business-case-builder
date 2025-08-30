@@ -27,14 +27,18 @@ class SimpleFormData {
 global.FormData = SimpleFormData;
 
 global.fetch = function() {
-    return Promise.resolve({
+    const payload = {
+        success: true,
+        data: { report_html: '<div>Report</div>' }
+    };
+    const response = {
         ok: true,
         status: 200,
-        json: async () => ({
-            success: true,
-            data: { report_html: '<div>Report</div>' }
-        })
-    });
+        json: async () => payload,
+        text: async () => JSON.stringify(payload),
+        clone() { return this; }
+    };
+    return Promise.resolve(response);
 };
 
 const form = {
