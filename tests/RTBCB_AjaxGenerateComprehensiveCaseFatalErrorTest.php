@@ -40,11 +40,21 @@ if ( ! function_exists( 'rtbcb_log_error' ) ) {
     function rtbcb_log_error( $message, $context = null ) {}
 }
 
+if ( ! function_exists( 'rtbcb_is_openai_configuration_error' ) ) {
+    function rtbcb_is_openai_configuration_error( $e ) {
+        $message = strtolower( $e->getMessage() );
+        return false !== strpos( $message, 'api key' ) || false !== strpos( $message, 'model' );
+    }
+}
+
 if ( ! class_exists( 'RTBCB_LLM' ) ) {
     class RTBCB_LLM {
         public static $mode = 'ok';
         public function generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context ) {
-            if ( 'fatal' === self::$mode ) {
+            if ( 'fatal_config' === self::$mode ) {
+                throw new Error( 'Missing API key' );
+            }
+            if ( 'fatal_internal' === self::$mode ) {
                 throw new Error( 'LLM fatal error' );
             }
             return [];
@@ -83,13 +93,18 @@ if ( ! class_exists( 'Real_Treasury_BCB_Fatal' ) ) {
             try {
                 $llm->generate_comprehensive_business_case( [], [], [] );
             } catch ( Error $e ) {
-                $error_code      = 'E_LLM_FATAL';
-                rtbcb_log_error( $error_code . ': ' . $e->getMessage(), $e->getTraceAsString() );
-                $guidance        = __( 'Check the OpenAI API key setting in plugin options.', 'rtbcb' );
-                $response_message = __( 'Our AI analysis service is temporarily unavailable.', 'rtbcb' ) . ' ' . $guidance;
-                if ( function_exists( 'wp_get_environment_type' ) && 'production' !== wp_get_environment_type() ) {
-                    $response_message = $e->getMessage() . ' ' . $guidance;
+                $error_code    = 'E_LLM_FATAL';
+                $error_message = $e->getMessage();
+
+                rtbcb_log_error( $error_code . ': ' . $error_message, $e->getTraceAsString() );
+
+                if ( rtbcb_is_openai_configuration_error( $e ) ) {
+                    $guidance        = __( 'Check the OpenAI API key setting in plugin options.', 'rtbcb' );
+                    $response_message = __( 'Our AI analysis service is temporarily unavailable.', 'rtbcb' ) . ' ' . $guidance;
+                } else {
+                    $response_message = __( 'Internal error. Please try again later.', 'rtbcb' );
                 }
+
                 wp_send_json_error(
                     [
                         'message'    => $response_message,
@@ -103,8 +118,8 @@ if ( ! class_exists( 'Real_Treasury_BCB_Fatal' ) ) {
 }
 
 final class RTBCB_AjaxGenerateComprehensiveCaseFatalErrorTest extends TestCase {
-    public function test_ajax_returns_fatal_error_json_when_llm_throws_error() {
-        RTBCB_LLM::$mode = 'fatal';
+    public function test_ajax_returns_guidance_when_configuration_error() {
+        RTBCB_LLM::$mode = 'fatal_config';
         $plugin          = new Real_Treasury_BCB_Fatal();
         try {
             $plugin->ajax_generate_comprehensive_case();
@@ -114,6 +129,22 @@ final class RTBCB_AjaxGenerateComprehensiveCaseFatalErrorTest extends TestCase {
             $this->assertSame( 'E_LLM_FATAL', $e->data['data']['error_code'] );
             $this->assertSame(
                 'Our AI analysis service is temporarily unavailable. Check the OpenAI API key setting in plugin options.',
+                $e->data['data']['message']
+            );
+        }
+    }
+
+    public function test_ajax_returns_generic_message_when_internal_error() {
+        RTBCB_LLM::$mode = 'fatal_internal';
+        $plugin          = new Real_Treasury_BCB_Fatal();
+        try {
+            $plugin->ajax_generate_comprehensive_case();
+            $this->fail( 'Expected RTBCB_JSON_Error was not thrown.' );
+        } catch ( RTBCB_JSON_Error $e ) {
+            $this->assertSame( 500, $e->status );
+            $this->assertSame( 'E_LLM_FATAL', $e->data['data']['error_code'] );
+            $this->assertSame(
+                'Internal error. Please try again later.',
                 $e->data['data']['message']
             );
         }
