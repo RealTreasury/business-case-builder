@@ -1493,10 +1493,19 @@ SYSTEM;
 
     /**
      * Call OpenAI with retry logic.
+     *
+     * Implements exponential backoff with jitter and a global timeout cap.
+     * Unrecoverable errors are detected early to prevent unnecessary waits.
+     *
+     * @param string $model       Model name.
+     * @param mixed  $prompt      Prompt data or text.
+     * @param int    $max_retries Optional override for max retries.
+     * @return array|WP_Error API response or error.
      */
-
     private function call_openai_with_retry( $model, $prompt, $max_retries = null ) {
-        $max_retries = $max_retries ?? intval( $this->gpt5_config['max_retries'] );
+        $max_retries    = $max_retries ?? intval( $this->gpt5_config['max_retries'] );
+        $global_timeout = intval( $this->gpt5_config['global_timeout'] ?? 60 );
+        $start_time     = microtime( true );
 
         for ( $attempt = 1; $attempt <= $max_retries; $attempt++ ) {
             $response = $this->call_openai( $model, $prompt );
@@ -1505,10 +1514,29 @@ SYSTEM;
                 return $response;
             }
 
-            error_log( "RTBCB: OpenAI attempt {$attempt} failed: " . $response->get_error_message() );
+            $code   = $response->get_error_code();
+            $data   = $response->get_error_data();
+            $status = is_array( $data ) && isset( $data['status'] ) ? intval( $data['status'] ) : 0;
+
+            if ( in_array( $code, [ 'no_api_key', 'empty_prompt' ], true ) ||
+                ( $status >= 400 && $status < 500 && 429 !== $status ) ) {
+                return $response;
+            }
+
+            error_log( 'RTBCB: OpenAI attempt ' . $attempt . ' failed: ' . $response->get_error_message() );
+
+            $elapsed = microtime( true ) - $start_time;
+            if ( $elapsed >= $global_timeout ) {
+                break;
+            }
 
             if ( $attempt < $max_retries ) {
-                sleep( $attempt ); // Progressive backoff
+                $delay   = pow( 2, $attempt - 1 );
+                $delay  += wp_rand( 0, 1000 ) / 1000; // Jitter up to 1s.
+                $delay   = min( $delay, $global_timeout - $elapsed );
+                if ( $delay > 0 ) {
+                    usleep( (int) ( $delay * 1000000 ) );
+                }
             }
         }
 
@@ -1555,9 +1583,10 @@ SYSTEM;
      * @param string       $model             Model name.
      * @param array|string $prompt            Prompt array or string.
      * @param int|null     $max_output_tokens Maximum output tokens.
+     * @param bool         $blocking          Whether to block for the response. Set to false for non-blocking requests.
      * @return array|WP_Error HTTP response array or WP_Error on failure.
      */
-    private function call_openai( $model, $prompt, $max_output_tokens = null ) {
+    private function call_openai( $model, $prompt, $max_output_tokens = null, $blocking = true ) {
         if ( empty( $this->api_key ) ) {
             return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
         }
@@ -1611,17 +1640,22 @@ SYSTEM;
         $timeout = intval( $this->gpt5_config['timeout'] ?? 180 );
 
         $args = [
-            'headers' => [
+            'headers'  => [
                 'Authorization' => 'Bearer ' . $this->api_key,
-                'Content-Type' => 'application/json',
+                'Content-Type'  => 'application/json',
             ],
-            'body'    => wp_json_encode( $body ),
-            'timeout' => $timeout,
+            'body'     => wp_json_encode( $body ),
+            'timeout'  => $timeout,
+            'blocking' => $blocking,
         ];
 
         $this->last_request = $body;
         $response           = wp_remote_post( $endpoint, $args );
         $this->last_response = $response;
+
+        if ( ! $blocking ) {
+            return $response;
+        }
 
         if ( class_exists( 'RTBCB_API_Log' ) ) {
             $decoded = [];

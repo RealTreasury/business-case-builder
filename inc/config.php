@@ -45,6 +45,7 @@ function rtbcb_get_gpt5_config( $overrides = [] ) {
         'max_retries'       => 2,
         'reasoning_effort'  => 'medium',
         'text_verbosity'    => 'medium',
+        'global_timeout'    => 60,
     ];
 
     $file_overrides = [];
