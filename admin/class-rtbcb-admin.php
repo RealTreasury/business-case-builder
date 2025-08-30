@@ -1870,10 +1870,25 @@ class RTBCB_Admin {
 			wp_send_json_success( __( 'Workflow history cleared', 'rtbcb' ) );
 		}
 
-       private function get_workflow_history_from_logs() {
-               $history = get_option( 'rtbcb_workflow_history', [] );
-               return is_array( $history ) ? $history : [];
-       }
+		/**
+		 * Retrieve workflow history with lead metadata.
+		 *
+		 * @return array Workflow history entries.
+		 */
+		private function get_workflow_history_from_logs() {
+			$history = get_option( 'rtbcb_workflow_history', [] );
+			if ( ! is_array( $history ) ) {
+			return [];
+			}
+			return array_map(
+				function ( $entry ) {
+				$entry['lead_id']    = isset( $entry['lead_id'] ) ? intval( $entry['lead_id'] ) : 0;
+				$entry['lead_email'] = isset( $entry['lead_email'] ) ? sanitize_email( $entry['lead_email'] ) : '';
+				return $entry;
+			},
+			$history
+			);
+		}
 
 	private function calculate_average_duration( $history ) {
 		if ( empty( $history ) ) {
