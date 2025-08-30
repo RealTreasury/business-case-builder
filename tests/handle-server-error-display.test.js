@@ -78,7 +78,7 @@ builder.form = form;
 let errorMessage = null;
 builder.showProgress = () => {};
 builder.showResults = () => {};
-builder.showError = (msg) => { errorMessage = msg; };
+builder.showEnhancedError = (msg) => { errorMessage = msg; };
 builder.showTimeoutError = (msg) => { errorMessage = msg; };
 
 (async () => {

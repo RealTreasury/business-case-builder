@@ -104,7 +104,7 @@ class BusinessCaseBuilder {
                     this.handleSubmit(e);
                 } catch (error) {
                     console.error('RTBCB: handleSubmit error:', error);
-                    this.showError('An unexpected error occurred. Please try again.');
+                    this.showEnhancedError('An unexpected error occurred. Please try again.');
                 }
             }
         });
@@ -361,7 +361,7 @@ class BusinessCaseBuilder {
         }
         
         if (!this.ajaxUrl) {
-            this.showError('Service unavailable. Please reload the page.');
+            this.showEnhancedError('Service unavailable. Please reload the page.');
             return;
         }
 
@@ -400,9 +400,9 @@ class BusinessCaseBuilder {
             } catch (parseError) {
                 console.log('RTBCB: Response is not JSON, treating as HTML');
                 // If it's not JSON, it might be the direct HTML report
-                if (responseText.includes('<div class="rtbcb-enhanced-report"') || 
+                if (responseText.includes('<div class="rtbcb-enhanced-report"') ||
                     responseText.includes('<div class="rtbcb-report"')) {
-                    this.showHTMLResults(responseText);
+                    this.showEnhancedHTMLReport(responseText);
                     return;
                 } else {
                     throw new Error('Invalid response format');
@@ -414,12 +414,15 @@ class BusinessCaseBuilder {
                 if (data.data && data.data.job_id) {
                     // Background job approach
                     this.pollJob(data.data.job_id, Date.now(), 0);
-                } else if (data.data && data.data.report_html) {
-                    // Direct HTML response
-                    this.showHTMLResults(data.data.report_html);
                 } else if (data.data) {
-                    // Structured data response
-                    this.handleSuccess(data.data);
+                    // Direct HTML or structured data response
+                    if (data.data.report_html) {
+                        this.handleSuccess(data.data);
+                    } else if (data.data.report_data) {
+                        this.handleSuccess(data.data.report_data);
+                    } else {
+                        this.handleSuccess(data.data);
+                    }
                 } else {
                     throw new Error('No report data received');
                 }
@@ -586,7 +589,7 @@ class BusinessCaseBuilder {
             if (status === 'completed') {
                 const result = data.data.result;
                 if (result && result.report_html) {
-                    this.showHTMLResults(result.report_html);
+                    this.handleSuccess(result);
                 } else if (result && result.report_data) {
                     this.handleSuccess(result.report_data);
                 } else {
@@ -606,38 +609,314 @@ class BusinessCaseBuilder {
 
     handleSuccess(data) {
         console.log('RTBCB: Success data received:', data);
-        this.showResults(data);
+
+        // Check if we have HTML report data
+        if (data.report_html && data.report_html.trim()) {
+            this.showEnhancedHTMLReport(data.report_html);
+        } else {
+            // Fallback to structured data rendering
+            this.showResults(data);
+        }
     }
 
-    showHTMLResults(htmlContent) {
-        console.log('RTBCB: Showing HTML results');
+    showEnhancedHTMLReport(htmlContent) {
+        console.log('RTBCB: Displaying enhanced HTML report');
         this.hideLoading();
-        
+
         // Close modal
         window.closeBusinessCaseModal();
-        
-        // Show HTML results
-        const resultsContainer = document.getElementById('rtbcbResults');
-        if (resultsContainer) {
-            resultsContainer.innerHTML = htmlContent;
-            resultsContainer.style.display = 'block';
-            resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        } else {
-            // Create results container if it doesn't exist
-            const newContainer = document.createElement('div');
-            newContainer.id = 'rtbcbResults';
-            newContainer.className = 'rtbcb-results';
-            newContainer.innerHTML = htmlContent;
-            
-            // Insert after the modal or at the end of body
+
+        // Create or find results container
+        let resultsContainer = document.getElementById('rtbcb-results-enhanced');
+        if (!resultsContainer) {
+            resultsContainer = document.createElement('div');
+            resultsContainer.id = 'rtbcb-results-enhanced';
+            resultsContainer.className = 'rtbcb-enhanced-results-container';
+
+            // Insert after the modal
             const modal = document.getElementById('rtbcbModalOverlay');
             if (modal && modal.parentNode) {
-                modal.parentNode.insertBefore(newContainer, modal.nextSibling);
+                modal.parentNode.insertBefore(resultsContainer, modal.nextSibling);
             } else {
-                document.body.appendChild(newContainer);
+                document.body.appendChild(resultsContainer);
             }
-            
-            newContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // Set content and make visible
+        resultsContainer.innerHTML = htmlContent;
+        resultsContainer.style.display = 'block';
+
+        // Initialize interactive features for the enhanced report
+        this.initializeEnhancedReport(resultsContainer);
+
+        // Smooth scroll to results
+        resultsContainer.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+        });
+    }
+
+    initializeEnhancedReport(container) {
+        // Initialize Chart.js charts if available
+        if (typeof Chart !== 'undefined') {
+            this.initializeReportCharts(container);
+        }
+
+        // Initialize collapsible sections
+        this.initializeCollapsibleSections(container);
+
+        // Initialize interactive metrics
+        this.initializeInteractiveMetrics(container);
+
+        // Add print and export functionality
+        this.initializeExportFunctions(container);
+    }
+
+    initializeReportCharts(container) {
+        const chartCanvas = container.querySelector('#rtbcb-roi-chart');
+        if (!chartCanvas) return;
+
+        try {
+            // Get chart data from the page or from localized data
+            const roiData = this.extractROIDataFromReport(container);
+
+            if (roiData && Object.keys(roiData).length > 0) {
+                this.createROIChart(chartCanvas, roiData);
+            }
+        } catch (error) {
+            console.error('Failed to initialize chart:', error);
+        }
+    }
+
+    extractROIDataFromReport(container) {
+        const roiData = {};
+
+        // Look for scenario data in the DOM
+        const scenarioCards = container.querySelectorAll('.rtbcb-scenario-card');
+        scenarioCards.forEach(card => {
+            const scenarioName = this.getScenarioNameFromCard(card);
+            if (scenarioName) {
+                roiData[scenarioName] = this.extractMetricsFromCard(card);
+            }
+        });
+
+        return roiData;
+    }
+
+    getScenarioNameFromCard(card) {
+        if (card.classList.contains('conservative')) return 'conservative';
+        if (card.classList.contains('base')) return 'base';
+        if (card.classList.contains('optimistic')) return 'optimistic';
+
+        // Try to extract from heading
+        const heading = card.querySelector('h4');
+        if (heading) {
+            const text = heading.textContent.toLowerCase();
+            if (text.includes('conservative')) return 'conservative';
+            if (text.includes('base')) return 'base';
+            if (text.includes('optimistic')) return 'optimistic';
+        }
+
+        return null;
+    }
+
+    extractMetricsFromCard(card) {
+        const metrics = {};
+
+        const metricElements = card.querySelectorAll('.rtbcb-scenario-metric');
+        metricElements.forEach(metric => {
+            const label = metric.querySelector('.rtbcb-metric-label');
+            const value = metric.querySelector('.rtbcb-metric-value');
+
+            if (label && value) {
+                const labelText = label.textContent.trim();
+                const valueText = value.textContent.replace(/[$,]/g, '').trim();
+                const numValue = parseFloat(valueText) || 0;
+
+                if (labelText.includes('Total Annual')) {
+                    metrics.total_annual_benefit = numValue;
+                } else if (labelText.includes('Labor')) {
+                    metrics.labor_savings = numValue;
+                } else if (labelText.includes('Fee')) {
+                    metrics.fee_savings = numValue;
+                } else if (labelText.includes('Error')) {
+                    metrics.error_reduction = numValue;
+                }
+            }
+        });
+
+        return metrics;
+    }
+
+    createROIChart(canvas, roiData) {
+        const ctx = canvas.getContext('2d');
+
+        const chartData = {
+            labels: ['Labor Savings', 'Fee Savings', 'Error Reduction', 'Total Benefit'],
+            datasets: []
+        };
+
+        const colors = {
+            conservative: { bg: 'rgba(239, 68, 68, 0.8)', border: 'rgba(239, 68, 68, 1)' },
+            base: { bg: 'rgba(59, 130, 246, 0.8)', border: 'rgba(59, 130, 246, 1)' },
+            optimistic: { bg: 'rgba(16, 185, 129, 0.8)', border: 'rgba(16, 185, 129, 1)' }
+        };
+
+        // Create datasets for each scenario
+        Object.keys(roiData).forEach(scenario => {
+            const data = roiData[scenario];
+            const color = colors[scenario] || colors.base;
+
+            chartData.datasets.push({
+                label: this.formatScenarioLabel(scenario),
+                data: [
+                    data.labor_savings || 0,
+                    data.fee_savings || 0,
+                    data.error_reduction || 0,
+                    data.total_annual_benefit || 0
+                ],
+                backgroundColor: color.bg,
+                borderColor: color.border,
+                borderWidth: 1
+            });
+        });
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: chartData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + new Intl.NumberFormat().format(value);
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': $' + 
+                                       new Intl.NumberFormat().format(context.raw);
+                            }
+                        }
+                    },
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    }
+                }
+            }
+        });
+    }
+
+    formatScenarioLabel(scenario) {
+        switch (scenario) {
+            case 'conservative': return 'Conservative';
+            case 'base': return 'Base Case';
+            case 'optimistic': return 'Optimistic';
+            default: return scenario.charAt(0).toUpperCase() + scenario.slice(1);
+        }
+    }
+
+    initializeCollapsibleSections(container) {
+        const toggles = container.querySelectorAll('.rtbcb-section-toggle');
+        toggles.forEach(toggle => {
+            toggle.addEventListener('click', function() {
+                const targetId = this.getAttribute('data-target');
+                const content = document.getElementById(targetId);
+                const arrow = this.querySelector('.rtbcb-toggle-arrow');
+                const text = this.querySelector('.rtbcb-toggle-text');
+
+                if (content) {
+                    const isHidden = content.style.display === 'none';
+                    content.style.display = isHidden ? 'block' : 'none';
+
+                    if (arrow) {
+                        arrow.textContent = isHidden ? '▲' : '▼';
+                    }
+                    if (text) {
+                        text.textContent = isHidden ? 'Collapse' : 'Expand';
+                    }
+                }
+            });
+        });
+    }
+
+    initializeInteractiveMetrics(container) {
+        const metricCards = container.querySelectorAll('.rtbcb-metric-card');
+        metricCards.forEach(card => {
+            card.addEventListener('click', function() {
+                this.classList.toggle('expanded');
+            });
+        });
+    }
+
+    initializeExportFunctions(container) {
+        // Print button
+        const printButtons = container.querySelectorAll('[onclick*="print"], .rtbcb-print-btn');
+        printButtons.forEach(btn => {
+            btn.onclick = null; // Remove inline handler
+            btn.addEventListener('click', () => {
+                window.print();
+            });
+        });
+
+        // PDF export button (same as print for now)
+        const pdfButtons = container.querySelectorAll('.rtbcb-export-pdf, .rtbcb-pdf-btn');
+        pdfButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                window.print(); // Browser will handle PDF export
+            });
+        });
+    }
+
+    showEnhancedError(message, details = null) {
+        this.hideLoading();
+
+        const progressContainer = document.getElementById('rtbcb-progress-container');
+        if (progressContainer) {
+            progressContainer.innerHTML = `
+                <div class="rtbcb-enhanced-error" style="padding: 40px; text-align: center; max-width: 600px;">
+                    <div class="rtbcb-error-icon" style="font-size: 48px; color: #ef4444; margin-bottom: 20px;">
+                        ⚠️
+                    </div>
+                    <h3 style="color: #ef4444; margin-bottom: 16px; font-size: 24px;">
+                        Unable to Generate Dashboard Report
+                    </h3>
+                    <p style="color: #4b5563; margin-bottom: 24px; font-size: 16px; line-height: 1.5;">
+                        ${this.escapeHTML(message)}
+                    </p>
+                    ${details ? `
+                    <details style="margin-bottom: 24px; text-align: left;">
+                        <summary style="cursor: pointer; color: #7c3aed; font-weight: 600;">
+                            Technical Details
+                        </summary>
+                        <pre style="background: #f3f4f6; padding: 16px; border-radius: 8px; font-size: 14px; margin-top: 8px; overflow-x: auto;">
+                            ${this.escapeHTML(JSON.stringify(details, null, 2))}
+                        </pre>
+                    </details>
+                    ` : ''}
+                    <div class="rtbcb-error-actions" style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                        <button type="button" onclick="location.reload()" 
+                                style="background: #7216f4; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                            Try Again
+                        </button>
+                        <a href="mailto:contact@realtreasury.com" 
+                           style="background: #f3f4f6; color: #4b5563; border: none; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">
+                            Contact Support
+                        </a>
+                    </div>
+                </div>
+            `;
+            progressContainer.style.display = 'flex';
+            progressContainer.style.alignItems = 'center';
+            progressContainer.style.justifyContent = 'center';
         }
     }
 
@@ -677,7 +956,7 @@ class BusinessCaseBuilder {
             resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
         } else {
             console.error('RTBCB: Results container not found');
-            this.showError('Unable to display results. Please refresh the page.');
+            this.showEnhancedError('Unable to display results. Please refresh the page.');
         }
     }
 
@@ -889,7 +1168,7 @@ class BusinessCaseBuilder {
         console.error('Timestamp:', errorData.timestamp);
         console.groupEnd();
 
-        this.showError(this.getUserFriendlyMessage(message));
+        this.showEnhancedError(this.getUserFriendlyMessage(message), errorData);
     }
 
     getUserFriendlyMessage(serverMessage) {
@@ -911,31 +1190,6 @@ class BusinessCaseBuilder {
         }
 
         return 'An error occurred while processing your request. Please try again.';
-    }
-
-    showError(message) {
-        this.hideLoading();
-        
-        const progressContainer = document.getElementById('rtbcb-progress-container');
-        if (progressContainer) {
-            const safeMessage = this.escapeHTML(message);
-            progressContainer.innerHTML = `
-                <div class="rtbcb-error-container" style="padding: 40px; text-align: center;">
-                    <div class="rtbcb-error-icon" style="font-size: 48px; color: #ef4444; margin-bottom: 20px;">⚠️</div>
-                    <h3 style="color: #ef4444; margin-bottom: 16px;">Unable to Generate Business Case</h3>
-                    <p style="color: #4b5563; margin-bottom: 24px;">${safeMessage}</p>
-                    <div class="rtbcb-error-actions">
-                        <button type="button" class="rtbcb-action-btn rtbcb-btn-primary" onclick="location.reload()">
-                            Try Again
-                        </button>
-                        <a href="mailto:contact@realtreasury.com" class="rtbcb-action-btn rtbcb-btn-secondary" style="text-decoration: none;">
-                            Contact Support
-                        </a>
-                    </div>
-                </div>
-            `;
-            progressContainer.style.display = 'flex';
-        }
     }
 
     escapeHTML(str) {
