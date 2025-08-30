@@ -2,14 +2,19 @@
  * Generate and display professional reports using OpenAI.
  */
 
+const RTBCB_GPT5_MAX_TOKENS = 8000;
 const RTBCB_GPT5_DEFAULTS = {
-    max_output_tokens: 20000,
+    max_output_tokens: RTBCB_GPT5_MAX_TOKENS,
     text: { verbosity: 'medium' },
     temperature: 0.7,
     store: true,
     timeout: 180,
     max_retries: 3
 };
+
+function estimateTokens(words) {
+    return Math.ceil(words * 1.5);
+}
 
 function supportsTemperature(model) {
     const capabilities = rtbcbReport.model_capabilities || {};
@@ -52,7 +57,9 @@ async function generateProfessionalReport(businessContext) {
         ...(typeof rtbcbReport !== 'undefined' ? rtbcbReport : {})
     };
     cfg.model = rtbcbReport.report_model;
-    cfg.max_output_tokens = Math.min(50000, Math.max(256, parseInt(cfg.max_output_tokens, 10) || 20000));
+    const adminLimit = Math.min(RTBCB_GPT5_MAX_TOKENS, parseInt(cfg.max_output_tokens, 10) || RTBCB_GPT5_MAX_TOKENS);
+    const desiredWords = 1000;
+    cfg.max_output_tokens = Math.min(adminLimit, estimateTokens(desiredWords));
     if ( !supportsTemperature( cfg.model ) ) {
         delete cfg.temperature;
     }
