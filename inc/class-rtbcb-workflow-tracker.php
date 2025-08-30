@@ -103,6 +103,8 @@ $this->ai_calls++;
 $this->steps[]     = $this->current_step;
 $this->current_step = null;
 
+do_action( 'rtbcb_workflow_step_completed', $step_name );
+
 error_log( 'RTBCB Workflow: Completed step ' . $step_name . ' in ' . round( $this->steps[ count( $this->steps ) - 1 ]['duration'], 2 ) . 's' );
 }
 }

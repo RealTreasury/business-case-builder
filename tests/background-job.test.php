@@ -43,6 +43,13 @@ if ( ! function_exists( 'get_transient' ) ) {
     }
 }
 
+if ( ! function_exists( 'delete_transient' ) ) {
+    function delete_transient( $name ) {
+        global $transients;
+        unset( $transients[ $name ] );
+    }
+}
+
 if ( ! function_exists( 'wp_schedule_single_event' ) ) {
     function wp_schedule_single_event( $timestamp, $hook, $args ) {
         global $scheduled_events;
@@ -67,8 +74,28 @@ if ( ! function_exists( 'wp_doing_cron' ) ) {
     }
 }
 
+global $wp_actions;
+$wp_actions = [];
+
 if ( ! function_exists( 'add_action' ) ) {
-    function add_action( $hook, $callback, $priority = 10, $accepted_args = 1 ) {}
+    function add_action( $hook, $callback, $priority = 10, $accepted_args = 1 ) {
+        global $wp_actions;
+        $wp_actions[ $hook ][] = [
+            'callback'      => $callback,
+            'accepted_args' => $accepted_args,
+        ];
+    }
+}
+
+if ( ! function_exists( 'do_action' ) ) {
+    function do_action( $hook, ...$args ) {
+        global $wp_actions;
+        if ( isset( $wp_actions[ $hook ] ) ) {
+            foreach ( $wp_actions[ $hook ] as $action ) {
+                call_user_func_array( $action['callback'], array_slice( $args, 0, $action['accepted_args'] ) );
+            }
+        }
+    }
 }
 
 if ( ! defined( 'HOUR_IN_SECONDS' ) ) {
@@ -83,6 +110,11 @@ if ( ! class_exists( 'RTBCB_Ajax' ) ) {
     class RTBCB_Ajax {
         public static $mode = 'success';
         public static function process_comprehensive_case( $user_inputs ) {
+            do_action( 'rtbcb_workflow_step_completed', 'ai_enrichment' );
+            do_action( 'rtbcb_workflow_step_completed', 'enhanced_roi_calculation' );
+            do_action( 'rtbcb_workflow_step_completed', 'intelligent_recommendations' );
+            do_action( 'rtbcb_workflow_step_completed', 'hybrid_rag_analysis' );
+            do_action( 'rtbcb_workflow_step_completed', 'data_structuring' );
             if ( 'error' === self::$mode ) {
                 return new WP_Error( 'failed', 'Processing failed.' );
             }
@@ -109,7 +141,8 @@ RTBCB_Background_Job::process_job( $job_id, $user_inputs );
 
 global $transient_log;
 $statuses = array_column( $transient_log[ $job_id ], 'status' );
-assert_true( $statuses === [ 'queued', 'processing', 'completed' ], 'Status flow incorrect: ' . json_encode( $statuses ) );
+assert_true( $statuses === [ 'queued', 'processing', 'processing', 'processing', 'processing', 'processing', 'processing', 'completed' ], 'Status flow incorrect: ' . json_encode( $statuses ) );
+assert_true( $transient_log[ $job_id ][2]['step'] === 'ai_enrichment', 'First step missing' );
 assert_true( 'completed' === get_transient( $job_id )['status'], 'Job not completed' );
 
 // Error job flow.
@@ -118,8 +151,15 @@ $job_id2          = RTBCB_Background_Job::enqueue( $user_inputs );
 RTBCB_Background_Job::process_job( $job_id2, $user_inputs );
 $status   = get_transient( $job_id2 );
 $statuses = array_column( $transient_log[ $job_id2 ], 'status' );
-assert_true( $statuses === [ 'queued', 'processing', 'error' ], 'Error status flow incorrect: ' . json_encode( $statuses ) );
+assert_true( $statuses[0] === 'queued' && end( $statuses ) === 'error', 'Error status flow incorrect: ' . json_encode( $statuses ) );
 assert_true( 'error' === $status['status'], 'Job did not error' );
 assert_true( 'Processing failed.' === $status['message'], 'Error message missing' );
+
+// Cleanup test.
+$job_id3 = RTBCB_Background_Job::enqueue( $user_inputs );
+RTBCB_Background_Job::cleanup();
+assert_true( false === get_transient( $job_id ), 'Completed job not cleaned' );
+assert_true( false === get_transient( $job_id2 ), 'Errored job not cleaned' );
+assert_true( get_transient( $job_id3 ) !== false, 'Queued job incorrectly cleaned' );
 
 echo "background-job.test.php passed\n";

@@ -280,13 +280,20 @@ class Real_Treasury_BCB {
 
         add_action( 'rtbcb_rebuild_rag_index', [ $this, 'scheduled_rag_rebuild' ] );
 
-        // Schedule data cleanup
-        if ( ! wp_next_scheduled( 'rtbcb_cleanup_data' ) ) {
-            wp_schedule_event( time(), 'weekly', 'rtbcb_cleanup_data' );
-        }
+// Schedule data cleanup
+if ( ! wp_next_scheduled( 'rtbcb_cleanup_data' ) ) {
+wp_schedule_event( time(), 'weekly', 'rtbcb_cleanup_data' );
+}
 
-        add_action( 'rtbcb_cleanup_data', [ $this, 'scheduled_data_cleanup' ] );
-    }
+add_action( 'rtbcb_cleanup_data', [ $this, 'scheduled_data_cleanup' ] );
+
+// Schedule background job cleanup
+if ( ! wp_next_scheduled( 'rtbcb_cleanup_jobs' ) ) {
+wp_schedule_event( time(), 'hourly', 'rtbcb_cleanup_jobs' );
+}
+
+add_action( 'rtbcb_cleanup_jobs', [ 'RTBCB_Background_Job', 'cleanup' ] );
+}
 
     /**
      * Handle version upgrades.
