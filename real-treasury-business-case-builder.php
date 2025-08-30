@@ -937,6 +937,7 @@ class Real_Treasury_BCB {
 	try {
 	$lead_data = [
 	'email'                  => $user_inputs['email'],
+	'company_name'           => $user_inputs['company_name'],
 	'company_size'           => $user_inputs['company_size'],
 	'industry'               => $user_inputs['industry'],
 	'hours_reconciliation'   => $user_inputs['hours_reconciliation'],
