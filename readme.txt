@@ -28,7 +28,10 @@ environment variable, or by creating a `rtbcb-config.json` file in the plugin di
 { "max_output_tokens": 128000 }
 ```
 
-Values outside the 256–128,000 range are ignored.
+The plugin also supports a `min_output_tokens` setting (default 256) to
+avoid truncated responses. Both values must fall within the 1–128,000
+range. If the minimum exceeds the maximum, the plugin automatically
+raises `max_output_tokens` to match before sending the request.
 
 == Testing Dashboard ==
 From the WordPress admin, go to **Real Treasury → Test Dashboard** and click

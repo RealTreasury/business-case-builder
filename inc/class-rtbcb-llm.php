@@ -2438,9 +2438,10 @@ return $analysis;
         }
 
         $body = [
-            'model' => $model_name,
-            'input' => $input,
+            'model'             => $model_name,
+            'input'             => $input,
             'max_output_tokens' => $max_output_tokens,
+            'min_output_tokens' => $min_tokens,
         ];
 
         if ( ! empty( $instructions ) ) {

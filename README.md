@@ -37,7 +37,8 @@ A comprehensive WordPress plugin that helps treasury teams quantify the benefits
 
    ```php
    $client->chat()->create([
-       'model' => 'gpt-5-mini',
+       'model'             => 'gpt-5-mini',
+       'min_output_tokens' => 256,
        'max_output_tokens' => 256,
    ]);
    ```
@@ -47,13 +48,16 @@ A comprehensive WordPress plugin that helps treasury teams quantify the benefits
 By default, the plugin configures `max_output_tokens` to `8000` and
 `min_output_tokens` to `256` for GPT-5 models. You can adjust these values
 via the plugin settings, by setting environment variables, or by creating a
-configuration file:
+configuration file. The maximum is always enforced to be at least the
+minimum so both values remain consistent when sent to OpenAI:
 
 - **Environment variable**: `RTBCB_MAX_OUTPUT_TOKENS=128000`
 - **Config file**: create `rtbcb-config.json` in the project root with
 `{ "max_output_tokens": 128000 }`
 
-Values outside the `256`–`128000` range are ignored.
+Values outside the `1`–`128000` range are ignored. If the configured
+`min_output_tokens` exceeds `max_output_tokens`, the maximum is
+automatically raised to match the minimum.
 
 #### Model Temperature Support
 

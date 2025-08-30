@@ -32,7 +32,8 @@ async function runTests() {
     };
 
     await generateProfessionalReport('context');
-    assert.strictEqual(capturedBody.max_output_tokens, 4000, 'Should apply min_output_tokens');
+    assert.strictEqual(capturedBody.min_output_tokens, 4000, 'Should send min_output_tokens');
+    assert.strictEqual(capturedBody.max_output_tokens, 4000, 'Max should respect min_output_tokens');
 }
 
 runTests().then(() => console.log('Min output tokens test passed.'));
