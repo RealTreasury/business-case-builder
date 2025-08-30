@@ -5,6 +5,8 @@
  * @package RealTreasuryBusinessCaseBuilder
  */
 
+defined( 'ABSPATH' ) || exit;
+
 /**
  * Retrieve the default model for a given tier.
  *
@@ -57,6 +59,11 @@ function rtbcb_get_gpt5_config( $overrides = [] ) {
     $env_tokens = getenv( 'RTBCB_MAX_OUTPUT_TOKENS' );
     if ( false !== $env_tokens ) {
         $file_overrides['max_output_tokens'] = $env_tokens;
+    }
+
+    $option_tokens = get_option( 'rtbcb_gpt5_max_output_tokens', false );
+    if ( false !== $option_tokens && '' !== $option_tokens ) {
+        $file_overrides['max_output_tokens'] = $option_tokens;
     }
 
     $overrides = array_merge( $file_overrides, $overrides );
