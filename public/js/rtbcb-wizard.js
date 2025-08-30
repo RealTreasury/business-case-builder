@@ -537,7 +537,9 @@ class BusinessCaseBuilder {
                     <div class="rtbcb-progress-spinner"></div>
                     <div class="rtbcb-progress-text">Generating Your Business Case</div>
                     <div class="rtbcb-progress-step">
-                        <span class="rtbcb-progress-step-text">Analyzing ${this.escapeHTML(companyName)}'s treasury operations...</span>
+                        <span id="rtbcb-progress-status" class="rtbcb-progress-step-text">
+                            Analyzing ${this.escapeHTML(companyName)}'s treasury operations...
+                        </span>
                     </div>
                 </div>
             `;
@@ -552,7 +554,7 @@ class BusinessCaseBuilder {
             progressContainer.innerHTML = '';
         }
 
-        const formContainer = this.form.closest('.rtbcb-form-container');
+        const formContainer = this.form?.closest?.('.rtbcb-form-container');
         if (formContainer) {
             formContainer.style.display = 'block';
         }
@@ -561,33 +563,42 @@ class BusinessCaseBuilder {
     async pollJob(jobId, startTime = Date.now(), attempt = 0) {
         const MAX_DURATION = 20 * 60 * 1000; // 20 minutes
         const MAX_ATTEMPTS = 600; // 600 attempts * 2s = 20 minutes max
-        
+
         if (Date.now() - startTime > MAX_DURATION || attempt > MAX_ATTEMPTS) {
-            this.handleError({ 
-                message: 'The request timed out after 20 minutes. Please try again later.', 
-                type: 'timeout' 
+            this.handleError({
+                message: 'The request timed out after 20 minutes. Please try again later.',
+                type: 'timeout'
             });
             return;
         }
-        
+
         try {
             const response = await fetch(`${this.ajaxUrl}?action=rtbcb_job_status&job_id=${encodeURIComponent(jobId)}&rtbcb_nonce=${rtbcbAjax.nonce}`, {
                 credentials: 'same-origin',
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             });
-            
+
             const data = await response.json();
-            
+
             if (!data.success) {
+                this.hideLoading();
                 this.handleError({ message: 'Unable to retrieve job status', type: 'polling_error' });
                 return;
             }
-            
-            const status = data.data.status;
-            console.log(`RTBCB: Job status: ${status} (attempt ${attempt})`);
-            
-            if (status === 'completed') {
-                const result = data.data.result;
+
+            const statusData = data.data;
+            const state = statusData.status;
+            const progressText = statusData.step || statusData.message;
+            const progressEl = document.getElementById('rtbcb-progress-status');
+            if (progressEl && progressText) {
+                progressEl.textContent = progressText;
+            }
+
+            console.log(`RTBCB: Job status: ${state} (attempt ${attempt})`);
+
+            if (state === 'completed') {
+                this.hideLoading();
+                const result = statusData.result;
                 if (result && result.report_html) {
                     this.handleSuccess(result);
                 } else if (result && result.report_data) {
@@ -595,14 +606,16 @@ class BusinessCaseBuilder {
                 } else {
                     this.handleError({ message: 'Report data missing from completed job', type: 'job_error' });
                 }
-            } else if (status === 'error') {
-                this.handleError({ message: data.data.message || 'Job failed', type: 'job_error' });
+            } else if (state === 'error') {
+                this.hideLoading();
+                this.handleError({ message: statusData.message || 'Job failed', type: 'job_error' });
             } else {
                 // Continue polling
                 setTimeout(() => this.pollJob(jobId, startTime, attempt + 1), 2000);
             }
         } catch (error) {
             console.error('RTBCB: Job polling error:', error);
+            this.hideLoading();
             this.handleError({ message: error.message || 'An unexpected error occurred', type: 'polling_error' });
         }
     }
