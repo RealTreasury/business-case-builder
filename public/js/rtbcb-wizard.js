@@ -424,12 +424,19 @@ class BusinessCaseBuilder {
             const contentType = response.headers && response.headers.get ? response.headers.get('content-type') : null;
             console.log('RTBCB: Content-Type:', contentType);
 
+            const responseText = await response.text();
+            console.log('RTBCB: Raw response length:', responseText.length);
+
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
 
-            const responseText = await response.text();
-            console.log('RTBCB: Raw response length:', responseText.length);
+            if (!contentType || !contentType.includes('application/json')) {
+                console.warn('RTBCB: Unexpected server response:', responseText);
+                const error = new Error('Unexpected server response');
+                error.status = response.status;
+                throw error;
+            }
 
             if (responseText.includes('Fatal error') ||
                 responseText.includes('Parse error') ||
@@ -596,7 +603,8 @@ class BusinessCaseBuilder {
             'Missing required field': 'Please fill in all required fields.',
             'Invalid email address': 'Please enter a valid email address.',
             'PHP error occurred': 'Server error encountered. Please try again.',
-            'Server returned invalid JSON response': 'Server communication error. Please try again.'
+            'Server returned invalid JSON response': 'Server communication error. Please try again.',
+            'Unexpected server response': 'Server communication error. Please try again.'
         };
 
         for (const [key, message] of Object.entries(errorMappings)) {

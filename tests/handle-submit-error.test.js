@@ -36,6 +36,7 @@ global.fetch = function() {
         status: 200,
         json: async () => payload,
         text: async () => JSON.stringify(payload),
+        headers: { get: () => 'application/json' },
         clone() { return this; }
     };
     return Promise.resolve(response);
