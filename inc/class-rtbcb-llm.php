@@ -1652,23 +1652,55 @@ SYSTEM;
     }
 
     /**
-     * Call OpenAI with retry logic.
+     * Call OpenAI with retry logic using exponential backoff and jitter.
+     *
+     * Aborts early for unrecoverable errors and enforces a global timeout cap.
+     *
+     * @param string       $model            Model name.
+     * @param string|array $prompt           Prompt or structured input.
+     * @param int|null     $max_output_tokens Optional token limit.
+     * @param int|null     $max_retries      Optional max retries.
+     * @param int|null     $global_timeout   Optional overall timeout in seconds.
+     *
+     * @return WP_Error|array Response from OpenAI or WP_Error on failure.
      */
 
-    private function call_openai_with_retry( $model, $prompt, $max_output_tokens = null, $max_retries = null ) {
-        $max_retries = $max_retries ?? intval( $this->gpt5_config['max_retries'] );
+    private function call_openai_with_retry( $model, $prompt, $max_output_tokens = null, $max_retries = null, $global_timeout = null ) {
+        $max_retries    = $max_retries ?? intval( $this->gpt5_config['max_retries'] );
+        $global_timeout = $global_timeout ?? intval( $this->gpt5_config['global_timeout'] ?? 60 );
+
+        $start_time = time();
 
         for ( $attempt = 1; $attempt <= $max_retries; $attempt++ ) {
+            if ( ( time() - $start_time ) >= $global_timeout ) {
+                return new WP_Error( 'llm_global_timeout', __( 'Exceeded maximum retry time.', 'rtbcb' ) );
+            }
+
             $response = $this->call_openai( $model, $prompt, $max_output_tokens );
 
             if ( ! is_wp_error( $response ) ) {
                 return $response;
             }
 
+            $error_code = $response->get_error_code();
+            $data       = $response->get_error_data( 'llm_http_status' );
+            $status     = intval( $data['status'] ?? 0 );
+
+            // Abort immediately for unrecoverable errors.
+            if ( in_array( $error_code, [ 'no_api_key', 'empty_prompt' ], true ) ||
+                ( 'llm_http_status' === $error_code && $status >= 400 && $status < 500 && 429 !== $status ) ) {
+                return $response;
+            }
+
             error_log( "RTBCB: OpenAI attempt {$attempt} failed: " . $response->get_error_message() );
 
             if ( $attempt < $max_retries ) {
-                sleep( $attempt ); // Progressive backoff
+                $base   = pow( 2, $attempt - 1 );
+                $jitter = wp_rand( 0, 1000 ) / 1000;
+                $delay  = min( $base + $jitter, $global_timeout - ( time() - $start_time ) );
+                if ( $delay > 0 ) {
+                    usleep( intval( $delay * 1000000 ) );
+                }
             }
         }
 
@@ -1779,6 +1811,7 @@ SYSTEM;
             'timeout' => $timeout,
         ];
 
+        // TODO: Explore streaming or non-blocking requests to reduce perceived latency.
         $this->last_request = $body;
         $response           = wp_remote_post( $endpoint, $args );
         $this->last_response = $response;
