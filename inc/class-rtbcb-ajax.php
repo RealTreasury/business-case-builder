@@ -203,56 +203,73 @@ class RTBCB_Ajax {
 		];
 	}
 
-	private static function structure_report_data( $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, $request_start ) {
-		return [
-			'metadata' => [
-				'company_name'   => $user_inputs['company_name'],
-				'analysis_date'  => current_time( 'Y-m-d' ),
-				'analysis_type'  => 'comprehensive_enhanced',
-				'confidence_level' => $final_analysis['confidence_level'] ?? 0.85,
-				'processing_time' => microtime( true ) - $request_start,
-			],
-			'executive_summary' => [
-				'strategic_positioning'   => $final_analysis['executive_summary']['strategic_positioning'] ?? '',
-				'business_case_strength'  => self::calculate_business_case_strength( $roi_scenarios, $recommendation ),
-				'key_value_drivers'       => $final_analysis['executive_summary']['key_value_drivers'] ?? [],
-				'executive_recommendation' => $final_analysis['executive_summary']['executive_recommendation'] ?? '',
-				'confidence_level'        => $final_analysis['executive_summary']['confidence_level'] ?? 0.85,
-			],
-			'company_intelligence' => [
-				'enriched_profile'    => $enriched_profile['company_profile'],
-				'industry_context'    => $enriched_profile['industry_context'],
-				'maturity_assessment' => $enriched_profile['maturity_assessment'] ?? [],
-				'competitive_position'=> $enriched_profile['competitive_position'] ?? [],
-			],
-			'financial_analysis' => [
-				'roi_scenarios'        => self::format_roi_scenarios( $roi_scenarios ),
-				'investment_breakdown' => $final_analysis['financial_analysis']['investment_breakdown'] ?? [],
-				'payback_analysis'     => $final_analysis['financial_analysis']['payback_analysis'] ?? [],
-				'sensitivity_analysis' => $roi_scenarios['sensitivity_analysis'] ?? [],
-			],
-			'technology_strategy' => [
-				'recommended_category' => $recommendation['recommended'],
-				'category_details'     => $recommendation['category_info'],
-				'implementation_roadmap' => $final_analysis['implementation_roadmap'] ?? [],
-				'vendor_considerations'=> $final_analysis['vendor_considerations'] ?? [],
-			],
-			'operational_insights' => [
-				'current_state_assessment' => $final_analysis['operational_analysis']['current_state_assessment'] ?? [],
-				'process_improvements'     => $final_analysis['operational_analysis']['process_improvements'] ?? [],
-				'automation_opportunities' => $final_analysis['operational_analysis']['automation_opportunities'] ?? [],
-			],
-			'risk_analysis' => [
-				'implementation_risks' => $final_analysis['risk_mitigation']['implementation_risks'] ?? [],
-				'mitigation_strategies' => $final_analysis['risk_mitigation']['mitigation_strategies'] ?? [],
-				'success_factors'      => $final_analysis['risk_mitigation']['success_factors'] ?? [],
-			],
-			'action_plan' => [
-				'immediate_steps'    => $final_analysis['next_steps']['immediate'] ?? [],
-				'short_term_milestones' => $final_analysis['next_steps']['short_term'] ?? [],
-				'long_term_objectives'  => $final_analysis['next_steps']['long_term'] ?? [],
-			],
-		];
+	  private static function structure_report_data( $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, $request_start ) {
+	$current_state_assessment = (array) ( $final_analysis['operational_analysis']['current_state_assessment'] ?? [] );
+	if ( empty( $current_state_assessment ) ) {
+	    $current_state_assessment[] = __( 'No data provided', 'rtbcb' );
+	}
+	$process_improvements = (array) ( $final_analysis['operational_analysis']['process_improvements'] ?? [] );
+	if ( empty( $process_improvements ) ) {
+	    $process_improvements[] = __( 'No data provided', 'rtbcb' );
+	}
+	$automation_opportunities = (array) ( $final_analysis['operational_analysis']['automation_opportunities'] ?? [] );
+	if ( empty( $automation_opportunities ) ) {
+	    $automation_opportunities[] = __( 'No data provided', 'rtbcb' );
+	}
+	$implementation_risks = (array) ( $final_analysis['risk_mitigation']['implementation_risks'] ?? [] );
+	if ( empty( $implementation_risks ) ) {
+	    $implementation_risks[] = __( 'No data provided', 'rtbcb' );
+	}
+
+	return [
+	    'metadata' => [
+	        'company_name'   => $user_inputs['company_name'],
+	        'analysis_date'  => current_time( 'Y-m-d' ),
+	        'analysis_type'  => 'comprehensive_enhanced',
+	        'confidence_level' => $final_analysis['confidence_level'] ?? 0.85,
+	        'processing_time' => microtime( true ) - $request_start,
+	    ],
+	    'executive_summary' => [
+	        'strategic_positioning'   => $final_analysis['executive_summary']['strategic_positioning'] ?? '',
+	        'business_case_strength'  => self::calculate_business_case_strength( $roi_scenarios, $recommendation ),
+	        'key_value_drivers'       => $final_analysis['executive_summary']['key_value_drivers'] ?? [],
+	        'executive_recommendation' => $final_analysis['executive_summary']['executive_recommendation'] ?? '',
+	        'confidence_level'        => $final_analysis['executive_summary']['confidence_level'] ?? 0.85,
+	    ],
+	    'company_intelligence' => [
+	        'enriched_profile'    => $enriched_profile['company_profile'],
+	        'industry_context'    => $enriched_profile['industry_context'],
+	        'maturity_assessment' => $enriched_profile['maturity_assessment'] ?? [],
+	        'competitive_position'=> $enriched_profile['competitive_position'] ?? [],
+	    ],
+	    'financial_analysis' => [
+	        'roi_scenarios'        => self::format_roi_scenarios( $roi_scenarios ),
+	        'investment_breakdown' => $final_analysis['financial_analysis']['investment_breakdown'] ?? [],
+	        'payback_analysis'     => $final_analysis['financial_analysis']['payback_analysis'] ?? [],
+	        'sensitivity_analysis' => $roi_scenarios['sensitivity_analysis'] ?? [],
+	    ],
+	    'technology_strategy' => [
+	        'recommended_category' => $recommendation['recommended'],
+	        'category_details'     => $recommendation['category_info'],
+	        'implementation_roadmap' => $final_analysis['implementation_roadmap'] ?? [],
+	        'vendor_considerations'=> $final_analysis['vendor_considerations'] ?? [],
+	    ],
+	    'operational_insights' => [
+	        'current_state_assessment' => $current_state_assessment,
+	        'process_improvements'     => $process_improvements,
+	        'automation_opportunities' => $automation_opportunities,
+	    ],
+	    'risk_analysis' => [
+	        'implementation_risks' => $implementation_risks,
+	        'mitigation_strategies' => (array) ( $final_analysis['risk_mitigation']['mitigation_strategies'] ?? [] ),
+	        'success_factors'      => (array) ( $final_analysis['risk_mitigation']['success_factors'] ?? [] ),
+	    ],
+	    'action_plan' => [
+	        'immediate_steps'    => $final_analysis['next_steps']['immediate'] ?? [],
+	        'short_term_milestones' => $final_analysis['next_steps']['short_term'] ?? [],
+	        'long_term_objectives'  => $final_analysis['next_steps']['long_term'] ?? [],
+	    ],
+	];
 	}
 
 	private static function build_rag_search_query( $user_inputs, $enriched_profile ) {
