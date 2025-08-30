@@ -896,31 +896,39 @@ return $use_comprehensive;
 	/**
 	 * Generate comprehensive business analysis using LLM.
 	 */
-	private function generate_business_analysis( $user_inputs, $scenarios, $rag_context ) {
-	if ( ! class_exists( 'RTBCB_LLM' ) ) {
-	return new WP_Error( 'llm_unavailable', __( 'AI analysis service unavailable.', 'rtbcb' ) );
-	}
-	
-	if ( ! rtbcb_has_openai_api_key() ) {
-	// Return fallback analysis instead of failing
-	return $this->generate_fallback_analysis( $user_inputs, $scenarios );
-	}
-	
-	try {
-	$llm    = new RTBCB_LLM();
-	$result = $llm->generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context );
-	
-	if ( is_wp_error( $result ) ) {
-	// Fall back to structured analysis
-	return $this->generate_fallback_analysis( $user_inputs, $scenarios );
-	}
-	
-	return $result;
-	} catch ( Exception $e ) {
-	rtbcb_log_error( 'LLM analysis failed', $e->getMessage() );
-	return $this->generate_fallback_analysis( $user_inputs, $scenarios );
-	}
-	}
+        private function generate_business_analysis( $user_inputs, $scenarios, $rag_context ) {
+        if ( ! class_exists( 'RTBCB_LLM' ) ) {
+        return new WP_Error( 'llm_unavailable', __( 'AI analysis service unavailable.', 'rtbcb' ) );
+        }
+
+        if ( ! rtbcb_has_openai_api_key() ) {
+        // Return fallback analysis instead of failing.
+        return $this->generate_fallback_analysis( $user_inputs, $scenarios );
+        }
+
+        try {
+        $llm    = new RTBCB_LLM();
+        $result = $llm->generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context );
+
+        if ( is_wp_error( $result ) ) {
+        // Fall back to structured analysis.
+        return $this->generate_fallback_analysis( $user_inputs, $scenarios );
+        }
+
+        $required_keys = [ 'executive_summary', 'financial_analysis', 'industry_analysis', 'implementation_roadmap', 'risk_mitigation', 'next_steps' ];
+        $missing_keys  = array_diff( $required_keys, array_keys( $result ) );
+
+        if ( ! empty( $missing_keys ) ) {
+        rtbcb_log_error( 'LLM missing required sections', [ 'missing' => $missing_keys ] );
+        return $this->generate_fallback_analysis( $user_inputs, $scenarios );
+        }
+
+        return $result;
+        } catch ( Exception $e ) {
+        rtbcb_log_error( 'LLM analysis failed', $e->getMessage() );
+        return $this->generate_fallback_analysis( $user_inputs, $scenarios );
+        }
+        }
 	
 	/**
 	 * Generate fallback analysis when LLM is unavailable.
@@ -1439,7 +1447,15 @@ return $use_comprehensive;
                         );
                         return;
                     }
-                    rtbcb_log_api_debug( 'LLM generation succeeded' );
+                    $required_sections = [ 'executive_summary', 'financial_analysis', 'industry_analysis', 'implementation_roadmap', 'risk_mitigation', 'next_steps' ];
+                    $missing_sections  = array_diff( $required_sections, array_keys( $comprehensive_analysis ) );
+
+                    if ( ! empty( $missing_sections ) ) {
+                        rtbcb_log_error( 'LLM missing required sections', [ 'missing' => $missing_sections ] );
+                        $comprehensive_analysis = $this->generate_fallback_analysis( $user_inputs, $scenarios );
+                    } else {
+                        rtbcb_log_api_debug( 'LLM generation succeeded' );
+                    }
                 } catch ( Exception $e ) {
                     $error_code = 'E_LLM_EXCEPTION';
                     rtbcb_log_error( $error_code . ': ' . $e->getMessage() );
