@@ -14,7 +14,7 @@ defined( 'ABSPATH' ) || exit;
  * @return int Timeout in seconds.
  */
 function rtbcb_get_api_timeout() {
-        $timeout = (int) get_option( 'rtbcb_gpt5_timeout', 180 );
+		$timeout = (int) get_option( 'rtbcb_gpt5_timeout', 180 );
 
 	/**
 	 * Filter the API request timeout.
@@ -25,7 +25,7 @@ function rtbcb_get_api_timeout() {
 		return (int) apply_filters( 'rtbcb_api_timeout', $timeout );
 	}
 
-        return $timeout;
+		return $timeout;
 }
 
 require_once __DIR__ . '/config.php';
@@ -164,11 +164,22 @@ function rtbcb_sanitize_min_output_tokens( $value ) {
  * @return array[] Section data keyed by section ID.
  */
 function rtbcb_get_dashboard_sections( $test_results = null ) {
-	if ( null === $test_results ) {
-		$test_results = get_option( 'rtbcb_test_results', [] );
+	$empty = [];
+
+	if ( null !== $test_results && ! is_array( $test_results ) ) {
+		return $empty;
 	}
 
-	$sections = [
+	try {
+		if ( null === $test_results ) {
+			$test_results = get_option( 'rtbcb_test_results', [] );
+		}
+
+		if ( ! is_array( $test_results ) ) {
+			$test_results = [];
+		}
+
+		$sections = [
 		'rtbcb-test-company-overview'      => [
 			'label'    => __( 'Company Overview', 'rtbcb' ),
 			'option'   => 'rtbcb_current_company',
@@ -268,13 +279,17 @@ function rtbcb_get_dashboard_sections( $test_results = null ) {
 		],
 	];
 
-	foreach ( $sections as $id => &$section ) {
-		$result               = rtbcb_get_last_test_result( $id, $test_results );
-		$status               = $result['status'] ?? '';
-		$section['completed'] = ( 'success' === $status );
-	}
+		foreach ( $sections as $id => &$section ) {
+		        $result               = rtbcb_get_last_test_result( $id, $test_results );
+		        $status               = $result['status'] ?? '';
+		        $section['completed'] = ( 'success' === $status );
+		}
 
-	return $sections;
+		return $sections;
+	} catch ( Exception $e ) {
+		rtbcb_log_error( 'Dashboard sections mapping failed: ' . $e->getMessage() );
+		return $empty;
+	}
 }
 
 /**
@@ -764,12 +779,24 @@ function rtbcb_get_sample_report_forms() {
  * @return array Filtered inputs.
  */
 function rtbcb_map_sample_report_inputs( $inputs, $scenario_key ) {
-	$forms = rtbcb_get_sample_report_forms();
-	if ( $scenario_key && isset( $forms[ $scenario_key ] ) ) {
-		return $forms[ $scenario_key ]['data'];
+	$empty = [];
+
+	if ( ! is_array( $inputs ) ) {
+		rtbcb_log_error( 'Sample report inputs must be an array.' );
+		return $empty;
 	}
 
-	return $inputs;
+	try {
+		$forms = rtbcb_get_sample_report_forms();
+		if ( $scenario_key && isset( $forms[ $scenario_key ] ) ) {
+		return $forms[ $scenario_key ]['data'];
+		}
+
+		return $inputs;
+	} catch ( Exception $e ) {
+		rtbcb_log_error( 'Sample report input mapping failed: ' . $e->getMessage() );
+		return $empty;
+	}
 }
 add_filter( 'rtbcb_sample_report_inputs', 'rtbcb_map_sample_report_inputs', 10, 2 );
 
@@ -826,9 +853,9 @@ function rtbcb_test_generate_category_recommendation( $analysis ) {
 						'input'        => $input,
 					]
 				),
-                               'timeout' => rtbcb_get_api_timeout(),
-                        ]
-                );
+		                       'timeout' => rtbcb_get_api_timeout(),
+		                ]
+		        );
 
 		if ( is_wp_error( $response ) ) {
 			return new WP_Error( 'llm_failure', __( 'Unable to generate recommendation at this time.', 'rtbcb' ) );
@@ -1235,14 +1262,14 @@ function rtbcb_proxy_openai_responses() {
 		wp_send_json_error( [ 'message' => __( 'Missing request body.', 'rtbcb' ) ], 400 );
 	}
 
-        $body_array = json_decode( $body, true );
-        if ( ! is_array( $body_array ) ) {
-                $body_array = [];
-        }
+		$body_array = json_decode( $body, true );
+		if ( ! is_array( $body_array ) ) {
+		        $body_array = [];
+		}
 
-        $company      = rtbcb_get_current_company();
-        $user_email   = isset( $company['email'] ) ? sanitize_email( $company['email'] ) : '';
-        $company_name = isset( $company['name'] ) ? sanitize_text_field( $company['name'] ) : '';
+		$company      = rtbcb_get_current_company();
+		$user_email   = isset( $company['email'] ) ? sanitize_email( $company['email'] ) : '';
+		$company_name = isset( $company['name'] ) ? sanitize_text_field( $company['name'] ) : '';
 
 	$config            = rtbcb_get_gpt5_config();
 	$max_output_tokens = intval( $body_array['max_output_tokens'] ?? $config['max_output_tokens'] );
@@ -1328,16 +1355,16 @@ function rtbcb_handle_openai_responses_job( $job_id, $user_id ) {
 	}
 	delete_transient( 'rtbcb_openai_job_' . $job_id . '_body' );
 
-        $body_array = json_decode( $body, true );
-        if ( ! is_array( $body_array ) ) {
-                $body_array = [];
-        }
+		$body_array = json_decode( $body, true );
+		if ( ! is_array( $body_array ) ) {
+		        $body_array = [];
+		}
 
-        $company      = rtbcb_get_current_company();
-        $user_email   = isset( $company['email'] ) ? sanitize_email( $company['email'] ) : '';
-        $company_name = isset( $company['name'] ) ? sanitize_text_field( $company['name'] ) : '';
+		$company      = rtbcb_get_current_company();
+		$user_email   = isset( $company['email'] ) ? sanitize_email( $company['email'] ) : '';
+		$company_name = isset( $company['name'] ) ? sanitize_text_field( $company['name'] ) : '';
 
-        $timeout = intval( get_option( 'rtbcb_responses_timeout', 120 ) );
+		$timeout = intval( get_option( 'rtbcb_responses_timeout', 120 ) );
 	if ( $timeout <= 0 ) {
 		$timeout = 120;
 	}
@@ -1355,9 +1382,9 @@ function rtbcb_handle_openai_responses_job( $job_id, $user_id ) {
 	);
 
 	if ( is_wp_error( $response ) ) {
-                if ( class_exists( 'RTBCB_API_Log' ) ) {
-                        RTBCB_API_Log::save_log( $body_array, [ 'error' => $response->get_error_message() ], $user_id, $user_email, $company_name );
-                }
+		        if ( class_exists( 'RTBCB_API_Log' ) ) {
+		                RTBCB_API_Log::save_log( $body_array, [ 'error' => $response->get_error_message() ], $user_id, $user_email, $company_name );
+		        }
 		set_transient(
 			'rtbcb_openai_job_' . $job_id,
 			[
@@ -1376,9 +1403,9 @@ function rtbcb_handle_openai_responses_job( $job_id, $user_id ) {
 		$decoded = [];
 	}
 
-        if ( class_exists( 'RTBCB_API_Log' ) ) {
-                RTBCB_API_Log::save_log( $body_array, $decoded, $user_id, $user_email, $company_name );
-        }
+		if ( class_exists( 'RTBCB_API_Log' ) ) {
+		        RTBCB_API_Log::save_log( $body_array, $decoded, $user_id, $user_email, $company_name );
+		}
 
 	set_transient(
 		'rtbcb_openai_job_' . $job_id,
