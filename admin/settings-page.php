@@ -15,7 +15,7 @@ $advanced_model  = get_option( 'rtbcb_advanced_model', rtbcb_get_default_model( 
 $embedding_model = get_option( 'rtbcb_embedding_model', rtbcb_get_default_model( 'embedding' ) );
 $labor_cost      = get_option( 'rtbcb_labor_cost_per_hour', '' );
 $bank_fee        = get_option( 'rtbcb_bank_fee_baseline', '' );
-$gpt5_timeout    = get_option( 'rtbcb_gpt5_timeout', 300 );
+$gpt5_timeout    = rtbcb_get_api_timeout();
 $gpt5_max_output_tokens = get_option( 'rtbcb_gpt5_max_output_tokens', 8000 );
 $gpt5_min_output_tokens = get_option( 'rtbcb_gpt5_min_output_tokens', 256 );
 

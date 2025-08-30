@@ -5,8 +5,6 @@ defined( 'ABSPATH' ) || exit;
  * Helper functions for the Real Treasury Business Case Builder plugin.
  */
 
-require_once __DIR__ . '/config.php';
-
 /**
  * Get the timeout for external API requests.
  *
@@ -16,7 +14,7 @@ require_once __DIR__ . '/config.php';
  * @return int Timeout in seconds.
  */
 function rtbcb_get_api_timeout() {
-	$timeout = (int) get_option( 'rtbcb_gpt5_timeout', 180 );
+        $timeout = (int) get_option( 'rtbcb_gpt5_timeout', 180 );
 
 	/**
 	 * Filter the API request timeout.
@@ -27,8 +25,10 @@ function rtbcb_get_api_timeout() {
 		return (int) apply_filters( 'rtbcb_api_timeout', $timeout );
 	}
 
-	return $timeout;
+        return $timeout;
 }
+
+require_once __DIR__ . '/config.php';
 
 /**
  * Retrieve the OpenAI API key from plugin settings.
@@ -826,9 +826,9 @@ function rtbcb_test_generate_category_recommendation( $analysis ) {
 						'input'        => $input,
 					]
 				),
-				'timeout' => 60,
-			]
-		);
+                               'timeout' => rtbcb_get_api_timeout(),
+                        ]
+                );
 
 		if ( is_wp_error( $response ) ) {
 			return new WP_Error( 'llm_failure', __( 'Unable to generate recommendation at this time.', 'rtbcb' ) );

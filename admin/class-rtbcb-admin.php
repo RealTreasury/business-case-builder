@@ -618,7 +618,7 @@ class RTBCB_Admin {
                 'Authorization' => 'Bearer ' . $api_key,
                 'Content-Type'  => 'application/json',
             ],
-            'timeout' => 20,
+            'timeout' => rtbcb_get_api_timeout(),
         ] );
 
         if ( is_wp_error( $response ) ) {

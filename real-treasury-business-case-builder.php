@@ -131,7 +131,7 @@ class Real_Treasury_BCB {
      */
     private function includes() {
         // Core classes
-        require_once RTBCB_DIR . 'inc/config.php';
+        require_once RTBCB_DIR . 'inc/helpers.php';
         require_once RTBCB_DIR . 'inc/class-rtbcb-settings.php';
         require_once RTBCB_DIR . 'inc/class-rtbcb-calculator.php';
         require_once RTBCB_DIR . 'inc/class-rtbcb-router.php';
@@ -149,7 +149,6 @@ class Real_Treasury_BCB {
         require_once RTBCB_DIR . 'inc/class-rtbcb-enhanced-calculator.php';
         require_once RTBCB_DIR . 'inc/class-rtbcb-intelligent-recommender.php';
         require_once RTBCB_DIR . 'inc/class-rtbcb-ajax.php';
-        require_once RTBCB_DIR . 'inc/helpers.php';
         require_once RTBCB_DIR . 'inc/class-rtbcb-logger.php';
 
         // Admin functionality
@@ -505,6 +504,7 @@ class Real_Treasury_BCB {
                 'model_capabilities'=> $model_capabilities,
                 'ajax_url'          => admin_url( 'admin-ajax.php' ),
                 'template_url'      => RTBCB_URL . 'public/templates/report-template.html',
+                'timeout_ms'       => $timeout * 1000,
             ]
         );
     }
@@ -729,7 +729,7 @@ class Real_Treasury_BCB {
         rtbcb_log_memory_usage( 'start' );
 
         // STEP 2: Set longer execution time
-        $timeout    = min( absint( rtbcb_get_api_timeout() ), 300 );
+        $timeout    = absint( rtbcb_get_api_timeout() );
         $start_time = time();
 
         if ( ! ini_get( 'safe_mode' ) ) {
@@ -1874,6 +1874,7 @@ function rtbcb_enqueue_company_overview_scripts( $hook ) {
             [
                 'ajax_url' => admin_url( 'admin-ajax.php' ),
                 'nonce'    => wp_create_nonce( 'rtbcb_test_company_overview' ),
+                'timeout'  => rtbcb_get_api_timeout() * 1000,
             ]
         );
     }
