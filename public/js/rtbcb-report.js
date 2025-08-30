@@ -9,7 +9,8 @@ const RTBCB_GPT5_DEFAULTS = {
     temperature: 0.7,
     store: true,
     timeout: 180,
-    max_retries: 3
+    max_retries: 3,
+    max_retry_time: 60
 };
 
 function estimateTokens(words) {

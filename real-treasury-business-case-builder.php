@@ -468,13 +468,14 @@ class Real_Treasury_BCB {
             'store'              => (bool) $config['store'],
             'timeout'            => intval( $config['timeout'] ),
             'max_retries'        => intval( $config['max_retries'] ),
+            'max_retry_time'     => intval( $config['max_retry_time'] ),
         ];
 
         if ( rtbcb_model_supports_temperature( $config['model'] ) ) {
             $config_localized['temperature'] = floatval( $config['temperature'] );
         }
 
-        $supported = [ 'model', 'max_output_tokens', 'text', 'temperature', 'store', 'timeout', 'max_retries' ];
+        $supported = [ 'model', 'max_output_tokens', 'text', 'temperature', 'store', 'timeout', 'max_retries', 'max_retry_time' ];
         $config_localized = array_intersect_key( $config_localized, array_flip( $supported ) );
 
         $model_capabilities = rtbcb_get_model_capabilities();

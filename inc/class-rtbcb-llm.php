@@ -1691,22 +1691,46 @@ SYSTEM;
      * @param array|string $prompt            Prompt for the model.
      * @param int|null     $max_output_tokens Maximum output tokens.
      * @param int|null     $max_retries       Number of retries.
+     * @param callable|null $chunk_handler     Optional streaming handler.
      * @return array|WP_Error Response array or error.
      */
-    private function call_openai_with_retry( $model, $prompt, $max_output_tokens = null, $max_retries = null ) {
+    private function call_openai_with_retry( $model, $prompt, $max_output_tokens = null, $max_retries = null, $chunk_handler = null ) {
         $max_retries     = $max_retries ?? intval( $this->gpt5_config['max_retries'] );
         $base_timeout    = intval( $this->gpt5_config['timeout'] ?? 180 );
         $current_timeout = $base_timeout;
         $current_tokens  = $max_output_tokens;
+        $max_retry_time  = intval( $this->gpt5_config['max_retry_time'] ?? 60 );
+        $start_time      = microtime( true );
 
         for ( $attempt = 1; $attempt <= $max_retries; $attempt++ ) {
-            $this->gpt5_config['timeout'] = $current_timeout;
+            $elapsed = microtime( true ) - $start_time;
+            if ( $elapsed >= $max_retry_time ) {
+                break;
+            }
 
-            $response = $this->call_openai( $model, $prompt, $current_tokens );
+            $remaining                    = $max_retry_time - $elapsed;
+            $this->gpt5_config['timeout'] = min( $current_timeout, $remaining );
+
+            $response = $this->call_openai( $model, $prompt, $current_tokens, $chunk_handler );
 
             if ( ! is_wp_error( $response ) ) {
                 $this->gpt5_config['timeout'] = $base_timeout;
                 return $response;
+            }
+
+            $error_code = $response->get_error_code();
+            if ( in_array( $error_code, [ 'no_api_key', 'empty_prompt' ], true ) ) {
+                $this->gpt5_config['timeout'] = $base_timeout;
+                return $response;
+            }
+
+            if ( 'llm_http_status' === $error_code ) {
+                $data   = $response->get_error_data();
+                $status = isset( $data['status'] ) ? intval( $data['status'] ) : 0;
+                if ( $status >= 400 && $status < 500 && 429 !== $status ) {
+                    $this->gpt5_config['timeout'] = $base_timeout;
+                    return $response;
+                }
             }
 
             error_log( "RTBCB: OpenAI attempt {$attempt} failed: " . $response->get_error_message() );
@@ -1716,11 +1740,14 @@ SYSTEM;
                     $current_tokens = max( 256, (int) ( $current_tokens * 0.9 ) );
                 }
 
-                $current_timeout += 5;
+                $current_timeout = min( $current_timeout + 5, $max_retry_time );
 
-                $delay  = pow( 2, $attempt - 1 );
-                $jitter = wp_rand( 0, 1000 ) / 1000;
-                usleep( (int) ( ( $delay + $jitter ) * 1000000 ) );
+                $elapsed = microtime( true ) - $start_time;
+                $delay   = min( pow( 2, $attempt - 1 ), $max_retry_time - $elapsed );
+                if ( $delay > 0 ) {
+                    $jitter = wp_rand( 0, 1000 ) / 1000;
+                    usleep( (int) ( ( $delay + $jitter ) * 1000000 ) );
+                }
             }
         }
 
@@ -1769,9 +1796,10 @@ SYSTEM;
      * @param string       $model             Model name.
      * @param array|string $prompt            Prompt array or string.
      * @param int|null     $max_output_tokens Maximum output tokens.
+     * @param callable|null $chunk_handler    Optional streaming handler.
      * @return array|WP_Error HTTP response array or WP_Error on failure.
      */
-    private function call_openai( $model, $prompt, $max_output_tokens = null ) {
+    private function call_openai( $model, $prompt, $max_output_tokens = null, $chunk_handler = null ) {
         if ( empty( $this->api_key ) ) {
             return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
         }
@@ -1836,8 +1864,11 @@ SYSTEM;
         curl_setopt( $ch, CURLOPT_POST, true );
         curl_setopt( $ch, CURLOPT_POSTFIELDS, $payload );
         curl_setopt( $ch, CURLOPT_TIMEOUT, $timeout );
-        curl_setopt( $ch, CURLOPT_WRITEFUNCTION, function ( $curl, $data ) use ( &$streamed ) {
+        curl_setopt( $ch, CURLOPT_WRITEFUNCTION, function ( $curl, $data ) use ( &$streamed, $chunk_handler ) {
             $streamed .= $data;
+            if ( is_callable( $chunk_handler ) ) {
+                call_user_func( $chunk_handler, $data );
+            }
             return strlen( $data );
         } );
 
