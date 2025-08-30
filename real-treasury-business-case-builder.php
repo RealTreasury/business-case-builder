@@ -1373,6 +1373,7 @@ class Real_Treasury_BCB {
             'rtbcb_pdf_enabled',
             'rtbcb_last_indexed',
             'rtbcb_settings',
+            'rtbcb_contact_form_id',
         ];
 
         foreach ( $options as $option ) {
