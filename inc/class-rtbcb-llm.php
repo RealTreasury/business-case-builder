@@ -1528,7 +1528,9 @@ USER,
         $endpoint         = 'https://api.openai.com/v1/responses'; // Correct endpoint.
         $model_name       = sanitize_text_field( $model ?: 'gpt-5-mini' );
         $model_name       = rtbcb_normalize_model_name( $model_name );
-        $max_output_tokens = max( 256, intval( $max_output_tokens ?? 20000 ) );
+        $default_tokens    = intval( $this->gpt5_config['max_output_tokens'] ?? 20000 );
+        $max_output_tokens = intval( $max_output_tokens ?? $default_tokens );
+        $max_output_tokens = min( 50000, max( 256, $max_output_tokens ) );
 
         if ( is_array( $prompt ) && isset( $prompt['input'] ) ) {
             $instructions = sanitize_textarea_field( $prompt['instructions'] ?? '' );
@@ -1868,6 +1870,7 @@ USER,
  *     @type array  $reasoning      Reasoning segments provided by the model.
  *     @type array  $function_calls Function call items returned by the model.
  *     @type array  $raw            Raw decoded response body.
+ *     @type bool   $truncated      Whether the response hit the token limit.
  * }
  */
 function rtbcb_parse_gpt5_response( $response ) {
@@ -1886,6 +1889,7 @@ function rtbcb_parse_gpt5_response( $response ) {
     $output_text    = '';
     $reasoning      = [];
     $function_calls = [];
+    $truncated      = false;
 
     // PRIORITY 1: Convenience field.
     if ( isset( $decoded['output_text'] ) && ! empty( trim( $decoded['output_text'] ) ) ) {
@@ -1945,9 +1949,19 @@ function rtbcb_parse_gpt5_response( $response ) {
     }
 
     // Log quality metrics.
-    $text_length    = strlen( $output_text );
-    $usage          = $decoded['usage'] ?? [];
-    $output_tokens  = $usage['output_tokens'] ?? 0;
+    $text_length   = strlen( $output_text );
+    $usage         = $decoded['usage'] ?? [];
+    $output_tokens = $usage['output_tokens'] ?? 0;
+    $config        = rtbcb_get_gpt5_config();
+    if ( 'incomplete' === ( $decoded['status'] ?? '' ) ) {
+        $truncated = true;
+    }
+    if ( ! $truncated && $output_tokens >= $config['max_output_tokens'] ) {
+        $truncated = true;
+    }
+    if ( $truncated ) {
+        error_log( 'RTBCB: OpenAI response truncated at ' . $output_tokens . ' tokens' );
+    }
 
     error_log(
         sprintf(
@@ -1967,6 +1981,7 @@ function rtbcb_parse_gpt5_response( $response ) {
         'reasoning'      => $reasoning,
         'function_calls' => $function_calls,
         'raw'            => $decoded,
+        'truncated'      => $truncated,
     ];
 }
 

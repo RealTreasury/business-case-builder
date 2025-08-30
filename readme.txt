@@ -19,6 +19,17 @@ Use the `[rt_business_case_builder]` shortcode to embed the calculator on any pa
 2. Activate the plugin through the "Plugins" menu in WordPress.
 3. Navigate to **Real Treasury → Settings** to configure ROI defaults and API keys.
 
+== Configuration ==
+By default, OpenAI responses are limited to 20,000 tokens. You can raise this limit
+to a maximum of 50,000 tokens by setting the `RTBCB_MAX_OUTPUT_TOKENS` environment
+variable or by creating a `rtbcb-config.json` file in the plugin directory with:
+
+```
+{ "max_output_tokens": 50000 }
+```
+
+Values outside the 256–50,000 range are ignored.
+
 == Testing Dashboard ==
 From the WordPress admin, go to **Real Treasury → Test Dashboard** and click
 **Run All Tests** to execute the full suite. A progress bar indicates overall
