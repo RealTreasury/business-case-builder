@@ -551,6 +551,23 @@ function rtbcb_get_client_ip() {
     return isset( $_SERVER['REMOTE_ADDR'] ) ? wp_unslash( $_SERVER['REMOTE_ADDR'] ) : '';
 }
 
+/**
+ * Recursively sanitize values using sanitize_text_field.
+ *
+ * @param mixed $data Data to sanitize.
+ * @return mixed Sanitized data.
+ */
+function rtbcb_recursive_sanitize_text_field( $data ) {
+    if ( is_array( $data ) ) {
+        foreach ( $data as $key => $value ) {
+            $data[ $key ] = rtbcb_recursive_sanitize_text_field( $value );
+        }
+
+        return $data;
+    }
+
+    return sanitize_text_field( (string) $data );
+}
 
 /**
  * Log API debug messages.
