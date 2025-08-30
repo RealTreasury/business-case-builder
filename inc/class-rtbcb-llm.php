@@ -2464,6 +2464,8 @@ $max_output_tokens = min( 128000, max( 256, $max_output_tokens ) );
         // Enable streaming so partial chunks are returned progressively.
         $body['stream'] = true;
 
+        do_action( 'rtbcb_llm_prompt_sent', $body );
+
         $timeout   = intval( $this->gpt5_config['timeout'] ?? 180 );
         $payload   = wp_json_encode( $body );
         $streamed  = '';

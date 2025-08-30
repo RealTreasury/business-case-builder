@@ -102,11 +102,12 @@ class RTBCB_Admin {
                 [
                     'ajax_url' => admin_url( 'admin-ajax.php' ),
                     'nonce'    => wp_create_nonce( 'rtbcb_workflow_visualizer' ),
-                    'strings'  => [
-                        'refresh_success' => __( 'Workflow history refreshed', 'rtbcb' ),
-                        'clear_success'   => __( 'Workflow history cleared', 'rtbcb' ),
-                        'error'           => __( 'An error occurred', 'rtbcb' ),
-                    ],
+                        'strings'  => [
+                                'refresh_success' => __( 'Workflow history refreshed', 'rtbcb' ),
+                                'clear_success'   => __( 'Workflow history cleared', 'rtbcb' ),
+                                'error'           => __( 'An error occurred', 'rtbcb' ),
+                                'no_history'      => __( 'No workflow history available.', 'rtbcb' ),
+                        ],
                 ]
             );
         }
@@ -2028,9 +2029,10 @@ class RTBCB_Admin {
 		wp_send_json_success();
 	}
 
-	private function get_workflow_history_from_logs() {
-		return [];
-	}
+       private function get_workflow_history_from_logs() {
+               $history = get_option( 'rtbcb_workflow_history', [] );
+               return is_array( $history ) ? $history : [];
+       }
 
 	private function calculate_average_duration( $history ) {
 		if ( empty( $history ) ) {

@@ -16,6 +16,13 @@ public static function generate_comprehensive_case() {
 $request_start = microtime( true );
 $workflow_tracker = new RTBCB_Workflow_Tracker();
 
+add_action(
+    'rtbcb_llm_prompt_sent',
+    function( $prompt ) use ( $workflow_tracker ) {
+        $workflow_tracker->add_prompt( $prompt );
+    }
+);
+
 try {
 if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
 wp_send_json_error( __( 'Security check failed.', 'rtbcb' ), 403 );
@@ -75,28 +82,28 @@ $workflow_tracker->complete_step( 'data_structuring', $structured_report_data );
 
 $lead_id = self::save_lead_data_async( $user_inputs, $structured_report_data );
 
+$debug_info = $workflow_tracker->get_debug_info();
+self::store_workflow_history( $debug_info );
+
 $response_data = [
-'success'      => true,
-'report_data'  => $structured_report_data,
-'workflow_info'=> [
-'total_time'     => microtime( true ) - $request_start,
-'steps_completed'=> $workflow_tracker->get_completed_steps(),
-'ai_calls_made'  => $workflow_tracker->get_ai_call_count(),
-'warnings'       => $workflow_tracker->get_warnings(),
-],
-'lead_id'      => $lead_id,
-'analysis_type'=> 'enhanced_comprehensive',
+'success'       => true,
+'report_data'   => $structured_report_data,
+'workflow_info' => $debug_info,
+'lead_id'       => $lead_id,
+'analysis_type' => 'enhanced_comprehensive',
 ];
 wp_send_json_success( $response_data );
 } catch ( Exception $e ) {
 $workflow_tracker->add_error( 'exception', $e->getMessage() );
 rtbcb_log_error( 'Ajax exception in new workflow', $e->getMessage() );
+$debug_info = $workflow_tracker->get_debug_info();
+self::store_workflow_history( $debug_info );
 wp_send_json_error(
-[
-'message'       => __( 'An error occurred while generating your business case. Please try again.', 'rtbcb' ),
-'workflow_info' => $workflow_tracker->get_debug_info(),
-],
-500
+    [
+        'message'       => __( 'An error occurred while generating your business case. Please try again.', 'rtbcb' ),
+        'workflow_info' => $debug_info,
+    ],
+    500
 );
 }
 }
@@ -231,6 +238,18 @@ return $base > 0 ? 'strong' : 'weak';
 
 private static function format_roi_scenarios( $roi_scenarios ) {
 return $roi_scenarios;
+}
+
+private static function store_workflow_history( $debug_info ) {
+    $history = get_option( 'rtbcb_workflow_history', [] );
+    if ( ! is_array( $history ) ) {
+        $history = [];
+    }
+    $history[] = $debug_info;
+    if ( count( $history ) > 20 ) {
+        $history = array_slice( $history, -20 );
+    }
+    update_option( 'rtbcb_workflow_history', $history, false );
 }
 }
 
