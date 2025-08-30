@@ -39,6 +39,13 @@ class Real_Treasury_BCB {
     private $plugin_data = [];
 
     /**
+     * Request start time.
+     *
+     * @var float
+     */
+    private $request_start_time = 0.0;
+
+    /**
      * Get plugin instance.
      *
      * @return Real_Treasury_BCB
@@ -95,8 +102,8 @@ class Real_Treasury_BCB {
         add_filter( 'plugin_action_links_' . plugin_basename( RTBCB_FILE ), [ $this, 'plugin_action_links' ] );
 
         // AJAX handlers
-        add_action( 'wp_ajax_rtbcb_generate_case', [ $this, 'ajax_generate_comprehensive_case' ] );
-        add_action( 'wp_ajax_nopriv_rtbcb_generate_case', [ $this, 'ajax_generate_comprehensive_case' ] );
+        add_action( 'wp_ajax_rtbcb_generate_case', [ 'RTBCB_Ajax', 'generate_comprehensive_case' ] );
+        add_action( 'wp_ajax_nopriv_rtbcb_generate_case', [ 'RTBCB_Ajax', 'generate_comprehensive_case' ] );
         add_action( 'wp_ajax_rtbcb_openai_responses', 'rtbcb_proxy_openai_responses' );
         add_action( 'wp_ajax_nopriv_rtbcb_openai_responses', 'rtbcb_proxy_openai_responses' );
         add_action( 'wp_ajax_rtbcb_openai_responses_status', 'rtbcb_get_openai_responses_status' );
@@ -138,6 +145,10 @@ class Real_Treasury_BCB {
         require_once RTBCB_DIR . 'inc/class-rtbcb-maturity-model.php';
         require_once RTBCB_DIR . 'inc/class-rtbcb-validator.php';
         require_once RTBCB_DIR . 'inc/class-rtbcb-api-tester.php';
+        require_once RTBCB_DIR . 'inc/class-rtbcb-workflow-tracker.php';
+        require_once RTBCB_DIR . 'inc/class-rtbcb-enhanced-calculator.php';
+        require_once RTBCB_DIR . 'inc/class-rtbcb-intelligent-recommender.php';
+        require_once RTBCB_DIR . 'inc/class-rtbcb-ajax.php';
         require_once RTBCB_DIR . 'inc/helpers.php';
         require_once RTBCB_DIR . 'inc/class-rtbcb-logger.php';
 
@@ -686,7 +697,7 @@ class Real_Treasury_BCB {
         }
 
         try {
-            $this->ajax_generate_comprehensive_case();
+            RTBCB_Ajax::generate_comprehensive_case();
         } catch ( Exception $e ) {
             error_log( 'RTBCB Exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine() );
             wp_send_json_error( __( 'An error occurred. Please try again later.', 'rtbcb' ), 500 );
@@ -702,7 +713,7 @@ class Real_Treasury_BCB {
     /**
      * Enhanced AJAX handler with memory management
      */
-    public function ajax_generate_comprehensive_case() {
+    public function ajax_generate_comprehensive_case_legacy() {
         $request_start   = microtime( true );
         $request_payload = rtbcb_recursive_sanitize_text_field( wp_unslash( $_POST ) );
         register_shutdown_function( [ 'RTBCB_Logger', 'log_shutdown' ], $request_start, $request_payload );
