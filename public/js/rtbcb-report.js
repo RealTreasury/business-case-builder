@@ -51,7 +51,7 @@ Ensure the report is:
 `;
 }
 
-async function generateProfessionalReport(businessContext) {
+async function generateProfessionalReport(businessContext, onChunk) {
     const cfg = {
         ...RTBCB_GPT5_DEFAULTS,
         ...(typeof rtbcbReport !== 'undefined' ? rtbcbReport : {})
@@ -60,7 +60,7 @@ async function generateProfessionalReport(businessContext) {
     const adminLimit = Math.min(RTBCB_GPT5_MAX_TOKENS, parseInt(cfg.max_output_tokens, 10) || RTBCB_GPT5_MAX_TOKENS);
     const desiredWords = 1000;
     cfg.max_output_tokens = Math.min(adminLimit, estimateTokens(desiredWords));
-    if ( !supportsTemperature( cfg.model ) ) {
+    if (!supportsTemperature(cfg.model)) {
         delete cfg.temperature;
     }
     const requestBody = {
@@ -77,71 +77,65 @@ async function generateProfessionalReport(businessContext) {
         ],
         max_output_tokens: cfg.max_output_tokens,
         text: cfg.text,
-        store: cfg.store
+        store: cfg.store,
+        stream: true
     };
-    if ( supportsTemperature( cfg.model ) ) {
+    if (supportsTemperature(cfg.model)) {
         requestBody.temperature = cfg.temperature;
     }
 
     const formData = new FormData();
     formData.append('action', 'rtbcb_openai_responses');
     formData.append('body', JSON.stringify(requestBody));
+    if (rtbcbReport.nonce) {
+        formData.append('nonce', rtbcbReport.nonce);
+    }
 
-    const startResponse = await fetch(rtbcbReport.ajax_url, {
+    const response = await fetch(rtbcbReport.ajax_url, {
         method: 'POST',
         body: formData
     });
-
-    if (!startResponse.ok) {
-        throw new Error('HTTP ' + startResponse.status + ' ' + startResponse.statusText);
+    if (!response.ok || !response.body) {
+        throw new Error('HTTP ' + response.status + ' ' + response.statusText);
     }
 
-    const startData = await startResponse.json();
-    if (!startData.success || !startData.data || !startData.data.job_id) {
-        throw new Error('Failed to start OpenAI job');
-    }
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let html = '';
 
-    const jobId = startData.data.job_id;
-    const maxAttempts = (cfg.max_retries || 3) * 20;
-    const pollInterval = 5000;
-
-    for (let attempt = 0; attempt < maxAttempts; attempt++) {
-        const pollData = new FormData();
-        pollData.append('action', 'rtbcb_openai_responses_status');
-        pollData.append('job_id', jobId);
-
-        const pollResponse = await fetch(rtbcbReport.ajax_url, {
-            method: 'POST',
-            body: pollData
-        });
-
-        if (pollResponse.ok) {
-            const pollJson = await pollResponse.json();
-            if (pollJson.success && pollJson.data) {
-                if (pollJson.data.status === 'pending') {
-                    await new Promise(resolve => setTimeout(resolve, pollInterval));
-                    continue;
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+            break;
+        }
+        buffer += decoder.decode(value, { stream: true });
+        const parts = buffer.split('\n\n');
+        buffer = parts.pop();
+        for (const part of parts) {
+            const line = part.trim();
+            if (!line.startsWith('data:')) {
+                continue;
+            }
+            const data = line.replace(/^data:\s*/, '');
+            if (data === '[DONE]') {
+                continue;
+            }
+            try {
+                const json = JSON.parse(data);
+                if (json.type === 'response.output_text.delta') {
+                    html += json.delta;
+                    if (onChunk) {
+                        onChunk(html);
+                    }
                 }
-                if (pollJson.data.status === 'complete') {
-                    const htmlContent = pollJson.data.response.output_text;
-                    const cleanedHTML = htmlContent
-                        .replace(/```html\n?/g, '')
-                        .replace(/```\n?/g, '')
-                        .trim();
-                    return cleanedHTML;
-                }
-                if (pollJson.data.status === 'error') {
-                    throw new Error(pollJson.data.message || 'Responses API error');
-                }
-            } else {
-                throw new Error(pollJson.data && pollJson.data.message ? pollJson.data.message : 'Unknown error');
+            } catch (e) {
+                // Ignore parse errors for incomplete chunks.
             }
         }
-
-        await new Promise(resolve => setTimeout(resolve, pollInterval));
     }
 
-    throw new Error('Timed out waiting for OpenAI response');
+    return html.trim();
 }
 
 function sanitizeReportHTML(htmlContent) {
@@ -185,13 +179,16 @@ async function generateAndDisplayReport(businessContext) {
     reportContainer.innerHTML = '';
 
     try {
-        const htmlReport = await generateProfessionalReport(businessContext);
+        const htmlReport = await generateProfessionalReport(businessContext, partial => {
+            reportContainer.textContent = partial;
+        });
 
         if (!htmlReport.includes('<!DOCTYPE html>')) {
             throw new Error('Invalid HTML response from API');
         }
 
         const safeReport = sanitizeReportHTML(htmlReport);
+        reportContainer.innerHTML = '';
         displayReport(safeReport);
 
         const exportBtn = document.createElement('button');
