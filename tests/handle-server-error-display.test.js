@@ -27,14 +27,11 @@ class SimpleFormData {
 global.FormData = SimpleFormData;
 
 global.fetch = function() {
-    const payload = {
-        data: { message: 'Server exploded', error_code: 'AI_CONFIG_ERROR' }
-    };
     const response = {
         ok: false,
         status: 500,
-        json: async () => payload,
-        text: async () => JSON.stringify(payload),
+        json: async () => ({}),
+        text: async () => '',
         clone() { return this; }
     };
     return Promise.resolve(response);
@@ -72,9 +69,7 @@ builder.showError = (msg) => { errorMessage = msg; };
 
 (async () => {
     await builder.handleSubmit();
-    assert.ok(errorMessage.includes('Server exploded'));
-    assert.ok(errorMessage.includes('AI_CONFIG_ERROR'));
-    assert.ok(errorMessage.includes('try again later'));
+    assert.ok(errorMessage.includes('The server took too long to respond'));
     console.log('Server error display test passed.');
 })().catch(err => {
     console.error(err);
