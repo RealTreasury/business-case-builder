@@ -1,36 +1,196 @@
 /* Styles for enhanced comprehensive report */
+/* Essential fixes for enhanced report display issues */
 
-.rtbcb-enhanced-report {
-	font-family: Arial, sans-serif;
-	color: #1f2937;
-}
-
-.rtbcb-report-header-enhanced {
-	background: #f9fafb;
+/* Ensure results container is properly styled */
+.rtbcb-enhanced-results-container {
+	display: block !important;
+	visibility: visible !important;
+	opacity: 1 !important;
+	max-width: 1200px;
+	margin: 40px auto;
 	padding: 20px;
-	border-radius: 8px;
-	margin-bottom: 20px;
+	background: #ffffff;
+	box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+	border-radius: 12px;
+	position: relative;
+	z-index: 100;
 }
 
+/* Fix for enhanced report wrapper */
+.rtbcb-enhanced-report {
+	display: block !important;
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+	line-height: 1.6 !important;
+	color: #1f2937 !important;
+	background: transparent !important;
+}
+
+/* Ensure header displays properly */
+.rtbcb-report-header-enhanced {
+	display: block !important;
+	background: #f9fafb !important;
+	padding: 30px !important;
+	border-radius: 12px !important;
+	margin-bottom: 30px !important;
+	border: 1px solid #e5e7eb;
+}
+
+/* Fix metric cards layout */
 .rtbcb-metrics-dashboard {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 12px;
-	margin-top: 20px;
+	display: flex !important;
+	flex-wrap: wrap !important;
+	gap: 16px !important;
+	margin-top: 24px !important;
 }
 
 .rtbcb-metric-card {
-	flex: 1 1 160px;
-	background: #ffffff;
-	border: 1px solid #e5e7eb;
-	border-radius: 8px;
-	display: flex;
-	align-items: center;
-	padding: 12px;
-	cursor: pointer;
-	transition: box-shadow 0.3s;
+	flex: 1 1 200px !important;
+	background: #ffffff !important;
+	border: 2px solid #e5e7eb !important;
+	border-radius: 12px !important;
+	padding: 20px !important;
+	display: flex !important;
+	align-items: center !important;
+	gap: 12px !important;
+	cursor: pointer !important;
+	transition: all 0.2s ease !important;
+	min-height: 80px !important;
 }
 
+	.rtbcb-metric-card:hover {
+	border-color: #7216f4 !important;
+	transform: translateY(-2px) !important;
+	box-shadow: 0 6px 20px rgba(114,22,244,0.2) !important;
+}
+
+/* Fix section display */
+.rtbcb-section-enhanced {
+	display: block !important;
+	margin-bottom: 30px !important;
+	background: #ffffff !important;
+	border: 1px solid #e5e7eb !important;
+	border-radius: 12px !important;
+	padding: 24px !important;
+	box-shadow: 0 2px 8px rgba(0,0,0,0.05) !important;
+}
+
+/* Fix chart container */
+.rtbcb-roi-chart-container {
+	position: relative !important;
+	height: 400px !important;
+	margin: 24px 0 !important;
+	background: #ffffff !important;
+	border-radius: 8px !important;
+	padding: 20px !important;
+}
+
+.rtbcb-roi-chart-container canvas {
+	display: block !important;
+	max-width: 100% !important;
+	max-height: 100% !important;
+}
+
+/* Fix scenario cards */
+.rtbcb-scenario-card {
+	background: #ffffff !important;
+	border: 2px solid #e5e7eb !important;
+	border-radius: 12px !important;
+	padding: 20px !important;
+	margin: 12px 0 !important;
+	display: block !important;
+}
+
+.rtbcb-scenario-card.base {
+	border-color: #7216f4 !important;
+	background: linear-gradient(135deg, #f8f9ff, #ffffff) !important;
+}
+
+/* Fix metric values */
+.rtbcb-metric-value {
+	font-size: 24px !important;
+	font-weight: 700 !important;
+	color: #16a34a !important;
+	margin: 8px 0 !important;
+}
+
+.rtbcb-metric-value.primary {
+	color: #7216f4 !important;
+	font-size: 28px !important;
+}
+
+/* Fix action buttons */
+.rtbcb-action-button {
+	display: inline-flex !important;
+	align-items: center !important;
+	gap: 8px !important;
+	padding: 12px 24px !important;
+	border: none !important;
+	border-radius: 8px !important;
+	font-weight: 600 !important;
+	cursor: pointer !important;
+	transition: all 0.2s ease !important;
+	text-decoration: none !important;
+}
+
+.rtbcb-action-button.primary {
+	background: #7216f4 !important;
+	color: #ffffff !important;
+}
+
+	.rtbcb-action-button.primary:hover {
+	background: #5b21b6 !important;
+	transform: translateY(-1px) !important;
+}
+
+.rtbcb-action-button.secondary {
+	background: #f3f4f6 !important;
+	color: #4b5563 !important;
+	border: 1px solid #d1d5db !important;
+}
+
+/* Fix footer */
+.rtbcb-report-footer-enhanced {
+	margin-top: 50px !important;
+	padding: 30px !important;
+	background: #f9fafb !important;
+	border-radius: 12px !important;
+	border-top: 4px solid #7216f4 !important;
+}
+
+/* Responsive fixes */
+@media (max-width: 768px) {
+.rtbcb-enhanced-results-container {
+	margin: 20px 10px !important;
+	padding: 16px !important;
+}
+
+.rtbcb-metrics-dashboard {
+	flex-direction: column !important;
+}
+
+.rtbcb-metric-card {
+	flex: 1 1 auto !important;
+}
+}
+
+/* Print styles */
+@media print {
+.rtbcb-enhanced-results-container {
+	box-shadow: none !important;
+	margin: 0 !important;
+	padding: 0 !important;
+}
+
+.rtbcb-action-button {
+	display: none !important;
+}
+
+.rtbcb-section-enhanced {
+	page-break-inside: avoid !important;
+}
+}
+
+/* Additional styles */
 .rtbcb-metric-card.expanded {
 	box-shadow: 0 0 0 2px #3b82f6;
 }
@@ -38,14 +198,6 @@
 .rtbcb-metric-icon {
 	font-size: 24px;
 	margin-right: 8px;
-}
-
-.rtbcb-section-enhanced {
-	margin-bottom: 30px;
-	background: #fff;
-	border: 1px solid #e5e7eb;
-	border-radius: 8px;
-	padding: 20px;
 }
 
 .rtbcb-section-header-enhanced {
@@ -72,21 +224,10 @@
 	gap: 4px;
 }
 
-.rtbcb-roi-chart-container {
-	margin-top: 20px;
-}
-
 .rtbcb-roi-components {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 12px;
-}
-
-.rtbcb-scenario-card {
-	flex: 1 1 250px;
-	border: 1px solid #e5e7eb;
-	border-radius: 8px;
-	padding: 12px;
 }
 
 .rtbcb-intelligence-grid {
@@ -111,12 +252,4 @@
 .rtbcb-timeline-phase {
 	border-left: 4px solid #3b82f6;
 	padding-left: 16px;
-}
-
-.rtbcb-report-footer-enhanced {
-	margin-top: 40px;
-	padding: 20px;
-	background: #f3f4f6;
-	border-radius: 8px;
-	font-size: 0.875rem;
 }
