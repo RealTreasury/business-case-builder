@@ -986,6 +986,51 @@ USER,
     }
 
     /**
+     * Assess treasury maturity based on user inputs.
+     *
+     * @param array $user_inputs Sanitized user inputs.
+     * @return array {
+     *     @type string $level     Assessed maturity level.
+     *     @type string $rationale Rationale for the assessment.
+     * }
+     */
+    private function assess_treasury_maturity( $user_inputs ) {
+        $company_data = [
+            'ftes' => isset( $user_inputs['ftes'] ) ? floatval( $user_inputs['ftes'] ) : 0,
+        ];
+
+        if ( class_exists( 'RTBCB_Maturity_Model' ) ) {
+            $model      = new RTBCB_Maturity_Model();
+            $assessment = $model->assess( $company_data );
+
+            return [
+                'level'     => sanitize_text_field( $assessment['level'] ?? '' ),
+                'rationale' => sanitize_text_field( $assessment['assessment'] ?? '' ),
+            ];
+        }
+
+        $ftes  = $company_data['ftes'];
+        $level = __( 'Basic', 'rtbcb' );
+
+        if ( $ftes > 5 ) {
+            $level = __( 'Advanced', 'rtbcb' );
+        } elseif ( $ftes > 2 ) {
+            $level = __( 'Intermediate', 'rtbcb' );
+        }
+
+        $rationale = sprintf(
+            /* translators: %d: number of treasury FTEs */
+            __( 'Assessment based on %d treasury FTEs.', 'rtbcb' ),
+            $ftes
+        );
+
+        return [
+            'level'     => sanitize_text_field( $level ),
+            'rationale' => sanitize_text_field( $rationale ),
+        ];
+    }
+
+    /**
      * Analyze industry context using the LLM.
      *
      * @param array $user_inputs Sanitized user inputs.
