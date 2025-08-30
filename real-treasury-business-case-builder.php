@@ -756,8 +756,20 @@ class Real_Treasury_BCB {
                     ];
                     update_option( 'rtbcb_current_company', $company );
                 } else {
-                    wp_send_json_error( __( 'No company data found. Please run the company overview first.', 'rtbcb' ), 400 );
-                    return;
+                    if ( empty( $company_name ) ) {
+                        wp_send_json_error( __( 'Please enter your company name.', 'rtbcb' ), 400 );
+                        return;
+                    }
+
+                    if ( empty( $company_size ) ) {
+                        wp_send_json_error( __( 'Please select your company size.', 'rtbcb' ), 400 );
+                        return;
+                    }
+
+                    if ( empty( $industry ) ) {
+                        wp_send_json_error( __( 'Please select your industry.', 'rtbcb' ), 400 );
+                        return;
+                    }
                 }
             }
 
