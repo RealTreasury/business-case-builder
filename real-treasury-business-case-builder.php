@@ -1753,10 +1753,30 @@ return $use_comprehensive;
 
 	$business_case_data = is_array( $business_case_data ) ? $business_case_data : [];
 
-	// Transform data structure for template.
-	$report_data = $this->transform_data_for_template( $business_case_data );
+        // Transform data structure for template.
+        $report_data = $this->transform_data_for_template( $business_case_data );
 
-	try {
+        if ( is_wp_error( $report_data ) ) {
+            rtbcb_log_error(
+                'Report data transformation failed',
+                [
+                    'error' => $report_data->get_error_message(),
+                ]
+            );
+
+            return $report_data;
+        }
+
+        if ( isset( $report_data['status'] ) && empty( $report_data['status']['valid'] ) ) {
+            rtbcb_log_error(
+                'Report data validation failed',
+                [
+                    'missing_keys' => $report_data['status']['missing_keys'],
+                ]
+            );
+        }
+
+        try {
 	set_error_handler(
 	static function ( $severity, $message, $file, $line ) {
 	throw new ErrorException( $message, 0, $severity, $file, $line );
@@ -1902,6 +1922,66 @@ return $use_comprehensive;
                'short_term_milestones'=> $this->extract_short_term_steps( $business_case_data ),
                'long_term_objectives' => $this->extract_long_term_steps( $business_case_data ),
            ],
+       ];
+
+       $required_sections = [
+           'metadata',
+           'executive_summary',
+           'financial_analysis',
+           'company_intelligence',
+           'technology_strategy',
+           'operational_insights',
+           'risk_analysis',
+           'action_plan',
+       ];
+
+       $section_defaults = [
+           'metadata'           => [
+               'company_name'     => '',
+               'analysis_date'    => '',
+               'confidence_level' => 0,
+               'processing_time'  => 0,
+           ],
+           'executive_summary'  => [
+               'strategic_positioning'    => '',
+               'key_value_drivers'       => [],
+               'executive_recommendation' => '',
+               'business_case_strength'  => '',
+           ],
+           'financial_analysis' => [
+               'roi_scenarios'      => [],
+               'payback_analysis'   => [ 'payback_months' => '' ],
+               'sensitivity_analysis' => [],
+           ],
+           'company_intelligence' => [],
+           'technology_strategy'  => [],
+           'operational_insights' => [],
+           'risk_analysis'        => [ 'implementation_risks' => [] ],
+           'action_plan'          => [
+               'immediate_steps'       => [],
+               'short_term_milestones' => [],
+               'long_term_objectives'  => [],
+           ],
+       ];
+
+       $missing_sections = [];
+
+       foreach ( $required_sections as $section ) {
+           if ( empty( $report_data[ $section ] ) ) {
+               $missing_sections[] = $section;
+               rtbcb_log_error(
+                   'Missing report data section',
+                   [
+                       'section' => $section,
+                   ]
+               );
+               $report_data[ $section ] = $section_defaults[ $section ];
+           }
+       }
+
+       $report_data['status'] = [
+           'valid'        => empty( $missing_sections ),
+           'missing_keys' => $missing_sections,
        ];
 
        return $report_data;
