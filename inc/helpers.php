@@ -164,117 +164,117 @@ function rtbcb_sanitize_min_output_tokens( $value ) {
  * @return array[] Section data keyed by section ID.
  */
 function rtbcb_get_dashboard_sections( $test_results = null ) {
-    if ( null === $test_results ) {
-        $test_results = get_option( 'rtbcb_test_results', [] );
-    }
+	if ( null === $test_results ) {
+		$test_results = get_option( 'rtbcb_test_results', [] );
+	}
 
-    $sections = [
-        'rtbcb-test-company-overview'      => [
-            'label'    => __( 'Company Overview', 'rtbcb' ),
-            'option'   => 'rtbcb_current_company',
-            'requires' => [],
-            'phase'    => 1,
-            'action'   => 'rtbcb_test_company_overview',
-        ],
-        'rtbcb-test-data-enrichment'       => [
-            'label'    => __( 'Data Enrichment', 'rtbcb' ),
-            'option'   => 'rtbcb_data_enrichment',
-            'requires' => [ 'rtbcb-test-company-overview' ],
-            'phase'    => 1,
-            'action'   => 'rtbcb_test_data_enrichment',
-        ],
-        'rtbcb-test-data-storage'          => [
-            'label'    => __( 'Data Storage', 'rtbcb' ),
-            'option'   => 'rtbcb_data_storage',
-            'requires' => [ 'rtbcb-test-data-enrichment' ],
-            'phase'    => 1,
-            'action'   => 'rtbcb_test_data_storage',
-        ],
-        'rtbcb-test-maturity-model'        => [
-            'label'    => __( 'Maturity Model', 'rtbcb' ),
-            'option'   => 'rtbcb_maturity_model',
-            'requires' => [ 'rtbcb-test-data-storage' ],
-            'phase'    => 2,
-            'action'   => 'rtbcb_test_maturity_model',
-        ],
-        'rtbcb-test-rag-market-analysis'   => [
-            'label'    => __( 'RAG Market Analysis', 'rtbcb' ),
-            'option'   => 'rtbcb_rag_market_analysis',
-            'requires' => [ 'rtbcb-test-maturity-model' ],
-            'phase'    => 2,
-            'action'   => 'rtbcb_test_rag_market_analysis',
-        ],
-        'rtbcb-test-value-proposition'     => [
-            'label'    => __( 'Value Proposition', 'rtbcb' ),
-            'option'   => 'rtbcb_value_proposition',
-            'requires' => [ 'rtbcb-test-rag-market-analysis' ],
-            'phase'    => 2,
-            'action'   => 'rtbcb_test_value_proposition',
-        ],
-        'rtbcb-test-industry-overview'      => [
-            'label'    => __( 'Industry Overview', 'rtbcb' ),
-            'option'   => 'rtbcb_industry_insights',
-            'requires' => [ 'rtbcb-test-value-proposition' ],
-            'phase'    => 2,
-            'action'   => 'rtbcb_test_industry_overview',
-        ],
-        'rtbcb-test-real-treasury-overview' => [
-            'label'    => __( 'Real Treasury Overview', 'rtbcb' ),
-            'option'   => 'rtbcb_real_treasury_overview',
-            'requires' => [ 'rtbcb-test-industry-overview' ],
-            'phase'    => 2,
-            'action'   => 'rtbcb_test_real_treasury_overview',
-        ],
-        'rtbcb-test-roadmap-generator'      => [
-            'label'    => __( 'Roadmap Generator', 'rtbcb' ),
-            'option'   => 'rtbcb_roadmap_plan',
-            'requires' => [ 'rtbcb-test-real-treasury-overview' ],
-            'phase'    => 3,
-        ],
-        'rtbcb-test-roi-calculator'         => [
-            'label'    => __( 'ROI Calculator', 'rtbcb' ),
-            'option'   => 'rtbcb_roi_results',
-            'requires' => [ 'rtbcb-test-roadmap-generator' ],
-            'phase'    => 3,
-            'action'   => 'rtbcb_test_calculate_roi',
-        ],
-        'rtbcb-test-estimated-benefits'     => [
-            'label'    => __( 'Estimated Benefits', 'rtbcb' ),
-            'option'   => 'rtbcb_estimated_benefits',
-            'requires' => [ 'rtbcb-test-roi-calculator' ],
-            'phase'    => 3,
-            'action'   => 'rtbcb_test_estimated_benefits',
-        ],
-        'rtbcb-test-report-assembly'        => [
-            'label'    => __( 'Report Assembly & Delivery', 'rtbcb' ),
-            'option'   => 'rtbcb_executive_summary',
-            'requires' => [ 'rtbcb-test-estimated-benefits' ],
-            'phase'    => 4,
-            'action'   => 'rtbcb_test_report_assembly',
-        ],
-        'rtbcb-test-tracking-script'        => [
-            'label'    => __( 'Tracking Scripts', 'rtbcb' ),
-            'option'   => 'rtbcb_tracking_script',
-            'requires' => [ 'rtbcb-test-report-assembly' ],
-            'phase'    => 5,
-            'action'   => 'rtbcb_test_tracking_script',
-        ],
-        'rtbcb-test-follow-up-email'        => [
-            'label'    => __( 'Follow-up Emails', 'rtbcb' ),
-            'option'   => 'rtbcb_follow_up_queue',
-            'requires' => [ 'rtbcb-test-tracking-script' ],
-            'phase'    => 5,
-            'action'   => 'rtbcb_test_follow_up_email',
-        ],
-    ];
+	$sections = [
+		'rtbcb-test-company-overview'      => [
+			'label'    => __( 'Company Overview', 'rtbcb' ),
+			'option'   => 'rtbcb_current_company',
+			'requires' => [],
+			'phase'    => 1,
+			'action'   => 'rtbcb_test_company_overview',
+		],
+		'rtbcb-test-data-enrichment'       => [
+			'label'    => __( 'Data Enrichment', 'rtbcb' ),
+			'option'   => 'rtbcb_data_enrichment',
+			'requires' => [ 'rtbcb-test-company-overview' ],
+			'phase'    => 1,
+			'action'   => 'rtbcb_test_data_enrichment',
+		],
+		'rtbcb-test-data-storage'          => [
+			'label'    => __( 'Data Storage', 'rtbcb' ),
+			'option'   => 'rtbcb_data_storage',
+			'requires' => [ 'rtbcb-test-data-enrichment' ],
+			'phase'    => 1,
+			'action'   => 'rtbcb_test_data_storage',
+		],
+		'rtbcb-test-maturity-model'        => [
+			'label'    => __( 'Maturity Model', 'rtbcb' ),
+			'option'   => 'rtbcb_maturity_model',
+			'requires' => [ 'rtbcb-test-data-storage' ],
+			'phase'    => 2,
+			'action'   => 'rtbcb_test_maturity_model',
+		],
+		'rtbcb-test-rag-market-analysis'   => [
+			'label'    => __( 'RAG Market Analysis', 'rtbcb' ),
+			'option'   => 'rtbcb_rag_market_analysis',
+			'requires' => [ 'rtbcb-test-maturity-model' ],
+			'phase'    => 2,
+			'action'   => 'rtbcb_test_rag_market_analysis',
+		],
+		'rtbcb-test-value-proposition'     => [
+			'label'    => __( 'Value Proposition', 'rtbcb' ),
+			'option'   => 'rtbcb_value_proposition',
+			'requires' => [ 'rtbcb-test-rag-market-analysis' ],
+			'phase'    => 2,
+			'action'   => 'rtbcb_test_value_proposition',
+		],
+		'rtbcb-test-industry-overview'      => [
+			'label'    => __( 'Industry Overview', 'rtbcb' ),
+			'option'   => 'rtbcb_industry_insights',
+			'requires' => [ 'rtbcb-test-value-proposition' ],
+			'phase'    => 2,
+			'action'   => 'rtbcb_test_industry_overview',
+		],
+		'rtbcb-test-real-treasury-overview' => [
+			'label'    => __( 'Real Treasury Overview', 'rtbcb' ),
+			'option'   => 'rtbcb_real_treasury_overview',
+			'requires' => [ 'rtbcb-test-industry-overview' ],
+			'phase'    => 2,
+			'action'   => 'rtbcb_test_real_treasury_overview',
+		],
+		'rtbcb-test-roadmap-generator'      => [
+			'label'    => __( 'Roadmap Generator', 'rtbcb' ),
+			'option'   => 'rtbcb_roadmap_plan',
+			'requires' => [ 'rtbcb-test-real-treasury-overview' ],
+			'phase'    => 3,
+		],
+		'rtbcb-test-roi-calculator'         => [
+			'label'    => __( 'ROI Calculator', 'rtbcb' ),
+			'option'   => 'rtbcb_roi_results',
+			'requires' => [ 'rtbcb-test-roadmap-generator' ],
+			'phase'    => 3,
+			'action'   => 'rtbcb_test_calculate_roi',
+		],
+		'rtbcb-test-estimated-benefits'     => [
+			'label'    => __( 'Estimated Benefits', 'rtbcb' ),
+			'option'   => 'rtbcb_estimated_benefits',
+			'requires' => [ 'rtbcb-test-roi-calculator' ],
+			'phase'    => 3,
+			'action'   => 'rtbcb_test_estimated_benefits',
+		],
+		'rtbcb-test-report-assembly'        => [
+			'label'    => __( 'Report Assembly & Delivery', 'rtbcb' ),
+			'option'   => 'rtbcb_executive_summary',
+			'requires' => [ 'rtbcb-test-estimated-benefits' ],
+			'phase'    => 4,
+			'action'   => 'rtbcb_test_report_assembly',
+		],
+		'rtbcb-test-tracking-script'        => [
+			'label'    => __( 'Tracking Scripts', 'rtbcb' ),
+			'option'   => 'rtbcb_tracking_script',
+			'requires' => [ 'rtbcb-test-report-assembly' ],
+			'phase'    => 5,
+			'action'   => 'rtbcb_test_tracking_script',
+		],
+		'rtbcb-test-follow-up-email'        => [
+			'label'    => __( 'Follow-up Emails', 'rtbcb' ),
+			'option'   => 'rtbcb_follow_up_queue',
+			'requires' => [ 'rtbcb-test-tracking-script' ],
+			'phase'    => 5,
+			'action'   => 'rtbcb_test_follow_up_email',
+		],
+	];
 
-    foreach ( $sections as $id => &$section ) {
-        $result               = rtbcb_get_last_test_result( $id, $test_results );
-        $status               = $result['status'] ?? '';
-        $section['completed'] = ( 'success' === $status );
-    }
+	foreach ( $sections as $id => &$section ) {
+		$result               = rtbcb_get_last_test_result( $id, $test_results );
+		$status               = $result['status'] ?? '';
+		$section['completed'] = ( 'success' === $status );
+	}
 
-    return $sections;
+	return $sections;
 }
 
 /**
@@ -285,33 +285,33 @@ function rtbcb_get_dashboard_sections( $test_results = null ) {
  * @return array Percentages keyed by phase number.
  */
 function rtbcb_calculate_phase_completion( $sections, $phases = [] ) {
-    $totals = [];
-    $done   = [];
+	$totals = [];
+	$done   = [];
 
-    foreach ( $sections as $section ) {
-        $phase = isset( $section['phase'] ) ? (int) $section['phase'] : 0;
-        if ( $phase ) {
-            if ( ! isset( $totals[ $phase ] ) ) {
-                $totals[ $phase ] = 0;
-                $done[ $phase ]   = 0;
-            }
-            $totals[ $phase ]++;
-            if ( ! empty( $section['completed'] ) ) {
-                $done[ $phase ]++;
-            }
-        }
-    }
+	foreach ( $sections as $section ) {
+		$phase = isset( $section['phase'] ) ? (int) $section['phase'] : 0;
+		if ( $phase ) {
+			if ( ! isset( $totals[ $phase ] ) ) {
+				$totals[ $phase ] = 0;
+				$done[ $phase ]   = 0;
+			}
+			$totals[ $phase ]++;
+			if ( ! empty( $section['completed'] ) ) {
+				$done[ $phase ]++;
+			}
+		}
+	}
 
-    $phase_keys  = $phases ? $phases : array_keys( $totals );
-    $percentages = array_fill_keys( $phase_keys, 0 );
+	$phase_keys  = $phases ? $phases : array_keys( $totals );
+	$percentages = array_fill_keys( $phase_keys, 0 );
 
-    foreach ( $totals as $phase => $total ) {
-        $percentages[ $phase ] = $total ? round( ( $done[ $phase ] / $total ) * 100 ) : 0;
-    }
+	foreach ( $totals as $phase => $total ) {
+		$percentages[ $phase ] = $total ? round( ( $done[ $phase ] / $total ) * 100 ) : 0;
+	}
 
-    ksort( $percentages );
+	ksort( $percentages );
 
-    return $percentages;
+	return $percentages;
 }
 
 /**
@@ -325,27 +325,27 @@ function rtbcb_calculate_phase_completion( $sections, $phases = [] ) {
  * @return string|null The first incomplete dependency or null if all met.
  */
 function rtbcb_get_first_incomplete_dependency( $section_id, $sections, $visited = [] ) {
-    if ( in_array( $section_id, $visited, true ) ) {
-        return null;
-    }
+	if ( in_array( $section_id, $visited, true ) ) {
+		return null;
+	}
 
-    $visited[] = $section_id;
+	$visited[] = $section_id;
 
-    if ( empty( $sections[ $section_id ]['requires'] ) ) {
-        return null;
-    }
+	if ( empty( $sections[ $section_id ]['requires'] ) ) {
+		return null;
+	}
 
-    foreach ( $sections[ $section_id ]['requires'] as $dependency ) {
-        if ( empty( $sections[ $dependency ]['completed'] ) ) {
-            $deep = rtbcb_get_first_incomplete_dependency( $dependency, $sections, $visited );
-            if ( $deep ) {
-                return $deep;
-            }
-            return $dependency;
-        }
-    }
+	foreach ( $sections[ $section_id ]['requires'] as $dependency ) {
+		if ( empty( $sections[ $dependency ]['completed'] ) ) {
+			$deep = rtbcb_get_first_incomplete_dependency( $dependency, $sections, $visited );
+			if ( $deep ) {
+				return $deep;
+			}
+			return $dependency;
+		}
+	}
 
-    return null;
+	return null;
 }
 
 /**
@@ -360,30 +360,30 @@ function rtbcb_get_first_incomplete_dependency( $section_id, $sections, $visited
  * @return bool True when allowed, false otherwise.
  */
 function rtbcb_require_completed_steps( $current_section, $display_notice = true ) {
-    static $displayed = [];
+	static $displayed = [];
 
-    $sections   = rtbcb_get_dashboard_sections();
-    $dependency = rtbcb_get_first_incomplete_dependency( $current_section, $sections );
+	$sections   = rtbcb_get_dashboard_sections();
+	$dependency = rtbcb_get_first_incomplete_dependency( $current_section, $sections );
 
-    if ( null === $dependency ) {
-        return true;
-    }
+	if ( null === $dependency ) {
+		return true;
+	}
 
-    if ( $display_notice && ! in_array( $dependency, $displayed, true ) ) {
-        $phase  = isset( $sections[ $dependency ]['phase'] ) ? (int) $sections[ $dependency ]['phase'] : 0;
-        $anchor = $phase ? 'rtbcb-phase' . $phase : $dependency;
-        $url    = admin_url( 'admin.php?page=rtbcb-test-dashboard#' . $anchor );
-        echo '<div class="notice notice-error"><p>' .
-            sprintf(
-                esc_html__( 'Please complete %s first.', 'rtbcb' ),
-                '<a href="' . esc_url( $url ) . '">' .
-                esc_html( $sections[ $dependency ]['label'] ) . '</a>'
-            ) .
-            '</p></div>';
-        $displayed[] = $dependency;
-    }
+	if ( $display_notice && ! in_array( $dependency, $displayed, true ) ) {
+		$phase  = isset( $sections[ $dependency ]['phase'] ) ? (int) $sections[ $dependency ]['phase'] : 0;
+		$anchor = $phase ? 'rtbcb-phase' . $phase : $dependency;
+		$url    = admin_url( 'admin.php?page=rtbcb-test-dashboard#' . $anchor );
+		echo '<div class="notice notice-error"><p>' .
+			sprintf(
+				esc_html__( 'Please complete %s first.', 'rtbcb' ),
+				'<a href="' . esc_url( $url ) . '">' .
+				esc_html( $sections[ $dependency ]['label'] ) . '</a>'
+			) .
+			'</p></div>';
+		$displayed[] = $dependency;
+	}
 
-    return false;
+	return false;
 }
 
 /**
