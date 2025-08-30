@@ -477,6 +477,7 @@ class Real_Treasury_BCB {
             'rtbcbReport',
             [
                 'report_model'       => $report_model,
+                'max_output_tokens'  => intval( $config['max_output_tokens'] ),
                 'defaults'           => $config_localized,
                 'model_capabilities' => $model_capabilities,
                 'ajax_url'           => admin_url( 'admin-ajax.php' ),

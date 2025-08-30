@@ -52,6 +52,7 @@ async function generateProfessionalReport(businessContext) {
         ...(typeof rtbcbReport !== 'undefined' ? rtbcbReport : {})
     };
     cfg.model = rtbcbReport.report_model;
+    cfg.max_output_tokens = Math.min(50000, Math.max(256, parseInt(cfg.max_output_tokens, 10) || 20000));
     if ( !supportsTemperature( cfg.model ) ) {
         delete cfg.temperature;
     }

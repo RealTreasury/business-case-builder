@@ -67,7 +67,7 @@ builder.showError = (msg) => { errorMessage = msg; };
 
 (async () => {
     await builder.handleSubmit();
-    assert.ok(errorMessage.includes('Invalid server response'));
+    assert.ok(errorMessage.includes('Unexpected server response'));
     assert.ok(errorMessage.includes('AI configuration'));
     console.log('Invalid server response test passed.');
 })().catch(err => {

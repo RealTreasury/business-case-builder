@@ -7,6 +7,8 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+require_once __DIR__ . '/config.php';
+
 /**
  * Retrieve the OpenAI API key from plugin settings.
  *
@@ -1139,6 +1141,12 @@ function rtbcb_proxy_openai_responses() {
     if ( ! is_array( $body_array ) ) {
         $body_array = [];
     }
+
+    $config              = rtbcb_get_gpt5_config();
+    $max_output_tokens   = intval( $body_array['max_output_tokens'] ?? $config['max_output_tokens'] );
+    $max_output_tokens   = min( 50000, max( 256, $max_output_tokens ) );
+    $body_array['max_output_tokens'] = $max_output_tokens;
+    $body              = wp_json_encode( $body_array );
 
     $timeout = intval( get_option( 'rtbcb_responses_timeout', 120 ) );
     if ( $timeout <= 0 ) {

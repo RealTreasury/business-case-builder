@@ -35,16 +35,35 @@ function rtbcb_get_default_model( $tier ) {
  */
 function rtbcb_get_gpt5_config( $overrides = [] ) {
     $defaults = [
-        'model'            => 'gpt-5-mini',
+        'model'             => 'gpt-5-mini',
         'max_output_tokens' => 20000,
-        'temperature'      => 0.7,
-        'store'            => true,
-        'timeout'          => 180,
-        'max_retries'      => 2,
-        'reasoning_effort' => 'medium',
-        'text_verbosity'   => 'medium',
+        'temperature'       => 0.7,
+        'store'             => true,
+        'timeout'           => 180,
+        'max_retries'       => 2,
+        'reasoning_effort'  => 'medium',
+        'text_verbosity'    => 'medium',
     ];
 
-    return array_merge( $defaults, array_intersect_key( $overrides, $defaults ) );
+    $file_overrides = [];
+    $config_path    = dirname( __DIR__ ) . '/rtbcb-config.json';
+    if ( file_exists( $config_path ) ) {
+        $decoded = json_decode( file_get_contents( $config_path ), true );
+        if ( is_array( $decoded ) && isset( $decoded['max_output_tokens'] ) ) {
+            $file_overrides['max_output_tokens'] = $decoded['max_output_tokens'];
+        }
+    }
+
+    $env_tokens = getenv( 'RTBCB_MAX_OUTPUT_TOKENS' );
+    if ( false !== $env_tokens ) {
+        $file_overrides['max_output_tokens'] = $env_tokens;
+    }
+
+    $overrides = array_merge( $file_overrides, $overrides );
+
+    $config = array_merge( $defaults, array_intersect_key( $overrides, $defaults ) );
+    $config['max_output_tokens'] = min( 50000, max( 256, intval( $config['max_output_tokens'] ) ) );
+
+    return $config;
 }
 
