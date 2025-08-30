@@ -48,10 +48,12 @@ class RTBCB_API_Tester {
     private static function test_completion( $api_key ) {
         $model = get_option( 'rtbcb_mini_model', rtbcb_get_default_model( 'mini' ) );
 
+        $min_tokens = intval( get_option( 'rtbcb_gpt5_min_output_tokens', 256 ) );
+
         $body = [
-            'model' => rtbcb_normalize_model_name( $model ),
-            'input' => 'Test connection - respond with exactly: "API connection successful"',
-            'max_output_tokens' => 256,
+            'model'             => rtbcb_normalize_model_name( $model ),
+            'input'             => 'Test connection - respond with exactly: "API connection successful"',
+            'max_output_tokens' => max( 256, $min_tokens ),
         ];
 
         if ( rtbcb_model_supports_temperature( $model ) ) {

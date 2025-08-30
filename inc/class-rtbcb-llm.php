@@ -105,12 +105,13 @@ class RTBCB_LLM {
      * @return int Estimated token count capped by configuration.
      */
     private function estimate_tokens( $words ) {
-        $words  = max( 0, intval( $words ) );
-        $tokens = (int) ceil( $words * 1.5 );
-$limit  = intval( $this->gpt5_config['max_output_tokens'] ?? 8000 );
-$limit  = min( 128000, max( 256, $limit ) );
+        $words       = max( 0, intval( $words ) );
+        $tokens      = (int) ceil( $words * 1.5 );
+        $limit       = intval( $this->gpt5_config['max_output_tokens'] ?? 8000 );
+        $min_tokens  = intval( $this->gpt5_config['min_output_tokens'] ?? 1 );
+        $limit       = min( 128000, max( $min_tokens, $limit ) );
 
-        return min( $tokens, $limit );
+        return max( $min_tokens, min( $tokens, $limit ) );
     }
 
     /**
@@ -2348,7 +2349,8 @@ return $analysis;
 
             if ( $attempt < $max_retries ) {
                 if ( null !== $current_tokens ) {
-                    $current_tokens = max( 256, (int) ( $current_tokens * 0.9 ) );
+                    $min_tokens    = intval( $this->gpt5_config['min_output_tokens'] ?? 1 );
+                    $current_tokens = max( $min_tokens, (int) ( $current_tokens * 0.9 ) );
                 }
 
                 $current_timeout = min( $current_timeout + 5, $max_retry_time );
@@ -2420,7 +2422,8 @@ return $analysis;
         $model_name       = rtbcb_normalize_model_name( $model_name );
         $default_tokens    = intval( $this->gpt5_config['max_output_tokens'] ?? 8000 );
         $max_output_tokens = intval( $max_output_tokens ?? $default_tokens );
-$max_output_tokens = min( 128000, max( 256, $max_output_tokens ) );
+        $min_tokens        = intval( $this->gpt5_config['min_output_tokens'] ?? 1 );
+        $max_output_tokens = min( 128000, max( $min_tokens, $max_output_tokens ) );
 
         if ( is_array( $prompt ) && isset( $prompt['input'] ) ) {
             $instructions = sanitize_textarea_field( $prompt['instructions'] ?? '' );

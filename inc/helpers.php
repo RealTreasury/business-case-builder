@@ -140,6 +140,20 @@ function rtbcb_sanitize_max_output_tokens( $value ) {
 }
 
 /**
+ * Sanitize the min output tokens option.
+ *
+ * Ensures the value stays within the allowed 1-128000 token range.
+ *
+ * @param mixed $value Raw option value.
+ * @return int Sanitized token count.
+ */
+function rtbcb_sanitize_min_output_tokens( $value ) {
+	$value = intval( $value );
+
+	return min( 128000, max( 1, $value ) );
+}
+
+/**
  * Get testing dashboard sections and their completion state.
  *
  * The returned array is keyed by section ID and contains the section label,
@@ -1222,7 +1236,8 @@ function rtbcb_proxy_openai_responses() {
 
     $config            = rtbcb_get_gpt5_config();
     $max_output_tokens = intval( $body_array['max_output_tokens'] ?? $config['max_output_tokens'] );
-    $max_output_tokens = min( 128000, max( 256, $max_output_tokens ) );
+    $min_tokens        = intval( $config['min_output_tokens'] );
+    $max_output_tokens = min( 128000, max( $min_tokens, $max_output_tokens ) );
     $body_array['max_output_tokens'] = $max_output_tokens;
     $body_array['stream']            = true;
     $payload                         = wp_json_encode( $body_array );

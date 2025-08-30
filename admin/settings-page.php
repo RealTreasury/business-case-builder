@@ -17,6 +17,7 @@ $labor_cost      = get_option( 'rtbcb_labor_cost_per_hour', '' );
 $bank_fee        = get_option( 'rtbcb_bank_fee_baseline', '' );
 $gpt5_timeout    = get_option( 'rtbcb_gpt5_timeout', 300 );
 $gpt5_max_output_tokens = get_option( 'rtbcb_gpt5_max_output_tokens', 8000 );
+$gpt5_min_output_tokens = get_option( 'rtbcb_gpt5_min_output_tokens', 256 );
 
 $chat_models = [
     'gpt-5'             => 'gpt-5',
@@ -107,6 +108,15 @@ $embedding_models = [
                 <td>
                     <input type="number" id="rtbcb_gpt5_timeout" name="rtbcb_gpt5_timeout" value="<?php echo esc_attr( $gpt5_timeout ); ?>" class="small-text" />
                     <p class="description"><?php echo esc_html__( 'Maximum time to wait for OpenAI responses.', 'rtbcb' ); ?></p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="rtbcb_gpt5_min_output_tokens"><?php echo esc_html__( 'Min Output Tokens', 'rtbcb' ); ?></label>
+                </th>
+                <td>
+                    <input type="number" id="rtbcb_gpt5_min_output_tokens" name="rtbcb_gpt5_min_output_tokens" value="<?php echo esc_attr( $gpt5_min_output_tokens ); ?>" class="small-text" min="1" max="128000" />
+                    <p class="description"><?php echo esc_html__( 'Minimum tokens returned by OpenAI.', 'rtbcb' ); ?></p>
                 </td>
             </tr>
             <tr>

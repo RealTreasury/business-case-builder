@@ -7,7 +7,7 @@ async function runTests() {
     const code = fs.readFileSync('public/js/rtbcb-report.js', 'utf8');
     vm.runInThisContext(code);
 
-    const capabilities = JSON.parse(execSync("php -r \"echo json_encode(include 'inc/model-capabilities.php');\"").toString());
+    const capabilities = JSON.parse(execSync("php -r \"define('ABSPATH', __DIR__.'/..'); echo json_encode(include 'inc/model-capabilities.php');\"").toString());
     const unsupportedModels = [...capabilities.temperature.unsupported, 'gpt-5-mini'];
     const supportedModels = ['gpt-4o', 'gpt-4.1-preview'];
     const templateHtml = fs.readFileSync('public/templates/report-template.html', 'utf8');
@@ -23,28 +23,18 @@ async function runTests() {
         let capturedBody;
         global.rtbcbReport = { report_model: model, model_capabilities: capabilities, ajax_url: 'https://example.com', template_url: 'template.html' };
 
-        let requestCount = 0;
-        global.fetch = (url, options) => {
-            if (!options) {
-                return Promise.resolve({ ok: true, text: () => Promise.resolve(templateHtml) });
-            }
-            requestCount++;
-            if (requestCount === 1) {
-                capturedBody = JSON.parse(options.body.store.body);
-                return Promise.resolve({
-                    ok: true,
-                    json: () => Promise.resolve({ success: true, data: { job_id: 'job-1' } }),
-                    status: 200,
-                    statusText: 'OK'
-                });
-            }
-            return Promise.resolve({
-                ok: true,
-                json: () => Promise.resolve({ success: true, data: { status: 'complete', response: { output_text: '<html></html>' } } }),
-                status: 200,
-                statusText: 'OK'
-            });
-        };
+    global.fetch = (url, options) => {
+        if (!options) {
+            return Promise.resolve({ ok: true, text: () => Promise.resolve(templateHtml) });
+        }
+        capturedBody = JSON.parse(options.body.store.body);
+        return Promise.resolve({
+            ok: true,
+            body: { getReader: () => ({ read: () => Promise.resolve({ done: true }) }) },
+            status: 200,
+            statusText: 'OK'
+        });
+    };
 
         global.document = { getElementById: () => null };
         global.DOMPurify = { sanitize: (html) => html };

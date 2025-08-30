@@ -460,33 +460,36 @@ class Real_Treasury_BCB {
         $api_key      = sanitize_text_field( get_option( 'rtbcb_openai_api_key', '' ) );
         $report_model = sanitize_text_field( get_option( 'rtbcb_advanced_model', 'gpt-5-mini' ) );
 
-        $timeout           = rtbcb_get_api_timeout();
-        $max_output_tokens = intval( get_option( 'rtbcb_gpt5_max_output_tokens', 8000 ) );
-        $config            = rtbcb_get_gpt5_config(
+        $timeout            = rtbcb_get_api_timeout();
+        $max_output_tokens  = intval( get_option( 'rtbcb_gpt5_max_output_tokens', 8000 ) );
+        $min_output_tokens  = intval( get_option( 'rtbcb_gpt5_min_output_tokens', 256 ) );
+        $config             = rtbcb_get_gpt5_config(
             array_merge(
                 get_option( 'rtbcb_gpt5_config', [] ),
                 [
                     'timeout'           => $timeout,
                     'max_output_tokens' => $max_output_tokens,
+                    'min_output_tokens' => $min_output_tokens,
                 ]
             )
         );
 
         $config_localized = [
-            'model'              => sanitize_text_field( $config['model'] ),
-            'max_output_tokens'  => intval( $config['max_output_tokens'] ),
-            'text'               => [ 'verbosity' => sanitize_text_field( $config['text']['verbosity'] ?? '' ) ],
-            'store'              => (bool) $config['store'],
-            'timeout'            => intval( $config['timeout'] ),
-            'max_retries'        => intval( $config['max_retries'] ),
-            'max_retry_time'     => intval( $config['max_retry_time'] ),
+            'model'             => sanitize_text_field( $config['model'] ),
+            'max_output_tokens' => intval( $config['max_output_tokens'] ),
+            'min_output_tokens' => intval( $config['min_output_tokens'] ),
+            'text'              => [ 'verbosity' => sanitize_text_field( $config['text']['verbosity'] ?? '' ) ],
+            'store'             => (bool) $config['store'],
+            'timeout'           => intval( $config['timeout'] ),
+            'max_retries'       => intval( $config['max_retries'] ),
+            'max_retry_time'    => intval( $config['max_retry_time'] ),
         ];
 
         if ( rtbcb_model_supports_temperature( $config['model'] ) ) {
             $config_localized['temperature'] = floatval( $config['temperature'] );
         }
 
-        $supported = [ 'model', 'max_output_tokens', 'text', 'temperature', 'store', 'timeout', 'max_retries', 'max_retry_time' ];
+        $supported = [ 'model', 'max_output_tokens', 'min_output_tokens', 'text', 'temperature', 'store', 'timeout', 'max_retries', 'max_retry_time' ];
         $config_localized = array_intersect_key( $config_localized, array_flip( $supported ) );
 
         $model_capabilities = rtbcb_get_model_capabilities();
@@ -495,12 +498,13 @@ class Real_Treasury_BCB {
             'rtbcb-report',
             'rtbcbReport',
             [
-                'report_model'       => $report_model,
-                'max_output_tokens'  => intval( $config['max_output_tokens'] ),
-                'defaults'           => $config_localized,
-                'model_capabilities' => $model_capabilities,
-                'ajax_url'           => admin_url( 'admin-ajax.php' ),
-                'template_url'       => RTBCB_URL . 'public/templates/report-template.html',
+                'report_model'      => $report_model,
+                'max_output_tokens' => intval( $config['max_output_tokens'] ),
+                'min_output_tokens' => intval( $config['min_output_tokens'] ),
+                'defaults'          => $config_localized,
+                'model_capabilities'=> $model_capabilities,
+                'ajax_url'          => admin_url( 'admin-ajax.php' ),
+                'template_url'      => RTBCB_URL . 'public/templates/report-template.html',
             ]
         );
     }
