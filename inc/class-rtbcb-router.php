@@ -249,6 +249,17 @@ class RTBCB_Router {
        // Transform data structure for comprehensive template.
        $report_data = $this->transform_data_for_template( $business_case_data );
 
+       if ( is_wp_error( $report_data ) ) {
+           RTBCB_Logger::log(
+               'report_data_validation_failed',
+               [
+                   'message'          => $report_data->get_error_message(),
+                   'missing_sections' => $report_data->get_error_data()['missing_sections'] ?? [],
+               ]
+           );
+           return '';
+       }
+
        ob_start();
        include $template_path;
        $html = ob_get_clean();
@@ -264,27 +275,54 @@ class RTBCB_Router {
     * @return array
     */
    private function transform_data_for_template( $business_case_data ) {
+       $required_keys = [
+           'metadata',
+           'executive_summary',
+           'financial_analysis',
+           'company_intelligence',
+           'technology_strategy',
+           'operational_insights',
+           'risk_analysis',
+           'action_plan',
+       ];
+
        // Get current company data.
        $company      = rtbcb_get_current_company();
        $company_name = $business_case_data['company_name'] ?? $company['name'] ?? __( 'Your Company', 'rtbcb' );
+
+       $defaults = [
+           'metadata'            => [
+               'company_name'    => $company_name,
+               'analysis_date'   => current_time( 'Y-m-d' ),
+               'confidence_level' => 0,
+               'processing_time'  => 0,
+           ],
+           'executive_summary'   => [],
+           'financial_analysis'  => [],
+           'company_intelligence'=> [],
+           'technology_strategy' => [],
+           'operational_insights'=> [],
+           'risk_analysis'       => [],
+           'action_plan'         => [],
+       ];
 
        // Create structured data format expected by template.
        $report_data = [
            'metadata'            => [
                'company_name'    => $company_name,
                'analysis_date'   => current_time( 'Y-m-d' ),
-               'confidence_level'=> $business_case_data['confidence'] ?? 0.85,
-               'processing_time' => $business_case_data['processing_time'] ?? 0,
+               'confidence_level' => $business_case_data['confidence'] ?? 0.85,
+               'processing_time'  => $business_case_data['processing_time'] ?? 0,
            ],
            'executive_summary'  => [
-               'strategic_positioning'   => $business_case_data['executive_summary'] ?? $business_case_data['narrative'] ?? '',
-               'key_value_drivers'      => $this->extract_value_drivers( $business_case_data ),
-               'executive_recommendation'=> $business_case_data['executive_recommendation'] ?? $business_case_data['recommendation'] ?? '',
-               'business_case_strength' => $this->determine_business_case_strength( $business_case_data ),
+               'strategic_positioning'    => $business_case_data['executive_summary'] ?? $business_case_data['narrative'] ?? '',
+               'key_value_drivers'       => $this->extract_value_drivers( $business_case_data ),
+               'executive_recommendation' => $business_case_data['executive_recommendation'] ?? $business_case_data['recommendation'] ?? '',
+               'business_case_strength'  => $this->determine_business_case_strength( $business_case_data ),
            ],
            'financial_analysis' => [
-               'roi_scenarios'      => $this->format_roi_scenarios( $business_case_data ),
-               'payback_analysis'   => [
+               'roi_scenarios'    => $this->format_roi_scenarios( $business_case_data ),
+               'payback_analysis' => [
                    'payback_months' => $business_case_data['payback_months'] ?? 'N/A',
                ],
                'sensitivity_analysis' => $business_case_data['sensitivity_analysis'] ?? [],
@@ -294,7 +332,7 @@ class RTBCB_Router {
                    'enhanced_description' => $business_case_data['company_analysis'] ?? '',
                    'maturity_level'       => $business_case_data['maturity_level'] ?? 'intermediate',
                    'treasury_maturity'    => [
-                       'current_state'    => $business_case_data['current_state_analysis'] ?? '',
+                       'current_state' => $business_case_data['current_state_analysis'] ?? '',
                    ],
                ],
                'industry_context' => [
@@ -315,11 +353,36 @@ class RTBCB_Router {
                'implementation_risks' => $business_case_data['risks'] ?? [],
            ],
            'action_plan'          => [
-               'immediate_steps'   => $this->extract_immediate_steps( $business_case_data ),
+               'immediate_steps'      => $this->extract_immediate_steps( $business_case_data ),
                'short_term_milestones' => $this->extract_short_term_steps( $business_case_data ),
                'long_term_objectives'  => $this->extract_long_term_steps( $business_case_data ),
            ],
        ];
+
+       $missing_keys = [];
+       foreach ( $required_keys as $key ) {
+           if ( ! isset( $report_data[ $key ] ) || empty( $report_data[ $key ] ) ) {
+               $missing_keys[]    = $key;
+               $report_data[ $key ] = $defaults[ $key ];
+               RTBCB_Logger::log(
+                   'missing_report_section',
+                   [
+                       'section' => $key,
+                   ]
+               );
+           }
+       }
+
+       if ( ! empty( $missing_keys ) ) {
+           return new WP_Error(
+               'rtbcb_missing_sections',
+               __( 'Required report sections were missing.', 'rtbcb' ),
+               [
+                   'missing_sections' => $missing_keys,
+                   'report_data'      => $report_data,
+               ]
+           );
+       }
 
        return $report_data;
    }
