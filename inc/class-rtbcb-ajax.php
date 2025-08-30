@@ -91,10 +91,12 @@ class RTBCB_Ajax {
 			$structured_report_data = self::structure_report_data( $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, $request_start );
 			$workflow_tracker->complete_step( 'data_structuring', $structured_report_data );
 
-			$lead_id = self::save_lead_data_async( $user_inputs, $structured_report_data );
+					$lead_id = self::save_lead_data_async( $user_inputs, $structured_report_data );
 
-			$debug_info = $workflow_tracker->get_debug_info();
-			self::store_workflow_history( $debug_info );
+					$debug_info              = $workflow_tracker->get_debug_info();
+					$debug_info['lead_id']    = $lead_id;
+					$debug_info['lead_email'] = $user_inputs['email'];
+					self::store_workflow_history( $debug_info, $lead_id, $user_inputs['email'] );
 
 			return [
 				'report_data'   => $structured_report_data,
@@ -105,8 +107,10 @@ class RTBCB_Ajax {
 		} catch ( Exception $e ) {
 			$workflow_tracker->add_error( 'exception', $e->getMessage() );
 			rtbcb_log_error( 'Ajax exception in new workflow', $e->getMessage() );
-			$debug_info = $workflow_tracker->get_debug_info();
-			self::store_workflow_history( $debug_info );
+					$debug_info              = $workflow_tracker->get_debug_info();
+					$debug_info['lead_id']    = isset( $lead_id ) ? $lead_id : null;
+					$debug_info['lead_email'] = $user_inputs['email'];
+					self::store_workflow_history( $debug_info, isset( $lead_id ) ? $lead_id : null, $user_inputs['email'] );
 			return new WP_Error( 'generation_failed', __( 'An error occurred while generating your business case. Please try again.', 'rtbcb' ) );
 		}
 	}
@@ -286,16 +290,18 @@ class RTBCB_Ajax {
 		return $roi_scenarios;
 	}
 
-	private static function store_workflow_history( $debug_info ) {
-		$history = get_option( 'rtbcb_workflow_history', [] );
-		if ( ! is_array( $history ) ) {
-			$history = [];
-		}
-		$history[] = $debug_info;
-		if ( count( $history ) > 20 ) {
-			$history = array_slice( $history, -20 );
-		}
-		update_option( 'rtbcb_workflow_history', $history, false );
+	private static function store_workflow_history( $debug_info, $lead_id = null, $lead_email = '' ) {
+		       $history = get_option( 'rtbcb_workflow_history', [] );
+		       if ( ! is_array( $history ) ) {
+		               $history = [];
+		       }
+		       $debug_info['lead_id']    = $lead_id ? intval( $lead_id ) : null;
+		       $debug_info['lead_email'] = sanitize_email( $lead_email );
+		       $history[]                = $debug_info;
+		       if ( count( $history ) > 20 ) {
+		               $history = array_slice( $history, -20 );
+		       }
+		       update_option( 'rtbcb_workflow_history', $history, false );
 	}
 }
 

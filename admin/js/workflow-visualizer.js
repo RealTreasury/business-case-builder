@@ -1,37 +1,56 @@
 jQuery(function($) {
 function loadHistory() {
-$.post(rtbcbWorkflow.ajax_url, {
-action: 'rtbcb_get_workflow_history',
-nonce: rtbcbWorkflow.nonce
-}).done(function(response) {
-    if (response.success) {
-        var history = response.data.history || [];
-        var html = '';
-        history.forEach(function(item, index) {
-            if (item.prompts && item.prompts.length) {
-                html += '<h3>Execution ' + (index + 1) + '</h3><ul>';
-                item.prompts.forEach(function(p) {
-                    var txt = '';
-                    if (p.instructions) {
-                        txt += p.instructions + "\n";
-                    }
-                    txt += p.input;
-                    html += '<li><pre>' + $('<div>').text(txt).html() + '</pre></li>';
-                });
-                html += '</ul>';
+    $.post(rtbcbWorkflow.ajax_url, {
+        action: 'rtbcb_get_workflow_history',
+        nonce: rtbcbWorkflow.nonce
+    }).done(function(response) {
+        if (response.success) {
+            var history = response.data.history || [];
+            if (!history.length) {
+                $('#rtbcb-workflow-history-container').html('<p>' + rtbcbWorkflow.strings.no_history + '</p>');
+                alert(rtbcbWorkflow.strings.refresh_success);
+                return;
             }
-        });
-        if (!html) {
-            html = '<p>' + rtbcbWorkflow.strings.no_history + '</p>';
+            var stepNames = [];
+            history.forEach(function(item) {
+                if (item.steps) {
+                    item.steps.forEach(function(step) {
+                        if (stepNames.indexOf(step.name) === -1) {
+                            stepNames.push(step.name);
+                        }
+                    });
+                }
+            });
+            var html = '<table><thead><tr><th>' + rtbcbWorkflow.strings.lead + '</th>';
+            stepNames.forEach(function(name) {
+                html += '<th>' + $('<div>').text(name).html() + '</th>';
+            });
+            html += '</tr></thead><tbody>';
+            history.forEach(function(item) {
+                var lead = item.email || (item.lead_id ? 'ID ' + item.lead_id : rtbcbWorkflow.strings.unknown_lead);
+                html += '<tr><td>' + $('<div>').text(lead).html() + '</td>';
+                stepNames.forEach(function(name) {
+                    var status = rtbcbWorkflow.strings.not_run;
+                    if (item.steps) {
+                        item.steps.forEach(function(step) {
+                            if (step.name === name) {
+                                status = step.status;
+                            }
+                        });
+                    }
+                    html += '<td>' + $('<div>').text(status).html() + '</td>';
+                });
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+            $('#rtbcb-workflow-history-container').html(html);
+            alert(rtbcbWorkflow.strings.refresh_success);
+        } else {
+            alert(rtbcbWorkflow.strings.error);
         }
-        $('#rtbcb-workflow-history-container').html(html);
-        alert(rtbcbWorkflow.strings.refresh_success);
-    } else {
+    }).fail(function() {
         alert(rtbcbWorkflow.strings.error);
-    }
-}).fail(function() {
-alert(rtbcbWorkflow.strings.error);
-});
+    });
 }
 
 $('#rtbcb-refresh-workflow').on('click', function() {
