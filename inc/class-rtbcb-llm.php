@@ -2087,33 +2087,62 @@ return $analysis;
 	 * @return array Validated profile data.
 	 */
 	private function validate_company_profile( $profile, $user_inputs ) {
-	return [
-	'name'                => $user_inputs['company_name'],
-	'enhanced_description' => sanitize_textarea_field( $profile['enhanced_description'] ?? '' ),
-	'business_model'      => sanitize_textarea_field( $profile['business_model'] ?? '' ),
-	'market_position'     => sanitize_textarea_field( $profile['market_position'] ?? '' ),
-	'maturity_level'      => in_array( $profile['maturity_level'] ?? '', [ 'basic', 'developing', 'strategic', 'optimized' ], true )
-	? $profile['maturity_level']
-	: 'basic',
-	'financial_indicators' => [
-	'estimated_revenue' => floatval( $profile['financial_indicators']['estimated_revenue'] ?? 0 ),
-	'growth_stage'      => sanitize_text_field( $profile['financial_indicators']['growth_stage'] ?? 'unknown' ),
-	'financial_health'  => sanitize_text_field( $profile['financial_indicators']['financial_health'] ?? 'unknown' ),
-	],
-	'treasury_maturity'   => [
-	'current_state'        => sanitize_textarea_field( $profile['treasury_maturity']['current_state'] ?? '' ),
-	'sophistication_level' => sanitize_text_field( $profile['treasury_maturity']['sophistication_level'] ?? 'manual' ),
-	'key_gaps'            => array_map( 'sanitize_text_field', $profile['treasury_maturity']['key_gaps'] ?? [] ),
-	'automation_readiness' => sanitize_text_field( $profile['treasury_maturity']['automation_readiness'] ?? 'medium' ),
-	],
-	'strategic_context'   => [
-	'primary_challenges'   => array_map( 'sanitize_text_field', $profile['strategic_context']['primary_challenges'] ?? [] ),
-	'growth_objectives'    => array_map( 'sanitize_text_field', $profile['strategic_context']['growth_objectives'] ?? [] ),
-	'competitive_pressures' => array_map( 'sanitize_text_field', $profile['strategic_context']['competitive_pressures'] ?? [] ),
-	'regulatory_environment' => sanitize_textarea_field( $profile['strategic_context']['regulatory_environment'] ?? '' ),
-	],
-	];
-	}
+       $defaults = [
+       'enhanced_description' => '',
+       'business_model'      => '',
+       'market_position'     => '',
+       'maturity_level'      => 'basic',
+       'financial_indicators' => [
+       'estimated_revenue' => 0,
+       'growth_stage'      => 'unknown',
+       'financial_health'  => 'unknown',
+       ],
+       'treasury_maturity'   => [
+       'current_state'        => '',
+       'sophistication_level' => 'manual',
+       'key_gaps'            => [],
+       'automation_readiness' => 'medium',
+       ],
+       'strategic_context'   => [
+       'primary_challenges'   => [],
+       'growth_objectives'    => [],
+       'competitive_pressures' => [],
+       'regulatory_environment' => '',
+       ],
+       ];
+
+       $profile                 = wp_parse_args( $profile, $defaults );
+       $profile['financial_indicators'] = wp_parse_args( $profile['financial_indicators'], $defaults['financial_indicators'] );
+       $profile['treasury_maturity']    = wp_parse_args( $profile['treasury_maturity'], $defaults['treasury_maturity'] );
+       $profile['strategic_context']    = wp_parse_args( $profile['strategic_context'], $defaults['strategic_context'] );
+
+       return [
+       'name'                => $user_inputs['company_name'],
+       'enhanced_description' => wp_kses_post( $profile['enhanced_description'] ),
+       'business_model'      => wp_kses_post( $profile['business_model'] ),
+       'market_position'     => wp_kses_post( $profile['market_position'] ),
+       'maturity_level'      => in_array( $profile['maturity_level'], [ 'basic', 'developing', 'strategic', 'optimized' ], true )
+       ? $profile['maturity_level']
+       : 'basic',
+       'financial_indicators' => [
+       'estimated_revenue' => floatval( $profile['financial_indicators']['estimated_revenue'] ),
+       'growth_stage'      => sanitize_text_field( $profile['financial_indicators']['growth_stage'] ),
+       'financial_health'  => sanitize_text_field( $profile['financial_indicators']['financial_health'] ),
+       ],
+       'treasury_maturity'   => [
+       'current_state'        => wp_kses_post( $profile['treasury_maturity']['current_state'] ),
+       'sophistication_level' => sanitize_text_field( $profile['treasury_maturity']['sophistication_level'] ),
+       'key_gaps'            => array_map( 'sanitize_text_field', $profile['treasury_maturity']['key_gaps'] ),
+       'automation_readiness' => sanitize_text_field( $profile['treasury_maturity']['automation_readiness'] ),
+       ],
+       'strategic_context'   => [
+       'primary_challenges'   => array_map( 'sanitize_text_field', $profile['strategic_context']['primary_challenges'] ),
+       'growth_objectives'    => array_map( 'sanitize_text_field', $profile['strategic_context']['growth_objectives'] ),
+       'competitive_pressures' => array_map( 'sanitize_text_field', $profile['strategic_context']['competitive_pressures'] ),
+       'regulatory_environment' => wp_kses_post( $profile['strategic_context']['regulatory_environment'] ),
+       ],
+       ];
+       }
 	
 	/**
 	 * Safe JSON encoding with error handling.
@@ -2139,26 +2168,51 @@ return $analysis;
 	 * @return array Validated context.
 	 */
 	private function validate_industry_context( $context ) {
-	return [
-	'sector_analysis'    => [
-	'market_dynamics'   => sanitize_textarea_field( $context['sector_analysis']['market_dynamics'] ?? '' ),
-	'growth_trends'     => sanitize_textarea_field( $context['sector_analysis']['growth_trends'] ?? '' ),
-	'disruption_factors' => array_map( 'sanitize_text_field', $context['sector_analysis']['disruption_factors'] ?? [] ),
-	'technology_adoption' => sanitize_text_field( $context['sector_analysis']['technology_adoption'] ?? 'follower' ),
-	],
-	'benchmarking'       => [
-	'typical_treasury_setup' => sanitize_textarea_field( $context['benchmarking']['typical_treasury_setup'] ?? '' ),
-	'common_pain_points'     => array_map( 'sanitize_text_field', $context['benchmarking']['common_pain_points'] ?? [] ),
-	'technology_penetration' => sanitize_text_field( $context['benchmarking']['technology_penetration'] ?? 'medium' ),
-	'investment_patterns'    => sanitize_textarea_field( $context['benchmarking']['investment_patterns'] ?? '' ),
-	],
-	'regulatory_landscape' => [
-	'key_regulations'      => array_map( 'sanitize_text_field', $context['regulatory_landscape']['key_regulations'] ?? [] ),
-	'compliance_complexity' => sanitize_text_field( $context['regulatory_landscape']['compliance_complexity'] ?? 'medium' ),
-	'upcoming_changes'     => array_map( 'sanitize_text_field', $context['regulatory_landscape']['upcoming_changes'] ?? [] ),
-	],
-	];
-	}
+       $defaults = [
+       'sector_analysis'    => [
+       'market_dynamics'   => '',
+       'growth_trends'     => '',
+       'disruption_factors' => [],
+       'technology_adoption' => 'follower',
+       ],
+       'benchmarking'       => [
+       'typical_treasury_setup' => '',
+       'common_pain_points'     => [],
+       'technology_penetration' => 'medium',
+       'investment_patterns'    => '',
+       ],
+       'regulatory_landscape' => [
+       'key_regulations'      => [],
+       'compliance_complexity' => 'medium',
+       'upcoming_changes'     => [],
+       ],
+       ];
+
+       $context                        = wp_parse_args( $context, $defaults );
+       $context['sector_analysis']     = wp_parse_args( $context['sector_analysis'], $defaults['sector_analysis'] );
+       $context['benchmarking']        = wp_parse_args( $context['benchmarking'], $defaults['benchmarking'] );
+       $context['regulatory_landscape'] = wp_parse_args( $context['regulatory_landscape'], $defaults['regulatory_landscape'] );
+
+       return [
+       'sector_analysis'    => [
+       'market_dynamics'   => wp_kses_post( $context['sector_analysis']['market_dynamics'] ),
+       'growth_trends'     => wp_kses_post( $context['sector_analysis']['growth_trends'] ),
+       'disruption_factors' => array_map( 'sanitize_text_field', $context['sector_analysis']['disruption_factors'] ),
+       'technology_adoption' => sanitize_text_field( $context['sector_analysis']['technology_adoption'] ),
+       ],
+       'benchmarking'       => [
+       'typical_treasury_setup' => wp_kses_post( $context['benchmarking']['typical_treasury_setup'] ),
+       'common_pain_points'     => array_map( 'sanitize_text_field', $context['benchmarking']['common_pain_points'] ),
+       'technology_penetration' => sanitize_text_field( $context['benchmarking']['technology_penetration'] ),
+       'investment_patterns'    => wp_kses_post( $context['benchmarking']['investment_patterns'] ),
+       ],
+       'regulatory_landscape' => [
+       'key_regulations'      => array_map( 'sanitize_text_field', $context['regulatory_landscape']['key_regulations'] ),
+       'compliance_complexity' => sanitize_text_field( $context['regulatory_landscape']['compliance_complexity'] ),
+       'upcoming_changes'     => array_map( 'sanitize_text_field', $context['regulatory_landscape']['upcoming_changes'] ),
+       ],
+       ];
+       }
 	
 	/**
 	 * Validate strategic insights data.
