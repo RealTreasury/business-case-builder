@@ -13,7 +13,7 @@
             $.ajax({
                 url: ajaxurl,
                 method: 'POST',
-                timeout: 30000,
+			timeout: 600000,
                 data: {
                     action: 'rtbcb_company_overview_simple',
                     company_name: companyName,

@@ -729,7 +729,7 @@ class Real_Treasury_BCB {
         rtbcb_log_memory_usage( 'start' );
 
         // STEP 2: Set longer execution time
-        $timeout    = min( absint( rtbcb_get_api_timeout() ), 300 );
+	$timeout    = min( absint( rtbcb_get_api_timeout() ), 600 );
         $start_time = time();
 
         if ( ! ini_get( 'safe_mode' ) ) {

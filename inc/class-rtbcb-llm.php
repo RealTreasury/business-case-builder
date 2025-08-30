@@ -2308,10 +2308,10 @@ return $analysis;
 	 */
 	private function call_openai_with_retry( $model, $prompt, $max_output_tokens = null, $max_retries = null, $chunk_handler = null ) {
 	        $max_retries     = $max_retries ?? intval( $this->gpt5_config['max_retries'] );
-        $base_timeout    = intval( $this->gpt5_config['timeout'] ?? 180 );
-        $current_timeout = $base_timeout;
-        $current_tokens  = $max_output_tokens;
-        $max_retry_time  = intval( $this->gpt5_config['max_retry_time'] ?? 60 );
+		$base_timeout    = intval( $this->gpt5_config['timeout'] ?? 600 );
+		$current_timeout = $base_timeout;
+		$current_tokens  = $max_output_tokens;
+		$max_retry_time  = intval( $this->gpt5_config['max_retry_time'] ?? 600 );
         $start_time      = microtime( true );
 
         for ( $attempt = 1; $attempt <= $max_retries; $attempt++ ) {
@@ -2469,7 +2469,7 @@ return $analysis;
 
         do_action( 'rtbcb_llm_prompt_sent', $body );
 
-        $timeout   = intval( $this->gpt5_config['timeout'] ?? 180 );
+		$timeout   = intval( $this->gpt5_config['timeout'] ?? 600 );
         $payload   = wp_json_encode( $body );
         $streamed  = '';
         $ch        = curl_init( $endpoint );

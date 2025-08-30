@@ -42,9 +42,9 @@ function rtbcb_get_gpt5_config( $overrides = [] ) {
         'min_output_tokens' => 256,
         'temperature'       => 0.7,
         'store'             => true,
-        'timeout'           => 180,
-        'max_retries'       => 2,
-        'max_retry_time'    => 60,
+		'timeout'           => 600,
+		'max_retries'       => 2,
+		'max_retry_time'    => 600,
         'reasoning_effort'  => 'medium',
         'text_verbosity'    => 'medium',
     ];

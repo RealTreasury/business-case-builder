@@ -16,7 +16,7 @@ require_once __DIR__ . '/config.php';
  * @return int Timeout in seconds.
  */
 function rtbcb_get_api_timeout() {
-    $timeout = (int) get_option( 'rtbcb_gpt5_timeout', 180 );
+	$timeout = (int) get_option( 'rtbcb_gpt5_timeout', 600 );
 
     /**
      * Filter the API request timeout.
@@ -820,7 +820,7 @@ function rtbcb_test_generate_category_recommendation( $analysis ) {
                         'input'        => $input,
                     ]
                 ),
-                'timeout' => 60,
+					'timeout' => 600,
             ]
         );
 
@@ -1247,10 +1247,10 @@ function rtbcb_proxy_openai_responses() {
     header( 'Cache-Control: no-cache' );
     header( 'Connection: keep-alive' );
 
-    $timeout = intval( get_option( 'rtbcb_responses_timeout', 120 ) );
-    if ( $timeout <= 0 ) {
-        $timeout = 120;
-    }
+	$timeout = intval( get_option( 'rtbcb_responses_timeout', 600 ) );
+	if ( $timeout <= 0 ) {
+		$timeout = 600;
+	}
 
     $ch = curl_init( 'https://api.openai.com/v1/responses' );
     curl_setopt( $ch, CURLOPT_POST, true );
@@ -1323,10 +1323,10 @@ function rtbcb_handle_openai_responses_job( $job_id, $user_id ) {
         $body_array = [];
     }
 
-    $timeout = intval( get_option( 'rtbcb_responses_timeout', 120 ) );
-    if ( $timeout <= 0 ) {
-        $timeout = 120;
-    }
+	$timeout = intval( get_option( 'rtbcb_responses_timeout', 600 ) );
+	if ( $timeout <= 0 ) {
+		$timeout = 600;
+	}
 
     $response = wp_remote_post(
         'https://api.openai.com/v1/responses',
