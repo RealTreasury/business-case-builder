@@ -16,7 +16,7 @@ const RTBCB_GPT5_DEFAULTS = {
     store: true,
     timeout: RTBCB_API_TIMEOUT,
     max_retries: 3,
-    max_retry_time: 60
+    max_retry_time: RTBCB_API_TIMEOUT
 };
 
 function estimateTokens(words) {
