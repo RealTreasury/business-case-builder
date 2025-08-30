@@ -275,8 +275,19 @@ class RTBCB_Router {
        $recommended_category = $business_case_data['recommended_category'] ?? ( $business_case_data['recommendation']['recommended'] ?? 'treasury_management_system' );
        $category_details     = $business_case_data['category_info'] ?? ( $business_case_data['recommendation']['category_info'] ?? [] );
 
-       // Create structured data format expected by template.
-       $report_data = [
+	// Prepare operational and risk data with fallbacks.
+	$operational_analysis = (array) ( $business_case_data['operational_analysis'] ?? [] );
+	if ( empty( $operational_analysis ) ) {
+	$operational_analysis = [ __( 'No data provided', 'rtbcb' ) ];
+	}
+	
+	$implementation_risks = (array) ( $business_case_data['risks'] ?? [] );
+	if ( empty( $implementation_risks ) ) {
+	$implementation_risks = [ __( 'No data provided', 'rtbcb' ) ];
+	}
+	
+	// Create structured data format expected by template.
+	$report_data = [
            'metadata'            => [
                'company_name'    => $company_name,
                'analysis_date'   => current_time( 'Y-m-d' ),
@@ -313,15 +324,15 @@ class RTBCB_Router {
                    ],
                ],
            ],
-           'technology_strategy' => [
-               'recommended_category' => $recommended_category,
-               'category_details'     => $category_details,
-           ],
-           'operational_insights' => $business_case_data['operational_analysis'] ?? [],
-           'risk_analysis'        => [
-               'implementation_risks' => $business_case_data['risks'] ?? [],
-           ],
-           'action_plan'          => [
+			'technology_strategy' => [
+				'recommended_category' => $recommended_category,
+				'category_details'     => $category_details,
+			],
+			'operational_insights' => $operational_analysis,
+			'risk_analysis'        => [
+				'implementation_risks' => $implementation_risks,
+			],
+	           'action_plan'          => [
                'immediate_steps'   => $this->extract_immediate_steps( $business_case_data ),
                'short_term_milestones' => $this->extract_short_term_steps( $business_case_data ),
                'long_term_objectives'  => $this->extract_long_term_steps( $business_case_data ),
