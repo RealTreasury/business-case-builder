@@ -101,20 +101,20 @@ class Real_Treasury_BCB {
         // Plugin action links
         add_filter( 'plugin_action_links_' . plugin_basename( RTBCB_FILE ), [ $this, 'plugin_action_links' ] );
 
-        // AJAX handlers
-        add_action( 'wp_ajax_rtbcb_generate_case', [ 'RTBCB_Ajax', 'generate_comprehensive_case' ] );
-        add_action( 'wp_ajax_nopriv_rtbcb_generate_case', [ 'RTBCB_Ajax', 'generate_comprehensive_case' ] );
-        add_action( 'wp_ajax_rtbcb_job_status', [ 'RTBCB_Ajax', 'get_job_status' ] );
-        add_action( 'wp_ajax_nopriv_rtbcb_job_status', [ 'RTBCB_Ajax', 'get_job_status' ] );
-        add_action( 'wp_ajax_rtbcb_openai_responses', 'rtbcb_proxy_openai_responses' );
-        add_action( 'wp_ajax_nopriv_rtbcb_openai_responses', 'rtbcb_proxy_openai_responses' );
-        add_action( 'wp_ajax_rtbcb_openai_responses_status', 'rtbcb_get_openai_responses_status' );
-        add_action( 'wp_ajax_nopriv_rtbcb_openai_responses_status', 'rtbcb_get_openai_responses_status' );
-
-        add_action( 'wp_ajax_rtbcb_generate_case_enhanced', [ $this, 'ajax_generate_comprehensive_case_enhanced' ] );
-        add_action( 'wp_ajax_nopriv_rtbcb_generate_case_enhanced', [ $this, 'ajax_generate_comprehensive_case_enhanced' ] );
-
-        $this->init_hooks_debug();
+		// AJAX handlers - Use the enhanced version
+		add_action( 'wp_ajax_rtbcb_generate_case', [ $this, 'ajax_generate_comprehensive_case_enhanced' ] );
+		add_action( 'wp_ajax_nopriv_rtbcb_generate_case', [ $this, 'ajax_generate_comprehensive_case_enhanced' ] );
+		
+		// Job status handlers
+		add_action( 'wp_ajax_rtbcb_job_status', [ 'RTBCB_Ajax', 'get_job_status' ] );
+		add_action( 'wp_ajax_nopriv_rtbcb_job_status', [ 'RTBCB_Ajax', 'get_job_status' ] );
+		
+		// OpenAI proxy handlers
+		add_action( 'wp_ajax_rtbcb_openai_responses', 'rtbcb_proxy_openai_responses' );
+		add_action( 'wp_ajax_nopriv_rtbcb_openai_responses', 'rtbcb_proxy_openai_responses' );
+		
+		// Debug handlers
+		$this->init_hooks_debug();
     }
 
     /**
@@ -122,12 +122,14 @@ class Real_Treasury_BCB {
      *
      * @return void
      */
-    private function init_hooks_debug() {
-        add_action( 'wp_ajax_rtbcb_debug_test', [ $this, 'debug_ajax_handler' ] );
-        add_action( 'wp_ajax_nopriv_rtbcb_debug_test', [ $this, 'debug_ajax_handler' ] );
-        add_action( 'wp_ajax_rtbcb_simple_test', [ $this, 'ajax_generate_case_simple' ] );
-        add_action( 'wp_ajax_nopriv_rtbcb_simple_test', [ $this, 'ajax_generate_case_simple' ] );
-    }
+		private function init_hooks_debug() {
+		add_action( 'wp_ajax_rtbcb_debug_test', [ $this, 'debug_ajax_handler' ] );
+		add_action( 'wp_ajax_nopriv_rtbcb_debug_test', [ $this, 'debug_ajax_handler' ] );
+		add_action( 'wp_ajax_rtbcb_simple_test', [ $this, 'ajax_generate_case_simple' ] );
+		add_action( 'wp_ajax_nopriv_rtbcb_simple_test', [ $this, 'ajax_generate_case_simple' ] );
+		add_action( 'wp_ajax_rtbcb_debug_report', [ $this, 'debug_report_generation' ] );
+		add_action( 'wp_ajax_nopriv_rtbcb_debug_report', [ $this, 'debug_report_generation' ] );
+		}
 
     /**
      * Include required files.
@@ -396,13 +398,15 @@ class Real_Treasury_BCB {
 	        RTBCB_VERSION
 	    );
 
-	    // Enhanced Report Styles
-	    wp_enqueue_style(
-	        'rtbcb-enhanced-report',
-	        RTBCB_URL . 'public/css/enhanced-report.css',
-	        [ 'rtbcb-style' ],
-	        RTBCB_VERSION
-	    );
+		// Enhanced Report Styles
+		if ( $this->should_use_comprehensive_template() ) {
+			wp_enqueue_style(
+			'rtbcb-enhanced-report',
+			RTBCB_URL . 'public/css/enhanced-report.css',
+			[ 'rtbcb-style' ],
+			RTBCB_VERSION
+			);
+		}
 
 	    // Chart.js for report visualizations
 	    wp_enqueue_script(
@@ -528,6 +532,23 @@ class Real_Treasury_BCB {
         // Load on any page - let WordPress handle caching
         return true;
     }
+
+		/**
+		 * Determine if comprehensive template should be used.
+		 *
+		 * @return bool
+		 */
+		private function should_use_comprehensive_template() {
+		$comprehensive_enabled = get_option( 'rtbcb_comprehensive_analysis', true );
+		
+		$template_path  = RTBCB_DIR . 'templates/comprehensive-report-template.php';
+		$template_exists = file_exists( $template_path );
+		
+		$css_path   = RTBCB_DIR . 'public/css/enhanced-report.css';
+		$css_exists = file_exists( $css_path );
+		
+		return $comprehensive_enabled && $template_exists && $css_exists;
+		}
 
     /**
      * Shortcode handler.
@@ -1582,30 +1603,24 @@ class Real_Treasury_BCB {
     *
     * @return string
     */
-   private function get_comprehensive_report_html( $business_case_data ) {
-       $template_path = RTBCB_DIR . 'templates/comprehensive-report-template.php';
-
-       // Fall back to basic template if comprehensive template doesn't exist.
-       if ( ! file_exists( $template_path ) ) {
-           $template_path = RTBCB_DIR . 'templates/report-template.php';
-       }
-
-       if ( ! file_exists( $template_path ) ) {
-           error_log( 'RTBCB: No report template found at: ' . $template_path );
-           return '';
-       }
-
-       $business_case_data = is_array( $business_case_data ) ? $business_case_data : [];
-
-       // Transform data structure for comprehensive template.
-       $report_data = $this->transform_data_for_template( $business_case_data );
-
-       ob_start();
-       include $template_path;
-       $html = ob_get_clean();
-
-       return wp_kses_post( $html );
-   }
+		private function get_comprehensive_report_html( $business_case_data ) {
+		if ( $this->should_use_comprehensive_template() ) {
+		$template_path = RTBCB_DIR . 'templates/comprehensive-report-template.php';
+		} else {
+		$template_path = RTBCB_DIR . 'templates/report-template.php';
+		}
+		if ( ! file_exists( $template_path ) ) {
+		error_log( 'RTBCB: No report template found at: ' . $template_path );
+		return '';
+		}
+		$business_case_data = is_array( $business_case_data ) ? $business_case_data : [];
+		// Transform data structure for template.
+		$report_data = $this->transform_data_for_template( $business_case_data );
+		ob_start();
+		include $template_path;
+		$html = ob_get_clean();
+		return wp_kses_post( $html );
+		}
 
    /**
     * Transform LLM response data into the structure expected by comprehensive template.
@@ -2066,6 +2081,39 @@ class Real_Treasury_BCB {
             ]
         );
     }
+
+		/**
+		* Output debug information for report generation.
+		*
+		* @return void
+		*/
+		public function debug_report_generation() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+		wp_die( 'Insufficient permissions' );
+		}
+		$debug_info = [
+		'comprehensive_template_exists' => file_exists( RTBCB_DIR . 'templates/comprehensive-report-template.php' ),
+		'basic_template_exists'        => file_exists( RTBCB_DIR . 'templates/report-template.php' ),
+		'enhanced_css_exists'         => file_exists( RTBCB_DIR . 'public/css/enhanced-report.css' ),
+		'chart_js_exists'             => file_exists( RTBCB_DIR . 'public/js/chart.min.js' ),
+		'comprehensive_analysis_enabled' => get_option( 'rtbcb_comprehensive_analysis', true ),
+		'openai_key_configured'       => ! empty( get_option( 'rtbcb_openai_api_key' ) ),
+		'required_classes'            => [
+		'RTBCB_Calculator'          => class_exists( 'RTBCB_Calculator' ),
+		'RTBCB_Category_Recommender'=> class_exists( 'RTBCB_Category_Recommender' ),
+		'RTBCB_LLM'                 => class_exists( 'RTBCB_LLM' ),
+		'RTBCB_Leads'               => class_exists( 'RTBCB_Leads' ),
+		'RTBCB_RAG'                 => class_exists( 'RTBCB_RAG' ),
+		],
+		'memory_limit'               => ini_get( 'memory_limit' ),
+		'max_execution_time'         => ini_get( 'max_execution_time' ),
+		'wordpress_version'          => get_bloginfo( 'version' ),
+		'php_version'                => PHP_VERSION,
+		];
+		header( 'Content-Type: application/json' );
+		echo wp_json_encode( $debug_info, JSON_PRETTY_PRINT );
+		exit;
+		}
 }
 
 // Initialize the plugin
