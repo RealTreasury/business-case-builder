@@ -718,11 +718,37 @@ function rtbcb_log_memory_usage( $stage ) {
 }
 
 function rtbcb_get_memory_status() {
-	return [
-		'current' => memory_get_usage( true ),
-		'peak'    => memory_get_peak_usage( true ),
-		'limit'   => wp_convert_hr_to_bytes( ini_get( 'memory_limit' ) ),
-	];
+        return [
+                'current' => memory_get_usage( true ),
+                'peak'    => memory_get_peak_usage( true ),
+                'limit'   => wp_convert_hr_to_bytes( ini_get( 'memory_limit' ) ),
+        ];
+}
+
+/**
+ * Determine if provided inputs qualify for synchronous processing.
+ *
+ * Simple cases with minimal data can be handled without background jobs.
+ *
+ * @param array $user_inputs Sanitized user inputs.
+ * @return bool True when synchronous execution is allowed.
+ */
+function rtbcb_is_simple_case( $user_inputs ) {
+	$user_inputs = is_array( $user_inputs ) ? $user_inputs : [];
+
+	$num_banks = absint( $user_inputs['num_banks'] ?? 0 );
+	$ftes      = absint( $user_inputs['ftes'] ?? 0 );
+	$hours     = absint( $user_inputs['hours_reconciliation'] ?? 0 ) + absint( $user_inputs['hours_cash_positioning'] ?? 0 );
+
+	$is_simple = ( $num_banks <= 2 && $ftes <= 2 && $hours <= 20 );
+
+	/**
+	 * Filter whether a case is simple enough for synchronous execution.
+	 *
+	 * @param bool  $is_simple   Whether case is considered simple.
+	 * @param array $user_inputs User input data.
+	 */
+	return (bool) apply_filters( 'rtbcb_is_simple_case', $is_simple, $user_inputs );
 }
 
 /**
