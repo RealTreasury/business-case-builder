@@ -1198,16 +1198,54 @@ function rtbcb_proxy_openai_responses() {
     if ( empty( $body ) ) {
         wp_send_json_error( [ 'message' => __( 'Missing request body.', 'rtbcb' ) ], 400 );
     }
+
     $body_array = json_decode( $body, true );
     if ( ! is_array( $body_array ) ) {
         $body_array = [];
     }
 
-    $config              = rtbcb_get_gpt5_config();
-    $max_output_tokens   = intval( $body_array['max_output_tokens'] ?? $config['max_output_tokens'] );
-    $max_output_tokens   = min( 50000, max( 256, $max_output_tokens ) );
+    $job_id = wp_generate_uuid4();
+
+    wp_schedule_single_event(
+        time(),
+        'rtbcb_run_openai_responses_job',
+        [ $job_id, $body_array ]
+    );
+
+    wp_send_json_success( [ 'job_id' => $job_id ] );
+}
+
+/**
+ * Background handler for OpenAI Responses jobs.
+ *
+ * @param string $job_id     Job identifier.
+ * @param array  $body_array Request body array.
+ * @return void
+ */
+function rtbcb_process_openai_responses_job( $job_id, $body_array ) {
+    $job_id = sanitize_key( $job_id );
+    if ( ! is_array( $body_array ) ) {
+        $body_array = [];
+    }
+
+    $api_key = get_option( 'rtbcb_openai_api_key' );
+    if ( empty( $api_key ) ) {
+        set_transient(
+            'rtbcb_openai_job_' . $job_id,
+            [
+                'code' => 500,
+                'body' => [ 'error' => __( 'OpenAI API key not configured.', 'rtbcb' ) ],
+            ],
+            MINUTE_IN_SECONDS * 10
+        );
+        return;
+    }
+
+    $config            = rtbcb_get_gpt5_config();
+    $max_output_tokens = intval( $body_array['max_output_tokens'] ?? $config['max_output_tokens'] );
+    $max_output_tokens = min( 50000, max( 256, $max_output_tokens ) );
     $body_array['max_output_tokens'] = $max_output_tokens;
-    $body              = wp_json_encode( $body_array );
+    $body = wp_json_encode( $body_array );
 
     $timeout = intval( get_option( 'rtbcb_responses_timeout', 120 ) );
     if ( $timeout <= 0 ) {
@@ -1226,13 +1264,16 @@ function rtbcb_proxy_openai_responses() {
         ]
     );
 
-    $decoded = [];
     if ( is_wp_error( $response ) ) {
-        $decoded = [ 'error' => $response->get_error_message() ];
+        $result = [
+            'code' => 500,
+            'body' => [ 'error' => $response->get_error_message() ],
+        ];
         if ( class_exists( 'RTBCB_API_Log' ) ) {
-            RTBCB_API_Log::save_log( $body_array, $decoded, get_current_user_id() );
+            RTBCB_API_Log::save_log( $body_array, $result['body'], get_current_user_id() );
         }
-        wp_send_json_error( [ 'message' => $response->get_error_message() ], 500 );
+        set_transient( 'rtbcb_openai_job_' . $job_id, $result, MINUTE_IN_SECONDS * 10 );
+        return;
     }
 
     $code      = wp_remote_retrieve_response_code( $response );
@@ -1246,7 +1287,37 @@ function rtbcb_proxy_openai_responses() {
         RTBCB_API_Log::save_log( $body_array, $decoded, get_current_user_id() );
     }
 
-    wp_send_json( $decoded, $code );
+    set_transient(
+        'rtbcb_openai_job_' . $job_id,
+        [
+            'code' => $code,
+            'body' => $decoded,
+        ],
+        MINUTE_IN_SECONDS * 10
+    );
+}
+
+if ( function_exists( 'add_action' ) ) {
+    add_action( 'rtbcb_run_openai_responses_job', 'rtbcb_process_openai_responses_job', 10, 2 );
+}
+
+/**
+ * Retrieve the result of a queued OpenAI Responses job.
+ *
+ * @return void
+ */
+function rtbcb_get_openai_job_status() {
+    $job_id = isset( $_REQUEST['job_id'] ) ? sanitize_key( wp_unslash( $_REQUEST['job_id'] ) ) : '';
+    if ( '' === $job_id ) {
+        wp_send_json_error( [ 'message' => __( 'Invalid job ID.', 'rtbcb' ) ], 400 );
+    }
+
+    $result = get_transient( 'rtbcb_openai_job_' . $job_id );
+    if ( false === $result ) {
+        wp_send_json( [ 'pending' => true ], 202 );
+    }
+
+    wp_send_json( $result['body'], intval( $result['code'] ) );
 }
 
 /**

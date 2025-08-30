@@ -77,6 +77,7 @@ async function generateProfessionalReport(businessContext) {
     }
 
     const maxAttempts = cfg.max_retries || 3;
+    let jobId;
     let lastError;
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -90,43 +91,61 @@ async function generateProfessionalReport(businessContext) {
                 body: formData
             });
 
-            if (response.ok) {
-                let data;
-                try {
-                    data = await response.json();
-                } catch (parseError) {
-                    lastError = parseError;
-                    continue;
-                }
-
-                if (data.error) {
-                    console.error('Attempt ' + attempt + ' API error details:', data.error);
-                    lastError = new Error(data.error.message || 'Responses API error');
-                    continue;
-                }
-
-                const htmlContent = data.output_text;
-                const cleanedHTML = htmlContent
-                    .replace(/```html\n?/g, '')
-                    .replace(/```\n?/g, '')
-                    .trim();
-                return cleanedHTML;
+            const data = await response.json();
+            if (response.ok && data && data.success && data.data && data.data.job_id) {
+                jobId = data.data.job_id;
+                break;
             }
 
-            if (rtbcbReport && rtbcbReport.debug) {
-                const responseText = await response.text();
-                console.error('Attempt ' + attempt + ' failed:', responseText);
-                console.error('RTBCB request body:', requestBody);
-            }
-            lastError = new Error('HTTP ' + response.status + ' ' + response.statusText);
+            lastError = new Error('Queueing failed');
         } catch (error) {
-            console.error('Error generating report (attempt ' + attempt + '):', error);
             lastError = error;
         }
     }
 
-    console.error('All attempts to generate report failed:', lastError);
-    throw new Error(lastError && lastError.message ? lastError.message : 'Unable to generate report at this time. Please try again later.');
+    if (!jobId) {
+        console.error('Failed to queue OpenAI job:', lastError);
+        throw new Error(lastError && lastError.message ? lastError.message : 'Unable to queue report generation.');
+    }
+
+    const pollInterval = 3000;
+    while (true) {
+        const pollData = new FormData();
+        pollData.append('action', 'rtbcb_openai_job_status');
+        pollData.append('job_id', jobId);
+
+        const pollResponse = await fetch(rtbcbReport.ajax_url, {
+            method: 'POST',
+            body: pollData
+        });
+
+        if (pollResponse.status === 202) {
+            await new Promise(resolve => setTimeout(resolve, pollInterval));
+            continue;
+        }
+
+        if (pollResponse.ok) {
+            let data;
+            try {
+                data = await pollResponse.json();
+            } catch (error) {
+                throw new Error('Invalid JSON from status endpoint');
+            }
+
+            if (data.error) {
+                throw new Error(data.error.message || 'Responses API error');
+            }
+
+            const htmlContent = data.output_text;
+            const cleanedHTML = htmlContent
+                .replace(/```html\n?/g, '')
+                .replace(/```\n?/g, '')
+                .trim();
+            return cleanedHTML;
+        }
+
+        throw new Error('HTTP ' + pollResponse.status + ' ' + pollResponse.statusText);
+    }
 }
 
 function sanitizeReportHTML(htmlContent) {

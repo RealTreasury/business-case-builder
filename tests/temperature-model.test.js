@@ -27,14 +27,27 @@ async function runTests() {
             if (!options) {
                 return Promise.resolve({ ok: true, text: () => Promise.resolve(templateHtml) });
             }
-            capturedBody = JSON.parse(options.body.store.body);
-            return Promise.resolve({
-                ok: true,
-                json: () => Promise.resolve({ output_text: '<html></html>' }),
-                status: 200,
-                statusText: 'OK',
-                text: () => Promise.resolve('')
-            });
+            const action = options.body.store.action;
+            if (action === 'rtbcb_openai_responses') {
+                capturedBody = JSON.parse(options.body.store.body);
+                return Promise.resolve({
+                    ok: true,
+                    json: () => Promise.resolve({ success: true, data: { job_id: 'job-123' } }),
+                    status: 200,
+                    statusText: 'OK',
+                    text: () => Promise.resolve('')
+                });
+            }
+            if (action === 'rtbcb_openai_job_status') {
+                return Promise.resolve({
+                    ok: true,
+                    json: () => Promise.resolve({ output_text: '<html></html>' }),
+                    status: 200,
+                    statusText: 'OK',
+                    text: () => Promise.resolve('')
+                });
+            }
+            return Promise.resolve({ ok: false, status: 404, statusText: 'Not Found', text: () => Promise.resolve('') });
         };
 
         global.document = { getElementById: () => null };
