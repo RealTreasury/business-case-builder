@@ -10,6 +10,8 @@
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
+
+$rag_context = $business_case_data['rag_context'] ?? [];
 ?>
 <div class="rtbcb-report">
     <h2><?php echo esc_html__( 'Business Case Report', 'rtbcb' ); ?></h2>
@@ -70,4 +72,15 @@ if ( ! defined( 'ABSPATH' ) ) {
     <?php if ( ! empty( $business_case_data['recommended_category'] ) ) : ?>
         <p><?php echo esc_html__( 'Recommended Category:', 'rtbcb' ) . ' ' . esc_html( $business_case_data['recommended_category'] ); ?></p>
     <?php endif; ?>
+
+	<h3><?php echo esc_html__( 'Context', 'rtbcb' ); ?></h3>
+	<?php if ( ! empty( $rag_context ) ) : ?>
+		<ul>
+			<?php foreach ( (array) $rag_context as $context_item ) : ?>
+				<li><?php echo esc_html( $context_item ); ?></li>
+			<?php endforeach; ?>
+		</ul>
+	<?php else : ?>
+		<p><?php echo esc_html__( 'No additional context available.', 'rtbcb' ); ?></p>
+	<?php endif; ?>
 </div>
