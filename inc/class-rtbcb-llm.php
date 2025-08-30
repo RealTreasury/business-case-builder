@@ -892,7 +892,7 @@ USER,
      * @return array|WP_Error Structured analysis array or error object.
      */
     private function parse_comprehensive_response( $response ) {
-        $parsed_response = rtbcb_parse_gpt5_response( $response );
+        $parsed_response = rtbcb_parse_gpt5_response( $response, true );
         $content         = $parsed_response['output_text'];
         $decoded         = $parsed_response['raw'];
 
@@ -2672,7 +2672,9 @@ return $analysis;
 
         $timeout   = intval( $this->gpt5_config['timeout'] ?? 180 );
         $payload   = wp_json_encode( $body );
-        $streamed  = '';
+        $buffer    = '';
+        $last_event = '';
+        $last_chunk = '';
         $ch        = curl_init( $endpoint );
         curl_setopt( $ch, CURLOPT_HTTPHEADER, [
             'Authorization: Bearer ' . $this->api_key,
@@ -2681,11 +2683,28 @@ return $analysis;
         curl_setopt( $ch, CURLOPT_POST, true );
         curl_setopt( $ch, CURLOPT_POSTFIELDS, $payload );
         curl_setopt( $ch, CURLOPT_TIMEOUT, $timeout );
-        curl_setopt( $ch, CURLOPT_WRITEFUNCTION, function ( $curl, $data ) use ( &$streamed, $chunk_handler ) {
-            $streamed .= $data;
+        curl_setopt( $ch, CURLOPT_WRITEFUNCTION, function ( $curl, $data ) use ( &$buffer, &$last_event, &$last_chunk, $chunk_handler ) {
+            $last_chunk = $data;
             if ( is_callable( $chunk_handler ) ) {
                 call_user_func( $chunk_handler, $data );
             }
+
+            $buffer .= $data;
+            while ( false !== ( $pos = strpos( $buffer, "\n" ) ) ) {
+                $line   = trim( substr( $buffer, 0, $pos ) );
+                $buffer = substr( $buffer, $pos + 1 );
+                if ( '' === $line ) {
+                    continue;
+                }
+                if ( 0 === strpos( $line, 'data:' ) ) {
+                    $payload_line = trim( substr( $line, strpos( $line, ':' ) + 1 ) );
+                    if ( '[DONE]' === $payload_line ) {
+                        continue;
+                    }
+                    $last_event = $payload_line;
+                }
+            }
+
             return strlen( $data );
         } );
 
@@ -2706,23 +2725,17 @@ return $analysis;
             );
         }
 
-        $last_event = '';
-        $lines      = explode( "\n", $streamed );
-        foreach ( $lines as $line ) {
-            $line = trim( $line );
-            if ( '' === $line ) {
-                continue;
-            }
+        if ( '' !== trim( $buffer ) ) {
+            $line = trim( $buffer );
             if ( 0 === strpos( $line, 'data:' ) ) {
                 $payload_line = trim( substr( $line, strpos( $line, ':' ) + 1 ) );
-                if ( '[DONE]' === $payload_line ) {
-                    continue;
+                if ( '[DONE]' !== $payload_line ) {
+                    $last_event = $payload_line;
                 }
-                $last_event = $payload_line;
             }
         }
 
-        $response_body = $last_event ? $last_event : $streamed;
+        $response_body = $last_event ? $last_event : $last_chunk;
 
         $decoded = json_decode( $response_body, true );
 
@@ -2843,7 +2856,7 @@ return $analysis;
             ? $response
             : [ 'body' => wp_json_encode( is_array( $response ) ? $response : [] ) ];
 
-        $parsed = rtbcb_parse_gpt5_response( $response_for_parser );
+        $parsed = rtbcb_parse_gpt5_response( $response_for_parser, true );
         $content = $parsed['output_text'];
         $usage   = $parsed['raw']['usage'] ?? [];
 
@@ -2851,14 +2864,16 @@ return $analysis;
         $reasoning_tokens  = intval( $usage['reasoning_tokens'] ?? 0 );
         $total_tokens      = intval( $usage['total_tokens'] ?? 0 );
         $response_length   = strlen( $content );
+        $memory            = rtbcb_get_memory_status();
 
         $log_message = sprintf(
-            'RTBCB GPT5 Call: context_size=%d, completion_tokens=%d, reasoning_tokens=%d, total_tokens=%d, response_length=%d',
+            'RTBCB GPT5 Call: context_size=%d, completion_tokens=%d, reasoning_tokens=%d, total_tokens=%d, response_length=%d, peak_memory=%d',
             $context_size,
             $completion_tokens,
             $reasoning_tokens,
             $total_tokens,
-            $response_length
+            $response_length,
+            intval( $memory['peak'] ?? 0 )
         );
 
         if ( ! empty( $error ) ) {
@@ -3023,7 +3038,8 @@ return $analysis;
  * string is not found, it manually walks the `output` chunks, prioritizing
  * message content before reasoning.
  *
- * @param array $response HTTP response array from wp_remote_post().
+ * @param array $response  HTTP response array from wp_remote_post().
+ * @param bool  $store_raw Optional. Include full raw payload. Default false.
  * @return array {
  *     @type string $output_text    Combined output text from the response.
  *     @type array  $reasoning      Reasoning segments provided by the model.
@@ -3032,7 +3048,7 @@ return $analysis;
  *     @type bool   $truncated      Whether the response hit the token limit.
  * }
  */
-function rtbcb_parse_gpt5_response( $response ) {
+function rtbcb_parse_gpt5_response( $response, $store_raw = false ) {
     $body    = wp_remote_retrieve_body( $response );
     $decoded = json_decode( $body, true );
 
@@ -3139,7 +3155,7 @@ function rtbcb_parse_gpt5_response( $response ) {
         'output_text'    => $output_text,
         'reasoning'      => $reasoning,
         'function_calls' => $function_calls,
-        'raw'            => $decoded,
+        'raw'            => $store_raw ? $decoded : [],
         'truncated'      => $truncated,
     ];
 }
