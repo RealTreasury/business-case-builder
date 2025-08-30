@@ -742,14 +742,31 @@ return $use_comprehensive;
 	
 	try {
 	// Collect and validate user inputs
-	$user_inputs = $this->collect_and_validate_inputs();
-	if ( is_wp_error( $user_inputs ) ) {
-	wp_send_json_error( [ 'message' => $user_inputs->get_error_message() ], 400 );
-	return;
-	}
-	
-	// Calculate ROI scenarios
-	if ( ! class_exists( 'RTBCB_Calculator' ) ) {
+        $user_inputs = $this->collect_and_validate_inputs();
+        if ( is_wp_error( $user_inputs ) ) {
+        wp_send_json_error( [ 'message' => $user_inputs->get_error_message() ], 400 );
+        return;
+        }
+
+       // Decide between synchronous and background processing.
+       if ( ! rtbcb_is_simple_case( $user_inputs ) ) {
+       $job_id = rtbcb_queue_comprehensive_analysis( $user_inputs['company_name'] );
+       if ( is_wp_error( $job_id ) ) {
+       wp_send_json_error( [ 'message' => $job_id->get_error_message() ], 500 );
+       return;
+       }
+       wp_send_json_success(
+       [
+       'queued'  => true,
+       'job_id'  => $job_id,
+       'message' => __( 'Your analysis is being processed in the background.', 'rtbcb' ),
+       ]
+       );
+       return;
+       }
+
+        // Calculate ROI scenarios
+        if ( ! class_exists( 'RTBCB_Calculator' ) ) {
 	wp_send_json_error( [ 'message' => __( 'System error: Calculator not available.', 'rtbcb' ) ], 500 );
 	return;
 	}

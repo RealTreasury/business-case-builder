@@ -1726,3 +1726,43 @@ function rtbcb_get_report_allowed_html() {
 	return $allowed;
 }
 
+
+/**
+ * Determine if user inputs constitute a simple case that can be processed synchronously.
+ *
+ * A case is considered "simple" when the dataset is small enough that the synchronous
+ * generation path can finish within the request timeout. The current heuristic treats
+ * a case as simple when all of the following thresholds are met:
+ *
+ * - No more than 10 banks.
+ * - No more than 50 full-time employees.
+ * - No more than 200 combined hours of manual work (reconciliation and cash positioning).
+ * - The serialized input payload is under 5 KB.
+ *
+ * These values are intentionally conservative and may be adjusted as performance characteristics change.
+ *
+ * @param array $inputs User-provided form inputs.
+ * @return bool True when the case can be handled synchronously.
+ */
+function rtbcb_is_simple_case( $inputs ) {
+	$inputs = is_array( $inputs ) ? $inputs : [];
+
+	$num_banks              = isset( $inputs['num_banks'] ) ? absint( $inputs['num_banks'] ) : 0;
+	$ftes                   = isset( $inputs['ftes'] ) ? absint( $inputs['ftes'] ) : 0;
+	$hours_reconciliation   = isset( $inputs['hours_reconciliation'] ) ? floatval( $inputs['hours_reconciliation'] ) : 0;
+	$hours_cash_positioning = isset( $inputs['hours_cash_positioning'] ) ? floatval( $inputs['hours_cash_positioning'] ) : 0;
+	$payload_size           = strlen( wp_json_encode( $inputs ) );
+
+	// Thresholds for the heuristic. Update as needed.
+	$max_banks        = 10;
+	$max_ftes         = 50;
+	$max_hours        = 200; // Combined hours of manual work.
+	$max_payload_size = 5 * 1024; // Approximately 5KB.
+
+	return (
+	$num_banks <= $max_banks &&
+	$ftes <= $max_ftes &&
+	( $hours_reconciliation + $hours_cash_positioning ) <= $max_hours &&
+	$payload_size <= $max_payload_size
+	);
+}
