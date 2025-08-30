@@ -114,8 +114,8 @@ $embedding_models = [
                     <label for="rtbcb_gpt5_max_output_tokens"><?php echo esc_html__( 'Max Output Tokens', 'rtbcb' ); ?></label>
                 </th>
                 <td>
-                    <input type="number" id="rtbcb_gpt5_max_output_tokens" name="rtbcb_gpt5_max_output_tokens" value="<?php echo esc_attr( $gpt5_max_output_tokens ); ?>" class="small-text" min="256" max="8000" />
-                    <p class="description"><?php echo esc_html__( 'Maximum tokens returned by OpenAI (max 8000).', 'rtbcb' ); ?></p>
+                    <input type="number" id="rtbcb_gpt5_max_output_tokens" name="rtbcb_gpt5_max_output_tokens" value="<?php echo esc_attr( $gpt5_max_output_tokens ); ?>" class="small-text" min="256" max="128000" />
+                    <p class="description"><?php echo esc_html__( 'Maximum tokens returned by OpenAI (max 128000).', 'rtbcb' ); ?></p>
                 </td>
             </tr>
             <tr>

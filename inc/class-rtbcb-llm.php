@@ -107,8 +107,8 @@ class RTBCB_LLM {
     private function estimate_tokens( $words ) {
         $words  = max( 0, intval( $words ) );
         $tokens = (int) ceil( $words * 1.5 );
-        $limit  = intval( $this->gpt5_config['max_output_tokens'] ?? 8000 );
-        $limit  = min( 8000, max( 256, $limit ) );
+$limit  = intval( $this->gpt5_config['max_output_tokens'] ?? 8000 );
+$limit  = min( 128000, max( 256, $limit ) );
 
         return min( $tokens, $limit );
     }
@@ -1809,7 +1809,7 @@ SYSTEM;
         $model_name       = rtbcb_normalize_model_name( $model_name );
         $default_tokens    = intval( $this->gpt5_config['max_output_tokens'] ?? 8000 );
         $max_output_tokens = intval( $max_output_tokens ?? $default_tokens );
-        $max_output_tokens = min( 8000, max( 256, $max_output_tokens ) );
+$max_output_tokens = min( 128000, max( 256, $max_output_tokens ) );
 
         if ( is_array( $prompt ) && isset( $prompt['input'] ) ) {
             $instructions = sanitize_textarea_field( $prompt['instructions'] ?? '' );
