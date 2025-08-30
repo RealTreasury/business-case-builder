@@ -92,8 +92,15 @@ async function handleSubmit(e) {
     var formContainer = document.querySelector('.rtbcb-form-container');
 
     // Show progress indicator
-    if (formContainer) formContainer.style.display = 'none';
-    if (progressContainer) progressContainer.style.display = 'block';
+    if (formContainer) {
+        formContainer.style.display = 'none';
+    }
+    if (progressContainer) {
+        if (rtbcbAjax && rtbcbAjax.strings && rtbcbAjax.strings.generating) {
+            progressContainer.textContent = rtbcbAjax.strings.generating;
+        }
+        progressContainer.style.display = 'block';
+    }
     if (typeof rtbcbAjax === 'undefined' || !rtbcbAjax.ajax_url) {
         handleSubmissionError('Unable to submit form. Please refresh the page and try again.', '');
         rtbcbIsSubmitting = false;
@@ -150,26 +157,12 @@ async function handleSubmit(e) {
         return;
     }
 
-    // On success, display the report
-    var reportContainer = document.getElementById('rtbcb-report-container');
-    if (progressContainer) progressContainer.style.display = 'none';
-    if (reportContainer) {
-        // Sanitize server-provided HTML before injecting to prevent XSS.
-        // Only allow expected markup needed for business case output.
-        var allowedTags = [
-            'a', 'p', 'br', 'strong', 'em', 'ul', 'ol', 'li',
-            'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span',
-            'table', 'thead', 'tbody', 'tr', 'th', 'td'
-        ];
-        var allowedAttr = { a: [ 'href', 'title', 'target', 'rel' ], '*': [ 'style' ] };
-        var sanitized = typeof DOMPurify !== 'undefined'
-            ? DOMPurify.sanitize(
-                result.data.report_html,
-                { ALLOWED_TAGS: allowedTags, ALLOWED_ATTR: allowedAttr }
-            )
-            : result.data.report_html;
-        reportContainer.innerHTML = sanitized;
-        reportContainer.style.display = 'block';
+    // On success, show confirmation message
+    if (progressContainer) {
+        if (rtbcbAjax && rtbcbAjax.strings && rtbcbAjax.strings.email_confirmation) {
+            progressContainer.textContent = rtbcbAjax.strings.email_confirmation;
+        }
+        progressContainer.style.display = 'block';
     }
 
     rtbcbIsSubmitting = false;

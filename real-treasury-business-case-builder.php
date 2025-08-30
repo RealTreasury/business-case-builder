@@ -426,6 +426,7 @@ class Real_Treasury_BCB {
                     'invalid_email'           => __( 'Please enter a valid email address.', 'rtbcb' ),
                     'required_field'          => __( 'This field is required.', 'rtbcb' ),
                     'select_pain_points'      => __( 'Please select at least one pain point.', 'rtbcb' ),
+                    'email_confirmation'     => __( 'Your report will arrive by email shortly.', 'rtbcb' ),
                 ],
                 'settings'    => [
                     'pdf_enabled'            => get_option( 'rtbcb_pdf_enabled', true ),
