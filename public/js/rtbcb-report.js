@@ -2,7 +2,7 @@
  * Generate and display professional reports using OpenAI.
  */
 
-const RTBCB_GPT5_MAX_TOKENS = 8000;
+const RTBCB_GPT5_MAX_TOKENS = 128000;
 const RTBCB_GPT5_DEFAULTS = {
     max_output_tokens: RTBCB_GPT5_MAX_TOKENS,
     text: { verbosity: 'medium' },
