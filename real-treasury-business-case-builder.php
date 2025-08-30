@@ -946,8 +946,23 @@ class Real_Treasury_BCB {
                     rtbcb_log_memory_usage( 'after_llm_generation' );
 
                     if ( is_wp_error( $comprehensive_analysis ) ) {
-                        $error_message   = $comprehensive_analysis->get_error_message();
-                        $llm_error_code  = method_exists( $comprehensive_analysis, 'get_error_code' ) ? $comprehensive_analysis->get_error_code() : '';
+                        $error_message  = $comprehensive_analysis->get_error_message();
+                        $llm_error_code = method_exists( $comprehensive_analysis, 'get_error_code' ) ? $comprehensive_analysis->get_error_code() : '';
+                        $error_data     = $comprehensive_analysis->get_error_data();
+                        $status         = is_array( $error_data ) && isset( $error_data['status'] ) ? (int) $error_data['status'] : 500;
+
+                        if ( 'llm_http_status' === $llm_error_code ) {
+                            rtbcb_log_error( 'E_LLM_HTTP_STATUS: ' . $error_message, [ 'status' => $status ] );
+                            wp_send_json_error(
+                                [
+                                    'message'    => $error_message,
+                                    'error_code' => 'E_LLM_HTTP_STATUS',
+                                ],
+                                $status
+                            );
+                            return;
+                        }
+
                         $error_code      = 'no_api_key' === $llm_error_code ? 'E_NO_API_KEY' : 'E_LLM_WP_ERROR';
                         rtbcb_log_error( $error_code . ': ' . $error_message, [ 'wp_error_code' => $llm_error_code ] );
                         $guidance        = __( 'Check the OpenAI API key setting in plugin options.', 'rtbcb' );

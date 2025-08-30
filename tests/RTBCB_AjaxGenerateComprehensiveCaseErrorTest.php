@@ -75,6 +75,9 @@ if ( ! class_exists( 'RTBCB_LLM' ) ) {
             if ( 'no_api_key' === self::$mode ) {
                 return new WP_Error( 'no_api_key', 'OpenAI API key not configured.' );
             }
+            if ( 'http_status' === self::$mode ) {
+                return new WP_Error( 'llm_http_status', 'Teapot', [ 'status' => 418 ] );
+            }
             return new WP_Error( 'llm_error', 'LLM failed' );
         }
     }
@@ -110,8 +113,13 @@ if ( ! class_exists( 'Real_Treasury_BCB' ) ) {
             $llm = new RTBCB_LLM();
             $comprehensive_analysis = $llm->generate_comprehensive_business_case( [], [], [] );
             if ( is_wp_error( $comprehensive_analysis ) ) {
-                $error_message = $comprehensive_analysis->get_error_message();
-                $error_code    = $comprehensive_analysis->get_error_code();
+                $error_message  = $comprehensive_analysis->get_error_message();
+                $error_code     = $comprehensive_analysis->get_error_code();
+                $error_data     = $comprehensive_analysis->get_error_data();
+                $status         = is_array( $error_data ) && isset( $error_data['status'] ) ? (int) $error_data['status'] : 500;
+                if ( 'llm_http_status' === $error_code ) {
+                    wp_send_json_error( [ 'message' => $error_message, 'error_code' => 'E_LLM_HTTP_STATUS' ], $status );
+                }
                 if ( 'no_api_key' === $error_code ) {
                     $response_message = __( 'Our AI analysis service is temporarily unavailable. Your submission has been saved and our team will follow up with a personalized business case.', 'rtbcb' );
                     if ( function_exists( 'wp_get_environment_type' ) && 'production' !== wp_get_environment_type() ) {
@@ -160,6 +168,24 @@ final class RTBCB_AjaxGenerateComprehensiveCaseErrorTest extends TestCase {
                 [
                     'success' => false,
                     'data'    => [ 'message' => 'Our AI analysis service is temporarily unavailable. Your submission has been saved and our team will follow up with a personalized business case.' ],
+                ],
+                $e->data
+            );
+        }
+    }
+
+    public function test_ajax_returns_http_status_error() {
+        RTBCB_LLM::$mode = 'http_status';
+        $plugin          = new Real_Treasury_BCB();
+        try {
+            $plugin->ajax_generate_comprehensive_case();
+            $this->fail( 'Expected RTBCB_JSON_Error was not thrown.' );
+        } catch ( RTBCB_JSON_Error $e ) {
+            $this->assertSame( 418, $e->status );
+            $this->assertSame(
+                [
+                    'success' => false,
+                    'data'    => [ 'message' => 'Teapot', 'error_code' => 'E_LLM_HTTP_STATUS' ],
                 ],
                 $e->data
             );

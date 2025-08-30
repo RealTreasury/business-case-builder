@@ -5,9 +5,7 @@
  * @package RealTreasuryBusinessCaseBuilder
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-    exit;
-}
+defined( 'ABSPATH' ) || exit;
 
 /**
  * Enhanced admin class with full feature integration.
@@ -1880,7 +1878,18 @@ class RTBCB_Admin {
         $analysis = $llm->generate_comprehensive_business_case( [ 'company_name' => $company_name ], [], $rag_context );
 
         if ( is_wp_error( $analysis ) ) {
-            wp_send_json_error( [ 'message' => $analysis->get_error_message() ] );
+            $error_message = $analysis->get_error_message();
+            $error_data    = $analysis->get_error_data();
+            $status        = is_array( $error_data ) && isset( $error_data['status'] ) ? (int) $error_data['status'] : 500;
+
+            wp_send_json_error(
+                [
+                    'message'    => $error_message,
+                    'error_code' => $analysis->get_error_code(),
+                ],
+                $status
+            );
+            return;
         }
 
         $timestamp = current_time( 'mysql' );

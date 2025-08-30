@@ -5,6 +5,8 @@
  * @package RealTreasuryBusinessCaseBuilder
  */
 
+defined( 'ABSPATH' ) || exit;
+
 /**
  * Class RTBCB_Router.
  */
@@ -69,7 +71,18 @@ class RTBCB_Router {
 
             // Check for LLM generation errors before proceeding.
             if ( is_wp_error( $business_case_data ) ) {
-                throw new Exception( $business_case_data->get_error_message() );
+                $error_message = $business_case_data->get_error_message();
+                $error_data    = $business_case_data->get_error_data();
+                $status        = is_array( $error_data ) && isset( $error_data['status'] ) ? (int) $error_data['status'] : 500;
+
+                wp_send_json_error(
+                    [
+                        'message'    => $error_message,
+                        'error_code' => $business_case_data->get_error_code(),
+                    ],
+                    $status
+                );
+                return;
             }
 
             // Generate report HTML based on type.

@@ -1614,6 +1614,28 @@ USER,
             );
         }
 
+        $code = intval( wp_remote_retrieve_response_code( $response ) );
+        if ( $code >= 400 ) {
+            $body_response = wp_remote_retrieve_body( $response );
+            $decoded       = json_decode( $body_response, true );
+
+            if ( is_array( $decoded ) ) {
+                if ( isset( $decoded['error']['message'] ) ) {
+                    $message = $decoded['error']['message'];
+                } elseif ( isset( $decoded['message'] ) ) {
+                    $message = $decoded['message'];
+                } else {
+                    $message = wp_json_encode( $decoded );
+                }
+            } else {
+                $message = $body_response;
+            }
+
+            $message = sanitize_text_field( $message );
+
+            return new WP_Error( 'llm_http_status', $message, [ 'status' => $code ] );
+        }
+
         return $response;
     }
 
