@@ -154,7 +154,7 @@ async function handleSubmit(e) {
         return;
     }
 
-    if (!result.success) {
+    if (!result.success || !result.data || !result.data.job_id) {
         var errorMessage = result.data && result.data.message ? result.data.message : 'An unknown error occurred.';
         var errorCode = result.data && result.data.error_code ? result.data.error_code : '';
         handleSubmissionError(errorMessage, errorCode);
@@ -162,25 +162,49 @@ async function handleSubmit(e) {
         return;
     }
 
-    // On success, show confirmation message then hide progress indicator
-    if (progressContainer) {
-        var progressTextSuccess = progressContainer.querySelector('.rtbcb-progress-text');
-        if (rtbcbAjax && rtbcbAjax.strings && rtbcbAjax.strings.email_confirmation) {
-            if (progressTextSuccess) {
-                progressTextSuccess.textContent = rtbcbAjax.strings.email_confirmation;
-            } else {
-                progressContainer.textContent = rtbcbAjax.strings.email_confirmation;
-            }
-        }
-        setTimeout(() => {
-            progressContainer.style.display = 'none';
-            if (formContainer) {
-                formContainer.style.display = 'block';
-            }
-        }, 3000);
-    }
+    pollJobStatus(result.data.job_id, progressContainer, formContainer);
+}
 
-    rtbcbIsSubmitting = false;
+async function pollJobStatus(jobId, progressContainer, formContainer) {
+    try {
+        const response = await fetch(`${rtbcbAjax.ajax_url}?action=rtbcb_job_status&job_id=${encodeURIComponent(jobId)}&rtbcb_nonce=${rtbcbAjax.nonce}`);
+        const data = await response.json();
+
+        if (!data.success) {
+            handleSubmissionError('Unable to retrieve job status.', '');
+            rtbcbIsSubmitting = false;
+            return;
+        }
+
+        const status = data.data.status;
+        if (status === 'completed') {
+            if (progressContainer) {
+                var progressTextSuccess = progressContainer.querySelector('.rtbcb-progress-text');
+                if (rtbcbAjax && rtbcbAjax.strings && rtbcbAjax.strings.email_confirmation) {
+                    if (progressTextSuccess) {
+                        progressTextSuccess.textContent = rtbcbAjax.strings.email_confirmation;
+                    } else {
+                        progressContainer.textContent = rtbcbAjax.strings.email_confirmation;
+                    }
+                }
+                setTimeout(() => {
+                    progressContainer.style.display = 'none';
+                    if (formContainer) {
+                        formContainer.style.display = 'block';
+                    }
+                }, 3000);
+            }
+            rtbcbIsSubmitting = false;
+        } else if (status === 'error') {
+            handleSubmissionError(data.data.message || 'Job failed.', '');
+            rtbcbIsSubmitting = false;
+        } else {
+            setTimeout(() => pollJobStatus(jobId, progressContainer, formContainer), 2000);
+        }
+    } catch (err) {
+        handleSubmissionError('Network error. Please try again later.', '');
+        rtbcbIsSubmitting = false;
+    }
 }
 
 // Ensure the form submission is handled by our new function

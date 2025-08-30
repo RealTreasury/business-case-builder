@@ -104,6 +104,8 @@ class Real_Treasury_BCB {
         // AJAX handlers
         add_action( 'wp_ajax_rtbcb_generate_case', [ 'RTBCB_Ajax', 'generate_comprehensive_case' ] );
         add_action( 'wp_ajax_nopriv_rtbcb_generate_case', [ 'RTBCB_Ajax', 'generate_comprehensive_case' ] );
+        add_action( 'wp_ajax_rtbcb_job_status', [ 'RTBCB_Ajax', 'get_job_status' ] );
+        add_action( 'wp_ajax_nopriv_rtbcb_job_status', [ 'RTBCB_Ajax', 'get_job_status' ] );
         add_action( 'wp_ajax_rtbcb_openai_responses', 'rtbcb_proxy_openai_responses' );
         add_action( 'wp_ajax_nopriv_rtbcb_openai_responses', 'rtbcb_proxy_openai_responses' );
         add_action( 'wp_ajax_rtbcb_openai_responses_status', 'rtbcb_get_openai_responses_status' );
@@ -148,6 +150,7 @@ class Real_Treasury_BCB {
         require_once RTBCB_DIR . 'inc/class-rtbcb-workflow-tracker.php';
         require_once RTBCB_DIR . 'inc/class-rtbcb-enhanced-calculator.php';
         require_once RTBCB_DIR . 'inc/class-rtbcb-intelligent-recommender.php';
+        require_once RTBCB_DIR . 'inc/class-rtbcb-background-job.php';
         require_once RTBCB_DIR . 'inc/class-rtbcb-ajax.php';
         require_once RTBCB_DIR . 'inc/class-rtbcb-logger.php';
 
