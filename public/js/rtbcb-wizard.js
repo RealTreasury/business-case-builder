@@ -531,27 +531,29 @@ class BusinessCaseBuilder {
             formContainer.style.display = 'none';
         }
 
-        // Create and show progress overlay
-        const companyName = this.form.querySelector('[name="company_name"]')?.value || 'your company';
-        const progressHTML = `
-            <div class="rtbcb-progress-overlay" style="position: relative; background: none;">
+        const progressContainer = document.getElementById('rtbcb-progress-container');
+        if (progressContainer) {
+            const companyName = this.form.querySelector('[name="company_name"]')?.value || 'your company';
+            progressContainer.innerHTML = `
                 <div class="rtbcb-progress-content">
                     <div class="rtbcb-progress-spinner"></div>
                     <div class="rtbcb-progress-text">Generating Your Business Case</div>
                     <div class="rtbcb-progress-step">
-                        <span class="rtbcb-progress-step-text">Analyzing ${companyName}'s treasury operations...</span>
+                        <span class="rtbcb-progress-step-text">Analyzing ${this.escapeHTML(companyName)}'s treasury operations...</span>
                     </div>
                 </div>
-            </div>
-        `;
-
-        const modalBody = this.form.closest('.rtbcb-modal-body');
-        if (modalBody) {
-            modalBody.insertAdjacentHTML('beforeend', progressHTML);
+            `;
+            progressContainer.style.display = 'flex';
         }
     }
 
     showResults(data) {
+        const progressContainer = document.getElementById('rtbcb-progress-container');
+        if (progressContainer) {
+            progressContainer.style.display = 'none';
+            progressContainer.innerHTML = '';
+        }
+
         // Close modal
         window.closeBusinessCaseModal();
 
@@ -765,58 +767,41 @@ class BusinessCaseBuilder {
     }
 
     showTimeoutError(message, diagnostics = {}) {
-        // Clear progress overlay if present
-        const progressOverlay = document.querySelector('.rtbcb-progress-overlay');
-        if (progressOverlay) {
-            progressOverlay.remove();
-        }
-
-        const formContainer = this.form.closest('.rtbcb-form-container');
-        const parent = formContainer ? formContainer.parentNode : this.form.parentNode;
-        const safeMessage = this.escapeHTML(message);
-        const requestInfo = diagnostics.requestId ? `<div>Request ID: ${this.escapeHTML(diagnostics.requestId)}</div>` : '';
-        const timestampInfo = diagnostics.timestamp ? `<div>Timestamp: ${this.escapeHTML(diagnostics.timestamp)}</div>` : '';
-        const diagHTML = requestInfo || timestampInfo ? `<div class="rtbcb-error-diagnostics" style="color: #6b7280; margin-bottom: 24px;">${requestInfo}${timestampInfo}</div>` : '';
-
-        const errorHTML = `
-            <div class="rtbcb-error-overlay" style="padding: 40px; text-align: center;">
-                <div class="rtbcb-error-icon" style="font-size: 48px; color: #ef4444; margin-bottom: 20px;">⚠️</div>
-                <h3 style="color: #ef4444; margin-bottom: 16px;">Server Timeout</h3>
-                <p style="color: #4b5563; margin-bottom: 24px;">${safeMessage}</p>
-                ${diagHTML}
-                <div class="rtbcb-error-actions">
-                    <button type="button" class="rtbcb-action-btn rtbcb-btn-primary rtbcb-retry-btn">Retry</button>
-                    <a href="mailto:contact@realtreasury.com" class="rtbcb-action-btn rtbcb-btn-secondary" style="text-decoration: none;">Contact Support</a>
+        const progressContainer = document.getElementById('rtbcb-progress-container');
+        if (progressContainer) {
+            const safeMessage = this.escapeHTML(message);
+            const requestInfo = diagnostics.requestId ? `<div>Request ID: ${this.escapeHTML(diagnostics.requestId)}</div>` : '';
+            const timestampInfo = diagnostics.timestamp ? `<div>Timestamp: ${this.escapeHTML(diagnostics.timestamp)}</div>` : '';
+            const diagHTML = requestInfo || timestampInfo ? `<div class="rtbcb-error-diagnostics" style="color: #6b7280; margin-bottom: 24px;">${requestInfo}${timestampInfo}</div>` : '';
+            progressContainer.innerHTML = `
+                <div class="rtbcb-error-overlay" style="padding: 40px; text-align: center;">
+                    <div class="rtbcb-error-icon" style="font-size: 48px; color: #ef4444; margin-bottom: 20px;">⚠️</div>
+                    <h3 style="color: #ef4444; margin-bottom: 16px;">Server Timeout</h3>
+                    <p style="color: #4b5563; margin-bottom: 24px;">${safeMessage}</p>
+                    ${diagHTML}
+                    <div class="rtbcb-error-actions">
+                        <button type="button" class="rtbcb-action-btn rtbcb-btn-primary rtbcb-retry-btn">Retry</button>
+                        <a href="mailto:contact@realtreasury.com" class="rtbcb-action-btn rtbcb-btn-secondary" style="text-decoration: none;">Contact Support</a>
+                    </div>
                 </div>
-            </div>
-        `;
-
-        parent.insertAdjacentHTML('afterbegin', errorHTML);
-        const retryBtn = parent.querySelector('.rtbcb-retry-btn');
-        if (retryBtn) {
-            retryBtn.addEventListener('click', () => {
-                retryBtn.disabled = true;
-                const overlay = parent.querySelector('.rtbcb-error-overlay');
-                if (overlay) {
-                    overlay.remove();
-                }
-                setTimeout(() => this.handleSubmit(this.lastFormData), 1000);
-            });
+            `;
+            progressContainer.style.display = 'flex';
+            const retryBtn = progressContainer.querySelector('.rtbcb-retry-btn');
+            if (retryBtn) {
+                retryBtn.addEventListener('click', () => {
+                    retryBtn.disabled = true;
+                    progressContainer.innerHTML = '';
+                    this.handleSubmit(this.lastFormData);
+                });
+            }
         }
     }
 
     showError(message) {
-        // Clear progress
-        const progressOverlay = document.querySelector('.rtbcb-progress-overlay');
-        if (progressOverlay) {
-            progressOverlay.remove();
-        }
-
-        // Show error in modal
-        const modalBody = this.form.closest('.rtbcb-modal-body');
-        if (modalBody) {
+        const progressContainer = document.getElementById('rtbcb-progress-container');
+        if (progressContainer) {
             const safeMessage = this.escapeHTML(message);
-            const errorHTML = `
+            progressContainer.innerHTML = `
                 <div class="rtbcb-error-container" style="padding: 40px; text-align: center;">
                     <div class="rtbcb-error-icon" style="font-size: 48px; color: #ef4444; margin-bottom: 20px;">⚠️</div>
                     <h3 style="color: #ef4444; margin-bottom: 16px;">Unable to Generate Business Case</h3>
@@ -831,7 +816,7 @@ class BusinessCaseBuilder {
                     </div>
                 </div>
             `;
-            modalBody.innerHTML = errorHTML;
+            progressContainer.style.display = 'flex';
         }
     }
 

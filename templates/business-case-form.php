@@ -443,6 +443,13 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
     </div>
 </div>
 
+<div id="rtbcb-progress-container" class="rtbcb-progress-overlay" style="display: none;">
+    <div class="rtbcb-progress-content">
+        <div class="rtbcb-progress-spinner"></div>
+        <div class="rtbcb-progress-text"><?php esc_html_e( 'Generating Your Business Case...', 'rtbcb' ); ?></div>
+    </div>
+</div>
+
 <!-- Results Section (separate from modal) -->
 <div id="rtbcbResults" class="rtbcb-results" style="display: none;">
     <!-- Results will be populated by JavaScript -->
