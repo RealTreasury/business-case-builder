@@ -71,6 +71,7 @@ echo "15. Running AJAX error handling tests..."
 phpunit tests/RTBCB_AjaxGenerateComprehensiveCaseErrorTest.php
 phpunit tests/RTBCB_AjaxGenerateComprehensiveCaseFatalErrorTest.php
 phpunit tests/RTBCB_GenerateBusinessAnalysisTimeoutTest.php
+phpunit tests/report-error-handling.test.php
 
 # Background job test
 echo "14. Running background job tests..."
