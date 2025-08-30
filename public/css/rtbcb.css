@@ -1251,7 +1251,7 @@
 
 .rtbcb-progress-label {
     font-size: 14px;
-    color: #ffffff;
+    color: var(--text-secondary);
     font-weight: 600;
     text-align: center;
 }
@@ -1786,7 +1786,7 @@
 #loading {
     text-align: center;
     padding: 40px;
-    color: #666666;
+    color: var(--text-secondary);
 }
 
 #error {
@@ -1799,13 +1799,13 @@
 
 /* READABILITY IMPROVEMENTS FOR TREASURY BUSINESS CASE BUILDER */
 
-/* 1. IMPROVE TEXT CONTRAST - Use light tones for dark backgrounds */
+/* 1. IMPROVE TEXT CONTRAST - Use dark tones for base text */
 
 /* Update color variables for better contrast */
 :root {
     /* Improved text colors for better readability */
-    --text-primary: #f3f4f6;        /* Light tone for primary text */
-    --text-secondary: #e5e7eb;      /* Lighter gray for secondary text */
+    --text-primary: #1f2937;        /* Darker tone for primary text */
+    --text-secondary: #4b5563;      /* Dark gray for secondary text */
     --text-muted: #6b7280;          /* Only for least important text */
     --text-light: #9ca3af;          /* Only for disabled states */
 
@@ -1835,7 +1835,7 @@
 
 /* Progress step labels - much more visible */
 .rtbcb-progress-label {
-    color: #ffffff;  /* Future steps white */
+    color: var(--text-secondary);  /* Use secondary text color for future steps */
     font-size: 14px;               /* Increase from 12px */
     font-weight: 600;              /* Add weight */
     text-align: center;
