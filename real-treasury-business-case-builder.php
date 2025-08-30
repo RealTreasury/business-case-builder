@@ -418,13 +418,22 @@ class Real_Treasury_BCB {
 	        true
 	    );
 
-	    // DOMPurify for sanitization
+	    // DOMPurify for sanitization with CDN fallback
+	    $dompurify_cdn   = 'https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.2/purify.min.js';
+	    $dompurify_local = RTBCB_URL . 'public/js/dompurify.min.js';
 	    wp_enqueue_script(
 	        'dompurify',
-	        'https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.2/purify.min.js',
+	        $dompurify_cdn,
 	        [],
 	        '3.0.2',
 	        true
+	    );
+	    wp_add_inline_script(
+	        'dompurify',
+	        sprintf(
+	            'window.DOMPurify||function(){var s=document.createElement("script");s.src="%s";document.head.appendChild(s);}();',
+	            esc_url( $dompurify_local )
+	        )
 	    );
 
 	    // Wizard script (loaded early for modal functions)
