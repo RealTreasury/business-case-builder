@@ -109,6 +109,10 @@ before the closing `</body>` tag.
 - `tests/` – Automated tests and diagnostics.
 - `vendor/` – Composer-managed third-party libraries (do not modify).
 
+Development guidelines are defined in `AGENTS.md` files. The root `AGENTS.md` outlines global
+WordPress standards and test commands, while directories such as `admin/` and `docs/` include
+their own `AGENTS.md` with additional rules.
+
 ### Full Directory Tree
 
 ```
