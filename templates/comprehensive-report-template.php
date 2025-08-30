@@ -584,9 +584,6 @@ function rtbcbExportPDF() {
 }
 </script>
 
-<!-- Enhanced CSS Styles -->
-<link rel="stylesheet" href="<?php echo esc_url( RTBCB_URL . 'public/css/enhanced-report.css' ); ?>">
-
 <?php
 // Pass structured data to JavaScript for charts and interactivity
 wp_localize_script( 'rtbcb-report', 'rtbcbReportData', [
