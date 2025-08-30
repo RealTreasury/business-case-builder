@@ -24,6 +24,7 @@ $technology_strategy  = $report_data['technology_strategy'] ?? [];
 $operational_insights = $report_data['operational_insights'] ?? [];
 $risk_analysis        = $report_data['risk_analysis'] ?? [];
 $action_plan          = $report_data['action_plan'] ?? [];
+$rag_context          = $report_data['rag_context'] ?? [];
 
 $company_name    = $metadata['company_name'] ?? __( 'Your Company', 'rtbcb' );
 $analysis_date   = $metadata['analysis_date'] ?? current_time( 'Y-m-d' );
@@ -391,6 +392,25 @@ $processing_time = $metadata['processing_time'] ?? 0;
 					</div>
 				<?php endif; ?>
 			</div>
+		</div>
+	</div>
+<?php endif; ?>
+
+	<!-- Supporting Context Section -->
+	<?php if ( ! empty( $rag_context ) ) : ?>
+	<div class="rtbcb-section-enhanced rtbcb-supporting-context">
+		<div class="rtbcb-section-header-enhanced">
+			<h2 class="rtbcb-section-title">
+				<span class="rtbcb-section-icon">📚</span>
+				<?php echo esc_html__( 'Supporting Context', 'rtbcb' ); ?>
+			</h2>
+		</div>
+		<div class="rtbcb-section-content">
+			<ul class="rtbcb-context-list">
+				<?php foreach ( (array) $rag_context as $context_item ) : ?>
+					<li><?php echo esc_html( $context_item ); ?></li>
+				<?php endforeach; ?>
+			</ul>
 		</div>
 	</div>
 	<?php endif; ?>
