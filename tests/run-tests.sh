@@ -70,6 +70,7 @@ node tests/handle-string-error-response.test.js
 node tests/temperature-model.test.js
 node tests/min-output-tokens.test.js
 node tests/gpt5-config-defaults.test.js
+npx --yes jest tests/poll-job-completed.test.js --config '{"testEnvironment":"node"}'
 
 # WordPress coding standards (if installed)
 if command -v phpcs &> /dev/null; then
