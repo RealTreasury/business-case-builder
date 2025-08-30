@@ -1493,13 +1493,24 @@ SYSTEM;
 
     /**
      * Call OpenAI with retry logic.
+     *
+     * Retries with exponential backoff and random jitter. Each retry reduces the
+     * maximum output tokens and increases the timeout to balance response size
+     * with the likelihood of success.
+     *
+     * @param string       $model       Model name.
+     * @param array|string $prompt      Prompt array or string.
+     * @param int|null     $max_retries Optional maximum retries.
+     * @return array|WP_Error HTTP response array or last WP_Error on failure.
      */
 
     private function call_openai_with_retry( $model, $prompt, $max_retries = null ) {
-        $max_retries = $max_retries ?? intval( $this->gpt5_config['max_retries'] );
+        $max_retries       = $max_retries ?? intval( $this->gpt5_config['max_retries'] );
+        $max_output_tokens = intval( $this->gpt5_config['max_output_tokens'] ?? 20000 );
+        $timeout           = intval( $this->gpt5_config['timeout'] ?? 180 );
 
         for ( $attempt = 1; $attempt <= $max_retries; $attempt++ ) {
-            $response = $this->call_openai( $model, $prompt );
+            $response = $this->call_openai( $model, $prompt, $max_output_tokens, $timeout );
 
             if ( ! is_wp_error( $response ) ) {
                 return $response;
@@ -1508,7 +1519,12 @@ SYSTEM;
             error_log( "RTBCB: OpenAI attempt {$attempt} failed: " . $response->get_error_message() );
 
             if ( $attempt < $max_retries ) {
-                sleep( $attempt ); // Progressive backoff
+                $delay  = min( 30, pow( 2, $attempt - 1 ) );
+                $jitter = mt_rand( 0, 1000 ) / 1000;
+                usleep( (int) ( ( $delay + $jitter ) * 1000000 ) );
+
+                $max_output_tokens = max( 256, (int) ( $max_output_tokens * 0.9 ) );
+                $timeout           = min( 600, (int) ( $timeout * 1.1 ) );
             }
         }
 
@@ -1555,9 +1571,10 @@ SYSTEM;
      * @param string       $model             Model name.
      * @param array|string $prompt            Prompt array or string.
      * @param int|null     $max_output_tokens Maximum output tokens.
+     * @param int|null     $timeout           Request timeout in seconds.
      * @return array|WP_Error HTTP response array or WP_Error on failure.
      */
-    private function call_openai( $model, $prompt, $max_output_tokens = null ) {
+    private function call_openai( $model, $prompt, $max_output_tokens = null, $timeout = null ) {
         if ( empty( $this->api_key ) ) {
             return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
         }
@@ -1568,6 +1585,8 @@ SYSTEM;
         $default_tokens    = intval( $this->gpt5_config['max_output_tokens'] ?? 20000 );
         $max_output_tokens = intval( $max_output_tokens ?? $default_tokens );
         $max_output_tokens = min( 50000, max( 256, $max_output_tokens ) );
+        $timeout           = intval( $timeout ?? $this->gpt5_config['timeout'] ?? 180 );
+        $timeout           = min( 600, max( 30, $timeout ) );
 
         if ( is_array( $prompt ) && isset( $prompt['input'] ) ) {
             $instructions = sanitize_textarea_field( $prompt['instructions'] ?? '' );
@@ -1607,8 +1626,6 @@ SYSTEM;
         if ( isset( $this->gpt5_config['store'] ) ) {
             $body['store'] = (bool) $this->gpt5_config['store'];
         }
-
-        $timeout = intval( $this->gpt5_config['timeout'] ?? 180 );
 
         $args = [
             'headers' => [
