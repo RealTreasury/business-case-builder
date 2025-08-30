@@ -29,7 +29,15 @@ global.FormData = SimpleFormData;
 global.fetch = function() {
     const payload = {
         success: true,
-        data: { report_html: '<div>Report</div>' }
+        data: {
+            report_data: {
+                metadata: { company_name: 'Test Co' },
+                financial_analysis: { roi_scenarios: {} },
+                technology_strategy: {},
+                executive_summary: { executive_recommendation: 'summary' },
+                action_plan: {}
+            }
+        }
     };
     const response = {
         ok: true,
@@ -87,7 +95,7 @@ builder.showError = () => {};
 
 (async () => {
     await builder.handleSubmit();
-    assert.strictEqual(resultsData.report_html, '<div>Report</div>');
+    assert.strictEqual(resultsData.metadata.company_name, 'Test Co');
     console.log('Success path test passed.');
 })().catch(err => {
     console.error(err);
