@@ -80,7 +80,6 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                     <div class="rtbcb-field rtbcb-field-required">
                         <label for="company_name">
                             <?php esc_html_e( 'Company Name', 'rtbcb' ); ?>
-                            <span class="rtbcb-required">*</span>
                         </label>
                         <input type="text" name="company_name" id="company_name" 
                                placeholder="<?php esc_attr_e( 'Enter your company name', 'rtbcb' ); ?>" 
@@ -94,7 +93,6 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                     <div class="rtbcb-field rtbcb-field-required">
                         <label for="company_size">
                             <?php esc_html_e( 'Company Size (Annual Revenue)', 'rtbcb' ); ?>
-                            <span class="rtbcb-required">*</span>
                         </label>
                         <select name="company_size" id="company_size" required>
                             <option value=""><?php esc_html_e( 'Select your company size...', 'rtbcb' ); ?></option>
@@ -108,7 +106,6 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                     <div class="rtbcb-field rtbcb-field-required">
                         <label for="industry">
                             <?php esc_html_e( 'Industry', 'rtbcb' ); ?>
-                            <span class="rtbcb-required">*</span>
                         </label>
                         <select name="industry" id="industry" required>
                             <option value=""><?php esc_html_e( 'Select your industry...', 'rtbcb' ); ?></option>
@@ -158,7 +155,6 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                     <div class="rtbcb-field rtbcb-field-required">
                         <label for="hours_reconciliation">
                             <?php esc_html_e( 'Weekly Hours: Bank Reconciliation', 'rtbcb' ); ?>
-                            <span class="rtbcb-required">*</span>
                         </label>
                         <input type="number" name="hours_reconciliation" id="hours_reconciliation"
                                min="0" max="168" step="0.5" placeholder="0" required inputmode="decimal" />
@@ -170,7 +166,6 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                     <div class="rtbcb-field rtbcb-field-required">
                         <label for="hours_cash_positioning">
                             <?php esc_html_e( 'Weekly Hours: Cash Positioning', 'rtbcb' ); ?>
-                            <span class="rtbcb-required">*</span>
                         </label>
                         <input type="number" name="hours_cash_positioning" id="hours_cash_positioning"
                                min="0" max="168" step="0.5" placeholder="0" required inputmode="decimal" />
@@ -182,7 +177,6 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                     <div class="rtbcb-field rtbcb-field-required">
                         <label for="num_banks">
                             <?php esc_html_e( 'Number of Banking Relationships', 'rtbcb' ); ?>
-                            <span class="rtbcb-required">*</span>
                         </label>
                         <input type="number" name="num_banks" id="num_banks"
                                min="1" max="50" placeholder="0" required inputmode="decimal" />
@@ -194,7 +188,6 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                     <div class="rtbcb-field rtbcb-field-required">
                         <label for="ftes">
                             <?php esc_html_e( 'Treasury Team Size (FTEs)', 'rtbcb' ); ?>
-                            <span class="rtbcb-required">*</span>
                         </label>
                         <input type="number" name="ftes" id="ftes"
                                min="0.5" max="100" step="0.5" placeholder="0" required inputmode="decimal" />
@@ -317,7 +310,6 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                     <div class="rtbcb-field rtbcb-field-required">
                         <label for="business_objective">
                             <?php esc_html_e( 'Primary Business Objective', 'rtbcb' ); ?>
-                            <span class="rtbcb-required">*</span>
                         </label>
                         <select name="business_objective" id="business_objective" required>
                             <option value=""><?php esc_html_e( 'Select an objective...', 'rtbcb' ); ?></option>
@@ -331,7 +323,6 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                     <div class="rtbcb-field rtbcb-field-required">
                         <label for="implementation_timeline">
                             <?php esc_html_e( 'Implementation Timeline', 'rtbcb' ); ?>
-                            <span class="rtbcb-required">*</span>
                         </label>
                         <select name="implementation_timeline" id="implementation_timeline" required>
                             <option value=""><?php esc_html_e( 'Select a timeline...', 'rtbcb' ); ?></option>
@@ -354,7 +345,6 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                     <div class="rtbcb-field rtbcb-field-required">
                         <label for="budget_range">
                             <?php esc_html_e( 'Budget Range', 'rtbcb' ); ?>
-                            <span class="rtbcb-required">*</span>
                         </label>
                         <select name="budget_range" id="budget_range" required>
                             <option value=""><?php esc_html_e( 'Select a range...', 'rtbcb' ); ?></option>
@@ -378,7 +368,6 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                     <div class="rtbcb-field rtbcb-field-required">
                         <label for="email">
                             <?php esc_html_e( 'Business Email Address', 'rtbcb' ); ?>
-                            <span class="rtbcb-required">*</span>
                         </label>
                         <input type="email" name="email" id="email" 
                                placeholder="yourname@company.com" required />
