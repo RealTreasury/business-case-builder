@@ -842,17 +842,36 @@ class Real_Treasury_BCB {
 	}
 	
 	try {
-	$rag          = new RTBCB_RAG();
-	$search_query = implode(
-	' ',
-	array_merge(
-	[ $user_inputs['company_name'], $user_inputs['industry'] ],
-	$user_inputs['pain_points'],
-	[ $recommendation['recommended'] ?? '' ]
-	)
-	);
-	
-	return $rag->search_similar( $search_query, 3 );
+        $rag          = new RTBCB_RAG();
+        $search_query = implode(
+            ' ',
+            array_merge(
+                [ $user_inputs['company_name'], $user_inputs['industry'] ],
+                $user_inputs['pain_points'],
+                [ $recommendation['recommended'] ?? '' ]
+            )
+        );
+
+        $results   = $rag->search_similar( $search_query, 3 );
+        $sanitized = [];
+
+        foreach ( $results as $result ) {
+            $text = '';
+
+            if ( is_array( $result ) && isset( $result['metadata'] ) ) {
+                $metadata = $result['metadata'];
+                $text     = is_array( $metadata ) ? wp_json_encode( $metadata ) : (string) $metadata;
+            } elseif ( is_scalar( $result ) ) {
+                $text = (string) $result;
+            } else {
+                $text = wp_json_encode( $result );
+            }
+
+            $text        = sanitize_text_field( (string) $text );
+            $sanitized[] = mb_substr( $text, 0, 1000 );
+        }
+
+        return $sanitized;
 	} catch ( Exception $e ) {
 	rtbcb_log_error( 'RAG search failed', $e->getMessage() );
 	return [];
