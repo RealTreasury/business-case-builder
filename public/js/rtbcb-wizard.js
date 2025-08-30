@@ -472,7 +472,7 @@ class BusinessCaseBuilder {
 
             if (data.success) {
                 console.log('RTBCB: Success response received');
-                this.handleSuccess(data.data);
+                this.handleSuccess(data.data.report_data);
             } else {
                 console.error('RTBCB: Error response:', data.data);
                 this.handleError(data.data);
@@ -655,20 +655,39 @@ class BusinessCaseBuilder {
         // Close modal
         window.closeBusinessCaseModal();
 
-        // Render results
+        const companyName = data.metadata?.company_name || 'Your Company';
+        const scenarios = data.financial_analysis?.roi_scenarios || {};
+        const recommendation = {
+            category_info: data.technology_strategy?.category_details || {},
+            reasoning: data.technology_strategy?.recommended_category || '',
+            confidence: data.metadata?.confidence_level || 0.75
+        };
+        const narrative = {
+            narrative: data.executive_summary?.executive_recommendation || '',
+            next_actions: [
+                ...(data.action_plan?.immediate_steps || []),
+                ...(data.action_plan?.short_term_milestones || []),
+                ...(data.action_plan?.long_term_objectives || [])
+            ],
+            risks: data.risk_analysis?.implementation_risks || []
+        };
+
         const resultsContainer = document.getElementById('rtbcbResults');
         if (resultsContainer) {
-            resultsContainer.innerHTML = this.renderResults(data);
-            this.populateRiskAssessment(data.narrative?.risks || []);
+            resultsContainer.innerHTML = this.renderResults({
+                companyName,
+                scenarios,
+                recommendation,
+                narrative
+            });
+            this.populateRiskAssessment(narrative.risks);
             resultsContainer.style.display = 'block';
             resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     }
 
-    renderResults(data) {
-        const { scenarios, recommendation, company_name } = data;
-        const narrative = data.narrative || {};
-        const displayName = company_name || 'Your Company';
+    renderResults({ companyName, scenarios, recommendation, narrative }) {
+        const displayName = companyName || 'Your Company';
 
         return `
             <div class="rtbcb-results-container">
