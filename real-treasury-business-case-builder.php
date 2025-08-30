@@ -1635,6 +1635,10 @@ class Real_Treasury_BCB {
        $company      = rtbcb_get_current_company();
        $company_name = $business_case_data['company_name'] ?? $company['name'] ?? __( 'Your Company', 'rtbcb' );
 
+       // Derive recommended category and details from recommendation if not provided.
+       $recommended_category = $business_case_data['recommended_category'] ?? ( $business_case_data['recommendation']['recommended'] ?? 'treasury_management_system' );
+       $category_details     = $business_case_data['category_info'] ?? ( $business_case_data['recommendation']['category_info'] ?? [] );
+
        // Create structured data format expected by template.
        $report_data = [
            'metadata'            => [
@@ -1674,8 +1678,8 @@ class Real_Treasury_BCB {
                ],
            ],
            'technology_strategy' => [
-               'recommended_category' => $business_case_data['recommended_category'] ?? 'treasury_management_system',
-               'category_details'     => $business_case_data['category_info'] ?? [],
+               'recommended_category' => $recommended_category,
+               'category_details'     => $category_details,
            ],
            'operational_insights' => $business_case_data['operational_analysis'] ?? [],
            'risk_analysis'        => [
