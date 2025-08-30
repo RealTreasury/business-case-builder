@@ -207,6 +207,48 @@ async function pollJobStatus(jobId, progressContainer, formContainer) {
     }
 }
 
+/**
+ * Stream business analysis and forward chunks to a callback.
+ *
+ * @param {FormData} formData Submission data.
+ * @param {Function} onChunk  Callback receiving raw chunk strings.
+ */
+async function rtbcbStreamAnalysis(formData, onChunk) {
+    formData.append('action', 'rtbcb_stream_analysis');
+    formData.append('rtbcb_nonce', rtbcbAjax.nonce);
+    const response = await fetch(rtbcbAjax.ajax_url, { method: 'POST', body: formData });
+    if (!response.body) {
+        throw new Error('No response body.');
+    }
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+            break;
+        }
+        buffer += decoder.decode(value, { stream: true });
+        const parts = buffer.split('\n\n');
+        buffer = parts.pop();
+        for (const part of parts) {
+            const line = part.trim();
+            if (!line.startsWith('data:')) {
+                continue;
+            }
+            const data = line.replace(/^data:\s*/, '');
+            if (data === '[DONE]') {
+                continue;
+            }
+            try {
+                if (onChunk) {
+                    onChunk(data);
+                }
+            } catch (e) {}
+        }
+    }
+}
+
 // Ensure the form submission is handled by our new function
 // eslint-disable-next-line @wordpress/no-global-event-listener
 document.addEventListener('DOMContentLoaded', function() {

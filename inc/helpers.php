@@ -1318,12 +1318,70 @@ function rtbcb_proxy_openai_responses() {
 	$error = curl_error( $ch );
 	curl_close( $ch );
 
-	if ( false === $ok && '' !== $error ) {
-		$msg = sanitize_text_field( $error );
-		echo 'data: ' . wp_json_encode( [ 'error' => $msg ] ) . "\n\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-	}
+        if ( false === $ok && '' !== $error ) {
+                $msg = sanitize_text_field( $error );
+                echo 'data: ' . wp_json_encode( [ 'error' => $msg ] ) . "\n\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+        }
 
-	exit;
+        exit;
+}
+
+/**
+ * Stream comprehensive business analysis to the client.
+ *
+ * Validates input, triggers LLM generation and forwards streamed chunks to
+ * the response using Server-Sent Events.
+ *
+ * @return void
+ */
+function rtbcb_stream_business_analysis() {
+        if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
+                wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
+        }
+
+        $validator   = new RTBCB_Validator();
+        $user_inputs = $validator->validate( $_POST );
+        if ( isset( $user_inputs['error'] ) ) {
+                wp_send_json_error( [ 'message' => $user_inputs['error'] ], 400 );
+        }
+
+        if ( ! class_exists( 'RTBCB_Calculator' ) || ! class_exists( 'RTBCB_LLM' ) ) {
+                wp_send_json_error( [ 'message' => __( 'System error.', 'rtbcb' ) ], 500 );
+        }
+
+        $scenarios = RTBCB_Calculator::calculate_roi( $user_inputs );
+
+        $rag_context = [];
+        if ( class_exists( 'RTBCB_RAG' ) ) {
+                $rag         = new RTBCB_RAG();
+                $description = sanitize_text_field( $user_inputs['company_description'] ?? '' );
+                $rag_context = $rag->get_context( $description );
+        }
+
+        nocache_headers();
+        header( 'Content-Type: text/event-stream' );
+        header( 'Cache-Control: no-cache' );
+        header( 'Connection: keep-alive' );
+
+        $llm           = new RTBCB_LLM();
+        $chunk_handler = function ( $chunk ) {
+                echo $chunk; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                if ( function_exists( 'flush' ) ) {
+                        flush();
+                }
+        };
+
+        $result = $llm->generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context, $chunk_handler );
+
+        if ( is_wp_error( $result ) ) {
+                $msg = $result->get_error_message();
+                echo 'data: ' . wp_json_encode( [ 'error' => $msg ] ) . "\n\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                exit;
+        }
+
+        echo 'data: ' . wp_json_encode( [ 'result' => $result ] ) . "\n\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+        echo "data: [DONE]\n\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+        exit;
 }
 
 /**

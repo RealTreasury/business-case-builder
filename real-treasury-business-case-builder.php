@@ -110,11 +110,15 @@ class Real_Treasury_BCB {
 		add_action( 'wp_ajax_nopriv_rtbcb_job_status', [ 'RTBCB_Ajax', 'get_job_status' ] );
 		
 		// OpenAI proxy handlers
-		add_action( 'wp_ajax_rtbcb_openai_responses', 'rtbcb_proxy_openai_responses' );
-		add_action( 'wp_ajax_nopriv_rtbcb_openai_responses', 'rtbcb_proxy_openai_responses' );
-		
-		// Debug handlers
-		$this->init_hooks_debug();
+                add_action( 'wp_ajax_rtbcb_openai_responses', 'rtbcb_proxy_openai_responses' );
+                add_action( 'wp_ajax_nopriv_rtbcb_openai_responses', 'rtbcb_proxy_openai_responses' );
+
+                // Streaming analysis handler
+                add_action( 'wp_ajax_rtbcb_stream_analysis', 'rtbcb_stream_business_analysis' );
+                add_action( 'wp_ajax_nopriv_rtbcb_stream_analysis', 'rtbcb_stream_business_analysis' );
+
+                // Debug handlers
+                $this->init_hooks_debug();
     }
 
     /**
@@ -942,10 +946,17 @@ return $use_comprehensive;
 	}
 	}
 	
-	/**
-	 * Generate comprehensive business analysis using LLM.
-	 */
-        private function generate_business_analysis( $user_inputs, $scenarios, $rag_context ) {
+        /**
+         * Generate comprehensive business analysis using LLM.
+         *
+         * @param array         $user_inputs    Sanitized user inputs.
+         * @param array         $scenarios      ROI calculation data.
+         * @param array         $rag_context    Context chunks from RAG.
+         * @param callable|null $chunk_handler  Optional streaming handler.
+         *
+         * @return array|WP_Error Analysis data or error.
+         */
+        private function generate_business_analysis( $user_inputs, $scenarios, $rag_context, $chunk_handler = null ) {
         if ( ! class_exists( 'RTBCB_LLM' ) ) {
         return new WP_Error( 'llm_unavailable', __( 'AI analysis service unavailable.', 'rtbcb' ) );
         }
@@ -957,7 +968,7 @@ return $use_comprehensive;
 
         try {
         $llm    = new RTBCB_LLM();
-        $result = $llm->generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context );
+        $result = $llm->generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context, $chunk_handler );
 
         if ( is_wp_error( $result ) ) {
         // Fall back to structured analysis.

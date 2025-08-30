@@ -55,7 +55,7 @@ if ( ! function_exists( 'rtbcb_is_openai_configuration_error' ) ) {
 if ( ! class_exists( 'RTBCB_LLM' ) ) {
     class RTBCB_LLM {
         public static $mode = 'ok';
-        public function generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context ) {
+        public function generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context, $chunk_handler = null ) {
             if ( 'fatal_config' === self::$mode ) {
                 throw new Error( 'Missing API key' );
             }
@@ -96,7 +96,7 @@ if ( ! class_exists( 'Real_Treasury_BCB_Fatal' ) ) {
         public function ajax_generate_comprehensive_case() {
             $llm = new RTBCB_LLM();
             try {
-                $llm->generate_comprehensive_business_case( [], [], [] );
+                $llm->generate_comprehensive_business_case( [], [], [], null );
             } catch ( Error $e ) {
                 $error_code    = 'E_LLM_FATAL';
                 $error_message = $e->getMessage();
