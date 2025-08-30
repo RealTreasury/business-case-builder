@@ -258,7 +258,10 @@ $processing_time = $metadata['processing_time'] ?? 0;
 									<span class="rtbcb-sensitivity-factor"><?php echo esc_html( $factor['factor'] ?? '' ); ?></span>
 									<span class="rtbcb-sensitivity-probability"><?php echo esc_html( round( ( $factor['probability'] ?? 0 ) * 100 ) ); ?>% <?php echo esc_html__( 'likelihood', 'rtbcb' ); ?></span>
 								</div>
-								<div class="rtbcb-sensitivity-impact <?php echo ( $factor['impact_percentage'] ?? 0 ) >= 0 ? 'positive' : 'negative'; ?>">
+								<div class="rtbcb-sensitivity-impact <?php
+									// Escaped for safe output.
+									echo esc_attr( ( $factor['impact_percentage'] ?? 0 ) >= 0 ? 'positive' : 'negative' );
+								?>">
 									<?php echo esc_html( $factor['impact_percentage'] ?? 0 ); ?>% <?php echo esc_html__( 'impact', 'rtbcb' ); ?>
 								</div>
 							</div>
