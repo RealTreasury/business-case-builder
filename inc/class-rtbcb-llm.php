@@ -941,6 +941,51 @@ USER,
     }
 
     /**
+     * Analyze a company's market position within its industry.
+     *
+     * @param string $industry     Industry name.
+     * @param string $company_size Company size descriptor.
+     * @return array Structured data including market share, peers, and growth outlook.
+     */
+    private function analyze_market_position( $industry, $company_size ) {
+        $industry     = sanitize_text_field( $industry );
+        $company_size = sanitize_text_field( $company_size );
+
+        $market_shares = [
+            '<$50M'      => 'emerging niche player',
+            '$50M-$500M' => 'growing regional player',
+            '$500M-$2B'  => 'established contender',
+            '>$2B'       => 'market leader',
+        ];
+
+        $industry_peers = [
+            'manufacturing' => [
+                'peers'  => [ 'Acme Manufacturing', 'Global Fabricators' ],
+                'growth' => 'stable',
+            ],
+            'technology'    => [
+                'peers'  => [ 'Innovatech', 'NextGen Software' ],
+                'growth' => 'rapid',
+            ],
+            'retail'        => [
+                'peers'  => [ 'RetailCo', 'ShopSmart' ],
+                'growth' => 'moderate',
+            ],
+        ];
+
+        $selected = $industry_peers[ $industry ] ?? [
+            'peers'  => [ 'General Competitor A', 'General Competitor B' ],
+            'growth' => 'moderate',
+        ];
+
+        return [
+            'market_share'   => sanitize_text_field( $market_shares[ $company_size ] ?? 'unknown' ),
+            'peers'          => array_map( 'sanitize_text_field', $selected['peers'] ),
+            'growth_outlook' => sanitize_text_field( $selected['growth'] ),
+        ];
+    }
+
+    /**
      * Analyze industry context using the LLM.
      *
      * @param array $user_inputs Sanitized user inputs.
