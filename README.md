@@ -521,6 +521,25 @@ If you encounter `Unchecked runtime.lastError` messages, they typically originat
 - **Database Optimization**: Regular cleanup of old lead data
 - **API Rate Limiting**: Built-in throttling for OpenAI requests
 
+### Server Timeouts
+
+Large reports can take several minutes to generate. Increase server and PHP timeout limits to avoid gateway errors. In nginx, raise `proxy_read_timeout` and `fastcgi_read_timeout`:
+
+```nginx
+location ~ \.php$ {
+    proxy_read_timeout 600;
+    fastcgi_read_timeout 600;
+}
+```
+
+Reload nginx after updating the configuration. For PHP-FPM, set `request_terminate_timeout` to a matching value:
+
+```ini
+request_terminate_timeout = 600
+```
+
+Restart PHP-FPM to apply the change. See [docs/timeout-config.md](docs/timeout-config.md) for full instructions.
+
 ## 🛣️ Roadmap and Future Features
 
 ### Version 2.2 (Coming Soon)
