@@ -1788,29 +1788,41 @@ return $use_comprehensive;
 	);
 	}
 
-	$business_case_data = is_array( $business_case_data ) ? $business_case_data : [];
+        $business_case_data = is_array( $business_case_data ) ? $business_case_data : [];
 
-        // Transform data structure for template.
-        $report_data = $this->transform_data_for_template( $business_case_data );
+        $report_data = $business_case_data['report_data'] ?? null;
+        $hash_source = $report_data ?: $business_case_data;
+        $data_hash  = md5( wp_json_encode( $hash_source ) );
+        $cache_key  = md5( $template_path . ':' . $data_hash );
 
-        if ( is_wp_error( $report_data ) ) {
-            rtbcb_log_error(
-                'Report data transformation failed',
-                [
-                    'error' => $report_data->get_error_message(),
-                ]
-            );
-
-            return $report_data;
+        $cached_html = wp_cache_get( $cache_key, 'rtbcb_reports' );
+        if ( false !== $cached_html ) {
+            return $cached_html;
         }
 
-        if ( isset( $report_data['status'] ) && empty( $report_data['status']['valid'] ) ) {
-            rtbcb_log_error(
-                'Report data validation failed',
-                [
-                    'missing_keys' => $report_data['status']['missing_keys'],
-                ]
-            );
+        if ( null === $report_data ) {
+            // Transform data structure for template.
+            $report_data = $this->transform_data_for_template( $business_case_data );
+
+            if ( is_wp_error( $report_data ) ) {
+                rtbcb_log_error(
+                    'Report data transformation failed',
+                    [
+                        'error' => $report_data->get_error_message(),
+                    ]
+                );
+
+                return $report_data;
+            }
+
+            if ( isset( $report_data['status'] ) && empty( $report_data['status']['valid'] ) ) {
+                rtbcb_log_error(
+                    'Report data validation failed',
+                    [
+                        'missing_keys' => $report_data['status']['missing_keys'],
+                    ]
+                );
+            }
         }
 
         try {
@@ -1850,9 +1862,12 @@ return $use_comprehensive;
 	'rtbcb_template_include_failed',
 	__( 'Error rendering report template.', 'rtbcb' )
 	);
-	}
+        }
 
-	return wp_kses( $html, rtbcb_get_report_allowed_html() );
+        $html = wp_kses( $html, rtbcb_get_report_allowed_html() );
+        wp_cache_set( $cache_key, $html, 'rtbcb_reports', HOUR_IN_SECONDS );
+
+        return $html;
 }
 
    /**
