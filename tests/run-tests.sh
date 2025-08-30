@@ -92,5 +92,8 @@ fi
 echo "17. Running project growth path test..."
 php tests/project-growth-path.test.php
 
+echo "17. Running validator tests..."
+phpunit -c phpunit.xml
+
 echo "================================================"
 echo "Tests complete!"

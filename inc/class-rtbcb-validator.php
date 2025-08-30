@@ -38,7 +38,29 @@ class RTBCB_Validator {
             }
         }
 
+        if ( ! rtbcb_is_business_email( $sanitized['email'] ) ) {
+            return [
+                'error' => __( 'Please use your business email address.', 'rtbcb' ),
+            ];
+        }
+
+        $length_limits = [
+            'company_name' => 255,
+            'email'        => 254,
+        ];
+
+        foreach ( $length_limits as $field => $limit ) {
+            if ( isset( $sanitized[ $field ] ) && strlen( $sanitized[ $field ] ) > $limit ) {
+                return [
+                    'error' => sprintf(
+                        __( '%s cannot exceed %d characters.', 'rtbcb' ),
+                        ucwords( str_replace( '_', ' ', $field ) ),
+                        $limit
+                    ),
+                ];
+            }
+        }
+
         return $sanitized;
     }
 }
-
