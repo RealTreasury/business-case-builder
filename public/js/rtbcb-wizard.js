@@ -526,7 +526,14 @@ class BusinessCaseBuilder {
         this.showError(message);
     }
 
-    async pollJob(jobId) {
+    async pollJob(jobId, startTime = Date.now()) {
+        const timeout = 15 * 60 * 1000; // 15 minutes
+
+        if (Date.now() - startTime >= timeout) {
+            this.handleError({ message: 'Request timed out. Please try again later.', type: 'polling_timeout' });
+            return;
+        }
+
         try {
             const response = await fetch(`${this.ajaxUrl}?action=rtbcb_job_status&job_id=${encodeURIComponent(jobId)}&rtbcb_nonce=${rtbcbAjax.nonce}`, {
                 credentials: 'same-origin',
@@ -548,7 +555,7 @@ class BusinessCaseBuilder {
             } else if (status === 'error') {
                 this.handleError({ message: data.data.message || 'Job failed', type: 'job_error' });
             } else {
-                setTimeout(() => this.pollJob(jobId), 2000);
+                setTimeout(() => this.pollJob(jobId, startTime), 2000);
             }
         } catch (error) {
             this.handleError({ message: error.message || 'An unexpected error occurred', type: 'polling_error' });
