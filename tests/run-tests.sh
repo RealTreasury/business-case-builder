@@ -58,8 +58,12 @@ echo "13. Running AJAX error handling tests..."
 phpunit tests/RTBCB_AjaxGenerateComprehensiveCaseErrorTest.php
 phpunit tests/RTBCB_AjaxGenerateComprehensiveCaseFatalErrorTest.php
 
+# Business analysis generation test
+echo "14. Running business analysis generation test..."
+phpunit tests/generate-business-analysis.test.php
+
 # JavaScript tests
-echo "14. Running JavaScript tests..."
+echo "15. Running JavaScript tests..."
 node tests/handle-submit-error.test.js
 node tests/handle-submit-no-ajax-url.test.js
 node tests/render-results-no-narrative.test.js
@@ -75,13 +79,13 @@ npx --yes jest tests/poll-job-show-results.test.js --config '{"testEnvironment":
 
 # WordPress coding standards (if installed)
 if command -v phpcs &> /dev/null; then
-    echo "15. Running WordPress coding standards check..."
+    echo "16. Running WordPress coding standards check..."
     phpcs --standard=WordPress --ignore=vendor .
 else
-    echo "15. Skipping WordPress coding standards (phpcs not installed)"
+    echo "16. Skipping WordPress coding standards (phpcs not installed)"
 fi
 
-echo "16. Running project growth path test..."
+echo "17. Running project growth path test..."
 php tests/project-growth-path.test.php
 
 echo "================================================"
