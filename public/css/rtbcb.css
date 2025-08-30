@@ -1612,7 +1612,8 @@
 
 /* Validation Styles */
 .rtbcb-field-required label::after {
-    content: " *";
+    content: '*';
+    margin-left: 4px;
     color: #ef4444;
 }
 
