@@ -128,6 +128,20 @@ function rtbcb_model_supports_temperature( $model ) {
 }
 
 /**
+ * Sanitize the max output tokens option.
+ *
+ * Ensures the value stays within the allowed 256-8000 token range.
+ *
+ * @param mixed $value Raw option value.
+ * @return int Sanitized token count.
+ */
+function rtbcb_sanitize_max_output_tokens( $value ) {
+    $value = intval( $value );
+
+    return min( 8000, max( 256, $value ) );
+}
+
+/**
  * Get testing dashboard sections and their completion state.
  *
  * The returned array is keyed by section ID and contains the section label,
@@ -1203,9 +1217,9 @@ function rtbcb_proxy_openai_responses() {
         $body_array = [];
     }
 
-    $config              = rtbcb_get_gpt5_config();
-    $max_output_tokens   = intval( $body_array['max_output_tokens'] ?? $config['max_output_tokens'] );
-    $max_output_tokens   = min( 50000, max( 256, $max_output_tokens ) );
+    $config            = rtbcb_get_gpt5_config();
+    $max_output_tokens = intval( $body_array['max_output_tokens'] ?? $config['max_output_tokens'] );
+    $max_output_tokens = min( 8000, max( 256, $max_output_tokens ) );
     $body_array['max_output_tokens'] = $max_output_tokens;
     $body              = wp_json_encode( $body_array );
 

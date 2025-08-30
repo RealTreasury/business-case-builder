@@ -45,8 +45,8 @@ async function runTests() {
 
         assert.strictEqual(
             capturedBody.max_output_tokens,
-            20000,
-            'Client request body should include max_output_tokens 20000'
+            1500,
+            'Client request body should include max_output_tokens 1500'
         );
 
         if (shouldInclude) {

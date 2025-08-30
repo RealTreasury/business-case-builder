@@ -46,7 +46,7 @@ class RTBCB_LLM {
         $this->api_key = rtbcb_get_openai_api_key();
 
         $timeout           = rtbcb_get_api_timeout();
-        $max_output_tokens = intval( get_option( 'rtbcb_gpt5_max_output_tokens', 20000 ) );
+        $max_output_tokens = intval( get_option( 'rtbcb_gpt5_max_output_tokens', 8000 ) );
         $config            = rtbcb_get_gpt5_config(
             array_merge(
                 get_option( 'rtbcb_gpt5_config', [] ),
@@ -96,6 +96,48 @@ class RTBCB_LLM {
      */
     public function get_last_response() {
         return $this->last_response;
+    }
+
+    /**
+     * Estimate token usage from a desired word count.
+     *
+     * @param int $words Desired word count.
+     * @return int Estimated token count capped by configuration.
+     */
+    private function estimate_tokens( $words ) {
+        $words  = max( 0, intval( $words ) );
+        $tokens = (int) ceil( $words * 1.5 );
+        $limit  = intval( $this->gpt5_config['max_output_tokens'] ?? 8000 );
+        $limit  = min( 8000, max( 256, $limit ) );
+
+        return min( $tokens, $limit );
+    }
+
+    /**
+     * Determine token limit for a report type.
+     *
+     * @param string $type Report type identifier.
+     * @return int Estimated token count for the report.
+     */
+    private function tokens_for_report( $type ) {
+        $targets = [
+            'business_case'             => 600,
+            'industry_commentary'       => 60,
+            'company_overview'          => 400,
+            'industry_overview'         => 400,
+            'treasury_tech_overview'    => 400,
+            'real_treasury_overview'    => 400,
+            'category_recommendation'   => 200,
+            'benefits_estimate'         => 200,
+            'comprehensive_business_case' => 2000,
+            'competitive_context'       => 200,
+            'industry_analysis'         => 400,
+            'tech_research'             => 400,
+        ];
+
+        $words = $targets[ $type ] ?? 800;
+
+        return $this->estimate_tokens( $words );
     }
 
     /**
@@ -150,8 +192,9 @@ class RTBCB_LLM {
                 'content' => $prompt,
             ],
         ];
-        $context   = $this->build_context_for_responses( $history );
-        $response  = $this->call_openai_with_retry( $selected_model, $context );
+        $context = $this->build_context_for_responses( $history );
+        $tokens  = $this->tokens_for_report( 'business_case' );
+        $response = $this->call_openai_with_retry( $selected_model, $context, $tokens );
 
         if ( is_wp_error( $response ) ) {
             return new WP_Error( 'llm_failure', __( 'Unable to generate analysis at this time.', 'rtbcb' ) );
@@ -209,8 +252,9 @@ class RTBCB_LLM {
                 'content' => $prompt,
             ],
         ];
-        $context  = $this->build_context_for_responses( $history );
-        $response = $this->call_openai_with_retry( $model, $context );
+        $context = $this->build_context_for_responses( $history );
+        $tokens  = $this->tokens_for_report( 'industry_commentary' );
+        $response = $this->call_openai_with_retry( $model, $context, $tokens );
 
         if ( is_wp_error( $response ) ) {
             return new WP_Error( 'llm_failure', __( 'Unable to generate commentary at this time.', 'rtbcb' ) );
@@ -321,8 +365,9 @@ USER,
             ],
         ];
 
-        $context  = $this->build_context_for_responses( $history, $system_prompt );
-        $response = $this->call_openai_with_retry( $model, $context, 3 ); // Reduce retries
+        $context = $this->build_context_for_responses( $history, $system_prompt );
+        $tokens  = $this->tokens_for_report( 'company_overview' );
+        $response = $this->call_openai_with_retry( $model, $context, $tokens, 3 ); // Reduce retries
 
         if ( is_wp_error( $response ) ) {
             return new WP_Error( 'llm_failure', $response->get_error_message() );
@@ -414,8 +459,9 @@ USER,
                 'content' => $prompt,
             ],
         ];
-        $context  = $this->build_context_for_responses( $history );
-        $response = $this->call_openai_with_retry( $model, $context );
+        $context = $this->build_context_for_responses( $history );
+        $tokens  = $this->tokens_for_report( 'industry_overview' );
+        $response = $this->call_openai_with_retry( $model, $context, $tokens );
 
         if ( is_wp_error( $response ) ) {
             return new WP_Error( 'llm_failure', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
@@ -463,8 +509,9 @@ USER,
                 'content' => $prompt,
             ],
         ];
-        $context  = $this->build_context_for_responses( $history );
-        $response = $this->call_openai_with_retry( $model, $context );
+        $context = $this->build_context_for_responses( $history );
+        $tokens  = $this->tokens_for_report( 'treasury_tech_overview' );
+        $response = $this->call_openai_with_retry( $model, $context, $tokens );
 
         if ( is_wp_error( $response ) ) {
             return new WP_Error( 'llm_failure', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
@@ -528,8 +575,9 @@ USER,
                 'content' => $prompt,
             ],
         ];
-        $context  = $this->build_context_for_responses( $history );
-        $response = $this->call_openai_with_retry( $model, $context );
+        $context = $this->build_context_for_responses( $history );
+        $tokens  = $this->tokens_for_report( 'real_treasury_overview' );
+        $response = $this->call_openai_with_retry( $model, $context, $tokens );
 
         if ( is_wp_error( $response ) ) {
             return new WP_Error( 'llm_failure', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
@@ -572,8 +620,9 @@ USER,
                 'content' => $prompt,
             ],
         ];
-        $context  = $this->build_context_for_responses( $history );
-        $response = $this->call_openai_with_retry( $model, $context );
+        $context = $this->build_context_for_responses( $history );
+        $tokens  = $this->tokens_for_report( 'category_recommendation' );
+        $response = $this->call_openai_with_retry( $model, $context, $tokens );
 
         if ( is_wp_error( $response ) ) {
             return new WP_Error( 'llm_failure', __( 'Unable to generate recommendation details at this time.', 'rtbcb' ) );
@@ -624,8 +673,9 @@ USER,
                 'content' => $prompt,
             ],
         ];
-        $context  = $this->build_context_for_responses( $history );
-        $response = $this->call_openai_with_retry( $model, $context );
+        $context = $this->build_context_for_responses( $history );
+        $tokens  = $this->tokens_for_report( 'benefits_estimate' );
+        $response = $this->call_openai_with_retry( $model, $context, $tokens );
 
         if ( is_wp_error( $response ) ) {
             return new WP_Error( 'llm_failure', __( 'Unable to generate benefits estimate at this time.', 'rtbcb' ) );
@@ -701,8 +751,9 @@ USER,
                 'content' => $prompt,
             ],
         ];
-        $context  = $this->build_context_for_responses( $history );
-        $response = $this->call_openai_with_retry( $model, $context );
+        $context = $this->build_context_for_responses( $history );
+        $tokens  = $this->tokens_for_report( 'comprehensive_business_case' );
+        $response = $this->call_openai_with_retry( $model, $context, $tokens );
 
         if ( is_wp_error( $response ) ) {
             return $response;
@@ -1005,8 +1056,9 @@ USER,
             ],
         ];
 
-        $context  = $this->build_context_for_responses( $history );
-        $response = $this->call_openai_with_retry( $model, $context );
+        $context = $this->build_context_for_responses( $history );
+        $tokens  = $this->tokens_for_report( 'competitive_context' );
+        $response = $this->call_openai_with_retry( $model, $context, $tokens );
 
         if ( is_wp_error( $response ) ) {
             return $default;
@@ -1233,7 +1285,8 @@ SYSTEM;
             ],
         ];
         $context = $this->build_context_for_responses( $history, $system_prompt );
-        $response = $this->call_openai_with_retry( $model, $context );
+        $tokens  = $this->tokens_for_report( 'industry_analysis' );
+        $response = $this->call_openai_with_retry( $model, $context, $tokens );
         if ( is_wp_error( $response ) ) {
             return $response;
         }
@@ -1281,8 +1334,9 @@ SYSTEM;
                 'content' => $prompt,
             ],
         ];
-        $context  = $this->build_context_for_responses( $history );
-        $response = $this->call_openai_with_retry( $model, $context );
+        $context = $this->build_context_for_responses( $history );
+        $tokens  = $this->tokens_for_report( 'tech_research' );
+        $response = $this->call_openai_with_retry( $model, $context, $tokens );
         if ( is_wp_error( $response ) ) {
             return $response;
         }
@@ -1495,11 +1549,11 @@ SYSTEM;
      * Call OpenAI with retry logic.
      */
 
-    private function call_openai_with_retry( $model, $prompt, $max_retries = null ) {
+    private function call_openai_with_retry( $model, $prompt, $max_output_tokens = null, $max_retries = null ) {
         $max_retries = $max_retries ?? intval( $this->gpt5_config['max_retries'] );
 
         for ( $attempt = 1; $attempt <= $max_retries; $attempt++ ) {
-            $response = $this->call_openai( $model, $prompt );
+            $response = $this->call_openai( $model, $prompt, $max_output_tokens );
 
             if ( ! is_wp_error( $response ) ) {
                 return $response;
@@ -1565,9 +1619,9 @@ SYSTEM;
         $endpoint         = 'https://api.openai.com/v1/responses'; // Correct endpoint.
         $model_name       = sanitize_text_field( $model ?: 'gpt-5-mini' );
         $model_name       = rtbcb_normalize_model_name( $model_name );
-        $default_tokens    = intval( $this->gpt5_config['max_output_tokens'] ?? 20000 );
+        $default_tokens    = intval( $this->gpt5_config['max_output_tokens'] ?? 8000 );
         $max_output_tokens = intval( $max_output_tokens ?? $default_tokens );
-        $max_output_tokens = min( 50000, max( 256, $max_output_tokens ) );
+        $max_output_tokens = min( 8000, max( 256, $max_output_tokens ) );
 
         if ( is_array( $prompt ) && isset( $prompt['input'] ) ) {
             $instructions = sanitize_textarea_field( $prompt['instructions'] ?? '' );

@@ -39,15 +39,15 @@ A comprehensive WordPress plugin that helps treasury teams quantify the benefits
 
    The API tester uses this value to verify connectivity.
 
-   By default, the plugin configures `max_output_tokens` to `20000` for GPT-5 models.
-   You can adjust this value up to `50000` tokens via the plugin settings,
+   By default, the plugin configures `max_output_tokens` to `8000` for GPT-5 models.
+   You can adjust this value up to `8000` tokens via the plugin settings,
    by setting an environment variable, or by creating a configuration file:
 
-   - **Environment variable**: `RTBCB_MAX_OUTPUT_TOKENS=50000`
+   - **Environment variable**: `RTBCB_MAX_OUTPUT_TOKENS=8000`
    - **Config file**: create `rtbcb-config.json` in the project root with
-     `{ "max_output_tokens": 50000 }`
+     `{ "max_output_tokens": 8000 }`
 
-   Values outside the `256`–`50000` range are ignored.
+   Values outside the `256`–`8000` range are ignored.
 
 #### Model Temperature Support
 
