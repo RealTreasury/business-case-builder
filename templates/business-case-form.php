@@ -42,6 +42,7 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 
                     <!-- Progress Indicator -->
                     <div class="rtbcb-wizard-progress">
+                        <div class="rtbcb-progress-line"></div>
                         <div class="rtbcb-progress-steps">
                             <div class="rtbcb-progress-step active" data-step="1">
                                 <div class="rtbcb-progress-number">1</div>

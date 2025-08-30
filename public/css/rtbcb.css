@@ -1161,7 +1161,7 @@
     .rtbcb-wizard-progress {
         background: linear-gradient(135deg, rgba(248, 249, 255, 0.8), rgba(243, 244, 255, 0.9));
         width: 100%;
-        margin: -32px auto 32px;
+        margin: 0 auto 32px;
         padding: 16px 32px;
         border-bottom: 1px solid rgba(114, 22, 244, 0.1);
         backdrop-filter: blur(10px);
@@ -1170,34 +1170,46 @@
         justify-content: center;
     }
 
-.rtbcb-progress-steps {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    position: relative;
-}
+    .rtbcb-wizard-progress::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        height: 2px;
+        width: 100%;
+        background: rgba(226, 232, 240, 0.6);
+        z-index: 0;
+    }
 
-.rtbcb-progress-steps::before {
-    content: '';
-    position: absolute;
-    top: 16px;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: rgba(226, 232, 240, 0.6);
-    z-index: 0;
-}
+    .rtbcb-progress-line {
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        height: 2px;
+        width: 0;
+        background: var(--success-green);
+        z-index: 1;
+        transition: width 0.3s ease;
+    }
 
-.rtbcb-progress-step {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    position: relative;
-    z-index: 2;
-    background: transparent;
-    padding: 0 8px;
-}
+    .rtbcb-progress-steps {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        position: relative;
+        z-index: 2;
+    }
+
+    .rtbcb-progress-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+        z-index: 2;
+        background: transparent;
+        padding: 0 8px;
+    }
 
 .rtbcb-progress-number {
     width: 48px;
@@ -1550,10 +1562,6 @@
 
     .rtbcb-progress-steps {
         gap: 16px;
-    }
-
-    .rtbcb-progress-steps::before {
-        display: none;
     }
 
     .rtbcb-progress-number {
