@@ -164,24 +164,16 @@ class RTBCB_Ajax {
 		wp_send_json_success( $status );
 	}
 
-	private static function collect_and_validate_user_inputs() {
-		$user_inputs = [
-			'email'                  => sanitize_email( wp_unslash( $_POST['email'] ?? '' ) ),
-			'company_name'           => sanitize_text_field( wp_unslash( $_POST['company_name'] ?? '' ) ),
-			'company_size'           => sanitize_text_field( wp_unslash( $_POST['company_size'] ?? '' ) ),
-			'industry'               => sanitize_text_field( wp_unslash( $_POST['industry'] ?? '' ) ),
-			'hours_reconciliation'   => floatval( wp_unslash( $_POST['hours_reconciliation'] ?? 0 ) ),
-			'hours_cash_positioning' => floatval( wp_unslash( $_POST['hours_cash_positioning'] ?? 0 ) ),
-			'num_banks'              => intval( wp_unslash( $_POST['num_banks'] ?? 0 ) ),
-			'ftes'                   => floatval( wp_unslash( $_POST['ftes'] ?? 0 ) ),
-			'pain_points'            => array_map( 'sanitize_text_field', (array) wp_unslash( $_POST['pain_points'] ?? [] ) ),
-			'business_objective'     => sanitize_text_field( wp_unslash( $_POST['business_objective'] ?? '' ) ),
-			'implementation_timeline'=> sanitize_text_field( wp_unslash( $_POST['implementation_timeline'] ?? '' ) ),
-			'budget_range'           => sanitize_text_field( wp_unslash( $_POST['budget_range'] ?? '' ) ),
-		];
+       private static function collect_and_validate_user_inputs() {
+               $validator = new RTBCB_Validator();
+               $validated = $validator->validate( $_POST );
 
-		return $user_inputs;
-	}
+               if ( isset( $validated['error'] ) ) {
+                       return new WP_Error( 'validation_error', $validated['error'] );
+               }
+
+               return $validated;
+       }
 
 	private static function create_fallback_profile( $user_inputs ) {
 		return [
