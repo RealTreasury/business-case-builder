@@ -533,22 +533,35 @@ class Real_Treasury_BCB {
         return true;
     }
 
-		/**
-		 * Determine if comprehensive template should be used.
-		 *
-		 * @return bool
-		 */
-		private function should_use_comprehensive_template() {
-		$comprehensive_enabled = get_option( 'rtbcb_comprehensive_analysis', true );
-		
-		$template_path  = RTBCB_DIR . 'templates/comprehensive-report-template.php';
-		$template_exists = file_exists( $template_path );
-		
-		$css_path   = RTBCB_DIR . 'public/css/enhanced-report.css';
-		$css_exists = file_exists( $css_path );
-		
-		return $comprehensive_enabled && $template_exists && $css_exists;
-		}
+               /**
+                * Determine if comprehensive template should be used.
+                *
+                * @return bool
+                */
+               private function should_use_comprehensive_template() {
+$comprehensive_enabled = get_option( 'rtbcb_comprehensive_analysis', true );
+
+$template_path  = RTBCB_DIR . 'templates/comprehensive-report-template.php';
+$template_exists = file_exists( $template_path );
+
+$css_path   = RTBCB_DIR . 'public/css/enhanced-report.css';
+$css_exists = file_exists( $css_path );
+
+$use_comprehensive = $comprehensive_enabled && $template_exists && $css_exists;
+rtbcb_log_api_debug(
+'Comprehensive template check',
+[
+'enabled'          => $comprehensive_enabled,
+'template_exists'  => $template_exists,
+'css_exists'       => $css_exists,
+'template_path'    => $template_path,
+'css_path'         => $css_path,
+'use_comprehensive' => $use_comprehensive,
+]
+);
+
+return $use_comprehensive;
+}
 
     /**
      * Shortcode handler.
@@ -1604,24 +1617,42 @@ class Real_Treasury_BCB {
     *
     * @return string
     */
-		private function get_comprehensive_report_html( $business_case_data ) {
-		if ( $this->should_use_comprehensive_template() ) {
-		$template_path = RTBCB_DIR . 'templates/comprehensive-report-template.php';
-		} else {
-		$template_path = RTBCB_DIR . 'templates/report-template.php';
-		}
-		if ( ! file_exists( $template_path ) ) {
-		error_log( 'RTBCB: No report template found at: ' . $template_path );
-		return '';
-		}
-		$business_case_data = is_array( $business_case_data ) ? $business_case_data : [];
-		// Transform data structure for template.
-		$report_data = $this->transform_data_for_template( $business_case_data );
-		ob_start();
-		include $template_path;
-		$html = ob_get_clean();
-		return wp_kses_post( $html );
-		}
+               private function get_comprehensive_report_html( $business_case_data ) {
+$use_comprehensive = $this->should_use_comprehensive_template();
+
+if ( $use_comprehensive ) {
+$template_path = RTBCB_DIR . 'templates/comprehensive-report-template.php';
+rtbcb_log_api_debug(
+'Using comprehensive report template',
+[
+'template_path' => $template_path,
+'use_comprehensive' => $use_comprehensive,
+]
+);
+} else {
+$template_path = RTBCB_DIR . 'templates/report-template.php';
+rtbcb_log_api_debug(
+'Using basic report template',
+[
+'template_path' => $template_path,
+'use_comprehensive' => $use_comprehensive,
+]
+);
+}
+
+if ( ! file_exists( $template_path ) ) {
+rtbcb_log_error( 'No report template found', [ 'template_path' => $template_path ] );
+return '';
+}
+
+$business_case_data = is_array( $business_case_data ) ? $business_case_data : [];
+// Transform data structure for template.
+$report_data = $this->transform_data_for_template( $business_case_data );
+ob_start();
+include $template_path;
+$html = ob_get_clean();
+return wp_kses_post( $html );
+               }
 
    /**
     * Transform LLM response data into the structure expected by comprehensive template.

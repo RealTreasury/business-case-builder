@@ -237,24 +237,27 @@ class RTBCB_Router {
     *
     * @return string
     */
-   private function get_comprehensive_report_html( $business_case_data ) {
-       $template_path = RTBCB_DIR . 'templates/comprehensive-report-template.php';
+    private function get_comprehensive_report_html( $business_case_data ) {
+        $template_path = RTBCB_DIR . 'templates/comprehensive-report-template.php';
 
-       if ( ! file_exists( $template_path ) ) {
-           return $this->get_report_html( $business_case_data );
-       }
+        if ( file_exists( $template_path ) ) {
+            rtbcb_log_api_debug( 'Router: using comprehensive template', [ 'template_path' => $template_path ] );
+        } else {
+            rtbcb_log_api_debug( 'Router: comprehensive template missing, using basic template', [ 'template_path' => $template_path ] );
+            return $this->get_report_html( $business_case_data );
+        }
 
-       $business_case_data = is_array( $business_case_data ) ? $business_case_data : [];
+        $business_case_data = is_array( $business_case_data ) ? $business_case_data : [];
 
-       // Transform data structure for comprehensive template.
-       $report_data = $this->transform_data_for_template( $business_case_data );
+        // Transform data structure for comprehensive template.
+        $report_data = $this->transform_data_for_template( $business_case_data );
 
-       ob_start();
-       include $template_path;
-       $html = ob_get_clean();
+        ob_start();
+        include $template_path;
+        $html = ob_get_clean();
 
-       return wp_kses_post( $html );
-   }
+        return wp_kses_post( $html );
+    }
 
    /**
     * Transform LLM response data into the structure expected by comprehensive template.
