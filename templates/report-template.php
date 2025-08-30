@@ -17,10 +17,16 @@ if ( ! defined( 'ABSPATH' ) ) {
         <p><?php echo esc_html( $business_case_data['narrative'] ); ?></p>
     <?php endif; ?>
 
-    <?php if ( ! empty( $business_case_data['risks'] ) ) : ?>
+    <?php
+    $risks = (array) ( $business_case_data['risks'] ?? [] );
+    if ( empty( $risks ) ) {
+	$risks[] = __( 'No data provided', 'rtbcb' );
+    }
+    if ( ! empty( $risks ) ) :
+    ?>
         <h3><?php echo esc_html__( 'Risks', 'rtbcb' ); ?></h3>
         <ul>
-            <?php foreach ( (array) $business_case_data['risks'] as $risk ) : ?>
+            <?php foreach ( $risks as $risk ) : ?>
                 <li><?php echo esc_html( $risk ); ?></li>
             <?php endforeach; ?>
         </ul>

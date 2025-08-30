@@ -268,6 +268,16 @@ class RTBCB_Router {
        $company      = rtbcb_get_current_company();
        $company_name = $business_case_data['company_name'] ?? $company['name'] ?? __( 'Your Company', 'rtbcb' );
 
+       $operational_analysis = (array) ( $business_case_data['operational_analysis'] ?? [] );
+       if ( empty( $operational_analysis ) ) {
+               $operational_analysis[] = __( 'No data provided', 'rtbcb' );
+       }
+
+       $risks = (array) ( $business_case_data['risks'] ?? [] );
+       if ( empty( $risks ) ) {
+               $risks[] = __( 'No data provided', 'rtbcb' );
+       }
+
        // Create structured data format expected by template.
        $report_data = [
            'metadata'            => [
@@ -310,9 +320,9 @@ class RTBCB_Router {
                'recommended_category' => $business_case_data['recommended_category'] ?? 'treasury_management_system',
                'category_details'     => $business_case_data['category_info'] ?? [],
            ],
-           'operational_insights' => $business_case_data['operational_analysis'] ?? [],
+           'operational_insights' => $operational_analysis,
            'risk_analysis'        => [
-               'implementation_risks' => $business_case_data['risks'] ?? [],
+               'implementation_risks' => $risks,
            ],
            'action_plan'          => [
                'immediate_steps'   => $this->extract_immediate_steps( $business_case_data ),

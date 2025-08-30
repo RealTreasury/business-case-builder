@@ -21,8 +21,15 @@ $executive_summary    = $report_data['executive_summary'] ?? [];
 $company_intelligence = $report_data['company_intelligence'] ?? [];
 $financial_analysis   = $report_data['financial_analysis'] ?? [];
 $technology_strategy  = $report_data['technology_strategy'] ?? [];
-$operational_insights = $report_data['operational_insights'] ?? [];
-$risk_analysis        = $report_data['risk_analysis'] ?? [];
+$operational_insights = (array) ( $report_data['operational_insights'] ?? [] );
+if ( empty( $operational_insights ) ) {
+	$operational_insights[] = __( 'No data provided', 'rtbcb' );
+}
+
+$risk_analysis        = (array) ( $report_data['risk_analysis'] ?? [] );
+if ( empty( $risk_analysis ) ) {
+	$risk_analysis[] = __( 'No data provided', 'rtbcb' );
+}
 $action_plan          = $report_data['action_plan'] ?? [];
 
 $company_name    = $metadata['company_name'] ?? __( 'Your Company', 'rtbcb' );
