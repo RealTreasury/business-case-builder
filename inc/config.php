@@ -37,15 +37,16 @@ function rtbcb_get_default_model( $tier ) {
  */
 function rtbcb_get_gpt5_config( $overrides = [] ) {
     $defaults = [
-        'model'             => 'gpt-5-mini',
-        'max_output_tokens' => 8000,
-        'temperature'       => 0.7,
-        'store'             => true,
-        'timeout'           => 180,
-        'max_retries'       => 2,
-        'reasoning_effort'  => 'medium',
-        'text_verbosity'    => 'medium',
-    ];
+'model'             => 'gpt-5-mini',
+'max_output_tokens' => 8000,
+'temperature'       => 0.7,
+'store'             => true,
+'timeout'           => 180,
+'max_retries'       => 2,
+'global_timeout'    => 300,
+'reasoning_effort'  => 'medium',
+'text_verbosity'    => 'medium',
+];
 
     $file_overrides = [];
     $config_path    = dirname( __DIR__ ) . '/rtbcb-config.json';

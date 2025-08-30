@@ -1693,53 +1693,92 @@ SYSTEM;
      * @param int|null     $max_retries       Number of retries.
      * @return array|WP_Error Response array or error.
      */
-    private function call_openai_with_retry( $model, $prompt, $max_output_tokens = null, $max_retries = null ) {
-        $max_retries     = $max_retries ?? intval( $this->gpt5_config['max_retries'] );
-        $base_timeout    = intval( $this->gpt5_config['timeout'] ?? 180 );
-        $current_timeout = $base_timeout;
-        $current_tokens  = $max_output_tokens;
+	private function call_openai_with_retry( $model, $prompt, $max_output_tokens = null, $max_retries = null ) {
+		$max_retries     = $max_retries ?? intval( $this->gpt5_config['max_retries'] );
+		$base_timeout    = intval( $this->gpt5_config['timeout'] ?? 180 );
+		$current_timeout = $base_timeout;
+		$current_tokens  = $max_output_tokens;
+		$start_time      = microtime( true );
+		$global_timeout  = intval( $this->gpt5_config['global_timeout'] ?? 300 );
 
-        for ( $attempt = 1; $attempt <= $max_retries; $attempt++ ) {
-            $this->gpt5_config['timeout'] = $current_timeout;
+		for ( $attempt = 1; $attempt <= $max_retries; $attempt++ ) {
+			if ( microtime( true ) - $start_time >= $global_timeout ) {
+				$response = new WP_Error( 'llm_global_timeout', __( 'The language model request exceeded the overall time limit.', 'rtbcb' ) );
+				break;
+			}
 
-            $response = $this->call_openai( $model, $prompt, $current_tokens );
+			$this->gpt5_config['timeout'] = $current_timeout;
 
-            if ( ! is_wp_error( $response ) ) {
-                $this->gpt5_config['timeout'] = $base_timeout;
-                return $response;
-            }
+			$response = $this->call_openai( $model, $prompt, $current_tokens );
 
-            error_log( "RTBCB: OpenAI attempt {$attempt} failed: " . $response->get_error_message() );
+			if ( ! is_wp_error( $response ) ) {
+				$this->gpt5_config['timeout'] = $base_timeout;
+				return $response;
+			}
 
-            if ( $attempt < $max_retries ) {
-                if ( null !== $current_tokens ) {
-                    $current_tokens = max( 256, (int) ( $current_tokens * 0.9 ) );
-                }
+			error_log( "RTBCB: OpenAI attempt {$attempt} failed: " . $response->get_error_message() );
 
-                $current_timeout += 5;
+			if ( ! $this->is_recoverable_error( $response ) ) {
+				break;
+			}
 
-                $delay  = pow( 2, $attempt - 1 );
-                $jitter = wp_rand( 0, 1000 ) / 1000;
-                usleep( (int) ( ( $delay + $jitter ) * 1000000 ) );
-            }
-        }
+			if ( $attempt < $max_retries ) {
+				if ( null !== $current_tokens ) {
+					$current_tokens = max( 256, (int) ( $current_tokens * 0.9 ) );
+				}
 
-        $this->gpt5_config['timeout'] = $base_timeout;
+				$current_timeout = min( $global_timeout, $current_timeout + 5 );
 
-        return $response; // Return last error
-    }
+				$delay    = pow( 2, $attempt - 1 );
+				$jitter   = wp_rand( 0, 1000 ) / 1000;
+				$elapsed  = microtime( true ) - $start_time;
+				$remaining = $global_timeout - $elapsed;
+				$sleep_for = min( $delay + $jitter, $remaining );
 
-    /**
-     * Build instructions and input for the Responses API.
-     *
-     * @param array       $history       Array of conversation items.
-     * @param string|null $system_prompt Optional system prompt.
-     *
-     * @return array {
-     *     @type string $instructions System prompt for the model.
-     *     @type string $input        User prompt for the model.
-     * }
-     */
+				if ( $sleep_for > 0 ) {
+					usleep( (int) ( $sleep_for * 1000000 ) );
+				}
+			}
+		}
+
+		$this->gpt5_config['timeout'] = $base_timeout;
+
+		return $response; // Return last error
+	}
+	/**
+	 * Determine whether an error is recoverable.
+	 *
+	 * @param WP_Error $error Error to inspect.
+	 * @return bool True if the error should trigger a retry.
+	 */
+	private function is_recoverable_error( $error ) {
+		if ( ! is_wp_error( $error ) ) {
+			return true;
+		}
+
+		$code = method_exists( $error, 'get_error_code' ) ? $error->get_error_code() : '';
+
+		if ( 'llm_http_status' === $code ) {
+			$data   = method_exists( $error, 'get_error_data' ) ? $error->get_error_data() : [];
+			$status = intval( $data['status'] ?? 0 );
+			return in_array( $status, [ 408, 429, 500, 502, 503, 504 ], true );
+		}
+
+return in_array( $code, [ 'llm_timeout', 'llm_http_error' ], true );
+}
+
+
+/**
+ * Build instructions and input for the Responses API.
+ *
+ * @param array       $history       Array of conversation items.
+ * @param string|null $system_prompt Optional system prompt.
+ *
+ * @return array {
+ *     @type string $instructions System prompt for the model.
+ *     @type string $input        User prompt for the model.
+ * }
+ */
     private function build_context_for_responses( $history, $system_prompt = null ) {
         $default_system = 'You are a senior treasury technology consultant. Provide detailed, research-driven analysis in the exact JSON format requested. Do not include any text outside the JSON structure.';
 
