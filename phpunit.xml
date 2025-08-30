@@ -1,8 +1,9 @@
 <?xml version="1.0"?>
 <phpunit>
   <testsuites>
-    <testsuite name="validator">
+    <testsuite name="rtbcb">
       <file>tests/validator.test.php</file>
+      <file>tests/edge-cases.test.php</file>
     </testsuite>
   </testsuites>
 </phpunit>
