@@ -469,9 +469,9 @@ class BusinessCaseBuilder {
                 throw new Error('Server returned invalid JSON response');
             }
 
-            if (data.success) {
-                console.log('RTBCB: Success response received');
-                this.handleSuccess(data.data);
+            if (data.success && data.data && data.data.job_id) {
+                console.log('RTBCB: Job queued');
+                this.pollJob(data.data.job_id);
             } else {
                 console.error('RTBCB: Error response:', data.data);
                 this.handleError(data.data);
@@ -523,6 +523,30 @@ class BusinessCaseBuilder {
 
     showErrorMessage(message) {
         this.showError(message);
+    }
+
+    async pollJob(jobId) {
+        try {
+            const response = await fetch(`${this.ajaxUrl}?action=rtbcb_job_status&job_id=${encodeURIComponent(jobId)}&rtbcb_nonce=${rtbcbAjax.nonce}`, {
+                credentials: 'same-origin',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const data = await response.json();
+            if (!data.success) {
+                this.handleError({ message: 'Unable to retrieve job status', type: 'polling_error' });
+                return;
+            }
+            const status = data.data.status;
+            if (status === 'completed') {
+                this.handleSuccess(data.data.result);
+            } else if (status === 'error') {
+                this.handleError({ message: data.data.message || 'Job failed', type: 'job_error' });
+            } else {
+                setTimeout(() => this.pollJob(jobId), 2000);
+            }
+        } catch (error) {
+            this.handleError({ message: error.message || 'An unexpected error occurred', type: 'polling_error' });
+        }
     }
 
     // Enhanced form validation
