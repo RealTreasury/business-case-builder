@@ -452,12 +452,25 @@ class BusinessCaseBuilder {
             }
 
             let result;
-            try {
-                result = await response.clone().json();
-            } catch (e) {
+            const contentType = response.headers && typeof response.headers.get === 'function'
+                ? response.headers.get('content-type') || ''
+                : '';
+            if (!contentType || contentType.includes('application/json')) {
+                try {
+                    result = await response.json();
+                } catch (e) {
+                    const rawText = await response.text();
+                    console.warn('RTBCB: Unexpected server response:', rawText);
+                    const parseError = new Error('Unexpected server response');
+                    parseError.status = response.status;
+                    throw parseError;
+                }
+            } else {
                 const rawText = await response.text();
                 console.warn('RTBCB: Unexpected server response:', rawText);
-                throw new Error('Unexpected server response');
+                const typeError = new Error('Unexpected server response');
+                typeError.status = response.status;
+                throw typeError;
             }
 
             if (response.ok) {
