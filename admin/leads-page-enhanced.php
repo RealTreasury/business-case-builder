@@ -99,6 +99,7 @@ $order   = isset( $order ) ? sanitize_key( $order ) : 'DESC';
                                 <?php endif; ?>
                             </a>
                         </th>
+                        <th class="manage-column column-company-name"><?php esc_html_e( 'Company', 'rtbcb' ); ?></th>
                         <th class="manage-column column-company-size"><?php esc_html_e( 'Company Size', 'rtbcb' ); ?></th>
                         <th class="manage-column column-category"><?php esc_html_e( 'Recommended Category', 'rtbcb' ); ?></th>
                         <th class="manage-column column-roi"><?php esc_html_e( 'Base ROI', 'rtbcb' ); ?></th>
@@ -134,6 +135,13 @@ $order   = isset( $order ) ? sanitize_key( $order ) : 'DESC';
                                     </span>
                                 </div>
                                 <button type="button" class="toggle-row"><span class="screen-reader-text"><?php esc_html_e( 'Show more details', 'rtbcb' ); ?></span></button>
+                            </td>
+                            <td class="column-company-name" data-colname="<?php esc_attr_e( 'Company', 'rtbcb' ); ?>">
+                                <?php if ( ! empty( $lead['company_name'] ) ) : ?>
+                                    <?php echo esc_html( $lead['company_name'] ); ?>
+                                <?php else : ?>
+                                    <span class="rtbcb-no-data"><?php esc_html_e( 'No data', 'rtbcb' ); ?></span>
+                                <?php endif; ?>
                             </td>
                             <td class="column-company-size" data-colname="<?php esc_attr_e( 'Company Size', 'rtbcb' ); ?>">
                                 <span class="rtbcb-company-size-badge rtbcb-size-<?php echo esc_attr( sanitize_title( $lead['company_size'] ) ); ?>">

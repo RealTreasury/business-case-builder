@@ -32,6 +32,7 @@ class RTBCB_Leads {
         $sql = "CREATE TABLE " . self::$table_name . " (
             id mediumint(9) NOT NULL AUTO_INCREMENT,
             email varchar(255) NOT NULL,
+            company_name varchar(255) DEFAULT '',
             company_size varchar(50) DEFAULT '',
             industry varchar(50) DEFAULT '',
             hours_reconciliation decimal(5,2) DEFAULT 0,
@@ -79,6 +80,7 @@ class RTBCB_Leads {
                 $simple_sql = "CREATE TABLE IF NOT EXISTS " . self::$table_name . " (
                     id mediumint(9) NOT NULL AUTO_INCREMENT,
                     email varchar(255) NOT NULL,
+                    company_name varchar(255) DEFAULT '',
                     company_size varchar(50) DEFAULT '',
                     industry varchar(50) DEFAULT '',
                     hours_reconciliation decimal(5,2) DEFAULT 0,
@@ -169,6 +171,7 @@ class RTBCB_Leads {
         // Sanitize data with proper validation
         $sanitized_data = [
             'email'                   => sanitize_email( $lead_data['email'] ),
+            'company_name'            => sanitize_text_field( $lead_data['company_name'] ?? '' ),
             'company_size'            => sanitize_text_field( $lead_data['company_size'] ?? '' ),
             'industry'                => sanitize_text_field( $lead_data['industry'] ?? '' ),
             'hours_reconciliation'    => floatval( $lead_data['hours_reconciliation'] ?? 0 ),
@@ -191,6 +194,7 @@ class RTBCB_Leads {
         // Prepare format array to match the sanitized data
         $formats = [
             '%s', // email
+            '%s', // company_name
             '%s', // company_size
             '%s', // industry
             '%f', // hours_reconciliation
