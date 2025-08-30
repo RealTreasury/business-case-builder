@@ -539,7 +539,7 @@ class BusinessCaseBuilder {
             }
             const status = data.data.status;
             if (status === 'completed') {
-                const report = data.data.report_data;
+                const report = data.data.result?.report_data || data.data.report_data;
                 if (report) {
                     this.handleSuccess(report);
                 } else {
