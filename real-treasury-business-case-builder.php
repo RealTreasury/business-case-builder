@@ -412,16 +412,8 @@ class Real_Treasury_BCB {
             false
         );
 
-        wp_enqueue_script(
-            'rtbcb-script',
-            RTBCB_URL . 'public/js/rtbcb.js',
-            [ 'jquery', 'rtbcb-wizard', 'dompurify' ],
-            RTBCB_VERSION,
-            true
-        );
-
         wp_localize_script(
-            'rtbcb-script',
+            'rtbcb-wizard',
             'rtbcbAjax',
             [
                 'ajax_url'    => admin_url( 'admin-ajax.php' ),
@@ -447,6 +439,14 @@ class Real_Treasury_BCB {
                     'professional_reports'   => get_option( 'rtbcb_professional_reports', true ),
                 ],
             ]
+        );
+
+        wp_enqueue_script(
+            'rtbcb-script',
+            RTBCB_URL . 'public/js/rtbcb.js',
+            [ 'jquery', 'rtbcb-wizard', 'dompurify' ],
+            RTBCB_VERSION,
+            true
         );
 
         wp_enqueue_script(
