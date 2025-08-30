@@ -720,113 +720,118 @@ return $use_comprehensive;
     }
 
 
+		/**
+		 * Enhanced AJAX handler for comprehensive case generation.
+		 */
+		public function ajax_generate_comprehensive_case_enhanced() {
+			// Security and setup.
+			if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
+				wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
+				return;
+			}
 
-	    /**
-	     * Enhanced AJAX handler for comprehensive case generation.
-	     */
-	    public function ajax_generate_comprehensive_case_enhanced() {
-	// Security and setup
-	if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
-	wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
-	return;
-	}
-	
-	// Setup environment
-	rtbcb_setup_ajax_logging();
-	rtbcb_increase_memory_limit();
-	
-	$timeout = absint( rtbcb_get_api_timeout() );
-	if ( ! ini_get( 'safe_mode' ) && $timeout > 0 ) {
-	set_time_limit( $timeout );
-	}
-	
-	try {
-	// Collect and validate user inputs
-	$user_inputs = $this->collect_and_validate_inputs();
-	if ( is_wp_error( $user_inputs ) ) {
-	wp_send_json_error( [ 'message' => $user_inputs->get_error_message() ], 400 );
-	return;
-	}
-	
-	// Calculate ROI scenarios
-	if ( ! class_exists( 'RTBCB_Calculator' ) ) {
-	wp_send_json_error( [ 'message' => __( 'System error: Calculator not available.', 'rtbcb' ) ], 500 );
-	return;
-	}
-	
-	$scenarios = RTBCB_Calculator::calculate_roi( $user_inputs );
-	
-	// Get category recommendation
-	if ( ! class_exists( 'RTBCB_Category_Recommender' ) ) {
-	wp_send_json_error( [ 'message' => __( 'System error: Recommender not available.', 'rtbcb' ) ], 500 );
-	return;
-	}
-	
-	$recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
-	
-	// Get RAG context if available
-	$rag_context = $this->get_rag_context( $user_inputs, $recommendation );
-	
-	// Generate business case analysis
-	$comprehensive_analysis = $this->generate_business_analysis( $user_inputs, $scenarios, $rag_context );
-	
-	if ( is_wp_error( $comprehensive_analysis ) ) {
-	wp_send_json_error( [ 'message' => $comprehensive_analysis->get_error_message() ], 500 );
-	return;
-	}
-	
-	// Merge all data for report generation
-	$report_data = array_merge(
-	$comprehensive_analysis,
-	[
-	'company_name'    => $user_inputs['company_name'],
-	'scenarios'       => $scenarios,
-	'recommendation'  => $recommendation,
-	'rag_context'     => $rag_context,
-	'processing_time' => microtime( true ) - $_SERVER['REQUEST_TIME_FLOAT'],
-	]
-	);
-	
-        // Generate HTML report using our fixed method
-        $report_html = $this->get_comprehensive_report_html( $report_data );
+			// Setup environment.
+			rtbcb_setup_ajax_logging();
+			rtbcb_increase_memory_limit();
 
-        if ( is_wp_error( $report_html ) ) {
-        wp_send_json_error( [ 'message' => $report_html->get_error_message() ], 500 );
-        return;
-        }
+			$timeout = absint( rtbcb_get_api_timeout() );
+			if ( ! ini_get( 'safe_mode' ) && $timeout > 0 ) {
+				set_time_limit( $timeout );
+			}
 
-        if ( empty( $report_html ) ) {
-        wp_send_json_error( [ 'message' => __( 'Failed to generate report HTML.', 'rtbcb' ) ], 500 );
-        return;
-        }
-	
-	// Save lead data
-	$lead_id = $this->save_lead_data( $user_inputs, $scenarios, $recommendation, $report_html );
-	
-	// Format response data
-	$formatted_scenarios = $this->format_scenarios_for_response( $scenarios );
-	
-	$response_data = [
-	'scenarios'              => $formatted_scenarios,
-	'recommendation'         => $recommendation,
-	'comprehensive_analysis' => $comprehensive_analysis,
-	'report_html'            => $report_html,
-	'lead_id'                => $lead_id,
-	'company_name'           => $user_inputs['company_name'],
-	'analysis_type'          => 'comprehensive_enhanced',
-	'memory_info'            => rtbcb_get_memory_status(),
-	];
-	
-	wp_send_json_success( $response_data );
-	
-	} catch ( Exception $e ) {
-	rtbcb_log_error( 'Ajax exception', $e->getMessage() );
-	wp_send_json_error( [ 'message' => __( 'An error occurred while generating your business case.', 'rtbcb' ) ], 500 );
-	} catch ( Error $e ) {
-	rtbcb_log_error( 'Ajax fatal error', $e->getMessage() );
-	wp_send_json_error( [ 'message' => __( 'A system error occurred. Please contact support.', 'rtbcb' ) ], 500 );
-	}
-	}
+			// Collect and validate user inputs.
+			$user_inputs = $this->collect_and_validate_inputs();
+			if ( is_wp_error( $user_inputs ) ) {
+				wp_send_json_error( [ 'message' => $user_inputs->get_error_message() ], 400 );
+				return;
+			}
+
+			// Offload complex cases to background processing.
+			if ( ! rtbcb_is_simple_case( $user_inputs ) ) {
+				$job_id = RTBCB_Background_Job::enqueue( $user_inputs );
+				wp_send_json_success( [ 'job_id' => $job_id ] );
+				return;
+			}
+
+			try {
+				// Calculate ROI scenarios.
+				if ( ! class_exists( 'RTBCB_Calculator' ) ) {
+					wp_send_json_error( [ 'message' => __( 'System error: Calculator not available.', 'rtbcb' ) ], 500 );
+					return;
+				}
+
+				$scenarios = RTBCB_Calculator::calculate_roi( $user_inputs );
+
+				// Get category recommendation.
+				if ( ! class_exists( 'RTBCB_Category_Recommender' ) ) {
+					wp_send_json_error( [ 'message' => __( 'System error: Recommender not available.', 'rtbcb' ) ], 500 );
+					return;
+				}
+
+				$recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
+
+				// Get RAG context if available.
+				$rag_context = $this->get_rag_context( $user_inputs, $recommendation );
+
+				// Generate business case analysis.
+				$comprehensive_analysis = $this->generate_business_analysis( $user_inputs, $scenarios, $rag_context );
+
+				if ( is_wp_error( $comprehensive_analysis ) ) {
+					wp_send_json_error( [ 'message' => $comprehensive_analysis->get_error_message() ], 500 );
+					return;
+				}
+
+				// Merge all data for report generation.
+				$report_data = array_merge(
+					$comprehensive_analysis,
+					[
+						'company_name'    => $user_inputs['company_name'],
+						'scenarios'       => $scenarios,
+						'recommendation'  => $recommendation,
+						'rag_context'     => $rag_context,
+						'processing_time' => microtime( true ) - $_SERVER['REQUEST_TIME_FLOAT'],
+					]
+				);
+
+				// Generate HTML report using our fixed method.
+				$report_html = $this->get_comprehensive_report_html( $report_data );
+
+				if ( is_wp_error( $report_html ) ) {
+					wp_send_json_error( [ 'message' => $report_html->get_error_message() ], 500 );
+					return;
+				}
+
+				if ( empty( $report_html ) ) {
+					wp_send_json_error( [ 'message' => __( 'Failed to generate report HTML.', 'rtbcb' ) ], 500 );
+					return;
+				}
+
+				// Save lead data.
+				$lead_id = $this->save_lead_data( $user_inputs, $scenarios, $recommendation, $report_html );
+
+				// Format response data.
+				$formatted_scenarios = $this->format_scenarios_for_response( $scenarios );
+
+				$response_data = [
+					'scenarios'              => $formatted_scenarios,
+					'recommendation'         => $recommendation,
+					'comprehensive_analysis' => $comprehensive_analysis,
+					'report_html'            => $report_html,
+					'lead_id'                => $lead_id,
+					'company_name'           => $user_inputs['company_name'],
+					'analysis_type'          => 'comprehensive_enhanced',
+					'memory_info'            => rtbcb_get_memory_status(),
+				];
+
+				wp_send_json_success( $response_data );
+			} catch ( Exception $e ) {
+				rtbcb_log_error( 'Ajax exception', $e->getMessage() );
+				wp_send_json_error( [ 'message' => __( 'An error occurred while generating your business case.', 'rtbcb' ) ], 500 );
+			} catch ( Error $e ) {
+				rtbcb_log_error( 'Ajax fatal error', $e->getMessage() );
+				wp_send_json_error( [ 'message' => __( 'A system error occurred. Please contact support.', 'rtbcb' ) ], 500 );
+			}
+		}
 	
 	/**
 	 * Collect and validate user inputs from POST data.
