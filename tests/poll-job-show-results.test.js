@@ -24,7 +24,7 @@ describe('pollJob completion', () => {
         vm.runInThisContext(code);
         const BusinessCaseBuilder = vm.runInThisContext('BusinessCaseBuilder');
 
-        const reportData = { report_html: '<div>ok</div>' };
+        const reportData = { company_name: 'Test Co', scenarios: {} };
         const fetchMock = jest.fn().mockResolvedValue({
             json: () => Promise.resolve({
                 success: true,

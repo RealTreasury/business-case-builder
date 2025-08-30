@@ -89,7 +89,7 @@ global.window = {};
   let resultsData = null;
   builder.showProgress = () => {};
   builder.showResults = (data) => { resultsData = data; };
-  builder.showError = () => {};
+  builder.showEnhancedError = () => {};
   builder.pollJob = () => { builder.handleSuccess({ report_html: '<div>Report</div>' }); };
 
 (async () => {
