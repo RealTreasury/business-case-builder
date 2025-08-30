@@ -684,7 +684,7 @@ class Real_Treasury_BCB {
 	    public function ajax_generate_comprehensive_case_enhanced() {
 	// Security and setup
 	if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
-	wp_send_json_error( __( 'Security check failed.', 'rtbcb' ), 403 );
+	wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
 	return;
 	}
 	
@@ -701,13 +701,13 @@ class Real_Treasury_BCB {
 	// Collect and validate user inputs
 	$user_inputs = $this->collect_and_validate_inputs();
 	if ( is_wp_error( $user_inputs ) ) {
-	wp_send_json_error( $user_inputs->get_error_message(), 400 );
+	wp_send_json_error( [ 'message' => $user_inputs->get_error_message() ], 400 );
 	return;
 	}
 	
 	// Calculate ROI scenarios
 	if ( ! class_exists( 'RTBCB_Calculator' ) ) {
-	wp_send_json_error( __( 'System error: Calculator not available.', 'rtbcb' ), 500 );
+	wp_send_json_error( [ 'message' => __( 'System error: Calculator not available.', 'rtbcb' ) ], 500 );
 	return;
 	}
 	
@@ -715,7 +715,7 @@ class Real_Treasury_BCB {
 	
 	// Get category recommendation
 	if ( ! class_exists( 'RTBCB_Category_Recommender' ) ) {
-	wp_send_json_error( __( 'System error: Recommender not available.', 'rtbcb' ), 500 );
+	wp_send_json_error( [ 'message' => __( 'System error: Recommender not available.', 'rtbcb' ) ], 500 );
 	return;
 	}
 	
@@ -728,7 +728,7 @@ class Real_Treasury_BCB {
 	$comprehensive_analysis = $this->generate_business_analysis( $user_inputs, $scenarios, $rag_context );
 	
 	if ( is_wp_error( $comprehensive_analysis ) ) {
-	wp_send_json_error( $comprehensive_analysis->get_error_message(), 500 );
+	wp_send_json_error( [ 'message' => $comprehensive_analysis->get_error_message() ], 500 );
 	return;
 	}
 	
@@ -748,7 +748,7 @@ class Real_Treasury_BCB {
 	$report_html = $this->get_comprehensive_report_html( $report_data );
 	
 	if ( empty( $report_html ) ) {
-	wp_send_json_error( __( 'Failed to generate report HTML.', 'rtbcb' ), 500 );
+	wp_send_json_error( [ 'message' => __( 'Failed to generate report HTML.', 'rtbcb' ) ], 500 );
 	return;
 	}
 	
@@ -773,10 +773,10 @@ class Real_Treasury_BCB {
 	
 	} catch ( Exception $e ) {
 	rtbcb_log_error( 'Ajax exception', $e->getMessage() );
-	wp_send_json_error( __( 'An error occurred while generating your business case.', 'rtbcb' ), 500 );
+	wp_send_json_error( [ 'message' => __( 'An error occurred while generating your business case.', 'rtbcb' ) ], 500 );
 	} catch ( Error $e ) {
 	rtbcb_log_error( 'Ajax fatal error', $e->getMessage() );
-	wp_send_json_error( __( 'A system error occurred. Please contact support.', 'rtbcb' ), 500 );
+	wp_send_json_error( [ 'message' => __( 'A system error occurred. Please contact support.', 'rtbcb' ) ], 500 );
 	}
 	}
 	
