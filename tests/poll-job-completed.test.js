@@ -36,6 +36,7 @@ describe('pollJob', () => {
         builder.ajaxUrl = 'https://example.com';
         builder.handleSuccess = jest.fn();
         builder.handleError = jest.fn();
+        builder.activeJobId = '123';
 
         await builder.pollJob('123');
 

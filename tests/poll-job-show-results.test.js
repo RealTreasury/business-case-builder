@@ -42,6 +42,7 @@ describe('pollJob completion', () => {
         builder.renderResults = () => '';
         builder.populateRiskAssessment = () => {};
         builder.handleError = jest.fn();
+        builder.activeJobId = '123';
 
         const showResultsSpy = jest.spyOn(builder, 'showResults');
 

@@ -24,6 +24,9 @@ window.closeBusinessCaseModal = function() {
         overlay.classList.remove('active');
         document.body.style.overflow = '';
     }
+    if (window.businessCaseBuilder) {
+        window.businessCaseBuilder.cancelPolling();
+    }
 };
 
 // Initialize on DOM ready with error handling
@@ -44,6 +47,8 @@ class BusinessCaseBuilder {
         this.form = document.getElementById('rtbcbForm');
         this.overlay = document.getElementById('rtbcbModalOverlay');
         this.ajaxUrl = ( typeof rtbcbAjax !== 'undefined' && rtbcbAjax.ajax_url ) ? rtbcbAjax.ajax_url : '';
+        this.pollingTimeout = null;
+        this.activeJobId = null;
 
         if ( ! this.form ) {
             return;
@@ -367,6 +372,7 @@ class BusinessCaseBuilder {
 
         try {
             console.log('RTBCB: Starting form submission');
+            this.cancelPolling();
             this.showLoading();
 
             const formData = this.collectFormData();
@@ -410,21 +416,19 @@ class BusinessCaseBuilder {
             }
 
             // Handle JSON response
-            if (data.success) {
-                if (data.data && data.data.job_id) {
-                    // Background job approach
-                    this.pollJob(data.data.job_id, Date.now(), 0);
-                } else if (data.data) {
-                    // Direct HTML or structured data response
-                    if (data.data.report_html) {
-                        this.handleSuccess(data.data);
-                    } else if (data.data.report_data) {
-                        this.handleSuccess(data.data.report_data);
-                    } else {
-                        this.handleSuccess(data.data);
-                    }
+            if (data && data.data && data.data.job_id) {
+                this.activeJobId = data.data.job_id;
+                this.pollJob(this.activeJobId, Date.now(), 0);
+                return;
+            }
+
+            if (data.success && data.data) {
+                if (data.data.report_html) {
+                    this.handleSuccess(data.data);
+                } else if (data.data.report_data) {
+                    this.handleSuccess(data.data.report_data);
                 } else {
-                    throw new Error('No report data received');
+                    this.handleSuccess(data.data);
                 }
             } else {
                 console.error('RTBCB: Error response:', data.data);
@@ -558,14 +562,26 @@ class BusinessCaseBuilder {
         }
     }
 
+    cancelPolling() {
+        if (this.pollingTimeout) {
+            clearTimeout(this.pollingTimeout);
+            this.pollingTimeout = null;
+        }
+        this.activeJobId = null;
+        this.hideLoading();
+    }
+
     async pollJob(jobId, startTime = Date.now(), attempt = 0) {
         const MAX_DURATION = 20 * 60 * 1000; // 20 minutes
         const MAX_ATTEMPTS = 600; // 600 attempts * 2s = 20 minutes max
-        
+        if (this.activeJobId !== jobId) {
+            return;
+        }
+
         if (Date.now() - startTime > MAX_DURATION || attempt > MAX_ATTEMPTS) {
-            this.handleError({ 
-                message: 'The request timed out after 20 minutes. Please try again later.', 
-                type: 'timeout' 
+            this.handleError({
+                message: 'The request timed out after 20 minutes. Please try again later.',
+                type: 'timeout'
             });
             return;
         }
@@ -577,12 +593,33 @@ class BusinessCaseBuilder {
             });
             
             const data = await response.json();
-            
+
             if (!data.success) {
                 this.handleError({ message: 'Unable to retrieve job status', type: 'polling_error' });
                 return;
             }
-            
+
+            const progress = data.data.progress || {};
+            const progressContainer = document.getElementById('rtbcb-progress-container');
+            if (progressContainer && typeof progressContainer.querySelector === 'function') {
+                const textEl = progressContainer.querySelector('.rtbcb-progress-text');
+                const stepEl = progressContainer.querySelector('.rtbcb-progress-step-text');
+                const message = progress.message || progress.status || '';
+                if (textEl && message) {
+                    textEl.textContent = message;
+                }
+                const stepMsg = progress.step || progress.step_text || '';
+                if (stepEl && stepMsg) {
+                    stepEl.textContent = stepMsg;
+                }
+                if (typeof progress.percent === 'number') {
+                    const bar = progressContainer.querySelector('.rtbcb-progress-line');
+                    if (bar) {
+                        bar.style.width = `${progress.percent}%`;
+                    }
+                }
+            }
+
             const status = data.data.status;
             console.log(`RTBCB: Job status: ${status} (attempt ${attempt})`);
             
@@ -595,11 +632,15 @@ class BusinessCaseBuilder {
                 } else {
                     this.handleError({ message: 'Report data missing from completed job', type: 'job_error' });
                 }
+                this.activeJobId = null;
+                this.pollingTimeout = null;
             } else if (status === 'error') {
                 this.handleError({ message: data.data.message || 'Job failed', type: 'job_error' });
+                this.activeJobId = null;
+                this.pollingTimeout = null;
             } else {
                 // Continue polling
-                setTimeout(() => this.pollJob(jobId, startTime, attempt + 1), 2000);
+                this.pollingTimeout = setTimeout(() => this.pollJob(jobId, startTime, attempt + 1), 2000);
             }
         } catch (error) {
             console.error('RTBCB: Job polling error:', error);
