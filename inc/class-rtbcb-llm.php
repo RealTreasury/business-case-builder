@@ -2536,7 +2536,10 @@ return $analysis;
             if ( ! is_array( $decoded ) ) {
                 $decoded = [];
             }
-            RTBCB_API_Log::save_log( $body, $decoded, get_current_user_id() );
+            $company      = rtbcb_get_current_company();
+            $user_email   = $this->current_inputs['email'] ?? ( $company['email'] ?? '' );
+            $company_name = $this->current_inputs['company_name'] ?? ( $company['name'] ?? '' );
+            RTBCB_API_Log::save_log( $body, $decoded, get_current_user_id(), $user_email, $company_name );
         }
 
         if ( $http_code >= 400 ) {
