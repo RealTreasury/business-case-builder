@@ -500,6 +500,57 @@ function rtbcb_normalize_model_name( $model ) {
 }
 
 /**
+ * Send the generated report to the user via email.
+ *
+ * Uses Contact Form 7 if available to leverage its mail settings,
+ * otherwise falls back to wp_mail.
+ *
+ * @param array  $form_data   Form submission data.
+ * @param string $report_path Absolute path to the HTML report file.
+ *
+ * @return void
+ */
+function rtbcb_send_report_email( $form_data, $report_path ) {
+    $email = isset( $form_data['email'] ) ? sanitize_email( $form_data['email'] ) : '';
+
+    if ( empty( $email ) || ! is_readable( $report_path ) ) {
+        return;
+    }
+
+    if ( class_exists( 'WPCF7_ContactForm' ) ) {
+        $form_id = (int) get_option( 'rtbcb_contact_form_id', 0 );
+
+        if ( $form_id ) {
+            $contact_form = \WPCF7_ContactForm::get_instance( $form_id );
+
+            if ( $contact_form ) {
+                $attachment_filter = function( $components ) use ( $report_path, $email ) {
+                    if ( ! isset( $components['attachments'] ) || ! is_array( $components['attachments'] ) ) {
+                        $components['attachments'] = [];
+                    }
+
+                    $components['attachments'][] = $report_path;
+                    $components['recipient']      = $email;
+
+                    return $components;
+                };
+
+                add_filter( 'wpcf7_mail_components', $attachment_filter );
+                $contact_form->submit();
+                remove_filter( 'wpcf7_mail_components', $attachment_filter );
+
+                return;
+            }
+        }
+    }
+
+    $subject = __( 'Your Business Case Report', 'rtbcb' );
+    $message = __( 'Please find your business case report attached.', 'rtbcb' );
+
+    wp_mail( $email, $subject, $message, [], [ $report_path ] );
+}
+
+/**
  * Get client information for analytics
  *
  * @return array Client data

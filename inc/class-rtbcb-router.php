@@ -94,6 +94,24 @@ class RTBCB_Router {
             $leads   = new RTBCB_Leads();
             $lead_id = $leads->save_lead( $form_data, $business_case_data );
 
+            // Write report HTML to temporary file.
+            $upload_dir  = wp_upload_dir();
+            $reports_dir = trailingslashit( $upload_dir['basedir'] ) . 'rtbcb-reports';
+            if ( ! file_exists( $reports_dir ) ) {
+                wp_mkdir_p( $reports_dir );
+            }
+
+            $report_path = trailingslashit( $reports_dir ) . 'report-' . $lead_id . '.html';
+            file_put_contents( $report_path, $report_html );
+
+            // Send report email.
+            rtbcb_send_report_email( $form_data, $report_path );
+
+            // Clean up temporary file.
+            if ( file_exists( $report_path ) ) {
+                unlink( $report_path );
+            }
+
             // Send success response.
             wp_send_json_success(
                 [
