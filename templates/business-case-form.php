@@ -376,34 +376,38 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                         </div>
                     </div>
 
-                    <div class="rtbcb-field">
-                        <div class="rtbcb-consent-wrapper">
-                            <label class="rtbcb-consent-label">
-                                <input type="checkbox" name="consent" required />
-                                <span class="rtbcb-consent-text">
-                                    <?php 
-                                    printf(
-                                        wp_kses(
-                                            __( 'I agree to receive my business case report and occasional treasury insights. You can unsubscribe at any time. View our <a href="%s" target="_blank">privacy policy</a>.', 'rtbcb' ),
-                                            [ 'a' => [ 'href' => [], 'target' => [] ] ]
-                                        ),
-                                        '#'
-                                    );
-                                    ?>
-                                </span>
-                            </label>
+                    <div class="rtbcb-consent-container">
+                        <div class="rtbcb-field">
+                            <div class="rtbcb-consent-wrapper">
+                                <label class="rtbcb-consent-label">
+                                    <input type="checkbox" name="consent" required />
+                                    <span class="rtbcb-consent-text">
+                                        <?php
+                                        printf(
+                                            wp_kses(
+                                                __( 'I agree to receive my business case report and occasional treasury insights. You can unsubscribe at any time. View our <a href="%s" target="_blank">privacy policy</a>.', 'rtbcb' ),
+                                                [ 'a' => [ 'href' => [], 'target' => [] ] ]
+                                            ),
+                                            '#'
+                                        );
+                                        ?>
+                                    </span>
+                                </label>
+                            </div>
                         </div>
                     </div>
 
                     <!-- What You'll Receive Preview -->
-                    <div class="rtbcb-results-preview">
-                        <h4><?php esc_html_e( 'What You\'ll Receive:', 'rtbcb' ); ?></h4>
-                        <ul class="rtbcb-preview-list">
-                            <li>📊 <?php esc_html_e( 'Detailed ROI projections (conservative, base case, optimistic)', 'rtbcb' ); ?></li>
-                            <li>🎯 <?php esc_html_e( 'Personalized solution category recommendation', 'rtbcb' ); ?></li>
-                            <li>📄 <?php esc_html_e( 'Professional PDF report ready for stakeholders', 'rtbcb' ); ?></li>
-                            <li>🗺️ <?php esc_html_e( 'Implementation roadmap and next steps', 'rtbcb' ); ?></li>
-                        </ul>
+                    <div class="rtbcb-preview-container">
+                        <div class="rtbcb-results-preview">
+                            <h4><?php esc_html_e( 'What You\'ll Receive:', 'rtbcb' ); ?></h4>
+                            <ul class="rtbcb-preview-list">
+                                <li>📊 <?php esc_html_e( 'Detailed ROI projections (conservative, base case, optimistic)', 'rtbcb' ); ?></li>
+                                <li>🎯 <?php esc_html_e( 'Personalized solution category recommendation', 'rtbcb' ); ?></li>
+                                <li>📄 <?php esc_html_e( 'Professional PDF report ready for stakeholders', 'rtbcb' ); ?></li>
+                                <li>🗺️ <?php esc_html_e( 'Implementation roadmap and next steps', 'rtbcb' ); ?></li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
