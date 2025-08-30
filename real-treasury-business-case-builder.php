@@ -140,11 +140,15 @@ class Real_Treasury_BCB {
         require_once RTBCB_DIR . 'inc/class-rtbcb-api-tester.php';
         require_once RTBCB_DIR . 'inc/helpers.php';
         require_once RTBCB_DIR . 'inc/class-rtbcb-logger.php';
+        require_once RTBCB_DIR . 'inc/class-rtbcb-workflow-tracker.php';
 
         // Admin functionality
         if ( is_admin() ) {
             require_once RTBCB_DIR . 'admin/class-rtbcb-admin.php';
+            require_once RTBCB_DIR . 'admin/class-rtbcb-admin-workflow-visualizer.php';
             new RTBCB_Admin();
+            $workflow_visualizer = new RTBCB_Admin_Workflow_Visualizer();
+            $workflow_visualizer->init();
         }
     }
 
