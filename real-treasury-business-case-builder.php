@@ -525,15 +525,34 @@ class Real_Treasury_BCB {
 	 *
 	 * @return bool
 	 */
-    private function should_load_assets() {
-        // Always load on admin pages for this plugin
-        if ( is_admin() && isset( $_GET['page'] ) && strpos( $_GET['page'], 'rtbcb' ) !== false ) {
-            return true;
-        }
+	private function should_load_assets() {
+		// Always load on admin pages for this plugin.
+		if ( is_admin() ) {
+			$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
+			if ( false !== strpos( $page, 'rtbcb' ) ) {
+				return true;
+			}
+		}
 
-        // Load on any page - let WordPress handle caching
-        return true;
-    }
+		// Load when shortcode is present on the page.
+		if ( is_singular() ) {
+			$post = get_post();
+			if ( $post && has_shortcode( $post->post_content, 'rt_business_case_builder' ) ) {
+				return true;
+			}
+		}
+
+		// Load on specific public pages.
+		$slugs = (array) apply_filters(
+			'rtbcb_asset_page_slugs',
+			[ 'business-case', 'business-case-report', 'business-case-builder' ]
+		);
+		if ( is_page( $slugs ) ) {
+			return true;
+		}
+
+		return false;
+	}
 
                /**
                 * Determine if comprehensive template should be used.
