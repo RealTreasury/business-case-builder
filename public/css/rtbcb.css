@@ -1670,13 +1670,19 @@
     text-decoration: underline;
 }
 
+/* Contact Step Containers */
+.rtbcb-consent-container,
+.rtbcb-preview-container {
+    margin-top: 24px;
+    font-size: 14px;
+}
+
 /* Results Preview */
 .rtbcb-results-preview {
     background: linear-gradient(135deg, #f8f9ff, #ffffff);
     border: 1px solid #7216f4;
     border-radius: 8px;
     padding: 20px;
-    margin-top: 24px;
 }
 
 .rtbcb-results-preview h4 {
