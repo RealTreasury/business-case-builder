@@ -61,6 +61,7 @@ phpunit tests/RTBCB_AjaxGenerateComprehensiveCaseFatalErrorTest.php
 # JavaScript tests
 echo "14. Running JavaScript tests..."
 node tests/handle-submit-error.test.js
+node tests/handle-submit-no-ajax-url.test.js
 node tests/render-results-no-narrative.test.js
 node tests/handle-submit-success.test.js
 node tests/handle-server-error-display.test.js
