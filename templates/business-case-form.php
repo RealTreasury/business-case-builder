@@ -437,6 +437,7 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 
         </div>
                 </form>
+            <div id="rtbcb-progress-container" class="rtbcb-progress" style="display:none"></div>
             </div>
             <div id="rtbcbSuccessMessage" class="rtbcb-success-message" style="display:none"></div>
         </div>
