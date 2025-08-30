@@ -10,6 +10,29 @@ if ( ! defined( 'ABSPATH' ) ) {
 require_once __DIR__ . '/config.php';
 
 /**
+ * Get the timeout for external API requests.
+ *
+ * Allows filtering via `rtbcb_api_timeout` to adjust how long remote
+ * requests may take before failing.
+ *
+ * @return int Timeout in seconds.
+ */
+function rtbcb_get_api_timeout() {
+    $timeout = (int) get_option( 'rtbcb_gpt5_timeout', 180 );
+
+    /**
+     * Filter the API request timeout.
+     *
+     * @param int $timeout Timeout in seconds.
+     */
+    if ( function_exists( 'apply_filters' ) ) {
+        return (int) apply_filters( 'rtbcb_api_timeout', $timeout );
+    }
+
+    return $timeout;
+}
+
+/**
  * Retrieve the OpenAI API key from plugin settings.
  *
  * Reads the value stored in the WordPress options table.
@@ -1203,5 +1226,169 @@ function rtbcb_proxy_openai_responses() {
     }
 
     wp_send_json( $decoded, $code );
+}
+
+/**
+ * Queue comprehensive analysis generation in the background.
+ *
+ * @param string $company_name Company name.
+ * @return string|WP_Error Job identifier on success or WP_Error on failure.
+ */
+function rtbcb_queue_comprehensive_analysis( $company_name ) {
+    $company_name = sanitize_text_field( $company_name );
+    if ( '' === $company_name ) {
+        return new WP_Error( 'invalid_company', __( 'Company name is required.', 'rtbcb' ) );
+    }
+
+    $job_id = wp_generate_uuid4();
+    wp_schedule_single_event(
+        time(),
+        'rtbcb_process_comprehensive_analysis',
+        [ $company_name, $job_id ]
+    );
+
+    return $job_id;
+}
+
+/**
+ * Background handler for comprehensive analysis jobs.
+ *
+ * @param string $company_name Company name.
+ * @param string $job_id       Job identifier.
+ * @return void
+ */
+function rtbcb_handle_comprehensive_analysis( $company_name, $job_id ) {
+    $company_name = sanitize_text_field( $company_name );
+    $job_id       = sanitize_key( $job_id );
+
+    $rag_context = [];
+    $vendor_list = [];
+
+    if ( function_exists( 'rtbcb_test_rag_market_analysis' ) && function_exists( 'rtbcb_get_current_company' ) ) {
+        $company = rtbcb_get_current_company();
+        $terms   = [];
+
+        if ( ! empty( $company['industry'] ) ) {
+            $terms[] = sanitize_text_field( $company['industry'] );
+        }
+
+        if ( ! empty( $company['focus_areas'] ) && is_array( $company['focus_areas'] ) ) {
+            $terms = array_merge( $terms, array_map( 'sanitize_text_field', $company['focus_areas'] ) );
+        }
+
+        if ( empty( $terms ) && ! empty( $company['summary'] ) ) {
+            $terms[] = sanitize_text_field( wp_trim_words( $company['summary'], 5, '' ) );
+        }
+
+        if ( empty( $terms ) ) {
+            $terms[] = $company_name;
+        }
+
+        $query       = sanitize_text_field( implode( ' ', $terms ) );
+        $vendor_list = rtbcb_test_rag_market_analysis( $query );
+
+        if ( is_wp_error( $vendor_list ) ) {
+            $vendor_list = [];
+        }
+
+        $rag_context = array_map( 'sanitize_text_field', $vendor_list );
+    }
+
+    $llm      = new RTBCB_LLM();
+    $analysis = $llm->generate_comprehensive_business_case( [ 'company_name' => $company_name ], [], $rag_context );
+
+    if ( is_wp_error( $analysis ) ) {
+        update_option(
+            'rtbcb_analysis_job_' . $job_id,
+            [
+                'success'    => false,
+                'message'    => $analysis->get_error_message(),
+                'error_code' => $analysis->get_error_code(),
+            ]
+        );
+        return;
+    }
+
+    $timestamp = current_time( 'mysql' );
+
+    update_option( 'rtbcb_current_company', $analysis['company_overview'] );
+    update_option( 'rtbcb_industry_insights', $analysis['industry_analysis'] );
+    update_option( 'rtbcb_maturity_model', $analysis['treasury_maturity'] );
+    update_option( 'rtbcb_rag_market_analysis', $vendor_list );
+    update_option( 'rtbcb_roadmap_plan', $analysis['implementation_roadmap'] );
+    update_option( 'rtbcb_value_proposition', $analysis['executive_summary']['executive_recommendation'] ?? '' );
+    update_option( 'rtbcb_estimated_benefits', $analysis['financial_analysis'] );
+    update_option( 'rtbcb_executive_summary', $analysis['executive_summary'] );
+
+    $results = [
+        'company_overview' => [
+            'summary'   => $analysis['company_overview'],
+            'stored_in' => 'rtbcb_current_company',
+        ],
+        'industry_analysis' => [
+            'summary'   => $analysis['industry_analysis'],
+            'stored_in' => 'rtbcb_industry_insights',
+        ],
+        'treasury_maturity' => [
+            'summary'   => $analysis['treasury_maturity'],
+            'stored_in' => 'rtbcb_maturity_model',
+        ],
+        'market_analysis' => [
+            'summary'   => $vendor_list,
+            'stored_in' => 'rtbcb_rag_market_analysis',
+        ],
+        'implementation_roadmap' => [
+            'summary'   => $analysis['implementation_roadmap'],
+            'stored_in' => 'rtbcb_roadmap_plan',
+        ],
+        'value_proposition' => [
+            'summary'   => $analysis['executive_summary'],
+            'stored_in' => 'rtbcb_value_proposition',
+        ],
+        'financial_analysis' => [
+            'summary'   => $analysis['financial_analysis'],
+            'stored_in' => 'rtbcb_estimated_benefits',
+        ],
+        'executive_summary' => [
+            'summary'   => $analysis['executive_summary'],
+            'stored_in' => 'rtbcb_executive_summary',
+        ],
+    ];
+
+    $usage_map = [
+        [ 'component' => __( 'Company Overview & Metrics', 'rtbcb' ), 'used_in' => __( 'Company Overview Test', 'rtbcb' ), 'option' => 'rtbcb_current_company' ],
+        [ 'component' => __( 'Industry Analysis', 'rtbcb' ), 'used_in' => __( 'Industry Overview Test', 'rtbcb' ), 'option' => 'rtbcb_industry_insights' ],
+        [ 'component' => __( 'Treasury Maturity Assessment', 'rtbcb' ), 'used_in' => __( 'Maturity Model Test', 'rtbcb' ), 'option' => 'rtbcb_maturity_model' ],
+        [ 'component' => __( 'Market Analysis & Vendors', 'rtbcb' ), 'used_in' => __( 'RAG Market Analysis Test', 'rtbcb' ), 'option' => 'rtbcb_rag_market_analysis' ],
+        [ 'component' => __( 'Value Proposition Paragraph', 'rtbcb' ), 'used_in' => __( 'Value Proposition Test', 'rtbcb' ), 'option' => 'rtbcb_value_proposition' ],
+        [ 'component' => __( 'Financial Benefits Breakdown', 'rtbcb' ), 'used_in' => __( 'Estimated Benefits Test', 'rtbcb' ), 'option' => 'rtbcb_estimated_benefits' ],
+        [ 'component' => __( 'Executive Summary', 'rtbcb' ), 'used_in' => __( 'Report Assembly Test', 'rtbcb' ), 'option' => 'rtbcb_executive_summary' ],
+        [ 'component' => __( 'Implementation Roadmap', 'rtbcb' ), 'used_in' => __( 'Roadmap Generator Test', 'rtbcb' ), 'option' => 'rtbcb_roadmap_plan' ],
+    ];
+
+    update_option(
+        'rtbcb_analysis_job_' . $job_id,
+        [
+            'success'              => true,
+            'timestamp'            => $timestamp,
+            'results'              => $results,
+            'usage_map'            => $usage_map,
+            'components_generated' => 7,
+        ]
+    );
+}
+if ( function_exists( 'add_action' ) ) {
+    add_action( 'rtbcb_process_comprehensive_analysis', 'rtbcb_handle_comprehensive_analysis', 10, 2 );
+}
+
+/**
+ * Get the result of a queued analysis job.
+ *
+ * @param string $job_id Job identifier.
+ * @return mixed|null Stored result array or null if pending.
+ */
+function rtbcb_get_analysis_job_result( $job_id ) {
+    $job_id = sanitize_key( $job_id );
+    return get_option( 'rtbcb_analysis_job_' . $job_id, null );
 }
 

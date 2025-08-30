@@ -56,7 +56,7 @@ class RTBCB_API_Tester {
             $body['temperature'] = 0.1;
         }
 
-        $timeout = intval( get_option( 'rtbcb_gpt5_timeout', 180 ) );
+        $timeout = rtbcb_get_api_timeout();
 
         $args = [
             'headers' => [

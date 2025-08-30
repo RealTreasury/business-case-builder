@@ -446,7 +446,7 @@ class Real_Treasury_BCB {
         $api_key      = sanitize_text_field( get_option( 'rtbcb_openai_api_key', '' ) );
         $report_model = sanitize_text_field( get_option( 'rtbcb_advanced_model', 'gpt-5-mini' ) );
 
-        $timeout           = intval( get_option( 'rtbcb_gpt5_timeout', 180 ) );
+        $timeout           = rtbcb_get_api_timeout();
         $max_output_tokens = intval( get_option( 'rtbcb_gpt5_max_output_tokens', 20000 ) );
         $config            = rtbcb_get_gpt5_config(
             array_merge(
@@ -710,7 +710,7 @@ class Real_Treasury_BCB {
         rtbcb_log_memory_usage( 'start' );
 
         // STEP 2: Set longer execution time
-        $timeout    = min( absint( get_option( 'rtbcb_gpt5_timeout', 60 ) ), 55 );
+        $timeout    = min( absint( rtbcb_get_api_timeout() ), 300 );
         $start_time = time();
 
         if ( ! ini_get( 'safe_mode' ) ) {

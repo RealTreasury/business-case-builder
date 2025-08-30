@@ -53,6 +53,7 @@ class RTBCB_Admin {
         add_action( 'wp_ajax_rtbcb_get_section_config', [ $this, 'ajax_get_section_config' ] );
         add_action( 'wp_ajax_rtbcb_get_test_summary_html', [ $this, 'ajax_get_test_summary_html' ] );
         add_action( 'wp_ajax_rtbcb_generate_comprehensive_analysis', [ $this, 'ajax_generate_comprehensive_analysis' ] );
+        add_action( 'wp_ajax_rtbcb_get_analysis_status', [ $this, 'ajax_get_analysis_status' ] );
         add_action( 'wp_ajax_rtbcb_clear_analysis_data', [ $this, 'ajax_clear_analysis_data' ] );
         add_action( 'wp_ajax_rtbcb_delete_log', [ $this, 'ajax_delete_log' ] );
         add_action( 'wp_ajax_rtbcb_clear_logs', [ $this, 'ajax_clear_logs' ] );
@@ -1831,7 +1832,6 @@ class RTBCB_Admin {
      */
     public function ajax_generate_comprehensive_analysis() {
         check_ajax_referer( 'rtbcb_test_dashboard', 'nonce' );
-
         $company_name = isset( $_POST['company_name'] ) ? sanitize_text_field( wp_unslash( $_POST['company_name'] ) ) : '';
         if ( '' === $company_name ) {
             $stored       = get_option( 'rtbcb_company_data', [] );
@@ -1842,123 +1842,37 @@ class RTBCB_Admin {
             wp_send_json_error( [ 'message' => __( 'Company name is required.', 'rtbcb' ) ] );
         }
 
-        $rag_context = [];
-        $vendor_list = [];
-
-        if ( function_exists( 'rtbcb_test_rag_market_analysis' ) && function_exists( 'rtbcb_get_current_company' ) ) {
-            $company = rtbcb_get_current_company();
-            $terms   = [];
-
-            if ( ! empty( $company['industry'] ) ) {
-                $terms[] = sanitize_text_field( $company['industry'] );
-            }
-
-            if ( ! empty( $company['focus_areas'] ) && is_array( $company['focus_areas'] ) ) {
-                $terms = array_merge( $terms, array_map( 'sanitize_text_field', $company['focus_areas'] ) );
-            }
-
-            if ( empty( $terms ) && ! empty( $company['summary'] ) ) {
-                $terms[] = sanitize_text_field( wp_trim_words( $company['summary'], 5, '' ) );
-            }
-
-            if ( empty( $terms ) ) {
-                $terms[] = $company_name;
-            }
-
-            $query       = sanitize_text_field( implode( ' ', $terms ) );
-            $vendor_list = rtbcb_test_rag_market_analysis( $query );
-
-            if ( is_wp_error( $vendor_list ) ) {
-                $vendor_list = [];
-            }
-
-            $rag_context = array_map( 'sanitize_text_field', $vendor_list );
+        $job_id = rtbcb_queue_comprehensive_analysis( $company_name );
+        if ( is_wp_error( $job_id ) ) {
+            wp_send_json_error( [ 'message' => $job_id->get_error_message() ] );
         }
 
-        $llm      = new RTBCB_LLM();
-        $analysis = $llm->generate_comprehensive_business_case( [ 'company_name' => $company_name ], [], $rag_context );
+        wp_send_json_success( [ 'job_id' => $job_id ] );
+    }
 
-        if ( is_wp_error( $analysis ) ) {
-            $error_message = $analysis->get_error_message();
-            $error_data    = $analysis->get_error_data();
-            $status        = is_array( $error_data ) && isset( $error_data['status'] ) ? (int) $error_data['status'] : 500;
+    /**
+     * Get status for a queued comprehensive analysis job.
+     *
+     * @return void
+     */
+    public function ajax_get_analysis_status() {
+        check_ajax_referer( 'rtbcb_test_dashboard', 'nonce' );
 
-            wp_send_json_error(
-                [
-                    'message'    => $error_message,
-                    'error_code' => $analysis->get_error_code(),
-                ],
-                $status
-            );
-            return;
+        $job_id = isset( $_GET['job_id'] ) ? sanitize_key( wp_unslash( $_GET['job_id'] ) ) : '';
+        if ( '' === $job_id ) {
+            wp_send_json_error( [ 'message' => __( 'Job ID is required.', 'rtbcb' ) ] );
         }
 
-        $timestamp = current_time( 'mysql' );
+        $result = rtbcb_get_analysis_job_result( $job_id );
+        if ( null === $result ) {
+            wp_send_json_success( [ 'status' => 'pending' ] );
+        }
 
-        update_option( 'rtbcb_current_company', $analysis['company_overview'] );
-        update_option( 'rtbcb_industry_insights', $analysis['industry_analysis'] );
-        update_option( 'rtbcb_maturity_model', $analysis['treasury_maturity'] );
-        update_option( 'rtbcb_rag_market_analysis', $vendor_list );
-        update_option( 'rtbcb_roadmap_plan', $analysis['implementation_roadmap'] );
-        update_option( 'rtbcb_value_proposition', $analysis['executive_summary']['executive_recommendation'] ?? '' );
-        update_option( 'rtbcb_estimated_benefits', $analysis['financial_analysis'] );
-        update_option( 'rtbcb_executive_summary', $analysis['executive_summary'] );
+        if ( empty( $result['success'] ) ) {
+            wp_send_json_error( [ 'message' => $result['message'] ?? __( 'Unknown error.', 'rtbcb' ) ] );
+        }
 
-        $results = [
-            'company_overview' => [
-                'summary'   => $analysis['company_overview'],
-                'stored_in' => 'rtbcb_current_company',
-            ],
-            'industry_analysis' => [
-                'summary'   => $analysis['industry_analysis'],
-                'stored_in' => 'rtbcb_industry_insights',
-            ],
-            'treasury_maturity' => [
-                'summary'   => $analysis['treasury_maturity'],
-                'stored_in' => 'rtbcb_maturity_model',
-            ],
-            'market_analysis' => [
-                'summary'   => $vendor_list,
-                'stored_in' => 'rtbcb_rag_market_analysis',
-            ],
-            'implementation_roadmap' => [
-                'summary'   => $analysis['implementation_roadmap'],
-                'stored_in' => 'rtbcb_roadmap_plan',
-            ],
-            'value_proposition' => [
-                'summary'   => $analysis['executive_summary'],
-                'stored_in' => 'rtbcb_value_proposition',
-            ],
-            'financial_analysis' => [
-                'summary'   => $analysis['financial_analysis'],
-                'stored_in' => 'rtbcb_estimated_benefits',
-            ],
-            'executive_summary' => [
-                'summary'   => $analysis['executive_summary'],
-                'stored_in' => 'rtbcb_executive_summary',
-            ],
-        ];
-
-        $usage_map = [
-            [ 'component' => __( 'Company Overview & Metrics', 'rtbcb' ), 'used_in' => __( 'Company Overview Test', 'rtbcb' ), 'option' => 'rtbcb_current_company' ],
-            [ 'component' => __( 'Industry Analysis', 'rtbcb' ), 'used_in' => __( 'Industry Overview Test', 'rtbcb' ), 'option' => 'rtbcb_industry_insights' ],
-            [ 'component' => __( 'Treasury Maturity Assessment', 'rtbcb' ), 'used_in' => __( 'Maturity Model Test', 'rtbcb' ), 'option' => 'rtbcb_maturity_model' ],
-            [ 'component' => __( 'Market Analysis & Vendors', 'rtbcb' ), 'used_in' => __( 'RAG Market Analysis Test', 'rtbcb' ), 'option' => 'rtbcb_rag_market_analysis' ],
-            [ 'component' => __( 'Value Proposition Paragraph', 'rtbcb' ), 'used_in' => __( 'Value Proposition Test', 'rtbcb' ), 'option' => 'rtbcb_value_proposition' ],
-            [ 'component' => __( 'Financial Benefits Breakdown', 'rtbcb' ), 'used_in' => __( 'Estimated Benefits Test', 'rtbcb' ), 'option' => 'rtbcb_estimated_benefits' ],
-            [ 'component' => __( 'Executive Summary', 'rtbcb' ), 'used_in' => __( 'Report Assembly Test', 'rtbcb' ), 'option' => 'rtbcb_executive_summary' ],
-            [ 'component' => __( 'Implementation Roadmap', 'rtbcb' ), 'used_in' => __( 'Roadmap Generator Test', 'rtbcb' ), 'option' => 'rtbcb_roadmap_plan' ],
-        ];
-
-        wp_send_json_success(
-            [
-                'message'               => __( 'Comprehensive analysis generated', 'rtbcb' ),
-                'components_generated'  => 7,
-                'timestamp'             => $timestamp,
-                'results'               => $results,
-                'usage_map'             => $usage_map,
-            ]
-        );
+        wp_send_json_success( array_merge( [ 'status' => 'completed' ], $result ) );
     }
 
     /**
