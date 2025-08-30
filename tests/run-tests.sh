@@ -84,5 +84,8 @@ fi
 echo "16. Running project growth path test..."
 php tests/project-growth-path.test.php
 
+echo "17. Running lead storage test..."
+php tests/lead-storage.test.php
+
 echo "================================================"
 echo "Tests complete!"
