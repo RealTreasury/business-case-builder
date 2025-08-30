@@ -1608,51 +1608,89 @@ SYSTEM;
             $body['store'] = (bool) $this->gpt5_config['store'];
         }
 
-        $timeout = intval( $this->gpt5_config['timeout'] ?? 180 );
+        $timeout             = intval( $this->gpt5_config['timeout'] ?? 180 );
+        $body['stream']      = true;
+        $this->last_request  = $body;
 
-        $args = [
-            'headers' => [
-                'Authorization' => 'Bearer ' . $this->api_key,
-                'Content-Type' => 'application/json',
-            ],
-            'body'    => wp_json_encode( $body ),
-            'timeout' => $timeout,
+        $ch = curl_init( $endpoint );
+        curl_setopt( $ch, CURLOPT_POST, true );
+        curl_setopt( $ch, CURLOPT_HTTPHEADER, [
+            'Authorization: Bearer ' . $this->api_key,
+            'Content-Type: application/json',
+        ] );
+        curl_setopt( $ch, CURLOPT_POSTFIELDS, wp_json_encode( $body ) );
+        curl_setopt( $ch, CURLOPT_TIMEOUT, $timeout );
+
+        $raw_response  = '';
+        $final_response = [];
+        $output_text   = '';
+
+        curl_setopt(
+            $ch,
+            CURLOPT_WRITEFUNCTION,
+            function( $curl, $data ) use ( &$raw_response, &$final_response, &$output_text ) {
+                $raw_response .= $data;
+                $lines = explode( "\n", $data );
+                foreach ( $lines as $line ) {
+                    $line = trim( $line );
+                    if ( '' === $line || 'data: [DONE]' === $line ) {
+                        continue;
+                    }
+                    if ( 0 === strpos( $line, 'data: ' ) ) {
+                        $json  = substr( $line, 6 );
+                        $chunk = json_decode( $json, true );
+                        if ( ! is_array( $chunk ) ) {
+                            continue;
+                        }
+                        $type = $chunk['type'] ?? '';
+                        if ( 'response.output_text.delta' === $type && isset( $chunk['delta'] ) ) {
+                            $output_text .= $chunk['delta'];
+                        } elseif ( 'response.completed' === $type && isset( $chunk['response'] ) ) {
+                            $final_response = $chunk['response'];
+                        }
+                    }
+                }
+                return strlen( $data );
+            }
+        );
+
+        $exec_result = curl_exec( $ch );
+        $http_code   = intval( curl_getinfo( $ch, CURLINFO_HTTP_CODE ) );
+        if ( false === $exec_result ) {
+            $error = curl_error( $ch );
+            curl_close( $ch );
+            return new WP_Error(
+                'llm_http_error',
+                sprintf( __( 'Language model request failed: %s', 'rtbcb' ), $error )
+            );
+        }
+        curl_close( $ch );
+
+        if ( empty( $final_response ) && '' !== $output_text ) {
+            $final_response = [ 'output_text' => $output_text ];
+        } elseif ( '' !== $output_text ) {
+            $final_response['output_text'] = $output_text;
+        }
+
+        $body_response       = wp_json_encode( $final_response );
+        $response            = [
+            'headers'  => [],
+            'body'     => $body_response,
+            'response' => [ 'code' => $http_code ],
         ];
-
-        $this->last_request = $body;
-        $response           = wp_remote_post( $endpoint, $args );
         $this->last_response = $response;
 
         if ( class_exists( 'RTBCB_API_Log' ) ) {
-            $decoded = [];
-            if ( is_wp_error( $response ) ) {
-                $decoded = [ 'error' => $response->get_error_message() ];
-            } else {
-                $decoded = json_decode( wp_remote_retrieve_body( $response ), true );
-                if ( ! is_array( $decoded ) ) {
-                    $decoded = [];
-                }
+            $decoded = json_decode( $body_response, true );
+            if ( ! is_array( $decoded ) ) {
+                $decoded = [];
             }
-
             RTBCB_API_Log::save_log( $body, $decoded, get_current_user_id() );
         }
 
-        if ( is_wp_error( $response ) ) {
-            if ( 'timeout' === $response->get_error_code() || false !== strpos( $response->get_error_message(), 'timed out' ) ) {
-                return new WP_Error( 'llm_timeout', __( 'The language model request timed out. Please try again.', 'rtbcb' ) );
-            }
-
-            return new WP_Error(
-                'llm_http_error',
-                sprintf( __( 'Language model request failed: %s', 'rtbcb' ), $response->get_error_message() )
-            );
-        }
-
-        $code = intval( wp_remote_retrieve_response_code( $response ) );
-        if ( $code >= 400 ) {
-            $body_response = wp_remote_retrieve_body( $response );
-            $decoded       = json_decode( $body_response, true );
-
+        if ( $http_code >= 400 ) {
+            $decoded = json_decode( $body_response, true );
+            $message = '';
             if ( is_array( $decoded ) ) {
                 if ( isset( $decoded['error']['message'] ) ) {
                     $message = $decoded['error']['message'];
@@ -1661,13 +1699,9 @@ SYSTEM;
                 } else {
                     $message = wp_json_encode( $decoded );
                 }
-            } else {
-                $message = $body_response;
             }
-
             $message = sanitize_text_field( $message );
-
-            return new WP_Error( 'llm_http_status', $message, [ 'status' => $code ] );
+            return new WP_Error( 'llm_http_status', $message, [ 'status' => $http_code ] );
         }
 
         return $response;

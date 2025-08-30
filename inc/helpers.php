@@ -1203,50 +1203,95 @@ function rtbcb_proxy_openai_responses() {
         $body_array = [];
     }
 
-    $config              = rtbcb_get_gpt5_config();
-    $max_output_tokens   = intval( $body_array['max_output_tokens'] ?? $config['max_output_tokens'] );
-    $max_output_tokens   = min( 50000, max( 256, $max_output_tokens ) );
+    $config            = rtbcb_get_gpt5_config();
+    $max_output_tokens = intval( $body_array['max_output_tokens'] ?? $config['max_output_tokens'] );
+    $max_output_tokens = min( 50000, max( 256, $max_output_tokens ) );
     $body_array['max_output_tokens'] = $max_output_tokens;
-    $body              = wp_json_encode( $body_array );
+    $body_array['stream']            = true;
+    $body                            = wp_json_encode( $body_array );
 
     $timeout = intval( get_option( 'rtbcb_responses_timeout', 120 ) );
     if ( $timeout <= 0 ) {
         $timeout = 120;
     }
 
-    $response = wp_remote_post(
-        'https://api.openai.com/v1/responses',
-        [
-            'headers' => [
-                'Content-Type'  => 'application/json',
-                'Authorization' => 'Bearer ' . $api_key,
-            ],
-            'body'    => $body,
-            'timeout' => $timeout,
-        ]
+    header( 'Content-Type: text/event-stream' );
+    header( 'Cache-Control: no-cache' );
+
+    $ch = curl_init( 'https://api.openai.com/v1/responses' );
+    curl_setopt( $ch, CURLOPT_POST, true );
+    curl_setopt( $ch, CURLOPT_HTTPHEADER, [
+        'Content-Type: application/json',
+        'Authorization: Bearer ' . $api_key,
+    ] );
+    curl_setopt( $ch, CURLOPT_POSTFIELDS, $body );
+    curl_setopt( $ch, CURLOPT_TIMEOUT, $timeout );
+
+    $raw_response = '';
+    curl_setopt(
+        $ch,
+        CURLOPT_WRITEFUNCTION,
+        function( $curl, $data ) use ( &$raw_response ) {
+            $raw_response .= $data;
+            echo $data;
+            if ( function_exists( 'ob_flush' ) ) {
+                @ob_flush();
+            }
+            flush();
+            return strlen( $data );
+        }
     );
 
-    $decoded = [];
-    if ( is_wp_error( $response ) ) {
-        $decoded = [ 'error' => $response->get_error_message() ];
-        if ( class_exists( 'RTBCB_API_Log' ) ) {
-            RTBCB_API_Log::save_log( $body_array, $decoded, get_current_user_id() );
+    $exec_result = curl_exec( $ch );
+    $http_code   = intval( curl_getinfo( $ch, CURLINFO_HTTP_CODE ) );
+    $curl_error  = curl_error( $ch );
+    curl_close( $ch );
+
+    $final_response = [];
+    $output_text    = '';
+    $lines          = explode( "\n", $raw_response );
+    foreach ( $lines as $line ) {
+        $line = trim( $line );
+        if ( '' === $line || 'data: [DONE]' === $line ) {
+            continue;
         }
-        wp_send_json_error( [ 'message' => $response->get_error_message() ], 500 );
+        if ( 0 === strpos( $line, 'data: ' ) ) {
+            $json  = substr( $line, 6 );
+            $chunk = json_decode( $json, true );
+            if ( ! is_array( $chunk ) ) {
+                continue;
+            }
+            $type = $chunk['type'] ?? '';
+            if ( 'response.output_text.delta' === $type && isset( $chunk['delta'] ) ) {
+                $output_text .= $chunk['delta'];
+            } elseif ( 'response.completed' === $type && isset( $chunk['response'] ) ) {
+                $final_response = $chunk['response'];
+            } elseif ( isset( $chunk['error']['message'] ) ) {
+                $final_response = $chunk;
+            }
+        }
     }
 
-    $code      = wp_remote_retrieve_response_code( $response );
-    $resp_body = wp_remote_retrieve_body( $response );
-    $decoded   = json_decode( $resp_body, true );
-    if ( ! is_array( $decoded ) ) {
-        $decoded = [];
+    if ( empty( $final_response ) && '' !== $output_text ) {
+        $final_response = [ 'output_text' => $output_text ];
+    } elseif ( '' !== $output_text ) {
+        $final_response['output_text'] = $output_text;
     }
 
     if ( class_exists( 'RTBCB_API_Log' ) ) {
-        RTBCB_API_Log::save_log( $body_array, $decoded, get_current_user_id() );
+        RTBCB_API_Log::save_log( $body_array, $final_response, get_current_user_id() );
     }
 
-    wp_send_json( $decoded, $code );
+    if ( false === $exec_result || $http_code >= 400 ) {
+        $message = $curl_error ? $curl_error : __( 'Unexpected error from OpenAI.', 'rtbcb' );
+        if ( isset( $final_response['error']['message'] ) ) {
+            $message = $final_response['error']['message'];
+        }
+        $error_output = wp_json_encode( [ 'error' => [ 'message' => $message ] ] );
+        echo 'data: ' . $error_output . "\n\n";
+    }
+
+    exit;
 }
 
 /**

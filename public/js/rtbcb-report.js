@@ -46,14 +46,14 @@ Ensure the report is:
 `;
 }
 
-async function generateProfessionalReport(businessContext) {
+async function generateProfessionalReport(businessContext, onDelta) {
     const cfg = {
         ...RTBCB_GPT5_DEFAULTS,
         ...(typeof rtbcbReport !== 'undefined' ? rtbcbReport : {})
     };
     cfg.model = rtbcbReport.report_model;
     cfg.max_output_tokens = Math.min(50000, Math.max(256, parseInt(cfg.max_output_tokens, 10) || 20000));
-    if ( !supportsTemperature( cfg.model ) ) {
+    if (!supportsTemperature(cfg.model)) {
         delete cfg.temperature;
     }
     const requestBody = {
@@ -70,9 +70,10 @@ async function generateProfessionalReport(businessContext) {
         ],
         max_output_tokens: cfg.max_output_tokens,
         text: cfg.text,
-        store: cfg.store
+        store: cfg.store,
+        stream: true
     };
-    if ( supportsTemperature( cfg.model ) ) {
+    if (supportsTemperature(cfg.model)) {
         requestBody.temperature = cfg.temperature;
     }
 
@@ -91,26 +92,57 @@ async function generateProfessionalReport(businessContext) {
             });
 
             if (response.ok) {
-                let data;
-                try {
-                    data = await response.json();
-                } catch (parseError) {
-                    lastError = parseError;
-                    continue;
+                const contentType = response.headers && response.headers.get ? response.headers.get('Content-Type') || '' : '';
+                if (response.body && !contentType.includes('application/json')) {
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+                    let result = '';
+                    let buffer = '';
+                    let errorMessage = '';
+
+                    while (true) {
+                        const { value, done } = await reader.read();
+                        if (done) {
+                            break;
+                        }
+                        buffer += decoder.decode(value, { stream: true });
+                        const lines = buffer.split('\n');
+                        buffer = lines.pop();
+                        for (const line of lines) {
+                            const trimmed = line.trim();
+                            if (!trimmed.startsWith('data:') || trimmed === 'data: [DONE]') {
+                                continue;
+                            }
+                            try {
+                                const chunk = JSON.parse(trimmed.substring(5));
+                                if (chunk.type === 'response.output_text.delta' && chunk.delta) {
+                                    result += chunk.delta;
+                                    if (onDelta) {
+                                        onDelta(result);
+                                    }
+                                } else if (chunk.error && chunk.error.message) {
+                                    errorMessage = chunk.error.message;
+                                }
+                            } catch (e) {
+                                // ignore parse errors
+                            }
+                        }
+                    }
+
+                    if (errorMessage) {
+                        lastError = new Error(errorMessage);
+                        continue;
+                    }
+
+                    return result.trim();
                 }
 
+                const data = await response.json();
                 if (data.error) {
-                    console.error('Attempt ' + attempt + ' API error details:', data.error);
                     lastError = new Error(data.error.message || 'Responses API error');
                     continue;
                 }
-
-                const htmlContent = data.output_text;
-                const cleanedHTML = htmlContent
-                    .replace(/```html\n?/g, '')
-                    .replace(/```\n?/g, '')
-                    .trim();
-                return cleanedHTML;
+                return data.output_text || '';
             }
 
             if (rtbcbReport && rtbcbReport.debug) {
@@ -120,12 +152,10 @@ async function generateProfessionalReport(businessContext) {
             }
             lastError = new Error('HTTP ' + response.status + ' ' + response.statusText);
         } catch (error) {
-            console.error('Error generating report (attempt ' + attempt + '):', error);
             lastError = error;
         }
     }
 
-    console.error('All attempts to generate report failed:', lastError);
     throw new Error(lastError && lastError.message ? lastError.message : 'Unable to generate report at this time. Please try again later.');
 }
 
@@ -170,7 +200,14 @@ async function generateAndDisplayReport(businessContext) {
     reportContainer.innerHTML = '';
 
     try {
-        const htmlReport = await generateProfessionalReport(businessContext);
+        const streamEl = document.createElement('pre');
+        reportContainer.appendChild(streamEl);
+
+        const htmlReport = await generateProfessionalReport(businessContext, (partial) => {
+            streamEl.textContent = partial;
+        });
+
+        reportContainer.innerHTML = '';
 
         if (!htmlReport.includes('<!DOCTYPE html>')) {
             throw new Error('Invalid HTML response from API');
