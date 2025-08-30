@@ -723,41 +723,115 @@ USER,
 
         $company_name = sanitize_text_field( $user_inputs['company_name'] ?? '' );
         $industry     = sanitize_text_field( $user_inputs['industry'] ?? '' );
+        $company_size = sanitize_text_field( $user_inputs['company_size'] ?? '' );
 
-        $company_research = rtbcb_get_research_cache( $company_name, $industry, 'company' );
+        $company_research  = rtbcb_get_research_cache( $company_name, $industry, 'company' );
+        $industry_analysis  = rtbcb_get_research_cache( $company_name, $industry, 'industry' );
+        $tech_landscape     = rtbcb_get_research_cache( $company_name, $industry, 'treasury' );
+
+        $batch_prompts = [];
+
         if ( false === $company_research ) {
-            $company_research = $this->conduct_company_research( $user_inputs );
+            $batch_prompts['company'] = [
+                'instructions' => 'Return JSON with company_profile {business_stage,key_characteristics,treasury_priorities,common_challenges} and treasury_maturity {level,rationale}.',
+                'input'        => 'Company: ' . $company_name . "\nIndustry: " . $industry . "\nSize: " . $company_size,
+            ];
+        }
+
+        if ( false === $industry_analysis ) {
+            $batch_prompts['industry'] = [
+                'instructions' => 'Return JSON with analysis, recommendations, references, errors.',
+                'input'        => 'Provide sector trends, competitive benchmarks, and regulatory considerations for the ' . $industry . ' industry.',
+            ];
+        }
+
+        if ( false === $tech_landscape ) {
+            $tech_prompt = 'Briefly summarize treasury technology solutions relevant to a ' . $company_size . ' company in the ' . $industry . ' industry.';
+            if ( ! empty( $context_chunks ) ) {
+                $tech_prompt .= '\nContext: ' . implode( '\n', array_map( 'sanitize_text_field', $context_chunks ) );
+            }
+            $batch_prompts['tech'] = [
+                'instructions' => 'Return plain text summary.',
+                'input'        => $tech_prompt,
+            ];
+        }
+
+        $batch_results = [];
+        if ( ! empty( $batch_prompts ) ) {
+            $batch_results = $this->generate_research_batch( $batch_prompts );
+            if ( is_wp_error( $batch_results ) ) {
+                $batch_results = [];
+            }
+        }
+
+        if ( false === $company_research ) {
+            if ( isset( $batch_results['company'] ) && ! is_wp_error( $batch_results['company'] ) ) {
+                $json = json_decode( $batch_results['company'], true );
+                if ( is_array( $json ) ) {
+                    $company_research = [
+                        'company_profile'  => [
+                            'business_stage'      => sanitize_text_field( $json['company_profile']['business_stage'] ?? '' ),
+                            'key_characteristics' => sanitize_text_field( $json['company_profile']['key_characteristics'] ?? '' ),
+                            'treasury_priorities' => sanitize_text_field( $json['company_profile']['treasury_priorities'] ?? '' ),
+                            'common_challenges'   => sanitize_text_field( $json['company_profile']['common_challenges'] ?? '' ),
+                        ],
+                        'treasury_maturity' => [
+                            'level'     => sanitize_text_field( $json['treasury_maturity']['level'] ?? '' ),
+                            'rationale' => sanitize_text_field( $json['treasury_maturity']['rationale'] ?? '' ),
+                        ],
+                    ];
+                }
+            }
+
+            if ( false === $company_research ) {
+                $company_research = $this->conduct_company_research( $user_inputs );
+            }
+
             if ( ! is_wp_error( $company_research ) ) {
                 rtbcb_set_research_cache( $company_name, $industry, 'company', $company_research );
+            } else {
+                return $company_research;
             }
         }
 
-        if ( is_wp_error( $company_research ) ) {
-            return $company_research;
-        }
-
-        $industry_analysis = rtbcb_get_research_cache( $company_name, $industry, 'industry' );
         if ( false === $industry_analysis ) {
-            $industry_analysis = $this->analyze_industry_context( $user_inputs );
+            if ( isset( $batch_results['industry'] ) && ! is_wp_error( $batch_results['industry'] ) ) {
+                $json = json_decode( $batch_results['industry'], true );
+                if ( is_array( $json ) ) {
+                    $industry_analysis = [
+                        'analysis'        => sanitize_text_field( $json['analysis'] ?? '' ),
+                        'recommendations' => array_map( 'sanitize_text_field', $json['recommendations'] ?? [] ),
+                        'references'      => array_map( 'sanitize_text_field', $json['references'] ?? [] ),
+                        'errors'          => array_map( 'sanitize_text_field', $json['errors'] ?? [] ),
+                    ];
+                }
+            }
+
+            if ( false === $industry_analysis ) {
+                $industry_analysis = $this->analyze_industry_context( $user_inputs );
+            }
+
             if ( ! is_wp_error( $industry_analysis ) ) {
                 rtbcb_set_research_cache( $company_name, $industry, 'industry', $industry_analysis );
+            } else {
+                return $industry_analysis;
             }
         }
 
-        if ( is_wp_error( $industry_analysis ) ) {
-            return $industry_analysis;
-        }
-
-        $tech_landscape = rtbcb_get_research_cache( $company_name, $industry, 'treasury' );
         if ( false === $tech_landscape ) {
-            $tech_landscape = $this->research_treasury_solutions( $user_inputs, $context_chunks );
+            if ( isset( $batch_results['tech'] ) && ! is_wp_error( $batch_results['tech'] ) ) {
+                $tech_landscape = sanitize_textarea_field( $batch_results['tech'] );
+            }
+
+            if ( false === $tech_landscape ) {
+                $tech_landscape = $this->research_treasury_solutions( $user_inputs, $context_chunks );
+            }
+
             if ( ! is_wp_error( $tech_landscape ) ) {
                 rtbcb_set_research_cache( $company_name, $industry, 'treasury', $tech_landscape );
+            } else {
+                return $tech_landscape;
             }
-        }
-
-        if ( is_wp_error( $tech_landscape ) ) {
-            return $tech_landscape;
         }
         
         // Generate comprehensive report
@@ -1363,6 +1437,101 @@ SYSTEM;
             'industry_analysis' => $industry_analysis,
             'tech_landscape'    => $tech_landscape,
         ];
+    }
+
+    /**
+     * Generate multiple research responses in a single OpenAI request.
+     *
+     * Each prompt should include `instructions` and `input` keys. The returned
+     * array preserves the original prompt keys.
+     *
+     * @param array $prompts Associative array of prompt data.
+     * @return array|WP_Error Array of responses or error object.
+     */
+    private function generate_research_batch( $prompts ) {
+        if ( empty( $this->api_key ) ) {
+            return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
+        }
+
+        if ( empty( $prompts ) || ! is_array( $prompts ) ) {
+            return new WP_Error( 'empty_prompt', __( 'Prompts array cannot be empty.', 'rtbcb' ) );
+        }
+
+        $model  = $this->get_model( 'mini' );
+        $inputs = [];
+        foreach ( $prompts as $prompt ) {
+            $instructions = sanitize_textarea_field( $prompt['instructions'] ?? '' );
+            $input        = sanitize_textarea_field( $prompt['input'] ?? '' );
+            $inputs[]     = $instructions ? $instructions . "\n" . $input : $input;
+        }
+
+        $body = [
+            'model'            => $model,
+            'input'            => $inputs,
+            'max_output_tokens'=> intval( $this->gpt5_config['max_output_tokens'] ?? 8000 ),
+            'stream'           => false,
+        ];
+
+        if ( rtbcb_model_supports_temperature( $model ) ) {
+            $body['temperature'] = floatval( $this->gpt5_config['temperature'] ?? 0.7 );
+        }
+
+        $timeout  = intval( $this->gpt5_config['timeout'] ?? 180 );
+        $response = wp_remote_post(
+            'https://api.openai.com/v1/responses',
+            [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $this->api_key,
+                    'Content-Type'  => 'application/json',
+                ],
+                'body'    => wp_json_encode( $body ),
+                'timeout' => $timeout,
+            ]
+        );
+
+        if ( is_wp_error( $response ) ) {
+            return $response;
+        }
+
+        $status = wp_remote_retrieve_response_code( $response );
+        if ( $status < 200 || $status >= 300 ) {
+            return new WP_Error(
+                'llm_http_status',
+                __( 'Language model request failed.', 'rtbcb' ),
+                [ 'status' => $status ]
+            );
+        }
+
+        $decoded = json_decode( wp_remote_retrieve_body( $response ), true );
+        if ( ! is_array( $decoded ) ) {
+            return new WP_Error( 'llm_response_decode_error', __( 'Failed to decode response body.', 'rtbcb' ) );
+        }
+
+        $outputs = $decoded['output'] ?? [];
+        $keys    = array_keys( $prompts );
+        $results = [];
+
+        foreach ( $keys as $index => $key ) {
+            $text = '';
+            if ( isset( $outputs[ $index ]['content'] ) && is_array( $outputs[ $index ]['content'] ) ) {
+                foreach ( $outputs[ $index ]['content'] as $piece ) {
+                    if ( isset( $piece['text'] ) ) {
+                        $text .= $piece['text'];
+                    }
+                }
+            } elseif ( isset( $outputs[ $index ]['output_text'] ) ) {
+                $text = $outputs[ $index ]['output_text'];
+            }
+
+            $text = trim( $text );
+            if ( '' === $text ) {
+                $results[ $key ] = new WP_Error( 'llm_empty_response', __( 'Empty response from language model.', 'rtbcb' ) );
+            } else {
+                $results[ $key ] = $text;
+            }
+        }
+
+        return $results;
     }
 
     /**
