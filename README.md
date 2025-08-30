@@ -33,7 +33,7 @@ A comprehensive WordPress plugin that helps treasury teams quantify the benefits
    - **Premium Model**: `gpt-5` (for complex requests)
    - **Embedding Model**: `text-embedding-3-small` (for RAG)
 
-   **Minimum Output Tokens:** set `max_output_tokens` to at least `256` when using `gpt-5-mini`.
+   **Minimum Output Tokens:** configure `min_output_tokens` (default `256`) to avoid truncated responses.
 
    ```php
    $client->chat()->create([
@@ -44,9 +44,10 @@ A comprehensive WordPress plugin that helps treasury teams quantify the benefits
 
    The API tester uses this value to verify connectivity.
 
-By default, the plugin configures `max_output_tokens` to `8000` for GPT-5 models.
-You can adjust this value up to `128000` tokens via the plugin settings,
-by setting an environment variable, or by creating a configuration file:
+By default, the plugin configures `max_output_tokens` to `8000` and
+`min_output_tokens` to `256` for GPT-5 models. You can adjust these values
+via the plugin settings, by setting environment variables, or by creating a
+configuration file:
 
 - **Environment variable**: `RTBCB_MAX_OUTPUT_TOKENS=128000`
 - **Config file**: create `rtbcb-config.json` in the project root with

@@ -3,8 +3,10 @@
  */
 
 const RTBCB_GPT5_MAX_TOKENS = 128000;
+const RTBCB_GPT5_MIN_TOKENS = 1;
 const RTBCB_GPT5_DEFAULTS = {
     max_output_tokens: RTBCB_GPT5_MAX_TOKENS,
+    min_output_tokens: 256,
     text: { verbosity: 'medium' },
     temperature: 0.7,
     store: true,
@@ -59,8 +61,9 @@ async function generateProfessionalReport(businessContext, onChunk) {
     };
     cfg.model = rtbcbReport.report_model;
     const adminLimit = Math.min(RTBCB_GPT5_MAX_TOKENS, parseInt(cfg.max_output_tokens, 10) || RTBCB_GPT5_MAX_TOKENS);
+    const adminMin = Math.max(RTBCB_GPT5_MIN_TOKENS, parseInt(cfg.min_output_tokens, 10) || RTBCB_GPT5_MIN_TOKENS);
     const desiredWords = 1000;
-    cfg.max_output_tokens = Math.min(adminLimit, estimateTokens(desiredWords));
+    cfg.max_output_tokens = Math.max(adminMin, Math.min(adminLimit, estimateTokens(desiredWords)));
     if (!supportsTemperature(cfg.model)) {
         delete cfg.temperature;
     }
