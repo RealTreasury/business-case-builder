@@ -1,5 +1,5 @@
 /**
- * Business Case Builder Wizard Controller
+ * Business Case Builder Wizard Controller - FIXED VERSION
  * Handles multi-step form navigation, validation, and submission
  */
 
@@ -70,9 +70,9 @@ class BusinessCaseBuilder {
         this.progressSteps = this.form.querySelectorAll('.rtbcb-progress-step');
         this.progressLine = this.form.querySelector('.rtbcb-progress-line');
         
-        // UPDATED: Form fields by step - now includes company_name and industry
+        // Form fields by step
         this.stepFields = {
-            1: ['company_name', 'company_size', 'industry'], // Added company_name and industry
+            1: ['company_name', 'company_size', 'industry'],
             2: ['hours_reconciliation', 'hours_cash_positioning', 'num_banks', 'ftes'],
             3: ['pain_points'],
             4: ['business_objective', 'implementation_timeline', 'budget_range'],
@@ -98,6 +98,7 @@ class BusinessCaseBuilder {
 
         // Form submission
         this.form.addEventListener('submit', (e) => {
+            e.preventDefault();
             if (this.validateStep(this.totalSteps)) {
                 try {
                     this.handleSubmit(e);
@@ -144,9 +145,6 @@ class BusinessCaseBuilder {
                 this.updateStepVisibility();
                 this.updateProgressIndicator();
                 this.scrollToTop();
-
-                // Safeguard to ensure navigation buttons reflect the current step
-                this.updateStepVisibility();
             }
         }
     }
@@ -185,27 +183,6 @@ class BusinessCaseBuilder {
         return isValid;
     }
 
-    // NEW: Show field warning (non-blocking)
-    showFieldWarning(field, message) {
-        const fieldContainer = field.closest('.rtbcb-field');
-        if (!fieldContainer) return;
-
-        // Remove existing warning
-        const existingWarning = fieldContainer.querySelector('.rtbcb-field-warning');
-        if (existingWarning) {
-            existingWarning.remove();
-        }
-
-        // Create warning element
-        const warningEl = document.createElement('div');
-        warningEl.className = 'rtbcb-field-warning';
-        warningEl.textContent = message;
-        warningEl.style.color = '#f59e0b';
-        warningEl.style.fontSize = '12px';
-        warningEl.style.marginTop = '4px';
-        fieldContainer.appendChild(warningEl);
-    }
-
     validateField(field) {
         const value = field.value.trim();
         let isValid = true;
@@ -217,7 +194,7 @@ class BusinessCaseBuilder {
             isValid = false;
         }
 
-        // NEW: Company name validation
+        // Company name validation
         if (field.name === 'company_name' && value) {
             if (value.length < 2) {
                 errorMessage = 'Company name must be at least 2 characters';
@@ -237,14 +214,6 @@ class BusinessCaseBuilder {
             if (!emailRegex.test(value)) {
                 errorMessage = 'Please enter a valid email address';
                 isValid = false;
-            }
-
-            // Enhanced business email validation
-            const domain = value.split('@')[1]?.toLowerCase();
-            const consumerDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'aol.com'];
-            if (domain && consumerDomains.includes(domain)) {
-                // Warning but don't block
-                this.showFieldWarning(field, 'Consider using your business email for better results');
             }
         }
 
@@ -270,13 +239,9 @@ class BusinessCaseBuilder {
         const fieldContainer = field.closest('.rtbcb-field');
         if (!fieldContainer) return;
 
-        // Remove existing error
         this.clearFieldError(field);
-
-        // Add error class
         field.classList.add('rtbcb-field-invalid');
 
-        // Create error element
         const errorEl = document.createElement('div');
         errorEl.className = 'rtbcb-field-error';
         errorEl.textContent = message;
@@ -353,21 +318,13 @@ class BusinessCaseBuilder {
         if (this.submitBtn) {
             const isLastStep = this.currentStep === this.totalSteps;
             if (isLastStep) {
-                let stepsValid = true;
-                for (let i = 1; i < this.currentStep; i++) {
-                    if (!this.validateStep(i)) {
-                        stepsValid = false;
-                        break;
-                    }
-                }
-                this.submitBtn.style.display = stepsValid ? 'inline-flex' : 'none';
-                this.submitBtn.disabled = !stepsValid;
+                this.submitBtn.style.display = 'inline-flex';
+                this.submitBtn.disabled = false;
             } else {
                 this.submitBtn.style.display = 'none';
                 this.submitBtn.disabled = true;
             }
         }
-
     }
 
     updateProgressIndicator() {
@@ -402,6 +359,7 @@ class BusinessCaseBuilder {
         if (event && event.preventDefault) {
             event.preventDefault();
         }
+        
         if (!this.ajaxUrl) {
             this.showError('Service unavailable. Please reload the page.');
             return;
@@ -413,69 +371,61 @@ class BusinessCaseBuilder {
 
             const formData = this.collectFormData();
             this.validateFormData(formData);
-            this.lastFormData = formData;
 
+            // SIMPLIFIED APPROACH: Direct submission instead of background jobs
             const response = await fetch(this.ajaxUrl, {
                 method: 'POST',
                 body: formData,
                 credentials: 'same-origin',
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
+                    'Accept': 'application/json, text/html'
                 }
             });
 
             console.log('RTBCB: Response status:', response.status);
-            const contentType = response.headers && response.headers.get ? response.headers.get('content-type') : null;
-            console.log('RTBCB: Content-Type:', contentType);
-
-            const responseText = await response.text();
-            console.log('RTBCB: Raw response length:', responseText.length);
-
+            
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
 
-            if (!contentType || !contentType.includes('application/json')) {
-                console.warn('RTBCB: Unexpected server response:', responseText);
-                const error = new Error('Unexpected server response');
-                error.status = response.status;
-                throw error;
-            }
+            const responseText = await response.text();
+            console.log('RTBCB: Response received, length:', responseText.length);
 
-            if (responseText.includes('Fatal error') ||
-                responseText.includes('Parse error') ||
-                responseText.includes('<b>Warning</b>') ||
-                responseText.includes('<b>Notice</b>')) {
-
-                console.error('RTBCB: PHP error detected in response');
-                throw new Error('Server error detected in response');
-            }
-
+            // Try to parse as JSON first
             let data;
             try {
                 data = JSON.parse(responseText);
+                console.log('RTBCB: Parsed JSON response:', data);
             } catch (parseError) {
-                console.error('RTBCB: JSON parse error:', parseError);
-                console.error('RTBCB: Response text (first 1000 chars):', responseText.substring(0, 1000));
-
-                const errorMatch = responseText.match(/Fatal error[^<]*/i) ||
-                                  responseText.match(/Warning[^<]*/i) ||
-                                  responseText.match(/Notice[^<]*/i);
-
-                if (errorMatch) {
-                    throw new Error(`Server error: ${errorMatch[0]}`);
+                console.log('RTBCB: Response is not JSON, treating as HTML');
+                // If it's not JSON, it might be the direct HTML report
+                if (responseText.includes('<div class="rtbcb-enhanced-report"') || 
+                    responseText.includes('<div class="rtbcb-report"')) {
+                    this.showHTMLResults(responseText);
+                    return;
+                } else {
+                    throw new Error('Invalid response format');
                 }
-
-                throw new Error('Server returned invalid JSON response');
             }
 
-            if (data.success && data.data && data.data.job_id) {
-                console.log('RTBCB: Job queued');
-                this.pollJob(data.data.job_id, Date.now(), 0);
+            // Handle JSON response
+            if (data.success) {
+                if (data.data && data.data.job_id) {
+                    // Background job approach
+                    this.pollJob(data.data.job_id, Date.now(), 0);
+                } else if (data.data && data.data.report_html) {
+                    // Direct HTML response
+                    this.showHTMLResults(data.data.report_html);
+                } else if (data.data) {
+                    // Structured data response
+                    this.handleSuccess(data.data);
+                } else {
+                    throw new Error('No report data received');
+                }
             } else {
                 console.error('RTBCB: Error response:', data.data);
-                this.handleError(data.data);
+                this.handleError(data.data || { message: 'Unknown error occurred' });
             }
 
         } catch (error) {
@@ -485,7 +435,7 @@ class BusinessCaseBuilder {
                 type: 'submission_error'
             });
         } finally {
-            this.hideLoading();
+            // Don't hide loading here - let success/error handlers do it
         }
     }
 
@@ -510,58 +460,6 @@ class BusinessCaseBuilder {
         return formData;
     }
 
-    showLoading() {
-        this.showProgress();
-    }
-
-    hideLoading() {
-        // progress is hidden by success or error handlers
-    }
-
-    handleSuccess(data) {
-        this.showResults(data);
-    }
-
-    showErrorMessage(message) {
-        this.showError(message);
-    }
-
-    async pollJob(jobId, startTime = Date.now(), attempt = 0) {
-        const MAX_DURATION = 20 * 60 * 1000; // 20 minutes
-        if (Date.now() - startTime > MAX_DURATION) {
-            this.handleError({ message: 'The request timed out after 20 minutes. Please try again later.', type: 'timeout' });
-            return;
-        }
-        try {
-            const response = await fetch(`${this.ajaxUrl}?action=rtbcb_job_status&job_id=${encodeURIComponent(jobId)}&rtbcb_nonce=${rtbcbAjax.nonce}`, {
-                credentials: 'same-origin',
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            });
-            const data = await response.json();
-            if (!data.success) {
-                this.handleError({ message: 'Unable to retrieve job status', type: 'polling_error' });
-                return;
-            }
-            const status = data.data.status;
-            if (status === 'completed') {
-                const result = data.data.result;
-                if (result && result.report_data) {
-                    this.handleSuccess(result.report_data);
-                } else {
-                    const message = !result ? 'Result data missing' : 'Report data missing';
-                    this.handleError({ message, type: 'job_error' });
-                }
-            } else if (status === 'error') {
-                this.handleError({ message: data.data.message || 'Job failed', type: 'job_error' });
-            } else {
-                setTimeout(() => this.pollJob(jobId, startTime, attempt + 1), 2000);
-            }
-        } catch (error) {
-            this.handleError({ message: error.message || 'An unexpected error occurred', type: 'polling_error' });
-        }
-    }
-
-    // Enhanced form validation
     validateFormData(formData) {
         const getValue = (field) => {
             if (typeof formData.get === 'function') {
@@ -621,43 +519,7 @@ class BusinessCaseBuilder {
         }
     }
 
-    // Enhanced error display
-    handleError(errorData) {
-        const message = errorData.message || 'An unexpected error occurred';
-
-        console.group('RTBCB Error Details');
-        console.error('Message:', message);
-        console.error('Type:', errorData.type);
-        console.error('Debug Info:', errorData.debug_info);
-        console.error('Timestamp:', errorData.timestamp);
-        console.groupEnd();
-
-        this.showErrorMessage(this.getUserFriendlyMessage(message));
-    }
-
-    getUserFriendlyMessage(serverMessage) {
-        const errorMappings = {
-            'Security check failed': 'Session expired. Please refresh the page and try again.',
-            'OpenAI API key not configured': 'Service temporarily unavailable. Please try again later.',
-            'API connection failed': 'Unable to connect to analysis service. Please try again.',
-            'Missing required field': 'Please fill in all required fields.',
-            'Invalid email address': 'Please enter a valid email address.',
-            'PHP error occurred': 'Server error encountered. Please try again.',
-            'Server returned invalid JSON response': 'Server communication error. Please try again.',
-            'Unexpected server response': 'Server communication error. Please try again.'
-        };
-
-        for (const [key, message] of Object.entries(errorMappings)) {
-            if (serverMessage.includes(key)) {
-                return message;
-            }
-        }
-
-        return 'An error occurred while processing your request. Please try again.';
-    }
-
-
-    showProgress() {
+    showLoading() {
         // Hide form
         const formContainer = this.form.closest('.rtbcb-form-container');
         if (formContainer) {
@@ -680,31 +542,127 @@ class BusinessCaseBuilder {
         }
     }
 
-    showResults(data) {
+    hideLoading() {
         const progressContainer = document.getElementById('rtbcb-progress-container');
         if (progressContainer) {
             progressContainer.style.display = 'none';
             progressContainer.innerHTML = '';
         }
 
-        // Map nested report data
+        const formContainer = this.form.closest('.rtbcb-form-container');
+        if (formContainer) {
+            formContainer.style.display = 'block';
+        }
+    }
+
+    async pollJob(jobId, startTime = Date.now(), attempt = 0) {
+        const MAX_DURATION = 20 * 60 * 1000; // 20 minutes
+        const MAX_ATTEMPTS = 600; // 600 attempts * 2s = 20 minutes max
+        
+        if (Date.now() - startTime > MAX_DURATION || attempt > MAX_ATTEMPTS) {
+            this.handleError({ 
+                message: 'The request timed out after 20 minutes. Please try again later.', 
+                type: 'timeout' 
+            });
+            return;
+        }
+        
+        try {
+            const response = await fetch(`${this.ajaxUrl}?action=rtbcb_job_status&job_id=${encodeURIComponent(jobId)}&rtbcb_nonce=${rtbcbAjax.nonce}`, {
+                credentials: 'same-origin',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            
+            const data = await response.json();
+            
+            if (!data.success) {
+                this.handleError({ message: 'Unable to retrieve job status', type: 'polling_error' });
+                return;
+            }
+            
+            const status = data.data.status;
+            console.log(`RTBCB: Job status: ${status} (attempt ${attempt})`);
+            
+            if (status === 'completed') {
+                const result = data.data.result;
+                if (result && result.report_html) {
+                    this.showHTMLResults(result.report_html);
+                } else if (result && result.report_data) {
+                    this.handleSuccess(result.report_data);
+                } else {
+                    this.handleError({ message: 'Report data missing from completed job', type: 'job_error' });
+                }
+            } else if (status === 'error') {
+                this.handleError({ message: data.data.message || 'Job failed', type: 'job_error' });
+            } else {
+                // Continue polling
+                setTimeout(() => this.pollJob(jobId, startTime, attempt + 1), 2000);
+            }
+        } catch (error) {
+            console.error('RTBCB: Job polling error:', error);
+            this.handleError({ message: error.message || 'An unexpected error occurred', type: 'polling_error' });
+        }
+    }
+
+    handleSuccess(data) {
+        console.log('RTBCB: Success data received:', data);
+        this.showResults(data);
+    }
+
+    showHTMLResults(htmlContent) {
+        console.log('RTBCB: Showing HTML results');
+        this.hideLoading();
+        
+        // Close modal
+        window.closeBusinessCaseModal();
+        
+        // Show HTML results
+        const resultsContainer = document.getElementById('rtbcbResults');
+        if (resultsContainer) {
+            resultsContainer.innerHTML = htmlContent;
+            resultsContainer.style.display = 'block';
+            resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+            // Create results container if it doesn't exist
+            const newContainer = document.createElement('div');
+            newContainer.id = 'rtbcbResults';
+            newContainer.className = 'rtbcb-results';
+            newContainer.innerHTML = htmlContent;
+            
+            // Insert after the modal or at the end of body
+            const modal = document.getElementById('rtbcbModalOverlay');
+            if (modal && modal.parentNode) {
+                modal.parentNode.insertBefore(newContainer, modal.nextSibling);
+            } else {
+                document.body.appendChild(newContainer);
+            }
+            
+            newContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
+    showResults(data) {
+        console.log('RTBCB: Processing structured data results');
+        this.hideLoading();
+        
+        // Map nested report data to expected structure
         const mapped = {
-            companyName: data.metadata?.company_name || 'Your Company',
-            scenarios: data.financial_analysis?.roi_scenarios || {},
+            companyName: data.company_name || data.metadata?.company_name || 'Your Company',
+            scenarios: data.scenarios || data.financial_analysis?.roi_scenarios || {},
             recommendation: {
-                category_info: data.technology_strategy?.category_details || {},
-                confidence: data.metadata?.confidence_level || 0.75,
-                reasoning: data.technology_strategy?.recommended_category || ''
+                category_info: data.recommendation?.category_info || data.technology_strategy?.category_details || {},
+                confidence: data.recommendation?.confidence || data.metadata?.confidence_level || 0.75,
+                reasoning: data.recommendation?.reasoning || data.technology_strategy?.recommended_category || ''
             },
             narrative: {
-                narrative: data.executive_summary?.executive_recommendation || '',
-                next_actions: [
+                narrative: data.narrative?.narrative || data.executive_summary?.executive_recommendation || '',
+                next_actions: data.narrative?.next_actions || [
                     ...(data.action_plan?.immediate_steps || []),
                     ...(data.action_plan?.short_term_milestones || []),
                     ...(data.action_plan?.long_term_objectives || [])
                 ]
             },
-            risks: data.risk_analysis?.implementation_risks || []
+            risks: data.risks || data.risk_analysis?.implementation_risks || []
         };
 
         // Close modal
@@ -717,6 +675,9 @@ class BusinessCaseBuilder {
             this.populateRiskAssessment(mapped.risks);
             resultsContainer.style.display = 'block';
             resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+            console.error('RTBCB: Results container not found');
+            this.showError('Unable to display results. Please refresh the page.');
         }
     }
 
@@ -773,7 +734,7 @@ class BusinessCaseBuilder {
                 <div class="rtbcb-roi-summary">
                     <div class="rtbcb-scenario">
                         <div class="rtbcb-scenario-label">Conservative</div>
-                        <div class="rtbcb-scenario-amount">$${this.formatNumber(scenarios.low?.total_annual_benefit || 0)}</div>
+                        <div class="rtbcb-scenario-amount">$${this.formatNumber(scenarios.low?.total_annual_benefit || scenarios.conservative?.total_annual_benefit || 0)}</div>
                         <div class="rtbcb-scenario-confidence">80% probability</div>
                     </div>
                     <div class="rtbcb-scenario rtbcb-scenario-base">
@@ -783,7 +744,7 @@ class BusinessCaseBuilder {
                     </div>
                     <div class="rtbcb-scenario">
                         <div class="rtbcb-scenario-label">Optimistic</div>
-                        <div class="rtbcb-scenario-amount">$${this.formatNumber(scenarios.high?.total_annual_benefit || 0)}</div>
+                        <div class="rtbcb-scenario-amount">$${this.formatNumber(scenarios.high?.total_annual_benefit || scenarios.optimistic?.total_annual_benefit || 0)}</div>
                         <div class="rtbcb-scenario-confidence">Best case scenario</div>
                     </div>
                 </div>
@@ -889,16 +850,6 @@ class BusinessCaseBuilder {
         `;
     }
 
-    copyResultsHTML() {
-        const container = document.querySelector('.rtbcb-results-container');
-        if (!container || !navigator.clipboard) {
-            return;
-        }
-        navigator.clipboard.writeText(container.innerHTML)
-            .then(() => alert('Results HTML copied to clipboard'))
-            .catch(err => console.error('Copy failed:', err));
-    }
-
     renderActions() {
         return `
             <div class="rtbcb-actions-section">
@@ -918,38 +869,53 @@ class BusinessCaseBuilder {
         `;
     }
 
-    showTimeoutError(message, diagnostics = {}) {
-        const progressContainer = document.getElementById('rtbcb-progress-container');
-        if (progressContainer) {
-            const safeMessage = this.escapeHTML(message);
-            const requestInfo = diagnostics.requestId ? `<div>Request ID: ${this.escapeHTML(diagnostics.requestId)}</div>` : '';
-            const timestampInfo = diagnostics.timestamp ? `<div>Timestamp: ${this.escapeHTML(diagnostics.timestamp)}</div>` : '';
-            const diagHTML = requestInfo || timestampInfo ? `<div class="rtbcb-error-diagnostics" style="color: #6b7280; margin-bottom: 24px;">${requestInfo}${timestampInfo}</div>` : '';
-            progressContainer.innerHTML = `
-                <div class="rtbcb-error-overlay" style="padding: 40px; text-align: center;">
-                    <div class="rtbcb-error-icon" style="font-size: 48px; color: #ef4444; margin-bottom: 20px;">⚠️</div>
-                    <h3 style="color: #ef4444; margin-bottom: 16px;">Server Timeout</h3>
-                    <p style="color: #4b5563; margin-bottom: 24px;">${safeMessage}</p>
-                    ${diagHTML}
-                    <div class="rtbcb-error-actions">
-                        <button type="button" class="rtbcb-action-btn rtbcb-btn-primary rtbcb-retry-btn">Retry</button>
-                        <a href="mailto:contact@realtreasury.com" class="rtbcb-action-btn rtbcb-btn-secondary" style="text-decoration: none;">Contact Support</a>
-                    </div>
-                </div>
-            `;
-            progressContainer.style.display = 'flex';
-            const retryBtn = progressContainer.querySelector('.rtbcb-retry-btn');
-            if (retryBtn) {
-                retryBtn.addEventListener('click', () => {
-                    retryBtn.disabled = true;
-                    progressContainer.innerHTML = '';
-                    this.handleSubmit(this.lastFormData);
-                });
+    copyResultsHTML() {
+        const container = document.querySelector('.rtbcb-results-container');
+        if (!container || !navigator.clipboard) {
+            return;
+        }
+        navigator.clipboard.writeText(container.innerHTML)
+            .then(() => alert('Results HTML copied to clipboard'))
+            .catch(err => console.error('Copy failed:', err));
+    }
+
+    handleError(errorData) {
+        const message = errorData.message || 'An unexpected error occurred';
+
+        console.group('RTBCB Error Details');
+        console.error('Message:', message);
+        console.error('Type:', errorData.type);
+        console.error('Debug Info:', errorData.debug_info);
+        console.error('Timestamp:', errorData.timestamp);
+        console.groupEnd();
+
+        this.showError(this.getUserFriendlyMessage(message));
+    }
+
+    getUserFriendlyMessage(serverMessage) {
+        const errorMappings = {
+            'Security check failed': 'Session expired. Please refresh the page and try again.',
+            'OpenAI API key not configured': 'Service temporarily unavailable. Please try again later.',
+            'API connection failed': 'Unable to connect to analysis service. Please try again.',
+            'Missing required field': 'Please fill in all required fields.',
+            'Invalid email address': 'Please enter a valid email address.',
+            'PHP error occurred': 'Server error encountered. Please try again.',
+            'Server returned invalid JSON response': 'Server communication error. Please try again.',
+            'Unexpected server response': 'Server communication error. Please try again.'
+        };
+
+        for (const [key, message] of Object.entries(errorMappings)) {
+            if (serverMessage.includes(key)) {
+                return message;
             }
         }
+
+        return 'An error occurred while processing your request. Please try again.';
     }
 
     showError(message) {
+        this.hideLoading();
+        
         const progressContainer = document.getElementById('rtbcb-progress-container');
         if (progressContainer) {
             const safeMessage = this.escapeHTML(message);
