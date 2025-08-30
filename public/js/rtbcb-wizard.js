@@ -65,6 +65,7 @@ class BusinessCaseBuilder {
         // Steps
         this.steps = this.form.querySelectorAll('.rtbcb-wizard-step');
         this.progressSteps = this.form.querySelectorAll('.rtbcb-progress-step');
+        this.progressLine = this.form.querySelector('.rtbcb-progress-line');
         
         // UPDATED: Form fields by step - now includes company_name and industry
         this.stepFields = {
@@ -381,6 +382,11 @@ class BusinessCaseBuilder {
                 step.classList.remove('active', 'completed');
             }
         });
+
+        if (this.progressLine) {
+            const progress = (this.currentStep / this.totalSteps) * 100;
+            this.progressLine.style.width = `${progress}%`;
+        }
     }
 
     scrollToTop() {
