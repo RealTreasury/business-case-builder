@@ -465,15 +465,23 @@ class BusinessCaseBuilder {
                     console.log('RTBCB: Business case generated successfully');
                     this.showResults(result.data);
                 } else {
-                    const errorMessage = result?.data?.message || 'Failed to generate business case';
+                    const errorData = result?.data;
+                    const errorMessage =
+                        (errorData && typeof errorData === 'object' && errorData.message)
+                            ? errorData.message
+                            : (typeof errorData === 'string' ? errorData : 'Failed to generate business case');
                     const error = new Error(errorMessage);
-                    if (result?.data?.error_code) {
-                        error.code = result.data.error_code;
+                    if (errorData && typeof errorData === 'object' && errorData.error_code) {
+                        error.code = errorData.error_code;
                     }
                     throw error;
                 }
             } else {
-                let errorMessage = result?.data?.message;
+                const errorData = result?.data;
+                let errorMessage =
+                    (errorData && typeof errorData === 'object' && errorData.message)
+                        ? errorData.message
+                        : (typeof errorData === 'string' ? errorData : '');
                 if (!errorMessage) {
                     if (response.status >= 500) {
                         errorMessage = 'Server error. Please try again later.';
@@ -485,8 +493,8 @@ class BusinessCaseBuilder {
                 }
                 const error = new Error(errorMessage);
                 error.status = response.status;
-                if (result?.data?.error_code) {
-                    error.code = result.data.error_code;
+                if (errorData && typeof errorData === 'object' && errorData.error_code) {
+                    error.code = errorData.error_code;
                 }
                 throw error;
             }

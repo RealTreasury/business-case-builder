@@ -739,19 +739,32 @@ class Real_Treasury_BCB {
                 return;
             }
 
+            $company_name = sanitize_text_field( wp_unslash( $_POST['company_name'] ?? '' ) );
+            $company_size = sanitize_text_field( wp_unslash( $_POST['company_size'] ?? '' ) );
+            $industry     = sanitize_text_field( wp_unslash( $_POST['industry'] ?? '' ) );
+
             $company = rtbcb_get_current_company();
             if ( empty( $company ) ) {
-                wp_send_json_error( __( 'No company data found. Please run the company overview first.', 'rtbcb' ), 400 );
-                return;
+                if ( $company_name && $company_size && $industry ) {
+                    $company = [
+                        'name'     => $company_name,
+                        'size'     => $company_size,
+                        'industry' => $industry,
+                    ];
+                    update_option( 'rtbcb_current_company', $company );
+                } else {
+                    wp_send_json_error( __( 'No company data found. Please run the company overview first.', 'rtbcb' ), 400 );
+                    return;
+                }
             }
 
             rtbcb_log_memory_usage( 'after_nonce_verification' );
 
             // Collect and validate form data
-            $hours_reconciliation_raw   = $_POST['hours_reconciliation'] ?? null;
-            $hours_cash_positioning_raw = $_POST['hours_cash_positioning'] ?? null;
-            $num_banks_raw              = $_POST['num_banks'] ?? null;
-            $ftes_raw                   = $_POST['ftes'] ?? null;
+            $hours_reconciliation_raw   = isset( $_POST['hours_reconciliation'] ) ? wp_unslash( $_POST['hours_reconciliation'] ) : null;
+            $hours_cash_positioning_raw = isset( $_POST['hours_cash_positioning'] ) ? wp_unslash( $_POST['hours_cash_positioning'] ) : null;
+            $num_banks_raw              = isset( $_POST['num_banks'] ) ? wp_unslash( $_POST['num_banks'] ) : null;
+            $ftes_raw                   = isset( $_POST['ftes'] ) ? wp_unslash( $_POST['ftes'] ) : null;
 
             if ( ! is_numeric( $hours_reconciliation_raw ) ) {
                 wp_send_json_error( __( 'Please enter your weekly reconciliation hours.', 'rtbcb' ), 400 );
@@ -771,19 +784,19 @@ class Real_Treasury_BCB {
             }
 
             $user_inputs = [
-                'email'                  => sanitize_email( $_POST['email'] ?? '' ),
-                'company_name'           => sanitize_text_field( $_POST['company_name'] ?? '' ),
-                'company_size'           => sanitize_text_field( $_POST['company_size'] ?? '' ),
-                'industry'               => sanitize_text_field( $_POST['industry'] ?? '' ),
-                'job_title'              => sanitize_text_field( $_POST['job_title'] ?? '' ),
+                'email'                  => sanitize_email( wp_unslash( $_POST['email'] ?? '' ) ),
+                'company_name'           => $company_name,
+                'company_size'           => $company_size,
+                'industry'               => $industry,
+                'job_title'              => sanitize_text_field( wp_unslash( $_POST['job_title'] ?? '' ) ),
                 'hours_reconciliation'   => floatval( $hours_reconciliation_raw ),
                 'hours_cash_positioning' => floatval( $hours_cash_positioning_raw ),
                 'num_banks'              => intval( $num_banks_raw ),
                 'ftes'                   => floatval( $ftes_raw ),
-                'pain_points'            => array_map( 'sanitize_text_field', (array) ( $_POST['pain_points'] ?? [] ) ),
-                'business_objective'     => sanitize_text_field( $_POST['business_objective'] ?? '' ),
-                'implementation_timeline'=> sanitize_text_field( $_POST['implementation_timeline'] ?? '' ),
-                'budget_range'           => sanitize_text_field( $_POST['budget_range'] ?? '' ),
+                'pain_points'            => array_map( 'sanitize_text_field', (array) wp_unslash( $_POST['pain_points'] ?? [] ) ),
+                'business_objective'     => sanitize_text_field( wp_unslash( $_POST['business_objective'] ?? '' ) ),
+                'implementation_timeline'=> sanitize_text_field( wp_unslash( $_POST['implementation_timeline'] ?? '' ) ),
+                'budget_range'           => sanitize_text_field( wp_unslash( $_POST['budget_range'] ?? '' ) ),
             ];
 
             rtbcb_log_api_debug( 'Collected user inputs', $user_inputs );
