@@ -14,7 +14,7 @@ class RTBCB_DB {
     /**
      * Current database version.
      */
-    const DB_VERSION = '2.0.0';
+    const DB_VERSION = '2.0.1';
 
     /**
      * Initialize database and handle upgrades.
@@ -53,10 +53,14 @@ class RTBCB_DB {
             RTBCB_API_Log::init();
         }
 
-        // Ensure RAG index table is present during upgrades.
-        self::create_rag_table();
+	// Ensure RAG index table is present during upgrades.
+	self::create_rag_table();
 
-        // Future migrations can be handled here.
+	if ( version_compare( $from_version, '2.0.1', '<' ) ) {
+		self::add_embedding_norm_index();
+	}
+
+	// Future migrations can be handled here.
 
         // Log the upgrade.
         error_log( 'RTBCB: Database upgraded from version ' . $from_version . ' to ' . self::DB_VERSION );
@@ -109,12 +113,28 @@ class RTBCB_DB {
             updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY  (id),
             UNIQUE KEY hash_key (text_hash),
-            KEY type_ref (type, ref_id)
+            KEY type_ref (type, ref_id),
+            KEY embedding_norm_idx (embedding_norm)
         ) {$charset_collate};";
 
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
         dbDelta( $sql );
     }
+
+    /**
+     * Add embedding_norm index to the RAG table if missing.
+     *
+     * @return void
+     */
+	private static function add_embedding_norm_index() {
+		global $wpdb;
+
+		$table_name = $wpdb->prefix . 'rtbcb_rag_index';
+		$exists     = $wpdb->get_var( $wpdb->prepare( 'SHOW INDEX FROM ' . $table_name . ' WHERE Key_name = %s', 'embedding_norm_idx' ) );
+		if ( empty( $exists ) ) {
+			$wpdb->query( 'ALTER TABLE ' . $table_name . ' ADD KEY embedding_norm_idx (embedding_norm)' );
+		}
+	}
 
     /**
      * Seed sample data into the RAG index when empty.
