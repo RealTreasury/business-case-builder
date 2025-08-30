@@ -61,9 +61,43 @@ function rtbcb_has_openai_api_key() {
  * @return bool True if the error appears configuration related.
  */
 function rtbcb_is_openai_configuration_error( $e ) {
-	$message = strtolower( $e->getMessage() );
+        $message = strtolower( $e->getMessage() );
 
-	return false !== strpos( $message, 'api key' ) || false !== strpos( $message, 'model' );
+        return false !== strpos( $message, 'api key' ) || false !== strpos( $message, 'model' );
+}
+
+/**
+ * Get allowed HTML tags for report templates.
+ *
+ * Adds interactive elements and data attributes to the default allowlist.
+ *
+ * @return array Allowed HTML tags.
+ */
+function rtbcb_get_report_allowed_html() {
+        $allowed_html = wp_kses_allowed_html( 'post' );
+
+        foreach ( $allowed_html as $tag => $attrs ) {
+                $allowed_html[ $tag ]['data-*'] = true;
+        }
+
+        $allowed_html['canvas'] = [
+                'id'     => true,
+                'class'  => true,
+                'style'  => true,
+                'width'  => true,
+                'height' => true,
+                'data-*' => true,
+        ];
+
+        $allowed_html['button'] = [
+                'id'     => true,
+                'class'  => true,
+                'style'  => true,
+                'type'   => true,
+                'data-*' => true,
+        ];
+
+        return $allowed_html;
 }
 
 /**

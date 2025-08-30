@@ -227,7 +227,9 @@ class RTBCB_Router {
         include $template_path;
         $html = ob_get_clean();
 
-        return wp_kses_post( $html );
+        $allowed_html = rtbcb_get_report_allowed_html();
+
+        return wp_kses( $html, $allowed_html );
     }
 
    /**
@@ -253,7 +255,9 @@ class RTBCB_Router {
        include $template_path;
        $html = ob_get_clean();
 
-       return wp_kses_post( $html );
+       $allowed_html = rtbcb_get_report_allowed_html();
+
+       return wp_kses( $html, $allowed_html );
    }
 
    /**

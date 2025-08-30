@@ -1616,12 +1616,13 @@ class Real_Treasury_BCB {
 		}
 		$business_case_data = is_array( $business_case_data ) ? $business_case_data : [];
 		// Transform data structure for template.
-		$report_data = $this->transform_data_for_template( $business_case_data );
-		ob_start();
-		include $template_path;
-		$html = ob_get_clean();
-		return wp_kses_post( $html );
-		}
+                $report_data = $this->transform_data_for_template( $business_case_data );
+                ob_start();
+                include $template_path;
+                $html = ob_get_clean();
+                $allowed_html = rtbcb_get_report_allowed_html();
+                return wp_kses( $html, $allowed_html );
+                }
 
    /**
     * Transform LLM response data into the structure expected by comprehensive template.
