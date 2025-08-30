@@ -60,10 +60,10 @@ class RTBCB_Ajax {
 			}
 			$workflow_tracker->complete_step( 'ai_enrichment', $enriched_profile );
 
-			$workflow_tracker->start_step( 'enhanced_roi_calculation' );
-			$enhanced_calculator = new RTBCB_Enhanced_Calculator();
-			$roi_scenarios       = $enhanced_calculator->calculate_enhanced_roi( $user_inputs, $enriched_profile );
-			$workflow_tracker->complete_step( 'enhanced_roi_calculation', $roi_scenarios );
+$workflow_tracker->start_step( 'enhanced_roi_calculation' );
+$category_output = RTBCB_Category_Recommender::recommend_category( $user_inputs );
+$roi_scenarios   = RTBCB_Calculator::calculate_category_refined_roi( $user_inputs, $category_output );
+$workflow_tracker->complete_step( 'enhanced_roi_calculation', $roi_scenarios );
 
 			$workflow_tracker->start_step( 'intelligent_recommendations' );
 			$intelligent_recommender = new RTBCB_Intelligent_Recommender();

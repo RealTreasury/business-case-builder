@@ -51,11 +51,15 @@ class RTBCB_Router {
             $llm = new RTBCB_LLM();
             $rag = new RTBCB_RAG();
 
-            // Perform calculations.
-            $calculations = RTBCB_Calculator::calculate_roi( $form_data );
+// Perform calculations.
+$calculations = RTBCB_Calculator::calculate_roi( $form_data );
 
-            // Generate context from RAG.
-            $rag_context = $rag->get_context( $form_data['company_description'] );
+// Refine ROI using category recommendation.
+$category_output = RTBCB_Category_Recommender::recommend_category( $form_data );
+$calculations    = RTBCB_Calculator::calculate_category_refined_roi( $form_data, $category_output );
+
+// Generate context from RAG.
+$rag_context = $rag->get_context( $form_data['company_description'] );
 
             if ( 'comprehensive' === $report_type ) {
                 // Generate comprehensive business case with LLM.
