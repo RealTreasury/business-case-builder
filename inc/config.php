@@ -44,7 +44,7 @@ function rtbcb_get_gpt5_config( $overrides = [] ) {
         'store'             => true,
         'timeout'           => function_exists( 'rtbcb_get_api_timeout' ) ? rtbcb_get_api_timeout() : (int) get_option( 'rtbcb_gpt5_timeout', 180 ),
         'max_retries'       => 2,
-        'max_retry_time'    => 60,
+        'max_retry_time'    => function_exists( 'rtbcb_get_api_timeout' ) ? rtbcb_get_api_timeout() : (int) get_option( 'rtbcb_gpt5_timeout', 180 ),
         'reasoning_effort'  => 'medium',
         'text_verbosity'    => 'medium',
     ];

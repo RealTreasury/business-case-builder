@@ -2308,11 +2308,11 @@ return $analysis;
 	 */
 	private function call_openai_with_retry( $model, $prompt, $max_output_tokens = null, $max_retries = null, $chunk_handler = null ) {
 	        $max_retries     = $max_retries ?? intval( $this->gpt5_config['max_retries'] );
-        $base_timeout    = intval( $this->gpt5_config['timeout'] ?? 180 );
-        $current_timeout = $base_timeout;
-        $current_tokens  = $max_output_tokens;
-        $max_retry_time  = intval( $this->gpt5_config['max_retry_time'] ?? 60 );
-        $start_time      = microtime( true );
+	        $base_timeout    = intval( $this->gpt5_config['timeout'] ?? 180 );
+	        $current_timeout = $base_timeout;
+	        $current_tokens  = $max_output_tokens;
+	        $max_retry_time  = max( $base_timeout, intval( $this->gpt5_config['max_retry_time'] ?? $base_timeout ) );
+	        $start_time      = microtime( true );
 
         for ( $attempt = 1; $attempt <= $max_retries; $attempt++ ) {
             $elapsed = microtime( true ) - $start_time;
