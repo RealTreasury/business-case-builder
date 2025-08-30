@@ -53,6 +53,9 @@ php tests/render-comprehensive-template.test.php
 echo "12. Running report interactivity test..."
 node tests/report-interactivity.test.js
 
+echo "12b. Running extended report interactivity test..."
+node tests/report-interactivity-extended.test.js
+
 # AJAX error handling test (PHPUnit)
 echo "13. Running AJAX error handling tests..."
 phpunit tests/RTBCB_AjaxGenerateComprehensiveCaseErrorTest.php
