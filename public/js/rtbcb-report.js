@@ -83,57 +83,65 @@ async function generateProfessionalReport(businessContext) {
         requestBody.temperature = cfg.temperature;
     }
 
-    const maxAttempts = cfg.max_retries || 3;
-    let lastError;
+    const formData = new FormData();
+    formData.append('action', 'rtbcb_openai_responses');
+    formData.append('body', JSON.stringify(requestBody));
 
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-        const formData = new FormData();
-        formData.append('action', 'rtbcb_openai_responses');
-        formData.append('body', JSON.stringify(requestBody));
+    const startResponse = await fetch(rtbcbReport.ajax_url, {
+        method: 'POST',
+        body: formData
+    });
 
-        try {
-            const response = await fetch(rtbcbReport.ajax_url, {
-                method: 'POST',
-                body: formData
-            });
-
-            if (response.ok) {
-                let data;
-                try {
-                    data = await response.json();
-                } catch (parseError) {
-                    lastError = parseError;
-                    continue;
-                }
-
-                if (data.error) {
-                    console.error('Attempt ' + attempt + ' API error details:', data.error);
-                    lastError = new Error(data.error.message || 'Responses API error');
-                    continue;
-                }
-
-                const htmlContent = data.output_text;
-                const cleanedHTML = htmlContent
-                    .replace(/```html\n?/g, '')
-                    .replace(/```\n?/g, '')
-                    .trim();
-                return cleanedHTML;
-            }
-
-            if (rtbcbReport && rtbcbReport.debug) {
-                const responseText = await response.text();
-                console.error('Attempt ' + attempt + ' failed:', responseText);
-                console.error('RTBCB request body:', requestBody);
-            }
-            lastError = new Error('HTTP ' + response.status + ' ' + response.statusText);
-        } catch (error) {
-            console.error('Error generating report (attempt ' + attempt + '):', error);
-            lastError = error;
-        }
+    if (!startResponse.ok) {
+        throw new Error('HTTP ' + startResponse.status + ' ' + startResponse.statusText);
     }
 
-    console.error('All attempts to generate report failed:', lastError);
-    throw new Error(lastError && lastError.message ? lastError.message : 'Unable to generate report at this time. Please try again later.');
+    const startData = await startResponse.json();
+    if (!startData.success || !startData.data || !startData.data.job_id) {
+        throw new Error('Failed to start OpenAI job');
+    }
+
+    const jobId = startData.data.job_id;
+    const maxAttempts = (cfg.max_retries || 3) * 20;
+    const pollInterval = 5000;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        const pollData = new FormData();
+        pollData.append('action', 'rtbcb_openai_responses_status');
+        pollData.append('job_id', jobId);
+
+        const pollResponse = await fetch(rtbcbReport.ajax_url, {
+            method: 'POST',
+            body: pollData
+        });
+
+        if (pollResponse.ok) {
+            const pollJson = await pollResponse.json();
+            if (pollJson.success && pollJson.data) {
+                if (pollJson.data.status === 'pending') {
+                    await new Promise(resolve => setTimeout(resolve, pollInterval));
+                    continue;
+                }
+                if (pollJson.data.status === 'complete') {
+                    const htmlContent = pollJson.data.response.output_text;
+                    const cleanedHTML = htmlContent
+                        .replace(/```html\n?/g, '')
+                        .replace(/```\n?/g, '')
+                        .trim();
+                    return cleanedHTML;
+                }
+                if (pollJson.data.status === 'error') {
+                    throw new Error(pollJson.data.message || 'Responses API error');
+                }
+            } else {
+                throw new Error(pollJson.data && pollJson.data.message ? pollJson.data.message : 'Unknown error');
+            }
+        }
+
+        await new Promise(resolve => setTimeout(resolve, pollInterval));
+    }
+
+    throw new Error('Timed out waiting for OpenAI response');
 }
 
 function sanitizeReportHTML(htmlContent) {
