@@ -23,17 +23,26 @@ async function runTests() {
         let capturedBody;
         global.rtbcbReport = { report_model: model, model_capabilities: capabilities, ajax_url: 'https://example.com', template_url: 'template.html' };
 
+        let requestCount = 0;
         global.fetch = (url, options) => {
             if (!options) {
                 return Promise.resolve({ ok: true, text: () => Promise.resolve(templateHtml) });
             }
-            capturedBody = JSON.parse(options.body.store.body);
+            requestCount++;
+            if (requestCount === 1) {
+                capturedBody = JSON.parse(options.body.store.body);
+                return Promise.resolve({
+                    ok: true,
+                    json: () => Promise.resolve({ success: true, data: { job_id: 'job-1' } }),
+                    status: 200,
+                    statusText: 'OK'
+                });
+            }
             return Promise.resolve({
                 ok: true,
-                json: () => Promise.resolve({ output_text: '<html></html>' }),
+                json: () => Promise.resolve({ success: true, data: { status: 'complete', response: { output_text: '<html></html>' } } }),
                 status: 200,
-                statusText: 'OK',
-                text: () => Promise.resolve('')
+                statusText: 'OK'
             });
         };
 
