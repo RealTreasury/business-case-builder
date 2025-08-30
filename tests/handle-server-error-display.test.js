@@ -66,10 +66,11 @@ let errorMessage = null;
 builder.showProgress = () => {};
 builder.showResults = () => {};
 builder.showError = (msg) => { errorMessage = msg; };
+builder.showTimeoutError = (msg) => { errorMessage = msg; };
 
 (async () => {
     await builder.handleSubmit();
-    assert.ok(errorMessage.includes('The server took too long to respond'));
+    assert.ok(errorMessage.includes('Server timeout—please retry or contact support'));
     console.log('Server error display test passed.');
 })().catch(err => {
     console.error(err);

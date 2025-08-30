@@ -396,7 +396,7 @@ class BusinessCaseBuilder {
         }
     }
 
-    async handleSubmit() {
+    async handleSubmit(existingData) {
         // Show loading state
         this.showProgress();
         if (typeof rtbcbAjax === 'undefined' || !rtbcbAjax.ajax_url) {
@@ -404,20 +404,31 @@ class BusinessCaseBuilder {
             return;
         }
 
-        const formData = new FormData();
-        const rawData = new FormData(this.form);
-        const numericFields = ['hours_reconciliation', 'hours_cash_positioning', 'num_banks', 'ftes'];
-
-        for (const [key, value] of rawData.entries()) {
-            if (numericFields.includes(key)) {
-                const numValue = Number(value);
-                formData.append(key, Number.isFinite(numValue) ? numValue : 0);
-            } else {
+        let formData;
+        if (existingData instanceof FormData) {
+            // Clone the existing data for retry
+            formData = new FormData();
+            for (const [key, value] of existingData.entries()) {
                 formData.append(key, value);
             }
+        } else {
+            formData = new FormData();
+            const rawData = new FormData(this.form);
+            const numericFields = ['hours_reconciliation', 'hours_cash_positioning', 'num_banks', 'ftes'];
+
+            for (const [key, value] of rawData.entries()) {
+                if (numericFields.includes(key)) {
+                    const numValue = Number(value);
+                    formData.append(key, Number.isFinite(numValue) ? numValue : 0);
+                } else {
+                    formData.append(key, value);
+                }
+            }
+            formData.append('action', 'rtbcb_generate_case');
+            formData.append('rtbcb_nonce', rtbcbAjax.nonce);
         }
-        formData.append('action', 'rtbcb_generate_case');
-        formData.append('rtbcb_nonce', rtbcbAjax.nonce);
+
+        this.lastFormData = formData;
 
         console.log('RTBCB: Submitting form data:', Object.fromEntries(formData));
 
@@ -427,8 +438,17 @@ class BusinessCaseBuilder {
                 body: formData
             });
 
-            if (response.status >= 500) {
-                throw new Error('Server timeout');
+            const requestId = response.headers && typeof response.headers.get === 'function'
+                ? response.headers.get('x-request-id')
+                : null;
+            const timestamp = new Date().toISOString();
+
+            if (response.status === 504 || response.status >= 500) {
+                const timeoutError = new Error('Server timeout');
+                timeoutError.status = response.status;
+                timeoutError.requestId = requestId;
+                timeoutError.timestamp = timestamp;
+                throw timeoutError;
             }
 
             let result;
@@ -478,20 +498,27 @@ class BusinessCaseBuilder {
                 code: error.code || error.error_code
             });
 
-            let displayMessage;
-            if (error.message === 'Server timeout') {
-                displayMessage = 'The server took too long to respond. Please retry or contact support.';
-            } else {
-                displayMessage = error.name === 'TypeError'
-                    ? 'Network error. Please check your connection and try again.'
-                    : error.message;
-
-                const errorCode = error.code || error.error_code;
-                if (errorCode) {
-                    displayMessage += ` (Error code: ${errorCode})`;
-                }
-                displayMessage += ' Please check your AI configuration or try again later.';
+            if (error.status === 504 || (error.status && error.status >= 500)) {
+                this.showTimeoutError(
+                    'Server timeout—please retry or contact support',
+                    {
+                        requestId: error.requestId,
+                        timestamp: error.timestamp || new Date().toISOString()
+                    }
+                );
+                return;
             }
+
+            let displayMessage;
+            displayMessage = error.name === 'TypeError'
+                ? 'Network error. Please check your connection and try again.'
+                : error.message;
+
+            const errorCode = error.code || error.error_code;
+            if (errorCode) {
+                displayMessage += ` (Error code: ${errorCode})`;
+            }
+            displayMessage += ' Please check your AI configuration or try again later.';
 
             this.showError(displayMessage);
         }
@@ -735,6 +762,47 @@ class BusinessCaseBuilder {
                 </button>
             </div>
         `;
+    }
+
+    showTimeoutError(message, diagnostics = {}) {
+        // Clear progress overlay if present
+        const progressOverlay = document.querySelector('.rtbcb-progress-overlay');
+        if (progressOverlay) {
+            progressOverlay.remove();
+        }
+
+        const formContainer = this.form.closest('.rtbcb-form-container');
+        const parent = formContainer ? formContainer.parentNode : this.form.parentNode;
+        const safeMessage = this.escapeHTML(message);
+        const requestInfo = diagnostics.requestId ? `<div>Request ID: ${this.escapeHTML(diagnostics.requestId)}</div>` : '';
+        const timestampInfo = diagnostics.timestamp ? `<div>Timestamp: ${this.escapeHTML(diagnostics.timestamp)}</div>` : '';
+        const diagHTML = requestInfo || timestampInfo ? `<div class="rtbcb-error-diagnostics" style="color: #6b7280; margin-bottom: 24px;">${requestInfo}${timestampInfo}</div>` : '';
+
+        const errorHTML = `
+            <div class="rtbcb-error-overlay" style="padding: 40px; text-align: center;">
+                <div class="rtbcb-error-icon" style="font-size: 48px; color: #ef4444; margin-bottom: 20px;">⚠️</div>
+                <h3 style="color: #ef4444; margin-bottom: 16px;">Server Timeout</h3>
+                <p style="color: #4b5563; margin-bottom: 24px;">${safeMessage}</p>
+                ${diagHTML}
+                <div class="rtbcb-error-actions">
+                    <button type="button" class="rtbcb-action-btn rtbcb-btn-primary rtbcb-retry-btn">Retry</button>
+                    <a href="mailto:contact@realtreasury.com" class="rtbcb-action-btn rtbcb-btn-secondary" style="text-decoration: none;">Contact Support</a>
+                </div>
+            </div>
+        `;
+
+        parent.insertAdjacentHTML('afterbegin', errorHTML);
+        const retryBtn = parent.querySelector('.rtbcb-retry-btn');
+        if (retryBtn) {
+            retryBtn.addEventListener('click', () => {
+                retryBtn.disabled = true;
+                const overlay = parent.querySelector('.rtbcb-error-overlay');
+                if (overlay) {
+                    overlay.remove();
+                }
+                setTimeout(() => this.handleSubmit(this.lastFormData), 1000);
+            });
+        }
     }
 
     showError(message) {
