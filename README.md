@@ -4,7 +4,12 @@ A comprehensive WordPress plugin that helps treasury teams quantify the benefits
 
 ## 🚀 What's New in Version 2.1.7
 
+
+### 🔧 Maintenance Release
+- Updated documentation references for the 2.1.7 release.
+
 - 📚 Added detailed wizard and API flow documentation in [docs/WIZARD_FORM_API_FLOW.md](docs/WIZARD_FORM_API_FLOW.md).
+
 
 ## 📋 Installation & Setup
 
