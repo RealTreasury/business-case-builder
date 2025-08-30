@@ -634,6 +634,7 @@ class BusinessCaseBuilder {
         // Create or find results container
         let resultsContainer = document.getElementById('rtbcb-results-enhanced');
         if (!resultsContainer) {
+            console.log('RTBCB: Creating results container');
             resultsContainer = document.createElement('div');
             resultsContainer.id = 'rtbcb-results-enhanced';
             resultsContainer.className = 'rtbcb-enhanced-results-container';
@@ -642,12 +643,17 @@ class BusinessCaseBuilder {
             const modal = document.getElementById('rtbcbModalOverlay');
             if (modal && modal.parentNode) {
                 modal.parentNode.insertBefore(resultsContainer, modal.nextSibling);
+                console.log('RTBCB: Results container inserted after modal');
             } else {
                 document.body.appendChild(resultsContainer);
+                console.log('RTBCB: Results container appended to body');
             }
+        } else {
+            console.log('RTBCB: Reusing existing results container');
         }
 
         // Set content and make visible
+        console.log('RTBCB: Injecting report content');
         resultsContainer.innerHTML = htmlContent;
         resultsContainer.style.display = 'block';
 
@@ -662,10 +668,8 @@ class BusinessCaseBuilder {
     }
 
     initializeEnhancedReport(container) {
-        // Initialize Chart.js charts if available
-        if (typeof Chart !== 'undefined') {
-            this.initializeReportCharts(container);
-        }
+        // Initialize Chart.js charts
+        this.initializeReportCharts(container);
 
         // Initialize collapsible sections
         this.initializeCollapsibleSections(container);
@@ -681,13 +685,24 @@ class BusinessCaseBuilder {
         const chartCanvas = container.querySelector('#rtbcb-roi-chart');
         if (!chartCanvas) return;
 
+        console.log('RTBCB: Initializing ROI chart');
+
+        if (typeof Chart === 'undefined') {
+            console.warn('RTBCB: Chart.js library is not available');
+            return;
+        }
+
         try {
             // Get chart data from the page or from localized data
             const roiData = this.extractROIDataFromReport(container);
+            console.log('RTBCB: Extracted ROI data', roiData);
 
-            if (roiData && Object.keys(roiData).length > 0) {
-                this.createROIChart(chartCanvas, roiData);
+            if (!roiData || Object.keys(roiData).length === 0) {
+                console.warn('RTBCB: ROI data is empty. Chart will not be rendered');
+                return;
             }
+
+            this.createROIChart(chartCanvas, roiData);
         } catch (error) {
             console.error('Failed to initialize chart:', error);
         }
@@ -754,6 +769,7 @@ class BusinessCaseBuilder {
     }
 
     createROIChart(canvas, roiData) {
+        console.log('RTBCB: Creating ROI chart');
         const ctx = canvas.getContext('2d');
         if (!ctx) {
             console.error('RTBCB: Failed to get canvas context for ROI chart.');
@@ -830,6 +846,7 @@ class BusinessCaseBuilder {
                 }
             }
         });
+        console.log('RTBCB: ROI chart created');
     }
 
     formatScenarioLabel(scenario) {
