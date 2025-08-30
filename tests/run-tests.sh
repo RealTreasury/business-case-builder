@@ -65,6 +65,7 @@ node tests/render-results-no-narrative.test.js
 node tests/handle-submit-success.test.js
 node tests/handle-server-error-display.test.js
 node tests/handle-invalid-server-response.test.js
+node tests/handle-string-error-response.test.js
 node tests/temperature-model.test.js
 
 # WordPress coding standards (if installed)
