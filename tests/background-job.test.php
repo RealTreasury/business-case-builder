@@ -43,6 +43,41 @@ if ( ! function_exists( 'get_transient' ) ) {
     }
 }
 
+if ( ! function_exists( 'delete_transient' ) ) {
+    function delete_transient( $name ) {
+        global $transients;
+        unset( $transients[ $name ] );
+        return true;
+    }
+}
+
+if ( ! function_exists( 'get_option' ) ) {
+    function get_option( $name, $default = false ) {
+        global $options;
+        return $options[ $name ] ?? $default;
+    }
+}
+
+if ( ! function_exists( 'update_option' ) ) {
+    function update_option( $name, $value, $autoload = null ) {
+        global $options;
+        $options[ $name ] = $value;
+        return true;
+    }
+}
+
+if ( ! function_exists( 'apply_filters' ) ) {
+    function apply_filters( $tag, $value ) {
+        return $value;
+    }
+}
+
+if ( ! function_exists( '__' ) ) {
+    function __( $text, $domain = null ) {
+        return $text;
+    }
+}
+
 if ( ! function_exists( 'wp_schedule_single_event' ) ) {
     function wp_schedule_single_event( $timestamp, $hook, $args ) {
         global $scheduled_events;
@@ -73,6 +108,10 @@ if ( ! function_exists( 'add_action' ) ) {
 
 if ( ! defined( 'HOUR_IN_SECONDS' ) ) {
     define( 'HOUR_IN_SECONDS', 3600 );
+}
+
+if ( ! defined( 'DAY_IN_SECONDS' ) ) {
+    define( 'DAY_IN_SECONDS', 86400 );
 }
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -121,5 +160,17 @@ $statuses = array_column( $transient_log[ $job_id2 ], 'status' );
 assert_true( $statuses === [ 'queued', 'processing', 'error' ], 'Error status flow incorrect: ' . json_encode( $statuses ) );
 assert_true( 'error' === $status['status'], 'Job did not error' );
 assert_true( 'Processing failed.' === $status['message'], 'Error message missing' );
+
+// get_status triggers cleanup of errored jobs.
+$retrieved = RTBCB_Background_Job::get_status( $job_id2 );
+assert_true( 'error' === $retrieved['status'], 'Error status not returned' );
+assert_true( false === get_transient( $job_id2 ), 'Errored job not cleaned' );
+
+// Old job cleanup.
+$jobs = get_option( 'rtbcb_background_jobs', [] );
+$jobs[ $job_id ] = time() - DAY_IN_SECONDS - 1;
+update_option( 'rtbcb_background_jobs', $jobs );
+RTBCB_Background_Job::cleanup();
+assert_true( false === get_transient( $job_id ), 'Old job not cleaned' );
 
 echo "background-job.test.php passed\n";

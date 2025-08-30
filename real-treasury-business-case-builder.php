@@ -286,6 +286,11 @@ class Real_Treasury_BCB {
         }
 
         add_action( 'rtbcb_cleanup_data', [ $this, 'scheduled_data_cleanup' ] );
+
+        // Schedule background job cleanup
+        if ( ! wp_next_scheduled( 'rtbcb_cleanup_jobs' ) ) {
+            wp_schedule_event( time(), 'hourly', 'rtbcb_cleanup_jobs' );
+        }
     }
 
     /**
@@ -2223,6 +2228,7 @@ return $use_comprehensive;
         // Clear scheduled events
         wp_clear_scheduled_hook( 'rtbcb_rebuild_rag_index' );
         wp_clear_scheduled_hook( 'rtbcb_cleanup_data' );
+        wp_clear_scheduled_hook( 'rtbcb_cleanup_jobs' );
 
         // Flush rewrite rules
         flush_rewrite_rules();
