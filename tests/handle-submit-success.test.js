@@ -26,7 +26,13 @@ class SimpleFormData {
 
 global.FormData = SimpleFormData;
 
-global.fetch = function() {
+let receivedHeaders = null;
+let warnCalled = false;
+const originalWarn = console.warn;
+console.warn = () => { warnCalled = true; };
+
+global.fetch = function(url, options) {
+    receivedHeaders = options.headers;
     const payload = {
         success: true,
         data: { report_html: '<div>Report</div>' }
@@ -88,6 +94,9 @@ builder.showError = () => {};
 (async () => {
     await builder.handleSubmit();
     assert.strictEqual(resultsData.report_html, '<div>Report</div>');
+    assert.strictEqual(receivedHeaders['Accept'], 'application/json');
+    assert.strictEqual(warnCalled, false);
+    console.warn = originalWarn;
     console.log('Success path test passed.');
 })().catch(err => {
     console.error(err);
