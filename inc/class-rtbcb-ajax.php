@@ -134,6 +134,23 @@ class RTBCB_Ajax {
 			return;
 		}
 
+		if (
+			'completed' === ( $status['status'] ?? '' ) &&
+			! empty( $status['result']['report_data'] )
+		) {
+			$result                = $status['result'];
+			$status['report_data'] = $result['report_data'];
+			if ( is_array( $result ) ) {
+				foreach ( $result as $key => $value ) {
+					if ( 'report_data' === $key ) {
+						continue;
+					}
+					$status[ $key ] = $value;
+				}
+			}
+			unset( $status['result'] );
+		}
+
 		wp_send_json_success( $status );
 	}
 
