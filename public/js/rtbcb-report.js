@@ -60,11 +60,21 @@ async function generateProfessionalReport(businessContext, onChunk) {
         ...(typeof rtbcbReport !== 'undefined' ? rtbcbReport : {})
     };
     cfg.model = rtbcbReport.report_model;
-    const adminLimit = Math.min(RTBCB_GPT5_MAX_TOKENS, parseInt(cfg.max_output_tokens, 10) || RTBCB_GPT5_MAX_TOKENS);
-    const adminMin = Math.max(RTBCB_GPT5_MIN_TOKENS, parseInt(cfg.min_output_tokens, 10) || RTBCB_GPT5_MIN_TOKENS);
+    const adminLimit = Math.min(
+        RTBCB_GPT5_MAX_TOKENS,
+        parseInt(cfg.max_output_tokens, 10) || RTBCB_GPT5_MAX_TOKENS
+    );
+    const adminMin = Math.max(
+        RTBCB_GPT5_MIN_TOKENS,
+        parseInt(cfg.min_output_tokens, 10) || RTBCB_GPT5_MIN_TOKENS
+    );
+    cfg.min_output_tokens = Math.min(adminMin, adminLimit);
     const desiredWords = 1000;
     const bufferedTokens = estimateTokens(desiredWords) * 2;
-    cfg.max_output_tokens = Math.min(adminLimit, Math.max(adminMin, bufferedTokens));
+    cfg.max_output_tokens = Math.min(
+        adminLimit,
+        Math.max(cfg.min_output_tokens, bufferedTokens)
+    );
     if (!supportsTemperature(cfg.model)) {
         delete cfg.temperature;
     }
@@ -81,6 +91,7 @@ async function generateProfessionalReport(businessContext, onChunk) {
             }
         ],
         max_output_tokens: cfg.max_output_tokens,
+        min_output_tokens: cfg.min_output_tokens,
         text: cfg.text,
         store: cfg.store,
         stream: true

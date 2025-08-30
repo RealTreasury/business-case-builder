@@ -2436,12 +2436,12 @@ return $analysis;
         if ( '' === trim( $input ) ) {
             return new WP_Error( 'empty_prompt', __( 'Prompt cannot be empty.', 'rtbcb' ) );
         }
-
-        $body = [
-            'model' => $model_name,
-            'input' => $input,
-            'max_output_tokens' => $max_output_tokens,
-        ];
+		$body = [
+			'model'             => $model_name,
+			'input'             => $input,
+			'max_output_tokens' => $max_output_tokens,
+			'min_output_tokens' => $min_tokens,
+		];
 
         if ( ! empty( $instructions ) ) {
             $body['instructions'] = $instructions;

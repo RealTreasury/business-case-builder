@@ -116,7 +116,7 @@ $embedding_models = [
                 </th>
                 <td>
                     <input type="number" id="rtbcb_gpt5_min_output_tokens" name="rtbcb_gpt5_min_output_tokens" value="<?php echo esc_attr( $gpt5_min_output_tokens ); ?>" class="small-text" min="1" max="128000" />
-                    <p class="description"><?php echo esc_html__( 'Minimum tokens returned by OpenAI.', 'rtbcb' ); ?></p>
+                    <p class="description"><?php echo esc_html__( 'Minimum tokens sent to OpenAI.', 'rtbcb' ); ?></p>
                 </td>
             </tr>
             <tr>

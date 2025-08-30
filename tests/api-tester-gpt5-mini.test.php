@@ -139,6 +139,11 @@ if ( 25000 !== ( $sent['max_output_tokens'] ?? 0 ) ) {
     exit( 1 );
 }
 
+if ( 5000 !== ( $sent['min_output_tokens'] ?? 0 ) ) {
+    echo "API tester did not respect configured min tokens\n";
+    exit( 1 );
+}
+
 if ( ! $result['success'] ) {
     echo "API tester did not report success\n";
     exit( 1 );

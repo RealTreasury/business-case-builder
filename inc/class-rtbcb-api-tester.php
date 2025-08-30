@@ -53,6 +53,7 @@ class RTBCB_API_Tester {
             'model'             => rtbcb_normalize_model_name( $model ),
             'input'             => 'Test connection - respond with exactly: "API connection successful"',
             'max_output_tokens' => $config['max_output_tokens'],
+            'min_output_tokens' => $config['min_output_tokens'],
         ];
 
         if ( rtbcb_model_supports_temperature( $model ) ) {

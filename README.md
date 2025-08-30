@@ -55,6 +55,10 @@ configuration file:
 
 Values outside the `256`–`128000` range are ignored.
 
+`min_output_tokens` serves as a floor for `max_output_tokens`. If the minimum
+exceeds the maximum, the plugin raises the maximum so both values match. This
+ensures requests always satisfy the minimum while respecting OpenAI's limits.
+
 #### Model Temperature Support
 
 | Model | Temperature Support |

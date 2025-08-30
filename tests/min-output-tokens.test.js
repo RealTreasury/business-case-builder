@@ -32,7 +32,16 @@ async function runTests() {
     };
 
     await generateProfessionalReport('context');
-    assert.strictEqual(capturedBody.max_output_tokens, 4000, 'Should apply min_output_tokens');
+    assert.strictEqual(
+        capturedBody.max_output_tokens,
+        4000,
+        'Should apply min_output_tokens'
+    );
+    assert.strictEqual(
+        capturedBody.min_output_tokens,
+        4000,
+        'Should send min_output_tokens'
+    );
 
     global.rtbcbReport = {
         report_model: 'gpt-5-mini',
@@ -44,7 +53,16 @@ async function runTests() {
     };
 
     await generateProfessionalReport('context');
-    assert.strictEqual(capturedBody.max_output_tokens, 2500, 'Should not exceed max_output_tokens');
+    assert.strictEqual(
+        capturedBody.max_output_tokens,
+        2500,
+        'Should not exceed max_output_tokens'
+    );
+    assert.strictEqual(
+        capturedBody.min_output_tokens,
+        2500,
+        'Min tokens clamped to max_output_tokens'
+    );
 
     global.rtbcbReport = {
         report_model: 'gpt-5-mini',
@@ -56,7 +74,16 @@ async function runTests() {
     };
 
     await generateProfessionalReport('context');
-    assert.strictEqual(capturedBody.max_output_tokens, 3000, 'Should include buffer in token estimate');
+    assert.strictEqual(
+        capturedBody.max_output_tokens,
+        3000,
+        'Should include buffer in token estimate'
+    );
+    assert.strictEqual(
+        capturedBody.min_output_tokens,
+        1,
+        'Should respect low min_output_tokens'
+    );
 }
 
 runTests().then(() => console.log('Min output tokens test passed.'));
