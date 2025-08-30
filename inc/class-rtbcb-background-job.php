@@ -25,14 +25,19 @@ class RTBCB_Background_Job {
 			HOUR_IN_SECONDS
 		);
 
-		wp_schedule_single_event(
-			time(),
-			'rtbcb_process_job',
-			[ $job_id, $user_inputs ]
-		);
+                wp_schedule_single_event(
+                        time(),
+                        'rtbcb_process_job',
+                        [ $job_id, $user_inputs ]
+                );
 
-		return $job_id;
-	}
+		// Trigger cron immediately in a non-blocking way.
+		if ( function_exists( 'spawn_cron' ) && ! wp_doing_cron() ) {
+			spawn_cron();
+		}
+
+                return $job_id;
+        }
 
 	/**
 	 * Process a queued job.
