@@ -720,20 +720,15 @@ USER,
             return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
         }
 
-        // Enhanced company research
-        $company_research = $this->conduct_company_research( $user_inputs );
-        
-        // Industry analysis
-        $industry_analysis = $this->analyze_industry_context( $user_inputs );
-        if ( is_wp_error( $industry_analysis ) ) {
-            return $industry_analysis;
+        // Run preliminary research in a single LLM batch call.
+        $research = $this->run_batched_research( $user_inputs, $context_chunks );
+        if ( is_wp_error( $research ) ) {
+            return $research;
         }
 
-        // Technology landscape research
-        $tech_landscape = $this->research_treasury_solutions( $user_inputs, $context_chunks );
-        if ( is_wp_error( $tech_landscape ) ) {
-            return $tech_landscape;
-        }
+        $company_research  = $research['company_research'] ?? [];
+        $industry_analysis  = $research['industry_analysis'] ?? [];
+        $tech_landscape     = $research['tech_landscape'] ?? '';
         
         // Generate comprehensive report
         $model = $this->select_optimal_model( $user_inputs, $context_chunks );
@@ -769,13 +764,14 @@ USER,
             return new WP_Error( 'llm_parse_error', $parsed['error'] );
         }
 
-        $analysis = $this->enhance_with_research( $parsed, $company_research, $industry_analysis );
+        $analysis = $this->enhance_with_research( $parsed, $company_research, $industry_analysis, $tech_landscape );
 
         return [
             'executive_summary'      => $analysis['executive_summary'] ?? [],
             'company_overview'       => $analysis['research']['company']['company_profile'] ?? [],
             'industry_analysis'      => $analysis['industry_insights'] ?? [],
             'treasury_maturity'      => $analysis['research']['company']['treasury_maturity'] ?? '',
+            'technology_landscape'   => $analysis['research']['technology'] ?? '',
             'financial_analysis'     => $analysis['financial_analysis'] ?? [],
             'implementation_roadmap' => $analysis['technology_recommendations'] ?? [],
             'risk_mitigation'        => $analysis['risk_mitigation'] ?? [],
@@ -1232,6 +1228,114 @@ USER,
     }
 
     /**
+     * Execute company, industry, and technology research in a single LLM call.
+     *
+     * @param array $user_inputs    Sanitized user inputs.
+     * @param array $context_chunks Optional context strings.
+     * @return array|WP_Error {
+     *     @type array  $company_research  Company research data.
+     *     @type array  $industry_analysis Industry analysis data.
+     *     @type string $tech_landscape    Technology landscape summary.
+     * }
+     */
+    private function run_batched_research( $user_inputs, $context_chunks ) {
+        if ( empty( $this->api_key ) ) {
+            return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
+        }
+
+        $company_name = sanitize_text_field( $user_inputs['company_name'] ?? '' );
+        $industry     = sanitize_text_field( $user_inputs['industry'] ?? '' );
+        $company_size = sanitize_text_field( $user_inputs['company_size'] ?? '' );
+
+        $model = $this->get_model( 'mini' );
+
+        $system_prompt = <<<'SYSTEM'
+You are a senior treasury technology consultant. Return a single JSON object with the following structure and no additional text:
+{
+  "company_research": {
+    "company_profile": {
+      "business_stage": string,
+      "key_characteristics": string,
+      "treasury_priorities": string,
+      "common_challenges": string
+    },
+    "treasury_maturity": {
+      "level": string,
+      "rationale": string
+    }
+  },
+  "industry_analysis": {
+    "analysis": string,
+    "recommendations": [string],
+    "references": [string],
+    "errors": [string]
+  },
+  "technology_landscape": string
+}
+SYSTEM;
+
+        $user_prompt = 'Company: ' . $company_name . "\n";
+        $user_prompt .= 'Industry: ' . $industry . "\n";
+        $user_prompt .= 'Size: ' . $company_size . "\n";
+        if ( ! empty( $context_chunks ) ) {
+            $user_prompt .= 'Context: ' . implode( '\n', array_map( 'sanitize_text_field', $context_chunks ) );
+        }
+
+        $history = [
+            [
+                'role'    => 'user',
+                'content' => $user_prompt,
+            ],
+        ];
+        $context  = $this->build_context_for_responses( $history, $system_prompt );
+        $response = $this->call_openai_with_retry( $model, $context );
+        if ( is_wp_error( $response ) ) {
+            return $response;
+        }
+
+        $parsed = rtbcb_parse_gpt5_response( $response );
+        $json   = json_decode( $parsed['output_text'], true );
+
+        if ( ! is_array( $json ) ) {
+            return new WP_Error( 'llm_parse_error', __( 'Invalid response from language model.', 'rtbcb' ) );
+        }
+
+        $company_profile = [
+            'business_stage'      => sanitize_text_field( $json['company_research']['company_profile']['business_stage'] ?? '' ),
+            'key_characteristics' => sanitize_text_field( $json['company_research']['company_profile']['key_characteristics'] ?? '' ),
+            'treasury_priorities' => sanitize_text_field( $json['company_research']['company_profile']['treasury_priorities'] ?? '' ),
+            'common_challenges'   => sanitize_text_field( $json['company_research']['company_profile']['common_challenges'] ?? '' ),
+        ];
+
+        $treasury_maturity = [
+            'level'     => sanitize_text_field( $json['company_research']['treasury_maturity']['level'] ?? '' ),
+            'rationale' => sanitize_text_field( $json['company_research']['treasury_maturity']['rationale'] ?? '' ),
+        ];
+
+        $company_research = [
+            'company_profile'  => $company_profile,
+            'treasury_maturity'=> $treasury_maturity,
+        ];
+
+        $industry_analysis = [
+            'analysis'        => sanitize_text_field( $json['industry_analysis']['analysis'] ?? '' ),
+            'recommendations' => array_map( 'sanitize_text_field', $json['industry_analysis']['recommendations'] ?? [] ),
+            'references'      => array_map( 'sanitize_text_field', $json['industry_analysis']['references'] ?? [] ),
+            'errors'          => array_map( 'sanitize_text_field', $json['industry_analysis']['errors'] ?? [] ),
+        ];
+
+        $tech_landscape = sanitize_textarea_field( $json['technology_landscape'] ?? '' );
+
+        $this->last_company_research = wp_json_encode( $company_research );
+
+        return [
+            'company_research' => $company_research,
+            'industry_analysis' => $industry_analysis,
+            'tech_landscape'    => $tech_landscape,
+        ];
+    }
+
+    /**
      * Analyze industry context using the LLM.
      *
      * @param array $user_inputs Sanitized user inputs.
@@ -1532,14 +1636,16 @@ SYSTEM;
      * Enhance parsed analysis with research context.
      *
      * @param array $analysis          Parsed analysis from LLM.
-     * @param array $company_research  Company research data.
-     * @param array $industry_analysis Industry analysis data.
+     * @param array  $company_research  Company research data.
+     * @param array  $industry_analysis Industry analysis data.
+     * @param string $tech_landscape    Technology landscape summary.
      * @return array Enhanced analysis.
      */
-    private function enhance_with_research( $analysis, $company_research, $industry_analysis ) {
+    private function enhance_with_research( $analysis, $company_research, $industry_analysis, $tech_landscape ) {
         $analysis['research'] = [
-            'company'  => $company_research,
-            'industry' => $industry_analysis,
+            'company'   => $company_research,
+            'industry'  => $industry_analysis,
+            'technology' => $tech_landscape,
         ];
 
         return $analysis;
