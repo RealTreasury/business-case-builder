@@ -69,10 +69,25 @@ function handleSubmissionError(errorMessage, errorCode) {
  * Handles the form submission by sending data to the backend.
  * @param {Event} e - The form submission event.
  */
-function handleSubmit(e) {
+let rtbcbIsSubmitting = false;
+
+async function handleSubmit(e) {
     e.preventDefault();
+
+    // If the wizard controller is present, let it handle submission to avoid duplicate posts
+    if (window.businessCaseBuilder && typeof window.businessCaseBuilder.handleSubmit === 'function') {
+        return;
+    }
+
+    if (rtbcbIsSubmitting) {
+        return;
+    }
+    rtbcbIsSubmitting = true;
+
     var form = e.target;
     var formData = new FormData(form);
+    formData.append('action', 'rtbcb_generate_case');
+    formData.append('rtbcb_nonce', rtbcbAjax.nonce);
     var progressContainer = document.getElementById('rtbcb-progress-container');
     var formContainer = document.querySelector('.rtbcb-form-container');
 
@@ -81,24 +96,29 @@ function handleSubmit(e) {
     if (progressContainer) progressContainer.style.display = 'block';
     if (typeof rtbcbAjax === 'undefined' || !rtbcbAjax.ajax_url) {
         handleSubmissionError('Unable to submit form. Please refresh the page and try again.', '');
+        rtbcbIsSubmitting = false;
         return;
     }
 
     var loggedData = typeof formData.entries === 'function' ? Object.fromEntries(formData.entries()) : {};
     console.log('RTBCB: Submitting form data:', loggedData);
 
-    var xhr = new XMLHttpRequest();
+    var response;
+    var responseText;
     try {
-        xhr.open('POST', rtbcbAjax.ajax_url, false); // Synchronous request
-        xhr.send(formData);
+        response = await fetch(rtbcbAjax.ajax_url, {
+            method: 'POST',
+            body: formData
+        });
+        responseText = await response.text();
     } catch (networkError) {
         handleSubmissionError('Network error. Please try again later.', '');
+        rtbcbIsSubmitting = false;
         return;
     }
 
-    var responseText = xhr.responseText;
-    if (xhr.status !== 200) {
-        var errorMessage = 'Server responded with status ' + xhr.status + '.';
+    if (!response.ok) {
+        var errorMessage = 'Server responded with status ' + response.status + '.';
         var errorCode = '';
         try {
             var errorJson = JSON.parse(responseText);
@@ -109,6 +129,7 @@ function handleSubmit(e) {
             errorMessage = responseText || errorMessage;
         }
         handleSubmissionError(errorMessage, errorCode);
+        rtbcbIsSubmitting = false;
         return;
     }
 
@@ -117,6 +138,7 @@ function handleSubmit(e) {
         result = JSON.parse(responseText);
     } catch (parseError) {
         handleSubmissionError('Invalid server response.', '');
+        rtbcbIsSubmitting = false;
         return;
     }
 
@@ -124,6 +146,7 @@ function handleSubmit(e) {
         var errorMessage = result.data && result.data.message ? result.data.message : 'An unknown error occurred.';
         var errorCode = result.data && result.data.error_code ? result.data.error_code : '';
         handleSubmissionError(errorMessage, errorCode);
+        rtbcbIsSubmitting = false;
         return;
     }
 
@@ -148,6 +171,8 @@ function handleSubmit(e) {
         reportContainer.innerHTML = sanitized;
         reportContainer.style.display = 'block';
     }
+
+    rtbcbIsSubmitting = false;
 }
 
 // Ensure the form submission is handled by our new function
