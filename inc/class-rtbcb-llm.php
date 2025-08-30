@@ -2523,6 +2523,23 @@ return $analysis;
 
         $response_body = $last_event ? $last_event : $streamed;
 
+        $decoded = json_decode( $response_body, true );
+
+        if ( null === $decoded || JSON_ERROR_NONE !== json_last_error() || ! is_array( $decoded ) ) {
+            error_log( 'RTBCB: Malformed LLM response: ' . $response_body );
+
+            if ( class_exists( 'RTBCB_API_Log' ) ) {
+                $company      = rtbcb_get_current_company();
+                $user_email   = $this->current_inputs['email'] ?? ( $company['email'] ?? '' );
+                $company_name = $this->current_inputs['company_name'] ?? ( $company['name'] ?? '' );
+                RTBCB_API_Log::save_log( $body, [ 'raw_body' => $response_body ], get_current_user_id(), $user_email, $company_name );
+            }
+
+            $error                 = new WP_Error( 'llm_response_format', __( 'Malformed response received from language model.', 'rtbcb' ) );
+            $this->last_response   = $error;
+            return $error;
+        }
+
         $response = [
             'body'     => $response_body,
             'response' => [ 'code' => $http_code, 'message' => '' ],
@@ -2532,10 +2549,6 @@ return $analysis;
         $this->last_response = $response;
 
         if ( class_exists( 'RTBCB_API_Log' ) ) {
-            $decoded = json_decode( $response_body, true );
-            if ( ! is_array( $decoded ) ) {
-                $decoded = [];
-            }
             $company      = rtbcb_get_current_company();
             $user_email   = $this->current_inputs['email'] ?? ( $company['email'] ?? '' );
             $company_name = $this->current_inputs['company_name'] ?? ( $company['name'] ?? '' );
@@ -2543,17 +2556,12 @@ return $analysis;
         }
 
         if ( $http_code >= 400 ) {
-            $decoded = json_decode( $response_body, true );
-            if ( is_array( $decoded ) ) {
-                if ( isset( $decoded['error']['message'] ) ) {
-                    $message = $decoded['error']['message'];
-                } elseif ( isset( $decoded['message'] ) ) {
-                    $message = $decoded['message'];
-                } else {
-                    $message = wp_json_encode( $decoded );
-                }
+            if ( isset( $decoded['error']['message'] ) ) {
+                $message = $decoded['error']['message'];
+            } elseif ( isset( $decoded['message'] ) ) {
+                $message = $decoded['message'];
             } else {
-                $message = $response_body;
+                $message = wp_json_encode( $decoded );
             }
 
             $message = sanitize_text_field( $message );
