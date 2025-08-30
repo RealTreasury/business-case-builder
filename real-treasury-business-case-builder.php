@@ -376,147 +376,146 @@ class Real_Treasury_BCB {
     }
 
     /**
-     * Enqueue frontend assets.
-     *
-     * @return void
-     */
-    public function enqueue_assets() {
-        if ( ! $this->should_load_assets() ) {
-            return;
-        }
+     * Enqueue frontend assets with enhanced report support.
+	 *
+	 * @return void
+	 */
+	public function enqueue_assets() {
+	    if ( ! $this->should_load_assets() ) {
+	        return;
+	    }
 
-        // Styles
-        wp_enqueue_style(
-            'rtbcb-style',
-            RTBCB_URL . 'public/css/rtbcb.css',
-            [],
-            RTBCB_VERSION
-        );
+	    // Base Styles
+	    wp_enqueue_style(
+	        'rtbcb-style',
+	        RTBCB_URL . 'public/css/rtbcb.css',
+	        [],
+	        RTBCB_VERSION
+	    );
 
-        // Scripts
-        // DOMPurify ensures any injected HTML is sanitized client-side.
-        wp_enqueue_script(
-            'dompurify',
-            'https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.2/purify.min.js',
-            [],
-            '3.0.2',
-            true
-        );
+	    // Enhanced Report Styles
+	    wp_enqueue_style(
+	        'rtbcb-enhanced-report',
+	        RTBCB_URL . 'public/css/enhanced-report.css',
+	        [ 'rtbcb-style' ],
+	        RTBCB_VERSION
+	    );
 
-        // Load wizard script early so modal helpers are available before user interaction.
-        $wizard_file = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? 'rtbcb-wizard.js' : 'rtbcb-wizard.min.js';
-        // Load the wizard script in the header so modal functions are available before interaction.
-        wp_enqueue_script(
-            'rtbcb-wizard',
-            RTBCB_URL . 'public/js/' . $wizard_file,
-            [ 'jquery' ],
-            RTBCB_VERSION,
-            false
-        );
+	    // Chart.js for report visualizations
+	    wp_enqueue_script(
+	        'chartjs',
+	        RTBCB_URL . 'public/js/chart.min.js',
+	        [],
+	        '3.9.1',
+	        true
+	    );
 
-        wp_localize_script(
-            'rtbcb-wizard',
-            'rtbcbAjax',
-            [
-                'ajax_url'    => admin_url( 'admin-ajax.php' ),
-                'nonce'       => wp_create_nonce( 'rtbcb_generate' ),
-                'strings'     => [
-                    'error'                   => __( 'An error occurred. Please try again.', 'rtbcb' ),
-                    'generating'              => __( 'Generating your comprehensive business case...', 'rtbcb' ),
-                    'analyzing'               => __( 'Analyzing your treasury operations...', 'rtbcb' ),
-                    'financial_modeling'      => __( 'Building financial models...', 'rtbcb' ),
-                    'risk_assessment'         => __( 'Conducting risk assessment...', 'rtbcb' ),
-                    'industry_benchmarking'   => __( 'Performing industry benchmarking...', 'rtbcb' ),
-                    'implementation_planning' => __( 'Creating implementation roadmap...', 'rtbcb' ),
-                    'vendor_evaluation'       => __( 'Preparing vendor evaluation framework...', 'rtbcb' ),
-                    'finalizing_report'       => __( 'Finalizing professional report...', 'rtbcb' ),
-                    'invalid_email'           => __( 'Please enter a valid email address.', 'rtbcb' ),
-                    'required_field'          => __( 'This field is required.', 'rtbcb' ),
-                    'select_pain_points'      => __( 'Please select at least one pain point.', 'rtbcb' ),
-                    'email_confirmation'     => __( 'Your report will arrive by email shortly.', 'rtbcb' ),
-                ],
-                'settings'    => [
-                    'pdf_enabled'            => get_option( 'rtbcb_pdf_enabled', true ),
-                    'comprehensive_analysis' => get_option( 'rtbcb_comprehensive_analysis', true ),
-                    'professional_reports'   => get_option( 'rtbcb_professional_reports', true ),
-                ],
-            ]
-        );
+	    // DOMPurify for sanitization
+	    wp_enqueue_script(
+	        'dompurify',
+	        'https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.2/purify.min.js',
+	        [],
+	        '3.0.2',
+	        true
+	    );
 
-        wp_enqueue_script(
-            'rtbcb-script',
-            RTBCB_URL . 'public/js/rtbcb.js',
-            [ 'jquery', 'rtbcb-wizard', 'dompurify' ],
-            RTBCB_VERSION,
-            true
-        );
+	    // Wizard script (loaded early for modal functions)
+	    $wizard_file = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? 'rtbcb-wizard.js' : 'rtbcb-wizard.min.js';
+	    wp_enqueue_script(
+	        'rtbcb-wizard',
+	        RTBCB_URL . 'public/js/' . $wizard_file,
+	        [ 'jquery' ],
+	        RTBCB_VERSION,
+	        false // Load in header
+	    );
 
-        wp_enqueue_script(
-            'rtbcb-report',
-            RTBCB_URL . 'public/js/rtbcb-report.js',
-            [ 'dompurify' ],
-            RTBCB_VERSION,
-            true
-        );
+	    // Main report functionality
+	    wp_enqueue_script(
+	        'rtbcb-report',
+	        RTBCB_URL . 'public/js/rtbcb-report.js',
+	        [ 'chartjs', 'dompurify' ],
+	        RTBCB_VERSION,
+	        true
+	    );
 
-        $api_key      = sanitize_text_field( get_option( 'rtbcb_openai_api_key', '' ) );
-        $report_model = sanitize_text_field( get_option( 'rtbcb_advanced_model', 'gpt-5-mini' ) );
+	    // Main plugin script
+	    wp_enqueue_script(
+	        'rtbcb-script',
+	        RTBCB_URL . 'public/js/rtbcb.js',
+	        [ 'jquery', 'rtbcb-wizard', 'rtbcb-report' ],
+	        RTBCB_VERSION,
+	        true
+	    );
 
-        $timeout            = rtbcb_get_api_timeout();
-        $max_output_tokens  = intval( get_option( 'rtbcb_gpt5_max_output_tokens', 8000 ) );
-        $min_output_tokens  = intval( get_option( 'rtbcb_gpt5_min_output_tokens', 256 ) );
-        $config             = rtbcb_get_gpt5_config(
-            array_merge(
-                get_option( 'rtbcb_gpt5_config', [] ),
-                [
-                    'timeout'           => $timeout,
-                    'max_output_tokens' => $max_output_tokens,
-                    'min_output_tokens' => $min_output_tokens,
-                ]
-            )
-        );
+	    // Localize scripts with configuration
+	    $this->localize_scripts();
+	}
 
-        $config_localized = [
-            'model'             => sanitize_text_field( $config['model'] ),
-            'max_output_tokens' => intval( $config['max_output_tokens'] ),
-            'min_output_tokens' => intval( $config['min_output_tokens'] ),
-            'text'              => [ 'verbosity' => sanitize_text_field( $config['text']['verbosity'] ?? '' ) ],
-            'store'             => (bool) $config['store'],
-            'timeout'           => intval( $config['timeout'] ),
-            'max_retries'       => intval( $config['max_retries'] ),
-            'max_retry_time'    => intval( $config['max_retry_time'] ),
-        ];
+	/**
+	 * Localize scripts with proper configuration data.
+	 */
+	private function localize_scripts() {
+	    // Wizard configuration
+	    wp_localize_script(
+	        'rtbcb-wizard',
+	        'rtbcbAjax',
+	        [
+	            'ajax_url'    => admin_url( 'admin-ajax.php' ),
+	            'nonce'       => wp_create_nonce( 'rtbcb_generate' ),
+	            'strings'     => [
+	                'error'                   => __( 'An error occurred. Please try again.', 'rtbcb' ),
+	                'generating'              => __( 'Generating your comprehensive business case...', 'rtbcb' ),
+	                'analyzing'               => __( 'Analyzing your treasury operations...', 'rtbcb' ),
+	                'financial_modeling'      => __( 'Building financial models...', 'rtbcb' ),
+	                'risk_assessment'         => __( 'Conducting risk assessment...', 'rtbcb' ),
+	                'industry_benchmarking'   => __( 'Performing industry benchmarking...', 'rtbcb' ),
+	                'implementation_planning' => __( 'Creating implementation roadmap...', 'rtbcb' ),
+	                'vendor_evaluation'       => __( 'Preparing vendor evaluation framework...', 'rtbcb' ),
+	                'finalizing_report'       => __( 'Finalizing professional report...', 'rtbcb' ),
+	                'invalid_email'           => __( 'Please enter a valid email address.', 'rtbcb' ),
+	                'required_field'          => __( 'This field is required.', 'rtbcb' ),
+	                'select_pain_points'      => __( 'Please select at least one pain point.', 'rtbcb' ),
+	                'email_confirmation'      => __( 'Your report will arrive by email shortly.', 'rtbcb' ),
+	            ],
+	            'settings'    => [
+	                'pdf_enabled'            => get_option( 'rtbcb_pdf_enabled', true ),
+	                'comprehensive_analysis' => get_option( 'rtbcb_comprehensive_analysis', true ),
+	                'professional_reports'   => get_option( 'rtbcb_professional_reports', true ),
+	            ],
+	        ]
+	    );
 
-        if ( rtbcb_model_supports_temperature( $config['model'] ) ) {
-            $config_localized['temperature'] = floatval( $config['temperature'] );
-        }
+	    // Report configuration
+	    $config             = rtbcb_get_gpt5_config();
+	    $model_capabilities = rtbcb_get_model_capabilities();
 
-        $supported = [ 'model', 'max_output_tokens', 'min_output_tokens', 'text', 'temperature', 'store', 'timeout', 'max_retries', 'max_retry_time' ];
-        $config_localized = array_intersect_key( $config_localized, array_flip( $supported ) );
+	    wp_localize_script(
+	        'rtbcb-report',
+	        'rtbcbReport',
+	        [
+	            'report_model'       => get_option( 'rtbcb_advanced_model', 'gpt-5-mini' ),
+	            'max_output_tokens'  => intval( $config['max_output_tokens'] ),
+	            'min_output_tokens'  => intval( $config['min_output_tokens'] ),
+	            'model_capabilities' => $model_capabilities,
+	            'ajax_url'           => admin_url( 'admin-ajax.php' ),
+	            'template_url'       => RTBCB_URL . 'public/templates/report-template.html',
+	            'timeout_ms'         => rtbcb_get_api_timeout() * 1000,
+	            'nonce'              => wp_create_nonce( 'rtbcb_generate' ),
+	            'strings'            => [
+	                'exportPDF'      => __( 'Export as PDF', 'rtbcb' ),
+	                'printReport'    => __( 'Print Report', 'rtbcb' ),
+	                'expandSection'  => __( 'Expand Section', 'rtbcb' ),
+	                'collapseSection' => __( 'Collapse Section', 'rtbcb' ),
+	            ],
+	        ]
+	    );
+	}
 
-        $model_capabilities = rtbcb_get_model_capabilities();
-
-        wp_localize_script(
-            'rtbcb-report',
-            'rtbcbReport',
-            [
-                'report_model'      => $report_model,
-                'max_output_tokens' => intval( $config['max_output_tokens'] ),
-                'min_output_tokens' => intval( $config['min_output_tokens'] ),
-                'defaults'          => $config_localized,
-                'model_capabilities'=> $model_capabilities,
-                'ajax_url'          => admin_url( 'admin-ajax.php' ),
-                'template_url'      => RTBCB_URL . 'public/templates/report-template.html',
-                'timeout_ms'       => $timeout * 1000,
-            ]
-        );
-    }
-
-    /**
-     * Check if assets should be loaded on current page.
-     *
-     * @return bool
-     */
+	/**
+	 * Check if assets should be loaded on current page.
+	 *
+	 * @return bool
+	 */
     private function should_load_assets() {
         // Always load on admin pages for this plugin
         if ( is_admin() && isset( $_GET['page'] ) && strpos( $_GET['page'], 'rtbcb' ) !== false ) {
