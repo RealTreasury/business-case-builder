@@ -24,7 +24,7 @@ describe('pollJob', () => {
                 success: true,
                 data: {
                     status: 'completed',
-                    result: { report_data: reportData },
+                    report_data: reportData,
                 },
             }),
         });

@@ -583,20 +583,20 @@ class BusinessCaseBuilder {
                 return;
             }
             
-            const status = data.data.status;
+            const statusData = data.data;
+            const status = statusData.status;
             console.log(`RTBCB: Job status: ${status} (attempt ${attempt})`);
-            
+
             if (status === 'completed') {
-                const result = data.data.result;
-                if (result && result.report_html) {
-                    this.handleSuccess(result);
-                } else if (result && result.report_data) {
-                    this.handleSuccess(result.report_data);
+                if (statusData.report_html) {
+                    this.handleSuccess(statusData);
+                } else if (statusData.report_data) {
+                    this.handleSuccess(statusData.report_data);
                 } else {
                     this.handleError({ message: 'Report data missing from completed job', type: 'job_error' });
                 }
             } else if (status === 'error') {
-                this.handleError({ message: data.data.message || 'Job failed', type: 'job_error' });
+                this.handleError({ message: statusData.message || 'Job failed', type: 'job_error' });
             } else {
                 // Continue polling
                 setTimeout(() => this.pollJob(jobId, startTime, attempt + 1), 2000);
