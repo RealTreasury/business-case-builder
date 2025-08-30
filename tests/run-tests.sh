@@ -68,6 +68,10 @@ phpunit tests/RTBCB_AjaxGenerateComprehensiveCaseErrorTest.php
 phpunit tests/RTBCB_AjaxGenerateComprehensiveCaseFatalErrorTest.php
 phpunit tests/RTBCB_GenerateBusinessAnalysisTimeoutTest.php
 
+# Background job test
+echo "14. Running background job tests..."
+php tests/background-job.test.php
+
 # JavaScript tests
 echo "15. Running JavaScript tests..."
 node tests/handle-submit-error.test.js
