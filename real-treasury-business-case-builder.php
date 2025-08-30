@@ -701,8 +701,18 @@ class Real_Treasury_BCB {
         rtbcb_log_memory_usage( 'start' );
 
         // STEP 2: Set longer execution time
+        $timeout    = min( absint( get_option( 'rtbcb_gpt5_timeout', 60 ) ), 55 );
+        $start_time = time();
+
         if ( ! ini_get( 'safe_mode' ) ) {
-            set_time_limit( 300 ); // 5 minutes
+            if ( $timeout <= 0 ) {
+                wp_send_json_error(
+                    [ 'message' => __( 'Request timed out; please retry.', 'rtbcb' ) ],
+                    504
+                );
+                return;
+            }
+            set_time_limit( $timeout );
         }
 
         // Clear any buffered output before sending JSON responses.
@@ -935,6 +945,17 @@ class Real_Treasury_BCB {
                         }
                     }
 
+                    // Short-circuit if the remaining time is insufficient for LLM processing.
+                    if ( ( time() - $start_time ) > ( $timeout - 5 ) ) {
+                        wp_send_json_error(
+                            [ 'message' => __( 'Request timed out; please retry.', 'rtbcb' ) ],
+                            504
+                        );
+                        return;
+                    }
+
+                    // Consider offloading this LLM call to a background task and polling for completion to
+                    // avoid keeping the HTTP connection open.
                     rtbcb_log_api_debug( 'Calling LLM for comprehensive business case' );
                     $llm = new RTBCB_LLM();
                     $comprehensive_analysis = $llm->generate_comprehensive_business_case(
