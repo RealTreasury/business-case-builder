@@ -19,6 +19,8 @@ defined( 'ABSPATH' ) || exit;
             <thead>
                 <tr>
                     <th><?php esc_html_e( 'ID', 'rtbcb' ); ?></th>
+                    <th><?php esc_html_e( 'Email', 'rtbcb' ); ?></th>
+                    <th><?php esc_html_e( 'Company Name', 'rtbcb' ); ?></th>
                     <th><?php esc_html_e( 'Request', 'rtbcb' ); ?></th>
                     <th><?php esc_html_e( 'Tokens', 'rtbcb' ); ?></th>
                     <th><?php esc_html_e( 'Status', 'rtbcb' ); ?></th>
@@ -41,6 +43,8 @@ defined( 'ABSPATH' ) || exit;
                     ?>
                     <tr data-id="<?php echo esc_attr( $log['id'] ); ?>" data-request="<?php echo esc_attr( $log['request_json'] ); ?>" data-response="<?php echo esc_attr( $log['response_json'] ); ?>">
                         <td><?php echo esc_html( $log['id'] ); ?></td>
+                        <td><?php echo esc_html( $log['user_email'] ); ?></td>
+                        <td><?php echo esc_html( $log['company_name'] ); ?></td>
                         <td><?php echo esc_html( $summary ); ?></td>
                         <td><?php echo esc_html( $log['total_tokens'] ); ?></td>
                         <td><?php echo esc_html( $status ); ?></td>
@@ -57,7 +61,7 @@ defined( 'ABSPATH' ) || exit;
                     <?php endforeach; ?>
                 <?php else : ?>
                     <tr>
-                        <td colspan="6"><?php esc_html_e( 'No logs found.', 'rtbcb' ); ?></td>
+                        <td colspan="8"><?php esc_html_e( 'No logs found.', 'rtbcb' ); ?></td>
                     </tr>
                 <?php endif; ?>
             </tbody>
