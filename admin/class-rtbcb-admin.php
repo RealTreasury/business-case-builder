@@ -57,6 +57,8 @@ class RTBCB_Admin {
         add_action( 'wp_ajax_rtbcb_clear_analysis_data', [ $this, 'ajax_clear_analysis_data' ] );
         add_action( 'wp_ajax_rtbcb_delete_log', [ $this, 'ajax_delete_log' ] );
         add_action( 'wp_ajax_rtbcb_clear_logs', [ $this, 'ajax_clear_logs' ] );
+		add_action( 'wp_ajax_rtbcb_get_workflow_history', [ $this, 'ajax_get_workflow_history' ] );
+		add_action( 'wp_ajax_rtbcb_clear_workflow_history', [ $this, 'ajax_clear_workflow_history' ] );
     }
 
     /**
@@ -85,6 +87,29 @@ class RTBCB_Admin {
             [],
             RTBCB_VERSION
         );
+
+        if ( 'rtbcb-workflow-visualizer' === $page ) {
+            wp_enqueue_script(
+                'rtbcb-workflow-visualizer',
+                RTBCB_URL . 'admin/js/workflow-visualizer.js',
+                [ 'jquery' ],
+                RTBCB_VERSION,
+                true
+            );
+            wp_localize_script(
+                'rtbcb-workflow-visualizer',
+                'rtbcbWorkflow',
+                [
+                    'ajax_url' => admin_url( 'admin-ajax.php' ),
+                    'nonce'    => wp_create_nonce( 'rtbcb_workflow_visualizer' ),
+                    'strings'  => [
+                        'refresh_success' => __( 'Workflow history refreshed', 'rtbcb' ),
+                        'clear_success'   => __( 'Workflow history cleared', 'rtbcb' ),
+                        'error'           => __( 'An error occurred', 'rtbcb' ),
+                    ],
+                ]
+            );
+        }
 
         $company_data = [];
         if ( function_exists( 'rtbcb_get_current_company' ) ) {
@@ -256,6 +281,15 @@ class RTBCB_Admin {
             'manage_options',
             'rtbcb-api-logs',
             [ $this, 'render_api_logs' ]
+        );
+
+        add_submenu_page(
+            'rtbcb-dashboard',
+            __( 'Workflow Visualizer', 'rtbcb' ),
+            __( 'Workflow Visualizer', 'rtbcb' ),
+            'manage_options',
+            'rtbcb-workflow-visualizer',
+            [ $this, 'render_workflow_visualizer' ]
         );
 
     }
@@ -1965,4 +1999,60 @@ class RTBCB_Admin {
             wp_send_json_error( sprintf( __( 'Diagnostics failed: %s', 'rtbcb' ), $e->getMessage() ) );
         }
     }
+
+	public function render_workflow_visualizer() {
+		include RTBCB_DIR . 'admin/workflow-visualizer-page.php';
+	}
+
+	public function ajax_get_workflow_history() {
+		check_ajax_referer( 'rtbcb_workflow_visualizer', 'nonce' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions', 'rtbcb' ) );
+		}
+		$history = $this->get_workflow_history_from_logs();
+		wp_send_json_success( [
+			'history' => $history,
+			'summary' => [
+				'total_executions' => count( $history ),
+				'avg_duration' => $this->calculate_average_duration( $history ),
+				'success_rate' => $this->calculate_success_rate( $history ),
+			],
+		] );
+	}
+
+	public function ajax_clear_workflow_history() {
+		check_ajax_referer( 'rtbcb_workflow_visualizer', 'nonce' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions', 'rtbcb' ) );
+		}
+		wp_send_json_success();
+	}
+
+	private function get_workflow_history_from_logs() {
+		return [];
+	}
+
+	private function calculate_average_duration( $history ) {
+		if ( empty( $history ) ) {
+			return 0;
+		}
+		$total = 0;
+		foreach ( $history as $item ) {
+			$total += isset( $item['duration'] ) ? floatval( $item['duration'] ) : 0;
+		}
+		return $total / count( $history );
+	}
+
+	private function calculate_success_rate( $history ) {
+		if ( empty( $history ) ) {
+			return 0;
+		}
+		$success = 0;
+		foreach ( $history as $item ) {
+			if ( ! empty( $item['success'] ) ) {
+				$success++;
+			}
+		}
+		return ( $success / count( $history ) ) * 100;
+	}
 }
