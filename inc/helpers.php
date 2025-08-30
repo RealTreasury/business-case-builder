@@ -1206,6 +1206,10 @@ function rtbcb_proxy_openai_responses() {
         wp_send_json_error( [ 'message' => __( 'OpenAI API key not configured.', 'rtbcb' ) ], 500 );
     }
 
+    if ( isset( $_POST['nonce'] ) ) {
+        check_ajax_referer( 'rtbcb_openai_responses', 'nonce' );
+    }
+
     $body = isset( $_POST['body'] ) ? wp_unslash( $_POST['body'] ) : '';
     if ( '' === $body ) {
         wp_send_json_error( [ 'message' => __( 'Missing request body.', 'rtbcb' ) ], 400 );
@@ -1220,20 +1224,45 @@ function rtbcb_proxy_openai_responses() {
     $max_output_tokens = intval( $body_array['max_output_tokens'] ?? $config['max_output_tokens'] );
     $max_output_tokens = min( 8000, max( 256, $max_output_tokens ) );
     $body_array['max_output_tokens'] = $max_output_tokens;
-    $body              = wp_json_encode( $body_array );
+    $body_array['stream']            = true;
+    $payload                         = wp_json_encode( $body_array );
 
-    $job_id = wp_generate_uuid4();
+    nocache_headers();
+    header( 'Content-Type: text/event-stream' );
+    header( 'Cache-Control: no-cache' );
+    header( 'Connection: keep-alive' );
 
-    set_transient( 'rtbcb_openai_job_' . $job_id, [ 'status' => 'pending' ], HOUR_IN_SECONDS );
-    set_transient( 'rtbcb_openai_job_' . $job_id . '_body', $body, HOUR_IN_SECONDS );
+    $timeout = intval( get_option( 'rtbcb_responses_timeout', 120 ) );
+    if ( $timeout <= 0 ) {
+        $timeout = 120;
+    }
 
-    wp_schedule_single_event(
-        time(),
-        'rtbcb_run_openai_responses_job',
-        [ $job_id, get_current_user_id() ]
-    );
+    $ch = curl_init( 'https://api.openai.com/v1/responses' );
+    curl_setopt( $ch, CURLOPT_POST, true );
+    curl_setopt( $ch, CURLOPT_POSTFIELDS, $payload );
+    curl_setopt( $ch, CURLOPT_HTTPHEADER, [
+        'Content-Type: application/json',
+        'Authorization: Bearer ' . $api_key,
+    ] );
+    curl_setopt( $ch, CURLOPT_TIMEOUT, $timeout );
+    curl_setopt( $ch, CURLOPT_WRITEFUNCTION, function ( $curl, $data ) {
+        echo $data;
+        if ( function_exists( 'flush' ) ) {
+            flush();
+        }
+        return strlen( $data );
+    } );
 
-    wp_send_json_success( [ 'job_id' => $job_id ] );
+    $ok    = curl_exec( $ch );
+    $error = curl_error( $ch );
+    curl_close( $ch );
+
+    if ( false === $ok && '' !== $error ) {
+        $msg = sanitize_text_field( $error );
+        echo 'data: ' . wp_json_encode( [ 'error' => $msg ] ) . "\n\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+    }
+
+    exit;
 }
 
 /**
