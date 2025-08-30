@@ -1121,6 +1121,63 @@ USER,
     }
 
     /**
+     * Project growth path tiers based on company size and industry.
+     *
+     * @param string $company_size Company size descriptor.
+     * @param string $industry     Industry name.
+     * @return array {
+     *     @type array $conservative {
+     *         @type float  $growth_rate Growth rate percentage (e.g., 0.05 for 5%).
+     *         @type string $description Scenario description.
+     *     }
+     *     @type array $moderate {
+     *         @type float  $growth_rate Growth rate percentage.
+     *         @type string $description Scenario description.
+     *     }
+     *     @type array $aggressive {
+     *         @type float  $growth_rate Growth rate percentage.
+     *         @type string $description Scenario description.
+     *     }
+     * }
+     */
+    private function project_growth_path( $company_size, $industry ) {
+        $company_size = sanitize_text_field( $company_size );
+        $industry     = sanitize_text_field( $industry );
+
+        $base_rates = [
+            '<$50M'      => 0.15,
+            '$50M-$500M' => 0.10,
+            '$500M-$2B'  => 0.07,
+            '>$2B'       => 0.04,
+        ];
+
+        $industry_adj = [
+            'technology'    => 1.2,
+            'manufacturing' => 0.9,
+            'retail'        => 1.0,
+            'finance'       => 0.8,
+        ];
+
+        $base_rate = isset( $base_rates[ $company_size ] ) ? $base_rates[ $company_size ] : 0.1;
+        $adjusted  = $base_rate * ( $industry_adj[ strtolower( $industry ) ] ?? 1.0 );
+
+        return [
+            'conservative' => [
+                'growth_rate' => round( $adjusted * 0.75, 3 ),
+                'description' => sanitize_text_field( __( 'Lower bound growth expectation based on market headwinds.', 'rtbcb' ) ),
+            ],
+            'moderate'     => [
+                'growth_rate' => round( $adjusted, 3 ),
+                'description' => sanitize_text_field( __( 'Mid-range growth aligned with historical performance.', 'rtbcb' ) ),
+            ],
+            'aggressive'   => [
+                'growth_rate' => round( $adjusted * 1.25, 3 ),
+                'description' => sanitize_text_field( __( 'Upside scenario assuming favorable market conditions.', 'rtbcb' ) ),
+            ],
+        ];
+    }
+
+    /**
      * Analyze industry context using the LLM.
      *
      * @param array $user_inputs Sanitized user inputs.
