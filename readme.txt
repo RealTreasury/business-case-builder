@@ -3,7 +3,7 @@ Contributors: realtreasury
 Tags: business, case, builder, roi, treasury
 Requires at least: 6.0
 Tested up to: 6.0
-Stable tag: 2.1.7
+Stable tag: 2.1.8
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -155,6 +155,11 @@ Reports are rendered as HTML in the browser. Use your browser's print or save fu
 The analytics dashboard uses Chart.js for its visualizations. The library is bundled with the plugin to reduce blocking by privacy tools, but strict ad blockers may still prevent it from loading. Allow the plugin's scripts in your browser to enable the charts.
 
 == Changelog ==
+= 2.1.8 =
+* Fixed bulk lead deletion actions within the lead management dashboard.
+* Added test coverage to ensure asynchronous jobs are marked complete correctly.
+* Reshaped job status data for clearer progress reporting.
+
 = 2.1.7 =
 * Update documentation to reflect version 2.1.7.
 = 2.1.6 =
