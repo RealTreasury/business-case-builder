@@ -1653,24 +1653,49 @@ SYSTEM;
 
     /**
      * Call OpenAI with retry logic.
+     *
+     * Uses exponential backoff with jitter between retries. Each subsequent
+     * attempt slightly reduces the maximum output tokens and increases the
+     * timeout to improve the chances of success.
+     *
+     * @param string       $model             Model name.
+     * @param array|string $prompt            Prompt for the model.
+     * @param int|null     $max_output_tokens Maximum output tokens.
+     * @param int|null     $max_retries       Number of retries.
+     * @return array|WP_Error Response array or error.
      */
-
     private function call_openai_with_retry( $model, $prompt, $max_output_tokens = null, $max_retries = null ) {
-        $max_retries = $max_retries ?? intval( $this->gpt5_config['max_retries'] );
+        $max_retries     = $max_retries ?? intval( $this->gpt5_config['max_retries'] );
+        $base_timeout    = intval( $this->gpt5_config['timeout'] ?? 180 );
+        $current_timeout = $base_timeout;
+        $current_tokens  = $max_output_tokens;
 
         for ( $attempt = 1; $attempt <= $max_retries; $attempt++ ) {
-            $response = $this->call_openai( $model, $prompt, $max_output_tokens );
+            $this->gpt5_config['timeout'] = $current_timeout;
+
+            $response = $this->call_openai( $model, $prompt, $current_tokens );
 
             if ( ! is_wp_error( $response ) ) {
+                $this->gpt5_config['timeout'] = $base_timeout;
                 return $response;
             }
 
             error_log( "RTBCB: OpenAI attempt {$attempt} failed: " . $response->get_error_message() );
 
             if ( $attempt < $max_retries ) {
-                sleep( $attempt ); // Progressive backoff
+                if ( null !== $current_tokens ) {
+                    $current_tokens = max( 256, (int) ( $current_tokens * 0.9 ) );
+                }
+
+                $current_timeout += 5;
+
+                $delay  = pow( 2, $attempt - 1 );
+                $jitter = wp_rand( 0, 1000 ) / 1000;
+                usleep( (int) ( ( $delay + $jitter ) * 1000000 ) );
             }
         }
+
+        $this->gpt5_config['timeout'] = $base_timeout;
 
         return $response; // Return last error
     }
