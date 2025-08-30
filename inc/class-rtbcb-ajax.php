@@ -195,8 +195,26 @@ class RTBCB_Ajax {
 		];
 	}
 
-	private static function structure_report_data( $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, $request_start ) {
-		return [
+private static function structure_report_data( $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, $request_start ) {
+	$operational_analysis = (array) ( $final_analysis['operational_analysis'] ?? [] );
+	$current_state_assessment = (array) ( $operational_analysis['current_state_assessment'] ?? [] );
+	if ( empty( $current_state_assessment ) ) {
+	$current_state_assessment = [ __( 'No data provided', 'rtbcb' ) ];
+	}
+	$process_improvements = (array) ( $operational_analysis['process_improvements'] ?? [] );
+	if ( empty( $process_improvements ) ) {
+	$process_improvements = [ __( 'No data provided', 'rtbcb' ) ];
+	}
+	$automation_opportunities = (array) ( $operational_analysis['automation_opportunities'] ?? [] );
+	if ( empty( $automation_opportunities ) ) {
+	$automation_opportunities = [ __( 'No data provided', 'rtbcb' ) ];
+	}
+	$implementation_risks = (array) ( $final_analysis['risk_mitigation']['implementation_risks'] ?? [] );
+	if ( empty( $implementation_risks ) ) {
+	$implementation_risks = [ __( 'No data provided', 'rtbcb' ) ];
+	}
+
+	return [
 			'metadata' => [
 				'company_name'   => $user_inputs['company_name'],
 				'analysis_date'  => current_time( 'Y-m-d' ),
@@ -230,14 +248,14 @@ class RTBCB_Ajax {
 				'vendor_considerations'=> $final_analysis['vendor_considerations'] ?? [],
 			],
 			'operational_insights' => [
-				'current_state_assessment' => $final_analysis['operational_analysis']['current_state_assessment'] ?? [],
-				'process_improvements'     => $final_analysis['operational_analysis']['process_improvements'] ?? [],
-				'automation_opportunities' => $final_analysis['operational_analysis']['automation_opportunities'] ?? [],
+							'current_state_assessment' => $current_state_assessment,
+							'process_improvements'     => $process_improvements,
+							'automation_opportunities' => $automation_opportunities,
 			],
 			'risk_analysis' => [
-				'implementation_risks' => $final_analysis['risk_mitigation']['implementation_risks'] ?? [],
-				'mitigation_strategies' => $final_analysis['risk_mitigation']['mitigation_strategies'] ?? [],
-				'success_factors'      => $final_analysis['risk_mitigation']['success_factors'] ?? [],
+							'implementation_risks' => $implementation_risks,
+							'mitigation_strategies' => $final_analysis['risk_mitigation']['mitigation_strategies'] ?? [],
+							'success_factors'      => $final_analysis['risk_mitigation']['success_factors'] ?? [],
 			],
 			'action_plan' => [
 				'immediate_steps'    => $final_analysis['next_steps']['immediate'] ?? [],
