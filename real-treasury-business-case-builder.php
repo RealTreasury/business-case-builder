@@ -840,22 +840,25 @@ return $use_comprehensive;
 	$company_name = $company['name'];
 	}
 	
-	$raw_hours_reconciliation = wp_unslash( $_POST['hours_reconciliation'] ?? '' );
+        $raw_hours_reconciliation   = wp_unslash( $_POST['hours_reconciliation'] ?? '' );
+        $raw_hours_cash_positioning = wp_unslash( $_POST['hours_cash_positioning'] ?? '' );
+        $raw_num_banks              = wp_unslash( $_POST['num_banks'] ?? '' );
+        $raw_ftes                   = wp_unslash( $_POST['ftes'] ?? '' );
 
-	$user_inputs = [
-	'email'                  => sanitize_email( wp_unslash( $_POST['email'] ?? '' ) ),
-	'company_name'           => $company_name,
-	'company_size'           => sanitize_text_field( wp_unslash( $_POST['company_size'] ?? $company['size'] ?? '' ) ),
-	'industry'               => sanitize_text_field( wp_unslash( $_POST['industry'] ?? $company['industry'] ?? '' ) ),
-	'hours_reconciliation'   => '' === $raw_hours_reconciliation ? 0 : floatval( $raw_hours_reconciliation ),
-	'hours_cash_positioning' => floatval( wp_unslash( $_POST['hours_cash_positioning'] ?? 0 ) ),
-	'num_banks'              => intval( wp_unslash( $_POST['num_banks'] ?? 0 ) ),
-	'ftes'                   => floatval( wp_unslash( $_POST['ftes'] ?? 0 ) ),
-	'pain_points'            => array_map( 'sanitize_text_field', (array) wp_unslash( $_POST['pain_points'] ?? [] ) ),
-	'business_objective'     => sanitize_text_field( wp_unslash( $_POST['business_objective'] ?? '' ) ),
-	'implementation_timeline'=> sanitize_text_field( wp_unslash( $_POST['implementation_timeline'] ?? '' ) ),
-	'budget_range'           => sanitize_text_field( wp_unslash( $_POST['budget_range'] ?? '' ) ),
-	];
+        $user_inputs = [
+        'email'                  => sanitize_email( wp_unslash( $_POST['email'] ?? '' ) ),
+        'company_name'           => $company_name,
+        'company_size'           => sanitize_text_field( wp_unslash( $_POST['company_size'] ?? $company['size'] ?? '' ) ),
+        'industry'               => sanitize_text_field( wp_unslash( $_POST['industry'] ?? $company['industry'] ?? '' ) ),
+        'hours_reconciliation'   => '' === $raw_hours_reconciliation ? 0 : floatval( $raw_hours_reconciliation ),
+        'hours_cash_positioning' => max( 0, floatval( $raw_hours_cash_positioning ) ),
+        'num_banks'              => max( 0, intval( $raw_num_banks ) ),
+        'ftes'                   => max( 0, floatval( $raw_ftes ) ),
+        'pain_points'            => array_map( 'sanitize_text_field', (array) wp_unslash( $_POST['pain_points'] ?? [] ) ),
+        'business_objective'     => sanitize_text_field( wp_unslash( $_POST['business_objective'] ?? '' ) ),
+        'implementation_timeline'=> sanitize_text_field( wp_unslash( $_POST['implementation_timeline'] ?? '' ) ),
+        'budget_range'           => sanitize_text_field( wp_unslash( $_POST['budget_range'] ?? '' ) ),
+        ];
 	
 	// Validate required fields
 	$validation_errors = [];
@@ -868,11 +871,23 @@ return $use_comprehensive;
 	$validation_errors[] = __( 'Please enter your company name.', 'rtbcb' );
 	}
 	
-	if ( '' !== $raw_hours_reconciliation && ! is_numeric( $raw_hours_reconciliation ) ) {
-		$validation_errors[] = __( 'Please enter valid reconciliation hours.', 'rtbcb' );
-	} elseif ( $user_inputs['hours_reconciliation'] < 0 ) {
-		$validation_errors[] = __( 'Please enter valid reconciliation hours.', 'rtbcb' );
-	}
+        if ( '' !== $raw_hours_reconciliation && ! is_numeric( $raw_hours_reconciliation ) ) {
+                $validation_errors[] = __( 'Please enter valid reconciliation hours.', 'rtbcb' );
+        } elseif ( $user_inputs['hours_reconciliation'] < 0 ) {
+                $validation_errors[] = __( 'Please enter valid reconciliation hours.', 'rtbcb' );
+        }
+
+        if ( '' !== $raw_hours_cash_positioning && ! is_numeric( $raw_hours_cash_positioning ) ) {
+                $validation_errors[] = __( 'Please enter valid cash positioning hours.', 'rtbcb' );
+        }
+
+        if ( '' !== $raw_num_banks && ! is_numeric( $raw_num_banks ) ) {
+                $validation_errors[] = __( 'Please enter a valid number of banks.', 'rtbcb' );
+        }
+
+        if ( '' !== $raw_ftes && ! is_numeric( $raw_ftes ) ) {
+                $validation_errors[] = __( 'Please enter valid FTEs.', 'rtbcb' );
+        }
 
 	
 	if ( ! empty( $validation_errors ) ) {
