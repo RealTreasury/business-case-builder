@@ -835,12 +835,14 @@ return $use_comprehensive;
 	$company_name = $company['name'];
 	}
 	
+	$raw_hours_reconciliation = wp_unslash( $_POST['hours_reconciliation'] ?? '' );
+
 	$user_inputs = [
 	'email'                  => sanitize_email( wp_unslash( $_POST['email'] ?? '' ) ),
 	'company_name'           => $company_name,
 	'company_size'           => sanitize_text_field( wp_unslash( $_POST['company_size'] ?? $company['size'] ?? '' ) ),
 	'industry'               => sanitize_text_field( wp_unslash( $_POST['industry'] ?? $company['industry'] ?? '' ) ),
-	'hours_reconciliation'   => floatval( wp_unslash( $_POST['hours_reconciliation'] ?? 0 ) ),
+	'hours_reconciliation'   => '' === $raw_hours_reconciliation ? 0 : floatval( $raw_hours_reconciliation ),
 	'hours_cash_positioning' => floatval( wp_unslash( $_POST['hours_cash_positioning'] ?? 0 ) ),
 	'num_banks'              => intval( wp_unslash( $_POST['num_banks'] ?? 0 ) ),
 	'ftes'                   => floatval( wp_unslash( $_POST['ftes'] ?? 0 ) ),
@@ -861,13 +863,12 @@ return $use_comprehensive;
 	$validation_errors[] = __( 'Please enter your company name.', 'rtbcb' );
 	}
 	
-	if ( $user_inputs['hours_reconciliation'] <= 0 ) {
-	$validation_errors[] = __( 'Please enter valid reconciliation hours.', 'rtbcb' );
+	if ( '' !== $raw_hours_reconciliation && ! is_numeric( $raw_hours_reconciliation ) ) {
+		$validation_errors[] = __( 'Please enter valid reconciliation hours.', 'rtbcb' );
+	} elseif ( $user_inputs['hours_reconciliation'] < 0 ) {
+		$validation_errors[] = __( 'Please enter valid reconciliation hours.', 'rtbcb' );
 	}
-	
-	if ( empty( $user_inputs['pain_points'] ) ) {
-	$validation_errors[] = __( 'Please select at least one challenge.', 'rtbcb' );
-	}
+
 	
 	if ( ! empty( $validation_errors ) ) {
 	return new WP_Error( 'validation_failed', implode( ' ', $validation_errors ) );
@@ -1264,11 +1265,11 @@ return $use_comprehensive;
                 return;
             }
 
-            if ( $user_inputs['hours_reconciliation'] <= 0 ) {
-                rtbcb_log_error( 'Invalid reconciliation hours', $user_inputs );
-                wp_send_json_error( __( 'Please enter your weekly reconciliation hours.', 'rtbcb' ), 400 );
-                return;
-            }
+			if ( $user_inputs['hours_reconciliation'] < 0 ) {
+				rtbcb_log_error( 'Invalid reconciliation hours', $user_inputs );
+				wp_send_json_error( __( 'Please enter your weekly reconciliation hours.', 'rtbcb' ), 400 );
+				return;
+			}
 
             if ( $user_inputs['hours_cash_positioning'] <= 0 ) {
                 rtbcb_log_error( 'Invalid cash positioning hours', $user_inputs );
@@ -1288,17 +1289,11 @@ return $use_comprehensive;
                 return;
             }
 
-            if ( empty( $user_inputs['pain_points'] ) ) {
-                rtbcb_log_error( 'No pain points selected', $user_inputs );
-                wp_send_json_error( __( 'Please select at least one challenge.', 'rtbcb' ), 400 );
-                return;
-            }
-
-            if ( empty( $user_inputs['business_objective'] ) ) {
-                rtbcb_log_error( 'Missing business objective', $user_inputs );
-                wp_send_json_error( __( 'Please select a primary business objective.', 'rtbcb' ), 400 );
-                return;
-            }
+			if ( empty( $user_inputs['business_objective'] ) ) {
+				rtbcb_log_error( 'Missing business objective', $user_inputs );
+				wp_send_json_error( __( 'Please select a primary business objective.', 'rtbcb' ), 400 );
+				return;
+			}
 
             if ( empty( $user_inputs['implementation_timeline'] ) ) {
                 rtbcb_log_error( 'Missing implementation timeline', $user_inputs );
