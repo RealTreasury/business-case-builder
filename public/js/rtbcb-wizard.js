@@ -423,9 +423,11 @@ class BusinessCaseBuilder {
 
             let result;
             try {
-                result = await response.json();
+                result = await response.clone().json();
             } catch (e) {
-                throw new Error('Invalid server response');
+                const rawText = await response.text();
+                console.warn('RTBCB: Unexpected server response:', rawText);
+                throw new Error('Unexpected server response');
             }
 
             if (response.ok) {

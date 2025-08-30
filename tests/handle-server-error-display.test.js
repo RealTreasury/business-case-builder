@@ -27,13 +27,17 @@ class SimpleFormData {
 global.FormData = SimpleFormData;
 
 global.fetch = function() {
-    return Promise.resolve({
+    const payload = {
+        data: { message: 'Server exploded', error_code: 'AI_CONFIG_ERROR' }
+    };
+    const response = {
         ok: false,
         status: 500,
-        json: async () => ({
-            data: { message: 'Server exploded', error_code: 'AI_CONFIG_ERROR' }
-        })
-    });
+        json: async () => payload,
+        text: async () => JSON.stringify(payload),
+        clone() { return this; }
+    };
+    return Promise.resolve(response);
 };
 
 const form = {
