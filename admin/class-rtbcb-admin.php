@@ -136,7 +136,7 @@ class RTBCB_Admin {
                     ? array_filter( array_map( 'sanitize_text_field', (array) $raw_company['challenges'] ) )
                     : [];
             }
-        }
+	}
 
         $sections_js = [];
         if ( function_exists( 'rtbcb_get_dashboard_sections' ) ) {
@@ -151,7 +151,7 @@ class RTBCB_Admin {
                     'phase'     => isset( $section['phase'] ) ? (int) $section['phase'] : 0,
                     'completed' => ! empty( $section['completed'] ),
                 ];
-                if ( ! empty( $section['action'] ) ) {
+		if ( ! empty( $section['action'] ) ) {
                     $action = sanitize_key( $section['action'] );
                     $section_data['action'] = $action;
                     $section_data['nonce']  = wp_create_nonce( $action );
@@ -437,7 +437,7 @@ class RTBCB_Admin {
         foreach ( $decoded as $item ) {
             $data = [];
             if ( isset( $item['data'] ) && is_array( $item['data'] ) ) {
-                foreach ( $item['data'] as $key => $value ) {
+		foreach ( $item['data'] as $key => $value ) {
                     if ( is_scalar( $value ) ) {
                         $data[ sanitize_key( $key ) ] = is_numeric( $value ) ? ( 0 + $value ) : sanitize_text_field( $value );
                     }
@@ -1508,7 +1508,7 @@ class RTBCB_Admin {
             ARRAY_A
         );
 
-        return $results ?: [];
+	return $results ?: [];
     }
 
     /**
@@ -1839,10 +1839,28 @@ class RTBCB_Admin {
 		wp_send_json_success();
 	}
 
-       private function get_workflow_history_from_logs() {
-               $history = get_option( 'rtbcb_workflow_history', [] );
-               return is_array( $history ) ? $history : [];
-       }
+	/**
+	* Retrieve workflow history from logs.
+	*
+	* @return array[] Workflow execution history with lead metadata.
+	*/
+	private function get_workflow_history_from_logs() {
+		$history = get_option( 'rtbcb_workflow_history', [] );
+		if ( ! is_array( $history ) ) {
+			return [];
+               }
+
+		foreach ( $history as &$item ) {
+			if ( isset( $item['lead_id'] ) ) {
+                               $item['lead_id'] = intval( $item['lead_id'] );
+                       }
+			if ( isset( $item['lead_email'] ) ) {
+                               $item['lead_email'] = sanitize_email( $item['lead_email'] );
+                       }
+               }
+
+		return $history;
+	}
 
 	private function calculate_average_duration( $history ) {
 		if ( empty( $history ) ) {
@@ -1855,20 +1873,20 @@ class RTBCB_Admin {
 		return $total / count( $history );
 	}
 
-        private function calculate_success_rate( $history ) {
+	private function calculate_success_rate( $history ) {
                 if ( empty( $history ) ) {
                         return 0;
                 }
                 $success = 0;
                 foreach ( $history as $item ) {
-                        if ( ! empty( $item['success'] ) ) {
+			if ( ! empty( $item['success'] ) ) {
                                 $success++;
                         }
                 }
-                return ( $success / count( $history ) ) * 100;
+		return ( $success / count( $history ) ) * 100;
         }
 
-        /**
+	/**
          * Display notice if PHP max execution time is lower than GPT-5 timeout.
          *
          * @return void
