@@ -941,6 +941,96 @@ USER,
     }
 
     /**
+     * Analyze the competitive landscape for a given industry.
+     *
+     * Provides a list of competitors and brief notes on their strengths. If an
+     * OpenAI API key is configured, the method will query the language model for
+     * up-to-date insights; otherwise a basic set of placeholder competitors is
+     * returned.
+     *
+     * @param string $industry Industry name or slug.
+     * @return array {
+     *     @type array $competitors List of competitors, each having `name` and
+     *                              `strength` keys.
+     * }
+     */
+    private function analyze_competitive_context( $industry ) {
+        $industry = sanitize_text_field( $industry );
+
+        $default = [
+            'competitors' => [
+                [
+                    'name'     => 'General Competitor A',
+                    'strength' => __( 'broad market reach', 'rtbcb' ),
+                ],
+                [
+                    'name'     => 'General Competitor B',
+                    'strength' => __( 'cost leadership', 'rtbcb' ),
+                ],
+            ],
+        ];
+
+        if ( empty( $this->api_key ) ) {
+            return $default;
+        }
+
+        $model        = $this->get_model( 'mini' );
+        $system_prompt = 'You are a market analyst. Return only JSON with an array "competitors" of objects each having "name" and "strength".';
+        $user_prompt   = sprintf( 'Identify three major competitors in the %s industry and note one key strength for each.', $industry );
+
+        $history = [
+            [
+                'role'    => 'system',
+                'content' => $system_prompt,
+            ],
+            [
+                'role'    => 'user',
+                'content' => $user_prompt,
+            ],
+        ];
+
+        $context  = $this->build_context_for_responses( $history );
+        $response = $this->call_openai_with_retry( $model, $context );
+
+        if ( is_wp_error( $response ) ) {
+            return $default;
+        }
+
+        $parsed = rtbcb_parse_gpt5_response( $response );
+        $json   = json_decode( $parsed['output_text'], true );
+
+        if ( ! is_array( $json ) || empty( $json['competitors'] ) || ! is_array( $json['competitors'] ) ) {
+            return $default;
+        }
+
+        $competitors = [];
+
+        foreach ( $json['competitors'] as $comp ) {
+            if ( ! is_array( $comp ) ) {
+                continue;
+            }
+
+            $name     = sanitize_text_field( $comp['name'] ?? '' );
+            $strength = sanitize_text_field( $comp['strength'] ?? '' );
+
+            if ( ! empty( $name ) ) {
+                $competitors[] = [
+                    'name'     => $name,
+                    'strength' => $strength,
+                ];
+            }
+        }
+
+        if ( empty( $competitors ) ) {
+            return $default;
+        }
+
+        return [
+            'competitors' => $competitors,
+        ];
+    }
+
+    /**
      * Analyze a company's market position within its industry.
      *
      * @param string $industry     Industry name.
