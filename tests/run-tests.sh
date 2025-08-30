@@ -62,6 +62,10 @@ node tests/report-interactivity.test.js
 echo "12b. Running extended report interactivity test..."
 node tests/report-interactivity-extended.test.js
 
+# Email and PDF test
+echo "13b. Running email and PDF test..."
+php tests/email-and-pdf.test.php
+
 # AJAX error handling test (PHPUnit)
 echo "14. Running AJAX error handling tests..."
 phpunit tests/RTBCB_AjaxGenerateComprehensiveCaseErrorTest.php
@@ -84,6 +88,7 @@ node tests/handle-string-error-response.test.js
 node tests/temperature-model.test.js
 node tests/min-output-tokens.test.js
 node tests/gpt5-config-defaults.test.js
+node tests/export-to-pdf-button.test.js
 node tests/wizard-report-flow.test.js
 npx --yes jest tests/poll-job-completed.test.js --config '{"testEnvironment":"node"}'
 npx --yes jest tests/poll-job-show-results.test.js --config '{"testEnvironment":"node"}'

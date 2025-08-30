@@ -556,7 +556,14 @@ function rtbcb_normalize_model_name( $model ) {
  *
  * @return void
  */
-function rtbcb_send_report_email( $form_data, $report_path ) {
+/**
+ * Send the generated report to the user via email.
+ *
+ * @param array    $form_data   Submitted form data.
+ * @param string   $report_path Path to the generated report file.
+ * @param callable $mailer      Optional mailer function for testing.
+ */
+function rtbcb_send_report_email( $form_data, $report_path, $mailer = 'wp_mail' ) {
 	$email = isset( $form_data['email'] ) ? sanitize_email( $form_data['email'] ) : '';
 
 	if ( empty( $email ) || ! is_readable( $report_path ) ) {
@@ -566,7 +573,9 @@ function rtbcb_send_report_email( $form_data, $report_path ) {
 	$subject = __( 'Your Business Case Report', 'rtbcb' );
 	$message = __( 'Please find your business case report attached.', 'rtbcb' );
 
-	wp_mail( $email, $subject, $message, [], [ $report_path ] );
+	if ( is_callable( $mailer ) ) {
+		call_user_func( $mailer, $email, $subject, $message, [], [ $report_path ] );
+	}
 }
 
 /**
