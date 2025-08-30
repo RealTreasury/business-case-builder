@@ -50,17 +50,20 @@ php tests/openai-api-key-validation.test.php
 echo "11. Rendering comprehensive report template..."
 php tests/render-comprehensive-template.test.php
 
-echo "12. Running report interactivity test..."
+echo "12. Running report memory usage test..."
+php tests/report-memory-usage.test.php
+
+echo "13. Running report interactivity test..."
 node tests/report-interactivity.test.js
 
 # AJAX error handling test (PHPUnit)
-echo "13. Running AJAX error handling tests..."
+echo "14. Running AJAX error handling tests..."
 phpunit tests/RTBCB_AjaxGenerateComprehensiveCaseErrorTest.php
 phpunit tests/RTBCB_AjaxGenerateComprehensiveCaseFatalErrorTest.php
 phpunit tests/RTBCB_GenerateBusinessAnalysisTimeoutTest.php
 
 # JavaScript tests
-echo "14. Running JavaScript tests..."
+echo "15. Running JavaScript tests..."
 node tests/handle-submit-error.test.js
 node tests/handle-submit-no-ajax-url.test.js
 node tests/render-results-no-narrative.test.js
@@ -76,13 +79,13 @@ npx --yes jest tests/poll-job-show-results.test.js --config '{"testEnvironment":
 
 # WordPress coding standards (if installed)
 if command -v phpcs &> /dev/null; then
-    echo "15. Running WordPress coding standards check..."
+    echo "16. Running WordPress coding standards check..."
     phpcs --standard=WordPress --ignore=vendor .
 else
-    echo "15. Skipping WordPress coding standards (phpcs not installed)"
+    echo "16. Skipping WordPress coding standards (phpcs not installed)"
 fi
 
-echo "16. Running project growth path test..."
+echo "17. Running project growth path test..."
 php tests/project-growth-path.test.php
 
 echo "================================================"
