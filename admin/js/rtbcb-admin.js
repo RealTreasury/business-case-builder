@@ -805,7 +805,7 @@ jQuery(document).ready(function($) {
                             action: 'rtbcb_bulk_action_leads',
                             nonce: window.rtbcbAdmin.nonce,
                             bulk_action: action,
-                            lead_ids: JSON.stringify(ids)
+                            lead_ids: ids
                         }
                     });
                     if (response.success) {

@@ -71,7 +71,7 @@ class RTBCB_Admin {
         $page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
         if ( strpos( $hook, 'rtbcb' ) === false && strpos( $page, 'rtbcb' ) === false ) {
             return;
-        }
+	}
 
         wp_enqueue_script( 'chart-js', RTBCB_URL . 'public/js/chart.min.js', [], '3.9.1', true );
         wp_enqueue_script( 
@@ -110,7 +110,7 @@ class RTBCB_Admin {
                         ],
                 ]
             );
-        }
+	}
 
         $company_data = [];
         if ( function_exists( 'rtbcb_get_current_company' ) ) {
@@ -561,8 +561,14 @@ class RTBCB_Admin {
             wp_send_json_error( [ 'message' => __( 'Permission denied.', 'rtbcb' ) ], 403 );
         }
 
-        $action = sanitize_text_field( wp_unslash( $_POST['action'] ?? '' ) );
-        $lead_ids = array_map( 'intval', wp_unslash( $_POST['lead_ids'] ?? [] ) );
+	$bulk_action = sanitize_text_field( wp_unslash( $_POST['bulk_action'] ?? '' ) );
+	$lead_ids_raw = wp_unslash( $_POST['lead_ids'] ?? [] );
+
+	if ( is_string( $lead_ids_raw ) ) {
+		$lead_ids_raw = json_decode( $lead_ids_raw, true );
+	}
+
+	$lead_ids = array_map( 'intval', (array) $lead_ids_raw );
 
         if ( empty( $lead_ids ) ) {
             wp_send_json_error( [ 'message' => __( 'No leads selected.', 'rtbcb' ) ] );
@@ -572,7 +578,7 @@ class RTBCB_Admin {
         $table_name = $wpdb->prefix . 'rtbcb_leads';
         $placeholders = implode( ',', array_fill( 0, count( $lead_ids ), '%d' ) );
 
-        switch ( $action ) {
+	switch ( $bulk_action ) {
             case 'delete':
                 $result = $wpdb->query( 
                     $wpdb->prepare( 
