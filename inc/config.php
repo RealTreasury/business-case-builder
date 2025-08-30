@@ -43,6 +43,7 @@ function rtbcb_get_gpt5_config( $overrides = [] ) {
         'store'             => true,
         'timeout'           => 180,
         'max_retries'       => 2,
+        'max_retry_time'    => 60,
         'reasoning_effort'  => 'medium',
         'text_verbosity'    => 'medium',
     ];
@@ -70,6 +71,7 @@ function rtbcb_get_gpt5_config( $overrides = [] ) {
 
     $config = array_merge( $defaults, array_intersect_key( $overrides, $defaults ) );
     $config['max_output_tokens'] = min( 8000, max( 256, intval( $config['max_output_tokens'] ) ) );
+    $config['max_retry_time']    = max( 1, intval( $config['max_retry_time'] ) );
 
     return $config;
 }
