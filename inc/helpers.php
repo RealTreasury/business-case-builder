@@ -280,9 +280,9 @@ function rtbcb_get_dashboard_sections( $test_results = null ) {
 	];
 
 		foreach ( $sections as $id => &$section ) {
-		        $result               = rtbcb_get_last_test_result( $id, $test_results );
-		        $status               = $result['status'] ?? '';
-		        $section['completed'] = ( 'success' === $status );
+			    $result               = rtbcb_get_last_test_result( $id, $test_results );
+			    $status               = $result['status'] ?? '';
+			    $section['completed'] = ( 'success' === $status );
 		}
 
 		return $sections;
@@ -862,9 +862,9 @@ function rtbcb_test_generate_category_recommendation( $analysis ) {
 						'input'        => $input,
 					]
 				),
-		                       'timeout' => rtbcb_get_api_timeout(),
-		                ]
-		        );
+			                   'timeout' => rtbcb_get_api_timeout(),
+			            ]
+			    );
 
 		if ( is_wp_error( $response ) ) {
 			return new WP_Error( 'llm_failure', __( 'Unable to generate recommendation at this time.', 'rtbcb' ) );
@@ -1273,7 +1273,7 @@ function rtbcb_proxy_openai_responses() {
 
 		$body_array = json_decode( $body, true );
 		if ( ! is_array( $body_array ) ) {
-		        $body_array = [];
+			    $body_array = [];
 		}
 
 		$company      = rtbcb_get_current_company();
@@ -1366,7 +1366,7 @@ function rtbcb_handle_openai_responses_job( $job_id, $user_id ) {
 
 		$body_array = json_decode( $body, true );
 		if ( ! is_array( $body_array ) ) {
-		        $body_array = [];
+			    $body_array = [];
 		}
 
 		$company      = rtbcb_get_current_company();
@@ -1391,9 +1391,9 @@ function rtbcb_handle_openai_responses_job( $job_id, $user_id ) {
 	);
 
 	if ( is_wp_error( $response ) ) {
-		        if ( class_exists( 'RTBCB_API_Log' ) ) {
-		                RTBCB_API_Log::save_log( $body_array, [ 'error' => $response->get_error_message() ], $user_id, $user_email, $company_name );
-		        }
+			    if ( class_exists( 'RTBCB_API_Log' ) ) {
+			            RTBCB_API_Log::save_log( $body_array, [ 'error' => $response->get_error_message() ], $user_id, $user_email, $company_name );
+			    }
 		set_transient(
 			'rtbcb_openai_job_' . $job_id,
 			[
@@ -1413,7 +1413,7 @@ function rtbcb_handle_openai_responses_job( $job_id, $user_id ) {
 	}
 
 		if ( class_exists( 'RTBCB_API_Log' ) ) {
-		        RTBCB_API_Log::save_log( $body_array, $decoded, $user_id, $user_email, $company_name );
+			    RTBCB_API_Log::save_log( $body_array, $decoded, $user_id, $user_email, $company_name );
 		}
 
 	set_transient(
@@ -1686,7 +1686,43 @@ function rtbcb_set_research_cache( $company, $industry, $type, $data, $ttl = 0 )
  * @param string $type     Cache segment identifier.
  */
 function rtbcb_delete_research_cache( $company, $industry, $type ) {
-	$key = rtbcb_get_research_cache_key( $company, $industry, $type );
-	delete_transient( $key );
+$key = rtbcb_get_research_cache_key( $company, $industry, $type );
+delete_transient( $key );
+}
+
+/**
+ * Get allowed HTML tags and attributes for report templates.
+ *
+ * Adds canvas and button elements and permits data-* attributes.
+ *
+ * @return array Allowed HTML tags and attributes.
+ */
+function rtbcb_get_report_allowed_html() {
+	$allowed = wp_kses_allowed_html( 'post' );
+
+	$allowed['canvas'] = [
+		'class'  => true,
+		'id'     => true,
+		'width'  => true,
+		'height' => true,
+		'style'  => true,
+		'data-*' => true,
+	];
+
+	$allowed['button'] = [
+		'class'  => true,
+		'id'     => true,
+		'type'   => true,
+		'name'   => true,
+		'value'  => true,
+		'style'  => true,
+		'data-*' => true,
+	];
+
+	foreach ( $allowed as $tag => $attrs ) {
+		$allowed[ $tag ]['data-*'] = true;
+	}
+
+	return $allowed;
 }
 

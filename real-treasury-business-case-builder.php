@@ -1795,7 +1795,7 @@ return $use_comprehensive;
 	);
 	}
 
-	return wp_kses_post( $html );
+	return wp_kses( $html, rtbcb_get_report_allowed_html() );
 }
 
    /**
