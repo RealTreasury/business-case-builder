@@ -30,6 +30,20 @@ function rtbcb_has_openai_api_key() {
 }
 
 /**
+ * Determine if an error indicates an OpenAI configuration issue.
+ *
+ * Checks for common phrases like a missing API key or invalid model.
+ *
+ * @param Throwable $e Thrown error or exception.
+ * @return bool True if the error appears configuration related.
+ */
+function rtbcb_is_openai_configuration_error( $e ) {
+    $message = strtolower( $e->getMessage() );
+
+    return false !== strpos( $message, 'api key' ) || false !== strpos( $message, 'model' );
+}
+
+/**
  * Retrieve current company data.
  *
  * @return array Current company data.
