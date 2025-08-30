@@ -427,6 +427,10 @@ class BusinessCaseBuilder {
                 body: formData
             });
 
+            if (response.status >= 500) {
+                throw new Error('Server timeout');
+            }
+
             let result;
             try {
                 result = await response.clone().json();
@@ -474,15 +478,20 @@ class BusinessCaseBuilder {
                 code: error.code || error.error_code
             });
 
-            let displayMessage = error.name === 'TypeError'
-                ? 'Network error. Please check your connection and try again.'
-                : error.message;
+            let displayMessage;
+            if (error.message === 'Server timeout') {
+                displayMessage = 'The server took too long to respond. Please retry or contact support.';
+            } else {
+                displayMessage = error.name === 'TypeError'
+                    ? 'Network error. Please check your connection and try again.'
+                    : error.message;
 
-            const errorCode = error.code || error.error_code;
-            if (errorCode) {
-                displayMessage += ` (Error code: ${errorCode})`;
+                const errorCode = error.code || error.error_code;
+                if (errorCode) {
+                    displayMessage += ` (Error code: ${errorCode})`;
+                }
+                displayMessage += ' Please check your AI configuration or try again later.';
             }
-            displayMessage += ' Please check your AI configuration or try again later.';
 
             this.showError(displayMessage);
         }
