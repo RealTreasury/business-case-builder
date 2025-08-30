@@ -1677,25 +1677,636 @@ SYSTEM;
             'technology' => $tech_landscape,
         ];
 
-        return $analysis;
-    }
+return $analysis;
+}
 
-    /**
-     * Call OpenAI with retry logic.
-     *
-     * Uses exponential backoff with jitter between retries. Each subsequent
-     * attempt slightly reduces the maximum output tokens and increases the
-     * timeout to improve the chances of success.
-     *
-     * @param string       $model             Model name.
-     * @param array|string $prompt            Prompt for the model.
-     * @param int|null     $max_output_tokens Maximum output tokens.
-     * @param int|null     $max_retries       Number of retries.
-     * @param callable|null $chunk_handler     Optional streaming handler.
-     * @return array|WP_Error Response array or error.
-     */
-    private function call_openai_with_retry( $model, $prompt, $max_output_tokens = null, $max_retries = null, $chunk_handler = null ) {
-        $max_retries     = $max_retries ?? intval( $this->gpt5_config['max_retries'] );
+	/**
+	 * PHASE 1: Consolidated Company & Industry Enrichment.
+	 *
+	 * @param array $user_inputs Validated user inputs.
+	 * @return array|WP_Error Enriched company profile or error.
+	 */
+	public function enrich_company_profile( $user_inputs ) {
+	if ( empty( $this->api_key ) ) {
+	return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
+	}
+	
+	$system_prompt = $this->build_enrichment_system_prompt();
+	$user_prompt   = $this->build_enrichment_user_prompt( $user_inputs );
+	
+	$response = $this->call_openai_with_retry(
+	$this->get_model( 'advanced' ),
+	[ 'instructions' => $system_prompt, 'input' => $user_prompt ],
+	$this->estimate_tokens( 1500 )
+	);
+	
+	if ( is_wp_error( $response ) ) {
+	return $response;
+	}
+	
+	$parsed        = rtbcb_parse_gpt5_response( $response );
+	$enriched_data = json_decode( $parsed['output_text'], true );
+	
+	if ( ! is_array( $enriched_data ) ) {
+	return new WP_Error( 'parse_error', __( 'Failed to parse AI enrichment response.', 'rtbcb' ) );
+	}
+	
+	return $this->validate_and_structure_enrichment( $enriched_data, $user_inputs );
+	}
+	
+	/**
+	 * Build system prompt for consolidated enrichment.
+	 *
+	 * @return string System prompt.
+	 */
+	private function build_enrichment_system_prompt() {
+	return <<<'SYSTEM'
+	You are a senior treasury technology consultant conducting comprehensive company and industry research.
+	
+	Your task is to enrich the provided company information with strategic insights, industry context, and actionable intelligence that will inform treasury technology recommendations.
+	
+	## Required Output Format
+	
+	Return a single JSON object with this exact structure:
+	
+	```json
+	{
+	  "company_profile": {
+	    "enhanced_description": "string - comprehensive company description",
+	    "business_model": "string - primary business model and revenue streams",
+	    "market_position": "string - competitive position and market standing",
+	    "maturity_level": "basic|developing|strategic|optimized",
+	    "financial_indicators": {
+	      "estimated_revenue": "number - best estimate in USD",
+	      "growth_stage": "startup|growth|mature|decline",
+	      "financial_health": "strong|stable|concerning|unknown"
+	    },
+	    "treasury_maturity": {
+	      "current_state": "string - assessment of current treasury operations",
+	      "sophistication_level": "manual|semi_automated|automated|strategic",
+	      "key_gaps": ["array of identified gaps"],
+	      "automation_readiness": "low|medium|high"
+	    },
+	    "strategic_context": {
+	      "primary_challenges": ["array of business challenges"],
+	      "growth_objectives": ["array of growth objectives"],
+	      "competitive_pressures": ["array of competitive factors"],
+	      "regulatory_environment": "string - regulatory considerations"
+	    }
+	  },
+	  "industry_context": {
+	    "sector_analysis": {
+	      "market_dynamics": "string - current market conditions",
+	      "growth_trends": "string - industry growth patterns",
+	      "disruption_factors": ["array of disruptive forces"],
+	      "technology_adoption": "laggard|follower|mainstream|leader"
+	    },
+	    "benchmarking": {
+	      "typical_treasury_setup": "string - industry norm for treasury operations",
+	      "common_pain_points": ["array of industry-wide challenges"],
+	      "technology_penetration": "low|medium|high",
+	      "investment_patterns": "string - typical technology investment patterns"
+	    },
+	    "regulatory_landscape": {
+	      "key_regulations": ["array of relevant regulations"],
+	      "compliance_complexity": "low|medium|high|very_high",
+	      "upcoming_changes": ["array of anticipated regulatory changes"]
+	    }
+	  },
+	  "strategic_insights": {
+	    "technology_readiness": "not_ready|ready|urgent_need",
+	    "investment_justification": "weak|moderate|strong|compelling",
+	    "implementation_complexity": "low|medium|high|very_high",
+	    "expected_benefits": {
+	      "efficiency_gains": "string - expected efficiency improvements",
+	      "risk_reduction": "string - risk mitigation benefits",
+	      "strategic_value": "string - strategic business value",
+	      "competitive_advantage": "string - competitive positioning benefits"
+	    },
+	    "critical_success_factors": ["array of key success factors"],
+	    "potential_obstacles": ["array of implementation challenges"]
+	  },
+	  "enrichment_metadata": {
+	    "confidence_level": "number - 0.0 to 1.0",
+	    "data_sources": ["array of information sources considered"],
+	    "analysis_depth": "surface|moderate|comprehensive",
+	    "recommendations_priority": "low|medium|high|urgent"
+	  }
+	}
+	```
+	
+	## Analysis Guidelines
+	
+	1. **Be Specific**: Provide company-specific insights, not generic advice
+	2. **Use Context**: Leverage all provided company data for comprehensive analysis
+	3. **Industry Focus**: Consider industry-specific factors that impact treasury operations
+	4. **Practical Insights**: Focus on actionable intelligence for decision-making
+	5. **Risk Assessment**: Identify both opportunities and potential challenges
+	6. **Confidence Scoring**: Honestly assess confidence based on available information
+	
+	## Important Notes
+	
+	- Return ONLY the JSON object, no additional text
+	- Use realistic estimates based on company size and industry
+	- Consider both current state and future trajectory
+	- Focus on treasury-relevant insights and recommendations
+	- Maintain professional consulting tone in all descriptions
+	SYSTEM;
+	}
+	
+	/**
+	 * Build user prompt with company data.
+	 *
+	 * @param array $user_inputs User inputs.
+	 * @return string User prompt.
+	 */
+	private function build_enrichment_user_prompt( $user_inputs ) {
+	$pain_points_formatted = implode( ', ', $user_inputs['pain_points'] );
+	
+	return <<<PROMPT
+	Please conduct comprehensive company and industry enrichment analysis for the following organization:
+	
+	## Company Information
+	- **Company Name**: {$user_inputs['company_name']}
+	- **Industry**: {$user_inputs['industry']}
+	- **Company Size**: {$user_inputs['company_size']}
+	- **Business Objective**: {$user_inputs['business_objective']}
+	- **Implementation Timeline**: {$user_inputs['implementation_timeline']}
+	- **Budget Range**: {$user_inputs['budget_range']}
+	
+	## Current Treasury Operations
+	- **Weekly Reconciliation Hours**: {$user_inputs['hours_reconciliation']}
+	- **Weekly Cash Positioning Hours**: {$user_inputs['hours_cash_positioning']}
+	- **Banking Relationships**: {$user_inputs['num_banks']}
+	- **Treasury Team Size**: {$user_inputs['ftes']} FTEs
+	- **Key Pain Points**: {$pain_points_formatted}
+	
+	## Analysis Requirements
+	
+	Provide deep, actionable insights that will inform:
+	1. ROI calculations and financial modeling
+	2. Technology category recommendations
+	3. Implementation planning and risk assessment
+	4. Strategic positioning and competitive analysis
+	
+	Focus on treasury-specific challenges and opportunities within the {$user_inputs['industry']} industry for a {$user_inputs['company_size']} organization.
+	
+	Consider how the stated business objective of "{$user_inputs['business_objective']}" and timeline of "{$user_inputs['implementation_timeline']}" impact the technology strategy.
+	PROMPT;
+	}
+	
+	/**
+	 * PHASE 2: Strategic Analysis Generation.
+	 *
+	 * @param array $enriched_profile Enriched company profile.
+	 * @param array $roi_scenarios    ROI calculations.
+	 * @param array $recommendation   Category recommendation.
+	 * @param array $rag_baseline     RAG search results.
+	 * @return array|WP_Error Strategic analysis or error.
+	 */
+	public function generate_strategic_analysis( $enriched_profile, $roi_scenarios, $recommendation, $rag_baseline ) {
+	if ( empty( $this->api_key ) ) {
+	return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
+	}
+	
+	$system_prompt = $this->build_strategic_analysis_system_prompt();
+	$user_prompt   = $this->build_strategic_analysis_user_prompt(
+	$enriched_profile,
+	$roi_scenarios,
+	$recommendation,
+	$rag_baseline
+	);
+	
+	$response = $this->call_openai_with_retry(
+	$this->get_model( 'premium' ),
+	[ 'instructions' => $system_prompt, 'input' => $user_prompt ],
+	$this->estimate_tokens( 2000 )
+	);
+	
+	if ( is_wp_error( $response ) ) {
+	return $response;
+	}
+	
+	$parsed        = rtbcb_parse_gpt5_response( $response );
+	$analysis_data = json_decode( $parsed['output_text'], true );
+	
+	if ( ! is_array( $analysis_data ) ) {
+	return new WP_Error( 'parse_error', __( 'Failed to parse strategic analysis response.', 'rtbcb' ) );
+	}
+	
+	return $this->validate_and_structure_analysis( $analysis_data );
+	}
+	
+	/**
+	 * Build system prompt for strategic analysis.
+	 *
+	 * @return string System prompt.
+	 */
+	private function build_strategic_analysis_system_prompt() {
+	return <<<'SYSTEM'
+	You are a senior treasury technology consultant creating executive-level strategic recommendations.
+	
+	You have been provided with:
+	1. Enriched company intelligence and industry context
+	2. Detailed ROI calculations and financial modeling
+	3. Technology category recommendations
+	4. Relevant market research and best practices
+	
+	Your task is to synthesize this information into a comprehensive strategic analysis that executives can use to make informed treasury technology investment decisions.
+	
+	## Required Output Format
+	
+	Return a single JSON object with this exact structure:
+	
+	```json
+	{
+	  "executive_summary": {
+	    "strategic_positioning": "string - 2-3 sentences on strategic position",
+	    "business_case_strength": "weak|moderate|strong|compelling",
+	    "key_value_drivers": ["array of 3-4 primary value drivers"],
+	    "executive_recommendation": "string - clear recommendation with next steps",
+	    "confidence_level": "number - 0.7 to 0.95"
+	  },
+	  "operational_analysis": {
+	    "current_state_assessment": {
+	      "efficiency_rating": "poor|fair|good|excellent",
+	      "benchmark_comparison": "string - vs industry peers",
+	      "capacity_utilization": "string - team capacity analysis"
+	    },
+	    "process_improvements": [
+	      {
+	        "process_area": "string - specific process",
+	        "current_state": "string - current approach",
+	        "improved_state": "string - post-implementation state",
+	        "impact_level": "low|medium|high|transformational"
+	      }
+	    ],
+	    "automation_opportunities": [
+	      {
+	        "opportunity": "string - automation opportunity",
+	        "complexity": "low|medium|high",
+	        "time_savings": "number - hours per week",
+	        "implementation_effort": "low|medium|high"
+	      }
+	    ]
+	  },
+	  "financial_analysis": {
+	    "investment_breakdown": {
+	      "software_licensing": "string - cost range and considerations",
+	      "implementation_services": "string - cost range and scope",
+	      "training_change_management": "string - cost range and requirements",
+	      "ongoing_support": "string - annual costs"
+	    },
+	    "payback_analysis": {
+	      "payback_months": "number - expected payback period",
+	      "roi_3_year": "number - 3 year ROI percentage",
+	      "npv_analysis": "string - net present value assessment",
+	      "sensitivity_factors": ["array of factors affecting ROI"]
+	    }
+	  },
+	  "implementation_roadmap": [
+	    {
+	      "phase": "string - phase name",
+	      "duration": "string - time estimate",
+	      "key_activities": ["array of activities"],
+	      "success_criteria": ["array of success metrics"],
+	      "risks": ["array of phase-specific risks"]
+	    }
+	  ],
+	  "risk_mitigation": {
+	    "implementation_risks": ["array of key risks"],
+	    "mitigation_strategies": {
+	      "change_management": "string - change management approach",
+	      "technical_integration": "string - integration risk mitigation",
+	      "vendor_selection": "string - vendor risk mitigation",
+	      "timeline_management": "string - timeline risk mitigation"
+	    },
+	    "success_factors": ["array of critical success factors"]
+	  },
+	  "next_steps": {
+	    "immediate": ["array of immediate actions (next 30 days)"],
+	    "short_term": ["array of short-term milestones (3-6 months)"],
+	    "long_term": ["array of long-term objectives (6+ months)"]
+	  },
+	  "vendor_considerations": {
+	    "evaluation_criteria": ["array of key selection criteria"],
+	    "due_diligence_areas": ["array of due diligence focus areas"],
+	    "negotiation_priorities": ["array of contract negotiation priorities"]
+	  }
+	}
+	```
+	
+	## Analysis Standards
+	
+	- **Executive Focus**: Write for C-level decision makers
+	- **Actionable Insights**: Provide specific, implementable recommendations
+	- **Risk Balance**: Address both opportunities and challenges honestly
+	- **Financial Rigor**: Support recommendations with solid financial analysis
+	- **Implementation Reality**: Consider practical constraints and requirements
+	- **Competitive Context**: Position recommendations within competitive landscape
+	
+	Return ONLY the JSON object with no additional text.
+	SYSTEM;
+	}
+	
+	/**
+	 * Build user prompt for strategic analysis.
+	 *
+	 * @param array $enriched_profile Enriched company profile.
+	 * @param array $roi_scenarios    ROI scenarios.
+	 * @param array $recommendation   Technology recommendation.
+	 * @param array $rag_baseline     Market research context.
+	 * @return string User prompt.
+	 */
+	private function build_strategic_analysis_user_prompt( $enriched_profile, $roi_scenarios, $recommendation, $rag_baseline ) {
+	$prompt = <<<PROMPT
+	Create a comprehensive strategic analysis and executive recommendations based on the following research and analysis:
+	
+	## Enriched Company Intelligence
+	```json
+	{$this->json_encode_safe( $enriched_profile )}
+	```
+	
+	## Financial Analysis & ROI Scenarios
+	```json
+	{$this->json_encode_safe( $roi_scenarios )}
+	```
+	
+	## Technology Recommendations
+	```json
+	{$this->json_encode_safe( $recommendation )}
+	```
+	
+	## Market Research Context
+	```json
+	{$this->json_encode_safe( $rag_baseline )}
+	```
+	
+	## Analysis Requirements
+	
+	Synthesize all provided information to create executive-level strategic recommendations that:
+	
+	1. **Justify the Investment**: Clear business case with financial backing
+	2. **Address Specific Needs**: Solutions tailored to identified challenges
+	3. **Mitigate Risks**: Comprehensive risk assessment and mitigation strategies
+	4. **Enable Success**: Practical implementation roadmap with success metrics
+	5. **Competitive Advantage**: Position technology investment within competitive context
+	
+	Focus on creating actionable insights that executives can use to make informed decisions about treasury technology investments.
+	
+	Consider the company's maturity level, industry dynamics, and specific operational challenges when formulating recommendations.
+	PROMPT;
+	
+	return $prompt;
+	}
+	
+	/**
+	 * Validate and structure enrichment data.
+	 *
+	 * @param array $enriched_data Enriched data from LLM.
+	 * @param array $user_inputs   User inputs.
+	 * @return array Structured enrichment data.
+	 */
+	private function validate_and_structure_enrichment( $enriched_data, $user_inputs ) {
+	$structured = [
+	'company_profile'    => $this->validate_company_profile( $enriched_data['company_profile'] ?? [], $user_inputs ),
+	'industry_context'   => $this->validate_industry_context( $enriched_data['industry_context'] ?? [] ),
+	'strategic_insights' => $this->validate_strategic_insights( $enriched_data['strategic_insights'] ?? [] ),
+	'enrichment_metadata' => $this->validate_enrichment_metadata( $enriched_data['enrichment_metadata'] ?? [] ),
+	];
+	
+	return $structured;
+	}
+	
+	/**
+	 * Validate company profile data.
+	 *
+	 * @param array $profile     Profile data.
+	 * @param array $user_inputs User inputs.
+	 * @return array Validated profile data.
+	 */
+	private function validate_company_profile( $profile, $user_inputs ) {
+	return [
+	'name'                => $user_inputs['company_name'],
+	'enhanced_description' => sanitize_textarea_field( $profile['enhanced_description'] ?? '' ),
+	'business_model'      => sanitize_textarea_field( $profile['business_model'] ?? '' ),
+	'market_position'     => sanitize_textarea_field( $profile['market_position'] ?? '' ),
+	'maturity_level'      => in_array( $profile['maturity_level'] ?? '', [ 'basic', 'developing', 'strategic', 'optimized' ], true )
+	? $profile['maturity_level']
+	: 'basic',
+	'financial_indicators' => [
+	'estimated_revenue' => floatval( $profile['financial_indicators']['estimated_revenue'] ?? 0 ),
+	'growth_stage'      => sanitize_text_field( $profile['financial_indicators']['growth_stage'] ?? 'unknown' ),
+	'financial_health'  => sanitize_text_field( $profile['financial_indicators']['financial_health'] ?? 'unknown' ),
+	],
+	'treasury_maturity'   => [
+	'current_state'        => sanitize_textarea_field( $profile['treasury_maturity']['current_state'] ?? '' ),
+	'sophistication_level' => sanitize_text_field( $profile['treasury_maturity']['sophistication_level'] ?? 'manual' ),
+	'key_gaps'            => array_map( 'sanitize_text_field', $profile['treasury_maturity']['key_gaps'] ?? [] ),
+	'automation_readiness' => sanitize_text_field( $profile['treasury_maturity']['automation_readiness'] ?? 'medium' ),
+	],
+	'strategic_context'   => [
+	'primary_challenges'   => array_map( 'sanitize_text_field', $profile['strategic_context']['primary_challenges'] ?? [] ),
+	'growth_objectives'    => array_map( 'sanitize_text_field', $profile['strategic_context']['growth_objectives'] ?? [] ),
+	'competitive_pressures' => array_map( 'sanitize_text_field', $profile['strategic_context']['competitive_pressures'] ?? [] ),
+	'regulatory_environment' => sanitize_textarea_field( $profile['strategic_context']['regulatory_environment'] ?? '' ),
+	],
+	];
+	}
+	
+	/**
+	 * Safe JSON encoding with error handling.
+	 *
+	 * @param mixed $data   Data to encode.
+	 * @param bool  $pretty Pretty print JSON.
+	 * @return string JSON representation.
+	 */
+	private function json_encode_safe( $data, $pretty = true ) {
+	$flags = JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE;
+	if ( $pretty ) {
+	$flags |= JSON_PRETTY_PRINT;
+	}
+	
+	$json = json_encode( $data, $flags );
+	return false !== $json ? $json : '{}';
+	}
+	
+	/**
+	 * Validate industry context data.
+	 *
+	 * @param array $context Context data.
+	 * @return array Validated context.
+	 */
+	private function validate_industry_context( $context ) {
+	return [
+	'sector_analysis'    => [
+	'market_dynamics'   => sanitize_textarea_field( $context['sector_analysis']['market_dynamics'] ?? '' ),
+	'growth_trends'     => sanitize_textarea_field( $context['sector_analysis']['growth_trends'] ?? '' ),
+	'disruption_factors' => array_map( 'sanitize_text_field', $context['sector_analysis']['disruption_factors'] ?? [] ),
+	'technology_adoption' => sanitize_text_field( $context['sector_analysis']['technology_adoption'] ?? 'follower' ),
+	],
+	'benchmarking'       => [
+	'typical_treasury_setup' => sanitize_textarea_field( $context['benchmarking']['typical_treasury_setup'] ?? '' ),
+	'common_pain_points'     => array_map( 'sanitize_text_field', $context['benchmarking']['common_pain_points'] ?? [] ),
+	'technology_penetration' => sanitize_text_field( $context['benchmarking']['technology_penetration'] ?? 'medium' ),
+	'investment_patterns'    => sanitize_textarea_field( $context['benchmarking']['investment_patterns'] ?? '' ),
+	],
+	'regulatory_landscape' => [
+	'key_regulations'      => array_map( 'sanitize_text_field', $context['regulatory_landscape']['key_regulations'] ?? [] ),
+	'compliance_complexity' => sanitize_text_field( $context['regulatory_landscape']['compliance_complexity'] ?? 'medium' ),
+	'upcoming_changes'     => array_map( 'sanitize_text_field', $context['regulatory_landscape']['upcoming_changes'] ?? [] ),
+	],
+	];
+	}
+	
+	/**
+	 * Validate strategic insights data.
+	 *
+	 * @param array $insights Insights data.
+	 * @return array Validated insights.
+	 */
+	private function validate_strategic_insights( $insights ) {
+	return [
+	'technology_readiness'     => sanitize_text_field( $insights['technology_readiness'] ?? 'not_ready' ),
+	'investment_justification' => sanitize_text_field( $insights['investment_justification'] ?? 'weak' ),
+	'implementation_complexity' => sanitize_text_field( $insights['implementation_complexity'] ?? 'medium' ),
+	'expected_benefits'        => [
+	'efficiency_gains'     => sanitize_textarea_field( $insights['expected_benefits']['efficiency_gains'] ?? '' ),
+	'risk_reduction'       => sanitize_textarea_field( $insights['expected_benefits']['risk_reduction'] ?? '' ),
+	'strategic_value'      => sanitize_textarea_field( $insights['expected_benefits']['strategic_value'] ?? '' ),
+	'competitive_advantage' => sanitize_textarea_field( $insights['expected_benefits']['competitive_advantage'] ?? '' ),
+	],
+	'critical_success_factors' => array_map( 'sanitize_text_field', $insights['critical_success_factors'] ?? [] ),
+	'potential_obstacles'      => array_map( 'sanitize_text_field', $insights['potential_obstacles'] ?? [] ),
+	];
+	}
+	
+	/**
+	 * Validate enrichment metadata.
+	 *
+	 * @param array $metadata Metadata.
+	 * @return array Validated metadata.
+	 */
+	private function validate_enrichment_metadata( $metadata ) {
+	$confidence = isset( $metadata['confidence_level'] ) ? floatval( $metadata['confidence_level'] ) : 0;
+	$confidence = max( 0, min( 1, $confidence ) );
+	
+	return [
+	'confidence_level'         => $confidence,
+	'data_sources'             => array_map( 'sanitize_text_field', $metadata['data_sources'] ?? [] ),
+	'analysis_depth'           => sanitize_text_field( $metadata['analysis_depth'] ?? 'surface' ),
+	'recommendations_priority' => sanitize_text_field( $metadata['recommendations_priority'] ?? 'medium' ),
+	];
+	}
+	
+	/**
+	 * Validate and structure strategic analysis data.
+	 *
+	 * @param array $analysis_data Raw analysis data.
+	 * @return array Structured analysis.
+	 */
+	private function validate_and_structure_analysis( $analysis_data ) {
+	$analysis = [
+	'executive_summary' => [
+	'strategic_positioning'   => sanitize_textarea_field( $analysis_data['executive_summary']['strategic_positioning'] ?? '' ),
+	'business_case_strength'  => sanitize_text_field( $analysis_data['executive_summary']['business_case_strength'] ?? 'weak' ),
+	'key_value_drivers'       => array_map( 'sanitize_text_field', $analysis_data['executive_summary']['key_value_drivers'] ?? [] ),
+	'executive_recommendation' => sanitize_textarea_field( $analysis_data['executive_summary']['executive_recommendation'] ?? '' ),
+	'confidence_level'        => floatval( $analysis_data['executive_summary']['confidence_level'] ?? 0 ),
+	],
+	'operational_analysis' => [
+	'current_state_assessment' => [
+	'efficiency_rating'   => sanitize_text_field( $analysis_data['operational_analysis']['current_state_assessment']['efficiency_rating'] ?? '' ),
+	'benchmark_comparison' => sanitize_textarea_field( $analysis_data['operational_analysis']['current_state_assessment']['benchmark_comparison'] ?? '' ),
+	'capacity_utilization' => sanitize_textarea_field( $analysis_data['operational_analysis']['current_state_assessment']['capacity_utilization'] ?? '' ),
+	],
+	'process_improvements'     => [],
+	'automation_opportunities' => [],
+	],
+	'financial_analysis' => [
+	'investment_breakdown' => [
+	'software_licensing'        => sanitize_textarea_field( $analysis_data['financial_analysis']['investment_breakdown']['software_licensing'] ?? '' ),
+	'implementation_services'   => sanitize_textarea_field( $analysis_data['financial_analysis']['investment_breakdown']['implementation_services'] ?? '' ),
+	'training_change_management' => sanitize_textarea_field( $analysis_data['financial_analysis']['investment_breakdown']['training_change_management'] ?? '' ),
+	'ongoing_support'           => sanitize_textarea_field( $analysis_data['financial_analysis']['investment_breakdown']['ongoing_support'] ?? '' ),
+	],
+	'payback_analysis' => [
+	'payback_months'     => floatval( $analysis_data['financial_analysis']['payback_analysis']['payback_months'] ?? 0 ),
+	'roi_3_year'         => floatval( $analysis_data['financial_analysis']['payback_analysis']['roi_3_year'] ?? 0 ),
+	'npv_analysis'       => sanitize_textarea_field( $analysis_data['financial_analysis']['payback_analysis']['npv_analysis'] ?? '' ),
+	'sensitivity_factors' => array_map( 'sanitize_text_field', $analysis_data['financial_analysis']['payback_analysis']['sensitivity_factors'] ?? [] ),
+	],
+	],
+	'implementation_roadmap' => [],
+	'risk_mitigation' => [
+	'implementation_risks'  => array_map( 'sanitize_text_field', $analysis_data['risk_mitigation']['implementation_risks'] ?? [] ),
+	'mitigation_strategies' => [
+	'change_management'    => sanitize_textarea_field( $analysis_data['risk_mitigation']['mitigation_strategies']['change_management'] ?? '' ),
+	'technical_integration' => sanitize_textarea_field( $analysis_data['risk_mitigation']['mitigation_strategies']['technical_integration'] ?? '' ),
+	'vendor_selection'     => sanitize_textarea_field( $analysis_data['risk_mitigation']['mitigation_strategies']['vendor_selection'] ?? '' ),
+	'timeline_management'  => sanitize_textarea_field( $analysis_data['risk_mitigation']['mitigation_strategies']['timeline_management'] ?? '' ),
+	],
+	'success_factors'      => array_map( 'sanitize_text_field', $analysis_data['risk_mitigation']['success_factors'] ?? [] ),
+	],
+	'next_steps' => [
+	'immediate'  => array_map( 'sanitize_text_field', $analysis_data['next_steps']['immediate'] ?? [] ),
+	'short_term' => array_map( 'sanitize_text_field', $analysis_data['next_steps']['short_term'] ?? [] ),
+	'long_term'  => array_map( 'sanitize_text_field', $analysis_data['next_steps']['long_term'] ?? [] ),
+	],
+	'vendor_considerations' => [
+	'evaluation_criteria'   => array_map( 'sanitize_text_field', $analysis_data['vendor_considerations']['evaluation_criteria'] ?? [] ),
+	'due_diligence_areas'   => array_map( 'sanitize_text_field', $analysis_data['vendor_considerations']['due_diligence_areas'] ?? [] ),
+	'negotiation_priorities' => array_map( 'sanitize_text_field', $analysis_data['vendor_considerations']['negotiation_priorities'] ?? [] ),
+	],
+	];
+	
+	foreach ( (array) ( $analysis_data['operational_analysis']['process_improvements'] ?? [] ) as $item ) {
+	$analysis['operational_analysis']['process_improvements'][] = [
+	'process_area'   => sanitize_text_field( $item['process_area'] ?? '' ),
+	'current_state'  => sanitize_textarea_field( $item['current_state'] ?? '' ),
+	'improved_state' => sanitize_textarea_field( $item['improved_state'] ?? '' ),
+	'impact_level'   => sanitize_text_field( $item['impact_level'] ?? '' ),
+	];
+	}
+	
+	foreach ( (array) ( $analysis_data['operational_analysis']['automation_opportunities'] ?? [] ) as $item ) {
+	$analysis['operational_analysis']['automation_opportunities'][] = [
+	'opportunity'          => sanitize_text_field( $item['opportunity'] ?? '' ),
+	'complexity'           => sanitize_text_field( $item['complexity'] ?? '' ),
+	'time_savings'         => floatval( $item['time_savings'] ?? 0 ),
+	'implementation_effort' => sanitize_text_field( $item['implementation_effort'] ?? '' ),
+	];
+	}
+	
+	foreach ( (array) ( $analysis_data['implementation_roadmap'] ?? [] ) as $phase ) {
+	$analysis['implementation_roadmap'][] = [
+	'phase'          => sanitize_text_field( $phase['phase'] ?? '' ),
+	'duration'       => sanitize_text_field( $phase['duration'] ?? '' ),
+	'key_activities' => array_map( 'sanitize_text_field', $phase['key_activities'] ?? [] ),
+	'success_criteria' => array_map( 'sanitize_text_field', $phase['success_criteria'] ?? [] ),
+	'risks'          => array_map( 'sanitize_text_field', $phase['risks'] ?? [] ),
+	];
+	}
+	
+	return $analysis;
+	}
+	
+	/**
+	 * Call OpenAI with retry logic.
+	 *
+	 * Uses exponential backoff with jitter between retries. Each subsequent
+	 * attempt slightly reduces the maximum output tokens and increases the
+	 * timeout to improve the chances of success.
+	 *
+	 * @param string       $model             Model name.
+	 * @param array|string $prompt            Prompt for the model.
+	 * @param int|null     $max_output_tokens Maximum output tokens.
+	 * @param int|null     $max_retries       Number of retries.
+	 * @param callable|null $chunk_handler     Optional streaming handler.
+	 * @return array|WP_Error Response array or error.
+	 */
+	private function call_openai_with_retry( $model, $prompt, $max_output_tokens = null, $max_retries = null, $chunk_handler = null ) {
+	        $max_retries     = $max_retries ?? intval( $this->gpt5_config['max_retries'] );
         $base_timeout    = intval( $this->gpt5_config['timeout'] ?? 180 );
         $current_timeout = $base_timeout;
         $current_tokens  = $max_output_tokens;
