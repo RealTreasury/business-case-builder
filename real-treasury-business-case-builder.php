@@ -963,26 +963,34 @@ class Real_Treasury_BCB {
 	 * Format scenarios for JSON response.
 	 */
 	private function format_scenarios_for_response( $scenarios ) {
-	return [
-	'low'  => [
-	'total_annual_benefit' => $scenarios['conservative']['total_annual_benefit'] ?? 0,
-	'labor_savings'        => $scenarios['conservative']['labor_savings'] ?? 0,
-	'fee_savings'          => $scenarios['conservative']['fee_savings'] ?? 0,
-	'error_reduction'      => $scenarios['conservative']['error_reduction'] ?? 0,
-	],
-	'base' => [
-	'total_annual_benefit' => $scenarios['base']['total_annual_benefit'] ?? 0,
-	'labor_savings'        => $scenarios['base']['labor_savings'] ?? 0,
-	'fee_savings'          => $scenarios['base']['fee_savings'] ?? 0,
-	'error_reduction'      => $scenarios['base']['error_reduction'] ?? 0,
-	],
-	'high' => [
-	'total_annual_benefit' => $scenarios['optimistic']['total_annual_benefit'] ?? 0,
-	'labor_savings'        => $scenarios['optimistic']['labor_savings'] ?? 0,
-	'fee_savings'          => $scenarios['optimistic']['fee_savings'] ?? 0,
-	'error_reduction'      => $scenarios['optimistic']['error_reduction'] ?? 0,
-	],
-	];
+		$map       = [
+			'low'  => 'conservative',
+			'base' => 'base',
+			'high' => 'optimistic',
+		];
+		$formatted = [];
+
+		foreach ( $map as $key => $source ) {
+			$scenario    = $scenarios[ $source ] ?? [];
+			$assumptions = $scenario['assumptions'] ?? [];
+
+			$formatted[ $key ] = [
+				'total_annual_benefit' => floatval( $scenario['total_annual_benefit'] ?? 0 ),
+				'labor_savings'        => floatval( $scenario['labor_savings'] ?? 0 ),
+				'fee_savings'          => floatval( $scenario['fee_savings'] ?? 0 ),
+				'error_reduction'      => floatval( $scenario['error_reduction'] ?? 0 ),
+				'roi_percentage'       => floatval( $scenario['roi_percentage'] ?? 0 ),
+				'assumptions'          => [
+					'name'                  => $assumptions['name'] ?? '',
+					'efficiency_improvement' => floatval( $assumptions['efficiency_improvement'] ?? 0 ),
+					'error_reduction'       => floatval( $assumptions['error_reduction'] ?? 0 ),
+					'fee_reduction'         => floatval( $assumptions['fee_reduction'] ?? 0 ),
+					'industry_benchmark'    => floatval( $assumptions['industry_benchmark'] ?? 0 ),
+				],
+			];
+		}
+
+		return $formatted;
 	}
 	
 	
