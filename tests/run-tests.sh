@@ -72,6 +72,10 @@ phpunit tests/RTBCB_GenerateBusinessAnalysisTimeoutTest.php
 echo "14. Running background job tests..."
 php tests/background-job.test.php
 
+# Business analysis generation test
+echo "14. Running business analysis generation test..."
+phpunit tests/generate-business-analysis.test.php
+
 # JavaScript tests
 echo "15. Running JavaScript tests..."
 node tests/handle-submit-error.test.js
