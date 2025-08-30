@@ -1718,7 +1718,33 @@ $report_data = $this->transform_data_for_template( $business_case_data );
 ob_start();
 include $template_path;
 $html = ob_get_clean();
-return wp_kses_post( $html );
+        $allowed_html = wp_kses_allowed_html( 'post' );
+
+        $allowed_html['canvas'] = [
+                'id'     => true,
+                'class'  => true,
+                'height' => true,
+                'width'  => true,
+                'style'  => true,
+        ];
+
+        $allowed_html['button'] = [
+                'id'      => true,
+                'class'   => true,
+                'type'    => true,
+                'name'    => true,
+                'value'   => true,
+                'onclick' => true,
+                'style'   => true,
+        ];
+
+        foreach ( $allowed_html as $tag => $attributes ) {
+                if ( is_array( $attributes ) ) {
+                        $allowed_html[ $tag ]['data-*'] = true;
+                }
+        }
+
+        return wp_kses( $html, $allowed_html );
                }
 
    /**
