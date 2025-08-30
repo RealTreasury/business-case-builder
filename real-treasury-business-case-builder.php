@@ -1730,6 +1730,10 @@ return wp_kses_post( $html );
        $base_roi     = $business_case_data['base_roi'] ?? $business_case_data['roi_base'] ?? 0;
        $business_case_data['roi_base'] = $base_roi;
 
+       // Derive recommended category and details from recommendation if not provided.
+       $recommended_category = $business_case_data['recommended_category'] ?? ( $business_case_data['recommendation']['recommended'] ?? 'treasury_management_system' );
+       $category_details     = $business_case_data['category_info'] ?? ( $business_case_data['recommendation']['category_info'] ?? [] );
+
        // Create structured data format expected by template.
        $report_data = [
            'metadata'            => [
@@ -1769,8 +1773,8 @@ return wp_kses_post( $html );
                ],
            ],
            'technology_strategy' => [
-               'recommended_category' => $business_case_data['recommended_category'] ?? 'treasury_management_system',
-               'category_details'     => $business_case_data['category_info'] ?? [],
+               'recommended_category' => $recommended_category,
+               'category_details'     => $category_details,
            ],
            'operational_insights' => $business_case_data['operational_analysis'] ?? [],
            'risk_analysis'        => [
