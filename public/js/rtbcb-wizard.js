@@ -472,7 +472,7 @@ class BusinessCaseBuilder {
 
             if (data.success && data.data && data.data.job_id) {
                 console.log('RTBCB: Job queued');
-                this.pollJob(data.data.job_id);
+                this.pollJob(data.data.job_id, Date.now(), 0);
             } else {
                 console.error('RTBCB: Error response:', data.data);
                 this.handleError(data.data);
@@ -526,7 +526,12 @@ class BusinessCaseBuilder {
         this.showError(message);
     }
 
-    async pollJob(jobId) {
+    async pollJob(jobId, startTime = Date.now(), attempt = 0) {
+        const MAX_DURATION = 20 * 60 * 1000; // 20 minutes
+        if (Date.now() - startTime > MAX_DURATION) {
+            this.handleError({ message: 'The request timed out after 20 minutes. Please try again later.', type: 'timeout' });
+            return;
+        }
         try {
             const response = await fetch(`${this.ajaxUrl}?action=rtbcb_job_status&job_id=${encodeURIComponent(jobId)}&rtbcb_nonce=${rtbcbAjax.nonce}`, {
                 credentials: 'same-origin',
@@ -548,7 +553,7 @@ class BusinessCaseBuilder {
             } else if (status === 'error') {
                 this.handleError({ message: data.data.message || 'Job failed', type: 'job_error' });
             } else {
-                setTimeout(() => this.pollJob(jobId), 2000);
+                setTimeout(() => this.pollJob(jobId, startTime, attempt + 1), 2000);
             }
         } catch (error) {
             this.handleError({ message: error.message || 'An unexpected error occurred', type: 'polling_error' });
