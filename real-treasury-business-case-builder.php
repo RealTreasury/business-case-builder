@@ -787,13 +787,18 @@ return $use_comprehensive;
 	]
 	);
 	
-	// Generate HTML report using our fixed method
-	$report_html = $this->get_comprehensive_report_html( $report_data );
-	
-	if ( empty( $report_html ) ) {
-	wp_send_json_error( [ 'message' => __( 'Failed to generate report HTML.', 'rtbcb' ) ], 500 );
-	return;
-	}
+        // Generate HTML report using our fixed method
+        $report_html = $this->get_comprehensive_report_html( $report_data );
+
+        if ( is_wp_error( $report_html ) ) {
+        wp_send_json_error( [ 'message' => $report_html->get_error_message() ], 500 );
+        return;
+        }
+
+        if ( empty( $report_html ) ) {
+        wp_send_json_error( [ 'message' => __( 'Failed to generate report HTML.', 'rtbcb' ) ], 500 );
+        return;
+        }
 	
 	// Save lead data
 	$lead_id = $this->save_lead_data( $user_inputs, $scenarios, $recommendation, $report_html );
@@ -1587,8 +1592,11 @@ return $use_comprehensive;
             $report_html = '';
             try {
                 $report_html = $this->get_comprehensive_report_html( $comprehensive_analysis );
-                if ( empty( $report_html ) ) {
-                    rtbcb_log_error( 'Report HTML generation returned empty', $comprehensive_analysis );
+                if ( is_wp_error( $report_html ) || empty( $report_html ) ) {
+                    rtbcb_log_error(
+                        'Report HTML generation failed',
+                        is_wp_error( $report_html ) ? $report_html->get_error_message() : $comprehensive_analysis
+                    );
                     wp_send_json_error(
                         [ 'message' => __( 'Failed to render business case report.', 'rtbcb' ) ],
                         500
@@ -1683,46 +1691,97 @@ return $use_comprehensive;
    /**
     * Generate comprehensive report HTML from template with proper data transformation.
     *
-    * @param array $business_case_data Business case data.
-    *
-    * @return string
-    */
-               private function get_comprehensive_report_html( $business_case_data ) {
-$use_comprehensive = $this->should_use_comprehensive_template();
+	* @param array $business_case_data Business case data.
+	*
+	* @return string|WP_Error
+	*/
+	private function get_comprehensive_report_html( $business_case_data ) {
+	$use_comprehensive = $this->should_use_comprehensive_template();
 
-if ( $use_comprehensive ) {
-$template_path = RTBCB_DIR . 'templates/comprehensive-report-template.php';
-rtbcb_log_api_debug(
-'Using comprehensive report template',
-[
-'template_path' => $template_path,
-'use_comprehensive' => $use_comprehensive,
-]
-);
-} else {
-$template_path = RTBCB_DIR . 'templates/report-template.php';
-rtbcb_log_api_debug(
-'Using basic report template',
-[
-'template_path' => $template_path,
-'use_comprehensive' => $use_comprehensive,
-]
-);
+	if ( $use_comprehensive ) {
+	$template_path = RTBCB_DIR . 'templates/comprehensive-report-template.php';
+	rtbcb_log_api_debug(
+	'Using comprehensive report template',
+	[
+	'template_path'    => $template_path,
+	'use_comprehensive' => $use_comprehensive,
+	]
+	);
+	} else {
+	$template_path = RTBCB_DIR . 'templates/report-template.php';
+	rtbcb_log_api_debug(
+	'Using basic report template',
+	[
+	'template_path'    => $template_path,
+	'use_comprehensive' => $use_comprehensive,
+	]
+	);
+	}
+
+	if ( ! file_exists( $template_path ) ) {
+	rtbcb_log_error( 'Report template missing', [ 'template_path' => $template_path ] );
+
+	return new WP_Error(
+	'rtbcb_template_missing',
+	__( 'Report template not found.', 'rtbcb' )
+	);
+	}
+
+	if ( ! is_readable( $template_path ) ) {
+	rtbcb_log_error( 'Report template not readable', [ 'template_path' => $template_path ] );
+
+	return new WP_Error(
+	'rtbcb_template_unreadable',
+	__( 'Report template is not readable.', 'rtbcb' )
+	);
+	}
+
+	$business_case_data = is_array( $business_case_data ) ? $business_case_data : [];
+
+	// Transform data structure for template.
+	$report_data = $this->transform_data_for_template( $business_case_data );
+
+	try {
+	set_error_handler(
+	static function ( $severity, $message, $file, $line ) {
+	throw new ErrorException( $message, 0, $severity, $file, $line );
+	}
+	);
+
+	ob_start();
+	include $template_path;
+	$html = ob_get_clean();
+	restore_error_handler();
+
+	if ( false === $html ) {
+	rtbcb_log_error( 'ob_get_clean returned false', [ 'template_path' => $template_path ] );
+
+	return new WP_Error(
+	'rtbcb_ob_get_clean_failed',
+	__( 'Failed to capture report output.', 'rtbcb' )
+	);
+	}
+	} catch ( Throwable $e ) {
+	if ( ob_get_level() > 0 ) {
+	ob_end_clean();
+	}
+	restore_error_handler();
+	rtbcb_log_error(
+	'Report template include failed',
+	[
+	'template_path' => $template_path,
+	'error'         => $e->getMessage(),
+	]
+	);
+
+	return new WP_Error(
+	'rtbcb_template_include_failed',
+	__( 'Error rendering report template.', 'rtbcb' )
+	);
+	}
+
+	return wp_kses_post( $html );
 }
-
-if ( ! file_exists( $template_path ) ) {
-rtbcb_log_error( 'No report template found', [ 'template_path' => $template_path ] );
-return '';
-}
-
-$business_case_data = is_array( $business_case_data ) ? $business_case_data : [];
-// Transform data structure for template.
-$report_data = $this->transform_data_for_template( $business_case_data );
-ob_start();
-include $template_path;
-$html = ob_get_clean();
-return wp_kses_post( $html );
-               }
 
    /**
     * Transform LLM response data into the structure expected by comprehensive template.
