@@ -1922,6 +1922,22 @@
     }
 }
 
+/* Mobile modal layout overrides moved from template */
+@media (max-width: 768px) {
+    .rtbcb-modal-container {
+        max-width: 95vw;
+        border-radius: 16px;
+    }
+
+    .rtbcb-modal-header {
+        padding: 24px 28px 16px 28px;
+    }
+
+    .rtbcb-form-container {
+        padding: 20px;
+    }
+}
+
 /* 10. FOCUS STATES FOR ACCESSIBILITY */
 
 /* Button focus states */

@@ -370,10 +370,9 @@ class Real_Treasury_BCB {
         }
 
         // Styles
-        $style_file = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? 'rtbcb.css' : 'rtbcb.min.css';
         wp_enqueue_style(
             'rtbcb-style',
-            RTBCB_URL . 'public/css/' . $style_file,
+            RTBCB_URL . 'public/css/rtbcb.css',
             [],
             RTBCB_VERSION
         );

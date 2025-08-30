@@ -473,20 +473,4 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
     </div>
 </div>
 
-<style>
-/* Only mobile-specific overrides needed here */
-@media (max-width: 768px) {
-    .rtbcb-modal-container {
-        max-width: 95vw;
-        border-radius: 16px;
-    }
-    
-    .rtbcb-modal-header {
-        padding: 24px 28px 16px 28px;
-    }
-    
-    .rtbcb-form-container {
-        padding: 20px;
-    }
-}
-</style>
+
