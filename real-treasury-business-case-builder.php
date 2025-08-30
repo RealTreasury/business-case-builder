@@ -1648,8 +1648,14 @@ return '';
 }
 
 $business_case_data = is_array( $business_case_data ) ? $business_case_data : [];
-// Transform data structure for template.
+// Transform data structure for template and validate required sections.
 $report_data = $this->transform_data_for_template( $business_case_data );
+
+if ( is_wp_error( $report_data ) ) {
+rtbcb_log_error( 'Report data validation failed', $report_data->get_error_data() );
+$report_data = $report_data->get_error_data()['report_data'] ?? [];
+}
+
 ob_start();
 include $template_path;
 $html = ob_get_clean();
@@ -1664,12 +1670,24 @@ return wp_kses_post( $html );
     * @return array
     */
    private function transform_data_for_template( $business_case_data ) {
-       // Get current company data.
-       $company      = rtbcb_get_current_company();
-       $company_name = $business_case_data['company_name'] ?? $company['name'] ?? __( 'Your Company', 'rtbcb' );
+	// Define required top-level sections for the report.
+	$required_sections = [
+		'metadata',
+		'executive_summary',
+		'financial_analysis',
+		'company_intelligence',
+		'technology_strategy',
+		'operational_insights',
+		'risk_analysis',
+		'action_plan',
+	];
 
-       // Create structured data format expected by template.
-       $report_data = [
+	// Get current company data.
+	$company      = rtbcb_get_current_company();
+	$company_name = $business_case_data['company_name'] ?? $company['name'] ?? __( 'Your Company', 'rtbcb' );
+
+	// Create structured data format expected by template.
+	$report_data = [
            'metadata'            => [
                'company_name'    => $company_name,
                'analysis_date'   => current_time( 'Y-m-d' ),
@@ -1719,10 +1737,30 @@ return wp_kses_post( $html );
                'short_term_milestones' => $this->extract_short_term_steps( $business_case_data ),
                'long_term_objectives'  => $this->extract_long_term_steps( $business_case_data ),
            ],
-       ];
+	];
+	$missing_sections = [];
 
-       return $report_data;
-   }
+	foreach ( $required_sections as $section ) {
+		if ( empty( $report_data[ $section ] ) ) {
+			$missing_sections[]    = $section;
+			rtbcb_log_error( 'Missing report section', [ 'section' => $section ] );
+			$report_data[ $section ] = $report_data[ $section ] ?? [];
+		}
+	}
+
+	if ( ! empty( $missing_sections ) ) {
+		return new WP_Error(
+		'rtbcb_missing_sections',
+		__( 'Missing required report sections.', 'rtbcb' ),
+		[
+		'missing_sections' => $missing_sections,
+		'report_data'      => $report_data,
+		]
+		);
+	}
+
+	return $report_data;
+    }
 
    /**
     * Extract value drivers from business case data.
