@@ -36,7 +36,20 @@ global.fetch = function() {
 };
 
 const form = {
-    fields: { company_name: 'Test Co' },
+    fields: {
+        email: 'test@example.com',
+        company_name: 'Test Co',
+        company_size: '100',
+        industry: 'Finance',
+        hours_reconciliation: '1',
+        hours_cash_positioning: '1',
+        num_banks: '1',
+        ftes: '1',
+        business_objective: 'growth',
+        implementation_timeline: '3 months',
+        budget_range: '1000',
+        'pain_points[]': 'manual'
+    },
     querySelector: (selector) => selector === '[name="company_name"]' ? { value: 'Test Co' } : null,
     querySelectorAll: () => [],
     addEventListener: () => {},
@@ -67,8 +80,7 @@ builder.showError = (msg) => { errorMessage = msg; };
 
 (async () => {
     await builder.handleSubmit();
-    assert.ok(errorMessage.includes('Unexpected server response'));
-    assert.ok(errorMessage.includes('AI configuration'));
+    assert.strictEqual(errorMessage, 'Server communication error. Please try again.');
     console.log('Invalid server response test passed.');
 })().catch(err => {
     console.error(err);

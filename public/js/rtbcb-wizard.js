@@ -43,9 +43,12 @@ class BusinessCaseBuilder {
         this.totalSteps = 5;
         this.form = document.getElementById('rtbcbForm');
         this.overlay = document.getElementById('rtbcbModalOverlay');
-        
-        if (!this.form) return;
-        
+        this.ajaxUrl = ( typeof rtbcbAjax !== 'undefined' && rtbcbAjax.ajax_url ) ? rtbcbAjax.ajax_url : '';
+
+        if ( ! this.form ) {
+            return;
+        }
+
         this.init();
     }
 
@@ -95,10 +98,9 @@ class BusinessCaseBuilder {
 
         // Form submission
         this.form.addEventListener('submit', (e) => {
-            e.preventDefault();
             if (this.validateStep(this.totalSteps)) {
                 try {
-                    this.handleSubmit();
+                    this.handleSubmit(e);
                 } catch (error) {
                     console.error('RTBCB: handleSubmit error:', error);
                     this.showError('An unexpected error occurred. Please try again.');
@@ -396,154 +398,216 @@ class BusinessCaseBuilder {
         }
     }
 
-    async handleSubmit(existingData) {
-        // Show loading state
-        this.showProgress();
-        if (typeof rtbcbAjax === 'undefined' || !rtbcbAjax.ajax_url) {
-            this.showError('Unable to submit form. Please refresh the page and try again.');
-            return;
+    async handleSubmit(event) {
+        if (event && event.preventDefault) {
+            event.preventDefault();
         }
-
-        let formData;
-        if (existingData instanceof FormData) {
-            // Clone the existing data for retry
-            formData = new FormData();
-            for (const [key, value] of existingData.entries()) {
-                formData.append(key, value);
-            }
-        } else {
-            formData = new FormData();
-            const rawData = new FormData(this.form);
-            const numericFields = ['hours_reconciliation', 'hours_cash_positioning', 'num_banks', 'ftes'];
-
-            for (const [key, value] of rawData.entries()) {
-                if (numericFields.includes(key)) {
-                    const numValue = Number(value);
-                    formData.append(key, Number.isFinite(numValue) ? numValue : 0);
-                } else {
-                    formData.append(key, value);
-                }
-            }
-            formData.append('action', 'rtbcb_generate_case');
-            formData.append('rtbcb_nonce', rtbcbAjax.nonce);
-        }
-
-        this.lastFormData = formData;
-
-        console.log('RTBCB: Submitting form data:', Object.fromEntries(formData));
 
         try {
-            const response = await fetch(rtbcbAjax.ajax_url, {
+            console.log('RTBCB: Starting form submission');
+            this.showLoading();
+
+            const formData = this.collectFormData();
+            this.validateFormData(formData);
+            this.lastFormData = formData;
+
+            const response = await fetch(this.ajaxUrl, {
                 method: 'POST',
-                body: formData
+                body: formData,
+                credentials: 'same-origin',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
             });
 
-            const requestId = response.headers && typeof response.headers.get === 'function'
-                ? response.headers.get('x-request-id')
-                : null;
-            const timestamp = new Date().toISOString();
+            console.log('RTBCB: Response status:', response.status);
+            const contentType = response.headers && response.headers.get ? response.headers.get('content-type') : null;
+            console.log('RTBCB: Content-Type:', contentType);
 
-            if (response.status === 504 || response.status >= 500) {
-                const timeoutError = new Error('Server timeout');
-                timeoutError.status = response.status;
-                timeoutError.requestId = requestId;
-                timeoutError.timestamp = timestamp;
-                throw timeoutError;
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
 
-            let result;
-            const contentType = response.headers && typeof response.headers.get === 'function'
-                ? response.headers.get('content-type') || ''
-                : '';
-            if (!contentType || contentType.includes('application/json')) {
-                try {
-                    result = await response.json();
-                } catch (e) {
-                    const rawText = await response.text();
-                    console.warn('RTBCB: Unexpected server response:', rawText);
-                    const parseError = new Error('Unexpected server response');
-                    parseError.status = response.status;
-                    throw parseError;
+            const responseText = await response.text();
+            console.log('RTBCB: Raw response length:', responseText.length);
+
+            if (responseText.includes('Fatal error') ||
+                responseText.includes('Parse error') ||
+                responseText.includes('<b>Warning</b>') ||
+                responseText.includes('<b>Notice</b>')) {
+
+                console.error('RTBCB: PHP error detected in response');
+                throw new Error('Server error detected in response');
+            }
+
+            let data;
+            try {
+                data = JSON.parse(responseText);
+            } catch (parseError) {
+                console.error('RTBCB: JSON parse error:', parseError);
+                console.error('RTBCB: Response text (first 1000 chars):', responseText.substring(0, 1000));
+
+                const errorMatch = responseText.match(/Fatal error[^<]*/i) ||
+                                  responseText.match(/Warning[^<]*/i) ||
+                                  responseText.match(/Notice[^<]*/i);
+
+                if (errorMatch) {
+                    throw new Error(`Server error: ${errorMatch[0]}`);
                 }
+
+                throw new Error('Server returned invalid JSON response');
+            }
+
+            if (data.success) {
+                console.log('RTBCB: Success response received');
+                this.handleSuccess(data.data);
             } else {
-                const rawText = await response.text();
-                console.warn('RTBCB: Unexpected server response:', rawText);
-                const typeError = new Error('Unexpected server response');
-                typeError.status = response.status;
-                throw typeError;
+                console.error('RTBCB: Error response:', data.data);
+                this.handleError(data.data);
             }
 
-            if (response.ok) {
-                if (result && result.success) {
-                    console.log('RTBCB: Business case generated successfully');
-                    this.showResults(result.data);
-                } else {
-                    const errorData = result?.data;
-                    const errorMessage =
-                        (errorData && typeof errorData === 'object' && errorData.message)
-                            ? errorData.message
-                            : (typeof errorData === 'string' ? errorData : 'Failed to generate business case');
-                    const error = new Error(errorMessage);
-                    if (errorData && typeof errorData === 'object' && errorData.error_code) {
-                        error.code = errorData.error_code;
-                    }
-                    throw error;
-                }
-            } else {
-                const errorData = result?.data;
-                let errorMessage =
-                    (errorData && typeof errorData === 'object' && errorData.message)
-                        ? errorData.message
-                        : (typeof errorData === 'string' ? errorData : '');
-                if (!errorMessage) {
-                    if (response.status >= 500) {
-                        errorMessage = 'Server error. Please try again later.';
-                    } else if (response.status >= 400) {
-                        errorMessage = 'Invalid input. Please check your entries and try again.';
-                    } else {
-                        errorMessage = 'Server responded with status ' + response.status;
-                    }
-                }
-                const error = new Error(errorMessage);
-                error.status = response.status;
-                if (errorData && typeof errorData === 'object' && errorData.error_code) {
-                    error.code = errorData.error_code;
-                }
-                throw error;
-            }
         } catch (error) {
-            console.error('RTBCB: Submission error details:', {
-                message: error.message,
-                stack: error.stack,
-                type: error.constructor.name,
-                code: error.code || error.error_code
+            console.error('RTBCB: Submission error:', error);
+            this.handleError({
+                message: error.message || 'An unexpected error occurred',
+                type: 'submission_error'
             });
-
-            if (error.status === 504 || (error.status && error.status >= 500)) {
-                this.showTimeoutError(
-                    'Server timeout—please retry or contact support',
-                    {
-                        requestId: error.requestId,
-                        timestamp: error.timestamp || new Date().toISOString()
-                    }
-                );
-                return;
-            }
-
-            let displayMessage;
-            displayMessage = error.name === 'TypeError'
-                ? 'Network error. Please check your connection and try again.'
-                : error.message;
-
-            const errorCode = error.code || error.error_code;
-            if (errorCode) {
-                displayMessage += ` (Error code: ${errorCode})`;
-            }
-            displayMessage += ' Please check your AI configuration or try again later.';
-
-            this.showError(displayMessage);
+        } finally {
+            this.hideLoading();
         }
     }
+
+    collectFormData() {
+        const rawData = new FormData(this.form);
+        const formData = new FormData();
+        const numericFields = ['hours_reconciliation', 'hours_cash_positioning', 'num_banks', 'ftes'];
+
+        for (const [key, value] of rawData.entries()) {
+            if (numericFields.includes(key)) {
+                const num = parseFloat(value);
+                formData.append(key, Number.isFinite(num) ? num : 0);
+            } else {
+                formData.append(key, value);
+            }
+        }
+
+        formData.append('action', 'rtbcb_generate_case');
+        if (typeof rtbcbAjax !== 'undefined' && rtbcbAjax.nonce) {
+            formData.append('rtbcb_nonce', rtbcbAjax.nonce);
+        }
+        return formData;
+    }
+
+    showLoading() {
+        this.showProgress();
+    }
+
+    hideLoading() {
+        // progress is hidden by success or error handlers
+    }
+
+    handleSuccess(data) {
+        this.showResults(data);
+    }
+
+    showErrorMessage(message) {
+        this.showError(message);
+    }
+
+    // Enhanced form validation
+    validateFormData(formData) {
+        const getValue = (field) => {
+            if (typeof formData.get === 'function') {
+                return formData.get(field);
+            }
+            for (const [k, v] of formData.entries()) {
+                if (k === field) {
+                    return v;
+                }
+            }
+            return null;
+        };
+
+        const getAllValues = (field) => {
+            if (typeof formData.getAll === 'function') {
+                return formData.getAll(field);
+            }
+            const values = [];
+            for (const [k, v] of formData.entries()) {
+                if (k === field) {
+                    values.push(v);
+                }
+            }
+            return values;
+        };
+
+        const requiredFields = [
+            'email', 'company_name', 'company_size', 'industry',
+            'hours_reconciliation', 'hours_cash_positioning',
+            'num_banks', 'ftes', 'business_objective',
+            'implementation_timeline', 'budget_range'
+        ];
+
+        for (const field of requiredFields) {
+            if (!getValue(field)) {
+                throw new Error(`Missing required field: ${field.replace('_', ' ')}`);
+            }
+        }
+
+        const email = getValue('email');
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            throw new Error('Please enter a valid email address');
+        }
+
+        const numericFields = ['hours_reconciliation', 'hours_cash_positioning', 'num_banks', 'ftes'];
+        for (const field of numericFields) {
+            const value = parseFloat(getValue(field));
+            if (isNaN(value) || value <= 0) {
+                throw new Error(`${field.replace('_', ' ')} must be a positive number`);
+            }
+        }
+
+        const painPoints = getAllValues('pain_points[]');
+        if (painPoints.length === 0) {
+            throw new Error('Please select at least one pain point');
+        }
+    }
+
+    // Enhanced error display
+    handleError(errorData) {
+        const message = errorData.message || 'An unexpected error occurred';
+
+        console.group('RTBCB Error Details');
+        console.error('Message:', message);
+        console.error('Type:', errorData.type);
+        console.error('Debug Info:', errorData.debug_info);
+        console.error('Timestamp:', errorData.timestamp);
+        console.groupEnd();
+
+        this.showErrorMessage(this.getUserFriendlyMessage(message));
+    }
+
+    getUserFriendlyMessage(serverMessage) {
+        const errorMappings = {
+            'Security check failed': 'Session expired. Please refresh the page and try again.',
+            'OpenAI API key not configured': 'Service temporarily unavailable. Please try again later.',
+            'API connection failed': 'Unable to connect to analysis service. Please try again.',
+            'Missing required field': 'Please fill in all required fields.',
+            'Invalid email address': 'Please enter a valid email address.',
+            'PHP error occurred': 'Server error encountered. Please try again.',
+            'Server returned invalid JSON response': 'Server communication error. Please try again.'
+        };
+
+        for (const [key, message] of Object.entries(errorMappings)) {
+            if (serverMessage.includes(key)) {
+                return message;
+            }
+        }
+
+        return 'An error occurred while processing your request. Please try again.';
+    }
+
 
     showProgress() {
         // Hide form

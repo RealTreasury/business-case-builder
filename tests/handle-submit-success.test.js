@@ -42,7 +42,20 @@ global.fetch = function() {
 };
 
 const form = {
-    fields: { company_name: 'Test Co' },
+    fields: {
+        email: 'test@example.com',
+        company_name: 'Test Co',
+        company_size: '100',
+        industry: 'Finance',
+        hours_reconciliation: '1',
+        hours_cash_positioning: '1',
+        num_banks: '1',
+        ftes: '1',
+        business_objective: 'growth',
+        implementation_timeline: '3 months',
+        budget_range: '1000',
+        'pain_points[]': 'manual'
+    },
     querySelector: (selector) => selector === '[name="company_name"]' ? { value: 'Test Co' } : null,
     querySelectorAll: () => [],
     addEventListener: () => {},
