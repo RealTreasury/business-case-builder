@@ -7,6 +7,8 @@ defined( 'ABSPATH' ) || exit;
  * @package RealTreasuryBusinessCaseBuilder
  */
 
+require_once __DIR__ . '/helpers.php';
+
 /**
  * Class RTBCB_Router.
  */
@@ -227,7 +229,7 @@ class RTBCB_Router {
         include $template_path;
         $html = ob_get_clean();
 
-        return wp_kses_post( $html );
+        return wp_kses( $html, rtbcb_get_report_allowed_html() );
     }
 
    /**
@@ -256,7 +258,7 @@ class RTBCB_Router {
         include $template_path;
         $html = ob_get_clean();
 
-        return wp_kses_post( $html );
+        return wp_kses( $html, rtbcb_get_report_allowed_html() );
     }
 
    /**
