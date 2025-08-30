@@ -400,11 +400,12 @@ class Real_Treasury_BCB {
 
 		// Enhanced Report Styles
 		if ( $this->should_use_comprehensive_template() ) {
+			$enhanced_css = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? 'enhanced-report.css' : 'enhanced-report.min.css';
 			wp_enqueue_style(
-			'rtbcb-enhanced-report',
-			RTBCB_URL . 'public/css/enhanced-report.css',
-			[ 'rtbcb-style' ],
-			RTBCB_VERSION
+				'rtbcb-enhanced-report',
+				RTBCB_URL . 'public/css/' . $enhanced_css,
+				[ 'rtbcb-style' ],
+				RTBCB_VERSION
 			);
 		}
 
@@ -436,24 +437,25 @@ class Real_Treasury_BCB {
 	        false // Load in header
 	    );
 
-	    // Main report functionality
-	    wp_enqueue_script(
-	        'rtbcb-report',
-	        RTBCB_URL . 'public/js/rtbcb-report.js',
-	        [ 'chartjs', 'dompurify' ],
-	        RTBCB_VERSION,
-	        true
-	    );
+		// Main report functionality
+		$report_file = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? 'rtbcb-report.js' : 'rtbcb-report.min.js';
+		wp_enqueue_script(
+			'rtbcb-report',
+			RTBCB_URL . 'public/js/' . $report_file,
+			[ 'chartjs', 'dompurify' ],
+			RTBCB_VERSION,
+			true
+		);
 
-	    // Main plugin script
-	    wp_enqueue_script(
-	        'rtbcb-script',
-	        RTBCB_URL . 'public/js/rtbcb.js',
-	        [ 'jquery', 'rtbcb-wizard', 'rtbcb-report' ],
-	        RTBCB_VERSION,
-	        true
-	    );
-
+		// Main plugin script
+		$main_script = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? 'rtbcb.js' : 'rtbcb.min.js';
+		wp_enqueue_script(
+			'rtbcb-script',
+			RTBCB_URL . 'public/js/' . $main_script,
+			[ 'jquery', 'rtbcb-wizard', 'rtbcb-report' ],
+			RTBCB_VERSION,
+			true
+		);
 	    // Localize scripts with configuration
 	    $this->localize_scripts();
 	}
