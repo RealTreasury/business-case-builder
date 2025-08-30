@@ -1193,22 +1193,46 @@ USER,
         $industry = sanitize_text_field( $user_inputs['industry'] ?? '' );
         if ( empty( $industry ) ) {
             return [
-                'sector_trends'          => '',
-                'competitive_benchmarks' => '',
-                'regulatory_considerations' => '',
+                'analysis'        => '',
+                'recommendations' => [],
+                'references'      => [],
+                'errors'          => [],
             ];
         }
 
-        $model  = $this->get_model( 'mini' );
-        $prompt = 'Provide sector_trends, competitive_benchmarks, and regulatory_considerations for the ' . $industry . ' industry in JSON.';
+        $model = $this->get_model( 'mini' );
 
-        $history  = [
+        $system_prompt = <<<'SYSTEM'
+You are a senior treasury technology consultant tasked with delivering comprehensive, research-based analysis. Begin by reviewing the request and identifying the main aspects to address. Your responses must be formatted strictly as a single JSON object according to the specified schema, and no text should appear outside this JSON.
+
+# Output Format
+Return a single JSON object with these fields, in the exact order shown:
+{
+  "analysis": string,
+  "recommendations": [string],
+  "references": [string],
+  "errors": [string]
+}
+
+## Formatting Rules
+- Every field is required.
+- If a field has no applicable content: use an empty string for "analysis" and empty arrays for the rest.
+- Maintain the order of fields as listed.
+- For multiple recommendations or references, use arrays.
+- Ensure strict adherence to the given JSON schema.
+
+Before generating your response, create a concise checklist (3-7 bullets) of what you will do to ensure your approach is methodical and covers all aspects of the request. After constructing the JSON, validate that your output strictly follows the schema and formatting requirements before returning it.
+SYSTEM;
+
+        $user_prompt = 'Provide sector_trends, competitive_benchmarks, and regulatory_considerations for the ' . $industry . ' industry in JSON.';
+
+        $history = [
             [
                 'role'    => 'user',
-                'content' => $prompt,
+                'content' => $user_prompt,
             ],
         ];
-        $context  = $this->build_context_for_responses( $history );
+        $context = $this->build_context_for_responses( $history, $system_prompt );
         $response = $this->call_openai_with_retry( $model, $context );
         if ( is_wp_error( $response ) ) {
             return $response;
@@ -1222,9 +1246,10 @@ USER,
         }
 
         return [
-            'sector_trends'          => sanitize_text_field( $json['sector_trends'] ?? '' ),
-            'competitive_benchmarks' => sanitize_text_field( $json['competitive_benchmarks'] ?? '' ),
-            'regulatory_considerations' => sanitize_text_field( $json['regulatory_considerations'] ?? '' ),
+            'analysis'        => sanitize_text_field( $json['analysis'] ?? '' ),
+            'recommendations' => array_map( 'sanitize_text_field', $json['recommendations'] ?? [] ),
+            'references'      => array_map( 'sanitize_text_field', $json['references'] ?? [] ),
+            'errors'          => array_map( 'sanitize_text_field', $json['errors'] ?? [] ),
         ];
     }
 
@@ -1326,10 +1351,15 @@ USER,
 
         // Industry Context
         if ( ! empty( $industry_analysis ) ) {
-            $prompt .= "INDUSTRY CONTEXT:\n";
-            $prompt .= 'Sector Trends: ' . ( $industry_analysis['sector_trends'] ?? '' ) . "\n";
-            $prompt .= 'Competitive Benchmarks: ' . ( $industry_analysis['competitive_benchmarks'] ?? '' ) . "\n";
-            $prompt .= 'Regulatory Considerations: ' . ( $industry_analysis['regulatory_considerations'] ?? '' ) . "\n\n";
+            if ( ! empty( $industry_analysis['analysis'] ) ) {
+                $prompt .= "INDUSTRY CONTEXT:\n" . $industry_analysis['analysis'] . "\n\n";
+            }
+            if ( ! empty( $industry_analysis['recommendations'] ) ) {
+                $prompt .= "INDUSTRY RECOMMENDATIONS:\n- " . implode( "\n- ", $industry_analysis['recommendations'] ) . "\n\n";
+            }
+            if ( ! empty( $industry_analysis['references'] ) ) {
+                $prompt .= "INDUSTRY REFERENCES:\n- " . implode( "\n- ", $industry_analysis['references'] ) . "\n\n";
+            }
         }
 
         // Treasury technology landscape
