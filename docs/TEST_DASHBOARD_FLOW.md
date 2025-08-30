@@ -101,7 +101,7 @@ Objective: Convert the report into an ongoing conversation and nurture the lead.
 
 ## 🧪 Test Dashboard
 
-The WordPress admin includes a dedicated **Test Dashboard** (`admin/test-dashboard-page.php`) for validating key dependencies and running diagnostics. A progress bar displays overall completion as each test finishes:
+The WordPress admin includes a dedicated **Test Dashboard** (`admin/test-dashboard-page.php`) for validating key dependencies. A progress bar displays overall completion as each test finishes:
 
 The **Set Company** button uses the company name input and applies it to all tests. Begin with **Run All Tests** to validate the entire flow—the selected company name is passed to every test for accurate coverage. Individual tools can be used afterward if deeper inspection is needed.
 
@@ -110,8 +110,6 @@ The **Connectivity Tests & Status** panel groups the first three checks and repl
 1. **OpenAI connectivity** — verifies API key configuration.
 2. **Portal integration** — checks the content portal connection.
 3. **RAG health** — ensures the retrieval index is available.
-4. **Run Diagnostics** — executes the integration tests defined in `tests/run-tests.sh` and stores the latest results. Tests may
-   take up to two minutes to finish.
 
 Developers can use the dashboard to quickly confirm environment health or trigger the test suite directly from the admin area.
 

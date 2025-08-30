@@ -58,15 +58,6 @@ $embedding_models = [
             </tr>
             <tr>
                 <th scope="row">
-                    <label><?php echo esc_html__( 'Diagnostics', 'rtbcb' ); ?></label>
-                </th>
-                <td>
-                    <button type="button" class="button" id="rtbcb-run-tests" data-nonce="<?php echo esc_attr( wp_create_nonce( 'rtbcb_nonce' ) ); ?>"><?php echo esc_html__( 'Run Diagnostics', 'rtbcb' ); ?></button>
-                    <p class="description"><?php echo esc_html__( 'Verify integration and system health. Tests may take up to two minutes.', 'rtbcb' ); ?></p>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row">
                     <label for="rtbcb_mini_model"><?php echo esc_html__( 'Mini Model', 'rtbcb' ); ?></label>
                 </th>
                 <td>

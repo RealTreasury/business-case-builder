@@ -27,7 +27,6 @@ class RTBCB_Admin {
         add_action( 'wp_ajax_rtbcb_bulk_action_leads', [ $this, 'bulk_action_leads' ] );
         add_action( 'wp_ajax_rtbcb_run_tests', [ $this, 'run_integration_tests' ] );
         add_action( 'wp_ajax_rtbcb_test_api', [ $this, 'ajax_test_api' ] );
-        add_action( 'wp_ajax_rtbcb_run_diagnostics', [ $this, 'ajax_run_diagnostics' ] );
         add_action( 'wp_ajax_rtbcb_sync_to_local', [ $this, 'sync_to_local' ] );
         add_action( 'wp_ajax_nopriv_rtbcb_sync_to_local', [ $this, 'sync_to_local' ] );
         add_action( 'wp_ajax_rtbcb_test_commentary', [ $this, 'ajax_test_commentary' ] );
@@ -163,7 +162,6 @@ class RTBCB_Admin {
         wp_localize_script( 'rtbcb-admin', 'rtbcbAdmin', [
             'ajax_url'                   => admin_url( 'admin-ajax.php' ),
             'nonce'                      => wp_create_nonce( 'rtbcb_nonce' ),
-            'diagnostics_nonce'          => wp_create_nonce( 'rtbcb_diagnostics' ),
             'company_overview_nonce'     => wp_create_nonce( 'rtbcb_test_company_overview' ),
             'maturity_model_nonce'       => wp_create_nonce( 'rtbcb_test_maturity_model' ),
             'rag_market_analysis_nonce'  => wp_create_nonce( 'rtbcb_test_rag_market_analysis' ),
@@ -1571,180 +1569,6 @@ class RTBCB_Admin {
     }
 
     /**
-     * Run comprehensive diagnostics to identify issues.
-     *
-     * @return array Diagnostic results.
-     */
-    public static function run_comprehensive_diagnostics() {
-        $diagnostics = [];
-
-        // 1. Check PHP Version
-        $diagnostics['php_version'] = [
-            'version'            => PHP_VERSION,
-            'meets_requirement'  => version_compare( PHP_VERSION, '7.4', '>=' ),
-            'status'             => version_compare( PHP_VERSION, '7.4', '>=' ) ? 'OK' : 'FAIL',
-        ];
-
-        // 2. Check WordPress Version
-        $wp_version = get_bloginfo( 'version' );
-        $diagnostics['wp_version'] = [
-            'version'            => $wp_version,
-            'meets_requirement'  => version_compare( $wp_version, '5.0', '>=' ),
-            'status'             => version_compare( $wp_version, '5.0', '>=' ) ? 'OK' : 'FAIL',
-        ];
-
-        // 3. Check Database Connection
-        global $wpdb;
-        try {
-            $wpdb->get_var( 'SELECT 1' );
-            $diagnostics['database'] = [
-                'status'  => 'OK',
-                'message' => __( 'Database connection successful', 'rtbcb' ),
-            ];
-        } catch ( Exception $e ) {
-            $diagnostics['database'] = [
-                'status'  => 'FAIL',
-                'message' => sprintf( __( 'Database connection failed: %s', 'rtbcb' ), $e->getMessage() ),
-            ];
-        }
-
-        // 4. Check Required Classes
-        $required_classes = [
-            'RTBCB_Calculator',
-            'RTBCB_Category_Recommender',
-            'RTBCB_LLM',
-            'RTBCB_RAG',
-            'RTBCB_Leads',
-            'RTBCB_Validator',
-        ];
-
-        foreach ( $required_classes as $class ) {
-            $diagnostics['classes'][ $class ] = [
-                'exists' => class_exists( $class ),
-                'status' => class_exists( $class ) ? 'OK' : 'FAIL',
-            ];
-        }
-
-        // 5. Check Database Tables
-        $table_name = $wpdb->prefix . 'rtbcb_leads';
-        $table_exists = $wpdb->get_var(
-            $wpdb->prepare(
-                'SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = %s AND table_name = %s',
-                DB_NAME,
-                $table_name
-            )
-        );
-
-        $diagnostics['database_tables']['rtbcb_leads'] = [
-            'exists' => (bool) $table_exists,
-            'status' => $table_exists ? 'OK' : 'FAIL',
-        ];
-
-        // 6. Check Table Structure
-        if ( $table_exists ) {
-            $columns = $wpdb->get_results( "DESCRIBE {$table_name}" );
-            $expected_columns = [
-                'id',
-                'email',
-                'company_size',
-                'industry',
-                'hours_reconciliation',
-                'hours_cash_positioning',
-                'num_banks',
-                'ftes',
-                'pain_points',
-                'recommended_category',
-                'roi_low',
-                'roi_base',
-                'roi_high',
-                'report_html',
-                'ip_address',
-                'user_agent',
-                'utm_source',
-                'utm_medium',
-                'utm_campaign',
-                'created_at',
-                'updated_at',
-            ];
-
-            $actual_columns  = array_column( $columns, 'Field' );
-            $missing_columns = array_diff( $expected_columns, $actual_columns );
-
-            $diagnostics['table_structure'] = [
-                'expected_columns' => count( $expected_columns ),
-                'actual_columns'   => count( $actual_columns ),
-                'missing_columns'  => $missing_columns,
-                'status'           => empty( $missing_columns ) ? 'OK' : 'FAIL',
-            ];
-        }
-
-        // 7. Check OpenAI API Configuration
-        $api_key      = get_option( 'rtbcb_openai_api_key' );
-        $configured   = ! empty( $api_key );
-        $valid_format = $configured ? rtbcb_is_valid_openai_api_key( $api_key ) : false;
-        $api_test     = RTBCB_API_Tester::test_connection();
-
-        $status = $api_test['success'] ? 'OK' : 'FAIL';
-        if ( $configured && ! $valid_format ) {
-            $status = 'INVALID_FORMAT';
-        }
-
-        $diagnostics['openai_api'] = [
-            'configured'   => $configured,
-            'valid_format' => $valid_format,
-            'success'      => $api_test['success'],
-            'message'      => $api_test['message'],
-            'details'      => $api_test['details'] ?? '',
-            'status'       => $status,
-        ];
-
-        // 8. Check Memory Limit
-        $memory_limit = ini_get( 'memory_limit' );
-        $memory_bytes = wp_convert_hr_to_bytes( $memory_limit );
-        $diagnostics['memory_limit'] = [
-            'current'    => $memory_limit,
-            'bytes'      => $memory_bytes,
-            'sufficient' => $memory_bytes >= 128 * 1024 * 1024,
-            'status'     => $memory_bytes >= 128 * 1024 * 1024 ? 'OK' : 'LOW',
-        ];
-
-        // 9. Check Error Logging
-        $diagnostics['error_logging'] = [
-            'wp_debug'      => defined( 'WP_DEBUG' ) && WP_DEBUG,
-            'wp_debug_log'  => defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG,
-            'log_errors'    => ini_get( 'log_errors' ),
-            'error_log_path'=> ini_get( 'error_log' ),
-        ];
-
-        // 10. Test Basic Functionality
-        try {
-            $test_inputs = rtbcb_get_sample_inputs();
-
-            if ( class_exists( 'RTBCB_Calculator' ) ) {
-                $roi_result = RTBCB_Calculator::calculate_roi( $test_inputs );
-                $diagnostics['functionality']['calculator'] = [
-                    'status' => ! empty( $roi_result ) ? 'OK' : 'FAIL',
-                    'result' => ! empty( $roi_result ),
-                ];
-            }
-
-            if ( class_exists( 'RTBCB_Category_Recommender' ) ) {
-                $recommendation = RTBCB_Category_Recommender::recommend_category( $test_inputs );
-                $diagnostics['functionality']['recommender'] = [
-                    'status' => ! empty( $recommendation ) ? 'OK' : 'FAIL',
-                    'result' => ! empty( $recommendation ),
-                ];
-            }
-        } catch ( Exception $e ) {
-            $diagnostics['functionality']['error'] = $e->getMessage();
-        } catch ( Error $e ) {
-            $diagnostics['functionality']['fatal_error'] = $e->getMessage();
-        }
-
-        return $diagnostics;
-    }
-
-    /**
      * AJAX handler to fetch phase completion percentages.
      *
      * @return void
@@ -1980,31 +1804,9 @@ class RTBCB_Admin {
         wp_send_json_success();
     }
 
-    /**
-     * AJAX handler for running diagnostics.
-     *
-     * @return void
-     */
-    public function ajax_run_diagnostics() {
-        check_ajax_referer( 'rtbcb_diagnostics', 'nonce' );
-
-        if ( ! current_user_can( 'manage_options' ) ) {
-            wp_send_json_error( __( 'Insufficient permissions', 'rtbcb' ) );
-        }
-
-        try {
-            $diagnostics = self::run_comprehensive_diagnostics();
-            wp_send_json_success( $diagnostics );
-        } catch ( Exception $e ) {
-            wp_send_json_error( sprintf( __( 'Diagnostics failed: %s', 'rtbcb' ), $e->getMessage() ) );
-        } catch ( Error $e ) {
-            wp_send_json_error( sprintf( __( 'Diagnostics failed: %s', 'rtbcb' ), $e->getMessage() ) );
-        }
+    public function render_workflow_visualizer() {
+            include RTBCB_DIR . 'admin/workflow-visualizer-page.php';
     }
-
-	public function render_workflow_visualizer() {
-		include RTBCB_DIR . 'admin/workflow-visualizer-page.php';
-	}
 
 	public function ajax_get_workflow_history() {
 		check_ajax_referer( 'rtbcb_workflow_visualizer', 'nonce' );
