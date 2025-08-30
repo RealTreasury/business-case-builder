@@ -1716,8 +1716,16 @@ return '';
 }
 
 $business_case_data = is_array( $business_case_data ) ? $business_case_data : [];
+
 // Transform data structure for template.
 $report_data = $this->transform_data_for_template( $business_case_data );
+
+if ( is_wp_error( $report_data ) ) {
+$error_data = $report_data->get_error_data();
+rtbcb_log_error( 'Report data validation failed', [ 'missing' => $error_data['missing'] ?? [] ] );
+$report_data = $error_data['report_data'] ?? [];
+}
+
 ob_start();
 include $template_path;
 $html = ob_get_clean();
@@ -1731,19 +1739,30 @@ return wp_kses_post( $html );
     *
     * @return array
     */
-   private function transform_data_for_template( $business_case_data ) {
-       // Get current company data.
-       $company      = rtbcb_get_current_company();
-       $company_name = $business_case_data['company_name'] ?? $company['name'] ?? __( 'Your Company', 'rtbcb' );
-       $base_roi     = $business_case_data['base_roi'] ?? $business_case_data['roi_base'] ?? 0;
-       $business_case_data['roi_base'] = $base_roi;
+private function transform_data_for_template( $business_case_data ) {
+// Get current company data.
+$company      = rtbcb_get_current_company();
+$company_name = $business_case_data['company_name'] ?? $company['name'] ?? __( 'Your Company', 'rtbcb' );
+$base_roi     = $business_case_data['base_roi'] ?? $business_case_data['roi_base'] ?? 0;
+$business_case_data['roi_base'] = $base_roi;
 
-       // Derive recommended category and details from recommendation if not provided.
-       $recommended_category = $business_case_data['recommended_category'] ?? ( $business_case_data['recommendation']['recommended'] ?? 'treasury_management_system' );
-       $category_details     = $business_case_data['category_info'] ?? ( $business_case_data['recommendation']['category_info'] ?? [] );
+$required_sections = [
+'metadata',
+'executive_summary',
+'financial_analysis',
+'company_intelligence',
+'technology_strategy',
+'operational_insights',
+'risk_analysis',
+'action_plan',
+];
 
-       // Create structured data format expected by template.
-       $report_data = [
+// Derive recommended category and details from recommendation if not provided.
+$recommended_category = $business_case_data['recommended_category'] ?? ( $business_case_data['recommendation']['recommended'] ?? 'treasury_management_system' );
+$category_details     = $business_case_data['category_info'] ?? ( $business_case_data['recommendation']['category_info'] ?? [] );
+
+// Create structured data format expected by template.
+$report_data = [
            'metadata'            => [
                'company_name'    => $company_name,
                'analysis_date'   => current_time( 'Y-m-d' ),
@@ -1788,15 +1807,32 @@ return wp_kses_post( $html );
            'risk_analysis'        => [
                'implementation_risks' => $business_case_data['risks'] ?? [],
            ],
-           'action_plan'          => [
-               'immediate_steps'   => $this->extract_immediate_steps( $business_case_data ),
-               'short_term_milestones' => $this->extract_short_term_steps( $business_case_data ),
-               'long_term_objectives'  => $this->extract_long_term_steps( $business_case_data ),
-           ],
-       ];
+'action_plan'          => [
+'immediate_steps'   => $this->extract_immediate_steps( $business_case_data ),
+'short_term_milestones' => $this->extract_short_term_steps( $business_case_data ),
+'long_term_objectives'  => $this->extract_long_term_steps( $business_case_data ),
+],
+];
 
-       return $report_data;
-   }
+$missing_sections = [];
+foreach ( $required_sections as $section ) {
+if ( empty( $report_data[ $section ] ) ) {
+$missing_sections[] = $section;
+$report_data[ $section ] = [];
+}
+}
+
+if ( ! empty( $missing_sections ) ) {
+rtbcb_log_error( 'Report data missing required sections', [ 'missing' => $missing_sections ] );
+return new WP_Error(
+'missing_report_sections',
+__( 'Required report sections missing.', 'rtbcb' ),
+[ 'report_data' => $report_data, 'missing' => $missing_sections ]
+);
+}
+
+return $report_data;
+}
 
    /**
     * Extract value drivers from business case data.
