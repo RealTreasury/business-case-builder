@@ -50,6 +50,13 @@ private $errors = [];
 private $ai_calls = 0;
 
 /**
+ * Recorded prompts sent to the AI.
+ *
+ * @var array
+ */
+private $prompts = [];
+
+/**
  * Constructor.
  */
 public function __construct() {
@@ -160,6 +167,31 @@ $this->steps
 }
 
 /**
+ * Record a prompt sent to the AI service.
+ *
+ * @param array $prompt Prompt data containing 'instructions' and 'input'.
+ * @return void
+ */
+public function add_prompt( $prompt ) {
+$step_name      = $this->current_step ? $this->current_step['name'] : 'unknown';
+$this->prompts[] = [
+'step'         => $step_name,
+'instructions' => sanitize_textarea_field( $prompt['instructions'] ?? '' ),
+'input'        => sanitize_textarea_field( $prompt['input'] ?? '' ),
+'timestamp'    => microtime( true ),
+];
+}
+
+/**
+ * Retrieve recorded prompts.
+ *
+ * @return array
+ */
+public function get_prompts() {
+return $this->prompts;
+}
+
+/**
  * Get AI call count.
  *
  * @return int
@@ -190,6 +222,7 @@ return [
 'warnings_count' => count( $this->warnings ),
 'errors_count'   => count( $this->errors ),
 'steps'          => $this->get_completed_steps(),
+'prompts'        => $this->prompts,
 'warnings'       => $this->warnings,
 'errors'         => $this->errors,
 ];
