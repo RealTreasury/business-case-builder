@@ -1138,37 +1138,40 @@ USER,
      * @param string $company_size Company size descriptor.
      * @param string $industry     Industry name or slug.
      * @return array {
-     *     @type string $size_outlook    Growth outlook based on company size.
+     *     @type string $size_tier        Tier label derived from company size.
+     *     @type string $size_outlook     Growth outlook based on company size.
+     *     @type string $industry_tier    Tier label derived from industry.
      *     @type string $industry_outlook Growth outlook based on industry.
-     *     @type string $summary         Combined sanitized summary.
+     *     @type string $summary          Combined sanitized summary.
      * }
      */
     private function project_growth_path( $company_size, $industry ) {
         $company_size = sanitize_text_field( $company_size );
-        $industry     = sanitize_text_field( $industry );
+        $industry     = sanitize_key( $industry );
 
         $size_outlooks = [
-            '<$50M'      => __( 'high growth potential', 'rtbcb' ),
-            '$50M-$500M' => __( 'scaling trajectory', 'rtbcb' ),
-            '$500M-$2B'  => __( 'steady expansion', 'rtbcb' ),
-            '>$2B'       => __( 'mature growth', 'rtbcb' ),
+            '<$50M'      => [ 'tier' => 'startup',    'description' => __( 'high growth potential', 'rtbcb' ) ],
+            '$50M-$500M' => [ 'tier' => 'scaleup',    'description' => __( 'scaling trajectory', 'rtbcb' ) ],
+            '$500M-$2B'  => [ 'tier' => 'growth',     'description' => __( 'steady expansion', 'rtbcb' ) ],
+            '>$2B'       => [ 'tier' => 'enterprise', 'description' => __( 'mature growth', 'rtbcb' ) ],
         ];
 
         $industry_outlooks = [
-            'technology'    => __( 'rapid expansion', 'rtbcb' ),
-            'manufacturing' => __( 'stable outlook', 'rtbcb' ),
-            'retail'        => __( 'moderate growth', 'rtbcb' ),
-            'finance'       => __( 'regulated stability', 'rtbcb' ),
+            'technology'    => [ 'tier' => 'hyper-growth', 'description' => __( 'rapid expansion', 'rtbcb' ) ],
+            'manufacturing' => [ 'tier' => 'stable',       'description' => __( 'stable outlook', 'rtbcb' ) ],
+            'retail'        => [ 'tier' => 'competitive',  'description' => __( 'moderate growth', 'rtbcb' ) ],
+            'finance'       => [ 'tier' => 'regulated',    'description' => __( 'regulated stability', 'rtbcb' ) ],
         ];
 
-        $size_outlook     = $size_outlooks[ $company_size ] ?? __( 'stable', 'rtbcb' );
-        $industry_key     = strtolower( $industry );
-        $industry_outlook = $industry_outlooks[ $industry_key ] ?? __( 'neutral', 'rtbcb' );
+        $size_data     = $size_outlooks[ $company_size ] ?? [ 'tier' => 'baseline', 'description' => __( 'stable', 'rtbcb' ) ];
+        $industry_data = $industry_outlooks[ $industry ] ?? [ 'tier' => 'neutral',  'description' => __( 'neutral', 'rtbcb' ) ];
 
         return [
-            'size_outlook'     => sanitize_text_field( $size_outlook ),
-            'industry_outlook' => sanitize_text_field( $industry_outlook ),
-            'summary'          => sanitize_text_field( $size_outlook . '; ' . $industry_outlook ),
+            'size_tier'        => sanitize_text_field( $size_data['tier'] ),
+            'size_outlook'     => sanitize_text_field( $size_data['description'] ),
+            'industry_tier'    => sanitize_text_field( $industry_data['tier'] ),
+            'industry_outlook' => sanitize_text_field( $industry_data['description'] ),
+            'summary'          => sanitize_text_field( $size_data['description'] . '; ' . $industry_data['description'] ),
         ];
     }
 
