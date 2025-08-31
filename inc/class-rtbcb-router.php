@@ -55,7 +55,7 @@ class RTBCB_Router {
                             $recommendation['category_info']
                         );
 
-            $fast_mode = 'fast' === $report_type || ! empty( $_POST['fast_mode'] ) || get_option( 'rtbcb_fast_mode', 0 );
+            $fast_mode = 'fast' === $report_type || ! empty( $_POST['fast_mode'] ) || rtbcb_heavy_features_disabled();
             if ( $fast_mode ) {
                 $report_html = $this->get_fast_report_html( $form_data, $calculations );
 
