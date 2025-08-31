@@ -723,12 +723,13 @@ USER,
 
         $company_name = sanitize_text_field( $user_inputs['company_name'] ?? '' );
         $industry     = sanitize_text_field( $user_inputs['industry'] ?? '' );
+        $company_size = sanitize_text_field( $user_inputs['company_size'] ?? '' );
 
-        $company_research = rtbcb_get_research_cache( $company_name, $industry, 'company' );
+        $company_research = rtbcb_get_research_cache( $company_name, $industry, 'company', $company_size );
         if ( false === $company_research ) {
             $company_research = $this->conduct_company_research( $user_inputs );
             if ( ! is_wp_error( $company_research ) ) {
-                rtbcb_set_research_cache( $company_name, $industry, 'company', $company_research );
+                rtbcb_set_research_cache( $company_name, $industry, 'company', $company_research, 0, $company_size );
             }
         }
 
