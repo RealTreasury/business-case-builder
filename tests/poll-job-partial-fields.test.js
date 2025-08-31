@@ -1,5 +1,4 @@
 const fs = require('fs');
-const fs = require('fs');
 const vm = require('vm');
 require('./jsdom-setup');
 
