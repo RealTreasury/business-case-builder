@@ -3,6 +3,35 @@ if ( ! defined( 'ABSPATH' ) ) {
 	define( 'ABSPATH', __DIR__ . '/../' );
 }
 
+if ( ! class_exists( 'WP_Error' ) ) {
+	class WP_Error {
+		private $code;
+		private $message;
+		private $data;
+		public function __construct( $code = '', $message = '', $data = [] ) {
+			$this->code    = $code;
+			$this->message = $message;
+			$this->data    = $data;
+		}
+		public function get_error_message() {
+			return $this->message;
+		}
+		public function get_error_code() {
+			return $this->code;
+		}
+		public function get_error_data() {
+			return $this->data;
+		}
+	}
+}
+
+if ( ! function_exists( 'is_wp_error' ) ) {
+	function is_wp_error( $thing ) {
+		return $thing instanceof WP_Error;
+	}
+}
+
+
 if ( ! function_exists( 'sanitize_text_field' ) ) {
 	function sanitize_text_field( $text ) {
 		$text = is_scalar( $text ) ? (string) $text : '';
@@ -43,6 +72,9 @@ if ( ! function_exists( 'get_transient' ) ) {
 
 if ( ! function_exists( 'get_option' ) ) {
 	function get_option( $name, $default = '' ) {
+		if ( 'rtbcb_openai_api_key' === $name ) {
+			return 'test-key';
+		}
 		return $default;
 	}
 }
@@ -78,10 +110,6 @@ require_once __DIR__ . '/../inc/class-rtbcb-llm.php';
 $llm = new class extends RTBCB_LLM {
         public $calls = 0;
 
-        public function __construct() {
-                $this->api_key     = 'test-key';
-                $this->gpt5_config = [];
-        }
 
         protected function conduct_company_research( $user_inputs ) {
                 $this->calls++;
