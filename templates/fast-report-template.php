@@ -2,10 +2,10 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Fast ROI report template.
- *
- * @package RealTreasuryBusinessCaseBuilder
- */
+	* Fast ROI report template.
+	*
+	* @package RealTreasuryBusinessCaseBuilder
+	*/
 
 $company_name = isset( $form_data['company_name'] ) ? sanitize_text_field( $form_data['company_name'] ) : '';
 $roi_low  = isset( $calculations['conservative']['roi_percentage'] ) ? floatval( $calculations['conservative']['roi_percentage'] ) : 0;

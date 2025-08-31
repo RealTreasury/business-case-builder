@@ -161,8 +161,8 @@ require_once __DIR__ . '/../inc/class-rtbcb-router.php';
 
 final class RTBCB_EdgeCasesTest extends TestCase {
 /**
- * @dataProvider edge_case_provider
- */
+	* @dataProvider edge_case_provider
+	*/
 public function test_handle_form_submission( $post_data, $expected_success ) {
 global $last_response;
 $last_response = null;

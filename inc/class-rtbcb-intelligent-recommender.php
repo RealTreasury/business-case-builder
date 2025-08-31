@@ -2,18 +2,18 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Intelligent Recommender that uses AI insights for category recommendations.
- *
- * @package RealTreasuryBusinessCaseBuilder
- */
+	* Intelligent Recommender that uses AI insights for category recommendations.
+	*
+	* @package RealTreasuryBusinessCaseBuilder
+	*/
 class RTBCB_Intelligent_Recommender extends RTBCB_Category_Recommender {
 /**
- * Generate recommendations using AI insights and rule-based scoring.
- *
- * @param array $user_inputs      Original user inputs.
- * @param array $enriched_profile AI-enriched company profile.
- * @return array Enhanced recommendation with confidence and alternatives.
- */
+	* Generate recommendations using AI insights and rule-based scoring.
+	*
+	* @param array $user_inputs      Original user inputs.
+	* @param array $enriched_profile AI-enriched company profile.
+	* @return array Enhanced recommendation with confidence and alternatives.
+	*/
 public function recommend_with_ai_insights( $user_inputs, $enriched_profile ) {
 // Get baseline recommendation from parent class.
 $base_recommendation = parent::recommend_category( $user_inputs );
@@ -47,11 +47,11 @@ return [
 }
 
 /**
- * Extract AI-based recommendation factors.
- *
- * @param array $enriched_profile Enriched profile data.
- * @return array AI factors for scoring.
- */
+	* Extract AI-based recommendation factors.
+	*
+	* @param array $enriched_profile Enriched profile data.
+	* @return array AI factors for scoring.
+	*/
 private function extract_ai_recommendation_factors( $enriched_profile ) {
 $company_profile   = $enriched_profile['company_profile'] ?? [];
 $strategic_insight = $enriched_profile['strategic_insights'] ?? [];
@@ -81,12 +81,12 @@ $company_profile['financial_indicators'] ?? []
 }
 
 /**
- * Apply AI insights to modify category scores.
- *
- * @param array $base_scores Base scores from recommender.
- * @param array $ai_factors  AI factor adjustments.
- * @return array Adjusted scores.
- */
+	* Apply AI insights to modify category scores.
+	*
+	* @param array $base_scores Base scores from recommender.
+	* @param array $ai_factors  AI factor adjustments.
+	* @return array Adjusted scores.
+	*/
 private function apply_ai_insights_to_scoring( $base_scores, $ai_factors ) {
 $enhanced_scores = $base_scores;
 
@@ -117,12 +117,12 @@ return $enhanced_scores;
 }
 
 /**
- * Assess how well each category aligns with company maturity.
- *
- * @param string $maturity_level Company maturity level.
- * @param array  $treasury_maturity Treasury maturity details.
- * @return array Category alignment adjustments.
- */
+	* Assess how well each category aligns with company maturity.
+	*
+	* @param string $maturity_level Company maturity level.
+	* @param array  $treasury_maturity Treasury maturity details.
+	* @return array Category alignment adjustments.
+	*/
 private function assess_maturity_category_alignment( $maturity_level, $treasury_maturity ) {
 $sophistication = $treasury_maturity['sophistication_level'] ?? 'manual';
 unset( $sophistication ); // Currently unused, reserved for future logic.
@@ -154,13 +154,13 @@ return $alignments[ $maturity_level ] ?? $alignments['basic'];
 }
 
 /**
- * Generate AI-enhanced reasoning for recommendation.
- *
- * @param string $recommended     Recommended category key.
- * @param array  $enriched_profile Enriched profile data.
- * @param array  $ai_factors       AI factors used.
- * @return string Reasoning text.
- */
+	* Generate AI-enhanced reasoning for recommendation.
+	*
+	* @param string $recommended     Recommended category key.
+	* @param array  $enriched_profile Enriched profile data.
+	* @param array  $ai_factors       AI factors used.
+	* @return string Reasoning text.
+	*/
 private function generate_ai_enhanced_reasoning( $recommended, $enriched_profile, $ai_factors ) {
 $company_profile   = $enriched_profile['company_profile'] ?? [];
 $strategic_insight = $enriched_profile['strategic_insights'] ?? [];
@@ -202,12 +202,12 @@ implode( ', and ', $reasoning_parts )
 }
 
 /**
- * Get intelligent alternatives based on AI insights.
- *
- * @param array $enhanced_scores  Score map of categories.
- * @param array $enriched_profile Enriched profile data.
- * @return array Alternative recommendations.
- */
+	* Get intelligent alternatives based on AI insights.
+	*
+	* @param array $enhanced_scores  Score map of categories.
+	* @param array $enriched_profile Enriched profile data.
+	* @return array Alternative recommendations.
+	*/
 private function get_intelligent_alternatives( $enhanced_scores, $enriched_profile ) {
 $alternatives  = [];
 $sorted_scores = $enhanced_scores;

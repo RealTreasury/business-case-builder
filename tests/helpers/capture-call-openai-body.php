@@ -15,13 +15,13 @@ $capabilities = include __DIR__ . '/../../inc/model-capabilities.php';
 $unsupported  = $capabilities['temperature']['unsupported'] ?? [];
 
 $body = [
-    'model'             => $model,
-    'input'             => 'test prompt',
-    'max_output_tokens' => 256,
+	'model'             => $model,
+	'input'             => 'test prompt',
+	'max_output_tokens' => 256,
 ];
 
 if ( ! in_array( $model, $unsupported, true ) ) {
-    $body['temperature'] = 0.7;
+	$body['temperature'] = 0.7;
 }
 
 echo json_encode( $body );

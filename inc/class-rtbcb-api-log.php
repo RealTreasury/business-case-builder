@@ -2,283 +2,283 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * API log management class.
- *
- * @package RealTreasuryBusinessCaseBuilder
- */
+	* API log management class.
+	*
+	* @package RealTreasuryBusinessCaseBuilder
+	*/
 
 /**
- * Handles storage and retrieval of API interaction logs.
- */
+	* Handles storage and retrieval of API interaction logs.
+	*/
 class RTBCB_API_Log {
-    /**
-     * Database table name.
-     *
-     * @var string
-     */
-    private static $table_name;
+	/**
+	 * Database table name.
+	 *
+	 * @var string
+	 */
+	private static $table_name;
 
-    /**
-     * Initialize the table name and create the table.
-     *
-     * @return void
-     */
-    public static function init() {
-        global $wpdb;
+	/**
+	 * Initialize the table name and create the table.
+	 *
+	 * @return void
+	 */
+	public static function init() {
+		global $wpdb;
 
-        self::$table_name = $wpdb->prefix . 'rtbcb_api_logs';
-        self::create_table();
-    }
+		self::$table_name = $wpdb->prefix . 'rtbcb_api_logs';
+		self::create_table();
+	}
 
-    /**
-     * Create the API logs table.
-     *
-     * @return bool True on success, false on failure.
-     */
-    private static function create_table() {
-        global $wpdb;
+	/**
+	 * Create the API logs table.
+	 *
+	 * @return bool True on success, false on failure.
+	 */
+	private static function create_table() {
+		global $wpdb;
 
-        $charset_collate = $wpdb->get_charset_collate();
-        $sql             = 'CREATE TABLE ' . self::$table_name . " (
-            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-            user_id bigint(20) unsigned DEFAULT 0,
-            user_email varchar(255) DEFAULT '',
-            company_name varchar(255) DEFAULT '',
-            request_json longtext DEFAULT '',
-            response_json longtext DEFAULT '',
-            prompt_tokens int(11) DEFAULT 0,
-            completion_tokens int(11) DEFAULT 0,
-            total_tokens int(11) DEFAULT 0,
-            created_at datetime DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY  (id),
-            KEY user_id (user_id),
-            KEY created_at (created_at)
-        ) $charset_collate;";
+		$charset_collate = $wpdb->get_charset_collate();
+		$sql             = 'CREATE TABLE ' . self::$table_name . " (
+			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+			user_id bigint(20) unsigned DEFAULT 0,
+			user_email varchar(255) DEFAULT '',
+			company_name varchar(255) DEFAULT '',
+			request_json longtext DEFAULT '',
+			response_json longtext DEFAULT '',
+			prompt_tokens int(11) DEFAULT 0,
+			completion_tokens int(11) DEFAULT 0,
+			total_tokens int(11) DEFAULT 0,
+			created_at datetime DEFAULT CURRENT_TIMESTAMP,
+			PRIMARY KEY  (id),
+			KEY user_id (user_id),
+			KEY created_at (created_at)
+		) $charset_collate;";
 
-        try {
-            require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-            dbDelta( $sql );
+		try {
+			require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+			dbDelta( $sql );
 
-            $table_exists = $wpdb->get_var(
-                $wpdb->prepare(
-                    'SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = %s AND table_name = %s',
-                    DB_NAME,
-                    self::$table_name
-                )
-            );
+			$table_exists = $wpdb->get_var(
+				$wpdb->prepare(
+					'SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = %s AND table_name = %s',
+					DB_NAME,
+					self::$table_name
+				)
+			);
 
-            if ( ! $table_exists ) {
-                error_log( 'RTBCB: Failed to create table ' . self::$table_name );
+			if ( ! $table_exists ) {
+				error_log( 'RTBCB: Failed to create table ' . self::$table_name );
 
-                $simple_sql = 'CREATE TABLE IF NOT EXISTS ' . self::$table_name . " (
-                    id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-                    user_id bigint(20) unsigned DEFAULT 0,
-                    user_email varchar(255) DEFAULT '',
-                    company_name varchar(255) DEFAULT '',
-                    request_json longtext DEFAULT '',
-                    response_json longtext DEFAULT '',
-                    prompt_tokens int(11) DEFAULT 0,
-                    completion_tokens int(11) DEFAULT 0,
-                    total_tokens int(11) DEFAULT 0,
-                    created_at datetime DEFAULT CURRENT_TIMESTAMP,
-                    PRIMARY KEY (id)
-                ) $charset_collate;";
+				$simple_sql = 'CREATE TABLE IF NOT EXISTS ' . self::$table_name . " (
+					id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+					user_id bigint(20) unsigned DEFAULT 0,
+					user_email varchar(255) DEFAULT '',
+					company_name varchar(255) DEFAULT '',
+					request_json longtext DEFAULT '',
+					response_json longtext DEFAULT '',
+					prompt_tokens int(11) DEFAULT 0,
+					completion_tokens int(11) DEFAULT 0,
+					total_tokens int(11) DEFAULT 0,
+					created_at datetime DEFAULT CURRENT_TIMESTAMP,
+					PRIMARY KEY (id)
+				) $charset_collate;";
 
-                $wpdb->query( $simple_sql );
+				$wpdb->query( $simple_sql );
 
-                $table_exists = $wpdb->get_var(
-                    $wpdb->prepare(
-                        'SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = %s AND table_name = %s',
-                        DB_NAME,
-                        self::$table_name
-                    )
-                );
+				$table_exists = $wpdb->get_var(
+					$wpdb->prepare(
+						'SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = %s AND table_name = %s',
+						DB_NAME,
+						self::$table_name
+					)
+				);
 
-                if ( ! $table_exists ) {
-                    error_log( 'RTBCB: Failed to create API log table even with simple structure' );
-                    return false;
-                }
-            }
+				if ( ! $table_exists ) {
+					error_log( 'RTBCB: Failed to create API log table even with simple structure' );
+					return false;
+				}
+			}
 
-            return true;
-        } catch ( Exception $e ) {
-            error_log( 'RTBCB: Exception creating API log table: ' . $e->getMessage() );
-            return false;
-        } catch ( Error $e ) {
-            error_log( 'RTBCB: Fatal error creating API log table: ' . $e->getMessage() );
-            return false;
-        }
-    }
+			return true;
+		} catch ( Exception $e ) {
+			error_log( 'RTBCB: Exception creating API log table: ' . $e->getMessage() );
+			return false;
+		} catch ( Error $e ) {
+			error_log( 'RTBCB: Fatal error creating API log table: ' . $e->getMessage() );
+			return false;
+		}
+	}
 
-    /**
-     * Save a log entry.
-     *
-     * @param array  $request      Request data.
-     * @param array  $response     Response data.
-     * @param int    $user_id      User ID.
-     * @param string $user_email   User email.
-     * @param string $company_name Company name.
-     * @return void
-     */
-    public static function save_log( $request, $response, $user_id, $user_email = '', $company_name = '' ) {
-        global $wpdb;
+	/**
+	 * Save a log entry.
+	 *
+	 * @param array  $request      Request data.
+	 * @param array  $response     Response data.
+	 * @param int    $user_id      User ID.
+	 * @param string $user_email   User email.
+	 * @param string $company_name Company name.
+	 * @return void
+	 */
+	public static function save_log( $request, $response, $user_id, $user_email = '', $company_name = '' ) {
+		global $wpdb;
 
-        if ( empty( self::$table_name ) ) {
-            self::init();
-        }
+		if ( empty( self::$table_name ) ) {
+			self::init();
+		}
 
-        $request_json  = wp_json_encode( $request );
-        $response_json = wp_json_encode( $response );
+		$request_json  = wp_json_encode( $request );
+		$response_json = wp_json_encode( $response );
 
-        $request_json  = substr( $request_json, 0, 10000 );
-        $response_json = substr( $response_json, 0, 10000 );
+		$request_json  = substr( $request_json, 0, 10000 );
+		$response_json = substr( $response_json, 0, 10000 );
 
-        $prompt_tokens     = intval( $response['usage']['prompt_tokens'] ?? 0 );
-        $completion_tokens = intval( $response['usage']['completion_tokens'] ?? 0 );
-        $total_tokens      = intval( $response['usage']['total_tokens'] ?? 0 );
+		$prompt_tokens     = intval( $response['usage']['prompt_tokens'] ?? 0 );
+		$completion_tokens = intval( $response['usage']['completion_tokens'] ?? 0 );
+		$total_tokens      = intval( $response['usage']['total_tokens'] ?? 0 );
 
-        $user_email   = sanitize_email( $user_email );
-        $company_name = sanitize_text_field( $company_name );
+		$user_email   = sanitize_email( $user_email );
+		$company_name = sanitize_text_field( $company_name );
 
-        $wpdb->insert(
-            self::$table_name,
-            [
-                'user_id'           => intval( $user_id ),
-                'user_email'        => $user_email,
-                'company_name'      => $company_name,
-                'request_json'      => $request_json,
-                'response_json'     => $response_json,
-                'prompt_tokens'     => $prompt_tokens,
-                'completion_tokens' => $completion_tokens,
-                'total_tokens'      => $total_tokens,
-                'created_at'        => current_time( 'mysql' ),
-            ],
-            [ '%d', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%s' ]
-        );
-    }
+		$wpdb->insert(
+			self::$table_name,
+			[
+				'user_id'           => intval( $user_id ),
+				'user_email'        => $user_email,
+				'company_name'      => $company_name,
+				'request_json'      => $request_json,
+				'response_json'     => $response_json,
+				'prompt_tokens'     => $prompt_tokens,
+				'completion_tokens' => $completion_tokens,
+				'total_tokens'      => $total_tokens,
+				'created_at'        => current_time( 'mysql' ),
+			],
+			[ '%d', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%s' ]
+		);
+	}
 
-    /**
-     * Retrieve recent logs.
-     *
-     * @param int $limit Number of logs to retrieve.
-     * @return array Log rows.
-     */
-    public static function get_logs( $limit = 50 ) {
-        global $wpdb;
+	/**
+	 * Retrieve recent logs.
+	 *
+	 * @param int $limit Number of logs to retrieve.
+	 * @return array Log rows.
+	 */
+	public static function get_logs( $limit = 50 ) {
+		global $wpdb;
 
-        if ( empty( self::$table_name ) ) {
-            self::init();
-        }
+		if ( empty( self::$table_name ) ) {
+			self::init();
+		}
 
-        $limit = max( 1, intval( $limit ) );
+		$limit = max( 1, intval( $limit ) );
 
-        $query = $wpdb->prepare(
-            'SELECT id, user_id, user_email, company_name, request_json, response_json, prompt_tokens, completion_tokens, total_tokens, created_at FROM ' . self::$table_name . ' ORDER BY created_at DESC LIMIT %d',
-            $limit
-        );
+		$query = $wpdb->prepare(
+			'SELECT id, user_id, user_email, company_name, request_json, response_json, prompt_tokens, completion_tokens, total_tokens, created_at FROM ' . self::$table_name . ' ORDER BY created_at DESC LIMIT %d',
+			$limit
+		);
 
-        return $wpdb->get_results( $query, ARRAY_A );
-    }
+		return $wpdb->get_results( $query, ARRAY_A );
+	}
 
-    /**
-     * Purge old logs.
-     *
-     * @param int $days Number of days to retain.
-     * @return int Rows deleted.
-     */
-    public static function purge_logs( $days = 30 ) {
-        global $wpdb;
+	/**
+	 * Purge old logs.
+	 *
+	 * @param int $days Number of days to retain.
+	 * @return int Rows deleted.
+	 */
+	public static function purge_logs( $days = 30 ) {
+		global $wpdb;
 
-        if ( empty( self::$table_name ) ) {
-            self::init();
-        }
+		if ( empty( self::$table_name ) ) {
+			self::init();
+		}
 
-        $days = intval( $days );
-        if ( $days <= 0 ) {
-            return 0;
-        }
+		$days = intval( $days );
+		if ( $days <= 0 ) {
+			return 0;
+		}
 
-        $threshold = gmdate( 'Y-m-d H:i:s', strtotime( "-{$days} days" ) );
+		$threshold = gmdate( 'Y-m-d H:i:s', strtotime( "-{$days} days" ) );
 
-        return $wpdb->query(
-            $wpdb->prepare(
-                'DELETE FROM ' . self::$table_name . ' WHERE created_at < %s',
-                $threshold
-            )
-        );
-    }
+		return $wpdb->query(
+			$wpdb->prepare(
+				'DELETE FROM ' . self::$table_name . ' WHERE created_at < %s',
+				$threshold
+			)
+		);
+	}
 
-    /**
-     * Delete a single log entry.
-     *
-     * @param int $id Log ID.
-     * @return int Rows deleted.
-     */
-    public static function delete_log( $id ) {
-        global $wpdb;
+	/**
+	 * Delete a single log entry.
+	 *
+	 * @param int $id Log ID.
+	 * @return int Rows deleted.
+	 */
+	public static function delete_log( $id ) {
+		global $wpdb;
 
-        if ( empty( self::$table_name ) ) {
-            self::init();
-        }
+		if ( empty( self::$table_name ) ) {
+			self::init();
+		}
 
-        $id = intval( $id );
-        if ( $id <= 0 ) {
-            return 0;
-        }
+		$id = intval( $id );
+		if ( $id <= 0 ) {
+			return 0;
+		}
 
-        return $wpdb->delete( self::$table_name, [ 'id' => $id ], [ '%d' ] );
-    }
+		return $wpdb->delete( self::$table_name, [ 'id' => $id ], [ '%d' ] );
+	}
 
-    /**
-     * Clear all log entries.
-     *
-     * @return int Rows deleted.
-     */
-    public static function clear_logs() {
-        global $wpdb;
+	/**
+	 * Clear all log entries.
+	 *
+	 * @return int Rows deleted.
+	 */
+	public static function clear_logs() {
+		global $wpdb;
 
-        if ( empty( self::$table_name ) ) {
-            self::init();
-        }
+		if ( empty( self::$table_name ) ) {
+			self::init();
+		}
 
-        return $wpdb->query( 'TRUNCATE TABLE ' . self::$table_name );
-    }
+		return $wpdb->query( 'TRUNCATE TABLE ' . self::$table_name );
+	}
 
-    /**
-     * Retrieve logs with pagination support.
-     *
-     * @param int $paged    Current page number.
-     * @param int $per_page Items per page.
-     * @return array{
-     *     logs: array,
-     *     total: int
-     * }
-     */
-    public static function get_logs_paginated( $paged = 1, $per_page = 20 ) {
-        global $wpdb;
+	/**
+	 * Retrieve logs with pagination support.
+	 *
+	 * @param int $paged    Current page number.
+	 * @param int $per_page Items per page.
+	 * @return array{
+	 *     logs: array,
+	 *     total: int
+	 * }
+	 */
+	public static function get_logs_paginated( $paged = 1, $per_page = 20 ) {
+		global $wpdb;
 
-        if ( empty( self::$table_name ) ) {
-            self::init();
-        }
+		if ( empty( self::$table_name ) ) {
+			self::init();
+		}
 
-        $paged    = max( 1, intval( $paged ) );
-        $per_page = max( 1, intval( $per_page ) );
-        $offset   = ( $paged - 1 ) * $per_page;
+		$paged    = max( 1, intval( $paged ) );
+		$per_page = max( 1, intval( $per_page ) );
+		$offset   = ( $paged - 1 ) * $per_page;
 
-        $logs = $wpdb->get_results(
-            $wpdb->prepare(
-                'SELECT id, user_id, user_email, company_name, request_json, response_json, prompt_tokens, completion_tokens, total_tokens, created_at FROM ' . self::$table_name . ' ORDER BY created_at DESC LIMIT %d OFFSET %d',
-                $per_page,
-                $offset
-            ),
-            ARRAY_A
-        );
+		$logs = $wpdb->get_results(
+			$wpdb->prepare(
+				'SELECT id, user_id, user_email, company_name, request_json, response_json, prompt_tokens, completion_tokens, total_tokens, created_at FROM ' . self::$table_name . ' ORDER BY created_at DESC LIMIT %d OFFSET %d',
+				$per_page,
+				$offset
+			),
+			ARRAY_A
+		);
 
-        $total = (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . self::$table_name );
+		$total = (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . self::$table_name );
 
-        return [
-            'logs'  => $logs,
-            'total' => $total,
-        ];
-    }
+		return [
+			'logs'  => $logs,
+			'total' => $total,
+		];
+	}
 }
