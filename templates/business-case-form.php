@@ -397,6 +397,15 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                             </div>
                         </div>
                     </div>
+                    <div class="rtbcb-field">
+                        <label>
+                            <input type="checkbox" name="fast_mode" id="fast_mode" value="1" />
+                            <?php esc_html_e( 'Enable fast mode (ROI only)', 'rtbcb' ); ?>
+                        </label>
+                        <div class="rtbcb-field-help">
+                            <?php esc_html_e( 'Skip AI analysis and only calculate ROI.', 'rtbcb' ); ?>
+                        </div>
+                    </div>
 
                     <!-- What You'll Receive Preview -->
                     <div class="rtbcb-preview-container">

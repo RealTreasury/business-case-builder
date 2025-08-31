@@ -497,6 +497,7 @@ class RTBCB_Admin {
         register_setting( 'rtbcb_settings', 'rtbcb_gpt5_timeout', [ 'sanitize_callback' => 'intval' ] );
         register_setting( 'rtbcb_settings', 'rtbcb_gpt5_max_output_tokens', [ 'sanitize_callback' => 'rtbcb_sanitize_max_output_tokens' ] );
         register_setting( 'rtbcb_settings', 'rtbcb_gpt5_min_output_tokens', [ 'sanitize_callback' => 'rtbcb_sanitize_min_output_tokens' ] );
+		register_setting( 'rtbcb_settings', 'rtbcb_fast_mode', [ 'sanitize_callback' => 'absint' ] );
     }
 
     /**
