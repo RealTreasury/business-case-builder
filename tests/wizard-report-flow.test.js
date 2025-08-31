@@ -53,7 +53,7 @@ const html = `<!DOCTYPE html><html><body>
   </form>
 </div>
 <div id="report-container"></div>
-<div id="rtbcb-progress-container" style="display:none"><div class="rtbcb-progress-content"><div class="rtbcb-progress-text"></div></div></div>
+<div id="rtbcb-progress-container" style="display:none"><div class="rtbcb-progress-content"><div class="rtbcb-progress-text"></div><div class="rtbcb-progress-step"><span id="rtbcb-progress-status"></span></div><div class="rtbcb-progress-provisional"><div id="rtbcb-progress-category"></div><div id="rtbcb-progress-basic-roi"></div></div></div></div>
 </body></html>`;
 
 const dom = new JSDOM(html, { url: 'http://localhost', runScripts: 'outside-only' });

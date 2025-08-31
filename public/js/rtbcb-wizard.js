@@ -555,6 +555,10 @@ class BusinessCaseBuilder {
                     <div class="rtbcb-progress-step">
                         <span class="rtbcb-progress-step-text" id="rtbcb-progress-status">Analyzing ${this.escapeHTML(companyName)}'s treasury operations...</span>
                     </div>
+                    <div class="rtbcb-progress-provisional">
+                        <div id="rtbcb-progress-category" class="rtbcb-progress-field" style="display:none"></div>
+                        <div id="rtbcb-progress-basic-roi" class="rtbcb-progress-field" style="display:none"></div>
+                    </div>
                 </div>
             `;
             progressContainer.style.display = 'flex';
@@ -628,6 +632,9 @@ class BusinessCaseBuilder {
                 }
             }
 
+            // Render any provisional data as it's received
+            this.renderProvisionalData(statusData);
+
             if (status === 'completed') {
                 this.cancelPolling();
                 this.hideLoading();
@@ -653,6 +660,26 @@ class BusinessCaseBuilder {
             console.error('RTBCB: Job polling error:', error);
             this.cancelPolling();
             this.handleError({ message: error.message || 'An unexpected error occurred', type: 'polling_error' });
+        }
+    }
+
+    renderProvisionalData(data) {
+        const { basic_roi, category } = data;
+
+        if (category) {
+            const categoryEl = document.getElementById('rtbcb-progress-category');
+            if (categoryEl && !categoryEl.textContent) {
+                categoryEl.textContent = `Category: ${category}`;
+                categoryEl.style.display = 'block';
+            }
+        }
+
+        if (basic_roi) {
+            const roiEl = document.getElementById('rtbcb-progress-basic-roi');
+            if (roiEl && !roiEl.textContent) {
+                roiEl.textContent = `ROI: ${basic_roi}`;
+                roiEl.style.display = 'block';
+            }
         }
     }
 

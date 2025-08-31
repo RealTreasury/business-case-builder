@@ -389,6 +389,17 @@
     margin-bottom: 20px;
 }
 
+.rtbcb-progress-provisional {
+    margin-top: 20px;
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+.rtbcb-progress-field {
+    display: none;
+    margin-top: 8px;
+}
+
 /* Enhanced Results Styles */
 .rtbcb-results {
     display: none;

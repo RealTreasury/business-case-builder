@@ -452,6 +452,13 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                 <div class="rtbcb-progress-content">
                     <div class="rtbcb-progress-spinner"></div>
                     <div class="rtbcb-progress-text"><?php esc_html_e( 'Generating your business case. It will arrive by email shortly...', 'rtbcb' ); ?></div>
+                    <div class="rtbcb-progress-step">
+                        <span class="rtbcb-progress-step-text" id="rtbcb-progress-status"></span>
+                    </div>
+                    <div class="rtbcb-progress-provisional">
+                        <div id="rtbcb-progress-category" class="rtbcb-progress-field" style="display:none"></div>
+                        <div id="rtbcb-progress-basic-roi" class="rtbcb-progress-field" style="display:none"></div>
+                    </div>
                 </div>
             </div>
         </div>
