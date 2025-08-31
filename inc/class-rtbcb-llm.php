@@ -708,9 +708,9 @@ USER,
      * Returns a {@see WP_Error} when the API key is missing or when the LLM
      * call or response parsing fails.
      *
-     * @param array $user_inputs    Sanitized user inputs.
-     * @param array $roi_data       ROI calculation data.
-     * @param array $context_chunks Optional context strings for the prompt.
+     * @param array                     $user_inputs    Sanitized user inputs.
+     * @param array                     $roi_data       ROI calculation data.
+     * @param callable|array|Traversable $context_chunks Optional context provider or strings for the prompt.
      *
      * @return array|WP_Error Comprehensive analysis array or error object.
      */
@@ -745,16 +745,26 @@ USER,
             ];
         }
 
-        if ( false === $tech_landscape ) {
-            $tech_prompt = 'Briefly summarize treasury technology solutions relevant to a ' . $company_size . ' company in the ' . $industry . ' industry.';
-            if ( ! empty( $context_chunks ) ) {
-                $tech_prompt .= '\nContext: ' . implode( '\n', array_map( 'sanitize_text_field', $context_chunks ) );
-            }
-            $batch_prompts['tech'] = [
-                'instructions' => 'Return plain text summary.',
-                'input'        => $tech_prompt,
-            ];
-        }
+if ( false === $tech_landscape ) {
+$tech_prompt = 'Briefly summarize treasury technology solutions relevant to a ' . $company_size . ' company in the ' . $industry . ' industry.';
+
+if ( is_callable( $context_chunks ) ) {
+$context_chunks = $context_chunks();
+}
+
+if ( $context_chunks instanceof Traversable ) {
+$context_chunks = iterator_to_array( $context_chunks );
+}
+
+if ( ! empty( $context_chunks ) ) {
+$tech_prompt .= '\nContext: ' . implode( '\n', array_map( 'sanitize_text_field', (array) $context_chunks ) );
+}
+
+$batch_prompts['tech'] = [
+'instructions' => 'Return plain text summary.',
+'input'        => $tech_prompt,
+];
+}
 
         $batch_results = [];
         if ( ! empty( $batch_prompts ) ) {

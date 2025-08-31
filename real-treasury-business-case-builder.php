@@ -775,30 +775,29 @@ return $use_comprehensive;
 					return;
 				}
 
-				$recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
+                               $recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
 
-				// Get RAG context if available.
-				$rag_context = $this->get_rag_context( $user_inputs, $recommendation );
+                               // Generate business case analysis with lazy RAG loading.
+                               $analysis_data          = $this->generate_business_analysis( $user_inputs, $scenarios, $recommendation );
+                               $comprehensive_analysis = $analysis_data['analysis'];
+                               $rag_context            = $analysis_data['rag_context'];
 
-				// Generate business case analysis.
-				$comprehensive_analysis = $this->generate_business_analysis( $user_inputs, $scenarios, $rag_context );
+                               if ( is_wp_error( $comprehensive_analysis ) ) {
+                                       wp_send_json_error( [ 'message' => $comprehensive_analysis->get_error_message() ], 500 );
+                                       return;
+                               }
 
-				if ( is_wp_error( $comprehensive_analysis ) ) {
-					wp_send_json_error( [ 'message' => $comprehensive_analysis->get_error_message() ], 500 );
-					return;
-				}
-
-				// Merge all data for report generation.
-				$report_data = array_merge(
-					$comprehensive_analysis,
-					[
-						'company_name'    => $user_inputs['company_name'],
-						'scenarios'       => $scenarios,
-						'recommendation'  => $recommendation,
-						'rag_context'     => $rag_context,
-						'processing_time' => microtime( true ) - $_SERVER['REQUEST_TIME_FLOAT'],
-					]
-				);
+                               // Merge all data for report generation.
+                               $report_data = array_merge(
+                                       $comprehensive_analysis,
+                                       [
+                                               'company_name'    => $user_inputs['company_name'],
+                                               'scenarios'       => $scenarios,
+                                               'recommendation'  => $recommendation,
+                                               'rag_context'     => $rag_context,
+                                               'processing_time' => microtime( true ) - $_SERVER['REQUEST_TIME_FLOAT'],
+                                       ]
+                               );
 
 				// Generate HTML report using our fixed method.
 				$report_html = $this->get_comprehensive_report_html( $report_data );
@@ -954,67 +953,104 @@ return $use_comprehensive;
 	}
 	}
 	
-	/**
-	 * Generate comprehensive business analysis using LLM.
-	 */
-        private function generate_business_analysis( $user_inputs, $scenarios, $rag_context ) {
-            $start_time = microtime( true );
-            $timeout    = absint( rtbcb_get_api_timeout() );
+       /**
+        * Generate comprehensive business analysis using LLM.
+        *
+        * @param array $user_inputs    Sanitized user inputs.
+        * @param array $scenarios      ROI scenarios.
+        * @param array $recommendation Category recommendation data.
+        *
+        * @return array {
+        *     @type array|WP_Error $analysis    Analysis data or WP_Error.
+        *     @type array          $rag_context Context chunks used for RAG.
+        * }
+        */
+       private function generate_business_analysis( $user_inputs, $scenarios, $recommendation ) {
+           $start_time = microtime( true );
+           $timeout    = absint( rtbcb_get_api_timeout() );
 
-            $time_remaining = static function() use ( $start_time, $timeout ) {
-                return $timeout - ( microtime( true ) - $start_time );
-            };
+           $time_remaining = static function() use ( $start_time, $timeout ) {
+               return $timeout - ( microtime( true ) - $start_time );
+           };
 
-            if ( ! class_exists( 'RTBCB_LLM' ) ) {
-                return new WP_Error( 'llm_unavailable', __( 'AI analysis service unavailable.', 'rtbcb' ) );
-            }
+           if ( ! class_exists( 'RTBCB_LLM' ) ) {
+               return [
+                   'analysis'    => new WP_Error( 'llm_unavailable', __( 'AI analysis service unavailable.', 'rtbcb' ) ),
+                   'rag_context' => [],
+               ];
+           }
 
-            if ( ! rtbcb_has_openai_api_key() ) {
-                // Return fallback analysis instead of failing.
-                return $this->generate_fallback_analysis( $user_inputs, $scenarios );
-            }
+           if ( ! rtbcb_has_openai_api_key() ) {
+               return [
+                   'analysis'    => $this->generate_fallback_analysis( $user_inputs, $scenarios ),
+                   'rag_context' => [],
+               ];
+           }
 
-            // Skip RAG lookup if time is nearly exhausted.
-            if ( $time_remaining() < 10 ) {
-                $rag_context = [];
-            }
+           if ( $time_remaining() < 5 ) {
+               return [
+                   'analysis'    => $this->generate_fallback_analysis( $user_inputs, $scenarios ),
+                   'rag_context' => [],
+               ];
+           }
 
-            // If there's insufficient time for enhanced analysis, return fallback early.
-            if ( $time_remaining() < 5 ) {
-                return $this->generate_fallback_analysis( $user_inputs, $scenarios );
-            }
+           $rag_context = [];
+           $rag_used    = false;
 
-            try {
-                $llm    = new RTBCB_LLM();
-                $result = $llm->generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context );
+           $rag_loader = function() use ( $user_inputs, $recommendation, &$rag_context, &$rag_used, $time_remaining ) {
+               $rag_used = true;
+               if ( $time_remaining() < 10 ) {
+                   $rag_context = [];
+               } else {
+                   $rag_context = $this->get_rag_context( $user_inputs, $recommendation );
+               }
+               return $rag_context;
+           };
 
-                if ( is_wp_error( $result ) ) {
-                    // Fall back to structured analysis.
-                    return $this->generate_fallback_analysis( $user_inputs, $scenarios );
-                }
+           try {
+               $llm    = new RTBCB_LLM();
+               $result = $llm->generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_loader );
 
-                // If time is running out, return partial results without further processing.
-                if ( $time_remaining() < 2 ) {
-                    return [
-                        'executive_summary' => $result['executive_summary'] ?? '',
-                        'partial'          => true,
-                    ];
-                }
+               if ( is_wp_error( $result ) ) {
+                   return [
+                       'analysis'    => $this->generate_fallback_analysis( $user_inputs, $scenarios ),
+                       'rag_context' => [],
+                   ];
+               }
 
-                $required_keys = [ 'executive_summary', 'financial_analysis', 'industry_analysis', 'implementation_roadmap', 'risk_mitigation', 'next_steps' ];
-                $missing_keys  = array_diff( $required_keys, array_keys( $result ) );
+               if ( $time_remaining() < 2 ) {
+                   return [
+                       'analysis'    => [
+                           'executive_summary' => $result['executive_summary'] ?? '',
+                           'partial'          => true,
+                       ],
+                       'rag_context' => $rag_used ? $rag_context : [],
+                   ];
+               }
 
-                if ( ! empty( $missing_keys ) ) {
-                    rtbcb_log_error( 'LLM missing required sections', [ 'missing' => $missing_keys ] );
-                    return $this->generate_fallback_analysis( $user_inputs, $scenarios );
-                }
+               $required_keys = [ 'executive_summary', 'financial_analysis', 'industry_analysis', 'implementation_roadmap', 'risk_mitigation', 'next_steps' ];
+               $missing_keys  = array_diff( $required_keys, array_keys( $result ) );
 
-                return $result;
-            } catch ( Exception $e ) {
-                rtbcb_log_error( 'LLM analysis failed', $e->getMessage() );
-                return $this->generate_fallback_analysis( $user_inputs, $scenarios );
-            }
-        }
+               if ( ! empty( $missing_keys ) ) {
+                   rtbcb_log_error( 'LLM missing required sections', [ 'missing' => $missing_keys ] );
+                   return [
+                       'analysis'    => $this->generate_fallback_analysis( $user_inputs, $scenarios ),
+                       'rag_context' => [],
+                   ];
+               }
+
+               return [
+                   'analysis'    => $result,
+                   'rag_context' => $rag_used ? $rag_context : [],
+               ];
+           } catch ( Exception $e ) {
+               rtbcb_log_error( 'LLM analysis failed', $e->getMessage() );
+               return [
+                   'analysis'    => $this->generate_fallback_analysis( $user_inputs, $scenarios ),
+                   'rag_context' => [],
+               ];
+           }
+       }
 	
 	/**
 	 * Generate fallback analysis when LLM is unavailable.
