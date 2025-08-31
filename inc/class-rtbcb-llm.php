@@ -948,10 +948,12 @@ USER,
                         return [
                             'process'     => sanitize_text_field( $item['process'] ?? '' ),
                             'impact'      => sanitize_text_field( $item['impact'] ?? '' ),
-                            'description' => sanitize_text_field( $item['description'] ?? '' ),
+                            'description' => sanitize_textarea_field( $item['description'] ?? '' ),
                         ];
                     },
-                    $json['operational_analysis']['process_inefficiencies'] ?? []
+                    is_array( $json['operational_analysis']['process_inefficiencies'] ?? null )
+                        ? $json['operational_analysis']['process_inefficiencies']
+                        : []
                 ),
                 'automation_opportunities' => array_map(
                     function ( $item ) {
