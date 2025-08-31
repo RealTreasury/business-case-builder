@@ -729,26 +729,40 @@ function rtbcb_get_memory_status() {
  * Determine if provided inputs qualify for synchronous processing.
  *
  * Simple cases with minimal data can be handled without background jobs.
+ * A case is considered "simple" when all of the following are under their
+ * respective thresholds:
+ * - Number of banks involved.
+ * - Full-time equivalents (FTEs) required.
+ * - Combined weekly hours spent on reconciliation and cash positioning.
+ *
+ * These thresholds are intentionally conservative to keep synchronous
+ * processing fast. Adjust the values below or use the `rtbcb_is_simple_case`
+ * filter to customize the behavior.
  *
  * @param array $user_inputs Sanitized user inputs.
  * @return bool True when synchronous execution is allowed.
  */
 function rtbcb_is_simple_case( $user_inputs ) {
-	$user_inputs = is_array( $user_inputs ) ? $user_inputs : [];
+        $user_inputs = is_array( $user_inputs ) ? $user_inputs : [];
 
-	$num_banks = absint( $user_inputs['num_banks'] ?? 0 );
-	$ftes      = absint( $user_inputs['ftes'] ?? 0 );
-	$hours     = absint( $user_inputs['hours_reconciliation'] ?? 0 ) + absint( $user_inputs['hours_cash_positioning'] ?? 0 );
+        // Thresholds for determining a simple case.
+        $max_banks = 2;  // No more than two banking relationships.
+        $max_ftes  = 2;  // Teams of two FTEs or fewer.
+        $max_hours = 20; // Twenty or fewer total manual hours per week.
 
-	$is_simple = ( $num_banks <= 2 && $ftes <= 2 && $hours <= 20 );
+        $num_banks = absint( $user_inputs['num_banks'] ?? 0 );
+        $ftes      = absint( $user_inputs['ftes'] ?? 0 );
+        $hours     = absint( $user_inputs['hours_reconciliation'] ?? 0 ) + absint( $user_inputs['hours_cash_positioning'] ?? 0 );
 
-	/**
-	 * Filter whether a case is simple enough for synchronous execution.
-	 *
-	 * @param bool  $is_simple   Whether case is considered simple.
-	 * @param array $user_inputs User input data.
-	 */
-	return (bool) apply_filters( 'rtbcb_is_simple_case', $is_simple, $user_inputs );
+        $is_simple = ( $num_banks <= $max_banks && $ftes <= $max_ftes && $hours <= $max_hours );
+
+        /**
+         * Filter whether a case is simple enough for synchronous execution.
+         *
+         * @param bool  $is_simple   Whether case is considered simple.
+         * @param array $user_inputs User input data.
+         */
+        return (bool) apply_filters( 'rtbcb_is_simple_case', $is_simple, $user_inputs );
 }
 
 /**

@@ -753,7 +753,7 @@ return $use_comprehensive;
 				return;
 			}
 
-			// Offload complex cases to background processing.
+                        // Handle simple inputs synchronously; queue complex cases for background processing.
 			if ( ! rtbcb_is_simple_case( $user_inputs ) ) {
 				$job_id = RTBCB_Background_Job::enqueue( $user_inputs );
 				wp_send_json_success( [ 'job_id' => $job_id ] );
