@@ -1455,6 +1455,13 @@ function rtbcb_proxy_openai_responses() {
 	$body_array['stream']            = true;
 	$payload                         = wp_json_encode( $body_array );
 
+	$action = isset( $_REQUEST['action'] ) ? sanitize_key( wp_unslash( $_REQUEST['action'] ) ) : '';
+	if ( 'rtbcb_openai_responses' !== $action ) {
+		// Jetpack also routes requests through admin-ajax.php; avoid sending
+		// streaming headers for unrelated actions.
+		return;
+	}
+
 	nocache_headers();
 	header( 'Content-Type: text/event-stream' );
 	header( 'Cache-Control: no-cache' );
@@ -1490,7 +1497,7 @@ function rtbcb_proxy_openai_responses() {
 		echo 'data: ' . wp_json_encode( [ 'error' => $msg ] ) . "\n\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	}
 
-	exit;
+	wp_die();
 }
 
 /**

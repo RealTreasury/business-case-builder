@@ -45,6 +45,13 @@ class RTBCB_Ajax {
 						return;
 				}
 
+				$action = isset( $_REQUEST['action'] ) ? sanitize_key( wp_unslash( $_REQUEST['action'] ) ) : '';
+				if ( 'rtbcb_stream_analysis' !== $action ) {
+				// Jetpack also routes requests through admin-ajax.php; avoid sending
+				// streaming headers for unrelated actions.
+				return;
+				}
+
 				nocache_headers();
 				header( 'Content-Type: text/event-stream' );
 				header( 'Cache-Control: no-cache' );
@@ -74,10 +81,10 @@ $method = new ReflectionMethod( RTBCB_Main::class, 'generate_business_analysis' 
 
 				echo 'data: ' . wp_json_encode( [ 'type' => 'final', 'payload' => $result ] ) . "\n\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 				if ( function_exists( 'flush' ) ) {
-						flush();
+					flush();
 				}
-				exit;
-		}
+				wp_die();
+                       }
 	/**
 	* Process the basic ROI calculation step.
 	*
