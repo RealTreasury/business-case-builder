@@ -495,13 +495,14 @@ class Real_Treasury_BCB {
 	                'select_pain_points'      => __( 'Please select at least one pain point.', 'rtbcb' ),
 	                'email_confirmation'      => __( 'Your report will arrive by email shortly.', 'rtbcb' ),
 	            ],
-	            'settings'    => [
-	                'pdf_enabled'            => get_option( 'rtbcb_pdf_enabled', true ),
-	                'comprehensive_analysis' => get_option( 'rtbcb_comprehensive_analysis', true ),
-	                'professional_reports'   => get_option( 'rtbcb_professional_reports', true ),
-	            ],
-	        ]
-	    );
+                    'settings'    => [
+                        'pdf_enabled'            => get_option( 'rtbcb_pdf_enabled', true ),
+                        'comprehensive_analysis' => get_option( 'rtbcb_comprehensive_analysis', true ),
+                        'professional_reports'   => get_option( 'rtbcb_professional_reports', true ),
+                    ],
+                    'request_url' => apply_filters( 'rtbcb_request_page_url', home_url( '/business-case-report/' ) ),
+                ]
+            );
 
 	    // Report configuration
 	    $config             = rtbcb_get_gpt5_config();

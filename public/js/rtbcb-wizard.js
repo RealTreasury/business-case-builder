@@ -412,7 +412,10 @@ class BusinessCaseBuilder {
             // Handle JSON response
             if (data.success) {
                 if (data.data && data.data.job_id) {
-                    // Background job approach
+                    if (rtbcbAjax.request_url) {
+                        window.location.href = `${rtbcbAjax.request_url}?job_id=${encodeURIComponent(data.data.job_id)}`;
+                        return;
+                    }
                     this.pollJob(data.data.job_id, Date.now(), 0);
                 } else if (data.data) {
                     // Direct HTML or structured data response

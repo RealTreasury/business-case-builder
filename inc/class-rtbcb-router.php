@@ -14,6 +14,42 @@ require_once __DIR__ . '/helpers.php';
  */
 class RTBCB_Router {
     /**
+     * Initialize router hooks.
+     *
+     * @return void
+     */
+    public static function init() {
+        add_shortcode( 'rtbcb_request_processing', [ __CLASS__, 'render_request_page' ] );
+    }
+
+    /**
+     * Render request processing or report based on job status.
+     *
+     * @param array $atts Shortcode attributes.
+     *
+     * @return string
+     */
+    public static function render_request_page( $atts = [] ) {
+        $job_id = isset( $_GET['job_id'] ) ? sanitize_text_field( wp_unslash( $_GET['job_id'] ) ) : '';
+
+        if ( empty( $job_id ) ) {
+            return '<div class="rtbcb-error">' . esc_html__( 'Missing job ID.', 'rtbcb' ) . '</div>';
+        }
+
+        $status = RTBCB_Background_Job::get_status( $job_id );
+
+        if ( ! is_wp_error( $status ) && 'completed' === ( $status['status'] ?? '' ) && ! empty( $status['report_data'] ) ) {
+            $report_data = $status['report_data'];
+            ob_start();
+            include RTBCB_DIR . 'templates/comprehensive-report-template.php';
+            return ob_get_clean();
+        }
+
+        ob_start();
+        include RTBCB_DIR . 'templates/request-processing.php';
+        return ob_get_clean();
+    }
+    /**
      * Handle form submission and generate the business case.
      *
      * @param string $report_type Optional report type (basic or comprehensive).
@@ -514,4 +550,6 @@ class RTBCB_Router {
        ];
    }
 }
+
+RTBCB_Router::init();
 

@@ -26,27 +26,27 @@ class SimpleFormData {
 
 global.FormData = SimpleFormData;
 
-  let receivedHeaders = null;
-  let warnCalled = false;
-  const originalWarn = console.warn;
-  console.warn = () => { warnCalled = true; };
+let receivedHeaders = null;
+let warnCalled = false;
+const originalWarn = console.warn;
+console.warn = () => { warnCalled = true; };
 
-  global.fetch = function(url, options) {
-      receivedHeaders = options.headers;
-      const payload = {
-          success: true,
-          data: { job_id: 'job-123' }
-      };
-      const response = {
-          ok: true,
-          status: 200,
-          json: async () => payload,
-          text: async () => JSON.stringify(payload),
-          headers: { get: () => 'application/json' },
-          clone() { return this; }
-      };
-      return Promise.resolve(response);
-  };
+global.fetch = function(url, options) {
+    receivedHeaders = options.headers;
+    const payload = {
+        success: true,
+        data: { job_id: 'job-123' }
+    };
+    const response = {
+        ok: true,
+        status: 200,
+        json: async () => payload,
+        text: async () => JSON.stringify(payload),
+        headers: { get: () => 'application/json' },
+        clone() { return this; }
+    };
+    return Promise.resolve(response);
+};
 
 const form = {
     fields: {
@@ -86,15 +86,15 @@ global.window = {};
 
   const builder = new BusinessCaseBuilder();
   builder.form = form;
-  let resultsData = null;
-  builder.showProgress = () => {};
-  builder.showResults = (data) => { resultsData = data; };
-  builder.showEnhancedError = () => {};
-  builder.pollJob = () => { builder.handleSuccess({ report_html: '<div>Report</div>' }); };
+let resultsHTML = null;
+builder.showProgress = () => {};
+builder.showEnhancedHTMLReport = (html) => { resultsHTML = html; };
+builder.showEnhancedError = () => {};
+builder.pollJob = () => { builder.handleSuccess({ report_html: '<div>Report</div>' }); };
 
 (async () => {
     await builder.handleSubmit();
-    assert.strictEqual(resultsData.report_html, '<div>Report</div>');
+    assert.strictEqual(resultsHTML, '<div>Report</div>');
     assert.strictEqual(receivedHeaders['Accept'], 'application/json, text/html');
     assert.strictEqual(warnCalled, false);
     console.warn = originalWarn;
