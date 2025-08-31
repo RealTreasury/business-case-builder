@@ -64,6 +64,10 @@ class RTBCB_Main {
 	* Constructor.
 	*/
 	private function __construct() {
+		if ( $this->is_jetpack_request() ) {
+			return;
+		}
+
 		$this->plugin_data = get_file_data( RTBCB_FILE, [
 			'Name'        => 'Plugin Name',
 			'Version'     => 'Version',
@@ -75,6 +79,34 @@ class RTBCB_Main {
 
 		$this->init_hooks();
 		$this->includes();
+	}
+
+	/**
+	* Check if the current request is from Jetpack.
+	*
+	* @return bool
+	*/
+	private function is_jetpack_request() {
+		if ( function_exists( 'wp_doing_cron' ) && wp_doing_cron() ) {
+			return false;
+		}
+
+		if ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) {
+			return true;
+		}
+
+		if ( isset( $_SERVER['HTTP_X_JETPACK_SIGNATURE'] ) || isset( $_SERVER['HTTP_JETPACK_SIGNATURE'] ) ) {
+			return true;
+		}
+
+		if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
+			$request_uri = isset( $_SERVER['REQUEST_URI'] ) ? wp_unslash( $_SERVER['REQUEST_URI'] ) : '';
+			if ( false !== strpos( $request_uri, '/jetpack/' ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**
@@ -2572,7 +2604,10 @@ if ( ! class_exists( 'Real_Treasury_BCB' ) ) {
 }
 
 // Initialize the plugin
-RTBCB_Main::instance();
+if ( ! defined( 'RTBCB_NO_BOOTSTRAP' ) ) {
+	RTBCB_Main::instance();
+}
+
 
 // Helper functions for use in templates and other plugins
 if ( ! function_exists( 'rtbcb_get_leads_count' ) ) {
