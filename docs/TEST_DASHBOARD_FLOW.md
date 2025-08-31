@@ -40,63 +40,63 @@ graph TD
 ### Phase 1: 📥 Data Collection & Advanced Enrichment
 Objective: Create a deep and accurate profile of the target company.
 
-- **Component:** Dynamic User Input Wizard  
-  **Files:** `templates/business-case-form.php`, `public/js/rtbcb-wizard.js`  
-  **Function:** Captures a rich dataset through an adaptive, multi-step form with conditional logic.  
+- **Component:** Dynamic User Input Wizard
+  **Files:** `templates/business-case-form.php`, `public/js/rtbcb-wizard.js`
+  **Function:** Captures a rich dataset through an adaptive, multi-step form with conditional logic.
   **Data Points:** Financials, Technology Stack, Scored Pain Points, and Strategic Objectives.
 
-- **Component:** Multi-Source AI Data Enrichment  
-  **File:** `inc/class-rtbcb-llm.php`  
+- **Component:** Multi-Source AI Data Enrichment
+  **File:** `inc/class-rtbcb-llm.php`
   **Function:** Augments user data with external information (market position, competitors, financial news) via AI. Validates data against public sources (e.g., SEC filings).
 
-- **Component:** Data Storage & Caching  
-  **File:** `inc/class-rtbcb-db.php`  
+- **Component:** Data Storage & Caching
+  **File:** `inc/class-rtbcb-db.php`
   **Function:** Stores the complete, validated company profile in a structured database table. Implements a caching layer to prevent redundant API calls.
 
 ### Phase 2: 🧠 In-Depth Analysis & Content Generation
 Objective: Perform a sophisticated analysis of the company's treasury function and generate tailored, insightful content.
 
-- **Component:** Treasury Maturity Model Assessment  
-  **File:** `inc/class-rtbcb-maturity-model.php` (New Module)  
+- **Component:** Treasury Maturity Model Assessment
+  **File:** `inc/class-rtbcb-maturity-model.php` (New Module)
   **Function:** Scores the company on a 4-stage maturity scale (Basic, Developing, Strategic, Optimized) and generates a narrative explaining their current state.
 
-- **Component:** RAG-Powered Marketplace Analysis  
-  **File:** `inc/class-rtbcb-rag.php`  
+- **Component:** RAG-Powered Marketplace Analysis
+  **File:** `inc/class-rtbcb-rag.php`
   **Function:** Uses internal data (Tech Portal, articles) to generate a relevant market overview. Performs a cosine similarity search to shortlist 2-3 best-fit vendors.
 
-- **Component:** Dynamic Value Proposition  
-  **File:** `templates/comprehensive-report-template.php`  
+- **Component:** Dynamic Value Proposition
+  **File:** `templates/comprehensive-report-template.php`
   **Function:** Uses AI to generate a personalized opening paragraph that connects Real Treasury's value directly to the company's maturity level and challenges.
 
 ### Phase 3: 📈 Granular ROI & Strategic Recommendation
 Objective: Deliver a detailed financial business case and a clear, actionable technology roadmap.
 
-- **Component:** Granular ROI & Benefits Calculator  
-  **File:** `inc/class-rtbcb-calculator.php`  
+- **Component:** Granular ROI & Benefits Calculator
+  **File:** `inc/class-rtbcb-calculator.php`
   **Function:** Calculates a detailed breakdown of hard savings (e.g., reduced bank fees) and soft savings (e.g., automation efficiency). Generates data for a 3-year ROI timeline chart.
 
-- **Component:** Phased Technology Roadmap Generator  
-  **File:** `inc/class-rtbcb-category-recommender.php`  
+- **Component:** Phased Technology Roadmap Generator
+  **File:** `inc/class-rtbcb-category-recommender.php`
   **Function:** Creates a strategic, multi-phase implementation plan (e.g., Phase 1: Foundational, Phase 2: Automation, Phase 3: Optimization) instead of a single recommendation.
 
 ### Phase 4: 📄 Report Assembly & Interactive Delivery
 Objective: Create a professional, engaging, and high-impact final report.
 
-- **Component:** Automated Executive Summary  
-  **File:** `inc/class-rtbcb-llm.php`  
+- **Component:** Automated Executive Summary
+  **File:** `inc/class-rtbcb-llm.php`
   **Function:** Makes a final AI call, feeding it all key findings to generate a concise, C-suite-ready Executive Summary.
 
-- **Component:** Interactive Web-Based Report  
-  **Files:** `templates/comprehensive-report-template.php`, `public/js/rtbcb-report.js`  
+- **Component:** Interactive Web-Based Report
+  **Files:** `templates/comprehensive-report-template.php`, `public/js/rtbcb-report.js`
   **Function:** Assembles all generated sections into a final HTML report. Enhances the page with interactive elements like hoverable charts, expandable sections, and a dynamic Call-to-Action.
 
 ### Phase 5: 🚀 Post-Delivery Engagement & Lead Nurturing
 Objective: Convert the report into an ongoing conversation and nurture the lead.
 
-- **Component:** User Engagement Tracking  
+- **Component:** User Engagement Tracking
   **Function:** Integrates analytics (e.g., Google Analytics) into the report page to track key interactions (time on page, sections viewed, CTA clicks).
 
-- **Component:** Automated Follow-up Sequence  
+- **Component:** Automated Follow-up Sequence
   **Function:** Triggers a personalized email sequence based on the user's primary challenges. For example, a user concerned with "FX Volatility" receives targeted content on FX risk management.
 
 ## 🧪 Test Dashboard

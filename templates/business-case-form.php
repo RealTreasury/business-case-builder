@@ -32,7 +32,7 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 		<div class="rtbcb-modal-header">
 			<button type="button" class="rtbcb-modal-close" onclick="closeBusinessCaseModal()">&times;</button>
 			<h2 class="rtbcb-modal-title"><?php echo esc_html( $title ); ?></h2>
-			<p class="rtbcb-modal-subtitle"><?php echo esc_html( $subtitle ); ?></p>
+	<p class="rtbcb-modal-subtitle"><?php echo esc_html( $subtitle ); ?></p>
 		</div>
 
 		<!-- Modal Body -->
@@ -82,10 +82,10 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 						<label for="company_name">
 							<?php esc_html_e( 'Company Name', 'rtbcb' ); ?>
 						</label>
-						<input type="text" name="company_name" id="company_name" 
-							   placeholder="<?php esc_attr_e( 'Enter your company name', 'rtbcb' ); ?>" 
-							   required 
-							   maxlength="100" />
+						<input type="text" name="company_name" id="company_name"
+								placeholder="<?php esc_attr_e( 'Enter your company name', 'rtbcb' ); ?>"
+								required
+								maxlength="100" />
 						<div class="rtbcb-field-help">
 							<?php esc_html_e( 'This will be used to personalize your business case report', 'rtbcb' ); ?>
 						</div>
@@ -149,16 +149,16 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 			<div class="rtbcb-wizard-step" data-step="2">
 				<div class="rtbcb-step-header">
 					<h3><?php esc_html_e( 'Your current treasury operations', 'rtbcb' ); ?></h3>
-					  <p><?php esc_html_e( 'Help us understand your current workload and banking relationships.', 'rtbcb' ); ?></p>
+					<p><?php esc_html_e( 'Help us understand your current workload and banking relationships.', 'rtbcb' ); ?></p>
 				</div>
-				
+
 				<div class="rtbcb-step-content">
 					<div class="rtbcb-field rtbcb-field-required">
 						<label for="hours_reconciliation">
 							<?php esc_html_e( 'Weekly Hours: Bank Reconciliation', 'rtbcb' ); ?>
 						</label>
 						<input type="number" name="hours_reconciliation" id="hours_reconciliation"
-							   min="0" max="168" step="0.5" placeholder="0" required inputmode="decimal" />
+								min="0" max="168" step="0.5" placeholder="0" required inputmode="decimal" />
 						<div class="rtbcb-field-help">
 							<?php esc_html_e( 'Total weekly hours spent on bank reconciliation tasks', 'rtbcb' ); ?>
 						</div>
@@ -169,7 +169,7 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 							<?php esc_html_e( 'Weekly Hours: Cash Positioning', 'rtbcb' ); ?>
 						</label>
 						<input type="number" name="hours_cash_positioning" id="hours_cash_positioning"
-							   min="0" max="168" step="0.5" placeholder="0" required inputmode="decimal" />
+								min="0" max="168" step="0.5" placeholder="0" required inputmode="decimal" />
 						<div class="rtbcb-field-help">
 							<?php esc_html_e( 'Time spent on cash visibility, forecasting, and positioning', 'rtbcb' ); ?>
 						</div>
@@ -180,7 +180,7 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 							<?php esc_html_e( 'Number of Banking Relationships', 'rtbcb' ); ?>
 						</label>
 						<input type="number" name="num_banks" id="num_banks"
-							   min="1" max="50" placeholder="0" required inputmode="decimal" />
+								min="1" max="50" placeholder="0" required inputmode="decimal" />
 						<div class="rtbcb-field-help">
 							<?php esc_html_e( 'Total number of banks where your company maintains accounts', 'rtbcb' ); ?>
 						</div>
@@ -191,7 +191,7 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 							<?php esc_html_e( 'Treasury Team Size (FTEs)', 'rtbcb' ); ?>
 						</label>
 						<input type="number" name="ftes" id="ftes"
-							   min="0.5" max="100" step="0.5" placeholder="0" required inputmode="decimal" />
+								min="0.5" max="100" step="0.5" placeholder="0" required inputmode="decimal" />
 						<div class="rtbcb-field-help">
 							<?php esc_html_e( 'Full-time equivalent employees dedicated to treasury functions', 'rtbcb' ); ?>
 						</div>
@@ -205,7 +205,7 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 					<h3><?php esc_html_e( 'What are your biggest challenges?', 'rtbcb' ); ?></h3>
 					<p><?php esc_html_e( 'Select the pain points that best describe your current treasury challenges.', 'rtbcb' ); ?></p>
 				</div>
-				
+
 				<div class="rtbcb-step-content">
 					<div class="rtbcb-pain-points-grid">
 						<div class="rtbcb-pain-point-card">
@@ -286,7 +286,7 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 							</label>
 						</div>
 					</div>
-					
+
 					<div class="rtbcb-pain-points-validation">
 						<div class="rtbcb-validation-message" style="display: none;">
 							<?php esc_html_e( 'Please select at least one challenge that applies to your organization.', 'rtbcb' ); ?>
@@ -364,14 +364,14 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 					<h3><?php esc_html_e( 'Get your business case', 'rtbcb' ); ?></h3>
 					<p><?php esc_html_e( 'Enter your email to receive your personalized ROI analysis and recommendations.', 'rtbcb' ); ?></p>
 				</div>
-				
+
 				<div class="rtbcb-step-content">
 					<div class="rtbcb-field rtbcb-field-required">
 						<label for="email">
 							<?php esc_html_e( 'Business Email Address', 'rtbcb' ); ?>
 						</label>
-						<input type="email" name="email" id="email" 
-							   placeholder="yourname@company.com" required />
+						<input type="email" name="email" id="email"
+								placeholder="yourname@company.com" required />
 						<div class="rtbcb-field-help">
 							<?php esc_html_e( 'We\'ll send your business case report to this email address', 'rtbcb' ); ?>
 						</div>

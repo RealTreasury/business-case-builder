@@ -7,38 +7,38 @@ if ( typeof ajaxurl === 'undefined' ) {
 
 jQuery(document).ready(function($) {
     'use strict';
-    
+
     // Simple test - remove this once working
     console.log('RTBCB Admin JS loaded successfully');
-    
+
     var RTBCB = window.RTBCB || {};
     window.RTBCB = RTBCB;
-    
+
     RTBCB.Admin = {
         init: function() {
             this.bindEvents();
             this.initComponents();
         },
-        
+
         bindEvents: function() {
             // Test API Connection
             $('#rtbcb-test-api').on('click', this.testApi);
-            
+
             // Export Leads
             $('#rtbcb-export-leads, #rtbcb-export-data').on('click', this.exportLeads);
-            
+
             // Rebuild Index
             $('#rtbcb-rebuild-index').on('click', this.rebuildIndex);
-            
+
             // Sync Local
             $('#rtbcb-sync-to-local').on('click', this.syncLocal);
-            
+
             // Commentary Test
             $('#rtbcb-generate-commentary').on('click', this.testCommentary);
-            
+
             // Company Overview Test
             $('#rtbcb-company-overview-form').on('submit', this.testCompanyOverview);
-            
+
             // Industry Overview Test
             $('#rtbcb-industry-overview-form').on('submit', this.testIndustryOverview);
 
@@ -84,13 +84,13 @@ jQuery(document).ready(function($) {
                 }
             });
         },
-        
+
         initComponents: function() {
             // Initialize leads manager if present
             if ($('#rtbcb-bulk-form').length) {
                 this.initLeadsManager();
             }
-            
+
             // Initialize tabs if present
             if ($('#rtbcb-test-tabs').length) {
                 this.initTabs();
@@ -107,7 +107,7 @@ jQuery(document).ready(function($) {
                 }
             }
         },
-        
+
         testApi: async function(e) {
             e.preventDefault();
             var $btn = $(this);
@@ -136,7 +136,7 @@ jQuery(document).ready(function($) {
                 $btn.prop('disabled', false);
             }
         },
-        
+
         exportLeads: async function(e) {
             e.preventDefault();
             var $btn = $(this);
@@ -181,7 +181,7 @@ jQuery(document).ready(function($) {
                 $btn.prop('disabled', false);
             }
         },
-        
+
         rebuildIndex: async function(e) {
             e.preventDefault();
             var $btn = $(this);
@@ -210,7 +210,7 @@ jQuery(document).ready(function($) {
                 $btn.text(original).prop('disabled', false);
             }
         },
-        
+
         syncLocal: async function(e) {
             e.preventDefault();
             var $btn = $(this);
@@ -240,7 +240,7 @@ jQuery(document).ready(function($) {
                 $btn.text(original).prop('disabled', false);
             }
         },
-        
+
         testCommentary: async function(e) {
             e.preventDefault();
             var $btn = $(this);
@@ -271,19 +271,19 @@ jQuery(document).ready(function($) {
                 $btn.prop('disabled', false).text(original);
             }
         },
-        
+
         testCompanyOverview: function(e) {
             e.preventDefault();
             var $form = $(this);
             var $results = $('#rtbcb-company-overview-results');
             var $btn = $form.find('button[type="submit"]');
             var original = $btn.text();
-            
+
             $btn.prop('disabled', true).text(window.rtbcbAdmin.strings.processing || 'Processing...');
-            
+
             var company = $('#rtbcb-company-name').val();
             var nonce = window.rtbcbAdmin.company_overview_nonce;
-            
+
             $.ajax({
                 url: window.rtbcbAdmin.ajax_url,
                 method: 'POST',
@@ -352,16 +352,16 @@ jQuery(document).ready(function($) {
                 }
             });
         },
-        
+
         testIndustryOverview: function(e) {
             e.preventDefault();
             var $form = $(this);
             var $results = $('#rtbcb-industry-overview-results');
             var $btn = $form.find('button[type="submit"]');
             var original = $btn.text();
-            
+
             $btn.prop('disabled', true).text(window.rtbcbAdmin.strings.processing || 'Processing...');
-            
+
             var industry = $('#rtbcb-industry-name').val();
             var size = $('#rtbcb-company-size').val();
             var nonce = $form.find('[name="nonce"]').val() || window.rtbcbAdmin.industry_overview_nonce;
@@ -370,7 +370,7 @@ jQuery(document).ready(function($) {
                 industry: industry,
                 size: size
             };
-            
+
             $.ajax({
                 url: window.rtbcbAdmin.ajax_url,
                 method: 'POST',
@@ -433,7 +433,7 @@ jQuery(document).ready(function($) {
                 }
             });
         },
-        
+
         testBenefits: async function(e) {
             e.preventDefault();
             var $results = $('#rtbcb-benefits-estimate-results');
@@ -590,7 +590,7 @@ jQuery(document).ready(function($) {
                 alert(window.rtbcbAdmin.strings.company_required || 'Please enter a company name before running tests');
                 return;
             }
-        
+
             var $status = $('#rtbcb-test-status');
             var $progress = $('#rtbcb-test-progress');
             var $step = $('#rtbcb-test-step');
@@ -765,23 +765,23 @@ jQuery(document).ready(function($) {
 
             $btn.prop('disabled', false).text(original);
         },
-        
+
         initLeadsManager: function() {
             var self = this;
-            
+
             // Select All functionality
             $('#rtbcb-select-all').on('change', function() {
                 var checked = this.checked;
                 $('.rtbcb-lead-checkbox').prop('checked', checked);
                 self.updateBulkButton();
             });
-            
+
             // Individual checkbox changes
             $('.rtbcb-lead-checkbox').on('change', function() {
                 self.updateSelectAll();
                 self.updateBulkButton();
             });
-            
+
             // Bulk form submission
             $('#rtbcb-bulk-form').on('submit', async function(e) {
                 e.preventDefault();
@@ -817,7 +817,7 @@ jQuery(document).ready(function($) {
                     alert('Bulk action request failed');
                 }
             });
-            
+
             // View lead details
             $('.rtbcb-view-lead').on('click', function(e) {
                 e.preventDefault();
@@ -827,7 +827,7 @@ jQuery(document).ready(function($) {
                 var category = $row.find('.column-category').text().trim();
                 var roi = $row.find('.column-roi').text().trim();
                 var date = $row.find('.column-date').text().trim();
-                
+
                 var html = `
                     <div class="rtbcb-lead-detail-grid">
                         <div class="rtbcb-detail-item"><label>Email:</label><span>${email}</span></div>
@@ -836,11 +836,11 @@ jQuery(document).ready(function($) {
                         <div class="rtbcb-detail-item"><label>ROI:</label><span>${roi}</span></div>
                         <div class="rtbcb-detail-item"><label>Date:</label><span>${date}</span></div>
                     </div>`;
-                
+
                 $('#rtbcb-lead-details').html(html);
                 $('#rtbcb-lead-modal').show();
             });
-            
+
             // Delete individual lead
             $('.rtbcb-delete-lead').on('click', async function(e) {
                 e.preventDefault();
@@ -871,28 +871,28 @@ jQuery(document).ready(function($) {
                     alert('Delete request failed');
                 }
             });
-            
+
             // Modal close
             $('.rtbcb-modal-close').on('click', function() {
                 $('#rtbcb-lead-modal').hide();
             });
-            
+
             $('#rtbcb-lead-modal').on('click', function(e) {
                 if (e.target.id === 'rtbcb-lead-modal') {
                     $(this).hide();
                 }
             });
         },
-        
+
         updateSelectAll: function() {
             var $all = $('#rtbcb-select-all');
             var total = $('.rtbcb-lead-checkbox').length;
             var checked = $('.rtbcb-lead-checkbox:checked').length;
-            
+
             $all.prop('checked', total === checked && total > 0);
             $all.prop('indeterminate', checked > 0 && checked < total);
         },
-        
+
         updateBulkButton: function() {
             var count = $('.rtbcb-lead-checkbox:checked').length;
             $('#rtbcb-bulk-form button[type="submit"]').prop('disabled', count === 0);
@@ -1106,7 +1106,7 @@ jQuery(document).ready(function($) {
             }
         }
     };
-    
+
     // Initialize when ready
     RTBCB.Admin.init();
 

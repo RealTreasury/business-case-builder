@@ -91,7 +91,7 @@ $enable_charts = RTBCB_Settings::get_setting( 'enable_charts', true );
 			</div>
 			<div class="rtbcb-chart-legend">
 				<?php foreach ( $category_stats as $stat ) : ?>
-					<?php 
+					<?php
 					$category_info = $categories[ $stat['recommended_category'] ] ?? [];
 					$category_name = $category_info['name'] ?? ucfirst( str_replace( '_', ' ', $stat['recommended_category'] ) );
 					?>
@@ -171,11 +171,11 @@ $enable_charts = RTBCB_Settings::get_setting( 'enable_charts', true );
 		<h2><?php esc_html_e( 'Key Insights', 'rtbcb' ); ?></h2>
 		<div class="rtbcb-insights-grid">
 			<?php if ( ! empty( $category_stats ) ) : ?>
-				<?php 
+				<?php
 				$top_category = array_reduce( $category_stats, function( $carry, $item ) {
 					return ( ! $carry || $item['count'] > $carry['count'] ) ? $item : $carry;
 				} );
-				
+
 				if ( $top_category ) {
 					$top_cat_info = $categories[ $top_category['recommended_category'] ] ?? [];
 					$top_cat_name = $top_cat_info['name'] ?? '';
@@ -189,8 +189,8 @@ $enable_charts = RTBCB_Settings::get_setting( 'enable_charts', true );
 					<div class="rtbcb-insight-content">
 						<h4><?php esc_html_e( 'Most Popular Category', 'rtbcb' ); ?></h4>
 						<p>
-							<?php 
-							printf( 
+							<?php
+							printf(
 								esc_html__( '%1$s is recommended for %2$d%% of leads (%3$d out of %4$d).', 'rtbcb' ),
 								esc_html( $top_cat_name ?? 'Unknown' ),
 								esc_html( number_format( $top_percentage ?? 0, 1 ) ),
@@ -204,10 +204,10 @@ $enable_charts = RTBCB_Settings::get_setting( 'enable_charts', true );
 			<?php endif; ?>
 
 			<?php if ( ! empty( $size_stats ) ) : ?>
-				<?php 
+				<?php
 				$enterprise_count = 0;
 				$smb_count = 0;
-				
+
 				foreach ( $size_stats as $stat ) {
 					if ( in_array( $stat['company_size'], [ '>$2B', '$500M-$2B' ], true ) ) {
 						$enterprise_count += $stat['count'];
@@ -215,7 +215,7 @@ $enable_charts = RTBCB_Settings::get_setting( 'enable_charts', true );
 						$smb_count += $stat['count'];
 					}
 				}
-				
+
 				$enterprise_percentage = $total_leads > 0 ? ( $enterprise_count / $total_leads ) * 100 : 0;
 				?>
 				<div class="rtbcb-insight-card">
@@ -225,8 +225,8 @@ $enable_charts = RTBCB_Settings::get_setting( 'enable_charts', true );
 					<div class="rtbcb-insight-content">
 						<h4><?php esc_html_e( 'Market Segment', 'rtbcb' ); ?></h4>
 						<p>
-							<?php 
-							printf( 
+							<?php
+							printf(
 								esc_html__( '%1$d%% of leads are enterprise-level companies ($500M+ revenue), indicating strong interest from larger organizations.', 'rtbcb' ),
 								esc_html( number_format( $enterprise_percentage, 1 ) )
 							);
@@ -243,10 +243,10 @@ $enable_charts = RTBCB_Settings::get_setting( 'enable_charts', true );
 				<div class="rtbcb-insight-content">
 					<h4><?php esc_html_e( 'ROI Potential', 'rtbcb' ); ?></h4>
 					<p>
-						<?php 
+						<?php
 						$avg_roi = intval( $roi_stats['avg_base'] ?? 0 );
 						if ( $avg_roi > 100000 ) {
-							printf( 
+							printf(
 								esc_html__( 'Average projected ROI of $%s demonstrates strong value proposition for treasury technology investments.', 'rtbcb' ),
 								esc_html( number_format( $avg_roi ) )
 							);
@@ -265,9 +265,9 @@ $enable_charts = RTBCB_Settings::get_setting( 'enable_charts', true );
 				<div class="rtbcb-insight-content">
 					<h4><?php esc_html_e( 'Recent Activity', 'rtbcb' ); ?></h4>
 					<p>
-						<?php 
+						<?php
 						if ( $recent_leads > 0 ) {
-							printf( 
+							printf(
 								esc_html__( '%1$d new leads in the last 30 days shows growing interest in treasury technology solutions.', 'rtbcb' ),
 								esc_html( $recent_leads )
 							);
@@ -767,19 +767,19 @@ function initializeAnalyticsCharts() {
 		gap: 16px;
 		align-items: stretch;
 	}
-	
+
 	.rtbcb-metrics-grid {
 		grid-template-columns: 1fr;
 	}
-	
+
 	.rtbcb-charts-grid {
 		grid-template-columns: 1fr;
 	}
-	
+
 	.rtbcb-roi-overview {
 		grid-template-columns: 1fr;
 	}
-	
+
 	.rtbcb-insights-grid {
 		grid-template-columns: 1fr;
 	}

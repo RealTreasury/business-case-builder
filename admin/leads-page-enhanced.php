@@ -32,13 +32,13 @@ $order   = isset( $order ) ? sanitize_key( $order ) : 'DESC';
 	<div class="rtbcb-filters">
 		<form method="get" action="">
 			<input type="hidden" name="page" value="rtbcb-leads" />
-			
+
 			<div class="rtbcb-filter-row">
 				<div class="rtbcb-filter-group">
 					<label for="search"><?php esc_html_e( 'Search Email:', 'rtbcb' ); ?></label>
 					<input type="text" id="search" name="search" value="<?php echo esc_attr( $search ); ?>" placeholder="<?php esc_attr_e( 'Enter email address...', 'rtbcb' ); ?>" />
 				</div>
-				
+
 				<div class="rtbcb-filter-group">
 					<label for="category"><?php esc_html_e( 'Category:', 'rtbcb' ); ?></label>
 					<select id="category" name="category">
@@ -50,17 +50,17 @@ $order   = isset( $order ) ? sanitize_key( $order ) : 'DESC';
 						<?php endforeach; ?>
 					</select>
 				</div>
-				
+
 				<div class="rtbcb-filter-group">
 					<label for="date_from"><?php esc_html_e( 'From Date:', 'rtbcb' ); ?></label>
 					<input type="date" id="date_from" name="date_from" value="<?php echo esc_attr( $date_from ); ?>" />
 				</div>
-				
+
 				<div class="rtbcb-filter-group">
 					<label for="date_to"><?php esc_html_e( 'To Date:', 'rtbcb' ); ?></label>
 					<input type="date" id="date_to" name="date_to" value="<?php echo esc_attr( $date_to ); ?>" />
 				</div>
-				
+
 				<div class="rtbcb-filter-actions">
 					<button type="submit" class="button button-primary"><?php esc_html_e( 'Filter', 'rtbcb' ); ?></button>
 					<a href="<?php echo esc_url( admin_url( 'admin.php?page=rtbcb-leads' ) ); ?>" class="button button-secondary"><?php esc_html_e( 'Clear', 'rtbcb' ); ?></a>
@@ -148,7 +148,7 @@ $order   = isset( $order ) ? sanitize_key( $order ) : 'DESC';
 							</td>
 							<td class="column-category" data-colname="<?php esc_attr_e( 'Category', 'rtbcb' ); ?>">
 								<?php if ( ! empty( $lead['recommended_category'] ) ) : ?>
-									<?php 
+									<?php
 									$cat_info = $categories[ $lead['recommended_category'] ] ?? [];
 									$cat_name = $cat_info['name'] ?? ucfirst( str_replace( '_', ' ', $lead['recommended_category'] ) );
 									?>
@@ -462,15 +462,15 @@ $order   = isset( $order ) ? sanitize_key( $order ) : 'DESC';
 		gap: 16px;
 		align-items: stretch;
 	}
-	
+
 	.rtbcb-filter-row {
 		flex-direction: column;
 	}
-	
+
 	.rtbcb-filter-group {
 		min-width: auto;
 	}
-	
+
 	.rtbcb-detail-item {
 		grid-template-columns: 1fr;
 		gap: 4px;
