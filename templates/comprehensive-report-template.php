@@ -30,6 +30,9 @@ $company_name    = $metadata['company_name'] ?? __( 'Your Company', 'rtbcb' );
 $analysis_date   = $metadata['analysis_date'] ?? current_time( 'Y-m-d' );
 $confidence_level = round( ( $metadata['confidence_level'] ?? 0.85 ) * 100 );
 $processing_time = $metadata['processing_time'] ?? 0;
+$analysis_tier  = $metadata['analysis_type'] ?? 'basic';
+$is_enhanced    = in_array( $analysis_tier, [ 'enhanced', 'premium' ], true );
+$is_premium     = 'premium' === $analysis_tier;
 ?>
 
 <div class="rtbcb-enhanced-report" data-company="<?php echo esc_attr( $company_name ); ?>">
@@ -63,12 +66,17 @@ $processing_time = $metadata['processing_time'] ?? 0;
 						<span class="rtbcb-meta-label"><?php echo esc_html__( 'Processing Time', 'rtbcb' ); ?></span>
 						<span class="rtbcb-meta-value"><?php echo esc_html( round( $processing_time, 1 ) ); ?>s</span>
 					</div>
-					<div class="rtbcb-meta-item">
-						<span class="rtbcb-meta-icon">📊</span>
-						<span class="rtbcb-meta-label"><?php echo esc_html__( 'Analysis Type', 'rtbcb' ); ?></span>
-						<span class="rtbcb-meta-value"><?php echo esc_html__( 'Comprehensive Enhanced', 'rtbcb' ); ?></span>
-					</div>
-				</div>
+                                       <div class="rtbcb-meta-item">
+                                               <span class="rtbcb-meta-icon">📊</span>
+                                               <span class="rtbcb-meta-label"><?php echo esc_html__( 'Analysis Type', 'rtbcb' ); ?></span>
+                                               <span class="rtbcb-meta-value"><?php echo esc_html( ucfirst( $analysis_tier ) ); ?></span>
+                                       </div>
+                                       <div class="rtbcb-meta-item">
+                                               <span class="rtbcb-meta-icon">🏷️</span>
+                                               <span class="rtbcb-meta-label"><?php echo esc_html__( 'Version', 'rtbcb' ); ?></span>
+                                               <span class="rtbcb-meta-value"><?php echo esc_html( RTBCB_VERSION ); ?></span>
+                                       </div>
+                               </div>
 			</div>
 
 			<!-- Key Metrics Dashboard -->
@@ -338,8 +346,8 @@ $processing_time = $metadata['processing_time'] ?? 0;
 	</div>
 	<?php endif; ?>
 
-	<!-- Action Plan Section with Timeline -->
-	<?php if ( ! empty( $action_plan ) ) : ?>
+       <!-- Action Plan Section with Timeline -->
+       <?php if ( $is_enhanced && ! empty( $action_plan ) ) : ?>
 	<div class="rtbcb-section-enhanced rtbcb-action-plan">
 		<div class="rtbcb-section-header-enhanced">
 			<h2 class="rtbcb-section-title">
@@ -399,24 +407,28 @@ $processing_time = $metadata['processing_time'] ?? 0;
 	</div>
 <?php endif; ?>
 
-	<!-- Supporting Context Section -->
-	<?php if ( ! empty( $rag_context ) ) : ?>
-	<div class="rtbcb-section-enhanced rtbcb-supporting-context">
-		<div class="rtbcb-section-header-enhanced">
-			<h2 class="rtbcb-section-title">
-				<span class="rtbcb-section-icon">📚</span>
-				<?php echo esc_html__( 'Supporting Context', 'rtbcb' ); ?>
-			</h2>
-		</div>
-		<div class="rtbcb-section-content">
-			<ul class="rtbcb-context-list">
-				<?php foreach ( (array) $rag_context as $context_item ) : ?>
-					<li><?php echo esc_html( $context_item ); ?></li>
-				<?php endforeach; ?>
-			</ul>
-		</div>
-	</div>
-	<?php endif; ?>
+       <!-- Supporting Context Section -->
+       <?php if ( $is_premium ) : ?>
+       <div class="rtbcb-section-enhanced rtbcb-supporting-context">
+               <div class="rtbcb-section-header-enhanced">
+                        <h2 class="rtbcb-section-title">
+                                <span class="rtbcb-section-icon">📚</span>
+                                <?php echo esc_html__( 'Supporting Context', 'rtbcb' ); ?>
+                        </h2>
+               </div>
+               <div class="rtbcb-section-content">
+                        <?php if ( ! empty( $rag_context ) ) : ?>
+                                <ul class="rtbcb-context-list">
+                                        <?php foreach ( (array) $rag_context as $context_item ) : ?>
+                                                <li><?php echo esc_html( $context_item ); ?></li>
+                                        <?php endforeach; ?>
+                                </ul>
+                        <?php else : ?>
+                                <p><?php echo esc_html__( 'No additional supporting context available.', 'rtbcb' ); ?></p>
+                        <?php endif; ?>
+               </div>
+       </div>
+       <?php endif; ?>
 
 	<!-- Enhanced Report Footer -->
 	<div class="rtbcb-report-footer-enhanced">

@@ -314,12 +314,13 @@ class RTBCB_Router {
 
        // Create structured data format expected by template.
        $report_data = [
-           'metadata'           => [
-               'company_name'     => $company_name,
-               'analysis_date'    => current_time( 'Y-m-d' ),
-               'confidence_level' => floatval( $business_case_data['confidence'] ),
-               'processing_time'  => intval( $business_case_data['processing_time'] ),
-           ],
+   'metadata'           => [
+       'company_name'     => $company_name,
+       'analysis_date'    => current_time( 'Y-m-d' ),
+       'analysis_type'    => rtbcb_get_analysis_tier(),
+       'confidence_level' => floatval( $business_case_data['confidence'] ),
+       'processing_time'  => intval( $business_case_data['processing_time'] ),
+   ],
            'executive_summary'  => [
                'strategic_positioning'    => wp_kses_post( $business_case_data['executive_summary'] ?: $business_case_data['narrative'] ),
                'key_value_drivers'       => $this->extract_value_drivers( $business_case_data ),

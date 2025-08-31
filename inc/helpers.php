@@ -1726,3 +1726,22 @@ function rtbcb_get_report_allowed_html() {
 	return $allowed;
 }
 
+
+/**
+ * Determine analysis tier based on enabled features.
+ *
+ * @return string Analysis tier.
+ */
+function rtbcb_get_analysis_tier() {
+	$comprehensive = get_option( 'rtbcb_comprehensive_analysis', true );
+	$professional  = get_option( 'rtbcb_professional_reports', true );
+
+	$tier = 'basic';
+	if ( $professional ) {
+		$tier = 'premium';
+	} elseif ( $comprehensive ) {
+		$tier = 'enhanced';
+	}
+
+	return in_array( $tier, RTBCB_ALLOWED_TIERS, true ) ? $tier : 'basic';
+}

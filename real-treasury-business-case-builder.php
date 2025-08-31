@@ -19,6 +19,7 @@ define( 'RTBCB_VERSION', '2.1.8' );
 define( 'RTBCB_FILE', __FILE__ );
 define( 'RTBCB_URL', plugin_dir_url( RTBCB_FILE ) );
 define( 'RTBCB_DIR', plugin_dir_path( RTBCB_FILE ) );
+define( 'RTBCB_ALLOWED_TIERS', [ 'basic', 'enhanced', 'premium' ] );
 
 /**
  * Enhanced main plugin class.
@@ -810,11 +811,11 @@ return $use_comprehensive;
 	'scenarios'              => $formatted_scenarios,
 	'recommendation'         => $recommendation,
 	'comprehensive_analysis' => $comprehensive_analysis,
-	'report_html'            => $report_html,
-	'lead_id'                => $lead_id,
-	'company_name'           => $user_inputs['company_name'],
-	'analysis_type'          => 'comprehensive_enhanced',
-	'memory_info'            => rtbcb_get_memory_status(),
+'report_html'            => $report_html,
+'lead_id'                => $lead_id,
+'company_name'           => $user_inputs['company_name'],
+'analysis_type'          => rtbcb_get_analysis_tier(),
+'memory_info'            => rtbcb_get_memory_status(),
 	];
 	
 	wp_send_json_success( $response_data );
@@ -1660,18 +1661,18 @@ return $use_comprehensive;
 
             // Prepare final response
             $response_data = [
-                'scenarios'              => $formatted_scenarios,
-                'recommendation'         => $recommendation,
-                'comprehensive_analysis' => $comprehensive_analysis,
-                'narrative'              => $comprehensive_analysis,
-                'rag_context'            => $rag_context,
-                'report_html'            => $report_html,
-                'lead_id'                => $lead_id,
-                'company_name'           => $user_inputs['company_name'],
-                'analysis_type'          => 'comprehensive',
-                'api_used'               => ! empty( get_option( 'rtbcb_openai_api_key' ) ),
-                'fallback_used'          => isset( $comprehensive_analysis['enhanced_fallback'] ),
-                'memory_info'            => rtbcb_get_memory_status(),
+'scenarios'              => $formatted_scenarios,
+'recommendation'         => $recommendation,
+'comprehensive_analysis' => $comprehensive_analysis,
+'narrative'              => $comprehensive_analysis,
+'rag_context'            => $rag_context,
+'report_html'            => $report_html,
+'lead_id'                => $lead_id,
+'company_name'           => $user_inputs['company_name'],
+'analysis_type'          => rtbcb_get_analysis_tier(),
+'api_used'               => ! empty( get_option( 'rtbcb_openai_api_key' ) ),
+'fallback_used'          => isset( $comprehensive_analysis['enhanced_fallback'] ),
+'memory_info'            => rtbcb_get_memory_status(),
             ];
 
             rtbcb_log_memory_usage( 'before_response' );

@@ -10,16 +10,17 @@
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
-
-$rag_context = $business_case_data['rag_context'] ?? [];
+$rag_context    = $business_case_data['rag_context'] ?? [];
+$analysis_tier = $business_case_data['metadata']['analysis_type'] ?? 'basic';
 ?>
 <div class="rtbcb-report">
     <h2><?php echo esc_html__( 'Business Case Report', 'rtbcb' ); ?></h2>
+    <div class="rtbcb-version-tag"><?php echo esc_html( RTBCB_VERSION ); ?></div>
     <?php if ( ! empty( $business_case_data['narrative'] ) ) : ?>
         <p><?php echo esc_html( $business_case_data['narrative'] ); ?></p>
     <?php endif; ?>
 
-    <?php if ( ! empty( $business_case_data['risks'] ) ) : ?>
+    <?php if ( in_array( $analysis_tier, [ 'enhanced', 'premium' ], true ) && ! empty( $business_case_data['risks'] ) ) : ?>
         <h3><?php echo esc_html__( 'Risks', 'rtbcb' ); ?></h3>
         <ul>
             <?php foreach ( (array) $business_case_data['risks'] as $risk ) : ?>
@@ -28,7 +29,7 @@ $rag_context = $business_case_data['rag_context'] ?? [];
         </ul>
     <?php endif; ?>
 
-    <?php if ( ! empty( $business_case_data['assumptions_explained'] ) ) : ?>
+    <?php if ( in_array( $analysis_tier, [ 'enhanced', 'premium' ], true ) && ! empty( $business_case_data['assumptions_explained'] ) ) : ?>
         <h3><?php echo esc_html__( 'Assumptions', 'rtbcb' ); ?></h3>
         <ul>
             <?php foreach ( (array) $business_case_data['assumptions_explained'] as $assumption ) : ?>
@@ -37,7 +38,7 @@ $rag_context = $business_case_data['rag_context'] ?? [];
         </ul>
     <?php endif; ?>
 
-    <?php if ( ! empty( $business_case_data['citations'] ) ) : ?>
+    <?php if ( 'premium' === $analysis_tier && ! empty( $business_case_data['citations'] ) ) : ?>
         <h3><?php echo esc_html__( 'Citations', 'rtbcb' ); ?></h3>
         <ol>
             <?php foreach ( (array) $business_case_data['citations'] as $citation ) : ?>
@@ -56,7 +57,7 @@ $rag_context = $business_case_data['rag_context'] ?? [];
         </ol>
     <?php endif; ?>
 
-    <?php if ( ! empty( $business_case_data['next_actions'] ) ) : ?>
+    <?php if ( 'premium' === $analysis_tier && ! empty( $business_case_data['next_actions'] ) ) : ?>
         <h3><?php echo esc_html__( 'Next Actions', 'rtbcb' ); ?></h3>
         <ul>
             <?php foreach ( (array) $business_case_data['next_actions'] as $action ) : ?>
@@ -73,14 +74,16 @@ $rag_context = $business_case_data['rag_context'] ?? [];
         <p><?php echo esc_html__( 'Recommended Category:', 'rtbcb' ) . ' ' . esc_html( $business_case_data['recommended_category'] ); ?></p>
     <?php endif; ?>
 
-	<h3><?php echo esc_html__( 'Context', 'rtbcb' ); ?></h3>
-	<?php if ( ! empty( $rag_context ) ) : ?>
+    <?php if ( 'premium' === $analysis_tier ) : ?>
+        <h3><?php echo esc_html__( 'Context', 'rtbcb' ); ?></h3>
+        <?php if ( ! empty( $rag_context ) ) : ?>
 		<ul>
 			<?php foreach ( (array) $rag_context as $context_item ) : ?>
 				<li><?php echo esc_html( $context_item ); ?></li>
 			<?php endforeach; ?>
 		</ul>
-	<?php else : ?>
-		<p><?php echo esc_html__( 'No additional context available.', 'rtbcb' ); ?></p>
-	<?php endif; ?>
+        <?php else : ?>
+                <p><?php echo esc_html__( 'No additional context available.', 'rtbcb' ); ?></p>
+        <?php endif; ?>
+    <?php endif; ?>
 </div>
