@@ -106,15 +106,12 @@ class RTBCB_Ajax {
 			}
 		
 		$workflow_tracker->start_step( 'category_refined_roi' );
-		$refined_roi = RTBCB_Calculator::calculate_category_refined_roi( $user_inputs, $recommendation['category_info'] );
-		$refined_roi['sensitivity_analysis'] = $roi_scenarios['sensitivity_analysis'] ?? [];
-		$refined_roi['confidence_metrics']   = $roi_scenarios['confidence_metrics'] ?? [];
-		$roi_scenarios                       = $refined_roi;
+		$roi_scenarios = self::clamp_roi_scenarios_to_category( $roi_scenarios, $recommendation['category_info'] );
 		$workflow_tracker->complete_step( 'category_refined_roi', $roi_scenarios );
-			if ( $job_id ) {
+		if ( $job_id ) {
 			RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'refined_roi' => $roi_scenarios ] );
 		}
-		
+
 		$workflow_tracker->start_step( 'hybrid_rag_analysis' );
                         if ( $enable_ai ) {
                                 $rag_baseline = [];
@@ -274,7 +271,7 @@ class RTBCB_Ajax {
 		];
 	}
 
-private static function structure_report_data( $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, $request_start ) {
+	private static function structure_report_data( $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, $request_start ) {
 	$operational_analysis = (array) ( $final_analysis['operational_analysis'] ?? [] );
 	$current_state_assessment = (array) ( $operational_analysis['current_state_assessment'] ?? [] );
 	if ( empty( $current_state_assessment ) ) {
@@ -374,6 +371,43 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 			return RTBCB_Leads::save_lead( $lead_data );
 		}
 		return null;
+	}
+
+	/**
+	 * Clamp ROI scenarios to the recommended category's ROI range.
+	 *
+	 * @param array $roi_scenarios ROI scenarios to clamp.
+	 * @param array $category      Recommended category info.
+	 * @return array Clamped ROI scenarios.
+	 */
+	private static function clamp_roi_scenarios_to_category( $roi_scenarios, $category ) {
+		if ( empty( $category['roi_range'] ) || ! is_array( $category['roi_range'] ) ) {
+			return $roi_scenarios;
+		}
+
+		$min_roi = $category['roi_range'][0];
+		$max_roi = $category['roi_range'][1];
+
+		foreach ( [ 'conservative', 'base', 'optimistic' ] as $key ) {
+			if ( isset( $roi_scenarios[ $key ]['total_annual_benefit'] ) ) {
+				$benefit = $roi_scenarios[ $key ]['total_annual_benefit'];
+				$clamped = max( $min_roi, min( $benefit, $max_roi ) );
+				$roi_scenarios[ $key ]['total_annual_benefit'] = $clamped;
+				$avg_cost = ( $min_roi + $max_roi ) / 2;
+				$roi_scenarios[ $key ]['roi_percentage'] = $avg_cost > 0 ? ( $clamped / $avg_cost ) * 100 : 0;
+			}
+		}
+
+		if ( isset( $roi_scenarios['sensitivity_analysis'] ) && is_array( $roi_scenarios['sensitivity_analysis'] ) ) {
+			foreach ( $roi_scenarios['sensitivity_analysis'] as &$analysis ) {
+				if ( isset( $analysis['adjusted_benefit'] ) ) {
+					$analysis['adjusted_benefit'] = max( $min_roi, min( $analysis['adjusted_benefit'], $max_roi ) );
+				}
+			}
+			unset( $analysis );
+		}
+
+		return $roi_scenarios;
 	}
 
 	private static function calculate_business_case_strength( $roi_scenarios, $recommendation ) {
