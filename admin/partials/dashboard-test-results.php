@@ -5,9 +5,7 @@
  * @package RealTreasuryBusinessCaseBuilder
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-    exit;
-}
+defined( 'ABSPATH' ) || exit;
 
 $max_results  = 10;
 $recent_results = [];

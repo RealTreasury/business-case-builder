@@ -5,9 +5,7 @@
  * @package RealTreasuryBusinessCaseBuilder
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-    exit;
-}
+defined( 'ABSPATH' ) || exit;
 
 if ( ! rtbcb_require_completed_steps( 'rtbcb-test-follow-up-email', false ) ) {
     echo '<div class="notice notice-warning inline"><p>' .

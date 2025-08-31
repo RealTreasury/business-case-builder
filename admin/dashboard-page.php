@@ -4,9 +4,7 @@
  */
 
 // Exit if accessed directly.
-if ( ! defined( 'ABSPATH' ) ) {
-    exit;
-}
+defined( 'ABSPATH' ) || exit;
 
 $total_leads = $stats['total_leads'] ?? 0;
 $recent_leads = $stats['recent_leads'] ?? 0;

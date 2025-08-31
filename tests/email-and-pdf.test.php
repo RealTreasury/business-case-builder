@@ -4,6 +4,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	define( 'ABSPATH', __DIR__ . '/' );
 }
 
+defined( 'ABSPATH' ) || exit;
+
 if ( ! function_exists( 'sanitize_email' ) ) {
 	function sanitize_email( $email ) {
 	    return filter_var( $email, FILTER_SANITIZE_EMAIL );

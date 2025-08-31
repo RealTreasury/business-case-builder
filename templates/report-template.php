@@ -7,9 +7,7 @@
  * @var array $business_case_data Business case data from the LLM.
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
-}
+defined( 'ABSPATH' ) || exit;
 
 $metadata      = $business_case_data['metadata'] ?? [];
 $analysis_type = $metadata['analysis_type'] ?? 'basic';

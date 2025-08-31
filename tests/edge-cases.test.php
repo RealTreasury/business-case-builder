@@ -1,7 +1,9 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) {
-define( 'ABSPATH', __DIR__ . '/../' );
+	define( 'ABSPATH', __DIR__ . '/../' );
 }
+
+defined( 'ABSPATH' ) || exit;
 
 use PHPUnit\Framework\TestCase;
 

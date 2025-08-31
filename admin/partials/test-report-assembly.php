@@ -5,9 +5,7 @@
  * @package RealTreasuryBusinessCaseBuilder
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-    exit;
-}
+defined( 'ABSPATH' ) || exit;
 
 $allowed = rtbcb_require_completed_steps( 'rtbcb-test-report-assembly', false );
 if ( ! $allowed ) {
