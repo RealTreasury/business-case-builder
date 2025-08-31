@@ -268,12 +268,24 @@ class RTBCB_Router {
         }
 
         $business_case_data = is_array( $business_case_data ) ? $business_case_data : [];
+        $report_data        = $business_case_data['report_data'] ?? null;
+        $hash_source        = $report_data ?: $business_case_data;
+        $data_hash          = md5( wp_json_encode( $hash_source ) );
+        $cache_key          = md5( $template_path . ':' . $data_hash );
+
+        $cached_html = wp_cache_get( $cache_key, 'rtbcb_reports' );
+        if ( false !== $cached_html ) {
+            return $cached_html;
+        }
 
         ob_start();
         include $template_path;
         $html = ob_get_clean();
+        $html = wp_kses( $html, rtbcb_get_report_allowed_html() );
 
-        return wp_kses( $html, rtbcb_get_report_allowed_html() );
+        wp_cache_set( $cache_key, $html, 'rtbcb_reports', HOUR_IN_SECONDS );
+
+        return $html;
     }
 
 	/**

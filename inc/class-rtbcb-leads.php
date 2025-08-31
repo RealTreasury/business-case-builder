@@ -269,6 +269,7 @@ class RTBCB_Leads {
                 }
 
                 self::update_cached_statistics();
+                rtbcb_clear_report_cache();
                 return intval( $existing_lead['id'] );
             } else {
                 // Insert new lead
@@ -285,6 +286,7 @@ class RTBCB_Leads {
 
                 $lead_id = $wpdb->insert_id;
                 self::update_cached_statistics();
+                rtbcb_clear_report_cache();
                 return $lead_id;
             }
         } catch ( Exception $e ) {

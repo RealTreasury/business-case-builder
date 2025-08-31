@@ -548,6 +548,7 @@ class RTBCB_Admin {
         $result = $wpdb->delete( $table_name, [ 'id' => $lead_id ], [ '%d' ] );
 
         if ( $result ) {
+            rtbcb_clear_report_cache();
             wp_send_json_success( [ 'message' => __( 'Lead deleted successfully.', 'rtbcb' ) ] );
         } else {
             wp_send_json_error( [ 'message' => __( 'Failed to delete lead.', 'rtbcb' ) ] );
@@ -593,8 +594,9 @@ class RTBCB_Admin {
                 );
                 
                 if ( $result ) {
-                    wp_send_json_success( [ 
-                        'message' => sprintf( __( '%d leads deleted successfully.', 'rtbcb' ), $result ) 
+                    rtbcb_clear_report_cache();
+                    wp_send_json_success( [
+                        'message' => sprintf( __( '%d leads deleted successfully.', 'rtbcb' ), $result )
                     ] );
                 } else {
                     wp_send_json_error( [ 'message' => __( 'Failed to delete leads.', 'rtbcb' ) ] );

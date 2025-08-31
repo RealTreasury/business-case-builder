@@ -1870,9 +1870,30 @@ function rtbcb_get_report_allowed_html() {
  * @return void
  */
 function rtbcb_invalidate_rag_cache() {
-	if ( function_exists( 'get_option' ) && function_exists( 'update_option' ) ) {
-		$version = (int) get_option( 'rtbcb_rag_cache_version', 1 );
-		update_option( 'rtbcb_rag_cache_version', $version + 1 );
-	}
+        if ( function_exists( 'get_option' ) && function_exists( 'update_option' ) ) {
+                $version = (int) get_option( 'rtbcb_rag_cache_version', 1 );
+                update_option( 'rtbcb_rag_cache_version', $version + 1 );
+        }
+}
+
+/**
+ * Clear cached report HTML entries.
+ *
+ * Removes all cached report templates to ensure fresh rendering when lead data changes.
+ *
+ * @return void
+ */
+function rtbcb_clear_report_cache() {
+        global $wp_object_cache;
+
+        if ( ! isset( $wp_object_cache->cache ) || ! is_array( $wp_object_cache->cache ) ) {
+                return;
+        }
+
+        if ( isset( $wp_object_cache->cache['rtbcb_reports'] ) && is_array( $wp_object_cache->cache['rtbcb_reports'] ) ) {
+                foreach ( array_keys( $wp_object_cache->cache['rtbcb_reports'] ) as $key ) {
+                        wp_cache_delete( $key, 'rtbcb_reports' );
+                }
+        }
 }
 
