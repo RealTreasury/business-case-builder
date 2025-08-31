@@ -19,6 +19,8 @@ $gpt5_timeout    = rtbcb_get_api_timeout();
 $gpt5_max_output_tokens = get_option( 'rtbcb_gpt5_max_output_tokens', 8000 );
 $gpt5_min_output_tokens = get_option( 'rtbcb_gpt5_min_output_tokens', 256 );
 $fast_mode       = get_option( 'rtbcb_fast_mode', 0 );
+$enable_ai       = get_option( 'rtbcb_enable_ai_analysis', 1 );
+$enable_charts   = get_option( 'rtbcb_enable_charts', 1 );
 
 $chat_models = [
     'gpt-5'             => 'gpt-5',
@@ -155,6 +157,24 @@ $embedding_models = [
                 <td>
                     <input type="checkbox" id="rtbcb_fast_mode" name="rtbcb_fast_mode" value="1" <?php checked( 1, $fast_mode ); ?> />
                     <p class="description"><?php echo esc_html__( 'Generate a basic ROI-only report without AI processing.', 'rtbcb' ); ?></p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="rtbcb_enable_ai_analysis"><?php echo esc_html__( 'Enable AI Analysis', 'rtbcb' ); ?></label>
+                </th>
+                <td>
+                    <input type="checkbox" id="rtbcb_enable_ai_analysis" name="rtbcb_enable_ai_analysis" value="1" <?php checked( 1, $enable_ai ); ?> />
+                    <p class="description"><?php echo esc_html__( 'Process inputs with AI for enriched insights.', 'rtbcb' ); ?></p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="rtbcb_enable_charts"><?php echo esc_html__( 'Enable Charts', 'rtbcb' ); ?></label>
+                </th>
+                <td>
+                    <input type="checkbox" id="rtbcb_enable_charts" name="rtbcb_enable_charts" value="1" <?php checked( 1, $enable_charts ); ?> />
+                    <p class="description"><?php echo esc_html__( 'Render visual charts in reports and dashboards.', 'rtbcb' ); ?></p>
                 </td>
             </tr>
         </table>

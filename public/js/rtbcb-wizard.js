@@ -678,8 +678,10 @@ class BusinessCaseBuilder {
     }
 
     initializeEnhancedReport(container) {
-        // Initialize Chart.js charts
-        this.initializeReportCharts(container);
+        // Initialize Chart.js charts if enabled
+        if ( window.rtbcbAjax?.settings?.charts_enabled ) {
+            this.initializeReportCharts(container);
+        }
 
         // Initialize collapsible sections
         this.initializeCollapsibleSections(container);
@@ -692,6 +694,10 @@ class BusinessCaseBuilder {
     }
 
     initializeReportCharts(container) {
+        if ( !window.rtbcbAjax?.settings?.charts_enabled ) {
+            return;
+        }
+
         const chartCanvas = container.querySelector('#rtbcb-roi-chart');
         if (!chartCanvas) return;
 

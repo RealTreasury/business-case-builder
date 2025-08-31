@@ -27,6 +27,7 @@ class RTBCB_Settings {
         'bank_fee_reduction'        => [ 'min' => 5, 'max' => 10 ],
         'baseline_bank_fee_multiplier' => 15000,
         'enable_ai_analysis'        => true,
+        'enable_charts'            => true,
     ];
 
     /**
@@ -37,8 +38,17 @@ class RTBCB_Settings {
      * @return mixed
      */
     public static function get_setting( $key, $default = null ) {
-        $settings = get_option( 'rtbcb_settings', self::DEFAULTS );
-        return $settings[ $key ] ?? $default;
+        $settings = get_option( 'rtbcb_settings', [] );
+        if ( is_array( $settings ) && isset( $settings[ $key ] ) ) {
+            return $settings[ $key ];
+        }
+
+        $option_value = get_option( 'rtbcb_' . $key, null );
+        if ( null !== $option_value ) {
+            return $option_value;
+        }
+
+        return self::DEFAULTS[ $key ] ?? $default;
     }
 
     /**

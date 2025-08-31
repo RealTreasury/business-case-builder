@@ -74,13 +74,20 @@ class RTBCB_Admin {
             return;
 	}
 
-        wp_enqueue_script( 'chart-js', RTBCB_URL . 'public/js/chart.min.js', [], '3.9.1', true );
-        wp_enqueue_script( 
-            'rtbcb-admin', 
-            RTBCB_URL . 'admin/js/rtbcb-admin.js', 
-            [ 'jquery', 'chart-js' ], 
-            RTBCB_VERSION, 
-            true 
+        $enable_charts = (bool) get_option( 'rtbcb_enable_charts', true );
+
+        if ( $enable_charts ) {
+            wp_enqueue_script( 'chart-js', RTBCB_URL . 'public/js/chart.min.js', [], '3.9.1', true );
+        }
+
+        $admin_deps = $enable_charts ? [ 'jquery', 'chart-js' ] : [ 'jquery' ];
+
+        wp_enqueue_script(
+            'rtbcb-admin',
+            RTBCB_URL . 'admin/js/rtbcb-admin.js',
+            $admin_deps,
+            RTBCB_VERSION,
+            true
         );
         wp_enqueue_style(
             'rtbcb-admin',
@@ -183,6 +190,7 @@ class RTBCB_Admin {
             'page'                       => $page,
             'company'                    => $company_data,
             'sections'                   => $sections_js,
+            'charts_enabled'             => (bool) get_option( 'rtbcb_enable_charts', true ),
             'strings'                    => [
                 'confirm_delete'      => __( 'Are you sure you want to delete this lead?', 'rtbcb' ),
                 'confirm_bulk_delete' => __( 'Are you sure you want to delete the selected leads?', 'rtbcb' ),
@@ -497,7 +505,9 @@ class RTBCB_Admin {
         register_setting( 'rtbcb_settings', 'rtbcb_gpt5_timeout', [ 'sanitize_callback' => 'intval' ] );
         register_setting( 'rtbcb_settings', 'rtbcb_gpt5_max_output_tokens', [ 'sanitize_callback' => 'rtbcb_sanitize_max_output_tokens' ] );
         register_setting( 'rtbcb_settings', 'rtbcb_gpt5_min_output_tokens', [ 'sanitize_callback' => 'rtbcb_sanitize_min_output_tokens' ] );
-		register_setting( 'rtbcb_settings', 'rtbcb_fast_mode', [ 'sanitize_callback' => 'absint' ] );
+        register_setting( 'rtbcb_settings', 'rtbcb_fast_mode', [ 'sanitize_callback' => 'absint' ] );
+        register_setting( 'rtbcb_settings', 'rtbcb_enable_ai_analysis', [ 'sanitize_callback' => 'absint' ] );
+        register_setting( 'rtbcb_settings', 'rtbcb_enable_charts', [ 'sanitize_callback' => 'absint' ] );
     }
 
     /**

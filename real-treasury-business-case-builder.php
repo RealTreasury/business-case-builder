@@ -378,6 +378,8 @@ add_action( 'rtbcb_cleanup_jobs', [ 'RTBCB_Background_Job', 'cleanup' ] );
             'rtbcb_labor_cost_per_hour'=> 100,
             'rtbcb_bank_fee_baseline'  => 15000,
             'rtbcb_comprehensive_analysis' => true,
+            'rtbcb_enable_ai_analysis' => true,
+            'rtbcb_enable_charts'      => true,
         ];
 
         foreach ( $defaults as $option => $value ) {
@@ -392,38 +394,42 @@ add_action( 'rtbcb_cleanup_jobs', [ 'RTBCB_Background_Job', 'cleanup' ] );
 	 *
 	 * @return void
 	 */
-	public function enqueue_assets() {
-	    if ( ! $this->should_load_assets() ) {
-	        return;
-	    }
+        public function enqueue_assets() {
+            if ( ! $this->should_load_assets() ) {
+                return;
+            }
 
-	    // Base Styles
-	    wp_enqueue_style(
-	        'rtbcb-style',
-	        RTBCB_URL . 'public/css/rtbcb.css',
-	        [],
-	        RTBCB_VERSION
-	    );
+            $charts_enabled = (bool) RTBCB_Settings::get_setting( 'enable_charts', true );
 
-		// Enhanced Report Styles
-		if ( $this->should_use_comprehensive_template() ) {
-			$enhanced_css = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? 'enhanced-report.css' : 'enhanced-report.min.css';
-			wp_enqueue_style(
-				'rtbcb-enhanced-report',
-				RTBCB_URL . 'public/css/' . $enhanced_css,
-				[ 'rtbcb-style' ],
-				RTBCB_VERSION
-			);
-		}
+            // Base Styles
+            wp_enqueue_style(
+                'rtbcb-style',
+                RTBCB_URL . 'public/css/rtbcb.css',
+                [],
+                RTBCB_VERSION
+            );
 
-	    // Chart.js for report visualizations
-	    wp_enqueue_script(
-	        'chartjs',
-	        RTBCB_URL . 'public/js/chart.min.js',
-	        [],
-	        '3.9.1',
-	        true
-	    );
+                // Enhanced Report Styles
+                if ( $this->should_use_comprehensive_template() ) {
+                        $enhanced_css = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? 'enhanced-report.css' : 'enhanced-report.min.css';
+                        wp_enqueue_style(
+                                'rtbcb-enhanced-report',
+                                RTBCB_URL . 'public/css/' . $enhanced_css,
+                                [ 'rtbcb-style' ],
+                                RTBCB_VERSION
+                        );
+                }
+
+            // Chart.js for report visualizations
+            if ( $charts_enabled ) {
+                wp_enqueue_script(
+                    'chartjs',
+                    RTBCB_URL . 'public/js/chart.min.js',
+                    [],
+                    '3.9.1',
+                    true
+                );
+            }
 
 	    // DOMPurify for sanitization with CDN fallback
 	    $dompurify_cdn   = 'https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.2/purify.min.js';
@@ -453,15 +459,16 @@ add_action( 'rtbcb_cleanup_jobs', [ 'RTBCB_Background_Job', 'cleanup' ] );
 	        false // Load in header
 	    );
 
-		// Main report functionality
-		$report_file = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? 'rtbcb-report.js' : 'rtbcb-report.min.js';
-		wp_enqueue_script(
-			'rtbcb-report',
-			RTBCB_URL . 'public/js/' . $report_file,
-			[ 'chartjs', 'dompurify' ],
-			RTBCB_VERSION,
-			true
-		);
+                // Main report functionality
+                $report_file = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? 'rtbcb-report.js' : 'rtbcb-report.min.js';
+                $report_deps = $charts_enabled ? [ 'chartjs', 'dompurify' ] : [ 'dompurify' ];
+                wp_enqueue_script(
+                        'rtbcb-report',
+                        RTBCB_URL . 'public/js/' . $report_file,
+                        $report_deps,
+                        RTBCB_VERSION,
+                        true
+                );
 
 		// Main plugin script
 		$main_script = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? 'rtbcb.js' : 'rtbcb.min.js';
@@ -481,13 +488,16 @@ add_action( 'rtbcb_cleanup_jobs', [ 'RTBCB_Background_Job', 'cleanup' ] );
 	 */
 	private function localize_scripts() {
 	    // Wizard configuration
-	    wp_localize_script(
-	        'rtbcb-wizard',
-	        'rtbcbAjax',
-	        [
-	            'ajax_url'    => admin_url( 'admin-ajax.php' ),
-	            'nonce'       => wp_create_nonce( 'rtbcb_generate' ),
-	            'strings'     => [
+            $charts_enabled = (bool) RTBCB_Settings::get_setting( 'enable_charts', true );
+            $ai_enabled     = (bool) RTBCB_Settings::get_setting( 'enable_ai_analysis', true );
+
+            wp_localize_script(
+                'rtbcb-wizard',
+                'rtbcbAjax',
+                [
+                    'ajax_url'    => admin_url( 'admin-ajax.php' ),
+                    'nonce'       => wp_create_nonce( 'rtbcb_generate' ),
+                    'strings'     => [
 	                'error'                   => __( 'An error occurred. Please try again.', 'rtbcb' ),
 	                'generating'              => __( 'Generating your comprehensive business case...', 'rtbcb' ),
 	                'analyzing'               => __( 'Analyzing your treasury operations...', 'rtbcb' ),
@@ -502,13 +512,15 @@ add_action( 'rtbcb_cleanup_jobs', [ 'RTBCB_Background_Job', 'cleanup' ] );
 	                'select_pain_points'      => __( 'Please select at least one pain point.', 'rtbcb' ),
 	                'email_confirmation'      => __( 'Your report will arrive by email shortly.', 'rtbcb' ),
 	            ],
-	            'settings'    => [
-	                'pdf_enabled'            => get_option( 'rtbcb_pdf_enabled', true ),
-	                'comprehensive_analysis' => get_option( 'rtbcb_comprehensive_analysis', true ),
-	                'professional_reports'   => get_option( 'rtbcb_professional_reports', true ),
-	            ],
-	        ]
-	    );
+                    'settings'    => [
+                        'pdf_enabled'            => get_option( 'rtbcb_pdf_enabled', true ),
+                        'comprehensive_analysis' => get_option( 'rtbcb_comprehensive_analysis', true ),
+                        'professional_reports'   => get_option( 'rtbcb_professional_reports', true ),
+                        'ai_analysis_enabled'    => $ai_enabled,
+                        'charts_enabled'         => $charts_enabled,
+                    ],
+                ]
+            );
 
 	    // Report configuration
 	    $config             = rtbcb_get_gpt5_config();
@@ -2443,9 +2455,10 @@ return $use_comprehensive;
 		$debug_info = [
 		'comprehensive_template_exists' => file_exists( RTBCB_DIR . 'templates/comprehensive-report-template.php' ),
 		'basic_template_exists'        => file_exists( RTBCB_DIR . 'templates/report-template.php' ),
-		'enhanced_css_exists'         => file_exists( RTBCB_DIR . 'public/css/enhanced-report.css' ),
-		'chart_js_exists'             => file_exists( RTBCB_DIR . 'public/js/chart.min.js' ),
-		'comprehensive_analysis_enabled' => get_option( 'rtbcb_comprehensive_analysis', true ),
+                'enhanced_css_exists'         => file_exists( RTBCB_DIR . 'public/css/enhanced-report.css' ),
+                'chart_js_exists'             => file_exists( RTBCB_DIR . 'public/js/chart.min.js' ),
+                'charts_enabled'              => RTBCB_Settings::get_setting( 'enable_charts', true ),
+                'comprehensive_analysis_enabled' => get_option( 'rtbcb_comprehensive_analysis', true ),
 		'openai_key_configured'       => ! empty( get_option( 'rtbcb_openai_api_key' ) ),
 		'required_classes'            => [
 		'RTBCB_Calculator'          => class_exists( 'RTBCB_Calculator' ),
