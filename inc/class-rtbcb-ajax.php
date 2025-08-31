@@ -2,56 +2,56 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * AJAX handlers for Business Case Builder.
- *
- * @package RealTreasuryBusinessCaseBuilder
- */
+	* AJAX handlers for Business Case Builder.
+	*
+	* @package RealTreasuryBusinessCaseBuilder
+	*/
 class RTBCB_Ajax {
 	/**
 	 * Generate comprehensive case via AJAX.
 	 *
 	 * @return void
 	 */
-        public static function generate_comprehensive_case() {
-                if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
-                        wp_send_json_error( __( 'Security check failed.', 'rtbcb' ), 403 );
-                        return;
-                }
+		public static function generate_comprehensive_case() {
+				if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
+						wp_send_json_error( __( 'Security check failed.', 'rtbcb' ), 403 );
+						return;
+				}
 
-                $user_inputs = self::collect_and_validate_user_inputs();
-                if ( is_wp_error( $user_inputs ) ) {
-                        wp_send_json_error( $user_inputs->get_error_message(), 400 );
-                        return;
-                }
+				$user_inputs = self::collect_and_validate_user_inputs();
+				if ( is_wp_error( $user_inputs ) ) {
+						wp_send_json_error( $user_inputs->get_error_message(), 400 );
+						return;
+				}
 
-                $job_id = RTBCB_Background_Job::enqueue( $user_inputs );
-                wp_send_json_success( [ 'job_id' => $job_id ] );
-        }
+				$job_id = RTBCB_Background_Job::enqueue( $user_inputs );
+				wp_send_json_success( [ 'job_id' => $job_id ] );
+		}
 
-        /**
-         * Stream business analysis chunks via AJAX.
-         *
-         * @return void
-         */
-        public static function stream_analysis() {
-                if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
-                        wp_send_json_error( __( 'Security check failed.', 'rtbcb' ), 403 );
-                        return;
-                }
+		/**
+		 * Stream business analysis chunks via AJAX.
+		 *
+		 * @return void
+		 */
+		public static function stream_analysis() {
+				if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
+						wp_send_json_error( __( 'Security check failed.', 'rtbcb' ), 403 );
+						return;
+				}
 
-                $user_inputs = self::collect_and_validate_user_inputs();
-                if ( is_wp_error( $user_inputs ) ) {
-                        wp_send_json_error( $user_inputs->get_error_message(), 400 );
-                        return;
-                }
+				$user_inputs = self::collect_and_validate_user_inputs();
+				if ( is_wp_error( $user_inputs ) ) {
+						wp_send_json_error( $user_inputs->get_error_message(), 400 );
+						return;
+				}
 
-                nocache_headers();
-                header( 'Content-Type: text/event-stream' );
-                header( 'Cache-Control: no-cache' );
-                header( 'Connection: keep-alive' );
+				nocache_headers();
+				header( 'Content-Type: text/event-stream' );
+				header( 'Cache-Control: no-cache' );
+				header( 'Connection: keep-alive' );
 
-                $scenarios      = RTBCB_Calculator::calculate_roi( $user_inputs );
-                $recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
+				$scenarios      = RTBCB_Calculator::calculate_roi( $user_inputs );
+				$recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
 
 $plugin = RTBCB_Main::instance();
 
@@ -72,12 +72,12 @@ $method = new ReflectionMethod( RTBCB_Main::class, 'generate_business_analysis' 
 			return;
 		}
 
-                echo 'data: ' . wp_json_encode( [ 'type' => 'final', 'payload' => $result ] ) . "\n\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-                if ( function_exists( 'flush' ) ) {
-                        flush();
-                }
-                exit;
-        }
+				echo 'data: ' . wp_json_encode( [ 'type' => 'final', 'payload' => $result ] ) . "\n\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+				if ( function_exists( 'flush' ) ) {
+						flush();
+				}
+				exit;
+		}
 	/**
 	 * Process the basic ROI calculation step.
 	 *
@@ -101,11 +101,11 @@ $method = new ReflectionMethod( RTBCB_Main::class, 'generate_business_analysis' 
 	 * @param array $user_inputs User inputs.
 	 * @return array|WP_Error Result data or error.
 	 */
-        public static function process_comprehensive_case( $user_inputs, $job_id = '' ) {
-               $request_start    = microtime( true );
-               $workflow_tracker = new RTBCB_Workflow_Tracker();
-               $bypass_heavy    = rtbcb_heavy_features_disabled();
-               $enable_ai        = ! $bypass_heavy && RTBCB_Settings::get_setting( 'enable_ai_analysis', true );
+		public static function process_comprehensive_case( $user_inputs, $job_id = '' ) {
+			   $request_start    = microtime( true );
+			   $workflow_tracker = new RTBCB_Workflow_Tracker();
+			   $bypass_heavy    = rtbcb_heavy_features_disabled();
+			   $enable_ai        = ! $bypass_heavy && RTBCB_Settings::get_setting( 'enable_ai_analysis', true );
 
 		add_action(
 			'rtbcb_llm_prompt_sent',
@@ -115,139 +115,139 @@ $method = new ReflectionMethod( RTBCB_Main::class, 'generate_business_analysis' 
 		);
 
 		try {
-                        if ( $bypass_heavy ) {
-                                $workflow_tracker->add_warning( 'heavy_features_bypassed', __( 'AI features temporarily disabled.', 'rtbcb' ) );
-                                $workflow_tracker->start_step( 'ai_enrichment' );
-                                $enriched_profile = self::create_fallback_profile( $user_inputs );
-                                $workflow_tracker->complete_step( 'ai_enrichment', $enriched_profile );
-                                if ( $job_id ) {
-                                        RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'enriched_profile' => $enriched_profile ] );
-                                }
+						if ( $bypass_heavy ) {
+								$workflow_tracker->add_warning( 'heavy_features_bypassed', __( 'AI features temporarily disabled.', 'rtbcb' ) );
+								$workflow_tracker->start_step( 'ai_enrichment' );
+								$enriched_profile = self::create_fallback_profile( $user_inputs );
+								$workflow_tracker->complete_step( 'ai_enrichment', $enriched_profile );
+								if ( $job_id ) {
+										RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'enriched_profile' => $enriched_profile ] );
+								}
 
-                                $workflow_tracker->start_step( 'enhanced_roi_calculation' );
-                                $roi_scenarios = RTBCB_Calculator::calculate_roi( $user_inputs );
-                                $workflow_tracker->complete_step( 'enhanced_roi_calculation', $roi_scenarios );
-                                if ( $job_id ) {
-                                        RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'enhanced_roi' => $roi_scenarios ] );
-                                }
+								$workflow_tracker->start_step( 'enhanced_roi_calculation' );
+								$roi_scenarios = RTBCB_Calculator::calculate_roi( $user_inputs );
+								$workflow_tracker->complete_step( 'enhanced_roi_calculation', $roi_scenarios );
+								if ( $job_id ) {
+										RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'enhanced_roi' => $roi_scenarios ] );
+								}
 
-                                $workflow_tracker->start_step( 'intelligent_recommendations' );
-                                $recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
-                                $workflow_tracker->complete_step( 'intelligent_recommendations', $recommendation );
-                                if ( $job_id ) {
-                                        RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'category' => $recommendation['recommended'] ] );
-                                }
+								$workflow_tracker->start_step( 'intelligent_recommendations' );
+								$recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
+								$workflow_tracker->complete_step( 'intelligent_recommendations', $recommendation );
+								if ( $job_id ) {
+										RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'category' => $recommendation['recommended'] ] );
+								}
 
-                                $workflow_tracker->start_step( 'hybrid_rag_analysis' );
-                                $final_analysis = self::create_fallback_analysis( $enriched_profile, $roi_scenarios );
-                                $workflow_tracker->complete_step( 'hybrid_rag_analysis', $final_analysis );
-                                if ( $job_id ) {
-                                        RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'analysis' => $final_analysis ] );
-                                }
+								$workflow_tracker->start_step( 'hybrid_rag_analysis' );
+								$final_analysis = self::create_fallback_analysis( $enriched_profile, $roi_scenarios );
+								$workflow_tracker->complete_step( 'hybrid_rag_analysis', $final_analysis );
+								if ( $job_id ) {
+										RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'analysis' => $final_analysis ] );
+								}
 
-                                $chart_data = self::prepare_chart_data( $roi_scenarios );
+								$chart_data = self::prepare_chart_data( $roi_scenarios );
 
-                                $workflow_tracker->start_step( 'data_structuring' );
-                                $structured_report_data = self::structure_report_data( $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, $chart_data, $request_start );
-                                $workflow_tracker->complete_step( 'data_structuring', $structured_report_data );
-                                if ( $job_id ) {
-                                        RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'report_data' => $structured_report_data ] );
-                                }
+								$workflow_tracker->start_step( 'data_structuring' );
+								$structured_report_data = self::structure_report_data( $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, $chart_data, $request_start );
+								$workflow_tracker->complete_step( 'data_structuring', $structured_report_data );
+								if ( $job_id ) {
+										RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'report_data' => $structured_report_data ] );
+								}
 
-                                $lead_id    = self::save_lead_data_async( $user_inputs, $structured_report_data );
-                                $lead_email = ! empty( $user_inputs['email'] ) ? sanitize_email( $user_inputs['email'] ) : '';
+								$lead_id    = self::save_lead_data_async( $user_inputs, $structured_report_data );
+								$lead_email = ! empty( $user_inputs['email'] ) ? sanitize_email( $user_inputs['email'] ) : '';
 
-                                $debug_info           = $workflow_tracker->get_debug_info();
-                                $debug_info['lead_id'] = $lead_id;
-                                if ( $lead_email ) {
-                                        $debug_info['lead_email'] = $lead_email;
-                                }
-                                self::store_workflow_history( $debug_info, $lead_id, $lead_email );
+								$debug_info           = $workflow_tracker->get_debug_info();
+								$debug_info['lead_id'] = $lead_id;
+								if ( $lead_email ) {
+										$debug_info['lead_email'] = $lead_email;
+								}
+								self::store_workflow_history( $debug_info, $lead_id, $lead_email );
 
-                                return [
-                                        'report_data'   => $structured_report_data,
-                                        'workflow_info' => $debug_info,
-                                        'lead_id'       => $lead_id,
-                                        'analysis_type' => rtbcb_get_analysis_type(),
-                                ];
-                        }
-                        $workflow_tracker->start_step( 'ai_enrichment' );
-                        if ( $enable_ai ) {
-                                $enriched_profile = new WP_Error( 'llm_missing', 'LLM service unavailable.' );
-                                if ( class_exists( 'RTBCB_LLM' ) ) {
-                                        $llm = new RTBCB_LLM();
-                                        if ( method_exists( $llm, 'enrich_company_profile' ) ) {
-                                                $enriched_profile = $llm->enrich_company_profile( $user_inputs );
-                                        }
-                                }
-                                if ( is_wp_error( $enriched_profile ) ) {
-                                        $enriched_profile = self::create_fallback_profile( $user_inputs );
-                                        $workflow_tracker->add_warning( 'ai_enrichment_failed', $enriched_profile->get_error_message() );
-                                }
-                        } else {
-                                $enriched_profile = self::create_fallback_profile( $user_inputs );
-                                $workflow_tracker->add_warning( 'ai_enrichment_disabled', __( 'AI analysis disabled.', 'rtbcb' ) );
-                        }
-                        $workflow_tracker->complete_step( 'ai_enrichment', $enriched_profile );
-                        if ( $job_id ) {
-                                RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'enriched_profile' => $enriched_profile ] );
-                        }
+								return [
+										'report_data'   => $structured_report_data,
+										'workflow_info' => $debug_info,
+										'lead_id'       => $lead_id,
+										'analysis_type' => rtbcb_get_analysis_type(),
+								];
+						}
+						$workflow_tracker->start_step( 'ai_enrichment' );
+						if ( $enable_ai ) {
+								$enriched_profile = new WP_Error( 'llm_missing', 'LLM service unavailable.' );
+								if ( class_exists( 'RTBCB_LLM' ) ) {
+										$llm = new RTBCB_LLM();
+										if ( method_exists( $llm, 'enrich_company_profile' ) ) {
+												$enriched_profile = $llm->enrich_company_profile( $user_inputs );
+										}
+								}
+								if ( is_wp_error( $enriched_profile ) ) {
+										$enriched_profile = self::create_fallback_profile( $user_inputs );
+										$workflow_tracker->add_warning( 'ai_enrichment_failed', $enriched_profile->get_error_message() );
+								}
+						} else {
+								$enriched_profile = self::create_fallback_profile( $user_inputs );
+								$workflow_tracker->add_warning( 'ai_enrichment_disabled', __( 'AI analysis disabled.', 'rtbcb' ) );
+						}
+						$workflow_tracker->complete_step( 'ai_enrichment', $enriched_profile );
+						if ( $job_id ) {
+								RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'enriched_profile' => $enriched_profile ] );
+						}
 
 			$workflow_tracker->start_step( 'enhanced_roi_calculation' );
 			$enhanced_calculator = new RTBCB_Enhanced_Calculator();
 			$roi_scenarios       = $enhanced_calculator->calculate_enhanced_roi( $user_inputs, $enriched_profile );
-                        $workflow_tracker->complete_step( 'enhanced_roi_calculation', $roi_scenarios );
-                        if ( $job_id ) {
-                                RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'enhanced_roi' => $roi_scenarios ] );
-                        }
+						$workflow_tracker->complete_step( 'enhanced_roi_calculation', $roi_scenarios );
+						if ( $job_id ) {
+								RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'enhanced_roi' => $roi_scenarios ] );
+						}
 
-                        $workflow_tracker->start_step( 'intelligent_recommendations' );
-                        if ( $enable_ai ) {
-                                $intelligent_recommender = new RTBCB_Intelligent_Recommender();
-                                $recommendation          = $intelligent_recommender->recommend_with_ai_insights( $user_inputs, $enriched_profile );
-                        } else {
-                                $recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
-                                $workflow_tracker->add_warning( 'intelligent_recommendations_disabled', __( 'AI analysis disabled.', 'rtbcb' ) );
-                        }
-                        $workflow_tracker->complete_step( 'intelligent_recommendations', $recommendation );
-                        if ( $job_id ) {
-                                RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'category' => $recommendation['recommended'] ] );
-                        }
+						$workflow_tracker->start_step( 'intelligent_recommendations' );
+						if ( $enable_ai ) {
+								$intelligent_recommender = new RTBCB_Intelligent_Recommender();
+								$recommendation          = $intelligent_recommender->recommend_with_ai_insights( $user_inputs, $enriched_profile );
+						} else {
+								$recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
+								$workflow_tracker->add_warning( 'intelligent_recommendations_disabled', __( 'AI analysis disabled.', 'rtbcb' ) );
+						}
+						$workflow_tracker->complete_step( 'intelligent_recommendations', $recommendation );
+						if ( $job_id ) {
+								RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'category' => $recommendation['recommended'] ] );
+						}
 
-                        $workflow_tracker->start_step( 'hybrid_rag_analysis' );
-                        if ( $enable_ai ) {
-                                $rag_baseline = [];
-                                if ( class_exists( 'RTBCB_RAG' ) ) {
-                                        $rag          = new RTBCB_RAG();
-                                        $search_query = self::build_rag_search_query( $user_inputs, $enriched_profile );
-                                        $rag_baseline = $rag->search_similar( $search_query, 5 );
-                                }
-                                $final_analysis = new WP_Error( 'analysis_unavailable', 'Final analysis unavailable.' );
-                                if ( isset( $llm ) && method_exists( $llm, 'generate_strategic_analysis' ) ) {
-                                        $final_analysis = $llm->generate_strategic_analysis( $enriched_profile, $roi_scenarios, $recommendation, $rag_baseline );
-                                }
-                                if ( is_wp_error( $final_analysis ) ) {
-                                        $final_analysis = self::create_fallback_analysis( $enriched_profile, $roi_scenarios );
-                                        $workflow_tracker->add_warning( 'final_analysis_failed', $final_analysis->get_error_message() );
-                                }
-                        } else {
-                                $rag_baseline  = [];
-                                $final_analysis = self::create_fallback_analysis( $enriched_profile, $roi_scenarios );
-                                $workflow_tracker->add_warning( 'hybrid_rag_disabled', __( 'AI analysis disabled.', 'rtbcb' ) );
-                        }
-                       $workflow_tracker->complete_step( 'hybrid_rag_analysis', $final_analysis );
-                       if ( $job_id ) {
-                               RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'analysis' => $final_analysis ] );
-                       }
+						$workflow_tracker->start_step( 'hybrid_rag_analysis' );
+						if ( $enable_ai ) {
+								$rag_baseline = [];
+								if ( class_exists( 'RTBCB_RAG' ) ) {
+										$rag          = new RTBCB_RAG();
+										$search_query = self::build_rag_search_query( $user_inputs, $enriched_profile );
+										$rag_baseline = $rag->search_similar( $search_query, 5 );
+								}
+								$final_analysis = new WP_Error( 'analysis_unavailable', 'Final analysis unavailable.' );
+								if ( isset( $llm ) && method_exists( $llm, 'generate_strategic_analysis' ) ) {
+										$final_analysis = $llm->generate_strategic_analysis( $enriched_profile, $roi_scenarios, $recommendation, $rag_baseline );
+								}
+								if ( is_wp_error( $final_analysis ) ) {
+										$final_analysis = self::create_fallback_analysis( $enriched_profile, $roi_scenarios );
+										$workflow_tracker->add_warning( 'final_analysis_failed', $final_analysis->get_error_message() );
+								}
+						} else {
+								$rag_baseline  = [];
+								$final_analysis = self::create_fallback_analysis( $enriched_profile, $roi_scenarios );
+								$workflow_tracker->add_warning( 'hybrid_rag_disabled', __( 'AI analysis disabled.', 'rtbcb' ) );
+						}
+					   $workflow_tracker->complete_step( 'hybrid_rag_analysis', $final_analysis );
+					   if ( $job_id ) {
+							   RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'analysis' => $final_analysis ] );
+					   }
 
-                       $chart_data = self::prepare_chart_data( $roi_scenarios );
+					   $chart_data = self::prepare_chart_data( $roi_scenarios );
 
-                       $workflow_tracker->start_step( 'data_structuring' );
-                       $structured_report_data = self::structure_report_data( $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, $chart_data, $request_start );
-                        $workflow_tracker->complete_step( 'data_structuring', $structured_report_data );
-                        if ( $job_id ) {
-                                RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'report_data' => $structured_report_data ] );
-                        }
+					   $workflow_tracker->start_step( 'data_structuring' );
+					   $structured_report_data = self::structure_report_data( $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, $chart_data, $request_start );
+						$workflow_tracker->complete_step( 'data_structuring', $structured_report_data );
+						if ( $job_id ) {
+								RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'report_data' => $structured_report_data ] );
+						}
 
 			$lead_id    = self::save_lead_data_async( $user_inputs, $structured_report_data );
 			$lead_email = ! empty( $user_inputs['email'] ) ? sanitize_email( $user_inputs['email'] ) : '';
@@ -263,7 +263,7 @@ $method = new ReflectionMethod( RTBCB_Main::class, 'generate_business_analysis' 
 				'report_data'   => $structured_report_data,
 				'workflow_info' => $debug_info,
 				'lead_id'       => $lead_id,
-                               'analysis_type' => rtbcb_get_analysis_type(),
+							   'analysis_type' => rtbcb_get_analysis_type(),
 			];
 		} catch ( Exception $e ) {
 			$workflow_tracker->add_error( 'exception', $e->getMessage() );
@@ -296,22 +296,22 @@ $method = new ReflectionMethod( RTBCB_Main::class, 'generate_business_analysis' 
 			return;
 		}
 
-                $status = RTBCB_Background_Job::get_status( $job_id );
-                if ( is_wp_error( $status ) ) {
-                        $status = [
-                                'state'   => 'error',
-                                'message' => sanitize_text_field( $status->get_error_message() ),
-                        ];
-                }
+				$status = RTBCB_Background_Job::get_status( $job_id );
+				if ( is_wp_error( $status ) ) {
+						$status = [
+								'state'   => 'error',
+								'message' => sanitize_text_field( $status->get_error_message() ),
+						];
+				}
 
-                $response = [
-                        'status' => $status['state'] ?? '',
-                ];
+				$response = [
+						'status' => $status['state'] ?? '',
+				];
 
-                foreach ( $status as $field => $value ) {
-                        if ( in_array( $field, [ 'state', 'created', 'updated', 'result' ], true ) ) {
-                                continue;
-                        }
+				foreach ( $status as $field => $value ) {
+						if ( in_array( $field, [ 'state', 'created', 'updated', 'result' ], true ) ) {
+								continue;
+						}
 			if ( 'percent' === $field ) {
 				$response[ $field ] = floatval( $value );
 			} elseif ( 'download_url' === $field && is_string( $value ) ) {
@@ -321,11 +321,11 @@ $method = new ReflectionMethod( RTBCB_Main::class, 'generate_business_analysis' 
 			} else {
 				$response[ $field ] = $value;
 			}
-                }
+				}
 
-                if ( isset( $status['result'] ) ) {
-                        if (
-                                'completed' === ( $response['status'] ?? '' ) &&
+				if ( isset( $status['result'] ) ) {
+						if (
+								'completed' === ( $response['status'] ?? '' ) &&
 				! empty( $status['result']['report_data'] )
 			) {
 				$result                  = $status['result'];
@@ -344,9 +344,9 @@ $method = new ReflectionMethod( RTBCB_Main::class, 'generate_business_analysis' 
 		}
 
 		wp_send_json_success( $response );
-       }
+	   }
 
-       private static function collect_and_validate_user_inputs() {
+	   private static function collect_and_validate_user_inputs() {
 		$validator = new RTBCB_Validator();
 		$validated = $validator->validate( $_POST );
 
@@ -355,7 +355,7 @@ $method = new ReflectionMethod( RTBCB_Main::class, 'generate_business_analysis' 
 		}
 
 		return $validated;
-       }
+	   }
 
 	private static function create_fallback_profile( $user_inputs ) {
 		return [
@@ -400,7 +400,7 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 			'metadata' => [
 				'company_name'   => $user_inputs['company_name'],
 				'analysis_date'  => current_time( 'Y-m-d' ),
-                               'analysis_type'  => rtbcb_get_analysis_type(),
+							   'analysis_type'  => rtbcb_get_analysis_type(),
 				'confidence_level' => $final_analysis['confidence_level'] ?? 0.85,
 				'processing_time' => microtime( true ) - $request_start,
 			],
@@ -417,13 +417,13 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 				'maturity_assessment' => $enriched_profile['maturity_assessment'] ?? [],
 				'competitive_position'=> $enriched_profile['competitive_position'] ?? [],
 			],
-                       'financial_analysis' => [
-                               'roi_scenarios'        => self::format_roi_scenarios( $roi_scenarios ),
-                               'investment_breakdown' => $final_analysis['financial_analysis']['investment_breakdown'] ?? [],
-                               'payback_analysis'     => $final_analysis['financial_analysis']['payback_analysis'] ?? [],
-                               'sensitivity_analysis' => $roi_scenarios['sensitivity_analysis'] ?? [],
-                               'chart_data'           => $chart_data,
-                       ],
+					   'financial_analysis' => [
+							   'roi_scenarios'        => self::format_roi_scenarios( $roi_scenarios ),
+							   'investment_breakdown' => $final_analysis['financial_analysis']['investment_breakdown'] ?? [],
+							   'payback_analysis'     => $final_analysis['financial_analysis']['payback_analysis'] ?? [],
+							   'sensitivity_analysis' => $roi_scenarios['sensitivity_analysis'] ?? [],
+							   'chart_data'           => $chart_data,
+					   ],
 			'technology_strategy' => [
 				'recommended_category' => $recommendation['recommended'],
 				'category_details'     => $recommendation['category_info'],
@@ -472,73 +472,73 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 		];
 	}
 
-        private static function save_lead_data_async( $user_inputs, $structured_report_data ) {
-                if ( class_exists( 'RTBCB_Leads' ) ) {
-                        $lead_data = array_merge( $user_inputs, [ 'report_data' => $structured_report_data ] );
-                        return RTBCB_Leads::save_lead( $lead_data );
-                }
-                return null;
-        }
+		private static function save_lead_data_async( $user_inputs, $structured_report_data ) {
+				if ( class_exists( 'RTBCB_Leads' ) ) {
+						$lead_data = array_merge( $user_inputs, [ 'report_data' => $structured_report_data ] );
+						return RTBCB_Leads::save_lead( $lead_data );
+				}
+				return null;
+		}
 
-       /**
-        * Prepare chart data for ROI visualization.
-        *
-        * @param array $roi_scenarios ROI scenarios.
-        * @return array Chart.js compatible data structure.
-        */
-       private static function prepare_chart_data( $roi_scenarios ) {
-               return [
-                       'labels'   => [
-                               __( 'Labor Savings', 'rtbcb' ),
-                               __( 'Fee Savings', 'rtbcb' ),
-                               __( 'Error Reduction', 'rtbcb' ),
-                               __( 'Total Benefit', 'rtbcb' ),
-                       ],
-                       'datasets' => [
-                               [
-                                       'label'           => __( 'Conservative', 'rtbcb' ),
-                                       'data'            => [
-                                               $roi_scenarios['conservative']['labor_savings'] ?? 0,
-                                               $roi_scenarios['conservative']['fee_savings'] ?? 0,
-                                               $roi_scenarios['conservative']['error_reduction'] ?? 0,
-                                               $roi_scenarios['conservative']['total_annual_benefit'] ?? 0,
-                                       ],
-                                       'backgroundColor' => 'rgba(239, 68, 68, 0.8)',
-                                       'borderColor'     => 'rgba(239, 68, 68, 1)',
-                                       'borderWidth'     => 1,
-                               ],
-                               [
-                                       'label'           => __( 'Base Case', 'rtbcb' ),
-                                       'data'            => [
-                                               $roi_scenarios['base']['labor_savings'] ?? 0,
-                                               $roi_scenarios['base']['fee_savings'] ?? 0,
-                                               $roi_scenarios['base']['error_reduction'] ?? 0,
-                                               $roi_scenarios['base']['total_annual_benefit'] ?? 0,
-                                       ],
-                                       'backgroundColor' => 'rgba(59, 130, 246, 0.8)',
-                                       'borderColor'     => 'rgba(59, 130, 246, 1)',
-                                       'borderWidth'     => 1,
-                               ],
-                               [
-                                       'label'           => __( 'Optimistic', 'rtbcb' ),
-                                       'data'            => [
-                                               $roi_scenarios['optimistic']['labor_savings'] ?? 0,
-                                               $roi_scenarios['optimistic']['fee_savings'] ?? 0,
-                                               $roi_scenarios['optimistic']['error_reduction'] ?? 0,
-                                               $roi_scenarios['optimistic']['total_annual_benefit'] ?? 0,
-                                       ],
-                                       'backgroundColor' => 'rgba(16, 185, 129, 0.8)',
-                                       'borderColor'     => 'rgba(16, 185, 129, 1)',
-                                       'borderWidth'     => 1,
-                               ],
-                       ],
-               ];
-       }
+	   /**
+		* Prepare chart data for ROI visualization.
+		*
+		* @param array $roi_scenarios ROI scenarios.
+		* @return array Chart.js compatible data structure.
+		*/
+	   private static function prepare_chart_data( $roi_scenarios ) {
+			   return [
+					   'labels'   => [
+							   __( 'Labor Savings', 'rtbcb' ),
+							   __( 'Fee Savings', 'rtbcb' ),
+							   __( 'Error Reduction', 'rtbcb' ),
+							   __( 'Total Benefit', 'rtbcb' ),
+					   ],
+					   'datasets' => [
+							   [
+									   'label'           => __( 'Conservative', 'rtbcb' ),
+									   'data'            => [
+											   $roi_scenarios['conservative']['labor_savings'] ?? 0,
+											   $roi_scenarios['conservative']['fee_savings'] ?? 0,
+											   $roi_scenarios['conservative']['error_reduction'] ?? 0,
+											   $roi_scenarios['conservative']['total_annual_benefit'] ?? 0,
+									   ],
+									   'backgroundColor' => 'rgba(239, 68, 68, 0.8)',
+									   'borderColor'     => 'rgba(239, 68, 68, 1)',
+									   'borderWidth'     => 1,
+							   ],
+							   [
+									   'label'           => __( 'Base Case', 'rtbcb' ),
+									   'data'            => [
+											   $roi_scenarios['base']['labor_savings'] ?? 0,
+											   $roi_scenarios['base']['fee_savings'] ?? 0,
+											   $roi_scenarios['base']['error_reduction'] ?? 0,
+											   $roi_scenarios['base']['total_annual_benefit'] ?? 0,
+									   ],
+									   'backgroundColor' => 'rgba(59, 130, 246, 0.8)',
+									   'borderColor'     => 'rgba(59, 130, 246, 1)',
+									   'borderWidth'     => 1,
+							   ],
+							   [
+									   'label'           => __( 'Optimistic', 'rtbcb' ),
+									   'data'            => [
+											   $roi_scenarios['optimistic']['labor_savings'] ?? 0,
+											   $roi_scenarios['optimistic']['fee_savings'] ?? 0,
+											   $roi_scenarios['optimistic']['error_reduction'] ?? 0,
+											   $roi_scenarios['optimistic']['total_annual_benefit'] ?? 0,
+									   ],
+									   'backgroundColor' => 'rgba(16, 185, 129, 0.8)',
+									   'borderColor'     => 'rgba(16, 185, 129, 1)',
+									   'borderWidth'     => 1,
+							   ],
+					   ],
+			   ];
+	   }
 
-       private static function calculate_business_case_strength( $roi_scenarios, $recommendation ) {
-               $base = $roi_scenarios['base']['total_annual_benefit'] ?? 0;
-               return $base > 0 ? 'strong' : 'weak';
-       }
+	   private static function calculate_business_case_strength( $roi_scenarios, $recommendation ) {
+			   $base = $roi_scenarios['base']['total_annual_benefit'] ?? 0;
+			   return $base > 0 ? 'strong' : 'weak';
+	   }
 
 	private static function format_roi_scenarios( $roi_scenarios ) {
 		return $roi_scenarios;

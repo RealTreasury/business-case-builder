@@ -2,20 +2,20 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Handles background job processing for case generation.
- *
- * @package RealTreasuryBusinessCaseBuilder
- */
+	* Handles background job processing for case generation.
+	*
+	* @package RealTreasuryBusinessCaseBuilder
+	*/
 
 class RTBCB_Background_Job {
 /**
- * Update job status data and accumulate payload.
- *
- * @param string $job_id  Job identifier.
- * @param string $state   New job state.
- * @param array  $payload Additional fields such as step, percent, or partial results.
- * @return void
- */
+	* Update job status data and accumulate payload.
+	*
+	* @param string $job_id  Job identifier.
+	* @param string $state   New job state.
+	* @param array  $payload Additional fields such as step, percent, or partial results.
+	* @return void
+	*/
 public static function update_status( $job_id, $state, $payload = [] ) {
 $current = get_transient( $job_id );
 if ( ! is_array( $current ) ) {
@@ -43,19 +43,19 @@ $job_id = uniqid( 'rtbcb_job_', true );
 
 self::update_status( $job_id, 'queued' );
 
-                wp_schedule_single_event(
-                        time(),
-                        'rtbcb_process_job',
-                        [ $job_id, $user_inputs ]
-                );
+				wp_schedule_single_event(
+						time(),
+						'rtbcb_process_job',
+						[ $job_id, $user_inputs ]
+				);
 
 		// Trigger cron immediately in a non-blocking way.
 		if ( function_exists( 'spawn_cron' ) && ! wp_doing_cron() ) {
 			spawn_cron();
 		}
 
-                return $job_id;
-        }
+				return $job_id;
+		}
 
 	/**
 	 * Process a queued job.
@@ -166,11 +166,11 @@ if ( is_wp_error( $result ) ) {
 	}
 
 /**
- * Get job status data.
- *
- * @param string $job_id Job identifier.
- * @return array|WP_Error Job data or error.
- */
+	* Get job status data.
+	*
+	* @param string $job_id Job identifier.
+	* @return array|WP_Error Job data or error.
+	*/
 public static function get_status( $job_id ) {
 $data = get_transient( $job_id );
 self::cleanup();
@@ -183,10 +183,10 @@ return array_merge( $data, $payload );
 }
 
 /**
- * Cleanup expired, errored, or stale job transients.
- *
- * @return void
- */
+	* Cleanup expired, errored, or stale job transients.
+	*
+	* @return void
+	*/
 public static function cleanup() {
 global $wpdb;
 

@@ -2,18 +2,18 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Enhanced Calculator that uses AI-enriched company data for improved accuracy.
- *
- * @package RealTreasuryBusinessCaseBuilder
- */
+	* Enhanced Calculator that uses AI-enriched company data for improved accuracy.
+	*
+	* @package RealTreasuryBusinessCaseBuilder
+	*/
 class RTBCB_Enhanced_Calculator extends RTBCB_Calculator {
 /**
- * Calculate enhanced ROI using AI-enriched company intelligence.
- *
- * @param array $user_inputs      Original user inputs.
- * @param array $enriched_profile AI-enriched company profile.
- * @return array Enhanced ROI scenarios with sensitivity analysis.
- */
+	* Calculate enhanced ROI using AI-enriched company intelligence.
+	*
+	* @param array $user_inputs      Original user inputs.
+	* @param array $enriched_profile AI-enriched company profile.
+	* @return array Enhanced ROI scenarios with sensitivity analysis.
+	*/
 public function calculate_enhanced_roi( $user_inputs, $enriched_profile ) {
 $base_scenarios = parent::calculate_roi( $user_inputs );
 
@@ -37,11 +37,11 @@ return $enhanced_scenarios;
 }
 
 /**
- * Calculate enhancement factors based on AI insights.
- *
- * @param array $enriched_profile Enriched profile data.
- * @return array Enhancement factor data.
- */
+	* Calculate enhancement factors based on AI insights.
+	*
+	* @param array $enriched_profile Enriched profile data.
+	* @return array Enhancement factor data.
+	*/
 private function calculate_enhancement_factors( $enriched_profile ) {
 $company_profile   = $enriched_profile['company_profile'] ?? [];
 $industry_context  = $enriched_profile['industry_context'] ?? [];
@@ -75,12 +75,12 @@ return [
 }
 
 /**
- * Apply enhancement factors to base scenarios.
- *
- * @param array $scenarios Base ROI scenarios.
- * @param array $factors   Enhancement factors.
- * @return array Enhanced scenarios.
- */
+	* Apply enhancement factors to base scenarios.
+	*
+	* @param array $scenarios Base ROI scenarios.
+	* @param array $factors   Enhancement factors.
+	* @return array Enhanced scenarios.
+	*/
 private function apply_enhancement_factors( $scenarios, $factors ) {
 foreach ( $scenarios as $key => &$scenario ) {
 if ( isset( $scenario['total_annual_benefit'] ) ) {
@@ -95,10 +95,10 @@ return $scenarios;
 
 /**
 \t * Get maturity level multiplier for ROI calculations.
- *
- * @param string $maturity_level Maturity level key.
- * @return float Multiplier.
- */
+	*
+	* @param string $maturity_level Maturity level key.
+	* @return float Multiplier.
+	*/
 private function get_maturity_multiplier( $maturity_level ) {
 $multipliers = [
 'basic'      => 1.2,
@@ -111,11 +111,11 @@ return $multipliers[ $maturity_level ] ?? 1.0;
 }
 
 /**
- * Get industry-specific multiplier.
- *
- * @param array $industry_context Industry context data.
- * @return float Multiplier.
- */
+	* Get industry-specific multiplier.
+	*
+	* @param array $industry_context Industry context data.
+	* @return float Multiplier.
+	*/
 private function get_industry_multiplier( $industry_context ) {
 $sector_analysis    = $industry_context['sector_analysis'] ?? [];
 $technology_adopt   = $sector_analysis['technology_adoption'] ?? 'mainstream';
@@ -130,11 +130,11 @@ return $adoption_multipliers[ $technology_adopt ] ?? 1.0;
 }
 
 /**
- * Get readiness multiplier based on automation readiness.
- *
- * @param string $readiness Automation readiness level.
- * @return float Multiplier.
- */
+	* Get readiness multiplier based on automation readiness.
+	*
+	* @param string $readiness Automation readiness level.
+	* @return float Multiplier.
+	*/
 private function get_readiness_multiplier( $readiness ) {
 $map = [
 'low'    => 0.8,
@@ -146,11 +146,11 @@ return $map[ $readiness ] ?? 1.0;
 }
 
 /**
- * Get financial health multiplier.
- *
- * @param string $health Financial health indicator.
- * @return float Multiplier.
- */
+	* Get financial health multiplier.
+	*
+	* @param string $health Financial health indicator.
+	* @return float Multiplier.
+	*/
 private function get_financial_health_multiplier( $health ) {
 $map = [
 'weak'   => 0.9,
@@ -162,11 +162,11 @@ return $map[ $health ] ?? 1.0;
 }
 
 /**
- * Calculate implementation complexity factor.
- *
- * @param array $strategic_insight Strategic insight data.
- * @return float Multiplier.
- */
+	* Calculate implementation complexity factor.
+	*
+	* @param array $strategic_insight Strategic insight data.
+	* @return float Multiplier.
+	*/
 private function calculate_implementation_complexity_factor( $strategic_insight ) {
 $complexity = $strategic_insight['implementation_complexity'] ?? 'medium';
 $map        = [
@@ -180,11 +180,11 @@ return $map[ $complexity ] ?? 1.0;
 }
 
 /**
- * Calculate timeline factor.
- *
- * @param array $enriched_profile Enriched profile data.
- * @return float Multiplier.
- */
+	* Calculate timeline factor.
+	*
+	* @param array $enriched_profile Enriched profile data.
+	* @return float Multiplier.
+	*/
 private function calculate_timeline_factor( $enriched_profile ) {
 $timeline = $enriched_profile['strategic_insights']['implementation_timeline'] ?? 'standard';
 $map      = [
@@ -197,12 +197,12 @@ return $map[ $timeline ] ?? 1.0;
 }
 
 /**
- * Perform sensitivity analysis on ROI calculations.
- *
- * @param array $scenarios        Enhanced scenarios.
- * @param array $enriched_profile Enriched profile data.
- * @return array Sensitivity analysis results.
- */
+	* Perform sensitivity analysis on ROI calculations.
+	*
+	* @param array $scenarios        Enhanced scenarios.
+	* @param array $enriched_profile Enriched profile data.
+	* @return array Sensitivity analysis results.
+	*/
 private function perform_sensitivity_analysis( $scenarios, $enriched_profile ) {
 $base_case    = $scenarios['base'];
 $base_benefit = $base_case['total_annual_benefit'];
@@ -236,12 +236,12 @@ return [
 }
 
 /**
- * Calculate confidence metrics for ROI projections.
- *
- * @param array $enriched_profile Enriched profile data.
- * @param array $user_inputs      Original user inputs.
- * @return array Confidence metrics.
- */
+	* Calculate confidence metrics for ROI projections.
+	*
+	* @param array $enriched_profile Enriched profile data.
+	* @param array $user_inputs      Original user inputs.
+	* @return array Confidence metrics.
+	*/
 private function calculate_confidence_metrics( $enriched_profile, $user_inputs ) {
 $data_quality                  = $this->assess_data_quality( $user_inputs );
 $ai_confidence                 = $enriched_profile['enrichment_metadata']['confidence_level'] ?? 0.8;
@@ -262,11 +262,11 @@ return [
 }
 
 /**
- * Assess data quality score.
- *
- * @param array $user_inputs User supplied inputs.
- * @return float Score between 0 and 1.
- */
+	* Assess data quality score.
+	*
+	* @param array $user_inputs User supplied inputs.
+	* @return float Score between 0 and 1.
+	*/
 private function assess_data_quality( $user_inputs ) {
 $required = [ 'ftes', 'hours_reconciliation', 'hours_cash_positioning' ];
 $filled   = 0;
@@ -281,20 +281,20 @@ return $filled / count( $required );
 
 /**
 \t * Assess industry benchmark availability.
- *
- * @param array $enriched_profile Enriched profile data.
- * @return float Score between 0 and 1.
- */
+	*
+	* @param array $enriched_profile Enriched profile data.
+	* @return float Score between 0 and 1.
+	*/
 private function assess_benchmark_availability( $enriched_profile ) {
 return ! empty( $enriched_profile['industry_context']['benchmarks'] ) ? 1.0 : 0.5;
 }
 
 /**
- * Calculate probability of implementation delay.
- *
- * @param array $enriched_profile Enriched profile data.
- * @return float Probability value.
- */
+	* Calculate probability of implementation delay.
+	*
+	* @param array $enriched_profile Enriched profile data.
+	* @return float Probability value.
+	*/
 private function calculate_delay_probability( $enriched_profile ) {
 $complexity = $enriched_profile['strategic_insights']['implementation_complexity'] ?? 'medium';
 $readiness  = $enriched_profile['company_profile']['treasury_maturity']['automation_readiness'] ?? 'medium';
@@ -315,11 +315,11 @@ return min( 0.8, $complexity_risk + $readiness_risk );
 }
 
 /**
- * Calculate probability of adoption resistance.
- *
- * @param array $enriched_profile Enriched profile data.
- * @return float Probability value.
- */
+	* Calculate probability of adoption resistance.
+	*
+	* @param array $enriched_profile Enriched profile data.
+	* @return float Probability value.
+	*/
 private function calculate_resistance_probability( $enriched_profile ) {
 $culture = $enriched_profile['company_profile']['culture'] ?? 'neutral';
 $map     = [
@@ -332,11 +332,11 @@ return $map[ $culture ] ?? 0.2;
 }
 
 /**
- * Calculate probability of competitive pressure.
- *
- * @param array $enriched_profile Enriched profile data.
- * @return float Probability value.
- */
+	* Calculate probability of competitive pressure.
+	*
+	* @param array $enriched_profile Enriched profile data.
+	* @return float Probability value.
+	*/
 private function calculate_competitive_pressure_probability( $enriched_profile ) {
 $competition = $enriched_profile['industry_context']['competition_intensity'] ?? 'medium';
 $map         = [

@@ -2,74 +2,74 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Workflow Tracker for monitoring and debugging the report generation process.
- *
- * @package RealTreasuryBusinessCaseBuilder
- */
+	* Workflow Tracker for monitoring and debugging the report generation process.
+	*
+	* @package RealTreasuryBusinessCaseBuilder
+	*/
 class RTBCB_Workflow_Tracker {
 /**
- * Recorded steps.
- *
- * @var array
- */
+	* Recorded steps.
+	*
+	* @var array
+	*/
 private $steps = [];
 
 /**
- * Currently running step.
- *
- * @var array|null
- */
+	* Currently running step.
+	*
+	* @var array|null
+	*/
 private $current_step = null;
 
 /**
- * Workflow start time.
- *
- * @var float
- */
+	* Workflow start time.
+	*
+	* @var float
+	*/
 private $start_time;
 
 /**
- * Recorded warnings.
- *
- * @var array
- */
+	* Recorded warnings.
+	*
+	* @var array
+	*/
 private $warnings = [];
 
 /**
- * Recorded errors.
- *
- * @var array
- */
+	* Recorded errors.
+	*
+	* @var array
+	*/
 private $errors = [];
 
 /**
- * Count of AI calls made.
- *
- * @var int
- */
+	* Count of AI calls made.
+	*
+	* @var int
+	*/
 private $ai_calls = 0;
 
 /**
- * Recorded prompts sent to the AI.
- *
- * @var array
- */
+	* Recorded prompts sent to the AI.
+	*
+	* @var array
+	*/
 private $prompts = [];
 
 /**
- * Constructor.
- */
+	* Constructor.
+	*/
 public function __construct() {
 $this->start_time = microtime( true );
 }
 
 /**
- * Start a new workflow step.
- *
- * @param string $step_name  Step identifier.
- * @param mixed  $input_data Optional input data.
- * @return void
- */
+	* Start a new workflow step.
+	*
+	* @param string $step_name  Step identifier.
+	* @param mixed  $input_data Optional input data.
+	* @return void
+	*/
 public function start_step( $step_name, $input_data = null ) {
 $this->current_step = [
 'name'       => $step_name,
@@ -82,12 +82,12 @@ error_log( "RTBCB Workflow: Starting step '{$step_name}'" );
 }
 
 /**
- * Complete the current workflow step.
- *
- * @param string $step_name   Step identifier.
- * @param mixed  $output_data Optional output data.
- * @return void
- */
+	* Complete the current workflow step.
+	*
+	* @param string $step_name   Step identifier.
+	* @param mixed  $output_data Optional output data.
+	* @return void
+	*/
 public function complete_step( $step_name, $output_data = null ) {
 if ( $this->current_step && $this->current_step['name'] === $step_name ) {
 $this->current_step['end_time']     = microtime( true );
@@ -110,12 +110,12 @@ error_log( 'RTBCB Workflow: Completed step ' . $step_name . ' in ' . round( $thi
 }
 
 /**
- * Add a warning to the current or last step.
- *
- * @param string $code    Warning code.
- * @param string $message Warning message.
- * @return void
- */
+	* Add a warning to the current or last step.
+	*
+	* @param string $code    Warning code.
+	* @param string $message Warning message.
+	* @return void
+	*/
 public function add_warning( $code, $message ) {
 $step_name = $this->current_step ? $this->current_step['name'] : ( $this->steps ? end( $this->steps )['name'] : 'unknown' );
 $warning   = [
@@ -130,12 +130,12 @@ error_log( "RTBCB Workflow Warning [{$code}]: {$message}" );
 }
 
 /**
- * Add an error to the workflow.
- *
- * @param string $code    Error code.
- * @param string $message Error message.
- * @return void
- */
+	* Add an error to the workflow.
+	*
+	* @param string $code    Error code.
+	* @param string $message Error message.
+	* @return void
+	*/
 public function add_error( $code, $message ) {
 $step_name = $this->current_step ? $this->current_step['name'] : ( $this->steps ? end( $this->steps )['name'] : 'unknown' );
 $error     = [
@@ -150,10 +150,10 @@ error_log( "RTBCB Workflow Error [{$code}]: {$message}" );
 }
 
 /**
- * Get completed steps summary.
- *
- * @return array
- */
+	* Get completed steps summary.
+	*
+	* @return array
+	*/
 public function get_completed_steps() {
 return array_map(
 function( $step ) {
@@ -169,11 +169,11 @@ $this->steps
 }
 
 /**
- * Record a prompt sent to the AI service.
- *
- * @param array $prompt Prompt data containing 'instructions' and 'input'.
- * @return void
- */
+	* Record a prompt sent to the AI service.
+	*
+	* @param array $prompt Prompt data containing 'instructions' and 'input'.
+	* @return void
+	*/
 public function add_prompt( $prompt ) {
 $step_name      = $this->current_step ? $this->current_step['name'] : 'unknown';
 $this->prompts[] = [
@@ -185,37 +185,37 @@ $this->prompts[] = [
 }
 
 /**
- * Retrieve recorded prompts.
- *
- * @return array
- */
+	* Retrieve recorded prompts.
+	*
+	* @return array
+	*/
 public function get_prompts() {
 return $this->prompts;
 }
 
 /**
- * Get AI call count.
- *
- * @return int
- */
+	* Get AI call count.
+	*
+	* @return int
+	*/
 public function get_ai_call_count() {
 return $this->ai_calls;
 }
 
 /**
- * Get warnings.
- *
- * @return array
- */
+	* Get warnings.
+	*
+	* @return array
+	*/
 public function get_warnings() {
 return $this->warnings;
 }
 
 /**
- * Get debug information.
- *
- * @return array
- */
+	* Get debug information.
+	*
+	* @return array
+	*/
 public function get_debug_info() {
 return [
 'total_steps'    => count( $this->steps ),
@@ -231,11 +231,11 @@ return [
 }
 
 /**
- * Check if step involves AI calls.
- *
- * @param string $step_name Step identifier.
- * @return bool
- */
+	* Check if step involves AI calls.
+	*
+	* @param string $step_name Step identifier.
+	* @return bool
+	*/
 private function is_ai_step( $step_name ) {
 $ai_steps = [ 'ai_enrichment', 'hybrid_rag_analysis', 'strategic_analysis' ];
 return in_array( $step_name, $ai_steps, true );

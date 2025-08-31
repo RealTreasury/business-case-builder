@@ -2,17 +2,17 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Helper functions for the Real Treasury Business Case Builder plugin.
- */
+	* Helper functions for the Real Treasury Business Case Builder plugin.
+	*/
 
 /**
- * Get the timeout for external API requests.
- *
- * Allows filtering via `rtbcb_api_timeout` to adjust how long remote
- * requests may take before failing.
- *
- * @return int Timeout in seconds.
- */
+	* Get the timeout for external API requests.
+	*
+	* Allows filtering via `rtbcb_api_timeout` to adjust how long remote
+	* requests may take before failing.
+	*
+	* @return int Timeout in seconds.
+	*/
 function rtbcb_get_api_timeout() {
 	$timeout = (int) get_option( 'rtbcb_gpt5_timeout', 300 );
 	$timeout = rtbcb_sanitize_api_timeout( $timeout );
@@ -32,13 +32,13 @@ function rtbcb_get_api_timeout() {
 require_once __DIR__ . '/config.php';
 
 /**
- * Determine the current analysis tier.
- *
- * Uses plugin settings to detect enabled features and maps them to one of
- * the allowed tiers. The value can be filtered via `rtbcb_analysis_type`.
- *
- * @return string Analysis type.
- */
+	* Determine the current analysis tier.
+	*
+	* Uses plugin settings to detect enabled features and maps them to one of
+	* the allowed tiers. The value can be filtered via `rtbcb_analysis_type`.
+	*
+	* @return string Analysis type.
+	*/
 function rtbcb_get_analysis_type() {
 	$analysis_type = 'basic';
 
@@ -60,12 +60,12 @@ function rtbcb_get_analysis_type() {
 }
 
 /**
- * Retrieve the OpenAI API key from plugin settings.
- *
- * Reads the value stored in the WordPress options table.
- *
- * @return string Sanitized API key.
- */
+	* Retrieve the OpenAI API key from plugin settings.
+	*
+	* Reads the value stored in the WordPress options table.
+	*
+	* @return string Sanitized API key.
+	*/
 function rtbcb_get_openai_api_key() {
 	$api_key = get_option( 'rtbcb_openai_api_key', '' );
 
@@ -73,35 +73,35 @@ function rtbcb_get_openai_api_key() {
 }
 
 /**
- * Determine if an OpenAI API key is configured.
- *
- * @return bool True if the API key is present.
- */
+	* Determine if an OpenAI API key is configured.
+	*
+	* @return bool True if the API key is present.
+	*/
 function rtbcb_has_openai_api_key() {
 	return ! empty( rtbcb_get_openai_api_key() );
 }
 
 /**
- * Check if heavy AI features are disabled.
- *
- * @return bool True if heavy features should be bypassed.
- */
+	* Check if heavy AI features are disabled.
+	*
+	* @return bool True if heavy features should be bypassed.
+	*/
 function rtbcb_heavy_features_disabled() {
 	return (bool) ( get_option( 'rtbcb_disable_heavy_features', 0 ) || get_option( 'rtbcb_fast_mode', 0 ) );
 }
 
 /**
- * Perform a remote POST request with retry logic.
- *
- * Uses exponential backoff with jitter between attempts. Retries are
- * triggered for transport errors, HTTP 429 responses and server errors.
- * Client errors (4xx) other than 429 will return immediately.
- *
- * @param string $url         Endpoint URL.
- * @param array  $args        Arguments for {@see wp_remote_post()}.
- * @param int    $max_retries Optional. Number of attempts. Default 3.
- * @return array|WP_Error HTTP response array or WP_Error on failure.
- */
+	* Perform a remote POST request with retry logic.
+	*
+	* Uses exponential backoff with jitter between attempts. Retries are
+	* triggered for transport errors, HTTP 429 responses and server errors.
+	* Client errors (4xx) other than 429 will return immediately.
+	*
+	* @param string $url         Endpoint URL.
+	* @param array  $args        Arguments for {@see wp_remote_post()}.
+	* @param int    $max_retries Optional. Number of attempts. Default 3.
+	* @return array|WP_Error HTTP response array or WP_Error on failure.
+	*/
 function rtbcb_wp_remote_post_with_retry( $url, $args = [], $max_retries = 3 ) {
 	$url         = function_exists( 'esc_url_raw' ) ? esc_url_raw( $url ) : $url;
 	$max_retries = max( 1, (int) $max_retries );
@@ -161,13 +161,13 @@ function rtbcb_wp_remote_post_with_retry( $url, $args = [], $max_retries = 3 ) {
 }
 
 /**
- * Determine if an error indicates an OpenAI configuration issue.
- *
- * Checks for common phrases like a missing API key or invalid model.
- *
- * @param Throwable $e Thrown error or exception.
- * @return bool True if the error appears configuration related.
- */
+	* Determine if an error indicates an OpenAI configuration issue.
+	*
+	* Checks for common phrases like a missing API key or invalid model.
+	*
+	* @param Throwable $e Thrown error or exception.
+	* @return bool True if the error appears configuration related.
+	*/
 function rtbcb_is_openai_configuration_error( $e ) {
 	$message = strtolower( $e->getMessage() );
 
@@ -175,19 +175,19 @@ function rtbcb_is_openai_configuration_error( $e ) {
 }
 
 /**
- * Retrieve current company data.
- *
- * @return array Current company data.
- */
+	* Retrieve current company data.
+	*
+	* @return array Current company data.
+	*/
 function rtbcb_get_current_company() {
 	return get_option( 'rtbcb_current_company', [] );
 }
 
 /**
- * Clear stored company data and reset test progress.
- *
- * @return void
- */
+	* Clear stored company data and reset test progress.
+	*
+	* @return void
+	*/
 function rtbcb_clear_current_company() {
 	$sections = rtbcb_get_dashboard_sections( [] );
 
@@ -210,38 +210,38 @@ function rtbcb_clear_current_company() {
 }
 
 /**
- * Retrieve model capability configuration.
- *
- * @return array Model capability data.
- */
+	* Retrieve model capability configuration.
+	*
+	* @return array Model capability data.
+	*/
 function rtbcb_get_model_capabilities() {
 	return include RTBCB_DIR . 'inc/model-capabilities.php';
 }
 
 /**
- * Determine if a model supports the temperature parameter.
- *
- * Attempts to query the OpenAI models endpoint and caches the result. Falls
- * back to a static list of unsupported models if the request fails.
- *
- * @param string $model Model identifier.
- * @return bool Whether the model supports temperature.
- */
+	* Determine if a model supports the temperature parameter.
+	*
+	* Attempts to query the OpenAI models endpoint and caches the result. Falls
+	* back to a static list of unsupported models if the request fails.
+	*
+	* @param string $model Model identifier.
+	* @return bool Whether the model supports temperature.
+	*/
 function rtbcb_model_supports_temperature( $model ) {
-        $capabilities = include RTBCB_DIR . 'inc/model-capabilities.php';
-        $unsupported = $capabilities['temperature']['unsupported'] ?? [];
-        return ! in_array( $model, $unsupported, true );
+		$capabilities = include RTBCB_DIR . 'inc/model-capabilities.php';
+		$unsupported = $capabilities['temperature']['unsupported'] ?? [];
+		return ! in_array( $model, $unsupported, true );
 }
 
 /**
- * Sanitize the API timeout option.
- *
- * Ensures the value stays within the allowed 1-600 second range while
- * preserving legacy zero values by falling back to the default 300 seconds.
- *
- * @param mixed $value Raw option value.
- * @return int Sanitized timeout in seconds.
- */
+	* Sanitize the API timeout option.
+	*
+	* Ensures the value stays within the allowed 1-600 second range while
+	* preserving legacy zero values by falling back to the default 300 seconds.
+	*
+	* @param mixed $value Raw option value.
+	* @return int Sanitized timeout in seconds.
+	*/
 function rtbcb_sanitize_api_timeout( $value ) {
 	$value = intval( $value );
 
@@ -253,13 +253,13 @@ function rtbcb_sanitize_api_timeout( $value ) {
 }
 
 /**
- * Sanitize the max output tokens option.
- *
- * Ensures the value stays within the allowed 256-128000 token range.
- *
- * @param mixed $value Raw option value.
- * @return int Sanitized token count.
- */
+	* Sanitize the max output tokens option.
+	*
+	* Ensures the value stays within the allowed 256-128000 token range.
+	*
+	* @param mixed $value Raw option value.
+	* @return int Sanitized token count.
+	*/
 function rtbcb_sanitize_max_output_tokens( $value ) {
 	$value = intval( $value );
 
@@ -267,13 +267,13 @@ function rtbcb_sanitize_max_output_tokens( $value ) {
 }
 
 /**
- * Sanitize the min output tokens option.
- *
- * Ensures the value stays within the allowed 1-128000 token range.
- *
- * @param mixed $value Raw option value.
- * @return int Sanitized token count.
- */
+	* Sanitize the min output tokens option.
+	*
+	* Ensures the value stays within the allowed 1-128000 token range.
+	*
+	* @param mixed $value Raw option value.
+	* @return int Sanitized token count.
+	*/
 function rtbcb_sanitize_min_output_tokens( $value ) {
 	$value = intval( $value );
 
@@ -281,15 +281,15 @@ function rtbcb_sanitize_min_output_tokens( $value ) {
 }
 
 /**
- * Get testing dashboard sections and their completion state.
- *
- * The returned array is keyed by section ID and contains the section label,
- * related option key, AJAX action, dependencies, and whether the section has
- * been completed.
- *
- * @param array|null $test_results Optional preloaded test results.
- * @return array[] Section data keyed by section ID.
- */
+	* Get testing dashboard sections and their completion state.
+	*
+	* The returned array is keyed by section ID and contains the section label,
+	* related option key, AJAX action, dependencies, and whether the section has
+	* been completed.
+	*
+	* @param array|null $test_results Optional preloaded test results.
+	* @return array[] Section data keyed by section ID.
+	*/
 function rtbcb_get_dashboard_sections( $test_results = null ) {
 	$empty = [];
 
@@ -407,9 +407,9 @@ function rtbcb_get_dashboard_sections( $test_results = null ) {
 	];
 
 		foreach ( $sections as $id => &$section ) {
-			    $result               = rtbcb_get_last_test_result( $id, $test_results );
-			    $status               = $result['status'] ?? '';
-			    $section['completed'] = ( 'success' === $status );
+				$result               = rtbcb_get_last_test_result( $id, $test_results );
+				$status               = $result['status'] ?? '';
+				$section['completed'] = ( 'success' === $status );
 		}
 
 		return $sections;
@@ -420,12 +420,12 @@ function rtbcb_get_dashboard_sections( $test_results = null ) {
 }
 
 /**
- * Calculate completion percentages for each phase.
- *
- * @param array $sections Dashboard sections.
- * @param array $phases   Optional phase numbers to include in the result.
- * @return array Percentages keyed by phase number.
- */
+	* Calculate completion percentages for each phase.
+	*
+	* @param array $sections Dashboard sections.
+	* @param array $phases   Optional phase numbers to include in the result.
+	* @return array Percentages keyed by phase number.
+	*/
 function rtbcb_calculate_phase_completion( $sections, $phases = [] ) {
 	$totals = [];
 	$done   = [];
@@ -457,15 +457,15 @@ function rtbcb_calculate_phase_completion( $sections, $phases = [] ) {
 }
 
 /**
- * Get the first incomplete dependency for a section.
- *
- * Recursively checks the dependency chain and returns the earliest section
- * that has not been completed.
- *
- * @param string $section_id Section identifier to check.
- * @param array  $sections   All dashboard sections.
- * @return string|null The first incomplete dependency or null if all met.
- */
+	* Get the first incomplete dependency for a section.
+	*
+	* Recursively checks the dependency chain and returns the earliest section
+	* that has not been completed.
+	*
+	* @param string $section_id Section identifier to check.
+	* @param array  $sections   All dashboard sections.
+	* @return string|null The first incomplete dependency or null if all met.
+	*/
 function rtbcb_get_first_incomplete_dependency( $section_id, $sections, $visited = [] ) {
 	if ( in_array( $section_id, $visited, true ) ) {
 		return null;
@@ -491,16 +491,16 @@ function rtbcb_get_first_incomplete_dependency( $section_id, $sections, $visited
 }
 
 /**
- * Ensure required sections are complete before rendering a dashboard section.
- *
- * Outputs a warning linking to the first incomplete section when prerequisites
- * are missing.
- *
- * @param string $current_section Current section ID.
- * @param bool   $display_notice  Optional. Whether to show an admin notice.
- *                                Defaults to true.
- * @return bool True when allowed, false otherwise.
- */
+	* Ensure required sections are complete before rendering a dashboard section.
+	*
+	* Outputs a warning linking to the first incomplete section when prerequisites
+	* are missing.
+	*
+	* @param string $current_section Current section ID.
+	* @param bool   $display_notice  Optional. Whether to show an admin notice.
+	*                                Defaults to true.
+	* @return bool True when allowed, false otherwise.
+	*/
 function rtbcb_require_completed_steps( $current_section, $display_notice = true ) {
 	static $displayed = [];
 
@@ -529,12 +529,12 @@ function rtbcb_require_completed_steps( $current_section, $display_notice = true
 }
 
 /**
- * Retrieve the most recent test result for a section.
- *
- * @param string     $section_id   Section identifier.
- * @param array|null $test_results Optional preloaded test results.
- * @return array|null Matching result or null when none found.
- */
+	* Retrieve the most recent test result for a section.
+	*
+	* @param string     $section_id   Section identifier.
+	* @param array|null $test_results Optional preloaded test results.
+	* @return array|null Matching result or null when none found.
+	*/
 function rtbcb_get_last_test_result( $section_id, $test_results = null ) {
 	if ( null === $test_results ) {
 		$test_results = get_option( 'rtbcb_test_results', [] );
@@ -554,13 +554,13 @@ function rtbcb_get_last_test_result( $section_id, $test_results = null ) {
 }
 
 /**
- * Render a button to start a new company analysis.
- *
- * The button clears existing company data and navigates to the Company
- * Overview section of the testing dashboard so a new analysis can begin.
- *
- * @return void
- */
+	* Render a button to start a new company analysis.
+	*
+	* The button clears existing company data and navigates to the Company
+	* Overview section of the testing dashboard so a new analysis can begin.
+	*
+	* @return void
+	*/
 function rtbcb_render_start_new_analysis_button() {
 	echo '<p>';
 	echo '<button type="button" id="rtbcb-start-new-analysis" class="button">' .
@@ -591,11 +591,11 @@ function rtbcb_check_database_health() {
 }
 
 /**
- * Sanitize form input data
- *
- * @param array $data Raw form data
- * @return array Sanitized data
- */
+	* Sanitize form input data
+	*
+	* @param array $data Raw form data
+	* @return array Sanitized data
+	*/
 function rtbcb_sanitize_form_data( $data ) {
 	$sanitized = [];
 	
@@ -651,11 +651,11 @@ function rtbcb_sanitize_form_data( $data ) {
 }
 
 /**
- * Validate email domain
- *
- * @param string $email Email address
- * @return bool True if valid business email
- */
+	* Validate email domain
+	*
+	* @param string $email Email address
+	* @return bool True if valid business email
+	*/
 function rtbcb_is_business_email( $email ) {
 	$consumer_domains = [
 		'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com',
@@ -667,44 +667,44 @@ function rtbcb_is_business_email( $email ) {
 }
 
 /**
- * Validate OpenAI API key format.
- *
- * Accepts standard and project-scoped keys which start with "sk-" and may
- * include letters, numbers, hyphens, colons, and underscores.
- *
- * @param string $api_key API key.
- * @return bool Whether the format is valid.
- */
+	* Validate OpenAI API key format.
+	*
+	* Accepts standard and project-scoped keys which start with "sk-" and may
+	* include letters, numbers, hyphens, colons, and underscores.
+	*
+	* @param string $api_key API key.
+	* @return bool Whether the format is valid.
+	*/
 function rtbcb_is_valid_openai_api_key( $api_key ) {
 	return preg_match( '/^sk-[A-Za-z0-9_:-]{48,}$/', $api_key );
 }
 
 /**
- * Normalize a model name by stripping date suffixes.
- *
- * @param string $model Raw model identifier.
- * @return string Model name without version date.
- */
+	* Normalize a model name by stripping date suffixes.
+	*
+	* @param string $model Raw model identifier.
+	* @return string Model name without version date.
+	*/
 function rtbcb_normalize_model_name( $model ) {
 	$model = sanitize_text_field( $model );
 	return preg_replace( '/^(gpt-[^\s]+?)(?:-\d{4}-\d{2}-\d{2})$/', '$1', $model );
 }
 
 /**
- * Send the generated report to the user via email.
- *
- * @param array  $form_data   Form submission data.
- * @param string $report_path Absolute path to the HTML report file.
- *
- * @return void
- */
+	* Send the generated report to the user via email.
+	*
+	* @param array  $form_data   Form submission data.
+	* @param string $report_path Absolute path to the HTML report file.
+	*
+	* @return void
+	*/
 /**
- * Send the generated report to the user via email.
- *
- * @param array    $form_data   Submitted form data.
- * @param string   $report_path Path to the generated report file.
- * @param callable $mailer      Optional mailer function for testing.
- */
+	* Send the generated report to the user via email.
+	*
+	* @param array    $form_data   Submitted form data.
+	* @param string   $report_path Path to the generated report file.
+	* @param callable $mailer      Optional mailer function for testing.
+	*/
 function rtbcb_send_report_email( $form_data, $report_path, $mailer = 'wp_mail' ) {
 	$email = isset( $form_data['email'] ) ? sanitize_email( $form_data['email'] ) : '';
 
@@ -721,10 +721,10 @@ function rtbcb_send_report_email( $form_data, $report_path, $mailer = 'wp_mail' 
 }
 
 /**
- * Get client information for analytics
- *
- * @return array Client data
- */
+	* Get client information for analytics
+	*
+	* @return array Client data
+	*/
 function rtbcb_get_client_info() {
 	return [
 		'ip'          => rtbcb_get_client_ip(),
@@ -742,10 +742,10 @@ function rtbcb_get_client_info() {
 }
 
 /**
- * Get client IP address
- *
- * @return string IP address
- */
+	* Get client IP address
+	*
+	* @return string IP address
+	*/
 function rtbcb_get_client_ip() {
 	$ip_keys = [ 'HTTP_X_FORWARDED_FOR', 'HTTP_X_REAL_IP', 'HTTP_CLIENT_IP', 'REMOTE_ADDR' ];
 	
@@ -773,11 +773,11 @@ function rtbcb_get_client_ip() {
 }
 
 /**
- * Recursively sanitize values using sanitize_text_field.
- *
- * @param mixed $data Data to sanitize.
- * @return mixed Sanitized data.
- */
+	* Recursively sanitize values using sanitize_text_field.
+	*
+	* @param mixed $data Data to sanitize.
+	* @return mixed Sanitized data.
+	*/
 function rtbcb_recursive_sanitize_text_field( $data ) {
 	if ( is_array( $data ) ) {
 		foreach ( $data as $key => $value ) {
@@ -791,12 +791,12 @@ function rtbcb_recursive_sanitize_text_field( $data ) {
 }
 
 /**
- * Log API debug messages.
- *
- * @param string $message Log message.
- * @param mixed  $data    Optional data.
- * @return void
- */
+	* Log API debug messages.
+	*
+	* @param string $message Log message.
+	* @param mixed  $data    Optional data.
+	* @return void
+	*/
 function rtbcb_log_api_debug( $message, $data = null ) {
 	$log_message = 'RTBCB API Debug: ' . $message;
 	if ( $data ) {
@@ -846,29 +846,29 @@ function rtbcb_log_memory_usage( $stage ) {
 
 function rtbcb_get_memory_status() {
 		return [
-		        'current' => memory_get_usage( true ),
-		        'peak'    => memory_get_peak_usage( true ),
-		        'limit'   => wp_convert_hr_to_bytes( ini_get( 'memory_limit' ) ),
+				'current' => memory_get_usage( true ),
+				'peak'    => memory_get_peak_usage( true ),
+				'limit'   => wp_convert_hr_to_bytes( ini_get( 'memory_limit' ) ),
 		];
 }
 
 /**
- * Determine if provided inputs qualify for synchronous processing.
- *
- * Simple cases with minimal data can be handled without background jobs.
- * A case is considered "simple" when all of the following are under their
- * respective thresholds:
- * - Number of banks involved.
- * - Full-time equivalents (FTEs) required.
- * - Combined weekly hours spent on reconciliation and cash positioning.
- *
- * These thresholds are intentionally conservative to keep synchronous
- * processing fast. Adjust the values below or use the `rtbcb_is_simple_case`
- * filter to customize the behavior.
- *
- * @param array $user_inputs Sanitized user inputs.
- * @return bool True when synchronous execution is allowed.
- */
+	* Determine if provided inputs qualify for synchronous processing.
+	*
+	* Simple cases with minimal data can be handled without background jobs.
+	* A case is considered "simple" when all of the following are under their
+	* respective thresholds:
+	* - Number of banks involved.
+	* - Full-time equivalents (FTEs) required.
+	* - Combined weekly hours spent on reconciliation and cash positioning.
+	*
+	* These thresholds are intentionally conservative to keep synchronous
+	* processing fast. Adjust the values below or use the `rtbcb_is_simple_case`
+	* filter to customize the behavior.
+	*
+	* @param array $user_inputs Sanitized user inputs.
+	* @return bool True when synchronous execution is allowed.
+	*/
 function rtbcb_is_simple_case( $user_inputs ) {
 		$user_inputs = is_array( $user_inputs ) ? $user_inputs : [];
 
@@ -893,10 +893,10 @@ function rtbcb_is_simple_case( $user_inputs ) {
 }
 
 /**
- * Retrieve sample user inputs for testing purposes.
- *
- * @return array Sample user inputs.
- */
+	* Retrieve sample user inputs for testing purposes.
+	*
+	* @return array Sample user inputs.
+	*/
 function rtbcb_get_sample_inputs() {
 	return [
 		'company_name'           => 'Acme Manufacturing Corp',
@@ -918,10 +918,10 @@ function rtbcb_get_sample_inputs() {
 }
 
 /**
- * Retrieve predefined sample report scenarios.
- *
- * @return array Map of scenario keys to labels and input data.
- */
+	* Retrieve predefined sample report scenarios.
+	*
+	* @return array Map of scenario keys to labels and input data.
+	*/
 function rtbcb_get_sample_report_forms() {
 	return [
 		'enterprise_manufacturer' => [
@@ -948,12 +948,12 @@ function rtbcb_get_sample_report_forms() {
 }
 
 /**
- * Map scenario keys to sample report inputs.
- *
- * @param array  $inputs       Default inputs.
- * @param string $scenario_key Scenario identifier.
- * @return array Filtered inputs.
- */
+	* Map scenario keys to sample report inputs.
+	*
+	* @param array  $inputs       Default inputs.
+	* @param string $scenario_key Scenario identifier.
+	* @return array Filtered inputs.
+	*/
 function rtbcb_map_sample_report_inputs( $inputs, $scenario_key ) {
 	$empty = [];
 
@@ -977,15 +977,15 @@ function rtbcb_map_sample_report_inputs( $inputs, $scenario_key ) {
 add_filter( 'rtbcb_sample_report_inputs', 'rtbcb_map_sample_report_inputs', 10, 2 );
 
 /**
- * Generate a category recommendation with enriched context for testing.
- *
- * Sanitizes requirement inputs, runs the category recommender, augments the
- * response with human readable names, reasoning, alternative categories,
- * confidence and scoring data, and optional implementation guidance.
- *
- * @param array $requirements User provided requirement data.
- * @return array Structured recommendation data.
- */
+	* Generate a category recommendation with enriched context for testing.
+	*
+	* Sanitizes requirement inputs, runs the category recommender, augments the
+	* response with human readable names, reasoning, alternative categories,
+	* confidence and scoring data, and optional implementation guidance.
+	*
+	* @param array $requirements User provided requirement data.
+	* @return array Structured recommendation data.
+	*/
 function rtbcb_test_generate_category_recommendation( $analysis ) {
 	$analysis = is_array( $analysis ) ? $analysis : [];
 
@@ -1015,23 +1015,23 @@ function rtbcb_test_generate_category_recommendation( $analysis ) {
 			$input .= "\nExtra Requirements: {$payload['extra_requirements']}";
 		}
 
-		        $response = rtbcb_wp_remote_post_with_retry(
-		                'https://api.openai.com/v1/responses',
-		                [
-		                        'headers' => [
-		                                'Content-Type'  => 'application/json',
-		                                'Authorization' => 'Bearer ' . $api_key,
-		                        ],
-		                        'body'    => wp_json_encode(
-		                                [
-		                                        'model'        => $model,
-		                                        'instructions' => $system_prompt,
-		                                        'input'        => $input,
-		                                ]
-		                        ),
-		                        'timeout' => rtbcb_get_api_timeout(),
-		                ]
-		        );
+				$response = rtbcb_wp_remote_post_with_retry(
+						'https://api.openai.com/v1/responses',
+						[
+								'headers' => [
+										'Content-Type'  => 'application/json',
+										'Authorization' => 'Bearer ' . $api_key,
+								],
+								'body'    => wp_json_encode(
+										[
+												'model'        => $model,
+												'instructions' => $system_prompt,
+												'input'        => $input,
+										]
+								),
+								'timeout' => rtbcb_get_api_timeout(),
+						]
+				);
 
 		if ( is_wp_error( $response ) ) {
 			return new WP_Error( 'llm_failure', __( 'Unable to generate recommendation at this time.', 'rtbcb' ) );
@@ -1104,11 +1104,11 @@ function rtbcb_test_generate_category_recommendation( $analysis ) {
 }
 
 /**
- * Test generating industry commentary using the LLM.
- *
- * @param string $industry Industry slug.
- * @return string|WP_Error Commentary text or error object.
- */
+	* Test generating industry commentary using the LLM.
+	*
+	* @param string $industry Industry slug.
+	* @return string|WP_Error Commentary text or error object.
+	*/
 function rtbcb_test_generate_industry_commentary( $industry ) {
 	$industry = sanitize_text_field( $industry );
 
@@ -1123,11 +1123,11 @@ function rtbcb_test_generate_industry_commentary( $industry ) {
 }
 
 /**
- * Test generating a company overview using the LLM.
- *
- * @param string $company_name Company name.
- * @return array|WP_Error Structured overview array or error object.
- */
+	* Test generating a company overview using the LLM.
+	*
+	* @param string $company_name Company name.
+	* @return array|WP_Error Structured overview array or error object.
+	*/
 function rtbcb_test_generate_company_overview( $company_name ) {
 	if ( ! class_exists( 'RTBCB_LLM' ) ) {
 		return new WP_Error( 'missing_class', __( 'LLM class not available', 'rtbcb' ) );
@@ -1146,17 +1146,17 @@ function rtbcb_test_generate_company_overview( $company_name ) {
 }
 
 /**
- * Test generating a treasury tech overview using the LLM.
- *
- * @param array $company_data Company data including focus areas and complexity.
- * @return string|WP_Error Overview text or error object.
- */
+	* Test generating a treasury tech overview using the LLM.
+	*
+	* @param array $company_data Company data including focus areas and complexity.
+	* @return string|WP_Error Overview text or error object.
+	*/
 /**
- * Test assessing treasury maturity.
- *
- * @param array $company_data Company information.
- * @return array|WP_Error Assessment data or error.
- */
+	* Test assessing treasury maturity.
+	*
+	* @param array $company_data Company information.
+	* @return array|WP_Error Assessment data or error.
+	*/
 function rtbcb_test_generate_maturity_model( $company_data ) {
 	if ( ! class_exists( 'RTBCB_Maturity_Model' ) ) {
 		return new WP_Error( 'missing_class', __( 'Maturity model class not available', 'rtbcb' ) );
@@ -1168,11 +1168,11 @@ function rtbcb_test_generate_maturity_model( $company_data ) {
 }
 
 /**
- * Test running RAG market analysis.
- *
- * @param string $query Search query.
- * @return array|WP_Error Vendor shortlist or error.
- */
+	* Test running RAG market analysis.
+	*
+	* @param string $query Search query.
+	* @return array|WP_Error Vendor shortlist or error.
+	*/
 function rtbcb_test_rag_market_analysis( $query ) {
 	if ( ! class_exists( 'RTBCB_RAG' ) ) {
 		return new WP_Error( 'missing_class', __( 'RAG class not available', 'rtbcb' ) );
@@ -1193,11 +1193,11 @@ function rtbcb_test_rag_market_analysis( $query ) {
 }
 
 /**
- * Test generating a value proposition.
- *
- * @param array $company_data Company information.
- * @return string|WP_Error Opening paragraph or error.
- */
+	* Test generating a value proposition.
+	*
+	* @param array $company_data Company information.
+	* @return string|WP_Error Opening paragraph or error.
+	*/
 function rtbcb_test_generate_value_proposition( $company_data ) {
 	$company_data = is_array( $company_data ) ? $company_data : [];
 	$company_name = isset( $company_data['name'] ) ? sanitize_text_field( $company_data['name'] ) : '';
@@ -1233,12 +1233,12 @@ function rtbcb_test_generate_value_proposition( $company_data ) {
 }
 
 /**
- * Test generating an industry overview using company data.
- *
- * @param array $company_data Company information including industry, size,
- *                            geography, and business model.
- * @return string|WP_Error Overview text or error object.
- */
+	* Test generating an industry overview using company data.
+	*
+	* @param array $company_data Company information including industry, size,
+	*                            geography, and business model.
+	* @return string|WP_Error Overview text or error object.
+	*/
 function rtbcb_test_generate_industry_overview( $company_data ) {
 	if ( ! class_exists( 'RTBCB_LLM' ) ) {
 		return new WP_Error( 'missing_class', __( 'LLM class not available', 'rtbcb' ) );
@@ -1257,19 +1257,19 @@ function rtbcb_test_generate_industry_overview( $company_data ) {
 }
 
 /**
- * Test generating a Real Treasury overview using the LLM.
- *
- * @param array $company_data {
- *     Company context data.
- *
- *     @type bool   $include_portal Include portal integration details.
- *     @type string $company_size   Company size description.
- *     @type string $industry       Company industry.
- *     @type array  $challenges     List of identified challenges.
- *     @type array  $categories     Optional vendor categories to highlight.
- * }
- * @return string|WP_Error Overview text or error object.
- */
+	* Test generating a Real Treasury overview using the LLM.
+	*
+	* @param array $company_data {
+	*     Company context data.
+	*
+	*     @type bool   $include_portal Include portal integration details.
+	*     @type string $company_size   Company size description.
+	*     @type string $industry       Company industry.
+	*     @type array  $challenges     List of identified challenges.
+	*     @type array  $categories     Optional vendor categories to highlight.
+	* }
+	* @return string|WP_Error Overview text or error object.
+	*/
 function rtbcb_test_generate_real_treasury_overview( $include_portal = false, $categories = [] ) {
 	if ( ! class_exists( 'RTBCB_LLM' ) ) {
 		return new WP_Error( 'missing_class', __( 'LLM class not available', 'rtbcb' ) );
@@ -1293,12 +1293,12 @@ function rtbcb_test_generate_real_treasury_overview( $include_portal = false, $c
 }
 
 /**
- * Test generating a benefits estimate using the LLM.
- *
- * @param array  $company_data        Company context including revenue, staff count and efficiency.
- * @param string $recommended_category Solution category.
- * @return array|WP_Error Structured estimate array or error object.
- */
+	* Test generating a benefits estimate using the LLM.
+	*
+	* @param array  $company_data        Company context including revenue, staff count and efficiency.
+	* @param string $recommended_category Solution category.
+	* @return array|WP_Error Structured estimate array or error object.
+	*/
 function rtbcb_test_generate_benefits_estimate( $company_data, $recommended_category ) {
 	$company_data = is_array( $company_data ) ? $company_data : [];
 	$revenue      = isset( $company_data['revenue'] ) ? floatval( $company_data['revenue'] ) : 0;
@@ -1317,10 +1317,10 @@ function rtbcb_test_generate_benefits_estimate( $company_data, $recommended_cate
 }
 
 /**
- * Test generating executive summary via the LLM.
- *
- * @return array|WP_Error Summary data or error object.
- */
+	* Test generating executive summary via the LLM.
+	*
+	* @return array|WP_Error Summary data or error object.
+	*/
 function rtbcb_test_generate_executive_summary() {
 	if ( ! class_exists( 'RTBCB_LLM' ) ) {
 		return new WP_Error( 'missing_class', __( 'LLM class not available', 'rtbcb' ) );
@@ -1329,8 +1329,8 @@ function rtbcb_test_generate_executive_summary() {
 	$company = rtbcb_get_current_company();
 	$roi     = get_option( 'rtbcb_roi_results', [] );
 
-       $llm    = new RTBCB_LLM();
-       $result = $llm->generate_comprehensive_business_case( $company, $roi, [], null );
+	   $llm    = new RTBCB_LLM();
+	   $result = $llm->generate_comprehensive_business_case( $company, $roi, [], null );
 
 	if ( is_wp_error( $result ) ) {
 		return $result;
@@ -1351,12 +1351,12 @@ function rtbcb_test_generate_executive_summary() {
 }
 
 /**
- * Parse GPT-5 Responses API output with quality validation.
- *
- * @param array $response Response data from GPT-5 API.
- *
- * @return array Parsed response with quality information.
- */
+	* Parse GPT-5 Responses API output with quality validation.
+	*
+	* @param array $response Response data from GPT-5 API.
+	*
+	* @return array Parsed response with quality information.
+	*/
 function rtbcb_parse_gpt5_business_case_response( $response ) {
 	$parsed = rtbcb_parse_gpt5_response( $response );
 
@@ -1416,13 +1416,13 @@ function rtbcb_parse_gpt5_business_case_response( $response ) {
 }
 
 /**
- * Proxy requests to the OpenAI Responses API.
- *
- * Reads the API key from options and forwards the provided request body to
- * the OpenAI endpoint.
- *
- * @return void
- */
+	* Proxy requests to the OpenAI Responses API.
+	*
+	* Reads the API key from options and forwards the provided request body to
+	* the OpenAI endpoint.
+	*
+	* @return void
+	*/
 function rtbcb_proxy_openai_responses() {
 	$api_key = get_option( 'rtbcb_openai_api_key' );
 	if ( empty( $api_key ) ) {
@@ -1440,7 +1440,7 @@ function rtbcb_proxy_openai_responses() {
 
 		$body_array = json_decode( $body, true );
 		if ( ! is_array( $body_array ) ) {
-			    $body_array = [];
+				$body_array = [];
 		}
 
 		$company      = rtbcb_get_current_company();
@@ -1494,12 +1494,12 @@ function rtbcb_proxy_openai_responses() {
 }
 
 /**
- * Background handler for OpenAI response jobs.
- *
- * @param string $job_id  Job identifier.
- * @param int    $user_id User identifier.
- * @return void
- */
+	* Background handler for OpenAI response jobs.
+	*
+	* @param string $job_id  Job identifier.
+	* @param int    $user_id User identifier.
+	* @return void
+	*/
 function rtbcb_handle_openai_responses_job( $job_id, $user_id ) {
 	$job_id  = sanitize_key( $job_id );
 	$user_id = intval( $user_id );
@@ -1533,7 +1533,7 @@ function rtbcb_handle_openai_responses_job( $job_id, $user_id ) {
 
 		$body_array = json_decode( $body, true );
 		if ( ! is_array( $body_array ) ) {
-			    $body_array = [];
+				$body_array = [];
 		}
 
 		$company      = rtbcb_get_current_company();
@@ -1546,21 +1546,21 @@ function rtbcb_handle_openai_responses_job( $job_id, $user_id ) {
 	}
 
 		$response = rtbcb_wp_remote_post_with_retry(
-		        'https://api.openai.com/v1/responses',
-		        [
-		                'headers' => [
-		                        'Content-Type'  => 'application/json',
-		                        'Authorization' => 'Bearer ' . $api_key,
-		                ],
-		                'body'    => $body,
-		                'timeout' => $timeout,
-		        ]
+				'https://api.openai.com/v1/responses',
+				[
+						'headers' => [
+								'Content-Type'  => 'application/json',
+								'Authorization' => 'Bearer ' . $api_key,
+						],
+						'body'    => $body,
+						'timeout' => $timeout,
+				]
 		);
 
 	if ( is_wp_error( $response ) ) {
-			    if ( class_exists( 'RTBCB_API_Log' ) ) {
-				    RTBCB_API_Log::save_log( $body_array, [ 'error' => $response->get_error_message() ], $user_id, $user_email, $company_name );
-			    }
+				if ( class_exists( 'RTBCB_API_Log' ) ) {
+					RTBCB_API_Log::save_log( $body_array, [ 'error' => $response->get_error_message() ], $user_id, $user_email, $company_name );
+				}
 		set_transient(
 			'rtbcb_openai_job_' . $job_id,
 			[
@@ -1580,7 +1580,7 @@ function rtbcb_handle_openai_responses_job( $job_id, $user_id ) {
 	}
 
 		if ( class_exists( 'RTBCB_API_Log' ) ) {
-			    RTBCB_API_Log::save_log( $body_array, $decoded, $user_id, $user_email, $company_name );
+				RTBCB_API_Log::save_log( $body_array, $decoded, $user_id, $user_email, $company_name );
 		}
 
 	set_transient(
@@ -1598,10 +1598,10 @@ if ( function_exists( 'add_action' ) ) {
 }
 
 /**
- * Retrieve the status or result of an OpenAI response job.
- *
- * @return void
- */
+	* Retrieve the status or result of an OpenAI response job.
+	*
+	* @return void
+	*/
 function rtbcb_get_openai_responses_status() {
 	$job_id = isset( $_REQUEST['job_id'] ) ? sanitize_key( wp_unslash( $_REQUEST['job_id'] ) ) : '';
 	if ( '' === $job_id ) {
@@ -1622,11 +1622,11 @@ function rtbcb_get_openai_responses_status() {
 }
 
 /**
- * Queue comprehensive analysis generation in the background.
- *
- * @param string $company_name Company name.
- * @return string|WP_Error Job identifier on success or WP_Error on failure.
- */
+	* Queue comprehensive analysis generation in the background.
+	*
+	* @param string $company_name Company name.
+	* @return string|WP_Error Job identifier on success or WP_Error on failure.
+	*/
 function rtbcb_queue_comprehensive_analysis( $company_name ) {
 	$company_name = sanitize_text_field( $company_name );
 	if ( '' === $company_name ) {
@@ -1644,12 +1644,12 @@ function rtbcb_queue_comprehensive_analysis( $company_name ) {
 }
 
 /**
- * Background handler for comprehensive analysis jobs.
- *
- * @param string $company_name Company name.
- * @param string $job_id       Job identifier.
- * @return void
- */
+	* Background handler for comprehensive analysis jobs.
+	*
+	* @param string $company_name Company name.
+	* @param string $job_id       Job identifier.
+	* @return void
+	*/
 function rtbcb_handle_comprehensive_analysis( $company_name, $job_id ) {
 	$company_name = sanitize_text_field( $company_name );
 	$job_id       = sanitize_key( $job_id );
@@ -1687,8 +1687,8 @@ function rtbcb_handle_comprehensive_analysis( $company_name, $job_id ) {
 		$rag_context = array_map( 'sanitize_text_field', $vendor_list );
 	}
 
-       $llm      = new RTBCB_LLM();
-       $analysis = $llm->generate_comprehensive_business_case( [ 'company_name' => $company_name ], [], $rag_context, null );
+	   $llm      = new RTBCB_LLM();
+	   $analysis = $llm->generate_comprehensive_business_case( [ 'company_name' => $company_name ], [], $rag_context, null );
 
 	if ( is_wp_error( $analysis ) ) {
 		update_option(
@@ -1775,25 +1775,25 @@ if ( function_exists( 'add_action' ) ) {
 }
 
 /**
- * Get the result of a queued analysis job.
- *
- * @param string $job_id Job identifier.
- * @return mixed|null Stored result array or null if pending.
- */
+	* Get the result of a queued analysis job.
+	*
+	* @param string $job_id Job identifier.
+	* @return mixed|null Stored result array or null if pending.
+	*/
 function rtbcb_get_analysis_job_result( $job_id ) {
 	$job_id = sanitize_key( $job_id );
 	return get_option( 'rtbcb_analysis_job_' . $job_id, null );
 }
 
 /**
- * Build a cache key for LLM research results.
- *
- * @param string $company  Company name.
- * @param string $industry Industry name.
- * @param string $type     Cache segment identifier.
- *
- * @return string Cache key.
- */
+	* Build a cache key for LLM research results.
+	*
+	* @param string $company  Company name.
+	* @param string $industry Industry name.
+	* @param string $type     Cache segment identifier.
+	*
+	* @return string Cache key.
+	*/
 function rtbcb_get_research_cache_key( $company, $industry, $type ) {
 	$company  = sanitize_title( $company );
 	$industry = sanitize_title( $industry );
@@ -1803,28 +1803,28 @@ function rtbcb_get_research_cache_key( $company, $industry, $type ) {
 }
 
 /**
- * Retrieve cached LLM research data.
- *
- * @param string $company  Company name.
- * @param string $industry Industry name.
- * @param string $type     Cache segment identifier.
- *
- * @return mixed Cached data or false when not found.
- */
+	* Retrieve cached LLM research data.
+	*
+	* @param string $company  Company name.
+	* @param string $industry Industry name.
+	* @param string $type     Cache segment identifier.
+	*
+	* @return mixed Cached data or false when not found.
+	*/
 function rtbcb_get_research_cache( $company, $industry, $type ) {
 	$key = rtbcb_get_research_cache_key( $company, $industry, $type );
 	return get_transient( $key );
 }
 
 /**
- * Store LLM research data in cache.
- *
- * @param string $company  Company name.
- * @param string $industry Industry name.
- * @param string $type     Cache segment identifier.
- * @param mixed  $data     Data to cache.
- * @param int    $ttl      Optional TTL in seconds.
- */
+	* Store LLM research data in cache.
+	*
+	* @param string $company  Company name.
+	* @param string $industry Industry name.
+	* @param string $type     Cache segment identifier.
+	* @param mixed  $data     Data to cache.
+	* @param int    $ttl      Optional TTL in seconds.
+	*/
 function rtbcb_set_research_cache( $company, $industry, $type, $data, $ttl = 0 ) {
 	$key = rtbcb_get_research_cache_key( $company, $industry, $type );
 	$ttl = (int) $ttl;
@@ -1846,24 +1846,24 @@ function rtbcb_set_research_cache( $company, $industry, $type, $data, $ttl = 0 )
 }
 
 /**
- * Delete cached LLM research data.
- *
- * @param string $company  Company name.
- * @param string $industry Industry name.
- * @param string $type     Cache segment identifier.
- */
+	* Delete cached LLM research data.
+	*
+	* @param string $company  Company name.
+	* @param string $industry Industry name.
+	* @param string $type     Cache segment identifier.
+	*/
 function rtbcb_delete_research_cache( $company, $industry, $type ) {
 $key = rtbcb_get_research_cache_key( $company, $industry, $type );
 delete_transient( $key );
 }
 
 /**
- * Get allowed HTML tags and attributes for report templates.
- *
- * Adds canvas and button elements and permits data-* attributes.
- *
- * @return array Allowed HTML tags and attributes.
- */
+	* Get allowed HTML tags and attributes for report templates.
+	*
+	* Adds canvas and button elements and permits data-* attributes.
+	*
+	* @return array Allowed HTML tags and attributes.
+	*/
 function rtbcb_get_report_allowed_html() {
 	$allowed = wp_kses_allowed_html( 'post' );
 
@@ -1894,24 +1894,24 @@ function rtbcb_get_report_allowed_html() {
 }
 
 /**
- * Increment the RAG search cache version to invalidate cached results.
- *
- * @return void
- */
+	* Increment the RAG search cache version to invalidate cached results.
+	*
+	* @return void
+	*/
 function rtbcb_invalidate_rag_cache() {
 		if ( function_exists( 'get_option' ) && function_exists( 'update_option' ) ) {
-		        $version = (int) get_option( 'rtbcb_rag_cache_version', 1 );
-		        update_option( 'rtbcb_rag_cache_version', $version + 1 );
+				$version = (int) get_option( 'rtbcb_rag_cache_version', 1 );
+				update_option( 'rtbcb_rag_cache_version', $version + 1 );
 		}
 }
 
 /**
- * Clear cached report HTML entries.
- *
- * Retrieves the current report cache version for versioned cache keys.
- *
- * @return int
- */
+	* Clear cached report HTML entries.
+	*
+	* Retrieves the current report cache version for versioned cache keys.
+	*
+	* @return int
+	*/
 function rtbcb_get_report_cache_version() {
 	$version = wp_cache_get( 'report_cache_version', 'rtbcb_reports' );
 
@@ -1924,12 +1924,12 @@ function rtbcb_get_report_cache_version() {
 }
 
 /**
- * Clear cached report HTML entries.
- *
- * Bumps the report cache version so previously cached templates are ignored.
- *
- * @return void
- */
+	* Clear cached report HTML entries.
+	*
+	* Bumps the report cache version so previously cached templates are ignored.
+	*
+	* @return void
+	*/
 function rtbcb_clear_report_cache() {
 	$version = rtbcb_get_report_cache_version();
 	wp_cache_set( 'report_cache_version', $version + 1, 'rtbcb_reports' );
@@ -1937,14 +1937,14 @@ function rtbcb_clear_report_cache() {
 
 
 /**
- * Enable persistent database connections when supported.
- *
- * Reconnects using a host prefixed with `p:` if the current connection is
- * not already persistent and persistent connections are allowed. Behavior can
- * be filtered with `rtbcb_enable_persistent_connection`.
- *
- * @return void
- */
+	* Enable persistent database connections when supported.
+	*
+	* Reconnects using a host prefixed with `p:` if the current connection is
+	* not already persistent and persistent connections are allowed. Behavior can
+	* be filtered with `rtbcb_enable_persistent_connection`.
+	*
+	* @return void
+	*/
 function rtbcb_enable_persistent_connection() {
 	global $wpdb;
 

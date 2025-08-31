@@ -5,155 +5,155 @@ if ( ! defined( 'ABSPATH' ) ) {
 defined( 'ABSPATH' ) || exit;
 
 if ( ! class_exists( 'WP_Error' ) ) {
-    class WP_Error {
-        private $code;
-        private $message;
-        private $data;
-        public function __construct( $code = '', $message = '', $data = [] ) {
-            $this->code    = $code;
-            $this->message = $message;
-            $this->data    = $data;
-        }
-        public function get_error_message() {
-            return $this->message;
-        }
-        public function get_error_code() {
-            return $this->code;
-        }
-        public function get_error_data() {
-            return $this->data;
-        }
-    }
+	class WP_Error {
+		private $code;
+		private $message;
+		private $data;
+		public function __construct( $code = '', $message = '', $data = [] ) {
+			$this->code    = $code;
+			$this->message = $message;
+			$this->data    = $data;
+		}
+		public function get_error_message() {
+			return $this->message;
+		}
+		public function get_error_code() {
+			return $this->code;
+		}
+		public function get_error_data() {
+			return $this->data;
+		}
+	}
 }
 
 if ( ! function_exists( 'is_wp_error' ) ) {
-    function is_wp_error( $thing ) {
-        return $thing instanceof WP_Error;
-    }
+	function is_wp_error( $thing ) {
+		return $thing instanceof WP_Error;
+	}
 }
 
 if ( ! function_exists( 'set_transient' ) ) {
-    function set_transient( $name, $value, $expiration ) {
-        global $transients, $transient_log;
-        $transients[ $name ]     = $value;
-        $transient_log[ $name ][] = $value;
-        return true;
-    }
+	function set_transient( $name, $value, $expiration ) {
+		global $transients, $transient_log;
+		$transients[ $name ]     = $value;
+		$transient_log[ $name ][] = $value;
+		return true;
+	}
 }
 
 if ( ! function_exists( 'get_transient' ) ) {
-    function get_transient( $name ) {
-        global $transients;
-        return $transients[ $name ] ?? false;
-    }
+	function get_transient( $name ) {
+		global $transients;
+		return $transients[ $name ] ?? false;
+	}
 }
 
 if ( ! function_exists( 'delete_transient' ) ) {
-    function delete_transient( $name ) {
-        global $transients;
-        unset( $transients[ $name ] );
-    }
+	function delete_transient( $name ) {
+		global $transients;
+		unset( $transients[ $name ] );
+	}
 }
 
 global $sent_report_email;
 $sent_report_email = [];
 if ( ! function_exists( 'rtbcb_send_report_email' ) ) {
-    function rtbcb_send_report_email( $form_data, $path ) {
-        global $sent_report_email;
-        $sent_report_email = [
-            'form_data' => $form_data,
-            'path'      => $path,
-        ];
-    }
+	function rtbcb_send_report_email( $form_data, $path ) {
+		global $sent_report_email;
+		$sent_report_email = [
+			'form_data' => $form_data,
+			'path'      => $path,
+		];
+	}
 }
 
 if ( ! function_exists( 'wp_schedule_single_event' ) ) {
-    function wp_schedule_single_event( $timestamp, $hook, $args ) {
-        global $scheduled_events;
-        $scheduled_events[] = [
-            'timestamp' => $timestamp,
-            'hook'      => $hook,
-            'args'      => $args,
-        ];
-    }
+	function wp_schedule_single_event( $timestamp, $hook, $args ) {
+		global $scheduled_events;
+		$scheduled_events[] = [
+			'timestamp' => $timestamp,
+			'hook'      => $hook,
+			'args'      => $args,
+		];
+	}
 }
 
 if ( ! function_exists( 'spawn_cron' ) ) {
-    function spawn_cron() {
-        global $spawned_cron;
-        $spawned_cron = true;
-    }
+	function spawn_cron() {
+		global $spawned_cron;
+		$spawned_cron = true;
+	}
 }
 
 if ( ! function_exists( 'wp_doing_cron' ) ) {
-    function wp_doing_cron() {
-        return false;
-    }
+	function wp_doing_cron() {
+		return false;
+	}
 }
 
 global $wp_actions;
 $wp_actions = [];
 
 if ( ! function_exists( 'add_action' ) ) {
-    function add_action( $hook, $callback, $priority = 10, $accepted_args = 1 ) {
-        global $wp_actions;
-        $wp_actions[ $hook ][] = [
-            'callback'      => $callback,
-            'accepted_args' => $accepted_args,
-        ];
-    }
+	function add_action( $hook, $callback, $priority = 10, $accepted_args = 1 ) {
+		global $wp_actions;
+		$wp_actions[ $hook ][] = [
+			'callback'      => $callback,
+			'accepted_args' => $accepted_args,
+		];
+	}
 }
 
 if ( ! function_exists( 'do_action' ) ) {
-    function do_action( $hook, ...$args ) {
-        global $wp_actions;
-        if ( isset( $wp_actions[ $hook ] ) ) {
-            foreach ( $wp_actions[ $hook ] as $action ) {
-                call_user_func_array( $action['callback'], array_slice( $args, 0, $action['accepted_args'] ) );
-            }
-        }
-    }
+	function do_action( $hook, ...$args ) {
+		global $wp_actions;
+		if ( isset( $wp_actions[ $hook ] ) ) {
+			foreach ( $wp_actions[ $hook ] as $action ) {
+				call_user_func_array( $action['callback'], array_slice( $args, 0, $action['accepted_args'] ) );
+			}
+		}
+	}
 }
 
 if ( ! defined( 'HOUR_IN_SECONDS' ) ) {
-    define( 'HOUR_IN_SECONDS', 3600 );
+	define( 'HOUR_IN_SECONDS', 3600 );
 }
 if ( ! defined( 'DAY_IN_SECONDS' ) ) {
-    define( 'DAY_IN_SECONDS', 86400 );
+	define( 'DAY_IN_SECONDS', 86400 );
 }
 
 if ( ! class_exists( 'RTBCB_Ajax' ) ) {
-    class RTBCB_Ajax {
-        public static $mode = 'success';
-        public static function process_basic_roi_step( $user_inputs ) {
-            return [ 'financial_analysis' => [] ];
-        }
-        public static function process_comprehensive_case( $user_inputs, $job_id ) {
-            do_action( 'rtbcb_workflow_step_completed', 'ai_enrichment' );
-            RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'enriched_profile' => [] ] );
-            do_action( 'rtbcb_workflow_step_completed', 'enhanced_roi_calculation' );
-            RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'enhanced_roi' => [] ] );
-            do_action( 'rtbcb_workflow_step_completed', 'intelligent_recommendations' );
-            RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'category' => 'cat' ] );
-            do_action( 'rtbcb_workflow_step_completed', 'hybrid_rag_analysis' );
-            RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'analysis' => [] ] );
-            do_action( 'rtbcb_workflow_step_completed', 'data_structuring' );
-            RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'report_data' => [] ] );
-            if ( 'error' === self::$mode ) {
-                return new WP_Error( 'failed', 'Processing failed.' );
-            }
-            return [ 'result' => 'ok' ];
-        }
-    }
+	class RTBCB_Ajax {
+		public static $mode = 'success';
+		public static function process_basic_roi_step( $user_inputs ) {
+			return [ 'financial_analysis' => [] ];
+		}
+		public static function process_comprehensive_case( $user_inputs, $job_id ) {
+			do_action( 'rtbcb_workflow_step_completed', 'ai_enrichment' );
+			RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'enriched_profile' => [] ] );
+			do_action( 'rtbcb_workflow_step_completed', 'enhanced_roi_calculation' );
+			RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'enhanced_roi' => [] ] );
+			do_action( 'rtbcb_workflow_step_completed', 'intelligent_recommendations' );
+			RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'category' => 'cat' ] );
+			do_action( 'rtbcb_workflow_step_completed', 'hybrid_rag_analysis' );
+			RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'analysis' => [] ] );
+			do_action( 'rtbcb_workflow_step_completed', 'data_structuring' );
+			RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'report_data' => [] ] );
+			if ( 'error' === self::$mode ) {
+				return new WP_Error( 'failed', 'Processing failed.' );
+			}
+			return [ 'result' => 'ok' ];
+		}
+	}
 }
 
 require_once __DIR__ . '/../inc/class-rtbcb-background-job.php';
 
 function assert_true( $condition, $message ) {
-    if ( ! $condition ) {
-        echo $message . "\n";
-        exit( 1 );
-    }
+	if ( ! $condition ) {
+		echo $message . "\n";
+		exit( 1 );
+	}
 }
 
 // Successful job flow.
