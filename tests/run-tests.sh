@@ -89,6 +89,8 @@ php tests/job-status.test.php
 # Business analysis generation test
 echo "14c. Running business analysis generation test..."
 phpunit tests/generate-business-analysis.test.php
+echo "14d. Running Jetpack compatibility test..."
+php tests/jetpack-compatibility.test.php
 
 # JavaScript tests
 echo "16. Running JavaScript tests..."
