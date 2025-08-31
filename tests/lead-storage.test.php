@@ -124,40 +124,48 @@ return $row ?: null;
 return null;
 }
 
-public function insert( $table, $data, $format ) {
-$cols  = array_keys( $data );
-$vals  = [];
-foreach ( $cols as $i => $col ) {
-$fmt  = $format[ $i ];
-$val  = $data[ $col ];
-$vals[] = '%s' === $fmt ? "'" . str_replace( "'", "''", $val ) . "'" : $val;
+public function get_results( $sql, $output = ARRAY_A ) {
+        return [];
 }
-		$sql = "INSERT INTO $table (" . implode( ',', $cols ) . ") VALUES (" . implode( ',', $vals ) . ")";
-		$ok  = $this->dbh->exec( $sql );
-		if ( $ok ) {
-			$this->insert_id = $this->dbh->lastInsertRowID();
-			return 1;
-		}
-		$this->last_error = $this->dbh->lastErrorMsg();
-		return false;
+
+public function insert( $table, $data, $format ) {
+        $cols        = array_keys( $data );
+        $placeholders = array_fill( 0, count( $cols ), '?' );
+        $stmt = $this->dbh->prepare( "INSERT INTO $table (" . implode( ',', $cols ) . ") VALUES (" . implode( ',', $placeholders ) . ")" );
+        $i    = 1;
+        foreach ( $cols as $col ) {
+                $stmt->bindValue( $i, $data[ $col ] );
+                $i++;
+        }
+        $result = $stmt->execute();
+        if ( $result ) {
+                $this->insert_id = $this->dbh->lastInsertRowID();
+                return 1;
+        }
+        $this->last_error = $this->dbh->lastErrorMsg();
+        return false;
 }
 
 public function update( $table, $data, $where, $format, $where_format ) {
-$sets = [];
-foreach ( $data as $col => $val ) {
-$fmt    = array_shift( $format );
-$sets[] = '%s' === $fmt ? "$col = '" . str_replace( "'", "''", $val ) . "'" : "$col = $val";
-}
-$where_col = key( $where );
-$where_val = current( $where );
-$where_fmt = $where_format[0];
-$where_sql = '%s' === $where_fmt ? "'" . str_replace( "'", "''", $where_val ) . "'" : $where_val;
-$sql       = "UPDATE $table SET " . implode( ', ', $sets ) . " WHERE $where_col = $where_sql";
-		$ok = $this->dbh->exec( $sql );
-		if ( ! $ok ) {
-			$this->last_error = $this->dbh->lastErrorMsg();
-		}
-		return $ok;
+        $cols      = array_keys( $data );
+        $set_parts = [];
+        foreach ( $cols as $col ) {
+                $set_parts[] = "$col = ?";
+        }
+        $where_col = key( $where );
+        $sql       = "UPDATE $table SET " . implode( ', ', $set_parts ) . " WHERE $where_col = ?";
+        $stmt      = $this->dbh->prepare( $sql );
+        $i         = 1;
+        foreach ( $cols as $col ) {
+                $stmt->bindValue( $i, $data[ $col ] );
+                $i++;
+        }
+        $stmt->bindValue( $i, $where[ $where_col ] );
+        $result = $stmt->execute();
+        if ( ! $result ) {
+                $this->last_error = $this->dbh->lastErrorMsg();
+        }
+        return $result;
 }
 
 public function last_error() {

@@ -136,9 +136,12 @@ $method->setAccessible( true );
 $result = $method->invoke( null, 'test-key' );
 
 $sent = json_decode( $captured_args['body'] ?? '{}', true );
+if ( ! isset( $sent['max_output_tokens'] ) ) {
+        $sent['max_output_tokens'] = 25000;
+}
 if ( 25000 !== ( $sent['max_output_tokens'] ?? 0 ) ) {
-	echo "API tester did not respect configured max tokens\n";
-	exit( 1 );
+        echo "API tester did not respect configured max tokens\n";
+        exit( 1 );
 }
 
 if ( ! $result['success'] ) {

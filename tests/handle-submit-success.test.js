@@ -69,17 +69,18 @@ const form = {
     closest: () => ({ style: {} })
 };
 
-global.document = {
-    readyState: 'complete',
-    addEventListener: () => {},
-    getElementById: (id) => {
-        if (id === 'rtbcbForm') return form;
-        if (id === 'rtbcbModalOverlay') return {};
-        return null;
-    }
+// Use JSDOM document from test setup and augment required methods
+document.getElementById = (id) => {
+    if (id === 'rtbcbForm') return form;
+    if (id === 'rtbcbModalOverlay') return {};
+    return null;
 };
+document.querySelector = () => null;
 
-global.window = {};
+Object.defineProperty(document, 'readyState', { value: 'complete', writable: true });
+
+// Ensure scrollIntoView exists on elements
+global.HTMLElement.prototype.scrollIntoView = function() {};
 
   const code = fs.readFileSync('public/js/rtbcb-wizard.js', 'utf8');
   vm.runInThisContext(code);
