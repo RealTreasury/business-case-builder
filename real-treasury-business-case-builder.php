@@ -242,6 +242,35 @@ class Real_Treasury_BCB {
             return false;
         }
 
+		// Check required PHP extensions.
+		$required_extensions = [ 'curl', 'mbstring' ];
+		$missing_extensions  = [];
+
+		foreach ( $required_extensions as $extension ) {
+			if ( ! extension_loaded( $extension ) ) {
+				$missing_extensions[] = $extension;
+			}
+		}
+
+		if ( ! empty( $missing_extensions ) ) {
+			add_action( 'admin_notices', function() use ( $missing_extensions ) {
+				echo '<div class="notice notice-error"><p>';
+				printf(
+					esc_html(
+						_n(
+							'Real Treasury Business Case Builder requires the following PHP extension: %s.',
+							'Real Treasury Business Case Builder requires the following PHP extensions: %s.',
+							count( $missing_extensions ),
+							'rtbcb'
+						)
+					),
+					esc_html( implode( ', ', $missing_extensions ) )
+				);
+				echo '</p></div>';
+			} );
+			return false;
+		}
+
         return true;
     }
 
