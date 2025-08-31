@@ -82,9 +82,9 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 						<label for="company_name">
 							<?php esc_html_e( 'Company Name', 'rtbcb' ); ?>
 						</label>
-						<input type="text" name="company_name" id="company_name" 
-							   placeholder="<?php esc_attr_e( 'Enter your company name', 'rtbcb' ); ?>" 
-							   required 
+						<input type="text" name="company_name" id="company_name"
+							   placeholder="<?php esc_attr_e( 'Enter your company name', 'rtbcb' ); ?>"
+							   required
 							   maxlength="100" />
 						<div class="rtbcb-field-help">
 							<?php esc_html_e( 'This will be used to personalize your business case report', 'rtbcb' ); ?>
@@ -151,7 +151,7 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 					<h3><?php esc_html_e( 'Your current treasury operations', 'rtbcb' ); ?></h3>
 					  <p><?php esc_html_e( 'Help us understand your current workload and banking relationships.', 'rtbcb' ); ?></p>
 				</div>
-				
+
 				<div class="rtbcb-step-content">
 					<div class="rtbcb-field rtbcb-field-required">
 						<label for="hours_reconciliation">
@@ -205,7 +205,7 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 					<h3><?php esc_html_e( 'What are your biggest challenges?', 'rtbcb' ); ?></h3>
 					<p><?php esc_html_e( 'Select the pain points that best describe your current treasury challenges.', 'rtbcb' ); ?></p>
 				</div>
-				
+
 				<div class="rtbcb-step-content">
 					<div class="rtbcb-pain-points-grid">
 						<div class="rtbcb-pain-point-card">
@@ -286,7 +286,7 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 							</label>
 						</div>
 					</div>
-					
+
 					<div class="rtbcb-pain-points-validation">
 						<div class="rtbcb-validation-message" style="display: none;">
 							<?php esc_html_e( 'Please select at least one challenge that applies to your organization.', 'rtbcb' ); ?>
@@ -364,13 +364,13 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 					<h3><?php esc_html_e( 'Get your business case', 'rtbcb' ); ?></h3>
 					<p><?php esc_html_e( 'Enter your email to receive your personalized ROI analysis and recommendations.', 'rtbcb' ); ?></p>
 				</div>
-				
+
 				<div class="rtbcb-step-content">
 					<div class="rtbcb-field rtbcb-field-required">
 						<label for="email">
 							<?php esc_html_e( 'Business Email Address', 'rtbcb' ); ?>
 						</label>
-						<input type="email" name="email" id="email" 
+						<input type="email" name="email" id="email"
 							   placeholder="yourname@company.com" required />
 						<div class="rtbcb-field-help">
 							<?php esc_html_e( 'We\'ll send your business case report to this email address', 'rtbcb' ); ?>

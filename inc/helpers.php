@@ -598,12 +598,12 @@ function rtbcb_check_database_health() {
 	*/
 function rtbcb_sanitize_form_data( $data ) {
 	$sanitized = [];
-	
+
 	// Email
 	if ( isset( $data['email'] ) ) {
 		$sanitized['email'] = sanitize_email( $data['email'] );
 	}
-	
+
 	// Text fields
 	$text_fields = [ 'company_size', 'industry' ];
 	foreach ( $text_fields as $field ) {
@@ -611,7 +611,7 @@ function rtbcb_sanitize_form_data( $data ) {
 			$sanitized[ $field ] = sanitize_text_field( $data[ $field ] );
 		}
 	}
-	
+
 	// Numeric fields
 	$numeric_fields = [
 		'hours_reconciliation'   => [ 'min' => 0,   'max' => 168 ],
@@ -619,7 +619,7 @@ function rtbcb_sanitize_form_data( $data ) {
 		'num_banks'              => [ 'min' => 1,   'max' => 50 ],
 		'ftes'                   => [ 'min' => 0.5, 'max' => 100 ],
 	];
-	
+
 	foreach ( $numeric_fields as $field => $limits ) {
 		if ( isset( $data[ $field ] ) ) {
 			$value = floatval( $data[ $field ] );
@@ -627,7 +627,7 @@ function rtbcb_sanitize_form_data( $data ) {
 			$sanitized[ $field ] = $value;
 		}
 	}
-	
+
 	// Pain points array
 	if ( isset( $data['pain_points'] ) && is_array( $data['pain_points'] ) ) {
 		$valid_pain_points = [
@@ -638,7 +638,7 @@ function rtbcb_sanitize_form_data( $data ) {
 			'bank_fees',
 			'integration_issues',
 		];
-		
+
 		$sanitized['pain_points'] = array_filter(
 			array_map( 'sanitize_text_field', $data['pain_points'] ),
 			function ( $point ) use ( $valid_pain_points ) {
@@ -646,7 +646,7 @@ function rtbcb_sanitize_form_data( $data ) {
 			}
 		);
 	}
-	
+
 	return $sanitized;
 }
 
@@ -661,7 +661,7 @@ function rtbcb_is_business_email( $email ) {
 		'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com',
 		'aol.com', 'icloud.com', 'mail.com', 'protonmail.com',
 	];
-	
+
 	$domain = substr( strrchr( $email, '@' ), 1 );
 	return ! in_array( strtolower( $domain ), $consumer_domains, true );
 }
@@ -748,16 +748,16 @@ function rtbcb_get_client_info() {
 	*/
 function rtbcb_get_client_ip() {
 	$ip_keys = [ 'HTTP_X_FORWARDED_FOR', 'HTTP_X_REAL_IP', 'HTTP_CLIENT_IP', 'REMOTE_ADDR' ];
-	
+
 	foreach ( $ip_keys as $key ) {
 		if ( ! empty( $_SERVER[ $key ] ) ) {
 			$ip = wp_unslash( $_SERVER[ $key ] );
-			
+
 			// Handle comma-separated IPs
 			if ( strpos( $ip, ',' ) !== false ) {
 				$ip = trim( explode( ',', $ip )[0] );
 			}
-			
+
 			// Validate IP
 			if ( filter_var(
 				$ip,
@@ -768,7 +768,7 @@ function rtbcb_get_client_ip() {
 			}
 		}
 	}
-	
+
 	return isset( $_SERVER['REMOTE_ADDR'] ) ? wp_unslash( $_SERVER['REMOTE_ADDR'] ) : '';
 }
 

@@ -91,7 +91,7 @@ $avg_roi = intval( $roi_stats['avg_base'] ?? 0 );
 				<div class="rtbcb-status-content">
 					<div class="rtbcb-status-label"><?php esc_html_e( 'RAG Index', 'rtbcb' ); ?></div>
 					<div class="rtbcb-status-value">
-						<?php 
+						<?php
 						if ( ! empty( $last_indexed ) ) {
 							echo esc_html( human_time_diff( strtotime( $last_indexed ), current_time( 'timestamp' ) ) ) . ' ' . esc_html__( 'ago', 'rtbcb' );
 						} else {
@@ -117,8 +117,8 @@ $avg_roi = intval( $roi_stats['avg_base'] ?? 0 );
 				<div class="rtbcb-metric-value"><?php echo esc_html( number_format( $total_leads ) ); ?></div>
 				<div class="rtbcb-metric-label"><?php esc_html_e( 'Total Leads Generated', 'rtbcb' ); ?></div>
 				<div class="rtbcb-metric-subtitle">
-					<?php 
-					printf( 
+					<?php
+					printf(
 						esc_html__( '%d new leads this month', 'rtbcb' ),
 						esc_html( $recent_leads )
 					);
@@ -157,12 +157,12 @@ $avg_roi = intval( $roi_stats['avg_base'] ?? 0 );
 					<span><?php esc_html_e( 'Top Category', 'rtbcb' ); ?></span>
 				</div>
 				<div class="rtbcb-metric-value">
-					<?php 
+					<?php
 					if ( ! empty( $category_stats ) ) {
 						$top_category = array_reduce( $category_stats, function( $carry, $item ) {
 							return ( ! $carry || $item['count'] > $carry['count'] ) ? $item : $carry;
 						} );
-						
+
 						$categories = RTBCB_Category_Recommender::get_all_categories();
 						$top_cat_info = $categories[ $top_category['recommended_category'] ] ?? [];
 						echo esc_html( $top_cat_info['name'] ?? 'TMS' );
@@ -282,7 +282,7 @@ $avg_roi = intval( $roi_stats['avg_base'] ?? 0 );
 
 			<div class="rtbcb-category-summary">
 				<?php foreach ( $category_stats as $stat ) : ?>
-					<?php 
+					<?php
 					$categories = RTBCB_Category_Recommender::get_all_categories();
 					$cat_info = $categories[ $stat['recommended_category'] ] ?? [];
 					$cat_name = $cat_info['name'] ?? ucfirst( str_replace( '_', ' ', $stat['recommended_category'] ) );
@@ -294,7 +294,7 @@ $avg_roi = intval( $roi_stats['avg_base'] ?? 0 );
 							<span class="rtbcb-category-count"><?php echo esc_html( $stat['count'] ); ?> leads</span>
 						</div>
 						<div class="rtbcb-category-bar">
-							<div class="rtbcb-category-fill rtbcb-cat-<?php echo esc_attr( $stat['recommended_category'] ); ?>" 
+							<div class="rtbcb-category-fill rtbcb-cat-<?php echo esc_attr( $stat['recommended_category'] ); ?>"
 								 style="width: <?php echo esc_attr( $percentage ); ?>%"></div>
 						</div>
 						<div class="rtbcb-category-percentage"><?php echo esc_html( number_format( $percentage, 1 ) ); ?>%</div>
@@ -743,7 +743,7 @@ $avg_roi = intval( $roi_stats['avg_base'] ?? 0 );
 	.rtbcb-metrics-overview {
 		grid-template-columns: 1fr;
 	}
-	
+
 	.rtbcb-dashboard-content {
 		grid-template-columns: 1fr;
 	}
@@ -755,11 +755,11 @@ $avg_roi = intval( $roi_stats['avg_base'] ?? 0 );
 		gap: 20px;
 		align-items: stretch;
 	}
-	
+
 	.rtbcb-dashboard-actions {
 		justify-content: center;
 	}
-	
+
 	.rtbcb-status-grid {
 		grid-template-columns: 1fr;
 	}

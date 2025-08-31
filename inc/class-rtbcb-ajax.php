@@ -251,7 +251,7 @@ $method = new ReflectionMethod( RTBCB_Main::class, 'generate_business_analysis' 
 
 			$lead_id    = self::save_lead_data_async( $user_inputs, $structured_report_data );
 			$lead_email = ! empty( $user_inputs['email'] ) ? sanitize_email( $user_inputs['email'] ) : '';
-			
+
 			$debug_info           = $workflow_tracker->get_debug_info();
 			$debug_info['lead_id'] = $lead_id;
 			if ( $lead_email ) {
