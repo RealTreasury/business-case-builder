@@ -973,7 +973,7 @@ class BusinessCaseBuilder {
                         Unable to Generate Dashboard Report
                     </h3>
                     <p style="color: #4b5563; margin-bottom: 24px; font-size: 16px; line-height: 1.5;">
-                        ${this.escapeHTML(message)}
+                        ${window.DOMPurify ? DOMPurify.sanitize(message) : this.escapeHTML(message)}
                     </p>
                     ${details ? `
                     <details style="margin-bottom: 24px; text-align: left;">
@@ -986,13 +986,17 @@ class BusinessCaseBuilder {
                     </details>
                     ` : ''}
                     <div class="rtbcb-error-actions" style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
-                        <button type="button" onclick="location.reload()" 
+                        <button type="button" onclick="location.reload()"
                                 style="background: #7216f4; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600;">
                             Try Again
                         </button>
-                        <a href="mailto:contact@realtreasury.com" 
+                        <a href="/request-processing/" target="_blank"
                            style="background: #f3f4f6; color: #4b5563; border: none; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">
-                            Contact Support
+                            Request Processing
+                        </a>
+                        <a href="mailto:contact@realtreasury.com"
+                           style="background: #f3f4f6; color: #4b5563; border: none; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">
+                            Email Results
                         </a>
                     </div>
                 </div>
@@ -1261,6 +1265,7 @@ class BusinessCaseBuilder {
             'API connection failed': 'Unable to connect to analysis service. Please try again.',
             'Missing required field': 'Please fill in all required fields.',
             'Invalid email address': 'Please enter a valid email address.',
+            'request took longer than our 5-minute limit': 'Your request exceeded the 5-minute limit. Visit the <a href="/request-processing/" target="_blank">Request Processing page</a> or <a href="mailto:contact@realtreasury.com?subject=Business%20Case%20Request">request email delivery</a>.',
             'PHP error occurred': 'Server error encountered. Please try again.',
             'Server returned invalid JSON response': 'Server communication error. Please try again.',
             'Unexpected server response': 'Server communication error. Please try again.'
