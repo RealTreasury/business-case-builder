@@ -123,7 +123,7 @@ return [];
 
 if ( ! class_exists( 'RTBCB_Leads' ) ) {
 class RTBCB_Leads {
-public function save_lead( $form_data, $business_case_data ) {
+public static function save_lead( $form_data, $business_case_data = [] ) {
 return 1;
 }
 }

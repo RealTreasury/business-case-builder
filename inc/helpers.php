@@ -1753,6 +1753,32 @@ function rtbcb_get_report_allowed_html() {
 }
 
 /**
+ * Purge cached report HTML for given data.
+ *
+ * @param array $data Report source data.
+ *
+ * @return void
+ */
+function rtbcb_purge_report_cache( $data ) {
+       if ( ! function_exists( 'wp_cache_delete' ) ) {
+               return;
+       }
+
+       $data      = is_array( $data ) ? $data : [];
+       $data_hash = md5( wp_json_encode( $data ) );
+
+       $templates = [
+               RTBCB_DIR . 'templates/report-template.php',
+               RTBCB_DIR . 'templates/comprehensive-report-template.php',
+       ];
+
+       foreach ( $templates as $template_path ) {
+               $cache_key = md5( $template_path . ':' . $data_hash );
+               wp_cache_delete( $cache_key, 'rtbcb_reports' );
+       }
+}
+
+/**
  * Increment the RAG search cache version to invalidate cached results.
  *
  * @return void

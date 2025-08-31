@@ -10,6 +10,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Class RTBCB_Leads - Enhanced version with full tracking capabilities.
  */
+require_once __DIR__ . '/helpers.php';
 class RTBCB_Leads {
     /**
      * Database table name.
@@ -159,7 +160,7 @@ class RTBCB_Leads {
      * @param array $lead_data Lead information.
      * @return int|false Lead ID or false on failure.
      */
-    public static function save_lead( $lead_data ) {
+    public static function save_lead( $lead_data, $report_data = [] ) {
         global $wpdb;
 
         // Validate required fields
@@ -233,6 +234,10 @@ class RTBCB_Leads {
                     return false;
                 }
 
+                if ( ! empty( $report_data ) ) {
+                    rtbcb_purge_report_cache( $report_data );
+                }
+
                 return intval( $existing_lead['id'] );
             } else {
                 // Insert new lead
@@ -245,6 +250,10 @@ class RTBCB_Leads {
                 if ( false === $result ) {
                     error_log( 'RTBCB: Database insert failed: ' . $wpdb->last_error );
                     return false;
+                }
+
+                if ( ! empty( $report_data ) ) {
+                    rtbcb_purge_report_cache( $report_data );
                 }
 
                 return $wpdb->insert_id;

@@ -8,6 +8,8 @@ define( 'ABSPATH', $temp_root . '/' );
 
 defined( 'ABSPATH' ) || exit;
 
+require_once __DIR__ . '/../inc/helpers.php';
+
 if ( ! defined( 'DB_NAME' ) ) {
 define( 'DB_NAME', 'testdb' );
 }

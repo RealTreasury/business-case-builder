@@ -92,9 +92,8 @@ class RTBCB_Router {
                 $this->get_comprehensive_report_html( $business_case_data ) :
                 $this->get_report_html( $business_case_data );
 
-            // Save the lead.
-            $leads   = new RTBCB_Leads();
-            $lead_id = $leads->save_lead( $form_data, $business_case_data );
+// Save the lead.
+$lead_id = RTBCB_Leads::save_lead( $form_data, $business_case_data );
 
             // Write report HTML to temporary file in uploads directory.
             $upload_dir  = wp_upload_dir();
@@ -216,21 +215,34 @@ class RTBCB_Router {
      *
      * @return string Report HTML.
      */
-    public function get_report_html( $business_case_data ) {
-        $template_path = RTBCB_DIR . 'templates/report-template.php';
+   public function get_report_html( $business_case_data ) {
+       $template_path = RTBCB_DIR . 'templates/report-template.php';
 
-        if ( ! file_exists( $template_path ) ) {
-            return '';
-        }
+       if ( ! file_exists( $template_path ) ) {
+           return '';
+       }
 
-        $business_case_data = is_array( $business_case_data ) ? $business_case_data : [];
+       $business_case_data = is_array( $business_case_data ) ? $business_case_data : [];
 
-        ob_start();
-        include $template_path;
-        $html = ob_get_clean();
+       $data_hash = md5( wp_json_encode( $business_case_data ) );
+       $cache_key = md5( $template_path . ':' . $data_hash );
 
-        return wp_kses( $html, rtbcb_get_report_allowed_html() );
-    }
+       $cached_html = function_exists( 'wp_cache_get' ) ? wp_cache_get( $cache_key, 'rtbcb_reports' ) : false;
+       if ( false !== $cached_html ) {
+           return $cached_html;
+       }
+
+       ob_start();
+       include $template_path;
+       $html = ob_get_clean();
+       $html = wp_kses( $html, rtbcb_get_report_allowed_html() );
+
+       if ( function_exists( 'wp_cache_set' ) ) {
+           wp_cache_set( $cache_key, $html, 'rtbcb_reports', HOUR_IN_SECONDS );
+       }
+
+       return $html;
+   }
 
    /**
     * Generate comprehensive report HTML from template with proper data transformation.
@@ -256,7 +268,7 @@ class RTBCB_Router {
        $data_hash  = md5( wp_json_encode( $hash_source ) );
        $cache_key  = md5( $template_path . ':' . $data_hash );
 
-       $cached_html = wp_cache_get( $cache_key, 'rtbcb_reports' );
+       $cached_html = function_exists( 'wp_cache_get' ) ? wp_cache_get( $cache_key, 'rtbcb_reports' ) : false;
        if ( false !== $cached_html ) {
            return $cached_html;
        }
@@ -271,7 +283,9 @@ class RTBCB_Router {
        $html = ob_get_clean();
        $html = wp_kses( $html, rtbcb_get_report_allowed_html() );
 
-       wp_cache_set( $cache_key, $html, 'rtbcb_reports', HOUR_IN_SECONDS );
+       if ( function_exists( 'wp_cache_set' ) ) {
+           wp_cache_set( $cache_key, $html, 'rtbcb_reports', HOUR_IN_SECONDS );
+       }
 
        return $html;
    }
