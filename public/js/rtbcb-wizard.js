@@ -699,8 +699,16 @@ categoryContainer.style.display = 'block';
         console.log('RTBCB: Displaying enhanced HTML report');
         this.hideLoading();
 
-        // Close modal
-        window.closeBusinessCaseModal();
+        // Close modal when available
+        if (typeof window.closeBusinessCaseModal === 'function') {
+            window.closeBusinessCaseModal();
+        }
+
+        if (typeof document === 'undefined' || typeof document.createElement !== 'function') {
+            console.log('RTBCB: document.createElement not available, using fallback');
+            this.showResults({ report_html: htmlContent });
+            return;
+        }
 
         // Create or find results container
         let resultsContainer = document.getElementById('rtbcb-results-enhanced');
@@ -715,9 +723,12 @@ categoryContainer.style.display = 'block';
             if (modal && modal.parentNode) {
                 modal.parentNode.insertBefore(resultsContainer, modal.nextSibling);
                 console.log('RTBCB: Results container inserted after modal');
-            } else {
+            } else if (document.body) {
                 document.body.appendChild(resultsContainer);
                 console.log('RTBCB: Results container appended to body');
+            } else {
+                this.showResults({ report_html: htmlContent });
+                return;
             }
         } else {
             console.log('RTBCB: Reusing existing results container');

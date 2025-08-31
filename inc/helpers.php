@@ -1968,4 +1968,6 @@ function rtbcb_enable_persistent_connection() {
 	$wpdb->db_connect();
 }
 
-add_action( 'plugins_loaded', 'rtbcb_enable_persistent_connection', 1 );
+if ( function_exists( 'add_action' ) ) {
+       add_action( 'plugins_loaded', 'rtbcb_enable_persistent_connection', 1 );
+}

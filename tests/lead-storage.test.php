@@ -75,6 +75,10 @@ return $default;
 }
 }
 
+if ( ! function_exists( 'rtbcb_clear_report_cache' ) ) {
+function rtbcb_clear_report_cache() {}
+}
+
 class WPDB_Memory {
 	public $prefix = '';
 	public $insert_id = 0;

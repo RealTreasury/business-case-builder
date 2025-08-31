@@ -203,11 +203,11 @@ class RTBCB_Leads {
 		);
 
 		foreach ( $leads as $lead ) {
-			if ( false !== @gzuncompress( $lead['report_html'] ) ) {
+			if ( false !== @gzuncompress( $lead['report_html'] ) || false !== @gzuncompress( base64_decode( $lead['report_html'], true ) ) ) {
 				continue;
 			}
 
-			$compressed = gzcompress( $lead['report_html'] );
+			$compressed = base64_encode( gzcompress( $lead['report_html'] ) );
 			$wpdb->update(
 				self::$table_name,
 				[ 'report_html' => $compressed ],
@@ -258,7 +258,7 @@ class RTBCB_Leads {
 		];
 
 		if ( ! empty( $sanitized_data['report_html'] ) ) {
-			$sanitized_data['report_html'] = gzcompress( $sanitized_data['report_html'] );
+			$sanitized_data['report_html'] = base64_encode( gzcompress( $sanitized_data['report_html'] ) );
 		}
 
 		// Prepare format array to match the sanitized data
@@ -303,7 +303,9 @@ class RTBCB_Leads {
 					return false;
 				}
 
-				self::update_cached_statistics();
+				if ( method_exists( $wpdb, 'get_results' ) ) {
+					self::update_cached_statistics();
+				}
 				rtbcb_clear_report_cache();
 				return intval( $existing_lead['id'] );
 			} else {
@@ -320,7 +322,9 @@ class RTBCB_Leads {
 				}
 
 				$lead_id = $wpdb->insert_id;
-				self::update_cached_statistics();
+				if ( method_exists( $wpdb, 'get_results' ) ) {
+					self::update_cached_statistics();
+				}
 				rtbcb_clear_report_cache();
 				return $lead_id;
 			}
@@ -354,9 +358,12 @@ class RTBCB_Leads {
 			$result['pain_points'] = maybe_unserialize( $result['pain_points'] );
 
 			if ( ! empty( $result['report_html'] ) ) {
-				$uncompressed = @gzuncompress( $result['report_html'] );
-				if ( false !== $uncompressed ) {
-					$result['report_html'] = $uncompressed;
+				$decoded = base64_decode( $result['report_html'], true );
+				if ( false !== $decoded ) {
+					$uncompressed = @gzuncompress( $decoded );
+					if ( false !== $uncompressed ) {
+						$result['report_html'] = $uncompressed;
+					}
 				}
 			}
 		}
@@ -429,9 +436,12 @@ class RTBCB_Leads {
 			$lead['pain_points'] = maybe_unserialize( $lead['pain_points'] );
 
 			if ( ! empty( $lead['report_html'] ) ) {
-				$uncompressed = @gzuncompress( $lead['report_html'] );
-				if ( false !== $uncompressed ) {
-					$lead['report_html'] = $uncompressed;
+				$decoded = base64_decode( $lead['report_html'], true );
+				if ( false !== $decoded ) {
+					$uncompressed = @gzuncompress( $decoded );
+					if ( false !== $uncompressed ) {
+						$lead['report_html'] = $uncompressed;
+					}
 				}
 			}
 		}
