@@ -12,8 +12,8 @@ class RTBCB_Background_Job {
  * Update job status data.
  *
  * @param string $job_id Job identifier.
- * @param string $status  New status.
- * @param array  $extra   Extra data such as step, message, percent, or result.
+ * @param string $status New status.
+ * @param array  $extra  Extra data such as step, message, percent, or result.
  * @return void
  */
 public static function update_status( $job_id, $status, $extra = [] ) {
@@ -21,8 +21,17 @@ $current = get_transient( $job_id );
 if ( ! is_array( $current ) ) {
 $current = [];
 }
-
-$new_data = array_merge( $current, $extra, [ 'status' => $status ] );
+if ( ! isset( $current['created'] ) ) {
+$current['created'] = time();
+}
+$new_data = array_merge(
+$current,
+$extra,
+[
+'status'  => $status,
+'updated' => time(),
+]
+);
 set_transient( $job_id, $new_data, HOUR_IN_SECONDS );
 }
 	/**
@@ -114,29 +123,31 @@ $job_id,
 }
 	}
 
-	/**
-	 * Get job status data.
-	 *
-	 * @param string $job_id Job identifier.
-	 * @return array|WP_Error Job data or error.
-	 */
-	public static function get_status( $job_id ) {
-		$data = get_transient( $job_id );
-
-		if ( false === $data ) {
-			return new WP_Error( 'not_found', __( 'Job not found.', 'rtbcb' ) );
-		}
-
+/**
+ * Get job status data.
+ *
+ * @param string $job_id Job identifier.
+ * @return array|WP_Error Job data or error.
+ */
+public static function get_status( $job_id ) {
+$data = get_transient( $job_id );
+self::cleanup();
+if ( false === $data ) {
+return new WP_Error( 'not_found', __( 'Job not found.', 'rtbcb' ) );
+}
 return $data;
 }
 
 /**
- * Cleanup completed or expired job transients.
+ * Cleanup expired, errored, or stale job transients.
  *
  * @return void
  */
 public static function cleanup() {
 global $wpdb;
+
+$default_threshold = defined( 'DAY_IN_SECONDS' ) ? DAY_IN_SECONDS : 86400;
+$threshold         = function_exists( 'apply_filters' ) ? (int) apply_filters( 'rtbcb_job_cleanup_threshold', $default_threshold ) : $default_threshold;
 
 if ( isset( $wpdb ) ) {
 $like         = $wpdb->esc_like( '_transient_rtbcb_job_' ) . '%';
@@ -144,15 +155,17 @@ $option_names = $wpdb->get_col( "SELECT option_name FROM {$wpdb->options} WHERE 
 foreach ( $option_names as $option_name ) {
 $job_id = str_replace( [ '_transient_', '_transient_timeout_' ], '', $option_name );
 $data   = get_transient( $job_id );
-if ( false === $data || in_array( $data['status'] ?? '', [ 'completed', 'error' ], true ) ) {
+$created = is_array( $data ) ? ( $data['created'] ?? 0 ) : 0;
+if ( false === $data || 'error' === ( $data['status'] ?? '' ) || ( $created && time() - $created > $threshold ) ) {
 delete_transient( $job_id );
 }
 }
 } elseif ( isset( $GLOBALS['transients'] ) && is_array( $GLOBALS['transients'] ) ) {
 foreach ( array_keys( $GLOBALS['transients'] ) as $job_id ) {
 if ( 0 === strpos( $job_id, 'rtbcb_job_' ) ) {
-$data = $GLOBALS['transients'][ $job_id ];
-if ( ! is_array( $data ) || in_array( $data['status'] ?? '', [ 'completed', 'error' ], true ) ) {
+$data    = $GLOBALS['transients'][ $job_id ];
+$created = is_array( $data ) ? ( $data['created'] ?? 0 ) : 0;
+if ( ! is_array( $data ) || 'error' === ( $data['status'] ?? '' ) || ( $created && time() - $created > $threshold ) ) {
 unset( $GLOBALS['transients'][ $job_id ] );
 }
 }

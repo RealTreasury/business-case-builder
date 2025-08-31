@@ -101,6 +101,9 @@ if ( ! function_exists( 'do_action' ) ) {
 if ( ! defined( 'HOUR_IN_SECONDS' ) ) {
     define( 'HOUR_IN_SECONDS', 3600 );
 }
+if ( ! defined( 'DAY_IN_SECONDS' ) ) {
+    define( 'DAY_IN_SECONDS', 86400 );
+}
 
 if ( ! defined( 'ABSPATH' ) ) {
     define( 'ABSPATH', __DIR__ . '/' );
@@ -158,8 +161,20 @@ assert_true( 'Processing failed.' === $status['message'], 'Error message missing
 // Cleanup test.
 $job_id3 = RTBCB_Background_Job::enqueue( $user_inputs );
 RTBCB_Background_Job::cleanup();
-assert_true( false === get_transient( $job_id ), 'Completed job not cleaned' );
+assert_true( get_transient( $job_id ) !== false, 'Completed job cleaned too early' );
 assert_true( false === get_transient( $job_id2 ), 'Errored job not cleaned' );
 assert_true( get_transient( $job_id3 ) !== false, 'Queued job incorrectly cleaned' );
+
+// Old job removal.
+$job_id4                 = RTBCB_Background_Job::enqueue( $user_inputs );
+$transients[ $job_id4 ]['created'] = time() - DAY_IN_SECONDS - 1;
+RTBCB_Background_Job::cleanup();
+assert_true( false === get_transient( $job_id4 ), 'Old job not cleaned' );
+
+// Cleanup on status retrieval.
+$job_id5 = RTBCB_Background_Job::enqueue( $user_inputs );
+RTBCB_Background_Job::update_status( $job_id5, 'error' );
+RTBCB_Background_Job::get_status( $job_id3 );
+assert_true( false === get_transient( $job_id5 ), 'Errored job not cleaned during status retrieval' );
 
 echo "background-job.test.php passed\n";
