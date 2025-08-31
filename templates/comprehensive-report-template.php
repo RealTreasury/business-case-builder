@@ -24,6 +24,7 @@ $technology_strategy  = $report_data['technology_strategy'] ?? [];
 $operational_insights = $report_data['operational_insights'] ?? [];
 $risk_analysis        = $report_data['risk_analysis'] ?? [];
 $action_plan          = $report_data['action_plan'] ?? [];
+$chart_data           = $report_data['chart_data'] ?? [];
 $rag_context          = $report_data['rag_context'] ?? [];
 
 $company_name    = $metadata['company_name'] ?? __( 'Your Company', 'rtbcb' );
@@ -72,9 +73,9 @@ $processing_time = $metadata['processing_time'] ?? 0;
 	                                    <div class="rtbcb-meta-item">
 	                                            <span class="rtbcb-meta-icon">🏷️</span>
 	                                            <span class="rtbcb-meta-label"><?php echo esc_html__( 'Version', 'rtbcb' ); ?></span>
-                                                <span class="rtbcb-meta-value"><?php echo esc_html( defined( 'RTBCB_VERSION' ) ? RTBCB_VERSION : 'dev' ); ?></span>
-                                        </div>
-                                </div>
+	                                            <span class="rtbcb-meta-value"><?php echo esc_html( defined( 'RTBCB_VERSION' ) ? RTBCB_VERSION : 'dev' ); ?></span>
+	                                    </div>
+	                            </div>
 			</div>
 
 			<!-- Key Metrics Dashboard -->
@@ -479,77 +480,40 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeROIChart() {
-	const ctx = document.getElementById('rtbcb-roi-chart');
-	if (!ctx) return;
-	
-	const roiData = <?php echo wp_json_encode( $financial_analysis['roi_scenarios'] ?? [] ); ?>;
-	
-	new Chart(ctx, {
-		type: 'bar',
-		data: {
-			labels: ['<?php echo esc_js( __( 'Labor Savings', 'rtbcb' ) ); ?>', '<?php echo esc_js( __( 'Fee Savings', 'rtbcb' ) ); ?>', '<?php echo esc_js( __( 'Error Reduction', 'rtbcb' ) ); ?>', '<?php echo esc_js( __( 'Total Benefit', 'rtbcb' ) ); ?>'],
-			datasets: [
-				{
-					label: '<?php echo esc_js( __( 'Conservative', 'rtbcb' ) ); ?>',
-					data: [
-						roiData.conservative?.labor_savings || 0,
-						roiData.conservative?.fee_savings || 0, 
-						roiData.conservative?.error_reduction || 0,
-						roiData.conservative?.total_annual_benefit || 0
-					],
-					backgroundColor: 'rgba(239, 68, 68, 0.8)',
-					borderColor: 'rgba(239, 68, 68, 1)',
-					borderWidth: 1
-				},
-				{
-					label: '<?php echo esc_js( __( 'Base Case', 'rtbcb' ) ); ?>',
-					data: [
-						roiData.base?.labor_savings || 0,
-						roiData.base?.fee_savings || 0,
-						roiData.base?.error_reduction || 0,
-						roiData.base?.total_annual_benefit || 0
-					],
-					backgroundColor: 'rgba(59, 130, 246, 0.8)',
-					borderColor: 'rgba(59, 130, 246, 1)',
-					borderWidth: 1
-				},
-				{
-					label: '<?php echo esc_js( __( 'Optimistic', 'rtbcb' ) ); ?>',
-					data: [
-						roiData.optimistic?.labor_savings || 0,
-						roiData.optimistic?.fee_savings || 0,
-						roiData.optimistic?.error_reduction || 0,
-						roiData.optimistic?.total_annual_benefit || 0
-					],
-					backgroundColor: 'rgba(16, 185, 129, 0.8)',
-					borderColor: 'rgba(16, 185, 129, 1)',
-					borderWidth: 1
-				}
-			]
-		},
-		options: {
-			responsive: true,
-			scales: {
-				y: {
-					beginAtZero: true,
-					ticks: {
-						callback: function(value) {
-							return '$' + new Intl.NumberFormat().format(value);
-						}
-					}
-				}
-			},
-			plugins: {
-				tooltip: {
-					callbacks: {
-						label: function(context) {
-							return context.dataset.label + ': $' + new Intl.NumberFormat().format(context.raw);
-						}
-					}
-				}
-			}
-		}
-	});
+	    const ctx = document.getElementById('rtbcb-roi-chart');
+	    if (!ctx) return;
+
+	    const chartData = <?php echo wp_json_encode( $chart_data ); ?>;
+	    if (!chartData.datasets || chartData.datasets.length === 0) {
+	            return;
+	    }
+
+	    new Chart(ctx, {
+	            type: 'bar',
+	            data: chartData,
+	            options: {
+	                    responsive: true,
+	                    scales: {
+	                            y: {
+	                                    beginAtZero: true,
+	                                    ticks: {
+	                                            callback: function(value) {
+	                                                    return '$' + new Intl.NumberFormat().format(value);
+	                                            }
+	                                    }
+	                            }
+	                    },
+	                    plugins: {
+	                            tooltip: {
+	                                    callbacks: {
+	                                            label: function(context) {
+	                                                    return context.dataset.label + ': $' + new Intl.NumberFormat().format(context.raw);
+	                                            }
+	                                    }
+	                            }
+	                    }
+	            }
+	    });
 }
 
 function initializeSectionToggles() {
