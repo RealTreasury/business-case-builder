@@ -75,16 +75,29 @@ $job_id,
 	public static function process_job( $job_id, $user_inputs ) {
 self::update_status( $job_id, 'processing' );
 
+		$basic_roi = RTBCB_Ajax::process_basic_roi_step( $user_inputs );
+
+		self::update_status(
+			$job_id,
+			'processing',
+			[
+				'step'    => 'basic_roi_calculation',
+				'percent' => 10,
+				'result'  => $basic_roi,
+			],
+		);
+
+
 add_action(
 'rtbcb_workflow_step_completed',
 function ( $step ) use ( $job_id ) {
-$map = [
-'ai_enrichment'             => 20,
-'enhanced_roi_calculation'  => 40,
-'intelligent_recommendations' => 60,
-'hybrid_rag_analysis'       => 80,
-'data_structuring'          => 90,
-];
+		$map = [
+			'ai_enrichment'             => 30,
+			'enhanced_roi_calculation'  => 50,
+			'intelligent_recommendations' => 70,
+			'hybrid_rag_analysis'       => 85,
+			'data_structuring'          => 95,
+		];
 if ( isset( $map[ $step ] ) ) {
 self::update_status(
 $job_id,
