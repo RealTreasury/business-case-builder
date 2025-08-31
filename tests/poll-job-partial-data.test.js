@@ -37,8 +37,10 @@ describe('pollJob partial data', () => {
                 success: true,
                 data: {
                     status: 'processing',
-                    basic_roi: '12%',
-                    category: 'Finance'
+                    result: {
+                        basic_roi: '12%',
+                        category: 'Finance'
+                    }
                 }
             })
         });

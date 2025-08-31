@@ -593,30 +593,31 @@ progressContainer.style.display = 'flex';
             const status = statusData.status;
             console.log(`RTBCB: Job status: ${status} (attempt ${attempt})`);
 
-const progressStatus = document.getElementById('rtbcb-progress-status');
-const progressMessage = statusData.step || statusData.message;
-if (progressStatus && progressMessage) {
-progressStatus.textContent = progressMessage;
-}
+            const progressStatus = document.getElementById('rtbcb-progress-status');
+            const progressMessage = statusData.step || statusData.message;
+            if (progressStatus && progressMessage) {
+                progressStatus.textContent = progressMessage;
+            }
 
-if (statusData.basic_roi || statusData.category) {
-const provisional = document.getElementById('rtbcb-provisional-data');
-if (provisional) {
-provisional.style.display = 'block';
-}
-if (statusData.category) {
-const categoryEl = document.getElementById('rtbcb-category');
-if (categoryEl) {
-categoryEl.textContent = `Category: ${statusData.category}`;
-}
-}
-if (statusData.basic_roi) {
-const roiEl = document.getElementById('rtbcb-basic-roi');
-if (roiEl) {
-roiEl.textContent = `Basic ROI: ${statusData.basic_roi}`;
-}
-}
-}
+            const partialData = statusData.result || {};
+            if (partialData.basic_roi || partialData.category) {
+                const provisional = document.getElementById('rtbcb-provisional-data');
+                if (provisional) {
+                    provisional.style.display = 'block';
+                }
+                if (partialData.category) {
+                    const categoryEl = document.getElementById('rtbcb-category');
+                    if (categoryEl) {
+                        categoryEl.textContent = `Category: ${partialData.category}`;
+                    }
+                }
+                if (partialData.basic_roi) {
+                    const roiEl = document.getElementById('rtbcb-basic-roi');
+                    if (roiEl) {
+                        roiEl.textContent = `Basic ROI: ${partialData.basic_roi}`;
+                    }
+                }
+            }
 
             if (status === 'completed') {
                 this.hideLoading();
