@@ -692,6 +692,57 @@ function rtbcb_send_report_email( $form_data, $report_path, $mailer = 'wp_mail' 
 }
 
 /**
+ * Generate report HTML and PDF files.
+ *
+ * @param string $job_id      Job identifier.
+ * @param array  $report_data Structured report data.
+ * @return array|WP_Error File paths and download URL or error.
+ */
+function rtbcb_generate_report_files( $job_id, $report_data ) {
+        $upload_dir = function_exists( 'wp_upload_dir' ) ? wp_upload_dir() : [
+                'basedir' => sys_get_temp_dir(),
+                'baseurl' => '',
+        ];
+        $base_dir  = rtrim( $upload_dir['basedir'], '/\\' ) . '/';
+        $base_url  = rtrim( $upload_dir['baseurl'], '/\\' ) . '/';
+        $dir       = $base_dir . 'rtbcb-reports/';
+        if ( ! file_exists( $dir ) ) {
+                if ( function_exists( 'wp_mkdir_p' ) ) {
+                        wp_mkdir_p( $dir );
+                } else {
+                        mkdir( $dir, 0777, true );
+                }
+        }
+
+		$safe_id   = function_exists( 'sanitize_file_name' ) ? sanitize_file_name( $job_id ) : preg_replace( '/[^A-Za-z0-9\-_.]/', '', $job_id );
+        $html_path = $dir . $safe_id . '.html';
+        $pdf_path  = $dir . $safe_id . '.pdf';
+
+        $report_data = $report_data;
+        ob_start();
+        include RTBCB_DIR . 'templates/comprehensive-report-template.php';
+        $html = ob_get_clean();
+        file_put_contents( $html_path, $html );
+
+        if ( class_exists( '\\Dompdf\\Dompdf' ) ) {
+                $dompdf = new Dompdf\Dompdf();
+                $dompdf->loadHtml( $html );
+                $dompdf->render();
+                file_put_contents( $pdf_path, $dompdf->output() );
+        } else {
+                file_put_contents( $pdf_path, $html );
+        }
+
+        $url = $base_url ? $base_url . 'rtbcb-reports/' . $safe_id . '.pdf' : $pdf_path;
+
+        return [
+                'html_path' => $html_path,
+                'pdf_path'  => $pdf_path,
+                'url'       => function_exists( 'esc_url_raw' ) ? esc_url_raw( $url ) : $url,
+        ];
+}
+
+/**
  * Get client information for analytics
  *
  * @return array Client data

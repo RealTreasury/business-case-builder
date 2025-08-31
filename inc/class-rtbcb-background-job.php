@@ -1,6 +1,8 @@
 <?php
 defined( 'ABSPATH' ) || exit;
 
+require_once __DIR__ . '/helpers.php';
+
 /**
  * Handles background job processing for case generation.
  *
@@ -115,6 +117,13 @@ $job_id,
 
 $result = RTBCB_Ajax::process_comprehensive_case( $user_inputs );
 
+if ( ! is_wp_error( $result ) ) {
+$files = rtbcb_generate_report_files( $job_id, $result['report_data'] ?? [] );
+if ( ! is_wp_error( $files ) ) {
+rtbcb_send_report_email( $user_inputs, $files['pdf_path'] );
+}
+}
+
 if ( is_wp_error( $result ) ) {
 self::update_status(
 $job_id,
@@ -122,7 +131,18 @@ $job_id,
 [
 'message' => $result->get_error_message(),
 'percent' => 100,
-]
+],
+);
+} else {
+if ( ! is_wp_error( $files ) ) {
+self::update_status(
+$job_id,
+'completed',
+[
+'result'       => $result,
+'percent'      => 100,
+'download_url' => $files['url'],
+],
 );
 } else {
 self::update_status(
@@ -131,9 +151,11 @@ $job_id,
 [
 'result'  => $result,
 'percent' => 100,
-]
+],
 );
 }
+}
+
 	}
 
 /**

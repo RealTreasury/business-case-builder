@@ -178,11 +178,15 @@ class RTBCB_Ajax {
 			'status' => $status['status'] ?? '',
 		];
 
-		foreach ( [ 'step', 'message', 'percent' ] as $field ) {
-			if ( isset( $status[ $field ] ) ) {
-			       $response[ $field ] = 'percent' === $field ? floatval( $status[ $field ] ) : sanitize_text_field( $status[ $field ] );
-			}
-		}
+                foreach ( [ 'step', 'message', 'percent' ] as $field ) {
+                        if ( isset( $status[ $field ] ) ) {
+                               $response[ $field ] = 'percent' === $field ? floatval( $status[ $field ] ) : sanitize_text_field( $status[ $field ] );
+                        }
+                }
+
+                if ( isset( $status['download_url'] ) ) {
+                        $response['download_url'] = esc_url_raw( $status['download_url'] );
+                }
 
 		if ( isset( $status['result'] ) ) {
 			if (

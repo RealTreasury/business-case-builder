@@ -27,6 +27,22 @@ if ( ! function_exists( 'is_wp_error' ) ) {
     }
 }
 
+if ( ! function_exists( 'sanitize_email' ) ) {
+    function sanitize_email( $email ) {
+        return $email;
+    }
+}
+
+if ( ! function_exists( '__' ) ) {
+    function __( $text, $domain = null ) {
+        return $text;
+    }
+}
+
+if ( ! defined( 'RTBCB_DIR' ) ) {
+    define( 'RTBCB_DIR', __DIR__ . '/../' );
+}
+
 if ( ! function_exists( 'set_transient' ) ) {
     function set_transient( $name, $value, $expiration ) {
         global $transients, $transient_log;
@@ -150,6 +166,8 @@ $statuses = array_column( $transient_log[ $job_id ], 'status' );
 assert_true( $statuses === [ 'queued', 'processing', 'processing', 'processing', 'processing', 'processing', 'processing', 'processing', 'completed' ], 'Status flow incorrect: ' . json_encode( $statuses ) );
 assert_true( $transient_log[ $job_id ][2]['step'] === 'basic_roi_calculation', 'First step missing' );
 assert_true( 'completed' === get_transient( $job_id )['status'], 'Job not completed' );
+$status = get_transient( $job_id );
+assert_true( ! empty( $status['download_url'] ), 'Download URL missing' );
 
 // Error job flow.
 RTBCB_Ajax::$mode = 'error';
