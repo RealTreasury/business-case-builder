@@ -16,7 +16,7 @@ class RTBCB_Router {
     /**
      * Handle form submission and generate the business case.
      *
-     * @param string $report_type Optional report type (basic or comprehensive).
+     * @param string $report_type Optional report type (fast, basic or comprehensive).
      *
      * @return void
      */
@@ -50,7 +50,7 @@ class RTBCB_Router {
             // Perform ROI calculations.
             $calculations = RTBCB_Calculator::calculate_roi( $form_data );
 
-            $fast_mode = ! empty( $_POST['fast_mode'] ) || get_option( 'rtbcb_fast_mode', 0 );
+            $fast_mode = 'fast' === $report_type || ! empty( $_POST['fast_mode'] ) || get_option( 'rtbcb_fast_mode', 0 );
             if ( $fast_mode ) {
                 $report_html = $this->get_fast_report_html( $form_data, $calculations );
 
