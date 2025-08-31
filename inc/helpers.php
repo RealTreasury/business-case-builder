@@ -1749,6 +1749,18 @@ function rtbcb_get_report_allowed_html() {
 		$allowed[ $tag ]['data-*'] = true;
 	}
 
-	return $allowed;
+        return $allowed;
+}
+
+/**
+ * Increment the RAG search cache version to invalidate cached results.
+ *
+ * @return void
+ */
+function rtbcb_invalidate_rag_cache() {
+	if ( function_exists( 'get_option' ) && function_exists( 'update_option' ) ) {
+		$version = (int) get_option( 'rtbcb_rag_cache_version', 1 );
+		update_option( 'rtbcb_rag_cache_version', $version + 1 );
+	}
 }
 

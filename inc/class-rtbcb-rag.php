@@ -21,6 +21,8 @@ class RTBCB_RAG {
     /**
      * Rebuild the RAG index from portal data.
      *
+     * Optionally invalidates cached search results.
+     *
      * @return void
      */
     public function rebuild_index() {
@@ -49,11 +51,25 @@ class RTBCB_RAG {
             );
         }
 
-        update_option( 'rtbcb_last_indexed', current_time( 'mysql' ) );
+        if ( function_exists( 'update_option' ) ) {
+            update_option( 'rtbcb_last_indexed', current_time( 'mysql' ) );
+        }
+
+        if ( function_exists( 'rtbcb_invalidate_rag_cache' ) ) {
+            $flush = true;
+            if ( function_exists( 'apply_filters' ) ) {
+                $flush = apply_filters( 'rtbcb_flush_search_cache_on_rebuild', $flush );
+            }
+            if ( $flush ) {
+                rtbcb_invalidate_rag_cache();
+            }
+        }
     }
 
     /**
      * Search the index for similar content.
+     *
+     * Caches results using the WordPress object cache.
      *
      * @param string $query Query string.
      * @param int    $top_k Number of results.
@@ -61,8 +77,24 @@ class RTBCB_RAG {
      * @return array Matching rows.
      */
     public function search_similar( $query, $top_k = 3 ) {
+        $normalized = strtolower( trim( function_exists( 'wp_strip_all_tags' ) ? wp_strip_all_tags( $query ) : strip_tags( $query ) ) );
+        $version    = function_exists( 'get_option' ) ? (int) get_option( 'rtbcb_rag_cache_version', 1 ) : 1;
+        $cache_key  = 'rtbcb_rag_' . md5( $normalized . '|' . $top_k . '|' . $version );
+
+        $cached = function_exists( 'wp_cache_get' ) ? wp_cache_get( $cache_key, 'rtbcb_rag_search' ) : false;
+        if ( false !== $cached ) {
+            return $cached;
+        }
+
         $query_embedding = $this->get_embedding( $query );
-        return $this->cosine_similarity_search( $query_embedding, $top_k );
+        $results         = $this->cosine_similarity_search( $query_embedding, $top_k );
+
+        $ttl = defined( 'MINUTE_IN_SECONDS' ) ? 15 * MINUTE_IN_SECONDS : 900;
+        if ( function_exists( 'wp_cache_set' ) ) {
+            wp_cache_set( $cache_key, $results, 'rtbcb_rag_search', $ttl );
+        }
+
+        return $results;
     }
 
     /**
