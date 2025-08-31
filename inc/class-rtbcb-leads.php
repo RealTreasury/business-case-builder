@@ -166,8 +166,8 @@ class RTBCB_Leads {
 	 *
 	 * @return void
 	 */
-	public static function add_missing_indexes() {
-		global $wpdb;
+        public static function add_missing_indexes() {
+                global $wpdb;
 
 		self::$table_name = $wpdb->prefix . 'rtbcb_leads';
 
@@ -182,10 +182,41 @@ class RTBCB_Leads {
 			$wpdb->query( 'ALTER TABLE ' . self::$table_name . ' ADD KEY created_at_index (created_at)' );
 		}
 
-		if ( ! in_array( 'recommended_category_index', $index_names, true ) ) {
-			$wpdb->query( 'ALTER TABLE ' . self::$table_name . ' ADD KEY recommended_category_index (recommended_category)' );
-		}
-	}
+                if ( ! in_array( 'recommended_category_index', $index_names, true ) ) {
+                        $wpdb->query( 'ALTER TABLE ' . self::$table_name . ' ADD KEY recommended_category_index (recommended_category)' );
+                }
+        }
+
+    /**
+     * Compress existing report_html entries.
+     *
+     * @return void
+     */
+    public static function compress_existing_report_html() {
+        global $wpdb;
+
+        self::$table_name = $wpdb->prefix . 'rtbcb_leads';
+
+        $leads = $wpdb->get_results(
+            "SELECT id, report_html FROM " . self::$table_name . " WHERE report_html != ''",
+            ARRAY_A
+        );
+
+        foreach ( $leads as $lead ) {
+            if ( false !== @gzuncompress( $lead['report_html'] ) ) {
+                continue;
+            }
+
+            $compressed = gzcompress( $lead['report_html'] );
+            $wpdb->update(
+                self::$table_name,
+                [ 'report_html' => $compressed ],
+                [ 'id' => $lead['id'] ],
+                [ '%s' ],
+                [ '%d' ]
+            );
+        }
+    }
 
 
     /**
@@ -225,6 +256,10 @@ class RTBCB_Leads {
             'utm_medium'              => sanitize_text_field( $_GET['utm_medium'] ?? '' ),
             'utm_campaign'            => sanitize_text_field( $_GET['utm_campaign'] ?? '' ),
         ];
+
+        if ( ! empty( $sanitized_data['report_html'] ) ) {
+            $sanitized_data['report_html'] = gzcompress( $sanitized_data['report_html'] );
+        }
 
         // Prepare format array to match the sanitized data
         $formats = [
@@ -315,6 +350,13 @@ class RTBCB_Leads {
 
         if ( $result ) {
             $result['pain_points'] = maybe_unserialize( $result['pain_points'] );
+
+            if ( ! empty( $result['report_html'] ) ) {
+                $uncompressed = @gzuncompress( $result['report_html'] );
+                if ( false !== $uncompressed ) {
+                    $result['report_html'] = $uncompressed;
+                }
+            }
         }
 
         return $result;
@@ -386,9 +428,16 @@ class RTBCB_Leads {
 
         $leads = $wpdb->get_results( $wpdb->prepare( $sql, $prepare_values ), ARRAY_A );
 
-        // Unserialize pain points
+        // Unserialize pain points and decompress report HTML.
         foreach ( $leads as &$lead ) {
             $lead['pain_points'] = maybe_unserialize( $lead['pain_points'] );
+
+            if ( ! empty( $lead['report_html'] ) ) {
+                $uncompressed = @gzuncompress( $lead['report_html'] );
+                if ( false !== $uncompressed ) {
+                    $lead['report_html'] = $uncompressed;
+                }
+            }
         }
 
         return [

@@ -14,7 +14,7 @@ class RTBCB_DB {
     /**
      * Current database version.
      */
-    const DB_VERSION = '2.0.2';
+    const DB_VERSION = '2.0.3';
 
     /**
      * Initialize database and handle upgrades.
@@ -58,9 +58,13 @@ class RTBCB_DB {
                 self::add_embedding_norm_index();
         }
 
-		if ( version_compare( $from_version, '2.0.2', '<' ) ) {
-			RTBCB_Leads::add_missing_indexes();
-}
+                if ( version_compare( $from_version, '2.0.2', '<' ) ) {
+                        RTBCB_Leads::add_missing_indexes();
+                }
+
+                if ( version_compare( $from_version, '2.0.3', '<' ) ) {
+                        RTBCB_Leads::compress_existing_report_html();
+                }
 
 	// Future migrations can be handled here.
 

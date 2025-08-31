@@ -210,6 +210,7 @@ $lead_data = [
 'roi_low'       => 1000,
 'roi_base'      => 2000,
 'roi_high'      => 3000,
+'report_html'   => '<p>Report</p>',
 ];
 
 $lead_id = RTBCB_Leads::save_lead( $lead_data );
@@ -231,6 +232,17 @@ exit( 1 );
 
 if ( 1000.0 !== (float) ( $retrieved['roi_low'] ?? 0 ) || 2000.0 !== (float) ( $retrieved['roi_base'] ?? 0 ) || 3000.0 !== (float) ( $retrieved['roi_high'] ?? 0 ) ) {
 echo "ROI mismatch\n";
+exit( 1 );
+}
+
+if ( '<p>Report</p>' !== ( $retrieved['report_html'] ?? '' ) ) {
+echo "Report HTML mismatch\n";
+exit( 1 );
+}
+
+$all = RTBCB_Leads::get_all_leads( [ 'per_page' => 1 ] );
+if ( '<p>Report</p>' !== ( $all['leads'][0]['report_html'] ?? '' ) ) {
+echo "All leads report HTML mismatch\n";
 exit( 1 );
 }
 
