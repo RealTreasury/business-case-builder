@@ -19,6 +19,7 @@ $gpt5_timeout    = rtbcb_get_api_timeout();
 $gpt5_max_output_tokens = get_option( 'rtbcb_gpt5_max_output_tokens', 8000 );
 $gpt5_min_output_tokens = get_option( 'rtbcb_gpt5_min_output_tokens', 256 );
 $fast_mode       = get_option( 'rtbcb_fast_mode', 0 );
+$disable_heavy_features = get_option( 'rtbcb_disable_heavy_features', 0 );
 
 $chat_models = [
     'gpt-5'             => 'gpt-5',
@@ -146,6 +147,15 @@ $embedding_models = [
                 </th>
                 <td>
                     <input type="number" step="0.01" id="rtbcb_bank_fee_baseline" name="rtbcb_bank_fee_baseline" value="<?php echo esc_attr( $bank_fee ); ?>" class="regular-text" />
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="rtbcb_disable_heavy_features"><?php echo esc_html__( 'Disable Heavy Features', 'rtbcb' ); ?></label>
+                </th>
+                <td>
+                    <input type="checkbox" id="rtbcb_disable_heavy_features" name="rtbcb_disable_heavy_features" value="1" <?php checked( 1, $disable_heavy_features ); ?> />
+                    <p class="description"><?php echo esc_html__( 'Temporarily bypass AI enrichment, RAG, and recommendations.', 'rtbcb' ); ?></p>
                 </td>
             </tr>
             <tr>

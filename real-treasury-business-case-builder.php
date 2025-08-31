@@ -2258,18 +2258,34 @@ return $use_comprehensive;
             echo '</div>';
         }
 
-        // Show upgrade notice if applicable
-        if ( get_transient( 'rtbcb_show_upgrade_notice' ) ) {
-            echo '<div class="notice notice-success is-dismissible">';
-            echo '<p>';
-            printf(
-                esc_html__( 'Real Treasury Business Case Builder has been upgraded to version %s with new features including PDF reports, analytics, and enhanced lead tracking!', 'rtbcb' ),
-                RTBCB_VERSION
-            );
-            echo '</p>';
-            echo '</div>';
-            delete_transient( 'rtbcb_show_upgrade_notice' );
-        }
+       // Show bypass notice when heavy features are disabled.
+       if ( current_user_can( 'manage_options' ) && get_option( 'rtbcb_disable_heavy_features', 0 ) ) {
+           $settings_url = admin_url( 'admin.php?page=rtbcb-settings' );
+           echo '<div class="notice notice-warning is-dismissible">';
+           echo '<p>';
+           printf(
+               wp_kses(
+                   __( '<strong>Real Treasury Business Case Builder:</strong> Heavy AI features are temporarily disabled. <a href="%s">Update settings</a> to re-enable.', 'rtbcb' ),
+                   [ 'strong' => [], 'a' => [ 'href' => [] ] ]
+               ),
+               esc_url( $settings_url )
+           );
+           echo '</p>';
+           echo '</div>';
+       }
+
+       // Show upgrade notice if applicable
+       if ( get_transient( 'rtbcb_show_upgrade_notice' ) ) {
+           echo '<div class="notice notice-success is-dismissible">';
+           echo '<p>';
+           printf(
+               esc_html__( 'Real Treasury Business Case Builder has been upgraded to version %s with new features including PDF reports, analytics, and enhanced lead tracking!', 'rtbcb' ),
+               RTBCB_VERSION
+           );
+           echo '</p>';
+           echo '</div>';
+           delete_transient( 'rtbcb_show_upgrade_notice' );
+       }
     }
 
     /**

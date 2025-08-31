@@ -40,23 +40,24 @@ require_once __DIR__ . '/config.php';
  * @return string Analysis type.
  */
 function rtbcb_get_analysis_type() {
-	$analysis_type = 'basic';
+$analysis_type = 'basic';
 
-	$enable_ai = class_exists( 'RTBCB_Settings' ) ? RTBCB_Settings::get_setting( 'enable_ai_analysis', true ) : true;
+$enable_ai = class_exists( 'RTBCB_Settings' ) ? RTBCB_Settings::get_setting( 'enable_ai_analysis', true ) : true;
+$bypass    = get_option( 'rtbcb_disable_heavy_features', 0 ) || get_option( 'rtbcb_fast_mode', 0 );
 
-	if ( $enable_ai ) {
-		$analysis_type = 'enhanced';
-	}
+if ( $enable_ai && ! $bypass ) {
+$analysis_type = 'enhanced';
+}
 
-	if ( function_exists( 'apply_filters' ) ) {
-		$analysis_type = apply_filters( 'rtbcb_analysis_type', $analysis_type );
-	}
+if ( function_exists( 'apply_filters' ) ) {
+$analysis_type = apply_filters( 'rtbcb_analysis_type', $analysis_type );
+}
 
-	if ( ! in_array( $analysis_type, RTBCB_ALLOWED_TIERS, true ) ) {
-		$analysis_type = 'basic';
-	}
+if ( ! in_array( $analysis_type, RTBCB_ALLOWED_TIERS, true ) ) {
+$analysis_type = 'basic';
+}
 
-	return $analysis_type;
+return $analysis_type;
 }
 
 /**
@@ -592,8 +593,8 @@ function rtbcb_sanitize_form_data( $data ) {
 	
 	// Email
 	if ( isset( $data['email'] ) ) {
-		$sanitized['email'] = sanitize_email( $data['email'] );
-	}
+$sanitized['email'] = sanitize_email( $data['email'] );
+}
 	
 	// Text fields
 	$text_fields = [ 'company_size', 'industry' ];
@@ -619,8 +620,8 @@ function rtbcb_sanitize_form_data( $data ) {
 		}
 	}
 	
-	// Pain points array
-	if ( isset( $data['pain_points'] ) && is_array( $data['pain_points'] ) ) {
+// Pain points array
+if ( isset( $data['pain_points'] ) && is_array( $data['pain_points'] ) ) {
 		$valid_pain_points = [
 			'manual_processes',
 			'poor_visibility',
@@ -636,9 +637,13 @@ function rtbcb_sanitize_form_data( $data ) {
 				return in_array( $point, $valid_pain_points, true );
 			}
 		);
-	}
-	
-	return $sanitized;
+}
+
+if ( isset( $data['fast_mode'] ) ) {
+$sanitized['fast_mode'] = absint( $data['fast_mode'] );
+}
+
+return $sanitized;
 }
 
 /**

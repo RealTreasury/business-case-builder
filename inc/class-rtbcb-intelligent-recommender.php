@@ -15,6 +15,13 @@ class RTBCB_Intelligent_Recommender extends RTBCB_Category_Recommender {
  * @return array Enhanced recommendation with confidence and alternatives.
  */
 public function recommend_with_ai_insights( $user_inputs, $enriched_profile ) {
+// Return basic recommendation when heavy features are bypassed.
+$fast_mode     = ! empty( $user_inputs['fast_mode'] ) || get_option( 'rtbcb_fast_mode', 0 );
+$disable_heavy = get_option( 'rtbcb_disable_heavy_features', 0 );
+if ( $fast_mode || $disable_heavy ) {
+return RTBCB_Category_Recommender::recommend_category( $user_inputs );
+}
+
 // Get baseline recommendation from parent class.
 $base_recommendation = parent::recommend_category( $user_inputs );
 

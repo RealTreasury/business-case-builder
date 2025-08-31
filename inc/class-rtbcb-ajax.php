@@ -51,9 +51,11 @@ class RTBCB_Ajax {
 	 * @return array|WP_Error Result data or error.
 	 */
         public static function process_comprehensive_case( $user_inputs, $job_id = '' ) {
-               $request_start    = microtime( true );
-               $workflow_tracker = new RTBCB_Workflow_Tracker();
-               $enable_ai        = RTBCB_Settings::get_setting( 'enable_ai_analysis', true );
+       $request_start    = microtime( true );
+       $workflow_tracker = new RTBCB_Workflow_Tracker();
+       $fast_mode        = ! empty( $user_inputs['fast_mode'] ) || get_option( 'rtbcb_fast_mode', 0 );
+       $disable_heavy    = get_option( 'rtbcb_disable_heavy_features', 0 );
+       $enable_ai        = RTBCB_Settings::get_setting( 'enable_ai_analysis', true ) && ! $disable_heavy && ! $fast_mode;
 
 		add_action(
 			'rtbcb_llm_prompt_sent',
@@ -62,7 +64,10 @@ class RTBCB_Ajax {
 			}
 		);
 
-		try {
+               try {
+                        if ( $disable_heavy || $fast_mode ) {
+                                $workflow_tracker->add_warning( 'heavy_features_bypassed', __( 'Heavy features disabled.', 'rtbcb' ) );
+                        }
                         $workflow_tracker->start_step( 'ai_enrichment' );
                         if ( $enable_ai ) {
                                 $enriched_profile = new WP_Error( 'llm_missing', 'LLM service unavailable.' );
@@ -93,13 +98,18 @@ class RTBCB_Ajax {
                                 RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'enhanced_roi' => $roi_scenarios ] );
                         }
 
-			$workflow_tracker->start_step( 'intelligent_recommendations' );
-			$intelligent_recommender = new RTBCB_Intelligent_Recommender();
-			$recommendation          = $intelligent_recommender->recommend_with_ai_insights( $user_inputs, $enriched_profile );
-                        $workflow_tracker->complete_step( 'intelligent_recommendations', $recommendation );
-                        if ( $job_id ) {
+                       $workflow_tracker->start_step( 'intelligent_recommendations' );
+                       $intelligent_recommender = new RTBCB_Intelligent_Recommender();
+                       $recommendation          = $enable_ai
+                               ? $intelligent_recommender->recommend_with_ai_insights( $user_inputs, $enriched_profile )
+                               : RTBCB_Category_Recommender::recommend_category( $user_inputs );
+                       if ( ! $enable_ai ) {
+                                $workflow_tracker->add_warning( 'intelligent_recommendations_disabled', __( 'AI analysis disabled.', 'rtbcb' ) );
+                       }
+                       $workflow_tracker->complete_step( 'intelligent_recommendations', $recommendation );
+                       if ( $job_id ) {
                                 RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'category' => $recommendation['recommended'] ] );
-                        }
+                       }
 
                         $workflow_tracker->start_step( 'hybrid_rag_analysis' );
                         if ( $enable_ai ) {
