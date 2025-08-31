@@ -439,12 +439,16 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                 </form>
             <div id="rtbcbSuccessMessage" class="rtbcb-success-message" style="display:none"></div>
             </div>
-            <div id="rtbcb-progress-container" class="rtbcb-progress-overlay" style="display: none;">
-                <div class="rtbcb-progress-content">
-                    <div class="rtbcb-progress-spinner"></div>
-                    <div class="rtbcb-progress-text"><?php esc_html_e( 'Generating your business case. It will arrive by email shortly...', 'rtbcb' ); ?></div>
-                </div>
-            </div>
+			<div id="rtbcb-progress-container" class="rtbcb-progress-overlay" style="display: none;">
+				<div class="rtbcb-progress-content">
+					<div class="rtbcb-progress-spinner"></div>
+					<div class="rtbcb-progress-text"><?php esc_html_e( 'Generating your business case. It will arrive by email shortly...', 'rtbcb' ); ?></div>
+					<div id="rtbcb-partial-results">
+						<div id="rtbcb-basic-roi"></div>
+						<div id="rtbcb-category"></div>
+					</div>
+				</div>
+			</div>
         </div>
     </div>
 </div>

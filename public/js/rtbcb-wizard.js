@@ -44,6 +44,7 @@ class BusinessCaseBuilder {
         this.form = document.getElementById('rtbcbForm');
         this.overlay = document.getElementById('rtbcbModalOverlay');
         this.ajaxUrl = ( typeof rtbcbAjax !== 'undefined' && rtbcbAjax.ajax_url ) ? rtbcbAjax.ajax_url : '';
+        this.partialResults = {};
 
         if ( ! this.form ) {
             return;
@@ -584,10 +585,20 @@ class BusinessCaseBuilder {
             }
             
             const status = data.data.status;
+            const result = data.data.result || {};
             console.log(`RTBCB: Job status: ${status} (attempt ${attempt})`);
-            
+
+            if (result.basic_roi && this.partialResults.basic_roi !== result.basic_roi) {
+                this.partialResults.basic_roi = result.basic_roi;
+                this.renderPartialBasicROI(result.basic_roi);
+            }
+
+            if (result.category && this.partialResults.category !== result.category) {
+                this.partialResults.category = result.category;
+                this.renderPartialCategory(result.category);
+            }
+
             if (status === 'completed') {
-                const result = data.data.result;
                 if (result && result.report_html) {
                     this.handleSuccess(result);
                 } else if (result && result.report_data) {
@@ -604,6 +615,22 @@ class BusinessCaseBuilder {
         } catch (error) {
             console.error('RTBCB: Job polling error:', error);
             this.handleError({ message: error.message || 'An unexpected error occurred', type: 'polling_error' });
+        }
+    }
+
+    renderPartialBasicROI(value) {
+        const container = document.getElementById('rtbcb-basic-roi');
+        if (container) {
+            container.textContent = `ROI: ${this.escapeHTML(value)}`;
+            container.style.display = 'block';
+        }
+    }
+
+    renderPartialCategory(value) {
+        const container = document.getElementById('rtbcb-category');
+        if (container) {
+            container.textContent = `Category: ${this.escapeHTML(value)}`;
+            container.style.display = 'block';
         }
     }
 
