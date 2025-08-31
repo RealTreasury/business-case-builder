@@ -91,8 +91,8 @@ if ( ! function_exists( 'wp_send_json_error' ) ) {
     }
 }
 
-if ( ! class_exists( 'Real_Treasury_BCB_Fatal' ) ) {
-    class Real_Treasury_BCB_Fatal {
+if ( ! class_exists( 'RTBCB_Main_Fatal' ) ) {
+    class RTBCB_Main_Fatal {
         public function ajax_generate_comprehensive_case() {
             $llm = new RTBCB_LLM();
             try {
@@ -125,7 +125,7 @@ if ( ! class_exists( 'Real_Treasury_BCB_Fatal' ) ) {
 final class RTBCB_AjaxGenerateComprehensiveCaseFatalErrorTest extends TestCase {
     public function test_ajax_returns_guidance_when_configuration_error() {
         RTBCB_LLM::$mode = 'fatal_config';
-        $plugin          = new Real_Treasury_BCB_Fatal();
+        $plugin          = new RTBCB_Main_Fatal();
         try {
             $plugin->ajax_generate_comprehensive_case();
             $this->fail( 'Expected RTBCB_JSON_Error was not thrown.' );
@@ -141,7 +141,7 @@ final class RTBCB_AjaxGenerateComprehensiveCaseFatalErrorTest extends TestCase {
 
     public function test_ajax_returns_generic_message_when_internal_error() {
         RTBCB_LLM::$mode = 'fatal_internal';
-        $plugin          = new Real_Treasury_BCB_Fatal();
+        $plugin          = new RTBCB_Main_Fatal();
         try {
             $plugin->ajax_generate_comprehensive_case();
             $this->fail( 'Expected RTBCB_JSON_Error was not thrown.' );

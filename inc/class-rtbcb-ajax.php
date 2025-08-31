@@ -53,7 +53,7 @@ class RTBCB_Ajax {
                 $scenarios      = RTBCB_Calculator::calculate_roi( $user_inputs );
                 $recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
 
-		$plugin = Real_Treasury_BCB::instance();
+$plugin = RTBCB_Main::instance();
 
 		$chunk_callback = function( $chunk ) {
 			echo $chunk; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
@@ -63,7 +63,7 @@ class RTBCB_Ajax {
 		};
 
 		try {
-			$method = new ReflectionMethod( Real_Treasury_BCB::class, 'generate_business_analysis' );
+$method = new ReflectionMethod( RTBCB_Main::class, 'generate_business_analysis' );
 			$method->setAccessible( true );
 			$result = $method->invoke( $plugin, $user_inputs, $scenarios, $recommendation, $chunk_callback );
 		} catch ( ReflectionException $e ) {
