@@ -5,6 +5,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 defined( 'ABSPATH' ) || exit;
 
+require_once __DIR__ . '/wp-stubs.php';
+
 use PHPUnit\Framework\TestCase;
 
 // Stub WordPress functions.
@@ -14,19 +16,7 @@ return true;
 }
 }
 
-if ( ! function_exists( 'sanitize_text_field' ) ) {
-function sanitize_text_field( $text ) {
-$text = is_scalar( $text ) ? (string) $text : '';
-$text = preg_replace( '/[\r\n\t\0\x0B]/', '', $text );
-return trim( $text );
-}
-}
 
-if ( ! function_exists( 'wp_unslash' ) ) {
-function wp_unslash( $value ) {
-return $value;
-}
-}
 
 if ( ! function_exists( '__' ) ) {
 function __( $text, $domain = null ) {
@@ -34,11 +24,6 @@ return $text;
 }
 }
 
-if ( ! function_exists( 'sanitize_email' ) ) {
-function sanitize_email( $email ) {
-return filter_var( $email, FILTER_SANITIZE_EMAIL );
-}
-}
 
 if ( ! function_exists( 'wp_send_json_success' ) ) {
 function wp_send_json_success( $data, $status = 200 ) {
