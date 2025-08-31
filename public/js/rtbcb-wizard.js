@@ -586,7 +586,7 @@ class BusinessCaseBuilder {
         const MAX_DURATION = 20 * 60 * 1000; // 20 minutes
         const MAX_ATTEMPTS = 600; // 600 attempts * 2s = 20 minutes max
 
-        if (this.pollingCancelled) {
+        if (this.pollingCancelled || jobId !== this.activeJobId) {
             return;
         }
 
@@ -606,6 +606,10 @@ class BusinessCaseBuilder {
             });
 
             const data = await response.json();
+
+            if (jobId !== this.activeJobId) {
+                return;
+            }
 
             if (!data.success) {
                 this.handleError({ message: 'Unable to retrieve job status', type: 'polling_error' });
