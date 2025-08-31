@@ -66,7 +66,7 @@ return new WP_Error( 'llm_timeout', 'Request timed out' );
 }
 }
 
-class Real_Treasury_BCB {
+class RTBCB_Main {
 private function generate_business_analysis( $user_inputs, $scenarios, $recommendation, $chunk_callback = null ) {
 $start_time      = microtime( true );
 $timeout         = rtbcb_get_api_timeout();
@@ -161,8 +161,8 @@ __( 'Develop implementation roadmap and timeline', 'rtbcb' ),
 
 final class RTBCB_GenerateBusinessAnalysisTimeoutTest extends TestCase {
 public function test_timeout_returns_fallback_analysis() {
-$plugin  = new Real_Treasury_BCB();
-$method  = new ReflectionMethod( Real_Treasury_BCB::class, 'generate_business_analysis' );
+$plugin  = new RTBCB_Main();
+$method  = new ReflectionMethod( RTBCB_Main::class, 'generate_business_analysis' );
 $method->setAccessible( true );
 
 $user_inputs = [ 'company_name' => 'Test Co' ];

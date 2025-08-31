@@ -31,7 +31,7 @@ Field definitions come from `templates/business-case-form.php` and the field reg
 
 ## Server-side Processing
 
-`Real_Treasury_BCB::ajax_generate_comprehensive_case()` validates the request and orchestrates report generation:
+`RTBCB_Main::ajax_generate_comprehensive_case()` validates the request and orchestrates report generation:
 
 1. **ROI Calculation** – `RTBCB_Calculator::calculate_roi()` builds conservative, base, and optimistic scenarios.
 2. **Category Recommendation & ROI Refinement** – `RTBCB_Category_Recommender::recommend_category()` scores the selected challenges to suggest a treasury solution type, then `RTBCB_Calculator::calculate_category_refined_roi()` recalculates ROI based on that category.
