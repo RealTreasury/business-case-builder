@@ -30,6 +30,8 @@ environment variable, or by creating a `rtbcb-config.json` file in the plugin di
 
 Values outside the 256–128,000 range are ignored.
 
+By default, API requests time out after 300 seconds. You can adjust this limit up to 600 seconds in the plugin settings.
+
 == Testing Dashboard ==
 From the WordPress admin, go to **Real Treasury → Test Dashboard** and click
 **Run All Tests** to execute the full suite. A progress bar indicates overall

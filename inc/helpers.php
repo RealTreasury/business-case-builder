@@ -11,10 +11,10 @@ defined( 'ABSPATH' ) || exit;
  * Allows filtering via `rtbcb_api_timeout` to adjust how long remote
  * requests may take before failing.
  *
- * @return int Timeout in seconds.
- */
+ * @return int Timeout in seconds. Defaults to 300.
+*/
 function rtbcb_get_api_timeout() {
-		$timeout = (int) get_option( 'rtbcb_gpt5_timeout', 180 );
+        $timeout = (int) get_option( 'rtbcb_gpt5_timeout', 300 );
 
 	/**
 	 * Filter the API request timeout.
@@ -25,7 +25,21 @@ function rtbcb_get_api_timeout() {
 		return (int) apply_filters( 'rtbcb_api_timeout', $timeout );
 	}
 
-		return $timeout;
+        return $timeout;
+}
+
+/**
+ * Sanitize the API timeout option.
+ *
+ * Ensures the timeout stays within the 1-600 second range.
+ *
+ * @param mixed $value Raw option value.
+ * @return int Sanitized timeout.
+ */
+function rtbcb_sanitize_timeout( $value ) {
+	$value = intval( $value );
+
+	return min( 600, max( 1, $value ) );
 }
 
 require_once __DIR__ . '/config.php';

@@ -1131,8 +1131,9 @@ return $use_comprehensive;
 
         rtbcb_setup_ajax_logging();
         rtbcb_increase_memory_limit();
-        if ( ! ini_get( 'safe_mode' ) ) {
-            set_time_limit( 300 );
+        $timeout = absint( rtbcb_get_api_timeout() );
+        if ( ! ini_get( 'safe_mode' ) && $timeout > 0 ) {
+            set_time_limit( $timeout );
         }
 
         try {
