@@ -559,8 +559,50 @@ function rtbcb_is_valid_openai_api_key( $api_key ) {
  * @return string Model name without version date.
  */
 function rtbcb_normalize_model_name( $model ) {
-	$model = sanitize_text_field( $model );
-	return preg_replace( '/^(gpt-[^\s]+?)(?:-\d{4}-\d{2}-\d{2})$/', '$1', $model );
+        $model = sanitize_text_field( $model );
+        return preg_replace( '/^(gpt-[^\s]+?)(?:-\d{4}-\d{2}-\d{2})$/', '$1', $model );
+}
+
+/**
+ * Generate report HTML and PDF files.
+ *
+ * @param string     $report_html Report HTML content.
+ * @param int|string $lead_id     Lead identifier for filenames.
+ * @return array {
+ *     @type string $html_path Path to the HTML file.
+ *     @type string $pdf_path  Path to the PDF file.
+ *     @type string $pdf_url   Public URL to the PDF file.
+ * }
+ */
+function rtbcb_generate_report_files( $report_html, $lead_id ) {
+	$upload_dir  = wp_upload_dir();
+	$reports_dir = trailingslashit( $upload_dir['basedir'] ) . 'rtbcb-reports';
+	if ( ! file_exists( $reports_dir ) ) {
+		wp_mkdir_p( $reports_dir );
+	}
+	
+	$filename  = 'report-' . $lead_id;
+	$html_path = trailingslashit( $reports_dir ) . $filename . '.html';
+	file_put_contents( $html_path, $report_html );
+	
+	$pdf_path = trailingslashit( $reports_dir ) . $filename . '.pdf';
+	
+	if ( class_exists( '\\Dompdf\\Dompdf' ) ) {
+		$dompdf = new \Dompdf\Dompdf();
+		$dompdf->loadHtml( $report_html );
+		$dompdf->render();
+		file_put_contents( $pdf_path, $dompdf->output() );
+	} else {
+		file_put_contents( $pdf_path, $report_html );
+	}
+	
+	$pdf_url = trailingslashit( $upload_dir['baseurl'] ) . 'rtbcb-reports/' . $filename . '.pdf';
+	
+	return [
+		'html_path' => $html_path,
+		'pdf_path'  => $pdf_path,
+		'pdf_url'   => $pdf_url,
+	];
 }
 
 /**

@@ -98,7 +98,7 @@ assert_same( 50.0, $data['data']['percent'], 'Percent mismatch' );
 $_GET['job_id'] = 'job2';
 RTBCB_Background_Job::$data['job2'] = [
     'status' => 'completed',
-    'result' => [ 'report_data' => [ 'foo' => 'bar' ], 'lead_id' => 5 ],
+    'result' => [ 'report_data' => [ 'foo' => 'bar' ], 'lead_id' => 5, 'download_url' => 'http://example.com/report.pdf' ],
 ];
 try {
     RTBCB_Ajax::get_job_status();
@@ -108,6 +108,7 @@ try {
 assert_same( 'completed', $data['data']['status'], 'Completed status mismatch' );
 assert_same( [ 'foo' => 'bar' ], $data['data']['report_data'], 'Report data missing' );
 assert_same( 5, $data['data']['lead_id'], 'Lead ID mismatch' );
+assert_same( 'http://example.com/report.pdf', $data['data']['download_url'], 'Download URL mismatch' );
 
 $_GET['job_id'] = 'missing';
 try {

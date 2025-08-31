@@ -106,6 +106,28 @@ if ( ! defined( 'ABSPATH' ) ) {
     define( 'ABSPATH', __DIR__ . '/' );
 }
 
+if ( ! class_exists( 'RTBCB_Router' ) ) {
+    class RTBCB_Router {
+        public function get_comprehensive_report_html( $result ) {
+            return '<html></html>';
+        }
+    }
+}
+
+if ( ! function_exists( 'rtbcb_generate_report_files' ) ) {
+    function rtbcb_generate_report_files( $html, $lead_id ) {
+        return [
+            'html_path' => '/tmp/report.html',
+            'pdf_path'  => '/tmp/report.pdf',
+            'pdf_url'   => 'http://example.com/report.pdf',
+        ];
+    }
+}
+
+if ( ! function_exists( 'rtbcb_send_report_email' ) ) {
+    function rtbcb_send_report_email( $form_data, $report_path ) {}
+}
+
 if ( ! class_exists( 'RTBCB_Ajax' ) ) {
     class RTBCB_Ajax {
         public static $mode = 'success';
@@ -144,6 +166,7 @@ $statuses = array_column( $transient_log[ $job_id ], 'status' );
 assert_true( $statuses === [ 'queued', 'processing', 'processing', 'processing', 'processing', 'processing', 'processing', 'completed' ], 'Status flow incorrect: ' . json_encode( $statuses ) );
 assert_true( $transient_log[ $job_id ][2]['step'] === 'ai_enrichment', 'First step missing' );
 assert_true( 'completed' === get_transient( $job_id )['status'], 'Job not completed' );
+assert_true( 'http://example.com/report.pdf' === get_transient( $job_id )['result']['download_url'], 'Download URL missing' );
 
 // Error job flow.
 RTBCB_Ajax::$mode = 'error';

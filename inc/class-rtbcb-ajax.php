@@ -175,14 +175,18 @@ class RTBCB_Ajax {
 			$result                  = $status['result'];
 			$response['report_data'] = $result['report_data'];
 			if ( is_array( $result ) ) {
-			       foreach ( $result as $key => $value ) {
-			               if ( 'report_data' === $key ) {
-			                       continue;
-			               }
-			               $response[ $key ] = $value;
-			       }
-			}
-		}
+                               foreach ( $result as $key => $value ) {
+                                       if ( 'report_data' === $key ) {
+                                               continue;
+                                       }
+                                       if ( 'download_url' === $key ) {
+                                               $response[ $key ] = esc_url_raw( $value );
+                                       } else {
+                                               $response[ $key ] = $value;
+                                       }
+                               }
+                       }
+               }
 
 		wp_send_json_success( $response );
        }

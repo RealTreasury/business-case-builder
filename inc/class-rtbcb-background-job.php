@@ -63,56 +63,71 @@ $job_id,
 	 * @param array  $user_inputs User inputs.
 	 * @return void
 	 */
-	public static function process_job( $job_id, $user_inputs ) {
-self::update_status( $job_id, 'processing' );
-
-add_action(
-'rtbcb_workflow_step_completed',
-function ( $step ) use ( $job_id ) {
-$map = [
-'ai_enrichment'             => 20,
-'enhanced_roi_calculation'  => 40,
-'intelligent_recommendations' => 60,
-'hybrid_rag_analysis'       => 80,
-'data_structuring'          => 90,
-];
-if ( isset( $map[ $step ] ) ) {
-self::update_status(
-$job_id,
-'processing',
-[
-'step'    => $step,
-'percent' => $map[ $step ],
-]
-);
-}
-},
-10,
-1
-);
-
-$result = RTBCB_Ajax::process_comprehensive_case( $user_inputs );
-
-if ( is_wp_error( $result ) ) {
-self::update_status(
-$job_id,
-'error',
-[
-'message' => $result->get_error_message(),
-'percent' => 100,
-]
-);
-} else {
-self::update_status(
-$job_id,
-'completed',
-[
-'result'  => $result,
-'percent' => 100,
-]
-);
-}
+	        public static function process_job( $job_id, $user_inputs ) {
+	self::update_status( $job_id, 'processing' );
+	
+	add_action(
+	'rtbcb_workflow_step_completed',
+	function( $step ) use ( $job_id ) {
+	$map = [
+	'ai_enrichment'             => 20,
+	'enhanced_roi_calculation'  => 40,
+	'intelligent_recommendations' => 60,
+	'hybrid_rag_analysis'       => 80,
+	'data_structuring'          => 90,
+	];
+	if ( isset( $map[ $step ] ) ) {
+	self::update_status(
+	$job_id,
+	'processing',
+	[
+	'step'    => $step,
+	'percent' => $map[ $step ],
+	]
+	);
 	}
+	},
+	10,
+	1
+	);
+	
+	$result = RTBCB_Ajax::process_comprehensive_case( $user_inputs );
+	
+	if ( is_wp_error( $result ) ) {
+	self::update_status(
+	$job_id,
+	'error',
+	[
+	'message' => $result->get_error_message(),
+	'percent' => 100,
+	]
+	);
+	} else {
+	$download_url = '';
+	
+	if ( class_exists( 'RTBCB_Router' ) && function_exists( 'rtbcb_generate_report_files' ) ) {
+	$router      = new RTBCB_Router();
+	$report_html = $router->get_comprehensive_report_html( $result );
+	$lead_id     = $result['lead_id'] ?? uniqid( 'rtbcb_report_', true );
+	$files       = rtbcb_generate_report_files( $report_html, $lead_id );
+	$download_url = $files['pdf_url'];
+	if ( function_exists( 'rtbcb_send_report_email' ) ) {
+	rtbcb_send_report_email( $user_inputs, $files['pdf_path'] );
+	}
+	}
+	
+	$result['download_url'] = $download_url;
+	
+	self::update_status(
+	$job_id,
+	'completed',
+	[
+	'result'  => $result,
+	'percent' => 100,
+	]
+	);
+	}
+        }
 
 	/**
 	 * Get job status data.
