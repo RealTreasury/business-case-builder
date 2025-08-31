@@ -10,7 +10,3 @@ php_value upload_max_filesize 50M
 SetEnvIf Request_URI "admin-ajax\.php" no-gzip dont-vary
 </IfModule>
 
-# Ensure proper content type for AJAX
-<FilesMatch "admin-ajax\.php$">
-Header set Content-Type "application/json; charset=utf-8"
-</FilesMatch>
