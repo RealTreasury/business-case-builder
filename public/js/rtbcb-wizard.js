@@ -538,31 +538,35 @@ class BusinessCaseBuilder {
         }
     }
 
-    showLoading() {
-        // Hide form
-        const formContainer = ( this.form && typeof this.form.closest === 'function' ) ? this.form.closest('.rtbcb-form-container') : null;
-        if (formContainer) {
-            formContainer.style.display = 'none';
-        }
+showLoading() {
+// Hide form
+const formContainer = ( this.form && typeof this.form.closest === 'function' ) ? this.form.closest('.rtbcb-form-container') : null;
+if (formContainer) {
+formContainer.style.display = 'none';
+}
 
-        const progressContainer = document.getElementById('rtbcb-progress-container');
-        if (progressContainer) {
-            const companyName = this.form.querySelector('[name="company_name"]')?.value || 'your company';
-            const initialText = window.rtbcbAjax?.settings?.enable_ai_analysis
-                ? `Analyzing ${this.escapeHTML(companyName)}'s treasury operations...`
-                : 'Calculating ROI...';
-            progressContainer.innerHTML = `
-                <div class="rtbcb-progress-content">
-                    <div class="rtbcb-progress-spinner"></div>
-                    <div class="rtbcb-progress-text">Generating Your Business Case</div>
-                    <div class="rtbcb-progress-step">
-                        <span class="rtbcb-progress-step-text" id="rtbcb-progress-status">${initialText}</span>
-                    </div>
-                </div>
-            `;
-            progressContainer.style.display = 'flex';
-        }
-    }
+const progressContainer = document.getElementById('rtbcb-progress-container');
+if (progressContainer) {
+const companyName = this.form.querySelector('[name="company_name"]')?.value || 'your company';
+const initialText = window.rtbcbAjax?.settings?.enable_ai_analysis
+? `Analyzing ${this.escapeHTML(companyName)}'s treasury operations...`
+: 'Calculating ROI...';
+progressContainer.innerHTML = `
+<div class="rtbcb-progress-content">
+<div class="rtbcb-progress-spinner"></div>
+<div class="rtbcb-progress-text">Generating Your Business Case</div>
+<div class="rtbcb-progress-step">
+<span class="rtbcb-progress-step-text" id="rtbcb-progress-status">${initialText}</span>
+</div>
+<div class="rtbcb-progress-partial">
+<div id="rtbcb-partial-basic-roi" style="display:none"></div>
+<div id="rtbcb-partial-category" style="display:none"></div>
+</div>
+</div>
+`;
+progressContainer.style.display = 'flex';
+}
+}
 
     hideLoading() {
         const progressContainer = document.getElementById('rtbcb-progress-container');
@@ -616,20 +620,35 @@ class BusinessCaseBuilder {
                 return;
             }
 
-            const statusData = data.data;
-            const { status, step, message, percent } = statusData;
-            console.log(`RTBCB: Job status: ${status} (attempt ${attempt})`);
+const statusData = data.data;
+const { status, step, message, percent } = statusData;
+console.log(`RTBCB: Job status: ${status} (attempt ${attempt})`);
 
-            const progressStatus = document.getElementById('rtbcb-progress-status');
-            if (progressStatus) {
-                let text = step || message || '';
-                if (typeof percent === 'number') {
-                    text = text ? `${text} (${Math.round(percent)}%)` : `${Math.round(percent)}%`;
-                }
-                if (text) {
-                    progressStatus.textContent = text;
-                }
-            }
+const progressStatus = document.getElementById('rtbcb-progress-status');
+if (progressStatus) {
+let text = step || message || '';
+if (typeof percent === 'number') {
+text = text ? `${text} (${Math.round(percent)}%)` : `${Math.round(percent)}%`;
+}
+if (text) {
+progressStatus.textContent = text;
+}
+}
+
+const roiContainer = document.getElementById('rtbcb-partial-basic-roi');
+if (statusData.basic_roi && roiContainer) {
+const base = statusData.basic_roi?.financial_analysis?.roi_scenarios?.base?.total_annual_benefit;
+if (typeof base === 'number') {
+roiContainer.textContent = `Projected Annual Benefit: $${this.formatNumber(base)}`;
+roiContainer.style.display = 'block';
+}
+}
+
+const categoryContainer = document.getElementById('rtbcb-partial-category');
+if (statusData.category && categoryContainer) {
+categoryContainer.textContent = `Recommended Category: ${this.escapeHTML(statusData.category)}`;
+categoryContainer.style.display = 'block';
+}
 
             if (status === 'completed') {
                 this.cancelPolling();
