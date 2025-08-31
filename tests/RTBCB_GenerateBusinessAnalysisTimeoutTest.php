@@ -57,8 +57,8 @@ function rtbcb_log_error( $message, $details = '' ) {
 }
 
 class RTBCB_LLM {
-public function generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context ) {
-return $this->call_openai_with_retry( '', '', 0 );
+public function generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context, $chunk_handler = null ) {
+return $this->call_openai_with_retry( '', '', 0, null, $chunk_handler );
 }
 
 public function call_openai_with_retry( $model, $prompt, $max_output_tokens = null, $max_retries = null, $chunk_handler = null ) {
@@ -67,7 +67,7 @@ return new WP_Error( 'llm_timeout', 'Request timed out' );
 }
 
 class Real_Treasury_BCB {
-private function generate_business_analysis( $user_inputs, $scenarios, $rag_context ) {
+private function generate_business_analysis( $user_inputs, $scenarios, $rag_context, $chunk_handler = null ) {
 $start_time = microtime( true );
 $timeout    = rtbcb_get_api_timeout();
 $time_remaining = static function() use ( $start_time, $timeout ) {
@@ -88,7 +88,7 @@ return $this->generate_fallback_analysis( $user_inputs, $scenarios );
 
 try {
 $llm    = new RTBCB_LLM();
-$result = $llm->generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context );
+$result = $llm->generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context, $chunk_handler );
 
 if ( is_wp_error( $result ) ) {
 return $this->generate_fallback_analysis( $user_inputs, $scenarios );
@@ -146,7 +146,7 @@ $method->setAccessible( true );
 $user_inputs = [ 'company_name' => 'Test Co' ];
 $scenarios   = [ 'base' => [ 'total_annual_benefit' => 1000 ] ];
 
-$result = $method->invoke( $plugin, $user_inputs, $scenarios, [] );
+$result = $method->invoke( $plugin, $user_inputs, $scenarios, [], null );
 
 $this->assertIsArray( $result );
 $this->assertArrayHasKey( 'enhanced_fallback', $result );

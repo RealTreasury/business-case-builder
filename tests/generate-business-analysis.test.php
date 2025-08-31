@@ -54,23 +54,23 @@ if ( ! function_exists( 'rtbcb_get_api_timeout' ) ) {
 }
 
 if ( ! class_exists( 'RTBCB_LLM' ) ) {
-    class RTBCB_LLM {
-        public static $called = false;
-        public static $sleep  = 0;
-        public function generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context ) {
-            self::$called = true;
-            if ( self::$sleep > 0 ) {
-                usleep( self::$sleep );
-            }
-            return [ 'executive_summary' => 'summary' ];
-        }
-    }
+	class RTBCB_LLM {
+public static $called = false;
+public static $sleep  = 0;
+public function generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context, $chunk_handler = null ) {
+self::$called = true;
+if ( self::$sleep > 0 ) {
+usleep( self::$sleep );
+}
+return [ 'executive_summary' => 'summary' ];
+}
+}
 }
 
 class Real_Treasury_BCB {
     public $fallback_called = false;
 
-    private function generate_business_analysis( $user_inputs, $scenarios, $rag_context ) {
+    private function generate_business_analysis( $user_inputs, $scenarios, $rag_context, $chunk_handler = null ) {
         $start_time = microtime( true );
         $timeout    = rtbcb_get_api_timeout();
         $time_remaining = static function() use ( $start_time, $timeout ) {
@@ -91,7 +91,7 @@ class Real_Treasury_BCB {
 
         try {
             $llm    = new RTBCB_LLM();
-            $result = $llm->generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context );
+            $result = $llm->generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context, $chunk_handler );
 
             if ( is_wp_error( $result ) ) {
                 return $this->generate_fallback_analysis( $user_inputs, $scenarios );
@@ -128,7 +128,7 @@ final class Generate_Business_Analysis_Test extends TestCase {
         $reflection = new ReflectionClass( $this->plugin );
         $method     = $reflection->getMethod( 'generate_business_analysis' );
         $method->setAccessible( true );
-        return $method->invoke( $this->plugin, [], [], [] );
+        return $method->invoke( $this->plugin, [], [], [], null );
     }
 
     public function test_llm_called_when_api_key_exists() {

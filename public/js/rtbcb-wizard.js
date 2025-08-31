@@ -372,6 +372,11 @@ class BusinessCaseBuilder {
             const formData = this.collectFormData();
             this.validateFormData(formData);
 
+            if (typeof formData.get === 'function' && formData.get('stream_chunks')) {
+                await this.streamAnalysis(formData);
+                return;
+            }
+
             // SIMPLIFIED APPROACH: Direct submission instead of background jobs
             const response = await fetch(this.ajaxUrl, {
                 method: 'POST',
@@ -1244,6 +1249,38 @@ class BusinessCaseBuilder {
 
     formatNumber(num) {
         return new Intl.NumberFormat('en-US').format(Math.round(num));
+    }
+
+    async streamAnalysis(formData) {
+        try {
+            const response = await fetch(this.ajaxUrl, {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            if (!response.body) {
+                return;
+            }
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) {
+                    break;
+                }
+                const chunk = decoder.decode(value, { stream: true });
+                if (window.rtbcbStreamChunk) {
+                    window.rtbcbStreamChunk(chunk);
+                }
+            }
+        } catch (error) {
+            console.error('RTBCB stream error', error);
+        }
     }
 
     reinitialize() {

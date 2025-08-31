@@ -761,13 +761,29 @@ return $use_comprehensive;
 			}
 
                         // Handle simple inputs synchronously; queue complex cases for background processing.
-			if ( ! rtbcb_is_simple_case( $user_inputs ) ) {
-				$job_id = RTBCB_Background_Job::enqueue( $user_inputs );
-				wp_send_json_success( [ 'job_id' => $job_id ] );
-				return;
-			}
+                        if ( ! rtbcb_is_simple_case( $user_inputs ) ) {
+                                $job_id = RTBCB_Background_Job::enqueue( $user_inputs );
+                                wp_send_json_success( [ 'job_id' => $job_id ] );
+                                return;
+                        }
 
-			try {
+                        $streaming     = ! empty( $_POST['stream_chunks'] );
+                        $chunk_handler = null;
+                        if ( $streaming ) {
+                                nocache_headers();
+                                header( 'Content-Type: text/event-stream' );
+                                header( 'Cache-Control: no-cache' );
+                                header( 'Connection: keep-alive' );
+                                $chunk_handler = static function( $chunk ) {
+                                        $chunk = sanitize_text_field( $chunk );
+                                        echo 'data: ' . $chunk . "\n\n";
+                                        do_action( 'rtbcb_stream_chunk', $chunk );
+                                        @ob_flush();
+                                        flush();
+                                };
+                        }
+
+                        try {
 				// Calculate ROI scenarios.
 				if ( ! class_exists( 'RTBCB_Calculator' ) ) {
 					wp_send_json_error( [ 'message' => __( 'System error: Calculator not available.', 'rtbcb' ) ], 500 );
@@ -787,13 +803,20 @@ return $use_comprehensive;
 				// Get RAG context if available.
 				$rag_context = $this->get_rag_context( $user_inputs, $recommendation );
 
-				// Generate business case analysis.
-				$comprehensive_analysis = $this->generate_business_analysis( $user_inputs, $scenarios, $rag_context );
+                                // Generate business case analysis.
+                                $comprehensive_analysis = $this->generate_business_analysis( $user_inputs, $scenarios, $rag_context, $chunk_handler );
 
-				if ( is_wp_error( $comprehensive_analysis ) ) {
-					wp_send_json_error( [ 'message' => $comprehensive_analysis->get_error_message() ], 500 );
-					return;
-				}
+                                if ( is_wp_error( $comprehensive_analysis ) ) {
+                                        if ( $streaming ) {
+                                                echo "event: error\n";
+                                                echo 'data: ' . wp_json_encode( [ 'message' => $comprehensive_analysis->get_error_message() ] ) . "\n\n";
+                                                @ob_flush();
+                                                flush();
+                                                return;
+                                        }
+                                        wp_send_json_error( [ 'message' => $comprehensive_analysis->get_error_message() ], 500 );
+                                        return;
+                                }
 
 				// Merge all data for report generation.
 				$report_data = array_merge(
@@ -815,29 +838,37 @@ return $use_comprehensive;
 					return;
 				}
 
-				if ( empty( $report_html ) ) {
-					wp_send_json_error( [ 'message' => __( 'Failed to generate report HTML.', 'rtbcb' ) ], 500 );
-					return;
-				}
+                                if ( empty( $report_html ) ) {
+                                        wp_send_json_error( [ 'message' => __( 'Failed to generate report HTML.', 'rtbcb' ) ], 500 );
+                                        return;
+                                }
 
-				// Save lead data.
-				$lead_id = $this->save_lead_data( $user_inputs, $scenarios, $recommendation, $report_html );
+                                // Save lead data.
+                                $lead_id = $this->save_lead_data( $user_inputs, $scenarios, $recommendation, $report_html );
 
-				// Format response data.
-				$formatted_scenarios = $this->format_scenarios_for_response( $scenarios );
+                                // Format response data.
+                                $formatted_scenarios = $this->format_scenarios_for_response( $scenarios );
 
-				$response_data = [
-					'scenarios'              => $formatted_scenarios,
-					'recommendation'         => $recommendation,
-					'comprehensive_analysis' => $comprehensive_analysis,
-					'report_html'            => $report_html,
-					'lead_id'                => $lead_id,
-					'company_name'           => $user_inputs['company_name'],
+                                $response_data = [
+                                        'scenarios'              => $formatted_scenarios,
+                                        'recommendation'         => $recommendation,
+                                        'comprehensive_analysis' => $comprehensive_analysis,
+                                        'report_html'            => $report_html,
+                                        'lead_id'                => $lead_id,
+                                        'company_name'           => $user_inputs['company_name'],
                                         'analysis_type'          => rtbcb_get_analysis_type(),
-					'memory_info'            => rtbcb_get_memory_status(),
-				];
+                                        'memory_info'            => rtbcb_get_memory_status(),
+                                ];
 
-				wp_send_json_success( $response_data );
+                                if ( $streaming ) {
+                                        echo "event: complete\n";
+                                        echo 'data: ' . wp_json_encode( $response_data ) . "\n\n";
+                                        @ob_flush();
+                                        flush();
+                                        return;
+                                }
+
+                                wp_send_json_success( $response_data );
 			} catch ( Exception $e ) {
 				rtbcb_log_error( 'Ajax exception', $e->getMessage() );
 				wp_send_json_error( [ 'message' => __( 'An error occurred while generating your business case.', 'rtbcb' ) ], 500 );
@@ -961,10 +992,17 @@ return $use_comprehensive;
 	}
 	}
 	
-	/**
-	 * Generate comprehensive business analysis using LLM.
-	 */
-        private function generate_business_analysis( $user_inputs, $scenarios, $rag_context ) {
+        /**
+         * Generate comprehensive business analysis using LLM.
+         *
+         * @param array         $user_inputs   Sanitized user inputs.
+         * @param array         $scenarios     ROI scenarios.
+         * @param array         $rag_context   Optional RAG context.
+         * @param callable|null $chunk_handler Optional streaming callback.
+         *
+         * @return array|WP_Error Analysis array or error.
+         */
+        private function generate_business_analysis( $user_inputs, $scenarios, $rag_context, $chunk_handler = null ) {
             $start_time = microtime( true );
             $timeout    = absint( rtbcb_get_api_timeout() );
 
@@ -993,7 +1031,7 @@ return $use_comprehensive;
 
             try {
                 $llm    = new RTBCB_LLM();
-                $result = $llm->generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context );
+                $result = $llm->generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context, $chunk_handler );
 
                 if ( is_wp_error( $result ) ) {
                     // Fall back to structured analysis.
