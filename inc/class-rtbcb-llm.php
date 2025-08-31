@@ -255,7 +255,7 @@ class RTBCB_LLM {
         ];
         $context = $this->build_context_for_responses( $history );
         $tokens  = $this->tokens_for_report( 'industry_commentary' );
-        $response = $this->call_openai_with_retry( $model, $context, $tokens );
+        $response = $this->call_openai_with_retry( $model, $context, $tokens, null, $chunk_callback );
 
         if ( is_wp_error( $response ) ) {
             return new WP_Error( 'llm_failure', __( 'Unable to generate commentary at this time.', 'rtbcb' ) );
@@ -711,10 +711,11 @@ USER,
      * @param array                     $user_inputs    Sanitized user inputs.
      * @param array                     $roi_data       ROI calculation data.
      * @param callable|array|Traversable $context_chunks Optional context provider or strings for the prompt.
+     * @param callable|null             $chunk_callback Optional streaming callback.
      *
      * @return array|WP_Error Comprehensive analysis array or error object.
      */
-    public function generate_comprehensive_business_case( $user_inputs, $roi_data, $context_chunks = [] ) {
+    public function generate_comprehensive_business_case( $user_inputs, $roi_data, $context_chunks = [], $chunk_callback = null ) {
         $this->current_inputs = $user_inputs;
 
         if ( empty( $this->api_key ) ) {

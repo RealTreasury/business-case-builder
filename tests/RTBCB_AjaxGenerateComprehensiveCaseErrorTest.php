@@ -74,18 +74,18 @@ if ( ! function_exists( 'rtbcb_log_memory_usage' ) ) {
 }
 
 if ( ! class_exists( 'RTBCB_LLM' ) ) {
-    class RTBCB_LLM {
-        public static $mode = 'generic';
-        public function generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context ) {
-            if ( 'no_api_key' === self::$mode ) {
-                return new WP_Error( 'no_api_key', 'OpenAI API key not configured.' );
-            }
-            if ( 'http_status' === self::$mode ) {
-                return new WP_Error( 'llm_http_status', 'Teapot', [ 'status' => 418 ] );
-            }
-            return new WP_Error( 'llm_error', 'LLM failed' );
-        }
-    }
+class RTBCB_LLM {
+public static $mode = 'generic';
+public function generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context, $chunk_callback = null ) {
+if ( 'no_api_key' === self::$mode ) {
+return new WP_Error( 'no_api_key', 'OpenAI API key not configured.' );
+}
+if ( 'http_status' === self::$mode ) {
+return new WP_Error( 'llm_http_status', 'Teapot', [ 'status' => 418 ] );
+}
+return new WP_Error( 'llm_error', 'LLM failed' );
+}
+}
 }
 
 if ( ! class_exists( 'RTBCB_JSON_Error' ) ) {
@@ -116,7 +116,7 @@ if ( ! class_exists( 'Real_Treasury_BCB' ) ) {
     class Real_Treasury_BCB {
         public function ajax_generate_comprehensive_case() {
             $llm = new RTBCB_LLM();
-            $comprehensive_analysis = $llm->generate_comprehensive_business_case( [], [], [] );
+            $comprehensive_analysis = $llm->generate_comprehensive_business_case( [], [], [], null );
             if ( is_wp_error( $comprehensive_analysis ) ) {
                 $error_message  = $comprehensive_analysis->get_error_message();
                 $error_code     = $comprehensive_analysis->get_error_code();

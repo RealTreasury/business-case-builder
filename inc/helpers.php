@@ -1320,8 +1320,8 @@ function rtbcb_test_generate_executive_summary() {
 	$company = rtbcb_get_current_company();
 	$roi     = get_option( 'rtbcb_roi_results', [] );
 
-	$llm    = new RTBCB_LLM();
-	$result = $llm->generate_comprehensive_business_case( $company, $roi );
+       $llm    = new RTBCB_LLM();
+       $result = $llm->generate_comprehensive_business_case( $company, $roi, [], null );
 
 	if ( is_wp_error( $result ) ) {
 		return $result;
@@ -1678,8 +1678,8 @@ function rtbcb_handle_comprehensive_analysis( $company_name, $job_id ) {
 		$rag_context = array_map( 'sanitize_text_field', $vendor_list );
 	}
 
-	$llm      = new RTBCB_LLM();
-	$analysis = $llm->generate_comprehensive_business_case( [ 'company_name' => $company_name ], [], $rag_context );
+       $llm      = new RTBCB_LLM();
+       $analysis = $llm->generate_comprehensive_business_case( [ 'company_name' => $company_name ], [], $rag_context, null );
 
 	if ( is_wp_error( $analysis ) ) {
 		update_option(
