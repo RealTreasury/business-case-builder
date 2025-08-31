@@ -101,7 +101,9 @@ class RTBCB_Leads {
                     created_at datetime DEFAULT CURRENT_TIMESTAMP,
                     updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                     PRIMARY KEY (id),
-                    UNIQUE KEY email_unique (email)
+                    UNIQUE KEY email_unique (email),
+                    KEY created_at_index (created_at),
+                    KEY recommended_category_index (recommended_category)
                 ) $charset_collate;";
 
                 $wpdb->query( $simple_sql );
@@ -152,6 +154,15 @@ class RTBCB_Leads {
             } );
         }
     }
+
+	/**
+	 * Upgrade the leads table schema.
+	 *
+	 * @return void
+	 */
+	public static function upgrade_schema() {
+		self::create_table();
+	}
 
     /**
      * Save a lead to the database.
