@@ -183,13 +183,19 @@ class RTBCB_Leads {
             'roi_low'                 => floatval( $lead_data['roi_low'] ?? 0 ),
             'roi_base'                => floatval( $lead_data['roi_base'] ?? 0 ),
             'roi_high'                => floatval( $lead_data['roi_high'] ?? 0 ),
-            'report_html'             => wp_kses_post( $lead_data['report_html'] ?? '' ),
+            'report_html'             => '',
             'ip_address'              => self::get_client_ip(),
             'user_agent'              => sanitize_text_field( $_SERVER['HTTP_USER_AGENT'] ?? '' ),
             'utm_source'              => sanitize_text_field( $_GET['utm_source'] ?? '' ),
             'utm_medium'              => sanitize_text_field( $_GET['utm_medium'] ?? '' ),
             'utm_campaign'            => sanitize_text_field( $_GET['utm_campaign'] ?? '' ),
         ];
+
+        $report_html = wp_kses_post( $lead_data['report_html'] ?? '' );
+        if ( '' !== $report_html ) {
+            $compressed = gzcompress( $report_html );
+            $sanitized_data['report_html'] = false === $compressed ? '' : $compressed;
+        }
 
         // Prepare format array to match the sanitized data
         $formats = [
@@ -277,6 +283,13 @@ class RTBCB_Leads {
 
         if ( $result ) {
             $result['pain_points'] = maybe_unserialize( $result['pain_points'] );
+
+            if ( ! empty( $result['report_html'] ) ) {
+                $uncompressed = @gzuncompress( $result['report_html'] );
+                if ( false !== $uncompressed ) {
+                    $result['report_html'] = $uncompressed;
+                }
+            }
         }
 
         return $result;
@@ -348,9 +361,15 @@ class RTBCB_Leads {
 
         $leads = $wpdb->get_results( $wpdb->prepare( $sql, $prepare_values ), ARRAY_A );
 
-        // Unserialize pain points
+        // Unserialize pain points and decompress report HTML
         foreach ( $leads as &$lead ) {
             $lead['pain_points'] = maybe_unserialize( $lead['pain_points'] );
+            if ( ! empty( $lead['report_html'] ) ) {
+                $uncompressed = @gzuncompress( $lead['report_html'] );
+                if ( false !== $uncompressed ) {
+                    $lead['report_html'] = $uncompressed;
+                }
+            }
         }
 
         return [
@@ -434,6 +453,13 @@ class RTBCB_Leads {
 
         // Data rows
         foreach ( $leads as $lead ) {
+            if ( ! empty( $lead['report_html'] ) ) {
+                $uncompressed = @gzuncompress( $lead['report_html'] );
+                if ( false !== $uncompressed ) {
+                    $lead['report_html'] = $uncompressed;
+                }
+            }
+
             $row = [
                 '"' . str_replace( '"', '""', $lead['email'] ) . '"',
                 '"' . str_replace( '"', '""', $lead['company_size'] ) . '"',
@@ -456,6 +482,41 @@ class RTBCB_Leads {
         }
 
         return $csv_content;
+    }
+
+    /**
+     * Compress existing report_html entries to save space.
+     *
+     * @return void
+     */
+    public static function convert_report_html_to_compressed() {
+        global $wpdb;
+
+        $rows = $wpdb->get_results( 'SELECT id, report_html FROM ' . self::$table_name . " WHERE report_html != ''", ARRAY_A );
+
+        foreach ( $rows as $row ) {
+            if ( '' === $row['report_html'] ) {
+                continue;
+            }
+
+            $maybe_uncompressed = @gzuncompress( $row['report_html'] );
+            if ( false !== $maybe_uncompressed ) {
+                continue;
+            }
+
+            $compressed = gzcompress( $row['report_html'] );
+            if ( false === $compressed ) {
+                continue;
+            }
+
+            $wpdb->update(
+                self::$table_name,
+                [ 'report_html' => $compressed ],
+                [ 'id' => $row['id'] ],
+                [ '%s' ],
+                [ '%d' ]
+            );
+        }
     }
 
     /**

@@ -14,7 +14,7 @@ class RTBCB_DB {
     /**
      * Current database version.
      */
-    const DB_VERSION = '2.0.1';
+    const DB_VERSION = '2.0.2';
 
     /**
      * Initialize database and handle upgrades.
@@ -56,11 +56,15 @@ class RTBCB_DB {
 	// Ensure RAG index table is present during upgrades.
 	self::create_rag_table();
 
-	if ( version_compare( $from_version, '2.0.1', '<' ) ) {
-		self::add_embedding_norm_index();
-	}
+        if ( version_compare( $from_version, '2.0.1', '<' ) ) {
+                self::add_embedding_norm_index();
+        }
 
-	// Future migrations can be handled here.
+        if ( version_compare( $from_version, '2.0.2', '<' ) ) {
+                RTBCB_Leads::convert_report_html_to_compressed();
+        }
+
+        // Future migrations can be handled here.
 
         // Log the upgrade.
         error_log( 'RTBCB: Database upgraded from version ' . $from_version . ' to ' . self::DB_VERSION );

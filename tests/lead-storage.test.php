@@ -200,6 +200,7 @@ $lead_data = [
 'roi_low'       => 1000,
 'roi_base'      => 2000,
 'roi_high'      => 3000,
+ 'report_html'  => '<div>Report</div>',
 ];
 
 $lead_id = RTBCB_Leads::save_lead( $lead_data );
@@ -219,8 +220,19 @@ echo "Pain points mismatch\n";
 exit( 1 );
 }
 
+if ( '<div>Report</div>' !== ( $retrieved['report_html'] ?? '' ) ) {
+echo "Report HTML mismatch\n";
+exit( 1 );
+}
+
 if ( 1000.0 !== (float) ( $retrieved['roi_low'] ?? 0 ) || 2000.0 !== (float) ( $retrieved['roi_base'] ?? 0 ) || 3000.0 !== (float) ( $retrieved['roi_high'] ?? 0 ) ) {
 echo "ROI mismatch\n";
+exit( 1 );
+}
+
+$raw = $wpdb->get_row( "SELECT report_html FROM rtbcb_leads WHERE id = $lead_id", ARRAY_A );
+if ( '<div>Report</div>' !== gzuncompress( $raw['report_html'] ) ) {
+echo "Compression check failed\n";
 exit( 1 );
 }
 
