@@ -271,7 +271,7 @@ class RTBCB_Ajax {
 		];
 	}
 
-private static function structure_report_data( $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, $request_start ) {
+	private static function structure_report_data( $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, $request_start ) {
 	$operational_analysis = (array) ( $final_analysis['operational_analysis'] ?? [] );
 	$current_state_assessment = (array) ( $operational_analysis['current_state_assessment'] ?? [] );
 	if ( empty( $current_state_assessment ) ) {
@@ -381,8 +381,12 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 	 * @return array Clamped ROI scenarios.
 	 */
 	private static function clamp_roi_scenarios_to_category( $roi_scenarios, $category ) {
-		$min_roi = $category['roi_range'][0] ?? 0;
-		$max_roi = $category['roi_range'][1] ?? $min_roi;
+		if ( empty( $category['roi_range'] ) || ! is_array( $category['roi_range'] ) ) {
+			return $roi_scenarios;
+		}
+
+		$min_roi = $category['roi_range'][0];
+		$max_roi = $category['roi_range'][1];
 
 		foreach ( [ 'conservative', 'base', 'optimistic' ] as $key ) {
 			if ( isset( $roi_scenarios[ $key ]['total_annual_benefit'] ) ) {
