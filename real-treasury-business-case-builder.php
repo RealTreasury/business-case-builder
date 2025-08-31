@@ -767,18 +767,19 @@ return $use_comprehensive;
 					return;
 				}
 
-				$scenarios = RTBCB_Calculator::calculate_roi( $user_inputs );
+                                $scenarios = RTBCB_Calculator::calculate_roi( $user_inputs );
 
-				// Get category recommendation.
-				if ( ! class_exists( 'RTBCB_Category_Recommender' ) ) {
-					wp_send_json_error( [ 'message' => __( 'System error: Recommender not available.', 'rtbcb' ) ], 500 );
-					return;
-				}
+                                // Get category recommendation.
+                                if ( ! class_exists( 'RTBCB_Category_Recommender' ) ) {
+                                        wp_send_json_error( [ 'message' => __( 'System error: Recommender not available.', 'rtbcb' ) ], 500 );
+                                        return;
+                                }
 
-				$recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
+                                $recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
+                                $scenarios      = RTBCB_Calculator::calculate_category_refined_roi( $user_inputs, $recommendation );
 
-				// Get RAG context if available.
-				$rag_context = $this->get_rag_context( $user_inputs, $recommendation );
+                                // Get RAG context if available.
+                                $rag_context = $this->get_rag_context( $user_inputs, $recommendation );
 
 				// Generate business case analysis.
 				$comprehensive_analysis = $this->generate_business_analysis( $user_inputs, $scenarios, $rag_context );
@@ -1398,6 +1399,7 @@ return $use_comprehensive;
             $recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
             rtbcb_log_api_debug( 'Category recommendation result', $recommendation );
             rtbcb_log_memory_usage( 'after_category_recommendation' );
+            $scenarios = RTBCB_Calculator::calculate_category_refined_roi( $user_inputs, $recommendation );
 
             // Get RAG context (with memory monitoring)
             $rag_context = [];

@@ -21,7 +21,7 @@ This document summarizes the workflow from internal company research to deliveri
 ## 4. Category Recommendation
 
 * The plugin categorizes the user's challenges without an LLM.
-* `RTBCB_Category_Recommender::recommend_category()` scores the input against predefined categories and returns a recommendation with reasoning and confidence.
+* `RTBCB_Category_Recommender::recommend_category()` scores the input against predefined categories and returns a recommendation with reasoning and confidence, then `RTBCB_Calculator::calculate_category_refined_roi()` recalculates ROI using the selected category.
 
 ## 5. Final Report Assembly
 

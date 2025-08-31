@@ -13,36 +13,47 @@ defined( 'ABSPATH' ) || exit;
  * Provides static ROI calculation helpers.
  */
 class RTBCB_Calculator {
-    /**
-     * Calculate ROI scenarios for given inputs.
-     *
-     * @param array $user_inputs User provided inputs.
-     * @return array
-     */
-    public static function calculate_roi( $user_inputs ) {
-        $settings       = RTBCB_Settings::get_all();
-        $recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
-        $category       = $recommendation['category_info'];
-        $industry_mult  = self::get_industry_benchmark( $user_inputs['industry'] ?? '' );
+	/**
+	* Calculate ROI scenarios for given inputs.
+	*
+	* @param array $user_inputs User provided inputs.
+	* @return array
+	*/
+	public static function calculate_roi( $user_inputs, $category = null ) {
+	$settings      = RTBCB_Settings::get_all();
+	$category_info = $category ?? [];
+	$industry_mult = self::get_industry_benchmark( $user_inputs['industry'] ?? '' );
 
-        $scenarios = [];
-        foreach ( [ 'conservative', 'base', 'optimistic' ] as $scenario ) {
-            $scenarios[ $scenario ] = self::calculate_scenario( $user_inputs, $settings, $category, $scenario, $industry_mult );
-        }
+	$scenarios = [];
+	foreach ( [ 'conservative', 'base', 'optimistic' ] as $scenario ) {
+		$scenarios[ $scenario ] = self::calculate_scenario( $user_inputs, $settings, $category_info, $scenario, $industry_mult );
+	}
 
-        return $scenarios;
-    }
+return $scenarios;
+}
 
-    /**
-     * Calculate ROI for a scenario.
-     *
-     * @param array  $inputs        User inputs.
-     * @param array  $settings      Plugin settings.
-     * @param array  $category      Recommended category info.
-     * @param string $scenario_type Scenario type.
-     * @param float  $industry_mult Industry benchmark multiplier.
-     * @return array
-     */
+/**
+ * Recalculate ROI scenarios using category recommendation output.
+ *
+ * @param array $user_inputs   User provided inputs.
+ * @param array $recommendation Category recommendation output.
+ * @return array
+ */
+public static function calculate_category_refined_roi( $user_inputs, $recommendation ) {
+$category = $recommendation['category_info'] ?? [];
+return self::calculate_roi( $user_inputs, $category );
+}
+
+/**
+	* Calculate ROI for a scenario.
+	*
+	* @param array  $inputs        User inputs.
+	* @param array  $settings      Plugin settings.
+	* @param array  $category      Recommended category info.
+	* @param string $scenario_type Scenario type.
+	* @param float  $industry_mult Industry benchmark multiplier.
+	* @return array
+	*/
     private static function calculate_scenario( $inputs, $settings, $category, $scenario_type, $industry_mult ) {
         /**
          * Filters the scenario multipliers used to adjust ROI calculations.
@@ -92,15 +103,15 @@ class RTBCB_Calculator {
         ];
     }
 
-    /**
-     * Calculate labor cost savings.
-     *
-     * @param array $inputs     User inputs.
-     * @param array $settings   Plugin settings.
-     * @param float $multiplier Scenario multiplier.
-     *
-     * @return float Annual labor savings.
-     */
+	/**
+	* Calculate labor cost savings.
+	*
+	* @param array $inputs     User inputs.
+	* @param array $settings   Plugin settings.
+	* @param float $multiplier Scenario multiplier.
+	*
+	* @return float Annual labor savings.
+	*/
     private static function calculate_labor_savings( $inputs, $settings, $multiplier ) {
         $hourly_cost = isset( $settings['labor_cost_per_hour'] ) ? floatval( $settings['labor_cost_per_hour'] ) : 100;
         $weekly_hours = ( isset( $inputs['hours_reconciliation'] ) ? floatval( $inputs['hours_reconciliation'] ) : 0 )
@@ -111,15 +122,15 @@ class RTBCB_Calculator {
         return $hours_saved * 52 * $hourly_cost;
     }
 
-    /**
-     * Calculate bank fee savings.
-     *
-     * @param array $inputs     User inputs.
-     * @param array $settings   Plugin settings.
-     * @param float $multiplier Scenario multiplier.
-     *
-     * @return float Annual fee savings.
-     */
+	/**
+	* Calculate bank fee savings.
+	*
+	* @param array $inputs     User inputs.
+	* @param array $settings   Plugin settings.
+	* @param float $multiplier Scenario multiplier.
+	*
+	* @return float Annual fee savings.
+	*/
     private static function calculate_fee_savings( $inputs, $settings, $multiplier ) {
         $num_banks = isset( $inputs['num_banks'] ) ? intval( $inputs['num_banks'] ) : 0;
         $baseline  = isset( $settings['bank_fee_baseline'] ) ? floatval( $settings['bank_fee_baseline'] ) : 15000;
@@ -128,15 +139,15 @@ class RTBCB_Calculator {
         return $num_banks * $baseline * $rate;
     }
 
-    /**
-     * Calculate savings from error reduction.
-     *
-     * @param array $inputs     User inputs.
-     * @param array $settings   Plugin settings.
-     * @param float $multiplier Scenario multiplier.
-     *
-     * @return float Annual error reduction benefit.
-     */
+	/**
+	* Calculate savings from error reduction.
+	*
+	* @param array $inputs     User inputs.
+	* @param array $settings   Plugin settings.
+	* @param float $multiplier Scenario multiplier.
+	*
+	* @return float Annual error reduction benefit.
+	*/
     private static function calculate_error_reduction( $inputs, $settings, $multiplier ) {
         /**
          * Filters the base error cost map used for calculating error reduction savings.
@@ -165,15 +176,15 @@ class RTBCB_Calculator {
         return $base_cost * $reduction;
     }
 
-    /**
-     * Get scenario assumptions.
-     *
-     * @param string $scenario_type Scenario key.
-     * @param float  $multiplier    Scenario multiplier.
-     * @param float  $industry_mult Industry multiplier.
-     *
-     * @return array Assumptions for the scenario.
-     */
+	/**
+	* Get scenario assumptions.
+	*
+	* @param string $scenario_type Scenario key.
+	* @param float  $multiplier    Scenario multiplier.
+	* @param float  $industry_mult Industry multiplier.
+	*
+	* @return array Assumptions for the scenario.
+	*/
     private static function get_scenario_assumptions( $scenario_type, $multiplier, $industry_mult ) {
         return [
             'name'                  => ucfirst( $scenario_type ),
@@ -184,12 +195,12 @@ class RTBCB_Calculator {
         ];
     }
 
-    /**
-     * Retrieve industry benchmark multiplier.
-     *
-     * @param string $industry Industry identifier.
-     * @return float Multiplier.
-     */
+	/**
+	* Retrieve industry benchmark multiplier.
+	*
+	* @param string $industry Industry identifier.
+	* @return float Multiplier.
+	*/
     private static function get_industry_benchmark( $industry ) {
         $benchmarks = [
             'manufacturing' => 0.9,

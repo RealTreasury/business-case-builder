@@ -95,8 +95,11 @@ return rtrim( $string, '/\\' ) . '/';
 // Stub plugin classes.
 if ( ! class_exists( 'RTBCB_Calculator' ) ) {
 class RTBCB_Calculator {
-public static function calculate_roi( $data ) {
+public static function calculate_roi( $data, $category = null ) {
 return [ 'roi_base' => 1000 ];
+}
+public static function calculate_category_refined_roi( $data, $recommendation ) {
+return self::calculate_roi( $data, $recommendation['category_info'] ?? [] );
 }
 }
 }
