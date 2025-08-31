@@ -102,16 +102,20 @@ class Real_Treasury_BCB {
         add_filter( 'plugin_action_links_' . plugin_basename( RTBCB_FILE ), [ $this, 'plugin_action_links' ] );
 
 		// AJAX handlers - Use the enhanced version
-		add_action( 'wp_ajax_rtbcb_generate_case', [ $this, 'ajax_generate_comprehensive_case_enhanced' ] );
-		add_action( 'wp_ajax_nopriv_rtbcb_generate_case', [ $this, 'ajax_generate_comprehensive_case_enhanced' ] );
-		
-		// Job status handlers
-		add_action( 'wp_ajax_rtbcb_job_status', [ 'RTBCB_Ajax', 'get_job_status' ] );
-		add_action( 'wp_ajax_nopriv_rtbcb_job_status', [ 'RTBCB_Ajax', 'get_job_status' ] );
-		
-		// OpenAI proxy handlers
-		add_action( 'wp_ajax_rtbcb_openai_responses', 'rtbcb_proxy_openai_responses' );
-		add_action( 'wp_ajax_nopriv_rtbcb_openai_responses', 'rtbcb_proxy_openai_responses' );
+                add_action( 'wp_ajax_rtbcb_generate_case', [ $this, 'ajax_generate_comprehensive_case_enhanced' ] );
+                add_action( 'wp_ajax_nopriv_rtbcb_generate_case', [ $this, 'ajax_generate_comprehensive_case_enhanced' ] );
+
+                // Job status handlers
+                add_action( 'wp_ajax_rtbcb_job_status', [ 'RTBCB_Ajax', 'get_job_status' ] );
+                add_action( 'wp_ajax_nopriv_rtbcb_job_status', [ 'RTBCB_Ajax', 'get_job_status' ] );
+
+                // Streamed analysis handler
+                add_action( 'wp_ajax_rtbcb_stream_analysis', [ 'RTBCB_Ajax', 'stream_analysis' ] );
+                add_action( 'wp_ajax_nopriv_rtbcb_stream_analysis', [ 'RTBCB_Ajax', 'stream_analysis' ] );
+
+                // OpenAI proxy handlers
+                add_action( 'wp_ajax_rtbcb_openai_responses', 'rtbcb_proxy_openai_responses' );
+                add_action( 'wp_ajax_nopriv_rtbcb_openai_responses', 'rtbcb_proxy_openai_responses' );
 		
 		// Debug handlers
 		$this->init_hooks_debug();
@@ -979,7 +983,7 @@ return $use_comprehensive;
         *     @type array          $rag_context Context chunks used for RAG.
         * }
         */
-       private function generate_business_analysis( $user_inputs, $scenarios, $recommendation ) {
+       private function generate_business_analysis( $user_inputs, $scenarios, $recommendation, $chunk_callback = null ) {
            $start_time = microtime( true );
            $timeout    = absint( rtbcb_get_api_timeout() );
 
@@ -1023,7 +1027,7 @@ return $use_comprehensive;
 
            try {
                $llm    = new RTBCB_LLM();
-               $result = $llm->generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_loader );
+               $result = $llm->generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_loader, $chunk_callback );
 
                if ( is_wp_error( $result ) ) {
                    return [

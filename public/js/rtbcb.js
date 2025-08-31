@@ -216,3 +216,34 @@ document.addEventListener('DOMContentLoaded', function() {
         form.addEventListener('submit', handleSubmit);
     }
 });
+
+/**
+ * Stream analysis chunks to the UI.
+ *
+ * @param {FormData} formData Form data to submit.
+ * @param {Function} onChunk  Callback for each streamed chunk.
+ * @return {Promise<void>} Promise that resolves when streaming completes.
+ */
+export async function rtbcbStreamAnalysis(formData, onChunk) {
+    if (!rtbcbAjax || !rtbcbAjax.ajax_url) {
+        return;
+    }
+    formData.append('action', 'rtbcb_stream_analysis');
+    formData.append('rtbcb_nonce', rtbcbAjax.nonce);
+    const response = await fetch(rtbcbAjax.ajax_url, {
+        method: 'POST',
+        body: formData
+    });
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    while (true) {
+        const { value, done } = await reader.read();
+        if (done) {
+            break;
+        }
+        const chunk = decoder.decode(value);
+        if (typeof onChunk === 'function') {
+            onChunk(chunk);
+        }
+    }
+}

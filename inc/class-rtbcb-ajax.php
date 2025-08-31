@@ -12,21 +12,66 @@ class RTBCB_Ajax {
 	 *
 	 * @return void
 	 */
-	public static function generate_comprehensive_case() {
-		if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
-			wp_send_json_error( __( 'Security check failed.', 'rtbcb' ), 403 );
-			return;
-		}
+        public static function generate_comprehensive_case() {
+                if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
+                        wp_send_json_error( __( 'Security check failed.', 'rtbcb' ), 403 );
+                        return;
+                }
 
-		$user_inputs = self::collect_and_validate_user_inputs();
-		if ( is_wp_error( $user_inputs ) ) {
-			wp_send_json_error( $user_inputs->get_error_message(), 400 );
-			return;
-		}
+                $user_inputs = self::collect_and_validate_user_inputs();
+                if ( is_wp_error( $user_inputs ) ) {
+                        wp_send_json_error( $user_inputs->get_error_message(), 400 );
+                        return;
+                }
 
-		$job_id = RTBCB_Background_Job::enqueue( $user_inputs );
-		wp_send_json_success( [ 'job_id' => $job_id ] );
-	}
+                $job_id = RTBCB_Background_Job::enqueue( $user_inputs );
+                wp_send_json_success( [ 'job_id' => $job_id ] );
+        }
+
+        /**
+         * Stream business analysis chunks via AJAX.
+         *
+         * @return void
+         */
+        public static function stream_analysis() {
+                if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
+                        wp_send_json_error( __( 'Security check failed.', 'rtbcb' ), 403 );
+                        return;
+                }
+
+                $user_inputs = self::collect_and_validate_user_inputs();
+                if ( is_wp_error( $user_inputs ) ) {
+                        wp_send_json_error( $user_inputs->get_error_message(), 400 );
+                        return;
+                }
+
+                nocache_headers();
+                header( 'Content-Type: text/event-stream' );
+                header( 'Cache-Control: no-cache' );
+                header( 'Connection: keep-alive' );
+
+                $scenarios      = RTBCB_Calculator::calculate_roi( $user_inputs );
+                $recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
+
+                $plugin = Real_Treasury_BCB::instance();
+                $method = new ReflectionMethod( Real_Treasury_BCB::class, 'generate_business_analysis' );
+                $method->setAccessible( true );
+
+                $chunk_callback = function( $chunk ) {
+                        echo $chunk; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                        if ( function_exists( 'flush' ) ) {
+                                flush();
+                        }
+                };
+
+                $result = $method->invoke( $plugin, $user_inputs, $scenarios, $recommendation, $chunk_callback );
+
+                echo 'data: ' . wp_json_encode( [ 'type' => 'final', 'payload' => $result ] ) . "\n\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                if ( function_exists( 'flush' ) ) {
+                        flush();
+                }
+                exit;
+        }
 	/**
 	 * Process the basic ROI calculation step.
 	 *

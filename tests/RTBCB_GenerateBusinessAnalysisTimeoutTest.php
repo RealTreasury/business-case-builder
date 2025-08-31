@@ -57,7 +57,7 @@ function rtbcb_log_error( $message, $details = '' ) {
 }
 
 class RTBCB_LLM {
-public function generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context ) {
+public function generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context, $chunk_callback = null ) {
 return $this->call_openai_with_retry( '', '', 0 );
 }
 
@@ -67,7 +67,7 @@ return new WP_Error( 'llm_timeout', 'Request timed out' );
 }
 
 class Real_Treasury_BCB {
-private function generate_business_analysis( $user_inputs, $scenarios, $recommendation ) {
+private function generate_business_analysis( $user_inputs, $scenarios, $recommendation, $chunk_callback = null ) {
 $start_time      = microtime( true );
 $timeout         = rtbcb_get_api_timeout();
 $time_remaining  = static function() use ( $start_time, $timeout ) {
@@ -101,7 +101,7 @@ return [
 
 try {
 $llm    = new RTBCB_LLM();
-$result = $llm->generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_loader );
+$result = $llm->generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_loader, $chunk_callback );
 
 if ( is_wp_error( $result ) ) {
 return [

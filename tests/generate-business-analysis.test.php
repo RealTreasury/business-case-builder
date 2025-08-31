@@ -57,7 +57,7 @@ if ( ! class_exists( 'RTBCB_LLM' ) ) {
 class RTBCB_LLM {
 public static $called = false;
 public static $sleep  = 0;
-public function generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context ) {
+public function generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context, $chunk_callback = null ) {
 self::$called = true;
 if ( is_callable( $rag_context ) ) {
 $rag_context = $rag_context();
@@ -73,7 +73,7 @@ return [ 'executive_summary' => 'summary', 'context_used' => $rag_context ];
 class Real_Treasury_BCB {
 public $fallback_called = false;
 
-private function generate_business_analysis( $user_inputs, $scenarios, $recommendation ) {
+private function generate_business_analysis( $user_inputs, $scenarios, $recommendation, $chunk_callback = null ) {
 $start_time      = microtime( true );
 $timeout         = rtbcb_get_api_timeout();
 $time_remaining  = static function() use ( $start_time, $timeout ) {
@@ -110,7 +110,7 @@ return [
 
 try {
 $llm    = new RTBCB_LLM();
-$result = $llm->generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_loader );
+$result = $llm->generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_loader, $chunk_callback );
 
 if ( is_wp_error( $result ) ) {
 return [
