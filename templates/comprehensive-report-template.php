@@ -465,6 +465,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Initialize interactive elements
         initializeInteractiveFeatures();
+
+        if ( typeof Chart !== 'undefined' && rtbcbReportData?.chartData ) {
+                initializeROIChart();
+        }
 });
 
 document.addEventListener('rtbcbFinalStageComplete', function() {
