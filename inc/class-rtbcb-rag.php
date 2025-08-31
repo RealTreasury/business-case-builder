@@ -189,7 +189,7 @@ class RTBCB_RAG {
             'timeout' => rtbcb_get_api_timeout(),
         ];
 
-        $response = wp_remote_post( $endpoint, $args );
+$response = rtbcb_wp_remote_post_with_retry( $endpoint, $args );
         if ( is_wp_error( $response ) ) {
             return [];
         }

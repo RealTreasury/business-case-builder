@@ -8,16 +8,16 @@ defined( 'ABSPATH' ) || exit;
  */
 
 /**
- * Structured logging for API interactions.
- */
-class RTBCB_Logger {
-    /**
-     * Send a structured log record.
-     *
-     * @param string $event   Event name.
-     * @param array  $context Context data.
-     * @return void
-     */
+         * Structured logging for API interactions.
+         */
+        class RTBCB_Logger {
+            /**
+             * Send a structured log record.
+             *
+             * @param string $event   Event name.
+             * @param array  $context Context data.
+             * @return void
+             */
     public static function log( $event, $context = [] ) {
         $record = [
             'timestamp' => gmdate( 'c' ),
@@ -28,15 +28,15 @@ class RTBCB_Logger {
         error_log( 'RTBCB_LOG: ' . wp_json_encode( $record ) );
 
         $endpoint = sanitize_text_field( get_option( 'rtbcb_log_endpoint', '' ) );
-        if ( $endpoint ) {
-            wp_remote_post(
-                $endpoint,
-                [
-                    'headers' => [ 'Content-Type' => 'application/json' ],
-                    'body'    => wp_json_encode( $record ),
-                    'timeout' => 2,
-                ]
-            );
+                if ( $endpoint ) {
+                        rtbcb_wp_remote_post_with_retry(
+                        $endpoint,
+                        [
+                        'headers' => [ 'Content-Type' => 'application/json' ],
+                        'body'    => wp_json_encode( $record ),
+                        'timeout' => 2,
+                        ]
+                        );
         }
     }
 
