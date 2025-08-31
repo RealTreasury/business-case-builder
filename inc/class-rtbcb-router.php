@@ -47,12 +47,56 @@ class RTBCB_Router {
                 $report_type = sanitize_text_field( wp_unslash( $_POST['report_type'] ) );
             }
 
+            // Perform ROI calculations.
+            $calculations = RTBCB_Calculator::calculate_roi( $form_data );
+
+            $fast_mode = ! empty( $_POST['fast_mode'] ) || get_option( 'rtbcb_fast_mode', 0 );
+            if ( $fast_mode ) {
+                $report_html = $this->get_fast_report_html( $form_data, $calculations );
+
+                $lead_data = array_merge(
+                    $form_data,
+                    [
+                        'roi_low'    => $calculations['conservative']['roi_percentage'] ?? 0,
+                        'roi_base'   => $calculations['base']['roi_percentage'] ?? 0,
+                        'roi_high'   => $calculations['optimistic']['roi_percentage'] ?? 0,
+                        'report_html' => $report_html,
+                    ]
+                );
+
+                $lead_id = RTBCB_Leads::save_lead( $lead_data );
+
+                $upload_dir  = wp_upload_dir();
+                $reports_dir = trailingslashit( $upload_dir['basedir'] ) . 'rtbcb-reports';
+                if ( ! file_exists( $reports_dir ) ) {
+                    wp_mkdir_p( $reports_dir );
+                }
+
+                $filepath = trailingslashit( $reports_dir ) . 'report-' . $lead_id . '.html';
+                file_put_contents( $filepath, $report_html );
+
+                $to      = sanitize_email( $form_data['email'] );
+                $subject = sprintf( __( 'Your Business Case from %s', 'rtbcb' ), get_bloginfo( 'name' ) );
+                $message = __( 'Thank you for using the Business Case Builder. Your report is attached.', 'rtbcb' );
+                wp_mail( $to, $subject, $message, [], [ $filepath ] );
+
+                if ( file_exists( $filepath ) ) {
+                    unlink( $filepath );
+                }
+
+                wp_send_json_success(
+                    [
+                        'message'     => __( 'Business case generated successfully.', 'rtbcb' ),
+                        'report_id'   => $lead_id,
+                        'report_html' => $report_html,
+                    ]
+                );
+                return;
+            }
+
             // Instantiate necessary classes.
             $llm = new RTBCB_LLM();
             $rag = new RTBCB_RAG();
-
-            // Perform calculations.
-            $calculations = RTBCB_Calculator::calculate_roi( $form_data );
 
             // Generate context from RAG.
             $rag_context = $rag->get_context( $form_data['company_description'] );
@@ -231,6 +275,31 @@ class RTBCB_Router {
 
         return wp_kses( $html, rtbcb_get_report_allowed_html() );
     }
+
+	/**
+	 * Generate fast mode report HTML.
+	 *
+	 * @param array $form_data   Form data.
+	 * @param array $calculations ROI calculations.
+	 *
+	 * @return string Report HTML.
+	 */
+	public function get_fast_report_html( $form_data, $calculations ) {
+		$template_path = RTBCB_DIR . 'templates/fast-report-template.php';
+		
+		if ( ! file_exists( $template_path ) ) {
+			return '';
+		}
+		
+		$form_data    = is_array( $form_data ) ? $form_data : [];
+		$calculations = is_array( $calculations ) ? $calculations : [];
+		
+		ob_start();
+		include $template_path;
+		$html = ob_get_clean();
+		
+		return wp_kses( $html, rtbcb_get_report_allowed_html() );
+	}
 
    /**
     * Generate comprehensive report HTML from template with proper data transformation.

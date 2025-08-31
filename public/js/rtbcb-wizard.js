@@ -460,6 +460,8 @@ class BusinessCaseBuilder {
         if (typeof rtbcbAjax !== 'undefined' && rtbcbAjax.nonce) {
             formData.append('rtbcb_nonce', rtbcbAjax.nonce);
         }
+        const fastMode = this.form.querySelector('#fast_mode');
+        formData.append('fast_mode', fastMode && fastMode.checked ? '1' : '0');
         return formData;
     }
 
