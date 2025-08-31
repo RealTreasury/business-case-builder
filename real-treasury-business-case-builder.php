@@ -887,7 +887,7 @@ return $use_comprehensive;
 				wp_send_json_error( [ 'message' => __( 'A system error occurred. Please contact support.', 'rtbcb' ) ], 500 );
 			}
 		}
-	
+
 	/**
 	 * Collect and validate user inputs from POST data.
 	 */
@@ -895,11 +895,11 @@ return $use_comprehensive;
 	// Get company data
 	$company      = rtbcb_get_current_company();
 	$company_name = sanitize_text_field( wp_unslash( $_POST['company_name'] ?? '' ) );
-	
+
 	if ( empty( $company_name ) && ! empty( $company['name'] ) ) {
 	$company_name = $company['name'];
 	}
-	
+
 		$raw_hours_reconciliation   = wp_unslash( $_POST['hours_reconciliation'] ?? '' );
 		$raw_hours_cash_positioning = wp_unslash( $_POST['hours_cash_positioning'] ?? '' );
 		$raw_num_banks              = wp_unslash( $_POST['num_banks'] ?? '' );
@@ -919,18 +919,18 @@ return $use_comprehensive;
 		'implementation_timeline'=> sanitize_text_field( wp_unslash( $_POST['implementation_timeline'] ?? '' ) ),
 		'budget_range'           => sanitize_text_field( wp_unslash( $_POST['budget_range'] ?? '' ) ),
 		];
-	
+
 	// Validate required fields
 	$validation_errors = [];
-	
+
 	if ( empty( $user_inputs['email'] ) || ! is_email( $user_inputs['email'] ) ) {
 	$validation_errors[] = __( 'Please enter a valid email address.', 'rtbcb' );
 	}
-	
+
 	if ( empty( $user_inputs['company_name'] ) ) {
 	$validation_errors[] = __( 'Please enter your company name.', 'rtbcb' );
 	}
-	
+
 		if ( '' !== $raw_hours_reconciliation && ! is_numeric( $raw_hours_reconciliation ) ) {
 				$validation_errors[] = __( 'Please enter valid reconciliation hours.', 'rtbcb' );
 		} elseif ( $user_inputs['hours_reconciliation'] < 0 ) {
@@ -949,14 +949,14 @@ return $use_comprehensive;
 				$validation_errors[] = __( 'Please enter valid FTEs.', 'rtbcb' );
 		}
 
-	
+
 	if ( ! empty( $validation_errors ) ) {
 	return new WP_Error( 'validation_failed', implode( ' ', $validation_errors ) );
 	}
-	
+
 	return $user_inputs;
 	}
-	
+
 	/**
 	 * Get RAG context for enhanced analysis.
 	 */
@@ -964,7 +964,7 @@ return $use_comprehensive;
 	if ( ! class_exists( 'RTBCB_RAG' ) ) {
 	return [];
 	}
-	
+
 	try {
 		$rag          = new RTBCB_RAG();
 		$search_query = implode(
@@ -1001,7 +1001,7 @@ return $use_comprehensive;
 	return [];
 	}
 	}
-	
+
 	   /**
 		* Generate comprehensive business analysis using LLM.
 		*
@@ -1100,14 +1100,14 @@ return $use_comprehensive;
 			   ];
 		   }
 	   }
-	
+
 	/**
 	 * Generate fallback analysis when LLM is unavailable.
 	 */
 	private function generate_fallback_analysis( $user_inputs, $scenarios ) {
 	$company_name = $user_inputs['company_name'];
 	$base_roi     = $scenarios['base']['total_annual_benefit'] ?? 0;
-	
+
 	return [
 	'executive_summary' => sprintf(
 	__( '%s has significant opportunities to improve treasury operations through technology automation. Based on current processes, implementing a modern treasury management system could deliver substantial ROI while reducing operational risk.', 'rtbcb' ),
@@ -1140,7 +1140,7 @@ return $use_comprehensive;
 		'enhanced_fallback' => true,
 		];
 	}
-	
+
 	/**
 	 * Save lead data to database.
 	 */
@@ -1148,7 +1148,7 @@ return $use_comprehensive;
 	if ( ! class_exists( 'RTBCB_Leads' ) ) {
 	return null;
 	}
-	
+
 	try {
 	$lead_data = [
 	'email'                  => $user_inputs['email'],
@@ -1166,14 +1166,14 @@ return $use_comprehensive;
 	'roi_high'               => $scenarios['optimistic']['total_annual_benefit'] ?? 0,
 	'report_html'            => $report_html,
 	];
-	
+
 	return RTBCB_Leads::save_lead( $lead_data );
 	} catch ( Exception $e ) {
 	rtbcb_log_error( 'Failed to save lead', $e->getMessage() );
 	return null;
 	}
 	}
-	
+
 	/**
 	 * Format scenarios for JSON response.
 	 */
@@ -1207,8 +1207,8 @@ return $use_comprehensive;
 
 		return $formatted;
 	}
-	
-	
+
+
 		/**
 	 * Debug wrapper for comprehensive case generation AJAX handler.
 	 */

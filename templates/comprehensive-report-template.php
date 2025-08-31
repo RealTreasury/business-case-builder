@@ -1,14 +1,14 @@
 <?php
 /**
 * Enhanced Comprehensive Report Template
-* 
+*
 * This template now handles structured data from the refactored workflow
 * and generates a modern dashboard-style interface with:
 * - Interactive charts and metrics
 * - Collapsible sections
 * - Enhanced visual design
 * - Mobile-responsive layout
-* 
+*
 * @package RealTreasuryBusinessCaseBuilder
 * @var array $report_data Structured report data from the new workflow
 */
@@ -35,7 +35,7 @@ $processing_time = $metadata['processing_time'] ?? 0;
 ?>
 
 <div class="rtbcb-enhanced-report" data-company="<?php echo esc_attr( $company_name ); ?>">
-	
+
 	<!-- Enhanced Report Header with Metrics Dashboard -->
 	<div class="rtbcb-report-header-enhanced">
 		<div class="rtbcb-header-content">
@@ -48,12 +48,12 @@ $processing_time = $metadata['processing_time'] ?? 0;
 						<span class="rtbcb-confidence-text"><?php echo esc_html( $confidence_level ); ?>% <?php echo esc_html__( 'Confidence', 'rtbcb' ); ?></span>
 					</div>
 				</div>
-				
+
 				<h1 class="rtbcb-report-title-enhanced">
-					<?php echo esc_html( $company_name ); ?> 
+					<?php echo esc_html( $company_name ); ?>
 					<span class="rtbcb-title-subtitle"><?php echo esc_html__( 'Treasury Technology Business Case', 'rtbcb' ); ?></span>
 				</h1>
-				
+
 				<div class="rtbcb-report-meta-enhanced">
 					<div class="rtbcb-meta-item">
 						<span class="rtbcb-meta-icon">📅</span>
@@ -142,11 +142,11 @@ $processing_time = $metadata['processing_time'] ?? 0;
 			</h2>
 			<div class="rtbcb-business-case-strength-enhanced <?php echo esc_attr( strtolower( $executive_summary['business_case_strength'] ?? 'strong' ) ); ?>">
 				<span class="rtbcb-strength-indicator"></span>
-				<?php echo esc_html( $executive_summary['business_case_strength'] ?? esc_html__( 'Strong', 'rtbcb' ) ); ?> 
+				<?php echo esc_html( $executive_summary['business_case_strength'] ?? esc_html__( 'Strong', 'rtbcb' ) ); ?>
 				<?php echo esc_html__( 'Business Case', 'rtbcb' ); ?>
 			</div>
 		</div>
-		
+
 		<div class="rtbcb-section-content">
 			<?php if ( ! empty( $executive_summary['strategic_positioning'] ) ) : ?>
 				<div class="rtbcb-strategic-positioning-enhanced">
@@ -203,7 +203,7 @@ $processing_time = $metadata['processing_time'] ?? 0;
 				<span class="rtbcb-toggle-arrow">▼</span>
 			</button>
 		</div>
-		
+
 		<div id="financial-content" class="rtbcb-section-content">
 				<!-- ROI Scenarios Chart -->
 				<?php if ( $enable_charts ) : ?>
@@ -296,7 +296,7 @@ $processing_time = $metadata['processing_time'] ?? 0;
 				<?php echo esc_html__( 'AI Enriched', 'rtbcb' ); ?>
 			</div>
 		</div>
-		
+
 		<div class="rtbcb-section-content">
 			<div class="rtbcb-intelligence-grid">
 				<?php if ( ! empty( $company_intelligence['enriched_profile'] ) ) : ?>
@@ -306,7 +306,7 @@ $processing_time = $metadata['processing_time'] ?? 0;
 							<?php if ( ! empty( $company_intelligence['enriched_profile']['enhanced_description'] ) ) : ?>
 								<p><?php echo esc_html( $company_intelligence['enriched_profile']['enhanced_description'] ); ?></p>
 							<?php endif; ?>
-							
+
 							<?php if ( ! empty( $company_intelligence['enriched_profile']['treasury_maturity'] ) ) : ?>
 								<div class="rtbcb-maturity-assessment">
 									<h4><?php echo esc_html__( 'Treasury Maturity Assessment', 'rtbcb' ); ?></h4>
@@ -330,7 +330,7 @@ $processing_time = $metadata['processing_time'] ?? 0;
 									<span><?php echo esc_html( $company_intelligence['industry_context']['sector_analysis']['market_dynamics'] ); ?></span>
 								</div>
 							<?php endif; ?>
-							
+
 							<?php if ( ! empty( $company_intelligence['industry_context']['benchmarking']['technology_penetration'] ) ) : ?>
 								<div class="rtbcb-insight-item">
 									<strong><?php echo esc_html__( 'Technology Adoption:', 'rtbcb' ); ?></strong>
@@ -356,7 +356,7 @@ $processing_time = $metadata['processing_time'] ?? 0;
 				<?php echo esc_html__( 'Implementation Action Plan', 'rtbcb' ); ?>
 			</h2>
 		</div>
-		
+
 		<div class="rtbcb-section-content">
 			<div class="rtbcb-timeline-container">
 				<?php if ( ! empty( $action_plan['immediate_steps'] ) ) : ?>
@@ -439,7 +439,7 @@ $processing_time = $metadata['processing_time'] ?? 0;
 					<?php echo esc_html__( 'AI-Enhanced Treasury Technology Analysis', 'rtbcb' ); ?>
 				</div>
 			</div>
-			
+
 			<div class="rtbcb-footer-actions">
 				<button type="button" class="rtbcb-action-button primary" onclick="window.print()">
 					<span class="rtbcb-button-icon">🖨️</span>
@@ -451,10 +451,10 @@ $processing_time = $metadata['processing_time'] ?? 0;
 				</button>
 			</div>
 		</div>
-		
+
 		<div class="rtbcb-footer-meta">
 			<div class="rtbcb-disclaimer-enhanced">
-				<p><strong><?php echo esc_html__( 'Analysis Disclaimer:', 'rtbcb' ); ?></strong> 
+				<p><strong><?php echo esc_html__( 'Analysis Disclaimer:', 'rtbcb' ); ?></strong>
 				<?php echo esc_html__( 'This AI-enhanced analysis is based on provided information and industry benchmarks. Results may vary depending on implementation approach and organizational factors. Confidence level reflects data quality and analysis depth.', 'rtbcb' ); ?></p>
 			</div>
 			<div class="rtbcb-footer-stats">
@@ -473,10 +473,10 @@ document.addEventListener('DOMContentLoaded', function() {
 	if (typeof Chart !== 'undefined') {
 		initializeROIChart();
 	}
-	
+
 	// Initialize collapsible sections
 	initializeSectionToggles();
-	
+
 	// Initialize interactive elements
 	initializeInteractiveFeatures();
 });
@@ -528,7 +528,7 @@ function initializeSectionToggles() {
 			const content = document.getElementById(targetId);
 			const arrow = this.querySelector('.rtbcb-toggle-arrow');
 			const text = this.querySelector('.rtbcb-toggle-text');
-			
+
 			if (content) {
 				content.style.display = content.style.display === 'none' ? 'block' : 'none';
 				arrow.textContent = content.style.display === 'none' ? '▼' : '▲';
@@ -544,7 +544,7 @@ function initializeInteractiveFeatures() {
 		section.style.animationDelay = (index * 0.1) + 's';
 		section.classList.add('rtbcb-fade-in');
 	});
-	
+
 	// Add click handlers for metric cards
 	document.querySelectorAll('.rtbcb-metric-card').forEach(card => {
 		card.addEventListener('click', function() {

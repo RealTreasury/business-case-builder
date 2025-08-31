@@ -75,12 +75,12 @@ class BusinessCaseBuilder {
         this.nextBtn = this.form.querySelector('.rtbcb-nav-next');
         this.prevBtn = this.form.querySelector('.rtbcb-nav-prev');
         this.submitBtn = this.form.querySelector('.rtbcb-nav-submit');
-        
+
         // Steps
         this.steps = this.form.querySelectorAll('.rtbcb-wizard-step');
         this.progressSteps = this.form.querySelectorAll('.rtbcb-progress-step');
         this.progressLine = this.form.querySelector('.rtbcb-progress-line');
-        
+
         // Form fields by step
         this.stepFields = {
             1: ['company_name', 'company_size', 'industry'],
@@ -341,7 +341,7 @@ class BusinessCaseBuilder {
     updateProgressIndicator() {
         this.progressSteps.forEach((step, index) => {
             const stepNum = index + 1;
-            
+
             if (stepNum < this.currentStep) {
                 step.classList.add('completed');
                 step.classList.remove('active');
@@ -370,7 +370,7 @@ class BusinessCaseBuilder {
         if (event && event.preventDefault) {
             event.preventDefault();
         }
-        
+
         if (!this.ajaxUrl) {
             this.showEnhancedError('Service unavailable. Please reload the page.');
             return;
@@ -395,7 +395,7 @@ class BusinessCaseBuilder {
             });
 
             console.log('RTBCB: Response status:', response.status);
-            
+
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
@@ -732,9 +732,9 @@ categoryContainer.style.display = 'block';
         this.initializeEnhancedReport(resultsContainer);
 
         // Smooth scroll to results
-        resultsContainer.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'start' 
+        resultsContainer.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
         });
     }
 
@@ -909,7 +909,7 @@ categoryContainer.style.display = 'block';
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                return context.dataset.label + ': $' + 
+                                return context.dataset.label + ': $' +
                                        new Intl.NumberFormat().format(context.raw);
                             }
                         }
@@ -1036,7 +1036,7 @@ categoryContainer.style.display = 'block';
     showResults(data) {
         console.log('RTBCB: Processing structured data results');
         this.hideLoading();
-        
+
         // Map nested report data to expected structure
         const mapped = {
             companyName: data.company_name || data.metadata?.company_name || 'Your Company',

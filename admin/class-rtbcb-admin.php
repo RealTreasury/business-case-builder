@@ -376,7 +376,7 @@ class RTBCB_Admin {
 	public function render_analytics() {
 		$stats = RTBCB_Leads::get_cached_statistics();
 		$monthly_trends = $this->get_monthly_trends();
-		
+
 		include RTBCB_DIR . 'admin/analytics-page.php';
 	}
 
@@ -562,10 +562,10 @@ class RTBCB_Admin {
 		}
 
 		$lead_id = intval( wp_unslash( $_POST['lead_id'] ?? 0 ) );
-		
+
 		global $wpdb;
 		$table_name = $wpdb->prefix . 'rtbcb_leads';
-		
+
 		$result = $wpdb->delete( $table_name, [ 'id' => $lead_id ], [ '%d' ] );
 
 		if ( $result ) {
@@ -607,13 +607,13 @@ class RTBCB_Admin {
 
 	switch ( $bulk_action ) {
 			case 'delete':
-				$result = $wpdb->query( 
-					$wpdb->prepare( 
-						"DELETE FROM {$table_name} WHERE id IN ({$placeholders})", 
-						$lead_ids 
-					) 
+				$result = $wpdb->query(
+					$wpdb->prepare(
+						"DELETE FROM {$table_name} WHERE id IN ({$placeholders})",
+						$lead_ids
+					)
 				);
-				
+
 				if ( $result ) {
 					rtbcb_clear_report_cache();
 					wp_send_json_success( [
@@ -1000,7 +1000,7 @@ class RTBCB_Admin {
 	 */
 	public function ajax_test_real_treasury_overview() {
 		check_ajax_referer( 'rtbcb_test_real_treasury_overview', 'nonce' );
-		
+
 		$include_portal = isset( $_POST['include_portal'] ) ? (bool) intval( wp_unslash( $_POST['include_portal'] ) ) : false;
 		$categories     = isset( $_POST['categories'] ) ? (array) wp_unslash( $_POST['categories'] ) : [];
 		$categories     = array_filter( array_map( 'sanitize_text_field', $categories ) );
@@ -1549,11 +1549,11 @@ class RTBCB_Admin {
 		$table_name = $wpdb->prefix . 'rtbcb_leads';
 
 		$results = $wpdb->get_results(
-			"SELECT 
+			"SELECT
 				DATE_FORMAT(created_at, '%Y-%m') as month,
 				COUNT(*) as leads,
 				AVG(roi_base) as avg_roi
-			 FROM {$table_name} 
+			 FROM {$table_name}
 			 WHERE created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
 			 GROUP BY DATE_FORMAT(created_at, '%Y-%m')
 			 ORDER BY month",
@@ -1894,7 +1894,7 @@ class RTBCB_Admin {
 		},
 		$raw_history
 		);
-		
+
 		wp_send_json_success(
 		[
 		'history' => $history,
