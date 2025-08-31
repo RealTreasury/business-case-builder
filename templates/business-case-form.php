@@ -444,6 +444,10 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                     <div class="rtbcb-progress-spinner"></div>
                     <div class="rtbcb-progress-text"><?php esc_html_e( 'Generating your business case. It will arrive by email shortly...', 'rtbcb' ); ?></div>
                 </div>
+                <div id="rtbcb-provisional-container" class="rtbcb-provisional-data" style="display:none;">
+                    <div id="rtbcb-provisional-roi"></div>
+                    <div id="rtbcb-provisional-category"></div>
+                </div>
             </div>
         </div>
     </div>

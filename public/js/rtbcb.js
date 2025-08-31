@@ -165,6 +165,35 @@ async function handleSubmit(e) {
     pollJobStatus(result.data.job_id, progressContainer, formContainer);
 }
 
+function rtbcb_render_provisional(data) {
+    const container = document.getElementById('rtbcb-provisional-container');
+    if (!container) {
+        return;
+    }
+
+    let show = false;
+
+    if (typeof data.basic_roi !== 'undefined') {
+        const roiEl = document.getElementById('rtbcb-provisional-roi');
+        if (roiEl) {
+            roiEl.textContent = 'ROI: ' + data.basic_roi;
+            show = true;
+        }
+    }
+
+    if (typeof data.category !== 'undefined') {
+        const catEl = document.getElementById('rtbcb-provisional-category');
+        if (catEl) {
+            catEl.textContent = 'Category: ' + data.category;
+            show = true;
+        }
+    }
+
+    if (show) {
+        container.style.display = 'block';
+    }
+}
+
 async function pollJobStatus(jobId, progressContainer, formContainer) {
     try {
         const response = await fetch(`${rtbcbAjax.ajax_url}?action=rtbcb_job_status&job_id=${encodeURIComponent(jobId)}&rtbcb_nonce=${rtbcbAjax.nonce}`);
@@ -200,6 +229,7 @@ async function pollJobStatus(jobId, progressContainer, formContainer) {
             handleSubmissionError(statusData.message || 'Job failed.', '');
             rtbcbIsSubmitting = false;
         } else {
+            rtbcb_render_provisional(statusData);
             setTimeout(() => pollJobStatus(jobId, progressContainer, formContainer), 2000);
         }
     } catch (err) {

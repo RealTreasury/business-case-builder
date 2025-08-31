@@ -540,6 +540,10 @@ class BusinessCaseBuilder {
                         <span class="rtbcb-progress-step-text">Analyzing ${this.escapeHTML(companyName)}'s treasury operations...</span>
                     </div>
                 </div>
+                <div id="rtbcb-provisional-container" class="rtbcb-provisional-data" style="display:none;">
+                    <div id="rtbcb-provisional-roi"></div>
+                    <div id="rtbcb-provisional-category"></div>
+                </div>
             `;
             progressContainer.style.display = 'flex';
         }
@@ -598,12 +602,41 @@ class BusinessCaseBuilder {
             } else if (status === 'error') {
                 this.handleError({ message: statusData.message || 'Job failed', type: 'job_error' });
             } else {
-                // Continue polling
+                this.updateProvisional(statusData);
                 setTimeout(() => this.pollJob(jobId, startTime, attempt + 1), 2000);
             }
         } catch (error) {
             console.error('RTBCB: Job polling error:', error);
             this.handleError({ message: error.message || 'An unexpected error occurred', type: 'polling_error' });
+        }
+    }
+
+    updateProvisional(data) {
+        const container = document.getElementById('rtbcb-provisional-container');
+        if (!container) {
+            return;
+        }
+
+        let show = false;
+
+        if (typeof data.basic_roi !== 'undefined') {
+            const roiEl = document.getElementById('rtbcb-provisional-roi');
+            if (roiEl) {
+                roiEl.textContent = `ROI: ${data.basic_roi}`;
+                show = true;
+            }
+        }
+
+        if (typeof data.category !== 'undefined') {
+            const catEl = document.getElementById('rtbcb-provisional-category');
+            if (catEl) {
+                catEl.textContent = `Category: ${data.category}`;
+                show = true;
+            }
+        }
+
+        if (show) {
+            container.style.display = 'block';
         }
     }
 
