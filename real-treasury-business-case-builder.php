@@ -286,6 +286,13 @@ class Real_Treasury_BCB {
         }
 
         add_action( 'rtbcb_cleanup_data', [ $this, 'scheduled_data_cleanup' ] );
+
+        // Schedule lead statistics refresh
+        if ( ! wp_next_scheduled( 'rtbcb_update_lead_stats' ) ) {
+            wp_schedule_event( time(), 'hourly', 'rtbcb_update_lead_stats' );
+        }
+
+        add_action( 'rtbcb_update_lead_stats', [ 'RTBCB_Leads', 'update_statistics_cache' ] );
     }
 
     /**
@@ -2223,6 +2230,7 @@ return $use_comprehensive;
         // Clear scheduled events
         wp_clear_scheduled_hook( 'rtbcb_rebuild_rag_index' );
         wp_clear_scheduled_hook( 'rtbcb_cleanup_data' );
+        wp_clear_scheduled_hook( 'rtbcb_update_lead_stats' );
 
         // Flush rewrite rules
         flush_rewrite_rules();
@@ -2424,7 +2432,7 @@ if ( ! function_exists( 'rtbcb_get_leads_count' ) ) {
      * @return int
      */
     function rtbcb_get_leads_count() {
-        $stats = RTBCB_Leads::get_statistics();
+        $stats = RTBCB_Leads::get_cached_statistics();
         return intval( $stats['total_leads'] ?? 0 );
     }
 }
@@ -2436,7 +2444,7 @@ if ( ! function_exists( 'rtbcb_get_average_roi' ) ) {
      * @return float
      */
     function rtbcb_get_average_roi() {
-        $stats = RTBCB_Leads::get_statistics();
+        $stats = RTBCB_Leads::get_cached_statistics();
         return floatval( $stats['average_roi']['avg_base'] ?? 0 );
     }
 }

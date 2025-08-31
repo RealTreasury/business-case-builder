@@ -15,6 +15,9 @@ $size_stats = $stats['by_company_size'] ?? [];
 $roi_stats = $stats['average_roi'] ?? [];
 $leads = $recent_leads_data['leads'] ?? [];
 
+// $stats comes from cached metrics to reduce database load.
+
+
 // System health checks
 $api_key       = get_option( 'rtbcb_openai_api_key' );
 $api_key_configured = ! empty( $api_key );

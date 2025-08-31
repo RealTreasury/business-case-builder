@@ -9,6 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 $categories = RTBCB_Category_Recommender::get_all_categories();
+// $stats is populated from cached metrics to avoid expensive queries.
 $total_leads = $stats['total_leads'] ?? 0;
 $recent_leads = $stats['recent_leads'] ?? 0;
 $category_stats = $stats['by_category'] ?? [];

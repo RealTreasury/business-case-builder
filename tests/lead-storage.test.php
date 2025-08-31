@@ -65,6 +65,16 @@ return $text;
 }
 }
 
+if ( ! function_exists( 'get_option' ) ) {
+function get_option( $name, $default = false ) {
+    return $GLOBALS['rtbcb_test_options'][ $name ] ?? $default;
+}
+function update_option( $name, $value ) {
+    $GLOBALS['rtbcb_test_options'][ $name ] = $value;
+    return true;
+}
+}
+
 class WPDB_Memory {
     public $prefix = '';
     public $insert_id = 0;
@@ -221,6 +231,12 @@ exit( 1 );
 
 if ( 1000.0 !== (float) ( $retrieved['roi_low'] ?? 0 ) || 2000.0 !== (float) ( $retrieved['roi_base'] ?? 0 ) || 3000.0 !== (float) ( $retrieved['roi_high'] ?? 0 ) ) {
 echo "ROI mismatch\n";
+exit( 1 );
+}
+
+$stats_cache = get_option( 'rtbcb_lead_stats', [] );
+if ( 1 !== intval( $stats_cache['total_leads'] ?? 0 ) ) {
+echo "Stats cache not updated\n";
 exit( 1 );
 }
 

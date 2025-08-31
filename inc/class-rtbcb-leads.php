@@ -233,6 +233,7 @@ class RTBCB_Leads {
                     return false;
                 }
 
+                self::update_statistics_cache();
                 return intval( $existing_lead['id'] );
             } else {
                 // Insert new lead
@@ -246,7 +247,7 @@ class RTBCB_Leads {
                     error_log( 'RTBCB: Database insert failed: ' . $wpdb->last_error );
                     return false;
                 }
-
+                self::update_statistics_cache();
                 return $wpdb->insert_id;
             }
         } catch ( Exception $e ) {
@@ -363,52 +364,88 @@ class RTBCB_Leads {
     }
 
     /**
-     * Get lead statistics.
+     * Compute statistics directly from the database.
      *
      * @return array Statistics data.
      */
-    public static function get_statistics() {
+    private static function compute_statistics() {
         global $wpdb;
 
         $stats = [];
 
-        // Total leads
-        $stats['total_leads'] = $wpdb->get_var( "SELECT COUNT(*) FROM " . self::$table_name );
+        // Total leads.
+        $stats['total_leads'] = $wpdb->get_var( 'SELECT COUNT(*) FROM ' . self::$table_name );
 
-        // Leads by category
+        // Leads by category.
         $category_stats = $wpdb->get_results(
-            "SELECT recommended_category, COUNT(*) as count FROM " . self::$table_name . " 
-             WHERE recommended_category != '' 
+            "SELECT recommended_category, COUNT(*) as count FROM " . self::$table_name . "
+             WHERE recommended_category != ''
              GROUP BY recommended_category",
             ARRAY_A
         );
         $stats['by_category'] = $category_stats;
 
-        // Leads by company size
+        // Leads by company size.
         $size_stats = $wpdb->get_results(
-            "SELECT company_size, COUNT(*) as count FROM " . self::$table_name . " 
-             WHERE company_size != '' 
+            "SELECT company_size, COUNT(*) as count FROM " . self::$table_name . "
+             WHERE company_size != ''
              GROUP BY company_size",
             ARRAY_A
         );
         $stats['by_company_size'] = $size_stats;
 
-        // Average ROI
+        // Average ROI.
         $roi_stats = $wpdb->get_row(
-            "SELECT AVG(roi_low) as avg_low, AVG(roi_base) as avg_base, AVG(roi_high) as avg_high 
-             FROM " . self::$table_name . " 
+            "SELECT AVG(roi_low) as avg_low, AVG(roi_base) as avg_base, AVG(roi_high) as avg_high
+             FROM " . self::$table_name . "
              WHERE roi_base > 0",
             ARRAY_A
         );
         $stats['average_roi'] = $roi_stats;
 
-        // Recent activity (last 30 days)
+        // Recent activity (last 30 days).
         $stats['recent_leads'] = $wpdb->get_var(
-            "SELECT COUNT(*) FROM " . self::$table_name . " 
+            "SELECT COUNT(*) FROM " . self::$table_name . "
              WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)"
         );
 
         return $stats;
+    }
+
+    /**
+     * Update the cached statistics option.
+     *
+     * @return void
+     */
+    public static function update_statistics_cache() {
+        $stats = self::compute_statistics();
+        update_option( 'rtbcb_lead_stats', $stats );
+    }
+
+    /**
+     * Retrieve cached lead statistics, generating them if missing.
+     *
+     * @return array Statistics data.
+     */
+    public static function get_cached_statistics() {
+        $stats = get_option( 'rtbcb_lead_stats', [] );
+        if ( empty( $stats ) || ! is_array( $stats ) ) {
+            self::update_statistics_cache();
+            $stats = get_option( 'rtbcb_lead_stats', [] );
+        }
+
+        return $stats;
+    }
+
+    /**
+     * Retrieve cached statistics (backward compatibility).
+     *
+     * @deprecated Use get_cached_statistics().
+     *
+     * @return array Statistics data.
+     */
+    public static function get_statistics() {
+        return self::get_cached_statistics();
     }
 
     /**
