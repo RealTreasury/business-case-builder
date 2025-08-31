@@ -30,12 +30,16 @@ class RTBCB_Ajax {
 	/**
 	 * Process the basic ROI calculation step.
 	 *
+	 * Obtains a category recommendation and refines ROI scenarios using the
+	 * category's expected investment range.
+	 *
 	 * @param array $user_inputs User inputs.
 	 * @return array ROI block.
 	 */
 	public static function process_basic_roi_step( $user_inputs ) {
-		$roi_scenarios = RTBCB_Calculator::calculate_roi( $user_inputs );
-
+		$recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
+		$roi_scenarios  = RTBCB_Calculator::calculate_category_refined_roi( $user_inputs, $recommendation['category_info'] );
+		
 		return [
 			'financial_analysis' => [
 				'roi_scenarios' => self::format_roi_scenarios( $roi_scenarios ),
@@ -93,15 +97,25 @@ class RTBCB_Ajax {
                                 RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'enhanced_roi' => $roi_scenarios ] );
                         }
 
-			$workflow_tracker->start_step( 'intelligent_recommendations' );
-			$intelligent_recommender = new RTBCB_Intelligent_Recommender();
-			$recommendation          = $intelligent_recommender->recommend_with_ai_insights( $user_inputs, $enriched_profile );
-                        $workflow_tracker->complete_step( 'intelligent_recommendations', $recommendation );
-                        if ( $job_id ) {
-                                RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'category' => $recommendation['recommended'] ] );
-                        }
-
-                        $workflow_tracker->start_step( 'hybrid_rag_analysis' );
+		$workflow_tracker->start_step( 'intelligent_recommendations' );
+		$intelligent_recommender = new RTBCB_Intelligent_Recommender();
+		$recommendation          = $intelligent_recommender->recommend_with_ai_insights( $user_inputs, $enriched_profile );
+		$workflow_tracker->complete_step( 'intelligent_recommendations', $recommendation );
+			if ( $job_id ) {
+			RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'category' => $recommendation['recommended'] ] );
+			}
+		
+		$workflow_tracker->start_step( 'category_refined_roi' );
+		$refined_roi = RTBCB_Calculator::calculate_category_refined_roi( $user_inputs, $recommendation['category_info'] );
+		$refined_roi['sensitivity_analysis'] = $roi_scenarios['sensitivity_analysis'] ?? [];
+		$refined_roi['confidence_metrics']   = $roi_scenarios['confidence_metrics'] ?? [];
+		$roi_scenarios                       = $refined_roi;
+		$workflow_tracker->complete_step( 'category_refined_roi', $roi_scenarios );
+			if ( $job_id ) {
+			RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'refined_roi' => $roi_scenarios ] );
+		}
+		
+		$workflow_tracker->start_step( 'hybrid_rag_analysis' );
                         if ( $enable_ai ) {
                                 $rag_baseline = [];
                                 if ( class_exists( 'RTBCB_RAG' ) ) {
