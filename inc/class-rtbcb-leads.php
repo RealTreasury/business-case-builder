@@ -152,6 +152,34 @@ class RTBCB_Leads {
             } );
         }
     }
+	/**
+	 * Add missing indexes to the leads table.
+	 *
+	 * Ensures unique and secondary indexes exist for commonly queried fields.
+	 *
+	 * @return void
+	 */
+	public static function add_missing_indexes() {
+		global $wpdb;
+
+		self::$table_name = $wpdb->prefix . 'rtbcb_leads';
+
+		$indexes     = $wpdb->get_results( 'SHOW INDEX FROM ' . self::$table_name, ARRAY_A );
+		$index_names = wp_list_pluck( $indexes, 'Key_name' );
+
+		if ( ! in_array( 'email_unique', $index_names, true ) ) {
+			$wpdb->query( 'ALTER TABLE ' . self::$table_name . ' ADD UNIQUE KEY email_unique (email)' );
+		}
+
+		if ( ! in_array( 'created_at_index', $index_names, true ) ) {
+			$wpdb->query( 'ALTER TABLE ' . self::$table_name . ' ADD KEY created_at_index (created_at)' );
+		}
+
+		if ( ! in_array( 'recommended_category_index', $index_names, true ) ) {
+			$wpdb->query( 'ALTER TABLE ' . self::$table_name . ' ADD KEY recommended_category_index (recommended_category)' );
+		}
+	}
+
 
     /**
      * Save a lead to the database.
