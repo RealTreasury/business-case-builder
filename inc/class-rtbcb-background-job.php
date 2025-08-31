@@ -6,33 +6,50 @@ defined( 'ABSPATH' ) || exit;
  *
  * @package RealTreasuryBusinessCaseBuilder
  */
-
 class RTBCB_Background_Job {
 /**
  * Update job status data.
  *
+ * Accumulates partial results in the `result` field while also
+ * updating meta fields such as step, message, or percent.
+ *
  * @param string $job_id Job identifier.
- * @param string $status  New status.
- * @param array  $extra   Extra data such as step, message, percent, or result.
+ * @param string $state  New state string.
+ * @param array  $payload Additional data including partial results.
  * @return void
  */
-public static function update_status( $job_id, $status, $extra = [] ) {
+public static function update_status( $job_id, $state, $payload = [] ) {
 $current = get_transient( $job_id );
 if ( ! is_array( $current ) ) {
 $current = [];
 }
 
-$new_data = array_merge( $current, $extra, [ 'status' => $status ] );
-set_transient( $job_id, $new_data, HOUR_IN_SECONDS );
+$meta_keys  = [ 'step', 'message', 'percent' ];
+$meta_data  = array_intersect_key( $payload, array_flip( $meta_keys ) );
+$partial    = array_diff_key( $payload, array_flip( $meta_keys ) );
+$prior      = isset( $current['result'] ) && is_array( $current['result'] ) ? $current['result'] : [];
+$new_result = array_merge( $prior, $partial );
+
+$new_payload = array_merge(
+$current,
+$meta_data,
+[
+'status' => $state,
+'result' => $new_result,
+]
+);
+
+set_transient( $job_id, $new_payload, HOUR_IN_SECONDS );
 }
-	/**
-	 * Enqueue a case generation job.
-	 *
-	 * @param array $user_inputs Sanitized user inputs.
-	 * @return string Job ID.
-	 */
-	public static function enqueue( $user_inputs ) {
-		$job_id = uniqid( 'rtbcb_job_', true );
+
+/**
+ * Enqueue a case generation job.
+ *
+ * @param array $user_inputs Sanitized user inputs.
+ * @return string Job ID.
+ */
+public static function enqueue( $user_inputs ) {
+$job_id = uniqid( 'rtbcb_job_', true );
 
 self::update_status(
 $job_id,
@@ -42,28 +59,28 @@ $job_id,
 ]
 );
 
-                wp_schedule_single_event(
-                        time(),
-                        'rtbcb_process_job',
-                        [ $job_id, $user_inputs ]
-                );
+wp_schedule_single_event(
+time(),
+'rtbcb_process_job',
+[ $job_id, $user_inputs ]
+);
 
-		// Trigger cron immediately in a non-blocking way.
-		if ( function_exists( 'spawn_cron' ) && ! wp_doing_cron() ) {
-			spawn_cron();
-		}
+// Trigger cron immediately in a non-blocking way.
+if ( function_exists( 'spawn_cron' ) && ! wp_doing_cron() ) {
+spawn_cron();
+}
 
-                return $job_id;
-        }
+return $job_id;
+}
 
-	/**
-	 * Process a queued job.
-	 *
-	 * @param string $job_id      Job identifier.
-	 * @param array  $user_inputs User inputs.
-	 * @return void
-	 */
-	public static function process_job( $job_id, $user_inputs ) {
+/**
+ * Process a queued job.
+ *
+ * @param string $job_id      Job identifier.
+ * @param array  $user_inputs User inputs.
+ * @return void
+ */
+public static function process_job( $job_id, $user_inputs ) {
 self::update_status( $job_id, 'processing' );
 
 add_action(
@@ -91,7 +108,7 @@ $job_id,
 1
 );
 
-$result = RTBCB_Ajax::process_comprehensive_case( $user_inputs );
+$result = RTBCB_Ajax::process_comprehensive_case( $user_inputs, $job_id );
 
 if ( is_wp_error( $result ) ) {
 self::update_status(
@@ -112,22 +129,25 @@ $job_id,
 ]
 );
 }
-	}
+}
 
-	/**
-	 * Get job status data.
-	 *
-	 * @param string $job_id Job identifier.
-	 * @return array|WP_Error Job data or error.
-	 */
-	public static function get_status( $job_id ) {
-		$data = get_transient( $job_id );
+/**
+ * Get job status data.
+ *
+ * @param string $job_id Job identifier.
+ * @return array|WP_Error Job data or error.
+ */
+public static function get_status( $job_id ) {
+$data = get_transient( $job_id );
 
-		if ( false === $data ) {
-			return new WP_Error( 'not_found', __( 'Job not found.', 'rtbcb' ) );
-		}
+if ( false === $data ) {
+return new WP_Error( 'not_found', __( 'Job not found.', 'rtbcb' ) );
+}
 
-return $data;
+$result = isset( $data['result'] ) && is_array( $data['result'] ) ? $data['result'] : [];
+$meta   = array_diff_key( $data, [ 'result' => 1 ] );
+
+return array_merge( $meta, $result );
 }
 
 /**

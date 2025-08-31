@@ -97,8 +97,9 @@ assert_same( 50.0, $data['data']['percent'], 'Percent mismatch' );
 
 $_GET['job_id'] = 'job2';
 RTBCB_Background_Job::$data['job2'] = [
-    'status' => 'completed',
-    'result' => [ 'report_data' => [ 'foo' => 'bar' ], 'lead_id' => 5 ],
+    'status'      => 'completed',
+    'report_data' => [ 'foo' => 'bar' ],
+    'lead_id'     => 5,
 ];
 try {
     RTBCB_Ajax::get_job_status();
