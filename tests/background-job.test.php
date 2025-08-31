@@ -79,6 +79,62 @@ if ( ! defined( 'ABSPATH' ) ) {
     define( 'ABSPATH', __DIR__ . '/' );
 }
 
+if ( ! defined( 'RTBCB_DIR' ) ) {
+    define( 'RTBCB_DIR', __DIR__ . '/../' );
+}
+
+if ( ! function_exists( '__' ) ) {
+    function __( $text, $domain = null ) { return $text; }
+}
+if ( ! function_exists( 'esc_html__' ) ) {
+    function esc_html__( $text, $domain = null ) { return $text; }
+}
+if ( ! function_exists( 'esc_html_e' ) ) {
+    function esc_html_e( $text, $domain = null ) {}
+}
+if ( ! function_exists( 'esc_html' ) ) {
+    function esc_html( $text ) { return $text; }
+}
+if ( ! function_exists( 'esc_attr' ) ) {
+    function esc_attr( $text ) { return $text; }
+}
+if ( ! function_exists( 'sanitize_email' ) ) {
+    function sanitize_email( $email ) { return filter_var( $email, FILTER_SANITIZE_EMAIL ); }
+}
+if ( ! function_exists( 'wp_upload_dir' ) ) {
+    function wp_upload_dir() {
+        return [ 'basedir' => sys_get_temp_dir(), 'baseurl' => 'http://example.com' ];
+    }
+}
+if ( ! function_exists( 'wp_mkdir_p' ) ) {
+    function wp_mkdir_p( $dir ) { if ( ! file_exists( $dir ) ) { mkdir( $dir, 0777, true ); } }
+}
+if ( ! function_exists( 'trailingslashit' ) ) {
+    function trailingslashit( $string ) { return rtrim( $string, '/\\' ) . '/'; }
+}
+if ( ! function_exists( 'sanitize_file_name' ) ) {
+    function sanitize_file_name( $name ) { return preg_replace( '/[^A-Za-z0-9\-_]/', '', $name ); }
+}
+if ( ! function_exists( 'wp_kses_allowed_html' ) ) {
+    function wp_kses_allowed_html( $context = null ) { return []; }
+}
+if ( ! function_exists( 'wp_kses' ) ) {
+    function wp_kses( $html, $allowed_html = [] ) { return $html; }
+}
+if ( ! function_exists( 'current_time' ) ) {
+    function current_time( $type ) { return date( 'Y-m-d' ); }
+}
+if ( ! function_exists( 'wp_mail' ) ) {
+    $sent_mail = [];
+    function wp_mail( $to, $subject, $message, $headers = [], $attachments = [] ) {
+        global $sent_mail;
+        $sent_mail = [ 'to' => $to, 'subject' => $subject, 'attachments' => $attachments ];
+        return true;
+    }
+}
+
+require_once __DIR__ . '/../inc/helpers.php';
+
 if ( ! class_exists( 'RTBCB_Ajax' ) ) {
     class RTBCB_Ajax {
         public static $mode = 'success';
@@ -86,7 +142,7 @@ if ( ! class_exists( 'RTBCB_Ajax' ) ) {
             if ( 'error' === self::$mode ) {
                 return new WP_Error( 'failed', 'Processing failed.' );
             }
-            return [ 'result' => 'ok' ];
+            return [ 'report_data' => [ 'metadata' => [ 'company_name' => 'Test' ] ] ];
         }
     }
 }
@@ -111,6 +167,9 @@ global $transient_log;
 $statuses = array_column( $transient_log[ $job_id ], 'status' );
 assert_true( $statuses === [ 'queued', 'processing', 'completed' ], 'Status flow incorrect: ' . json_encode( $statuses ) );
 assert_true( 'completed' === get_transient( $job_id )['status'], 'Job not completed' );
+$final = get_transient( $job_id );
+assert_true( ! empty( $final['download_url'] ), 'Download URL missing' );
+assert_true( isset( $sent_mail['to'] ) && 'test@example.com' === $sent_mail['to'], 'Email not sent' );
 
 // Error job flow.
 RTBCB_Ajax::$mode = 'error';

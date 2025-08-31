@@ -144,25 +144,29 @@ class RTBCB_Ajax {
 			return;
 		}
 
-		if (
-			'completed' === ( $status['status'] ?? '' ) &&
-			! empty( $status['result']['report_data'] )
-		) {
-			$result                = $status['result'];
-			$status['report_data'] = $result['report_data'];
-			if ( is_array( $result ) ) {
-				foreach ( $result as $key => $value ) {
-					if ( 'report_data' === $key ) {
-						continue;
-					}
-					$status[ $key ] = $value;
-				}
-			}
-			unset( $status['result'] );
-		}
+               if (
+                       'completed' === ( $status['status'] ?? '' ) &&
+                       ! empty( $status['result']['report_data'] )
+               ) {
+                       $result                = $status['result'];
+                       $status['report_data'] = $result['report_data'];
+                       if ( is_array( $result ) ) {
+                               foreach ( $result as $key => $value ) {
+                                       if ( 'report_data' === $key ) {
+                                               continue;
+                                       }
+                                       $status[ $key ] = $value;
+                               }
+                       }
+                       unset( $status['result'] );
+               }
 
-		wp_send_json_success( $status );
-	}
+               if ( ! empty( $status['download_url'] ) ) {
+                       $status['download_url'] = esc_url_raw( $status['download_url'] );
+               }
+
+               wp_send_json_success( $status );
+       }
 
        private static function collect_and_validate_user_inputs() {
                $validator = new RTBCB_Validator();

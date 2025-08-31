@@ -579,7 +579,7 @@ function rtbcb_normalize_model_name( $model ) {
  * @param callable $mailer      Optional mailer function for testing.
  */
 function rtbcb_send_report_email( $form_data, $report_path, $mailer = 'wp_mail' ) {
-	$email = isset( $form_data['email'] ) ? sanitize_email( $form_data['email'] ) : '';
+        $email = isset( $form_data['email'] ) ? sanitize_email( $form_data['email'] ) : '';
 
 	if ( empty( $email ) || ! is_readable( $report_path ) ) {
 		return;
@@ -588,13 +588,82 @@ function rtbcb_send_report_email( $form_data, $report_path, $mailer = 'wp_mail' 
 	$subject = __( 'Your Business Case Report', 'rtbcb' );
 	$message = __( 'Please find your business case report attached.', 'rtbcb' );
 
-	if ( is_callable( $mailer ) ) {
-		call_user_func( $mailer, $email, $subject, $message, [], [ $report_path ] );
-	}
+        if ( is_callable( $mailer ) ) {
+                call_user_func( $mailer, $email, $subject, $message, [], [ $report_path ] );
+        }
 }
 
 /**
- * Get client information for analytics
+ * Generate report HTML from structured data.
+ *
+ * @param array $report_data Report data array.
+ * @return string Sanitized report HTML.
+ */
+function rtbcb_generate_report_html( $report_data ) {
+		$template = RTBCB_DIR . 'templates/comprehensive-report-template.php';
+			if ( ! file_exists( $template ) ) {
+			return '';
+		}
+		
+		$report_data = is_array( $report_data ) ? $report_data : [];
+		
+		ob_start();
+		include $template;
+		$html = ob_get_clean();
+		
+		if ( function_exists( 'wp_kses' ) ) {
+			return wp_kses( $html, rtbcb_get_report_allowed_html() );
+		}
+		
+	return $html;
+}
+
+/**
+ * Save report HTML and PDF files.
+ *
+ * @param string $job_id      Job identifier.
+ * @param string $report_html Report HTML content.
+ * @return array Paths and URL for generated files.
+ */
+function rtbcb_save_report_files( $job_id, $report_html ) {
+	$upload_dir = function_exists( 'wp_upload_dir' ) ? wp_upload_dir() : [
+	'basedir' => sys_get_temp_dir(),
+	'baseurl' => 'http://example.com',
+	];
+	
+	$reports_dir = ( function_exists( 'trailingslashit' ) ? trailingslashit( $upload_dir['basedir'] ) : rtrim( $upload_dir['basedir'], '/\\' ) . '/' ) . 'rtbcb-reports';
+	if ( function_exists( 'wp_mkdir_p' ) ) {
+	wp_mkdir_p( $reports_dir );
+	} elseif ( ! file_exists( $reports_dir ) ) {
+	mkdir( $reports_dir, 0777, true );
+	}
+	
+	$base      = 'report-' . ( function_exists( 'sanitize_file_name' ) ? sanitize_file_name( $job_id ) : preg_replace( '/[^A-Za-z0-9\-_]/', '', $job_id ) );
+	$html_path = ( function_exists( 'trailingslashit' ) ? trailingslashit( $reports_dir ) : rtrim( $reports_dir, '/\\' ) . '/' ) . $base . '.html';
+	file_put_contents( $html_path, $report_html );
+	
+	$pdf_path = ( function_exists( 'trailingslashit' ) ? trailingslashit( $reports_dir ) : rtrim( $reports_dir, '/\\' ) . '/' ) . $base . '.pdf';
+	if ( class_exists( '\\Dompdf\\Dompdf' ) ) {
+	$dompdf = new \Dompdf\Dompdf();
+	$dompdf->loadHtml( $report_html );
+	$dompdf->setPaper( 'A4', 'portrait' );
+	$dompdf->render();
+	file_put_contents( $pdf_path, $dompdf->output() );
+	} else {
+	file_put_contents( $pdf_path, $report_html );
+	}
+	
+	$pdf_url = ( function_exists( 'trailingslashit' ) ? trailingslashit( $upload_dir['baseurl'] ) : rtrim( $upload_dir['baseurl'], '/\\' ) . '/' ) . 'rtbcb-reports/' . $base . '.pdf';
+	
+	return [
+	'html_path' => $html_path,
+	'pdf_path'  => $pdf_path,
+	'pdf_url'   => $pdf_url,
+	];
+	}
+	
+	/**
+	 * Get client information for analytics
  *
  * @return array Client data
  */

@@ -55,28 +55,39 @@ class RTBCB_Background_Job {
 			HOUR_IN_SECONDS
 		);
 
-		$result = RTBCB_Ajax::process_comprehensive_case( $user_inputs );
+               $result = RTBCB_Ajax::process_comprehensive_case( $user_inputs );
 
-		if ( is_wp_error( $result ) ) {
-			set_transient(
-				$job_id,
-				[
-					'status'  => 'error',
-					'message' => $result->get_error_message(),
-				],
-				HOUR_IN_SECONDS
-			);
-		} else {
-			set_transient(
-				$job_id,
-				[
-					'status' => 'completed',
-					'result' => $result,
-				],
-				HOUR_IN_SECONDS
-			);
-		}
-	}
+               if ( is_wp_error( $result ) ) {
+                       set_transient(
+                               $job_id,
+                               [
+                                       'status'  => 'error',
+                                       'message' => $result->get_error_message(),
+                               ],
+                               HOUR_IN_SECONDS
+                       );
+               } else {
+                       $download_url = '';
+                       if ( ! empty( $result['report_data'] ) ) {
+                               $report_html = rtbcb_generate_report_html( $result['report_data'] );
+                               $files       = rtbcb_save_report_files( $job_id, $report_html );
+                               if ( ! empty( $files['pdf_path'] ) ) {
+                                       rtbcb_send_report_email( $user_inputs, $files['pdf_path'] );
+                                       $download_url = $files['pdf_url'];
+                               }
+                       }
+
+                       set_transient(
+                               $job_id,
+                               [
+                                       'status'       => 'completed',
+                                       'result'       => $result,
+                                       'download_url' => $download_url,
+                               ],
+                               HOUR_IN_SECONDS
+                       );
+               }
+       }
 
 	/**
 	 * Get job status data.
