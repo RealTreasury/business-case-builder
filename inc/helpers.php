@@ -1896,3 +1896,27 @@ function rtbcb_invalidate_rag_cache() {
 	}
 }
 
+
+/**
+ * Enable persistent database connections when supported.
+ *
+ * Reconnects using a host prefixed with `p:` if the current connection is
+ * not already persistent.
+ *
+ * @return void
+ */
+function rtbcb_enable_persistent_connection() {
+	global $wpdb;
+
+	if ( strpos( DB_HOST, 'p:' ) === 0 ) {
+		return;
+	}
+
+	$wpdb->dbhost = 'p:' . DB_HOST;
+	if ( method_exists( $wpdb, 'close' ) ) {
+		$wpdb->close();
+	}
+	$wpdb->db_connect();
+}
+
+add_action( 'plugins_loaded', 'rtbcb_enable_persistent_connection', 1 );
