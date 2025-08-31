@@ -7,7 +7,7 @@ const RTBCB_GPT5_MIN_TOKENS = 256;
 const RTBCB_API_TIMEOUT =
     typeof rtbcbReport !== 'undefined' && rtbcbReport.timeout_ms
         ? rtbcbReport.timeout_ms / 1000
-        : 180;
+        : 300;
 const RTBCB_GPT5_DEFAULTS = {
     max_output_tokens: RTBCB_GPT5_MAX_TOKENS,
     min_output_tokens: RTBCB_GPT5_MIN_TOKENS,

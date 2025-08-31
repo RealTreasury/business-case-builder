@@ -14,7 +14,8 @@ defined( 'ABSPATH' ) || exit;
  * @return int Timeout in seconds.
  */
 function rtbcb_get_api_timeout() {
-		$timeout = (int) get_option( 'rtbcb_gpt5_timeout', 180 );
+	$timeout = (int) get_option( 'rtbcb_gpt5_timeout', 300 );
+	$timeout = rtbcb_sanitize_api_timeout( $timeout );
 
 	/**
 	 * Filter the API request timeout.
@@ -25,7 +26,7 @@ function rtbcb_get_api_timeout() {
 		return (int) apply_filters( 'rtbcb_api_timeout', $timeout );
 	}
 
-		return $timeout;
+	return $timeout;
 }
 
 require_once __DIR__ . '/config.php';
@@ -218,9 +219,28 @@ function rtbcb_get_model_capabilities() {
  * @return bool Whether the model supports temperature.
  */
 function rtbcb_model_supports_temperature( $model ) {
-	$capabilities = include RTBCB_DIR . 'inc/model-capabilities.php';
-	$unsupported = $capabilities['temperature']['unsupported'] ?? [];
-	return ! in_array( $model, $unsupported, true );
+        $capabilities = include RTBCB_DIR . 'inc/model-capabilities.php';
+        $unsupported = $capabilities['temperature']['unsupported'] ?? [];
+        return ! in_array( $model, $unsupported, true );
+}
+
+/**
+ * Sanitize the API timeout option.
+ *
+ * Ensures the value stays within the allowed 1-600 second range while
+ * preserving legacy zero values by falling back to the default 300 seconds.
+ *
+ * @param mixed $value Raw option value.
+ * @return int Sanitized timeout in seconds.
+ */
+function rtbcb_sanitize_api_timeout( $value ) {
+	$value = intval( $value );
+
+	if ( $value <= 0 ) {
+		return 300;
+	}
+
+	return min( 600, $value );
 }
 
 /**

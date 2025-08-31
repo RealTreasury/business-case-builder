@@ -1481,7 +1481,7 @@ SYSTEM;
             $body['temperature'] = floatval( $this->gpt5_config['temperature'] ?? 0.7 );
         }
 
-        $timeout  = intval( $this->gpt5_config['timeout'] ?? 180 );
+	$timeout  = intval( $this->gpt5_config['timeout'] ?? 300 );
         $response = wp_remote_post(
             'https://api.openai.com/v1/responses',
             [
@@ -2506,7 +2506,7 @@ return $analysis;
 		}
 
 		$max_retries     = $max_retries ?? intval( $this->gpt5_config['max_retries'] );
-		$base_timeout    = intval( $this->gpt5_config['timeout'] ?? 180 );
+	   $base_timeout    = intval( $this->gpt5_config['timeout'] ?? 300 );
 		$current_timeout = $base_timeout;
 		$current_tokens  = $max_output_tokens;
 		$max_retry_time  = max( $base_timeout, intval( $this->gpt5_config['max_retry_time'] ?? $base_timeout ) );
@@ -2675,7 +2675,7 @@ return $analysis;
 
         do_action( 'rtbcb_llm_prompt_sent', $body );
 
-        $timeout   = intval( $this->gpt5_config['timeout'] ?? 180 );
+	$timeout   = intval( $this->gpt5_config['timeout'] ?? 300 );
         $payload   = wp_json_encode( $body );
         $buffer    = '';
         $last_event = '';
