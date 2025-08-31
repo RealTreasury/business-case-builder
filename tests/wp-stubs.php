@@ -1,4 +1,5 @@
 <?php
+defined( 'ABSPATH' ) || exit;
 if ( ! function_exists( 'add_filter' ) ) {
     function add_filter( $tag, $function_to_add, $priority = 10, $accepted_args = 1 ) {}
 }
@@ -36,5 +37,29 @@ if ( ! function_exists( 'sanitize_email' ) ) {
 if ( ! function_exists( 'wp_unslash' ) ) {
     function wp_unslash( $value ) {
         return $value;
+    }
+}
+
+if ( ! class_exists( 'RTBCB_Category_Recommender' ) ) {
+    class RTBCB_Category_Recommender {
+        /**
+         * Recommend a category based on inputs.
+         *
+         * @param array $inputs Input values.
+         * @return array Recommended category.
+         */
+        public static function recommend_category( $inputs ) {
+            return self::suggest_category( $inputs );
+        }
+
+        /**
+         * Suggest a category for backward compatibility.
+         *
+         * @param array $inputs Input values.
+         * @return array Recommended category.
+         */
+        public static function suggest_category( $inputs ) {
+            return [ 'recommended' => 'general' ];
+        }
     }
 }
