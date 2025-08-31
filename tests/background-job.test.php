@@ -50,6 +50,18 @@ if ( ! function_exists( 'delete_transient' ) ) {
     }
 }
 
+global $sent_report_email;
+$sent_report_email = [];
+if ( ! function_exists( 'rtbcb_send_report_email' ) ) {
+    function rtbcb_send_report_email( $form_data, $path ) {
+        global $sent_report_email;
+        $sent_report_email = [
+            'form_data' => $form_data,
+            'path'      => $path,
+        ];
+    }
+}
+
 if ( ! function_exists( 'wp_schedule_single_event' ) ) {
     function wp_schedule_single_event( $timestamp, $hook, $args ) {
         global $scheduled_events;
@@ -158,6 +170,9 @@ $final = RTBCB_Background_Job::get_status( $job_id );
 assert_true( isset( $final['basic_roi'] ), 'basic_roi missing' );
 assert_true( isset( $final['category'] ), 'category missing' );
 assert_true( 'completed' === get_transient( $job_id )['state'], 'Job not completed' );
+global $sent_report_email;
+assert_true( isset( $final['download_url'] ), 'download_url missing' );
+assert_true( ! empty( $sent_report_email['path'] ), 'Report email not sent' );
 
 // Error job flow.
 RTBCB_Ajax::$mode = 'error';
