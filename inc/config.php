@@ -42,9 +42,9 @@ function rtbcb_get_gpt5_config( $overrides = [] ) {
         'min_output_tokens' => 256,
         'temperature'       => 0.7,
         'store'             => true,
-        'timeout'           => function_exists( 'rtbcb_get_api_timeout' ) ? rtbcb_get_api_timeout() : (int) get_option( 'rtbcb_gpt5_timeout', 180 ),
+        'timeout'           => function_exists( 'rtbcb_get_api_timeout' ) ? rtbcb_get_api_timeout() : (int) get_option( 'rtbcb_gpt5_timeout', 300 ),
         'max_retries'       => 2,
-        'max_retry_time'    => function_exists( 'rtbcb_get_api_timeout' ) ? rtbcb_get_api_timeout() : (int) get_option( 'rtbcb_gpt5_timeout', 180 ),
+        'max_retry_time'    => function_exists( 'rtbcb_get_api_timeout' ) ? rtbcb_get_api_timeout() : (int) get_option( 'rtbcb_gpt5_timeout', 300 ),
         'reasoning_effort'  => 'medium',
         'text_verbosity'    => 'medium',
     ];

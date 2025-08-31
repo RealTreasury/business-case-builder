@@ -536,7 +536,7 @@ If you encounter `Unchecked runtime.lastError` messages, they typically originat
 
 ### Server Timeouts
 
-Large reports can take several minutes to generate. Increase server and PHP timeout limits to avoid gateway errors. In nginx, raise `proxy_read_timeout` and `fastcgi_read_timeout`:
+Large reports can take several minutes to generate. The plugin defaults to a 300-second API request timeout, configurable up to 600 seconds in the settings. Increase server and PHP timeout limits to avoid gateway errors. In nginx, raise `proxy_read_timeout` and `fastcgi_read_timeout`:
 
 ```nginx
 location ~ \.php$ {

@@ -97,8 +97,8 @@ $embedding_models = [
                     <label for="rtbcb_gpt5_timeout"><?php echo esc_html__( 'API Request Timeout (seconds)', 'rtbcb' ); ?></label>
                 </th>
                 <td>
-                    <input type="number" id="rtbcb_gpt5_timeout" name="rtbcb_gpt5_timeout" value="<?php echo esc_attr( $gpt5_timeout ); ?>" class="small-text" />
-                    <p class="description"><?php echo esc_html__( 'Maximum time to wait for OpenAI responses.', 'rtbcb' ); ?></p>
+                    <input type="number" id="rtbcb_gpt5_timeout" name="rtbcb_gpt5_timeout" value="<?php echo esc_attr( $gpt5_timeout ); ?>" class="small-text" min="1" max="600" />
+                    <p class="description"><?php echo esc_html__( 'Maximum time to wait for OpenAI responses (default 300, max 600).', 'rtbcb' ); ?></p>
                 </td>
             </tr>
             <tr>

@@ -1166,11 +1166,12 @@ return $use_comprehensive;
             wp_send_json_error( __( 'Required components missing.', 'rtbcb' ), 500 );
         }
 
-        rtbcb_setup_ajax_logging();
-        rtbcb_increase_memory_limit();
-        if ( ! ini_get( 'safe_mode' ) ) {
-            set_time_limit( 300 );
-        }
+	rtbcb_setup_ajax_logging();
+	rtbcb_increase_memory_limit();
+	$timeout = absint( rtbcb_get_api_timeout() );
+	if ( ! ini_get( 'safe_mode' ) && $timeout > 0 ) {
+		set_time_limit( $timeout );
+	}
 
         try {
             RTBCB_Ajax::generate_comprehensive_case();
