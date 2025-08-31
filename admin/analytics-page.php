@@ -14,6 +14,7 @@ $recent_leads = $stats['recent_leads'] ?? 0;
 $category_stats = $stats['by_category'] ?? [];
 $size_stats = $stats['by_company_size'] ?? [];
 $roi_stats = $stats['average_roi'] ?? [];
+$enable_charts = RTBCB_Settings::get_setting( 'enable_charts', true );
 ?>
 
 <div class="wrap rtbcb-admin-page">
@@ -76,6 +77,7 @@ $roi_stats = $stats['average_roi'] ?? [];
         </div>
     </div>
 
+    <?php if ( $enable_charts ) : ?>
     <!-- Charts Section -->
     <div class="rtbcb-charts-grid">
         <!-- Category Distribution Chart -->
@@ -475,7 +477,8 @@ function initializeAnalyticsCharts() {
         showFallback('rtbcb-trends-chart');
     }
 }
-</script>
+    </script>
+    <?php endif; ?>
 
 <style>
 /* Analytics page specific styles */

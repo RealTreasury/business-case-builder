@@ -423,14 +423,19 @@ add_action( 'rtbcb_cleanup_jobs', [ 'RTBCB_Background_Job', 'cleanup' ] );
 			);
 		}
 
-	    // Chart.js for report visualizations
-	    wp_enqueue_script(
-	        'chartjs',
-	        RTBCB_URL . 'public/js/chart.min.js',
-	        [],
-	        '3.9.1',
-	        true
-	    );
+            $enable_charts = RTBCB_Settings::get_setting( 'enable_charts', true );
+            $report_deps   = [];
+            if ( $enable_charts ) {
+                // Chart.js for report visualizations
+                wp_enqueue_script(
+                    'chartjs',
+                    RTBCB_URL . 'public/js/chart.min.js',
+                    [],
+                    '3.9.1',
+                    true
+                );
+                $report_deps[] = 'chartjs';
+            }
 
 	    // DOMPurify for sanitization with CDN fallback
 	    $dompurify_cdn   = 'https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.2/purify.min.js';
@@ -463,12 +468,12 @@ add_action( 'rtbcb_cleanup_jobs', [ 'RTBCB_Background_Job', 'cleanup' ] );
 		// Main report functionality
 		$report_file = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? 'rtbcb-report.js' : 'rtbcb-report.min.js';
 		wp_enqueue_script(
-			'rtbcb-report',
-			RTBCB_URL . 'public/js/' . $report_file,
-			[ 'chartjs', 'dompurify' ],
-			RTBCB_VERSION,
-			true
-		);
+                'rtbcb-report',
+                RTBCB_URL . 'public/js/' . $report_file,
+                array_merge( $report_deps, [ 'dompurify' ] ),
+                RTBCB_VERSION,
+                true
+            );
 
 		// Main plugin script
 		$main_script = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? 'rtbcb.js' : 'rtbcb.min.js';
@@ -509,13 +514,15 @@ add_action( 'rtbcb_cleanup_jobs', [ 'RTBCB_Background_Job', 'cleanup' ] );
 	                'select_pain_points'      => __( 'Please select at least one pain point.', 'rtbcb' ),
 	                'email_confirmation'      => __( 'Your report will arrive by email shortly.', 'rtbcb' ),
 	            ],
-	            'settings'    => [
-	                'pdf_enabled'            => get_option( 'rtbcb_pdf_enabled', true ),
-	                'comprehensive_analysis' => get_option( 'rtbcb_comprehensive_analysis', true ),
-	                'professional_reports'   => get_option( 'rtbcb_professional_reports', true ),
-	            ],
-	        ]
-	    );
+                    'settings'    => [
+                        'pdf_enabled'            => get_option( 'rtbcb_pdf_enabled', true ),
+                        'comprehensive_analysis' => get_option( 'rtbcb_comprehensive_analysis', true ),
+                        'professional_reports'   => get_option( 'rtbcb_professional_reports', true ),
+                        'enable_ai_analysis'     => RTBCB_Settings::get_setting( 'enable_ai_analysis', true ),
+                        'enable_charts'          => RTBCB_Settings::get_setting( 'enable_charts', true ),
+                    ],
+                ]
+            );
 
 	    // Report configuration
 	    $config             = rtbcb_get_gpt5_config();

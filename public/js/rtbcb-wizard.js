@@ -548,12 +548,15 @@ class BusinessCaseBuilder {
         const progressContainer = document.getElementById('rtbcb-progress-container');
         if (progressContainer) {
             const companyName = this.form.querySelector('[name="company_name"]')?.value || 'your company';
+            const initialText = window.rtbcbAjax?.settings?.enable_ai_analysis
+                ? `Analyzing ${this.escapeHTML(companyName)}'s treasury operations...`
+                : 'Calculating ROI...';
             progressContainer.innerHTML = `
                 <div class="rtbcb-progress-content">
                     <div class="rtbcb-progress-spinner"></div>
                     <div class="rtbcb-progress-text">Generating Your Business Case</div>
                     <div class="rtbcb-progress-step">
-                        <span class="rtbcb-progress-step-text" id="rtbcb-progress-status">Analyzing ${this.escapeHTML(companyName)}'s treasury operations...</span>
+                        <span class="rtbcb-progress-step-text" id="rtbcb-progress-status">${initialText}</span>
                     </div>
                 </div>
             `;
@@ -731,6 +734,10 @@ class BusinessCaseBuilder {
     }
 
     initializeReportCharts(container) {
+        if ( window.rtbcbAjax?.settings && window.rtbcbAjax.settings.enable_charts === false ) {
+            console.log('RTBCB: Charts disabled in settings');
+            return;
+        }
         const chartCanvas = container.querySelector('#rtbcb-roi-chart');
         if (!chartCanvas) return;
 

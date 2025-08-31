@@ -19,6 +19,9 @@ $gpt5_timeout    = rtbcb_get_api_timeout();
 $gpt5_max_output_tokens = get_option( 'rtbcb_gpt5_max_output_tokens', 8000 );
 $gpt5_min_output_tokens = get_option( 'rtbcb_gpt5_min_output_tokens', 256 );
 $fast_mode       = get_option( 'rtbcb_fast_mode', 0 );
+$feature_settings    = get_option( 'rtbcb_settings', RTBCB_Settings::DEFAULTS );
+$enable_ai_analysis = isset( $feature_settings['enable_ai_analysis'] ) ? (bool) $feature_settings['enable_ai_analysis'] : true;
+$enable_charts      = isset( $feature_settings['enable_charts'] ) ? (bool) $feature_settings['enable_charts'] : true;
 
 $chat_models = [
     'gpt-5'             => 'gpt-5',
@@ -155,6 +158,24 @@ $embedding_models = [
                 <td>
                     <input type="checkbox" id="rtbcb_fast_mode" name="rtbcb_fast_mode" value="1" <?php checked( 1, $fast_mode ); ?> />
                     <p class="description"><?php echo esc_html__( 'Generate a basic ROI-only report without AI processing.', 'rtbcb' ); ?></p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="rtbcb_enable_ai_analysis"><?php echo esc_html__( 'Enable AI Analysis', 'rtbcb' ); ?></label>
+                </th>
+                <td>
+                    <input type="checkbox" id="rtbcb_enable_ai_analysis" name="rtbcb_settings[enable_ai_analysis]" value="1" <?php checked( $enable_ai_analysis ); ?> />
+                    <p class="description"><?php echo esc_html__( 'Use AI services for enhanced insights and recommendations.', 'rtbcb' ); ?></p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="rtbcb_enable_charts"><?php echo esc_html__( 'Enable Charts', 'rtbcb' ); ?></label>
+                </th>
+                <td>
+                    <input type="checkbox" id="rtbcb_enable_charts" name="rtbcb_settings[enable_charts]" value="1" <?php checked( $enable_charts ); ?> />
+                    <p class="description"><?php echo esc_html__( 'Display visual charts in reports and analytics.', 'rtbcb' ); ?></p>
                 </td>
             </tr>
         </table>
