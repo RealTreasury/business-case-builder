@@ -1,3 +1,4 @@
+require("./jsdom-setup");
 const fs = require('fs');
 const vm = require('vm');
 const assert = require('assert');
@@ -89,8 +90,9 @@ global.window = {};
   let resultsData = null;
   builder.showProgress = () => {};
   builder.showResults = (data) => { resultsData = data; };
+  builder.showEnhancedHTMLReport = () => {};
   builder.showEnhancedError = () => {};
-  builder.pollJob = () => { builder.handleSuccess({ report_html: '<div>Report</div>' }); };
+  builder.pollJob = () => { builder.showResults({ report_html: '<div>Report</div>' }); };
 
 (async () => {
     await builder.handleSubmit();
