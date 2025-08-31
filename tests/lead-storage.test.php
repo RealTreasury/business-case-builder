@@ -200,6 +200,7 @@ $lead_data = [
 'roi_low'       => 1000,
 'roi_base'      => 2000,
 'roi_high'      => 3000,
+'report_html'  => '<div>Report</div>',
 ];
 
 $lead_id = RTBCB_Leads::save_lead( $lead_data );
@@ -216,6 +217,11 @@ exit( 1 );
 
 if ( [ 'delays', 'errors' ] !== ( $retrieved['pain_points'] ?? [] ) ) {
 echo "Pain points mismatch\n";
+exit( 1 );
+}
+
+if ( '<div>Report</div>' !== ( $retrieved['report_html'] ?? '' ) ) {
+echo "Report HTML mismatch\n";
 exit( 1 );
 }
 
