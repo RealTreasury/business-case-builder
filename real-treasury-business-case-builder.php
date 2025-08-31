@@ -2568,6 +2568,11 @@ return $use_comprehensive;
 		}
 }
 
+// Provide backwards compatibility for previous class name.
+if ( ! class_exists( 'Real_Treasury_BCB' ) ) {
+	class_alias( RTBCB_Main::class, 'Real_Treasury_BCB' );
+}
+
 // Initialize the plugin
 RTBCB_Main::instance();
 
