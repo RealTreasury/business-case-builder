@@ -1144,9 +1144,11 @@ class RTBCB_Admin {
             ? rtbcb_sanitize_form_data( wp_unslash( $_POST['roi_inputs'] ) )
             : rtbcb_get_sample_inputs();
 
-        $start = microtime( true );
-        $roi   = RTBCB_Calculator::calculate_roi( $roi_inputs );
-        $elapsed = round( microtime( true ) - $start, 2 );
+        $start         = microtime( true );
+        $roi           = RTBCB_Calculator::calculate_roi( $roi_inputs );
+        $recommendation = RTBCB_Category_Recommender::recommend_category( $roi_inputs );
+        $roi           = RTBCB_Calculator::calculate_category_refined_roi( $roi_inputs, $recommendation['category_info'] );
+        $elapsed       = round( microtime( true ) - $start, 2 );
 
         if ( empty( $roi ) || is_wp_error( $roi ) ) {
             wp_send_json_error( [ 'message' => __( 'Unable to calculate ROI.', 'rtbcb' ) ] );
