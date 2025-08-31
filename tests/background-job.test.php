@@ -115,12 +115,17 @@ if ( ! class_exists( 'RTBCB_Ajax' ) ) {
         public static function process_basic_roi_step( $user_inputs ) {
             return [ 'financial_analysis' => [] ];
         }
-        public static function process_comprehensive_case( $user_inputs ) {
+        public static function process_comprehensive_case( $user_inputs, $job_id ) {
             do_action( 'rtbcb_workflow_step_completed', 'ai_enrichment' );
+            RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'enriched_profile' => [] ] );
             do_action( 'rtbcb_workflow_step_completed', 'enhanced_roi_calculation' );
+            RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'enhanced_roi' => [] ] );
             do_action( 'rtbcb_workflow_step_completed', 'intelligent_recommendations' );
+            RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'category' => 'cat' ] );
             do_action( 'rtbcb_workflow_step_completed', 'hybrid_rag_analysis' );
+            RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'analysis' => [] ] );
             do_action( 'rtbcb_workflow_step_completed', 'data_structuring' );
+            RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'report_data' => [] ] );
             if ( 'error' === self::$mode ) {
                 return new WP_Error( 'failed', 'Processing failed.' );
             }
@@ -141,24 +146,27 @@ function assert_true( $condition, $message ) {
 // Successful job flow.
 $user_inputs = [ 'email' => 'test@example.com' ];
 $job_id      = RTBCB_Background_Job::enqueue( $user_inputs );
-assert_true( 'queued' === get_transient( $job_id )['status'], 'Job not queued' );
+assert_true( 'queued' === get_transient( $job_id )['state'], 'Job not queued' );
 
 RTBCB_Background_Job::process_job( $job_id, $user_inputs );
 
 global $transient_log;
-$statuses = array_column( $transient_log[ $job_id ], 'status' );
-assert_true( $statuses === [ 'queued', 'processing', 'processing', 'processing', 'processing', 'processing', 'processing', 'processing', 'completed' ], 'Status flow incorrect: ' . json_encode( $statuses ) );
-assert_true( $transient_log[ $job_id ][2]['step'] === 'basic_roi_calculation', 'First step missing' );
-assert_true( 'completed' === get_transient( $job_id )['status'], 'Job not completed' );
+$statuses = array_column( $transient_log[ $job_id ], 'state' );
+assert_true( $statuses[0] === 'queued' && end( $statuses ) === 'completed', 'Status flow incorrect: ' . json_encode( $statuses ) );
+assert_true( $transient_log[ $job_id ][2]['payload']['step'] === 'basic_roi_calculation', 'First step missing' );
+$final = RTBCB_Background_Job::get_status( $job_id );
+assert_true( isset( $final['basic_roi'] ), 'basic_roi missing' );
+assert_true( isset( $final['category'] ), 'category missing' );
+assert_true( 'completed' === get_transient( $job_id )['state'], 'Job not completed' );
 
 // Error job flow.
 RTBCB_Ajax::$mode = 'error';
 $job_id2          = RTBCB_Background_Job::enqueue( $user_inputs );
 RTBCB_Background_Job::process_job( $job_id2, $user_inputs );
-$status   = get_transient( $job_id2 );
-$statuses = array_column( $transient_log[ $job_id2 ], 'status' );
+$status   = RTBCB_Background_Job::get_status( $job_id2 );
+$statuses = array_column( $transient_log[ $job_id2 ], 'state' );
 assert_true( $statuses[0] === 'queued' && end( $statuses ) === 'error', 'Error status flow incorrect: ' . json_encode( $statuses ) );
-assert_true( 'error' === $status['status'], 'Job did not error' );
+assert_true( 'error' === $status['state'], 'Job did not error' );
 assert_true( 'Processing failed.' === $status['message'], 'Error message missing' );
 
 // Cleanup test.

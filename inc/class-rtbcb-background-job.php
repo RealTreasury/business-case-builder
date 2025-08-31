@@ -9,30 +9,28 @@ defined( 'ABSPATH' ) || exit;
 
 class RTBCB_Background_Job {
 /**
- * Update job status data.
+ * Update job status data and accumulate payload.
  *
- * @param string $job_id Job identifier.
- * @param string $status New status.
- * @param array  $extra  Extra data such as step, message, percent, or result.
+ * @param string $job_id  Job identifier.
+ * @param string $state   New job state.
+ * @param array  $payload Additional fields such as step, percent, or partial results.
  * @return void
  */
-public static function update_status( $job_id, $status, $extra = [] ) {
+public static function update_status( $job_id, $state, $payload = [] ) {
 $current = get_transient( $job_id );
 if ( ! is_array( $current ) ) {
-$current = [];
+$current = [
+'payload' => [],
+];
 }
 if ( ! isset( $current['created'] ) ) {
 $current['created'] = time();
 }
-$new_data = array_merge(
-$current,
-$extra,
-[
-'status'  => $status,
-'updated' => time(),
-]
-);
-set_transient( $job_id, $new_data, HOUR_IN_SECONDS );
+$existing_payload   = isset( $current['payload'] ) && is_array( $current['payload'] ) ? $current['payload'] : [];
+$current['payload'] = array_merge( $existing_payload, $payload );
+$current['state']   = $state;
+$current['updated'] = time();
+set_transient( $job_id, $current, HOUR_IN_SECONDS );
 }
 	/**
 	 * Enqueue a case generation job.
@@ -40,16 +38,10 @@ set_transient( $job_id, $new_data, HOUR_IN_SECONDS );
 	 * @param array $user_inputs Sanitized user inputs.
 	 * @return string Job ID.
 	 */
-	public static function enqueue( $user_inputs ) {
-		$job_id = uniqid( 'rtbcb_job_', true );
+public static function enqueue( $user_inputs ) {
+$job_id = uniqid( 'rtbcb_job_', true );
 
-self::update_status(
-$job_id,
-'queued',
-[
-'result' => null,
-]
-);
+self::update_status( $job_id, 'queued' );
 
                 wp_schedule_single_event(
                         time(),
@@ -72,20 +64,20 @@ $job_id,
 	 * @param array  $user_inputs User inputs.
 	 * @return void
 	 */
-	public static function process_job( $job_id, $user_inputs ) {
+public static function process_job( $job_id, $user_inputs ) {
 self::update_status( $job_id, 'processing' );
 
-		$basic_roi = RTBCB_Ajax::process_basic_roi_step( $user_inputs );
+$basic_roi = RTBCB_Ajax::process_basic_roi_step( $user_inputs );
 
-		self::update_status(
-			$job_id,
-			'processing',
-			[
-				'step'    => 'basic_roi_calculation',
-				'percent' => 10,
-				'result'  => $basic_roi,
-			],
-		);
+self::update_status(
+$job_id,
+'processing',
+[
+'step'      => 'basic_roi_calculation',
+'percent'   => 10,
+'basic_roi' => $basic_roi,
+],
+);
 
 
 add_action(
@@ -113,26 +105,26 @@ $job_id,
 1
 );
 
-$result = RTBCB_Ajax::process_comprehensive_case( $user_inputs );
+$result = RTBCB_Ajax::process_comprehensive_case( $user_inputs, $job_id );
 
 if ( is_wp_error( $result ) ) {
-self::update_status(
-$job_id,
-'error',
-[
-'message' => $result->get_error_message(),
-'percent' => 100,
-]
-);
+	self::update_status(
+		$job_id,
+		'error',
+		[
+			'message' => $result->get_error_message(),
+			'percent' => 100,
+		],
+	);
 } else {
-self::update_status(
-$job_id,
-'completed',
-[
-'result'  => $result,
-'percent' => 100,
-]
-);
+	self::update_status(
+		$job_id,
+		'completed',
+		[
+			'percent' => 100,
+			'result'  => $result,
+		],
+	);
 }
 	}
 
@@ -148,7 +140,9 @@ self::cleanup();
 if ( false === $data ) {
 return new WP_Error( 'not_found', __( 'Job not found.', 'rtbcb' ) );
 }
-return $data;
+$payload = isset( $data['payload'] ) && is_array( $data['payload'] ) ? $data['payload'] : [];
+unset( $data['payload'] );
+return array_merge( $data, $payload );
 }
 
 /**
@@ -169,7 +163,7 @@ foreach ( $option_names as $option_name ) {
 $job_id = str_replace( [ '_transient_', '_transient_timeout_' ], '', $option_name );
 $data   = get_transient( $job_id );
 $created = is_array( $data ) ? ( $data['created'] ?? 0 ) : 0;
-if ( false === $data || 'error' === ( $data['status'] ?? '' ) || ( $created && time() - $created > $threshold ) ) {
+if ( false === $data || 'error' === ( $data['state'] ?? '' ) || ( $created && time() - $created > $threshold ) ) {
 delete_transient( $job_id );
 }
 }
@@ -178,7 +172,7 @@ foreach ( array_keys( $GLOBALS['transients'] ) as $job_id ) {
 if ( 0 === strpos( $job_id, 'rtbcb_job_' ) ) {
 $data    = $GLOBALS['transients'][ $job_id ];
 $created = is_array( $data ) ? ( $data['created'] ?? 0 ) : 0;
-if ( ! is_array( $data ) || 'error' === ( $data['status'] ?? '' ) || ( $created && time() - $created > $threshold ) ) {
+if ( ! is_array( $data ) || 'error' === ( $data['state'] ?? '' ) || ( $created && time() - $created > $threshold ) ) {
 unset( $GLOBALS['transients'][ $job_id ] );
 }
 }
