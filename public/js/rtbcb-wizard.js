@@ -602,6 +602,11 @@ class BusinessCaseBuilder {
 
                     const data = await response.json();
 
+                    if (this.pollingCancelled) {
+                        resolve();
+                        return;
+                    }
+
                     if (!data.success) {
                         this.handleError({ message: 'Unable to retrieve job status', type: 'polling_error' });
                         resolve();

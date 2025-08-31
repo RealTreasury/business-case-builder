@@ -5,7 +5,11 @@ describe('pollJob completion', () => {
     test('invokes showResults with report data and clears progress', async () => {
         const nodeGlobal = vm.runInThisContext('this');
 
-        const progressContainer = { style: { display: 'block' }, innerHTML: 'loading' };
+        const progressContainer = {
+            style: { display: 'block' },
+            innerHTML: 'loading',
+            querySelector: () => null
+        };
         const resultsContainer = { innerHTML: '', style: {}, scrollIntoView: () => {} };
 
         nodeGlobal.window = { closeBusinessCaseModal: () => {} };
