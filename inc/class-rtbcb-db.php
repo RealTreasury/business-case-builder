@@ -14,7 +14,7 @@ class RTBCB_DB {
     /**
      * Current database version.
      */
-    const DB_VERSION = '2.0.1';
+    const DB_VERSION = '2.0.2';
 
     /**
      * Initialize database and handle upgrades.
@@ -22,8 +22,6 @@ class RTBCB_DB {
      * @return void
      */
     public static function init() {
-        self::create_tables();
-
         $current = get_option( 'rtbcb_db_version', '1.0.0' );
 
         if ( version_compare( $current, self::DB_VERSION, '<' ) ) {
@@ -56,39 +54,18 @@ class RTBCB_DB {
 	// Ensure RAG index table is present during upgrades.
 	self::create_rag_table();
 
-	if ( version_compare( $from_version, '2.0.1', '<' ) ) {
-		self::add_embedding_norm_index();
-	}
+        if ( version_compare( $from_version, '2.0.1', '<' ) ) {
+                self::add_embedding_norm_index();
+        }
+
+		if ( version_compare( $from_version, '2.0.2', '<' ) ) {
+			RTBCB_Leads::add_missing_indexes();
+}
 
 	// Future migrations can be handled here.
 
         // Log the upgrade.
         error_log( 'RTBCB: Database upgraded from version ' . $from_version . ' to ' . self::DB_VERSION );
-    }
-
-    /**
-     * Create required database tables.
-     *
-     * @return void
-     */
-    private static function create_tables() {
-        global $wpdb;
-
-        $charset_collate = $wpdb->get_charset_collate();
-
-        // Create leads table.
-        $table_name = $wpdb->prefix . 'rtbcb_leads';
-        $sql        = "CREATE TABLE {$table_name} (
-            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-            email varchar(255) NOT NULL,
-            company_size varchar(50),
-            industry varchar(100),
-            created_at datetime DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (id)
-        ) {$charset_collate};";
-
-        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-        dbDelta( $sql );
     }
 
     /**
