@@ -59,6 +59,18 @@ return $data;
 }
 }
 
+if ( ! function_exists( 'wp_parse_args' ) ) {
+function wp_parse_args( $args, $defaults = [] ) {
+return array_merge( $defaults, (array) $args );
+}
+}
+
+if ( ! function_exists( 'sanitize_sql_orderby' ) ) {
+function sanitize_sql_orderby( $orderby ) {
+return $orderby;
+}
+}
+
 if ( ! function_exists( '__' ) ) {
 function __( $text, $domain = null ) {
 return $text;
@@ -94,6 +106,7 @@ return $this->dbh->exec( $sql );
 }
 
 public function prepare( $query, ...$args ) {
+$args    = ( 1 === count( $args ) && is_array( $args[0] ) ) ? $args[0] : $args;
 $escaped = array_map( function ( $arg ) {
 if ( is_string( $arg ) ) {
 return "'" . str_replace( "'", "''", $arg ) . "'";
@@ -105,6 +118,13 @@ return vsprintf( $query, $escaped );
 
 public function get_var( $sql ) {
 if ( false !== strpos( $sql, 'information_schema.tables' ) ) {
+return 1;
+}
+$sql_lower = strtolower( $sql );
+if ( false !== strpos( $sql_lower, 'date_sub' ) ) {
+return 0;
+}
+if ( false !== strpos( $sql_lower, 'found_rows' ) ) {
 return 1;
 }
 $result = $this->dbh->query( $sql );
@@ -124,40 +144,84 @@ return $row ?: null;
 return null;
 }
 
+public function get_results( $sql, $output = ARRAY_A ) {
+$sql    = str_replace( 'SQL_CALC_FOUND_ROWS', '', $sql );
+$result = $this->dbh->query( $sql );
+$rows   = [];
+if ( $result instanceof SQLite3Result ) {
+while ( $row = $result->fetchArray( SQLITE3_ASSOC ) ) {
+$rows[] = $row;
+}
+}
+return $rows;
+}
+
 public function insert( $table, $data, $format ) {
-$cols  = array_keys( $data );
-$vals  = [];
+$cols         = array_keys( $data );
+$placeholders = array_fill( 0, count( $cols ), '?' );
+$sql          = 'INSERT INTO ' . $table . ' (' . implode( ',', $cols ) . ') VALUES (' . implode( ',', $placeholders ) . ')';
+$stmt         = $this->dbh->prepare( $sql );
+
 foreach ( $cols as $i => $col ) {
 $fmt  = $format[ $i ];
 $val  = $data[ $col ];
-$vals[] = '%s' === $fmt ? "'" . str_replace( "'", "''", $val ) . "'" : $val;
+$type = SQLITE3_TEXT;
+if ( '%f' === $fmt ) {
+$type = SQLITE3_FLOAT;
+} elseif ( '%d' === $fmt ) {
+$type = SQLITE3_INTEGER;
+} elseif ( 'report_html' === $col ) {
+$type = SQLITE3_BLOB;
 }
-		$sql = "INSERT INTO $table (" . implode( ',', $cols ) . ") VALUES (" . implode( ',', $vals ) . ")";
-		$ok  = $this->dbh->exec( $sql );
-		if ( $ok ) {
-			$this->insert_id = $this->dbh->lastInsertRowID();
-			return 1;
-		}
-		$this->last_error = $this->dbh->lastErrorMsg();
-		return false;
+$stmt->bindValue( $i + 1, $val, $type );
+}
+
+$result = $stmt->execute();
+if ( $result ) {
+$this->insert_id = $this->dbh->lastInsertRowID();
+return 1;
+}
+$this->last_error = $this->dbh->lastErrorMsg();
+return false;
 }
 
 public function update( $table, $data, $where, $format, $where_format ) {
-$sets = [];
-foreach ( $data as $col => $val ) {
-$fmt    = array_shift( $format );
-$sets[] = '%s' === $fmt ? "$col = '" . str_replace( "'", "''", $val ) . "'" : "$col = $val";
+$cols        = array_keys( $data );
+$set_clauses = array_map( function( $col ) { return $col . ' = ?'; }, $cols );
+$where_col   = key( $where );
+$sql         = 'UPDATE ' . $table . ' SET ' . implode( ', ', $set_clauses ) . ' WHERE ' . $where_col . ' = ?';
+$stmt        = $this->dbh->prepare( $sql );
+
+foreach ( $cols as $i => $col ) {
+$fmt  = $format[ $i ];
+$val  = $data[ $col ];
+$type = SQLITE3_TEXT;
+if ( '%f' === $fmt ) {
+$type = SQLITE3_FLOAT;
+} elseif ( '%d' === $fmt ) {
+$type = SQLITE3_INTEGER;
+} elseif ( 'report_html' === $col ) {
+$type = SQLITE3_BLOB;
 }
-$where_col = key( $where );
-$where_val = current( $where );
-$where_fmt = $where_format[0];
-$where_sql = '%s' === $where_fmt ? "'" . str_replace( "'", "''", $where_val ) . "'" : $where_val;
-$sql       = "UPDATE $table SET " . implode( ', ', $sets ) . " WHERE $where_col = $where_sql";
-		$ok = $this->dbh->exec( $sql );
-		if ( ! $ok ) {
-			$this->last_error = $this->dbh->lastErrorMsg();
-		}
-		return $ok;
+$stmt->bindValue( $i + 1, $val, $type );
+}
+
+$where_val  = current( $where );
+$where_fmt  = $where_format[0];
+$where_type = SQLITE3_TEXT;
+if ( '%f' === $where_fmt ) {
+$where_type = SQLITE3_FLOAT;
+} elseif ( '%d' === $where_fmt ) {
+$where_type = SQLITE3_INTEGER;
+}
+$stmt->bindValue( count( $cols ) + 1, $where_val, $where_type );
+
+$result = $stmt->execute();
+if ( ! $result ) {
+$this->last_error = $this->dbh->lastErrorMsg();
+return false;
+}
+return true;
 }
 
 public function last_error() {

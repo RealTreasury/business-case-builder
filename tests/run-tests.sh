@@ -72,11 +72,23 @@ echo "13b. Running email and PDF test..."
 php tests/email-and-pdf.test.php
 
 # AJAX error handling test (PHPUnit)
+# Determine phpunit executable
+PHPUNIT=""
+if [ -x "vendor/bin/phpunit" ]; then
+PHPUNIT="vendor/bin/phpunit"
+elif command -v phpunit >/dev/null 2>&1; then
+PHPUNIT="phpunit"
+fi
+
+if [ -n "$PHPUNIT" ]; then
 echo "15. Running AJAX error handling tests..."
-phpunit tests/RTBCB_AjaxGenerateComprehensiveCaseErrorTest.php
-phpunit tests/RTBCB_AjaxGenerateComprehensiveCaseFatalErrorTest.php
-phpunit tests/RTBCB_GenerateBusinessAnalysisTimeoutTest.php
-phpunit tests/report-error-handling.test.php
+$PHPUNIT tests/RTBCB_AjaxGenerateComprehensiveCaseErrorTest.php
+$PHPUNIT tests/RTBCB_AjaxGenerateComprehensiveCaseFatalErrorTest.php
+$PHPUNIT tests/RTBCB_GenerateBusinessAnalysisTimeoutTest.php
+$PHPUNIT tests/report-error-handling.test.php
+else
+echo "15. Skipping AJAX error handling tests (phpunit not installed)"
+fi
 
 # Background job test
 echo "14. Running background job tests..."
@@ -87,8 +99,12 @@ echo "14b. Running job status tests..."
 php tests/job-status.test.php
 
 # Business analysis generation test
+if [ -n "$PHPUNIT" ]; then
 echo "14c. Running business analysis generation test..."
-phpunit tests/generate-business-analysis.test.php
+$PHPUNIT tests/generate-business-analysis.test.php
+else
+echo "14c. Skipping business analysis generation test (phpunit not installed)"
+fi
 
 # JavaScript tests
 echo "16. Running JavaScript tests..."
@@ -123,8 +139,12 @@ php tests/project-growth-path.test.php
 echo "18b. Running company research cache test..."
 php tests/company-research-cache.test.php
 
+if [ -n "$PHPUNIT" ]; then
 echo "19. Running validator tests..."
-phpunit -c phpunit.xml
+$PHPUNIT -c phpunit.xml
+else
+echo "19. Skipping validator tests (phpunit not installed)"
+fi
 
 echo "================================================"
 echo "Tests complete!"
