@@ -1622,30 +1622,33 @@ function rtbcb_get_analysis_job_result( $job_id ) {
  * Build a cache key for LLM research results.
  *
  * @param string $company  Company name.
- * @param string $industry Industry name.
- * @param string $type     Cache segment identifier.
+ * @param string $industry     Industry name.
+ * @param string $type         Cache segment identifier.
+ * @param string $company_size Company size.
  *
  * @return string Cache key.
  */
-function rtbcb_get_research_cache_key( $company, $industry, $type ) {
-	$company  = sanitize_title( $company );
-	$industry = sanitize_title( $industry );
-	$type     = sanitize_key( $type );
+function rtbcb_get_research_cache_key( $company, $industry, $type, $company_size = '' ) {
+	$company      = sanitize_title( $company );
+	$industry     = sanitize_title( $industry );
+	$type         = sanitize_key( $type );
+	$company_size = sanitize_title( $company_size );
 
-	return 'rtbcb_' . $type . '_' . md5( $company . '_' . $industry );
+	return 'rtbcb_' . $type . '_' . md5( $company . '_' . $industry . '_' . $company_size );
 }
 
 /**
  * Retrieve cached LLM research data.
  *
  * @param string $company  Company name.
- * @param string $industry Industry name.
- * @param string $type     Cache segment identifier.
+ * @param string $industry     Industry name.
+ * @param string $type         Cache segment identifier.
+ * @param string $company_size Company size.
  *
  * @return mixed Cached data or false when not found.
  */
-function rtbcb_get_research_cache( $company, $industry, $type ) {
-	$key = rtbcb_get_research_cache_key( $company, $industry, $type );
+function rtbcb_get_research_cache( $company, $industry, $type, $company_size = '' ) {
+	$key = rtbcb_get_research_cache_key( $company, $industry, $type, $company_size );
 	return get_transient( $key );
 }
 
@@ -1653,27 +1656,29 @@ function rtbcb_get_research_cache( $company, $industry, $type ) {
  * Store LLM research data in cache.
  *
  * @param string $company  Company name.
- * @param string $industry Industry name.
- * @param string $type     Cache segment identifier.
- * @param mixed  $data     Data to cache.
- * @param int    $ttl      Optional TTL in seconds.
+ * @param string $industry     Industry name.
+ * @param string $type         Cache segment identifier.
+ * @param mixed  $data         Data to cache.
+ * @param int    $ttl          Optional TTL in seconds.
+ * @param string $company_size Company size.
  */
-function rtbcb_set_research_cache( $company, $industry, $type, $data, $ttl = 0 ) {
-	$key = rtbcb_get_research_cache_key( $company, $industry, $type );
+function rtbcb_set_research_cache( $company, $industry, $type, $data, $ttl = 0, $company_size = '' ) {
+	$key = rtbcb_get_research_cache_key( $company, $industry, $type, $company_size );
 	$ttl = (int) $ttl;
 	if ( 0 === $ttl ) {
 		$ttl = DAY_IN_SECONDS;
 	}
-
-	/**
-	 * Filter the research cache TTL.
-	 *
-	 * @param int $ttl Cache duration in seconds.
-	 * @param string $type Cache segment identifier.
-	 * @param string $company Sanitized company name.
-	 * @param string $industry Sanitized industry.
-	 */
-	$ttl = apply_filters( 'rtbcb_research_cache_ttl', $ttl, $type, $company, $industry );
+	
+/**
+ * Filter the research cache TTL.
+ *
+ * @param int    $ttl          Cache duration in seconds.
+ * @param string $type         Cache segment identifier.
+ * @param string $company      Sanitized company name.
+ * @param string $industry     Sanitized industry.
+ * @param string $company_size Sanitized company size.
+ */
+	$ttl = apply_filters( 'rtbcb_research_cache_ttl', $ttl, $type, $company, $industry, $company_size );
 
 	set_transient( $key, $data, $ttl );
 }
@@ -1682,12 +1687,13 @@ function rtbcb_set_research_cache( $company, $industry, $type, $data, $ttl = 0 )
  * Delete cached LLM research data.
  *
  * @param string $company  Company name.
- * @param string $industry Industry name.
- * @param string $type     Cache segment identifier.
+ * @param string $industry     Industry name.
+ * @param string $type         Cache segment identifier.
+ * @param string $company_size Company size.
  */
-function rtbcb_delete_research_cache( $company, $industry, $type ) {
-$key = rtbcb_get_research_cache_key( $company, $industry, $type );
-delete_transient( $key );
+function rtbcb_delete_research_cache( $company, $industry, $type, $company_size = '' ) {
+	$key = rtbcb_get_research_cache_key( $company, $industry, $type, $company_size );
+	delete_transient( $key );
 }
 
 /**

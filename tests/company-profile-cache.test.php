@@ -92,18 +92,36 @@ if ( ! is_array( $result['company_profile'] ) ) {
 	exit( 1 );
 }
 
-$cached = rtbcb_get_research_cache( 'Cache Co', 'finance', 'company_profile' );
+$cached = rtbcb_get_research_cache( 'Cache Co', 'finance', 'company_profile', '$50M-$500M' );
 if ( false === $cached ) {
 	echo "Profile not cached\n";
 	exit( 1 );
 }
 
 $custom = [ 'stage' => 'cached', 'characteristics' => '', 'treasury_focus' => '', 'typical_challenges' => '' ];
-rtbcb_set_research_cache( 'Cache Co', 'finance', 'company_profile', $custom );
+rtbcb_set_research_cache( 'Cache Co', 'finance', 'company_profile', $custom, 0, '$50M-$500M' );
 
 $result2 = $method->invoke( $llm, $inputs );
 if ( 'cached' !== ( $result2['company_profile']['stage'] ?? '' ) ) {
-	echo "Cache not used\n";
+        echo "Cache not used\n";
+        exit( 1 );
+}
+
+$inputs_large = [
+	'company_name' => 'Cache Co',
+	'company_size' => '>$2B',
+	'industry'     => 'finance',
+];
+
+$result3 = $method->invoke( $llm, $inputs_large );
+if ( 'cached' === ( $result3['company_profile']['stage'] ?? '' ) ) {
+        echo "Cache reused for different size\n";
+        exit( 1 );
+}
+
+$cached_large = rtbcb_get_research_cache( 'Cache Co', 'finance', 'company_profile', '>$2B' );
+if ( false === $cached_large ) {
+	echo "Large profile not cached\n";
 	exit( 1 );
 }
 

@@ -941,10 +941,10 @@ USER,
 	$industry     = sanitize_text_field( $user_inputs['industry'] ?? '' );
 	$company_size = sanitize_text_field( $user_inputs['company_size'] ?? '' );
 
-	$company_profile = rtbcb_get_research_cache( $company_name, $industry, 'company_profile' );
+	$company_profile = rtbcb_get_research_cache( $company_name, $industry, 'company_profile', $company_size );
 	if ( false === $company_profile ) {
 		$company_profile = $this->build_company_profile( $company_name, $industry, $company_size );
-		rtbcb_set_research_cache( $company_name, $industry, 'company_profile', $company_profile );
+		rtbcb_set_research_cache( $company_name, $industry, 'company_profile', $company_profile, 0, $company_size );
 	}
 
 	$research = [
