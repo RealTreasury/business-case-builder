@@ -3,6 +3,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	define( 'ABSPATH', __DIR__ . '/../' );
 }
 
+ini_set( 'error_log', '/dev/null' );
+
 if ( ! function_exists( 'sanitize_text_field' ) ) {
 	function sanitize_text_field( $text ) {
 		$text = is_scalar( $text ) ? (string) $text : '';
