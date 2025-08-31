@@ -125,7 +125,14 @@ return null;
 }
 
 public function get_results( $sql, $output = ARRAY_A ) {
-        return [];
+	$results = [];
+	$query   = $this->dbh->query( $sql );
+	if ( $query instanceof SQLite3Result ) {
+		while ( $row = $query->fetchArray( SQLITE3_ASSOC ) ) {
+			$results[] = $row;
+		}
+	}
+	return $results;
 }
 
 public function insert( $table, $data, $format ) {

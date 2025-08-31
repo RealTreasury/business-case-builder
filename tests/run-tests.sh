@@ -91,7 +91,7 @@ $PHP tests/job-status.test.php
 
 # Business analysis generation test
 echo "14c. Running business analysis generation test..."
-$PHP tests/generate-business-analysis.test.php
+phpunit tests/generate-business-analysis.test.php
 
 # JavaScript tests
 echo "16. Running JavaScript tests..."
