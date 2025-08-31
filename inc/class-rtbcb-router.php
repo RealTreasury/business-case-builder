@@ -332,6 +332,7 @@ class RTBCB_Router {
            'metadata'           => [
                'company_name'     => $company_name,
                'analysis_date'    => current_time( 'Y-m-d' ),
+               'analysis_type'    => rtbcb_get_analysis_type(),
                'confidence_level' => floatval( $business_case_data['confidence'] ),
                'processing_time'  => intval( $business_case_data['processing_time'] ),
            ],

@@ -31,6 +31,34 @@ function rtbcb_get_api_timeout() {
 require_once __DIR__ . '/config.php';
 
 /**
+ * Determine the current analysis tier.
+ *
+ * Uses plugin settings to detect enabled features and maps them to one of
+ * the allowed tiers. The value can be filtered via `rtbcb_analysis_type`.
+ *
+ * @return string Analysis type.
+ */
+function rtbcb_get_analysis_type() {
+	$analysis_type = 'basic';
+
+	$enable_ai = class_exists( 'RTBCB_Settings' ) ? RTBCB_Settings::get_setting( 'enable_ai_analysis', true ) : true;
+
+	if ( $enable_ai ) {
+		$analysis_type = 'enhanced';
+	}
+
+	if ( function_exists( 'apply_filters' ) ) {
+		$analysis_type = apply_filters( 'rtbcb_analysis_type', $analysis_type );
+	}
+
+	if ( ! in_array( $analysis_type, RTBCB_ALLOWED_TIERS, true ) ) {
+		$analysis_type = 'basic';
+	}
+
+	return $analysis_type;
+}
+
+/**
  * Retrieve the OpenAI API key from plugin settings.
  *
  * Reads the value stored in the WordPress options table.

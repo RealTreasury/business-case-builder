@@ -117,7 +117,7 @@ class RTBCB_Ajax {
 				'report_data'   => $structured_report_data,
 				'workflow_info' => $debug_info,
 				'lead_id'       => $lead_id,
-				'analysis_type' => 'enhanced_comprehensive',
+                               'analysis_type' => rtbcb_get_analysis_type(),
 			];
 		} catch ( Exception $e ) {
 			$workflow_tracker->add_error( 'exception', $e->getMessage() );
@@ -241,7 +241,7 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 			'metadata' => [
 				'company_name'   => $user_inputs['company_name'],
 				'analysis_date'  => current_time( 'Y-m-d' ),
-				'analysis_type'  => 'comprehensive_enhanced',
+                               'analysis_type'  => rtbcb_get_analysis_type(),
 				'confidence_level' => $final_analysis['confidence_level'] ?? 0.85,
 				'processing_time' => microtime( true ) - $request_start,
 			],

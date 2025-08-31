@@ -826,7 +826,7 @@ return $use_comprehensive;
 					'report_html'            => $report_html,
 					'lead_id'                => $lead_id,
 					'company_name'           => $user_inputs['company_name'],
-					'analysis_type'          => 'comprehensive_enhanced',
+                                        'analysis_type'          => rtbcb_get_analysis_type(),
 					'memory_info'            => rtbcb_get_memory_status(),
 				];
 
@@ -1705,7 +1705,7 @@ return $use_comprehensive;
                 'report_html'            => $report_html,
                 'lead_id'                => $lead_id,
                 'company_name'           => $user_inputs['company_name'],
-                'analysis_type'          => 'comprehensive',
+                'analysis_type'          => rtbcb_get_analysis_type(),
                 'api_used'               => ! empty( get_option( 'rtbcb_openai_api_key' ) ),
                 'fallback_used'          => isset( $comprehensive_analysis['enhanced_fallback'] ),
                 'memory_info'            => rtbcb_get_memory_status(),
@@ -1928,6 +1928,7 @@ return $use_comprehensive;
            'metadata'           => [
                'company_name'     => $company_name,
                'analysis_date'    => current_time( 'Y-m-d' ),
+               'analysis_type'    => rtbcb_get_analysis_type(),
                'confidence_level' => floatval( $business_case_data['confidence'] ),
                'processing_time'  => intval( $business_case_data['processing_time'] ),
            ],
@@ -1991,6 +1992,7 @@ return $use_comprehensive;
            'metadata'           => [
                'company_name'     => '',
                'analysis_date'    => '',
+               'analysis_type'    => '',
                'confidence_level' => 0,
                'processing_time'  => 0,
            ],
