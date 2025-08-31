@@ -460,8 +460,8 @@ class RTBCB_Leads {
 
 		// Leads by category
 		$category_stats = $wpdb->get_results(
-			"SELECT recommended_category, COUNT(*) as count FROM " . self::$table_name . " 
-			 WHERE recommended_category != '' 
+			"SELECT recommended_category, COUNT(*) as count FROM " . self::$table_name . "
+			 WHERE recommended_category != ''
 			 GROUP BY recommended_category",
 			ARRAY_A
 		);
@@ -469,8 +469,8 @@ class RTBCB_Leads {
 
 		// Leads by company size
 		$size_stats = $wpdb->get_results(
-			"SELECT company_size, COUNT(*) as count FROM " . self::$table_name . " 
-			 WHERE company_size != '' 
+			"SELECT company_size, COUNT(*) as count FROM " . self::$table_name . "
+			 WHERE company_size != ''
 			 GROUP BY company_size",
 			ARRAY_A
 		);
@@ -478,8 +478,8 @@ class RTBCB_Leads {
 
 		// Average ROI
 		$roi_stats = $wpdb->get_row(
-			"SELECT AVG(roi_low) as avg_low, AVG(roi_base) as avg_base, AVG(roi_high) as avg_high 
-			 FROM " . self::$table_name . " 
+			"SELECT AVG(roi_low) as avg_low, AVG(roi_base) as avg_base, AVG(roi_high) as avg_high
+			 FROM " . self::$table_name . "
 			 WHERE roi_base > 0",
 			ARRAY_A
 		);

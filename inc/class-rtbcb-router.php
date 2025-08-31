@@ -304,18 +304,18 @@ class RTBCB_Router {
 	 */
 	public function get_fast_report_html( $form_data, $calculations ) {
 		$template_path = RTBCB_DIR . 'templates/fast-report-template.php';
-		
+
 		if ( ! file_exists( $template_path ) ) {
 			return '';
 		}
-		
+
 		$form_data    = is_array( $form_data ) ? $form_data : [];
 		$calculations = is_array( $calculations ) ? $calculations : [];
-		
+
 		ob_start();
 		include $template_path;
 		$html = ob_get_clean();
-		
+
 		return wp_kses( $html, rtbcb_get_report_allowed_html() );
 	}
 

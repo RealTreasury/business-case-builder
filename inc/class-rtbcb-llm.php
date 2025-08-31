@@ -848,17 +848,17 @@ $batch_prompts['tech'] = [
 				return $tech_landscape;
 			}
 		}
-		
+
 		// Generate comprehensive report
 		$model = $this->select_optimal_model( $user_inputs, $context_chunks );
-		$prompt = $this->build_comprehensive_prompt( 
-			$user_inputs, 
-			$roi_data, 
+		$prompt = $this->build_comprehensive_prompt(
+			$user_inputs,
+			$roi_data,
 			$company_research,
 			$industry_analysis,
 			$tech_landscape
 		);
-		
+
 		$history  = [
 			[
 				'role'    => 'user',
@@ -1081,9 +1081,9 @@ $batch_prompts['tech'] = [
 				'typical_challenges' => 'system complexity, governance requirements, scale management'
 			]
 		];
-		
+
 		$profile = $size_profiles[$company_size] ?? $size_profiles['$50M-$500M'];
-		
+
 		return [
 			'company_name' => $company_name,
 			'revenue_segment' => $company_size,
@@ -1120,7 +1120,7 @@ $batch_prompts['tech'] = [
 			],
 			// Add more industries as needed
 		];
-		
+
 		return $contexts[$industry] ?? [
 			'cash_flow_pattern' => 'varies by business model',
 			'working_capital_intensity' => 'moderate',
@@ -1726,7 +1726,7 @@ SYSTEM;
 		$prompt .= "Key Characteristics: {$company_profile['key_characteristics']}\n";
 		$prompt .= "Treasury Priorities: {$company_profile['treasury_priorities']}\n";
 		$prompt .= "Common Challenges: {$company_profile['common_challenges']}\n\n";
-		
+
 		// Current State Analysis
 		$prompt .= "CURRENT TREASURY OPERATIONS:\n";
 		$prompt .= "Weekly Reconciliation Hours: " . ($user_inputs['hours_reconciliation'] ?? 0) . "\n";
@@ -1758,7 +1758,7 @@ SYSTEM;
 		$prompt .= "Conservative Scenario: $" . number_format($roi_data['conservative']['total_annual_benefit'] ?? 0) . "\n";
 		$prompt .= "Base Case Scenario: $" . number_format($roi_data['base']['total_annual_benefit'] ?? 0) . "\n";
 		$prompt .= "Optimistic Scenario: $" . number_format($roi_data['optimistic']['total_annual_benefit'] ?? 0) . "\n\n";
-		
+
 		// Strategic Context
 		if ( ! empty( $user_inputs['business_objective'] ) ) {
 			$prompt .= "Primary Business Objective: " . $user_inputs['business_objective'] . "\n";
@@ -1856,7 +1856,7 @@ SYSTEM;
 				"Change management and training program"
 			]
 		], JSON_PRETTY_PRINT);
-		
+
 		return $prompt;
 	}
 
@@ -1893,30 +1893,30 @@ return $analysis;
 	if ( empty( $this->api_key ) ) {
 	return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
 	}
-	
+
 	$system_prompt = $this->build_enrichment_system_prompt();
 	$user_prompt   = $this->build_enrichment_user_prompt( $user_inputs );
-	
+
 	$response = $this->call_openai_with_retry(
 	$this->get_model( 'advanced' ),
 	[ 'instructions' => $system_prompt, 'input' => $user_prompt ],
 	$this->estimate_tokens( 1500 )
 	);
-	
+
 	if ( is_wp_error( $response ) ) {
 	return $response;
 	}
-	
+
 	$parsed        = rtbcb_parse_gpt5_response( $response );
 	$enriched_data = json_decode( $parsed['output_text'], true );
-	
+
 	if ( ! is_array( $enriched_data ) ) {
 	return new WP_Error( 'parse_error', __( 'Failed to parse AI enrichment response.', 'rtbcb' ) );
 	}
-	
+
 	return $this->validate_and_structure_enrichment( $enriched_data, $user_inputs );
 	}
-	
+
 	/**
 	 * Build system prompt for consolidated enrichment.
 	 *
@@ -1925,13 +1925,13 @@ return $analysis;
 	private function build_enrichment_system_prompt() {
 	return <<<'SYSTEM'
 	You are a senior treasury technology consultant conducting comprehensive company and industry research.
-	
+
 	Your task is to enrich the provided company information with strategic insights, industry context, and actionable intelligence that will inform treasury technology recommendations.
-	
+
 	## Required Output Format
-	
+
 	Return a single JSON object with this exact structure:
-	
+
 	```json
 	{
 	  "company_profile": {
@@ -1997,18 +1997,18 @@ return $analysis;
 	  }
 	}
 	```
-	
+
 	## Analysis Guidelines
-	
+
 	1. **Be Specific**: Provide company-specific insights, not generic advice
 	2. **Use Context**: Leverage all provided company data for comprehensive analysis
 	3. **Industry Focus**: Consider industry-specific factors that impact treasury operations
 	4. **Practical Insights**: Focus on actionable intelligence for decision-making
 	5. **Risk Assessment**: Identify both opportunities and potential challenges
 	6. **Confidence Scoring**: Honestly assess confidence based on available information
-	
+
 	## Important Notes
-	
+
 	- Return ONLY the JSON object, no additional text
 	- Use realistic estimates based on company size and industry
 	- Consider both current state and future trajectory
@@ -2016,7 +2016,7 @@ return $analysis;
 	- Maintain professional consulting tone in all descriptions
 	SYSTEM;
 	}
-	
+
 	/**
 	 * Build user prompt with company data.
 	 *
@@ -2025,10 +2025,10 @@ return $analysis;
 	 */
 	private function build_enrichment_user_prompt( $user_inputs ) {
 	$pain_points_formatted = implode( ', ', $user_inputs['pain_points'] );
-	
+
 	return <<<PROMPT
 	Please conduct comprehensive company and industry enrichment analysis for the following organization:
-	
+
 	## Company Information
 	- **Company Name**: {$user_inputs['company_name']}
 	- **Industry**: {$user_inputs['industry']}
@@ -2036,28 +2036,28 @@ return $analysis;
 	- **Business Objective**: {$user_inputs['business_objective']}
 	- **Implementation Timeline**: {$user_inputs['implementation_timeline']}
 	- **Budget Range**: {$user_inputs['budget_range']}
-	
+
 	## Current Treasury Operations
 	- **Weekly Reconciliation Hours**: {$user_inputs['hours_reconciliation']}
 	- **Weekly Cash Positioning Hours**: {$user_inputs['hours_cash_positioning']}
 	- **Banking Relationships**: {$user_inputs['num_banks']}
 	- **Treasury Team Size**: {$user_inputs['ftes']} FTEs
 	- **Key Pain Points**: {$pain_points_formatted}
-	
+
 	## Analysis Requirements
-	
+
 	Provide deep, actionable insights that will inform:
 	1. ROI calculations and financial modeling
 	2. Technology category recommendations
 	3. Implementation planning and risk assessment
 	4. Strategic positioning and competitive analysis
-	
+
 	Focus on treasury-specific challenges and opportunities within the {$user_inputs['industry']} industry for a {$user_inputs['company_size']} organization.
-	
+
 	Consider how the stated business objective of "{$user_inputs['business_objective']}" and timeline of "{$user_inputs['implementation_timeline']}" impact the technology strategy.
 	PROMPT;
 	}
-	
+
 	/**
 	 * PHASE 2: Strategic Analysis Generation.
 	 *
@@ -2075,7 +2075,7 @@ return $analysis;
 	if ( empty( $this->api_key ) ) {
 	return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
 	}
-	
+
 	$system_prompt = $this->build_strategic_analysis_system_prompt();
 	$user_prompt   = $this->build_strategic_analysis_user_prompt(
 	$enriched_profile,
@@ -2083,27 +2083,27 @@ return $analysis;
 	$recommendation,
 	$rag_baseline
 	);
-	
+
 	$response = $this->call_openai_with_retry(
 	$this->get_model( 'premium' ),
 	[ 'instructions' => $system_prompt, 'input' => $user_prompt ],
 	$this->estimate_tokens( 2000 )
 	);
-	
+
 	if ( is_wp_error( $response ) ) {
 	return $response;
 	}
-	
+
 	$parsed        = rtbcb_parse_gpt5_response( $response );
 	$analysis_data = json_decode( $parsed['output_text'], true );
-	
+
 	if ( ! is_array( $analysis_data ) ) {
 	return new WP_Error( 'parse_error', __( 'Failed to parse strategic analysis response.', 'rtbcb' ) );
 	}
-	
+
 	return $this->validate_and_structure_analysis( $analysis_data );
 	}
-	
+
 	/**
 	 * Build system prompt for strategic analysis.
 	 *
@@ -2112,19 +2112,19 @@ return $analysis;
 	private function build_strategic_analysis_system_prompt() {
 	return <<<'SYSTEM'
 	You are a senior treasury technology consultant creating executive-level strategic recommendations.
-	
+
 	You have been provided with:
 	1. Enriched company intelligence and industry context
 	2. Detailed ROI calculations and financial modeling
 	3. Technology category recommendations
 	4. Relevant market research and best practices
-	
+
 	Your task is to synthesize this information into a comprehensive strategic analysis that executives can use to make informed treasury technology investment decisions.
-	
+
 	## Required Output Format
-	
+
 	Return a single JSON object with this exact structure:
-	
+
 	```json
 	{
 	  "executive_summary": {
@@ -2202,20 +2202,20 @@ return $analysis;
 	  }
 	}
 	```
-	
+
 	## Analysis Standards
-	
+
 	- **Executive Focus**: Write for C-level decision makers
 	- **Actionable Insights**: Provide specific, implementable recommendations
 	- **Risk Balance**: Address both opportunities and challenges honestly
 	- **Financial Rigor**: Support recommendations with solid financial analysis
 	- **Implementation Reality**: Consider practical constraints and requirements
 	- **Competitive Context**: Position recommendations within competitive landscape
-	
+
 	Return ONLY the JSON object with no additional text.
 	SYSTEM;
 	}
-	
+
 	/**
 	 * Build user prompt for strategic analysis.
 	 *
@@ -2228,45 +2228,45 @@ return $analysis;
 	private function build_strategic_analysis_user_prompt( $enriched_profile, $roi_scenarios, $recommendation, $rag_baseline ) {
 	$prompt = <<<PROMPT
 	Create a comprehensive strategic analysis and executive recommendations based on the following research and analysis:
-	
+
 	## Enriched Company Intelligence
 	```json
 	{$this->json_encode_safe( $enriched_profile )}
 	```
-	
+
 	## Financial Analysis & ROI Scenarios
 	```json
 	{$this->json_encode_safe( $roi_scenarios )}
 	```
-	
+
 	## Technology Recommendations
 	```json
 	{$this->json_encode_safe( $recommendation )}
 	```
-	
+
 	## Market Research Context
 	```json
 	{$this->json_encode_safe( $rag_baseline )}
 	```
-	
+
 	## Analysis Requirements
-	
+
 	Synthesize all provided information to create executive-level strategic recommendations that:
-	
+
 	1. **Justify the Investment**: Clear business case with financial backing
 	2. **Address Specific Needs**: Solutions tailored to identified challenges
 	3. **Mitigate Risks**: Comprehensive risk assessment and mitigation strategies
 	4. **Enable Success**: Practical implementation roadmap with success metrics
 	5. **Competitive Advantage**: Position technology investment within competitive context
-	
+
 	Focus on creating actionable insights that executives can use to make informed decisions about treasury technology investments.
-	
+
 	Consider the company's maturity level, industry dynamics, and specific operational challenges when formulating recommendations.
 	PROMPT;
-	
+
 	return $prompt;
 	}
-	
+
 	/**
 	 * Validate and structure enrichment data.
 	 *
@@ -2281,10 +2281,10 @@ return $analysis;
 	'strategic_insights' => $this->validate_strategic_insights( $enriched_data['strategic_insights'] ?? [] ),
 	'enrichment_metadata' => $this->validate_enrichment_metadata( $enriched_data['enrichment_metadata'] ?? [] ),
 	];
-	
+
 	return $structured;
 	}
-	
+
 	/**
 	 * Validate company profile data.
 	 *
@@ -2320,7 +2320,7 @@ return $analysis;
 	],
 	];
 	}
-	
+
 	/**
 	 * Safe JSON encoding with error handling.
 	 *
@@ -2333,11 +2333,11 @@ return $analysis;
 	if ( $pretty ) {
 	$flags |= JSON_PRETTY_PRINT;
 	}
-	
+
 	$json = json_encode( $data, $flags );
 	return false !== $json ? $json : '{}';
 	}
-	
+
 	/**
 	 * Validate industry context data.
 	 *
@@ -2365,7 +2365,7 @@ return $analysis;
 	],
 	];
 	}
-	
+
 	/**
 	 * Validate strategic insights data.
 	 *
@@ -2387,7 +2387,7 @@ return $analysis;
 	'potential_obstacles'      => array_map( 'sanitize_text_field', $insights['potential_obstacles'] ?? [] ),
 	];
 	}
-	
+
 	/**
 	 * Validate enrichment metadata.
 	 *
@@ -2397,7 +2397,7 @@ return $analysis;
 	private function validate_enrichment_metadata( $metadata ) {
 	$confidence = isset( $metadata['confidence_level'] ) ? floatval( $metadata['confidence_level'] ) : 0;
 	$confidence = max( 0, min( 1, $confidence ) );
-	
+
 	return [
 	'confidence_level'         => $confidence,
 	'data_sources'             => array_map( 'sanitize_text_field', $metadata['data_sources'] ?? [] ),
@@ -2405,7 +2405,7 @@ return $analysis;
 	'recommendations_priority' => sanitize_text_field( $metadata['recommendations_priority'] ?? 'medium' ),
 	];
 	}
-	
+
 	/**
 	 * Validate and structure strategic analysis data.
 	 *
@@ -2466,7 +2466,7 @@ return $analysis;
 	'negotiation_priorities' => array_map( 'sanitize_text_field', $analysis_data['vendor_considerations']['negotiation_priorities'] ?? [] ),
 	],
 	];
-	
+
 	foreach ( (array) ( $analysis_data['operational_analysis']['process_improvements'] ?? [] ) as $item ) {
 	$analysis['operational_analysis']['process_improvements'][] = [
 	'process_area'   => sanitize_text_field( $item['process_area'] ?? '' ),
@@ -2475,7 +2475,7 @@ return $analysis;
 	'impact_level'   => sanitize_text_field( $item['impact_level'] ?? '' ),
 	];
 	}
-	
+
 	foreach ( (array) ( $analysis_data['operational_analysis']['automation_opportunities'] ?? [] ) as $item ) {
 	$analysis['operational_analysis']['automation_opportunities'][] = [
 	'opportunity'          => sanitize_text_field( $item['opportunity'] ?? '' ),
@@ -2484,7 +2484,7 @@ return $analysis;
 	'implementation_effort' => sanitize_text_field( $item['implementation_effort'] ?? '' ),
 	];
 	}
-	
+
 	foreach ( (array) ( $analysis_data['implementation_roadmap'] ?? [] ) as $phase ) {
 	$analysis['implementation_roadmap'][] = [
 	'phase'          => sanitize_text_field( $phase['phase'] ?? '' ),
@@ -2494,10 +2494,10 @@ return $analysis;
 	'risks'          => array_map( 'sanitize_text_field', $phase['risks'] ?? [] ),
 	];
 	}
-	
+
 	return $analysis;
 	}
-	
+
 	/**
 	 * Call OpenAI with retry logic.
 	 *
@@ -2517,7 +2517,7 @@ return $analysis;
 		$cache_key = 'rtbcb_llm_' . md5( $raw_key );
 		$ttl       = (int) apply_filters( 'rtbcb_llm_cache_ttl', HOUR_IN_SECONDS, $cache_key, $model, $prompt );
 		$invalidate = (bool) apply_filters( 'rtbcb_llm_invalidate_cache', false, $cache_key, $model, $prompt );
-		
+
 			if ( $invalidate ) {
 			wp_cache_delete( $cache_key, 'rtbcb_llm' );
 			delete_transient( $cache_key );
@@ -2529,7 +2529,7 @@ return $analysis;
 			wp_cache_set( $cache_key, $cached, 'rtbcb_llm', $ttl );
 			}
 			}
-			
+
 			if ( false !== $cached && '' !== $cached ) {
 			$response            = [ 'body' => $cached, 'response' => [ 'code' => 200, 'message' => '' ], 'headers' => [] ];
 			$this->last_response = $response;
@@ -2543,18 +2543,18 @@ return $analysis;
 		$current_tokens  = $max_output_tokens;
 		$max_retry_time  = max( $base_timeout, intval( $this->gpt5_config['max_retry_time'] ?? $base_timeout ) );
 		$start_time      = microtime( true );
-		
+
 				for ( $attempt = 1; $attempt <= $max_retries; $attempt++ ) {
 					$elapsed = microtime( true ) - $start_time;
 					if ( $elapsed >= $max_retry_time ) {
 						break;
 					}
-		
+
 					$remaining                    = $max_retry_time - $elapsed;
 					$this->gpt5_config['timeout'] = min( $current_timeout, $remaining );
-		
+
 					$response = $this->call_openai( $model, $prompt, $current_tokens, $chunk_handler );
-		
+
 		if ( ! is_wp_error( $response ) ) {
 		$this->gpt5_config['timeout'] = $base_timeout;
 		if ( isset( $response['body'] ) ) {
@@ -2567,13 +2567,13 @@ return $analysis;
 		}
 		return $response;
 		}
-		
+
 					$error_code = $response->get_error_code();
 					if ( in_array( $error_code, [ 'no_api_key', 'empty_prompt' ], true ) ) {
 						$this->gpt5_config['timeout'] = $base_timeout;
 						return $response;
 					}
-		
+
 					if ( 'llm_http_status' === $error_code ) {
 						$data   = $response->get_error_data();
 						$status = isset( $data['status'] ) ? intval( $data['status'] ) : 0;
@@ -2582,17 +2582,17 @@ return $analysis;
 							return $response;
 						}
 					}
-		
+
 					error_log( "RTBCB: OpenAI attempt {$attempt} failed: " . $response->get_error_message() );
-		
+
 					if ( $attempt < $max_retries ) {
 						if ( null !== $current_tokens ) {
 							$min_tokens    = intval( $this->gpt5_config['min_output_tokens'] ?? 1 );
 							$current_tokens = max( $min_tokens, (int) ( $current_tokens * 0.9 ) );
 						}
-		
+
 						$current_timeout = min( $current_timeout + 5, $max_retry_time );
-		
+
 						$elapsed = microtime( true ) - $start_time;
 						$delay   = min( pow( 2, $attempt - 1 ), $max_retry_time - $elapsed );
 						if ( $delay > 0 ) {
@@ -2601,7 +2601,7 @@ return $analysis;
 						}
 					}
 				}
-		
+
 				$this->gpt5_config['timeout'] = $base_timeout;
 
 		return $response; // Return last error
@@ -2974,9 +2974,9 @@ return $analysis;
 		$total_hours = ($user_inputs['hours_reconciliation'] ?? 0) + ($user_inputs['hours_cash_positioning'] ?? 0);
 		$team_size = $user_inputs['ftes'] ?? 1;
 		$hours_per_fte = $team_size > 0 ? $total_hours / $team_size : $total_hours;
-		
+
 		if ( $hours_per_fte < 5 ) return 'Good';
-		if ( $hours_per_fte < 15 ) return 'Fair'; 
+		if ( $hours_per_fte < 15 ) return 'Fair';
 		return 'Poor';
 	}
 
@@ -2990,7 +2990,7 @@ return $analysis;
 	private function analyze_process_inefficiencies( $user_inputs ) {
 		$inefficiencies = [];
 		$pain_points = $user_inputs['pain_points'] ?? [];
-		
+
 		foreach ( $pain_points as $pain_point ) {
 			switch ( $pain_point ) {
 				case 'manual_processes':
@@ -3003,7 +3003,7 @@ return $analysis;
 				case 'poor_visibility':
 					$inefficiencies[] = [
 						'process' => 'Cash Position Reporting',
-						'impact' => 'High', 
+						'impact' => 'High',
 						'description' => 'Lack of real-time visibility delays decision-making and impacts working capital optimization'
 					];
 					break;
@@ -3016,13 +3016,13 @@ return $analysis;
 					break;
 			}
 		}
-		
+
 		return $inefficiencies;
 	}
 
 	private function identify_automation_opportunities( $user_inputs ) {
 		$opportunities = [];
-		
+
 		if ( ($user_inputs['hours_reconciliation'] ?? 0) > 0 ) {
 			$opportunities[] = [
 				'area' => 'Bank Reconciliation',
@@ -3030,7 +3030,7 @@ return $analysis;
 				'potential_hours_saved' => round( ($user_inputs['hours_reconciliation'] ?? 0) * 0.7, 1 )
 			];
 		}
-		
+
 		if ( ($user_inputs['hours_cash_positioning'] ?? 0) > 0 ) {
 			$opportunities[] = [
 				'area' => 'Cash Position Management',
@@ -3038,7 +3038,7 @@ return $analysis;
 				'potential_hours_saved' => round( ($user_inputs['hours_cash_positioning'] ?? 0) * 0.5, 1 )
 			];
 		}
-		
+
 		return $opportunities;
 	}
 
@@ -3048,14 +3048,14 @@ return $analysis;
 			'technology' => 'Rapid growth companies are prioritizing real-time cash management and automated forecasting to support scaling operations',
 			'retail' => 'Omnichannel payment processing and seasonal cash flow management are key drivers for treasury technology investment'
 		];
-		
+
 		return $trends[$industry] ?? 'Companies across industries are modernizing treasury operations to improve efficiency and risk management';
 	}
 
 	private function build_financial_analysis( $roi_data, $user_inputs ) {
 		$base_benefit = $roi_data['base']['total_annual_benefit'] ?? 0;
 		$estimated_cost = $base_benefit * 0.4; // Rough estimate
-		
+
 		return [
 			'investment_breakdown' => [
 				'software_licensing' => '$' . number_format( $estimated_cost * 0.6 ) . ' - $' . number_format( $estimated_cost * 0.8 ),
