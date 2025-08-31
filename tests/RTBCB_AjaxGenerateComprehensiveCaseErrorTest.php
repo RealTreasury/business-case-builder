@@ -76,7 +76,7 @@ if ( ! function_exists( 'rtbcb_log_memory_usage' ) ) {
 if ( ! class_exists( 'RTBCB_LLM' ) ) {
     class RTBCB_LLM {
         public static $mode = 'generic';
-        public function generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context ) {
+        public function generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context, $chunk_handler = null ) {
             if ( 'no_api_key' === self::$mode ) {
                 return new WP_Error( 'no_api_key', 'OpenAI API key not configured.' );
             }

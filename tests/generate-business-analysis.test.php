@@ -57,7 +57,7 @@ if ( ! class_exists( 'RTBCB_LLM' ) ) {
     class RTBCB_LLM {
         public static $called = false;
         public static $sleep  = 0;
-        public function generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context ) {
+        public function generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context, $chunk_handler = null ) {
             self::$called = true;
             if ( self::$sleep > 0 ) {
                 usleep( self::$sleep );
@@ -70,7 +70,7 @@ if ( ! class_exists( 'RTBCB_LLM' ) ) {
 class Real_Treasury_BCB {
     public $fallback_called = false;
 
-    private function generate_business_analysis( $user_inputs, $scenarios, $rag_context ) {
+    private function generate_business_analysis( $user_inputs, $scenarios, $rag_context, $chunk_handler = null ) {
         $start_time = microtime( true );
         $timeout    = rtbcb_get_api_timeout();
         $time_remaining = static function() use ( $start_time, $timeout ) {

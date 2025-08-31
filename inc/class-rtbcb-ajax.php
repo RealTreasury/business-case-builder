@@ -34,7 +34,7 @@ class RTBCB_Ajax {
 	 * @param array $user_inputs User inputs.
 	 * @return array|WP_Error Result data or error.
 	 */
-	public static function process_comprehensive_case( $user_inputs ) {
+public static function process_comprehensive_case( $user_inputs ) {
                $request_start    = microtime( true );
                $workflow_tracker = new RTBCB_Workflow_Tracker();
                $enable_ai        = RTBCB_Settings::get_setting( 'enable_ai_analysis', true );
@@ -350,7 +350,48 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 		if ( count( $history ) > 20 ) {
 		$history = array_slice( $history, -20 );
 		}
-		update_option( 'rtbcb_workflow_history', $history, false );
-	}
+update_option( 'rtbcb_workflow_history', $history, false );
+}
+
+/**
+ * Stream business analysis chunks to the browser.
+ *
+ * @return void
+ */
+public static function stream_analysis() {
+if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
+headers_sent() || header( 'Content-Type: application/json; charset=UTF-8' );
+echo wp_json_encode( [ 'error' => __( 'Security check failed.', 'rtbcb' ) ] );
+wp_die( '', '', [ 'response' => 403 ] );
+}
+
+$user_inputs = self::collect_and_validate_user_inputs();
+if ( is_wp_error( $user_inputs ) ) {
+headers_sent() || header( 'Content-Type: application/json; charset=UTF-8' );
+echo wp_json_encode( [ 'error' => sanitize_text_field( $user_inputs->get_error_message() ) ] );
+wp_die();
+}
+
+$calculator = new RTBCB_Calculator();
+$scenarios  = $calculator->calculate_roi( $user_inputs );
+
+headers_sent() || header( 'Content-Type: text/plain; charset=UTF-8' );
+headers_sent() || header( 'Cache-Control: no-cache' );
+
+$chunk_handler = static function( $chunk ) {
+echo wp_json_encode( [ 'chunk' => sanitize_text_field( (string) $chunk ) ] ) . "\n";
+if ( function_exists( 'ob_flush' ) ) {
+ob_flush();
+}
+flush();
+};
+
+$llm    = new RTBCB_LLM();
+$result = $llm->generate_comprehensive_business_case( $user_inputs, $scenarios, [], $chunk_handler );
+
+echo wp_json_encode( [ 'done' => $result ] );
+wp_die();
+}
+
 }
 

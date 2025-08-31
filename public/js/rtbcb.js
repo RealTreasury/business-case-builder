@@ -216,3 +216,65 @@ document.addEventListener('DOMContentLoaded', function() {
         form.addEventListener('submit', handleSubmit);
     }
 });
+
+/**
+ * Stream analysis chunks from the server.
+ *
+ * @param {FormData} formData Form data to send.
+ * @param {Function} onChunk  Callback for each streamed chunk.
+ * @param {Function} onDone   Callback when streaming completes.
+ */
+function rtbcbStreamAnalysis(formData, onChunk, onDone) {
+    formData.append('action', 'rtbcb_stream_analysis');
+    if (typeof rtbcbAjax !== 'undefined' && rtbcbAjax.nonce) {
+        formData.append('rtbcb_nonce', rtbcbAjax.nonce);
+    }
+
+    fetch(rtbcbAjax.ajax_url, {
+        method: 'POST',
+        body: formData
+    }).then(function(response) {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        function read() {
+            reader.read().then(function(result) {
+                if (result.done) {
+                    if (buffer) {
+                        try {
+                            const data = JSON.parse(buffer);
+                            if (data.done && typeof onDone === 'function') {
+                                onDone(data.done);
+                            }
+                        } catch (e) {}
+                    }
+                    return;
+                }
+                buffer += decoder.decode(result.value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop();
+                lines.forEach(function(line) {
+                    if (!line.trim()) {
+                        return;
+                    }
+                    try {
+                        const data = JSON.parse(line);
+                        if (data.chunk && typeof onChunk === 'function') {
+                            onChunk(data.chunk);
+                        }
+                        if (data.done && typeof onDone === 'function') {
+                            onDone(data.done);
+                        }
+                    } catch (e) {}
+                });
+                read();
+            });
+        }
+        read();
+    }).catch(function(err) {
+        console.error('RTBCB stream error', err);
+    });
+}
+
+window.rtbcbStreamAnalysis = rtbcbStreamAnalysis;

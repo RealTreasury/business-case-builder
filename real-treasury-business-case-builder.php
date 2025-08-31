@@ -24,32 +24,32 @@ define( 'RTBCB_DIR', plugin_dir_path( RTBCB_FILE ) );
  * Enhanced main plugin class.
  */
 class Real_Treasury_BCB {
-    /**
-     * Singleton instance.
-     *
-     * @var Real_Treasury_BCB|null
-     */
-    private static $instance = null;
+	/**
+	* Singleton instance.
+	*
+	* @var Real_Treasury_BCB|null
+	*/
+	private static $instance = null;
 
-    /**
-     * Plugin data.
-     *
-     * @var array
-     */
+	/**
+	* Plugin data.
+	*
+	* @var array
+	*/
     private $plugin_data = [];
 
-    /**
-     * Request start time.
-     *
-     * @var float
-     */
+	/**
+	* Request start time.
+	*
+	* @var float
+	*/
     private $request_start_time = 0.0;
 
-    /**
-     * Get plugin instance.
-     *
-     * @return Real_Treasury_BCB
-     */
+	/**
+	* Get plugin instance.
+	*
+	* @return Real_Treasury_BCB
+	*/
     public static function instance() {
         if ( null === self::$instance ) {
             self::$instance = new self();
@@ -58,9 +58,9 @@ class Real_Treasury_BCB {
         return self::$instance;
     }
 
-    /**
-     * Constructor.
-     */
+	/**
+	* Constructor.
+	*/
     private function __construct() {
         $this->plugin_data = get_file_data( RTBCB_FILE, [
             'Name'        => 'Plugin Name',
@@ -75,11 +75,11 @@ class Real_Treasury_BCB {
         $this->includes();
     }
 
-    /**
-     * Initialize hooks.
-     *
-     * @return void
-     */
+	/**
+	* Initialize hooks.
+	*
+	* @return void
+	*/
     private function init_hooks() {
         register_activation_hook( RTBCB_FILE, [ $this, 'activate' ] );
         register_deactivation_hook( RTBCB_FILE, [ $this, 'deactivate' ] );
@@ -101,9 +101,11 @@ class Real_Treasury_BCB {
         // Plugin action links
         add_filter( 'plugin_action_links_' . plugin_basename( RTBCB_FILE ), [ $this, 'plugin_action_links' ] );
 
-		// AJAX handlers - Use the enhanced version
-		add_action( 'wp_ajax_rtbcb_generate_case', [ $this, 'ajax_generate_comprehensive_case_enhanced' ] );
-		add_action( 'wp_ajax_nopriv_rtbcb_generate_case', [ $this, 'ajax_generate_comprehensive_case_enhanced' ] );
+	// AJAX handlers - Use the enhanced version
+	add_action( 'wp_ajax_rtbcb_generate_case', [ $this, 'ajax_generate_comprehensive_case_enhanced' ] );
+	add_action( 'wp_ajax_nopriv_rtbcb_generate_case', [ $this, 'ajax_generate_comprehensive_case_enhanced' ] );
+	add_action( 'wp_ajax_rtbcb_stream_analysis', [ 'RTBCB_Ajax', 'stream_analysis' ] );
+	add_action( 'wp_ajax_nopriv_rtbcb_stream_analysis', [ 'RTBCB_Ajax', 'stream_analysis' ] );
 		
 		// Job status handlers
 		add_action( 'wp_ajax_rtbcb_job_status', [ 'RTBCB_Ajax', 'get_job_status' ] );
@@ -117,11 +119,11 @@ class Real_Treasury_BCB {
 		$this->init_hooks_debug();
     }
 
-    /**
-     * Initialize debug-related hooks.
-     *
-     * @return void
-     */
+	/**
+	* Initialize debug-related hooks.
+	*
+	* @return void
+	*/
 		private function init_hooks_debug() {
 		add_action( 'wp_ajax_rtbcb_debug_test', [ $this, 'debug_ajax_handler' ] );
 		add_action( 'wp_ajax_nopriv_rtbcb_debug_test', [ $this, 'debug_ajax_handler' ] );
@@ -131,11 +133,11 @@ class Real_Treasury_BCB {
 		add_action( 'wp_ajax_nopriv_rtbcb_debug_report', [ $this, 'debug_report_generation' ] );
 		}
 
-    /**
-     * Include required files.
-     *
-     * @return void
-     */
+	/**
+	* Include required files.
+	*
+	* @return void
+	*/
     private function includes() {
         // Core classes
         require_once RTBCB_DIR . 'inc/helpers.php';
@@ -166,11 +168,11 @@ class Real_Treasury_BCB {
         }
     }
 
-    /**
-     * Plugin initialization.
-     *
-     * @return void
-     */
+	/**
+	* Plugin initialization.
+	*
+	* @return void
+	*/
     public function init() {
         // Load text domain
         load_plugin_textdomain( 'rtbcb', false, dirname( plugin_basename( RTBCB_FILE ) ) . '/languages' );
@@ -180,11 +182,11 @@ class Real_Treasury_BCB {
         $this->setup_capabilities();
     }
 
-    /**
-     * Initialize components after plugins are loaded.
-     *
-     * @return void
-     */
+	/**
+	* Initialize components after plugins are loaded.
+	*
+	* @return void
+	*/
     public function plugins_loaded() {
         // Check compatibility
         if ( ! $this->check_compatibility() ) {
@@ -201,11 +203,11 @@ class Real_Treasury_BCB {
         do_action( 'rtbcb_loaded' );
     }
 
-    /**
-     * Check plugin compatibility.
-     *
-     * @return bool
-     */
+	/**
+	* Check plugin compatibility.
+	*
+	* @return bool
+	*/
     private function check_compatibility() {
         // Check PHP version
         if ( version_compare( PHP_VERSION, '7.4', '<' ) ) {
@@ -238,11 +240,11 @@ class Real_Treasury_BCB {
         return true;
     }
 
-    /**
-     * Initialize database tables.
-     *
-     * @return void
-     */
+	/**
+	* Initialize database tables.
+	*
+	* @return void
+	*/
     private function init_database() {
         // Initialize database and tables
         RTBCB_DB::init();
@@ -253,11 +255,11 @@ class Real_Treasury_BCB {
         }
     }
 
-    /**
-     * Setup user capabilities.
-     *
-     * @return void
-     */
+	/**
+	* Setup user capabilities.
+	*
+	* @return void
+	*/
     private function setup_capabilities() {
         $admin = get_role( 'administrator' );
         if ( $admin ) {
@@ -267,11 +269,11 @@ class Real_Treasury_BCB {
         }
     }
 
-    /**
-     * Setup cron jobs for maintenance tasks.
-     *
-     * @return void
-     */
+	/**
+	* Setup cron jobs for maintenance tasks.
+	*
+	* @return void
+	*/
     private function setup_cron_jobs() {
         // Schedule RAG index rebuilds
         if ( ! wp_next_scheduled( 'rtbcb_rebuild_rag_index' ) ) {
@@ -285,21 +287,21 @@ if ( ! wp_next_scheduled( 'rtbcb_cleanup_data' ) ) {
 wp_schedule_event( time(), 'weekly', 'rtbcb_cleanup_data' );
 }
 
-add_action( 'rtbcb_cleanup_data', [ $this, 'scheduled_data_cleanup' ] );
+	add_action( 'rtbcb_cleanup_data', [ $this, 'scheduled_data_cleanup' ] );
 
 // Schedule background job cleanup
 if ( ! wp_next_scheduled( 'rtbcb_cleanup_jobs' ) ) {
 wp_schedule_event( time(), 'hourly', 'rtbcb_cleanup_jobs' );
 }
 
-add_action( 'rtbcb_cleanup_jobs', [ 'RTBCB_Background_Job', 'cleanup' ] );
+	add_action( 'rtbcb_cleanup_jobs', [ 'RTBCB_Background_Job', 'cleanup' ] );
 }
 
-    /**
-     * Handle version upgrades.
-     *
-     * @return void
-     */
+	/**
+	* Handle version upgrades.
+	*
+	* @return void
+	*/
     private function maybe_upgrade() {
         $current_version = get_option( 'rtbcb_version', '1.0.0' );
 
@@ -309,12 +311,12 @@ add_action( 'rtbcb_cleanup_jobs', [ 'RTBCB_Background_Job', 'cleanup' ] );
         }
     }
 
-    /**
-     * Upgrade plugin data and settings.
-     *
-     * @param string $from_version Previous version.
-     * @return void
-     */
+	/**
+	* Upgrade plugin data and settings.
+	*
+	* @param string $from_version Previous version.
+	* @return void
+	*/
     private function upgrade_plugin( $from_version ) {
         // Upgrade from 1.x to 2.x
         if ( version_compare( $from_version, '2.0.0', '<' ) ) {
@@ -344,11 +346,11 @@ add_action( 'rtbcb_cleanup_jobs', [ 'RTBCB_Background_Job', 'cleanup' ] );
         error_log( "RTBCB: Upgraded from version {$from_version} to " . RTBCB_VERSION );
     }
 
-    /**
-     * Migrate v1 settings to v2 format.
-     *
-     * @return void
-     */
+	/**
+	* Migrate v1 settings to v2 format.
+	*
+	* @return void
+	*/
     private function migrate_v1_settings() {
         // Migration logic for old settings format
         $old_settings = get_option( 'rtbcb_old_settings', [] );
@@ -364,11 +366,11 @@ add_action( 'rtbcb_cleanup_jobs', [ 'RTBCB_Background_Job', 'cleanup' ] );
         }
     }
 
-    /**
-     * Set default options for new installation.
-     *
-     * @return void
-     */
+	/**
+	* Set default options for new installation.
+	*
+	* @return void
+	*/
     private function set_default_options() {
         $defaults = [
             'rtbcb_mini_model'         => rtbcb_get_default_model( 'mini' ),
@@ -387,8 +389,8 @@ add_action( 'rtbcb_cleanup_jobs', [ 'RTBCB_Background_Job', 'cleanup' ] );
         }
     }
 
-    /**
-     * Enqueue frontend assets with enhanced report support.
+	/**
+	* Enqueue frontend assets with enhanced report support.
 	 *
 	 * @return void
 	 */
@@ -600,12 +602,12 @@ rtbcb_log_api_debug(
 return $use_comprehensive;
 }
 
-    /**
-     * Shortcode handler.
-     *
-     * @param array $atts Shortcode attributes.
-     * @return string
-     */
+	/**
+	* Shortcode handler.
+	*
+	* @param array $atts Shortcode attributes.
+	* @return string
+	*/
     public function shortcode_handler( $atts = [] ) {
         // Parse attributes
         $atts = shortcode_atts( [
@@ -630,13 +632,13 @@ return $use_comprehensive;
         return ob_get_clean();
     }
 
-    /**
-     * Load a template file with arguments.
-     *
-     * @param string $template Template name.
-     * @param array  $args     Template arguments.
-     * @return void
-     */
+	/**
+	* Load a template file with arguments.
+	*
+	* @param string $template Template name.
+	* @param array  $args     Template arguments.
+	* @return void
+	*/
     private function load_template( $template, $args = [] ) {
         $template_path = RTBCB_DIR . "templates/{$template}.php";
 
@@ -649,11 +651,11 @@ return $use_comprehensive;
         }
     }
 
-    /**
-     * Handle portal data changes.
-     *
-     * @return void
-     */
+	/**
+	* Handle portal data changes.
+	*
+	* @return void
+	*/
     public function handle_portal_data_change() {
         // Rebuild RAG index when portal data changes
         if ( class_exists( 'RTBCB_RAG' ) ) {
@@ -664,11 +666,11 @@ return $use_comprehensive;
         error_log( 'RTBCB: Portal data change detected, RAG index rebuild scheduled' );
     }
 
-    /**
-     * Scheduled RAG index rebuild.
-     *
-     * @return void
-     */
+	/**
+	* Scheduled RAG index rebuild.
+	*
+	* @return void
+	*/
     public function scheduled_rag_rebuild() {
         if ( ! class_exists( 'RTBCB_RAG' ) ) {
             return;
@@ -683,11 +685,11 @@ return $use_comprehensive;
         }
     }
 
-    /**
-     * Scheduled data cleanup.
-     *
-     * @return void
-     */
+	/**
+	* Scheduled data cleanup.
+	*
+	* @return void
+	*/
     public function scheduled_data_cleanup() {
         global $wpdb;
 
@@ -955,11 +957,18 @@ return $use_comprehensive;
 	}
 	
 	/**
-	 * Generate comprehensive business analysis using LLM.
-	 */
-        private function generate_business_analysis( $user_inputs, $scenarios, $rag_context ) {
-            $start_time = microtime( true );
-            $timeout    = absint( rtbcb_get_api_timeout() );
+	* Generate comprehensive business analysis using LLM.
+	*
+	* @param array         $user_inputs   Sanitized user inputs.
+	* @param array         $scenarios     ROI scenarios.
+	* @param array         $rag_context   Retrieved RAG context.
+	* @param callable|null $chunk_handler Optional streaming callback.
+	*
+	* @return array|WP_Error Analysis array or error.
+	*/
+	private function generate_business_analysis( $user_inputs, $scenarios, $rag_context, $chunk_handler = null ) {
+		$start_time = microtime( true );
+		$timeout    = absint( rtbcb_get_api_timeout() );
 
             $time_remaining = static function() use ( $start_time, $timeout ) {
                 return $timeout - ( microtime( true ) - $start_time );
@@ -986,7 +995,7 @@ return $use_comprehensive;
 
             try {
                 $llm    = new RTBCB_LLM();
-                $result = $llm->generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context );
+                $result = $llm->generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context, $chunk_handler );
 
                 if ( is_wp_error( $result ) ) {
                     // Fall back to structured analysis.
@@ -1125,8 +1134,8 @@ return $use_comprehensive;
 	
 	
 	    /**
-     * Debug wrapper for comprehensive case generation AJAX handler.
-     */
+	* Debug wrapper for comprehensive case generation AJAX handler.
+	*/
     public function ajax_generate_comprehensive_case_debug() {
         error_log( 'RTBCB: Enter ajax_generate_comprehensive_case_debug' );
 
@@ -1186,9 +1195,9 @@ return $use_comprehensive;
     }
 
 
-    /**
-     * Enhanced AJAX handler with memory management
-     */
+	/**
+	* Enhanced AJAX handler with memory management
+	*/
     public function ajax_generate_comprehensive_case_legacy() {
         $request_start   = microtime( true );
         $request_payload = rtbcb_recursive_sanitize_text_field( wp_unslash( $_POST ) );
@@ -1741,8 +1750,8 @@ return $use_comprehensive;
         }
     }
    /**
-    * Generate comprehensive report HTML from template with proper data transformation.
-    *
+	* Generate comprehensive report HTML from template with proper data transformation.
+	*
 	* @param array $business_case_data Business case data.
 	*
 	* @return string|WP_Error
@@ -1871,12 +1880,12 @@ return $use_comprehensive;
 }
 
    /**
-    * Transform LLM response data into the structure expected by comprehensive template.
-    *
-    * @param array $business_case_data Business case data.
-    *
-    * @return array
-    */
+	* Transform LLM response data into the structure expected by comprehensive template.
+	*
+	* @param array $business_case_data Business case data.
+	*
+	* @return array
+	*/
    private function transform_data_for_template( $business_case_data ) {
        $defaults = [
            'company_name'           => '',
@@ -2040,12 +2049,12 @@ return $use_comprehensive;
    }
 
    /**
-    * Extract value drivers from business case data.
-    *
-    * @param array $data Business case data.
-    *
-    * @return array
-    */
+	* Extract value drivers from business case data.
+	*
+	* @param array $data Business case data.
+	*
+	* @return array
+	*/
    private function extract_value_drivers( $data ) {
        $drivers = [];
 
@@ -2068,12 +2077,12 @@ return $use_comprehensive;
    }
 
    /**
-    * Format ROI scenarios for template.
-    *
-    * @param array $data Business case data.
-    *
-    * @return array
-    */
+	* Format ROI scenarios for template.
+	*
+	* @param array $data Business case data.
+	*
+	* @return array
+	*/
    private function format_roi_scenarios( $data ) {
        // Try to get ROI data from various possible locations.
        if ( ! empty( $data['scenarios'] ) ) {
@@ -2108,12 +2117,12 @@ return $use_comprehensive;
    }
 
    /**
-    * Determine business case strength based on ROI.
-    *
-    * @param array $data Business case data.
-    *
-    * @return string
-    */
+	* Determine business case strength based on ROI.
+	*
+	* @param array $data Business case data.
+	*
+	* @return string
+	*/
    private function determine_business_case_strength( $data ) {
        $base_roi = $data['roi_base'] ?? $data['scenarios']['base']['total_annual_benefit'] ?? 0;
 
@@ -2129,12 +2138,12 @@ return $use_comprehensive;
    }
 
    /**
-    * Extract action steps from business case data.
-    *
-    * @param array $data Business case data.
-    *
-    * @return array
-    */
+	* Extract action steps from business case data.
+	*
+	* @param array $data Business case data.
+	*
+	* @return array
+	*/
    private function extract_immediate_steps( $data ) {
        if ( ! empty( $data['next_actions'] ) ) {
            $all_actions = (array) $data['next_actions'];
@@ -2149,12 +2158,12 @@ return $use_comprehensive;
    }
 
    /**
-    * Extract short term action steps.
-    *
-    * @param array $data Business case data.
-    *
-    * @return array
-    */
+	* Extract short term action steps.
+	*
+	* @param array $data Business case data.
+	*
+	* @return array
+	*/
    private function extract_short_term_steps( $data ) {
        if ( ! empty( $data['implementation_steps'] ) ) {
            $steps = (array) $data['implementation_steps'];
@@ -2170,12 +2179,12 @@ return $use_comprehensive;
    }
 
    /**
-    * Extract long term action steps.
-    *
-    * @param array $data Business case data.
-    *
-    * @return array
-    */
+	* Extract long term action steps.
+	*
+	* @param array $data Business case data.
+	*
+	* @return array
+	*/
    private function extract_long_term_steps( $data ) {
        return [
            __( 'Complete system implementation and testing', 'rtbcb' ),
@@ -2216,12 +2225,12 @@ return $use_comprehensive;
         }
     }
 
-    /**
-     * Add plugin action links.
-     *
-     * @param array $links Existing links.
-     * @return array Modified links.
-     */
+	/**
+	* Add plugin action links.
+	*
+	* @param array $links Existing links.
+	* @return array Modified links.
+	*/
     public function plugin_action_links( $links ) {
         $custom_links = [
             'settings' => sprintf(
@@ -2239,11 +2248,11 @@ return $use_comprehensive;
         return array_merge( $custom_links, $links );
     }
 
-    /**
-     * Plugin activation.
-     *
-     * @return void
-     */
+	/**
+	* Plugin activation.
+	*
+	* @return void
+	*/
     public function activate() {
         // Create database tables
         $this->init_database();
@@ -2266,11 +2275,11 @@ return $use_comprehensive;
         error_log( 'RTBCB: Plugin activated successfully' );
     }
 
-    /**
-     * Plugin deactivation.
-     *
-     * @return void
-     */
+	/**
+	* Plugin deactivation.
+	*
+	* @return void
+	*/
     public function deactivate() {
         // Clear scheduled events
         wp_clear_scheduled_hook( 'rtbcb_rebuild_rag_index' );
@@ -2282,11 +2291,11 @@ return $use_comprehensive;
         error_log( 'RTBCB: Plugin deactivated' );
     }
 
-    /**
-     * Plugin uninstall.
-     *
-     * @return void
-     */
+	/**
+	* Plugin uninstall.
+	*
+	* @return void
+	*/
     public static function uninstall() {
         global $wpdb;
 
@@ -2353,12 +2362,12 @@ return $use_comprehensive;
         error_log( 'RTBCB: Plugin uninstalled and data cleaned up' );
     }
 
-    /**
-     * Get plugin data.
-     *
-     * @param string $key Data key.
-     * @return mixed
-     */
+	/**
+	* Get plugin data.
+	*
+	* @param string $key Data key.
+	* @return mixed
+	*/
     public function get_plugin_data( $key = null ) {
         if ( $key ) {
             return $this->plugin_data[ $key ] ?? null;
@@ -2366,11 +2375,11 @@ return $use_comprehensive;
         return $this->plugin_data;
     }
 
-    /**
-     * Handle debug diagnostics via AJAX.
-     *
-     * @return void
-     */
+	/**
+	* Handle debug diagnostics via AJAX.
+	*
+	* @return void
+	*/
     public function debug_ajax_handler() {
         $nonce       = isset( $_POST['rtbcb_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['rtbcb_nonce'] ) ) : '';
         $nonce_valid = wp_verify_nonce( $nonce, 'rtbcb_debug' );
@@ -2395,11 +2404,11 @@ return $use_comprehensive;
         wp_send_json_success( $diagnostics );
     }
 
-    /**
-     * Handle simplified ROI test via AJAX.
-     *
-     * @return void
-     */
+	/**
+	* Handle simplified ROI test via AJAX.
+	*
+	* @return void
+	*/
     public function ajax_generate_case_simple() {
         if ( ! check_ajax_referer( 'rtbcb_simple', 'rtbcb_nonce', false ) ) {
             wp_send_json_error( __( 'Security check failed.', 'rtbcb' ), 403 );
@@ -2432,10 +2441,10 @@ return $use_comprehensive;
     }
 
 		/**
-		* Output debug information for report generation.
-		*
-		* @return void
-		*/
+	* Output debug information for report generation.
+	*
+	* @return void
+	*/
 		public function debug_report_generation() {
 		if ( ! current_user_can( 'manage_options' ) ) {
 		wp_die( 'Insufficient permissions' );
@@ -2470,11 +2479,11 @@ Real_Treasury_BCB::instance();
 
 // Helper functions for use in templates and other plugins
 if ( ! function_exists( 'rtbcb_get_leads_count' ) ) {
-    /**
-     * Get total number of leads.
-     *
-     * @return int
-     */
+	/**
+	* Get total number of leads.
+	*
+	* @return int
+	*/
     function rtbcb_get_leads_count() {
         $stats = RTBCB_Leads::get_statistics();
         return intval( $stats['total_leads'] ?? 0 );
@@ -2482,11 +2491,11 @@ if ( ! function_exists( 'rtbcb_get_leads_count' ) ) {
 }
 
 if ( ! function_exists( 'rtbcb_get_average_roi' ) ) {
-    /**
-     * Get average ROI across all leads.
-     *
-     * @return float
-     */
+	/**
+	* Get average ROI across all leads.
+	*
+	* @return float
+	*/
     function rtbcb_get_average_roi() {
         $stats = RTBCB_Leads::get_statistics();
         return floatval( $stats['average_roi']['avg_base'] ?? 0 );
@@ -2494,11 +2503,11 @@ if ( ! function_exists( 'rtbcb_get_average_roi' ) ) {
 }
 
 if ( ! function_exists( 'rtbcb_is_configured' ) ) {
-    /**
-     * Check if plugin is properly configured.
-     *
-     * @return bool
-     */
+	/**
+	* Check if plugin is properly configured.
+	*
+	* @return bool
+	*/
     function rtbcb_is_configured() {
         return ! empty( get_option( 'rtbcb_openai_api_key' ) );
     }
@@ -2506,11 +2515,11 @@ if ( ! function_exists( 'rtbcb_is_configured' ) ) {
 
 
 // Add AJAX handlers for overview generation.
-add_action( 'wp_ajax_rtbcb_generate_company_overview', 'rtbcb_ajax_generate_company_overview' );
-add_action( 'wp_ajax_rtbcb_generate_real_treasury_overview', 'rtbcb_ajax_generate_real_treasury_overview' );
-add_action( 'wp_ajax_rtbcb_generate_category_recommendation', 'rtbcb_ajax_generate_category_recommendation' );
-add_action( 'wp_ajax_rtbcb_clear_current_company', 'rtbcb_ajax_clear_current_company' );
-add_action( 'wp_ajax_rtbcb_company_overview_simple', 'rtbcb_handle_company_overview_simple' );
+	add_action( 'wp_ajax_rtbcb_generate_company_overview', 'rtbcb_ajax_generate_company_overview' );
+	add_action( 'wp_ajax_rtbcb_generate_real_treasury_overview', 'rtbcb_ajax_generate_real_treasury_overview' );
+	add_action( 'wp_ajax_rtbcb_generate_category_recommendation', 'rtbcb_ajax_generate_category_recommendation' );
+	add_action( 'wp_ajax_rtbcb_clear_current_company', 'rtbcb_ajax_clear_current_company' );
+	add_action( 'wp_ajax_rtbcb_company_overview_simple', 'rtbcb_handle_company_overview_simple' );
 
 /**
  * Simple AJAX handler to test company overview generation.
@@ -2770,9 +2779,9 @@ function rtbcb_ajax_generate_category_recommendation() {
 }
 
 // Enqueue admin scripts for company overview page.
-add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_company_overview_scripts' );
-add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_real_treasury_overview_scripts' );
-add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_recommended_category_scripts' );
+	add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_company_overview_scripts' );
+	add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_real_treasury_overview_scripts' );
+	add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_recommended_category_scripts' );
 
 /**
  * Enqueue admin scripts for company overview page.

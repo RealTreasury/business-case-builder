@@ -57,7 +57,7 @@ function rtbcb_log_error( $message, $details = '' ) {
 }
 
 class RTBCB_LLM {
-public function generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context ) {
+public function generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context, $chunk_handler = null ) {
 return $this->call_openai_with_retry( '', '', 0 );
 }
 
