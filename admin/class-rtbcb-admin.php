@@ -73,13 +73,19 @@ class RTBCB_Admin {
             return;
 	}
 
-        wp_enqueue_script( 'chart-js', RTBCB_URL . 'public/js/chart.min.js', [], '3.9.1', true );
-        wp_enqueue_script( 
-            'rtbcb-admin', 
-            RTBCB_URL . 'admin/js/rtbcb-admin.js', 
-            [ 'jquery', 'chart-js' ], 
-            RTBCB_VERSION, 
-            true 
+        $enable_charts = get_option( 'rtbcb_enable_charts', true );
+        $deps          = [ 'jquery' ];
+        if ( $enable_charts ) {
+            wp_enqueue_script( 'chart-js', RTBCB_URL . 'public/js/chart.min.js', [], '3.9.1', true );
+            $deps[] = 'chart-js';
+        }
+
+        wp_enqueue_script(
+            'rtbcb-admin',
+            RTBCB_URL . 'admin/js/rtbcb-admin.js',
+            $deps,
+            RTBCB_VERSION,
+            true
         );
         wp_enqueue_style(
             'rtbcb-admin',
@@ -182,6 +188,10 @@ class RTBCB_Admin {
             'page'                       => $page,
             'company'                    => $company_data,
             'sections'                   => $sections_js,
+            'settings'                   => [
+                'enable_ai_analysis' => (bool) get_option( 'rtbcb_enable_ai_analysis', true ),
+                'enable_charts'      => (bool) $enable_charts,
+            ],
             'strings'                    => [
                 'confirm_delete'      => __( 'Are you sure you want to delete this lead?', 'rtbcb' ),
                 'confirm_bulk_delete' => __( 'Are you sure you want to delete the selected leads?', 'rtbcb' ),
@@ -496,6 +506,8 @@ class RTBCB_Admin {
         register_setting( 'rtbcb_settings', 'rtbcb_gpt5_timeout', [ 'sanitize_callback' => 'intval' ] );
         register_setting( 'rtbcb_settings', 'rtbcb_gpt5_max_output_tokens', [ 'sanitize_callback' => 'rtbcb_sanitize_max_output_tokens' ] );
         register_setting( 'rtbcb_settings', 'rtbcb_gpt5_min_output_tokens', [ 'sanitize_callback' => 'rtbcb_sanitize_min_output_tokens' ] );
+        register_setting( 'rtbcb_settings', 'rtbcb_enable_ai_analysis', [ 'sanitize_callback' => 'rest_sanitize_boolean' ] );
+        register_setting( 'rtbcb_settings', 'rtbcb_enable_charts', [ 'sanitize_callback' => 'rest_sanitize_boolean' ] );
     }
 
     /**
@@ -1702,6 +1714,9 @@ class RTBCB_Admin {
      */
     public function ajax_generate_comprehensive_analysis() {
         check_ajax_referer( 'rtbcb_test_dashboard', 'nonce' );
+        if ( ! get_option( 'rtbcb_enable_ai_analysis', true ) ) {
+            wp_send_json_error( [ 'message' => __( 'AI analysis is disabled.', 'rtbcb' ) ] );
+        }
         $company_name = isset( $_POST['company_name'] ) ? sanitize_text_field( wp_unslash( $_POST['company_name'] ) ) : '';
         if ( '' === $company_name ) {
             $stored       = get_option( 'rtbcb_company_data', [] );

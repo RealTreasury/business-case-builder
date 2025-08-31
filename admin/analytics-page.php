@@ -76,6 +76,7 @@ $roi_stats = $stats['average_roi'] ?? [];
         </div>
     </div>
 
+    <?php if ( get_option( 'rtbcb_enable_charts', true ) ) : ?>
     <!-- Charts Section -->
     <div class="rtbcb-charts-grid">
         <!-- Category Distribution Chart -->
@@ -165,6 +166,9 @@ $roi_stats = $stats['average_roi'] ?? [];
             </div>
         </div>
     </div>
+    <?php else : ?>
+        <p><?php esc_html_e( 'Charts are disabled.', 'rtbcb' ); ?></p>
+    <?php endif; ?>
 
     <!-- Insights Section -->
     <div class="rtbcb-insights-section">
@@ -282,6 +286,7 @@ $roi_stats = $stats['average_roi'] ?? [];
     </div>
 </div>
 
+<?php if ( get_option( 'rtbcb_enable_charts', true ) ) : ?>
 <script type="text/javascript">
 document.addEventListener('DOMContentLoaded', function() {
     initializeAnalyticsCharts();
@@ -476,6 +481,7 @@ function initializeAnalyticsCharts() {
     }
 }
 </script>
+<?php endif; ?>
 
 <style>
 /* Analytics page specific styles */

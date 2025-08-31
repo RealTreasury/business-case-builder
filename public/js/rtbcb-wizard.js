@@ -359,7 +359,13 @@ class BusinessCaseBuilder {
         if (event && event.preventDefault) {
             event.preventDefault();
         }
-        
+
+        if (typeof rtbcbAjax !== 'undefined' && rtbcbAjax.settings && !rtbcbAjax.settings.enable_ai_analysis) {
+            const msg = window.wp?.i18n?.__('AI analysis is disabled.', 'rtbcb') || 'AI analysis is disabled.';
+            this.showEnhancedError(msg);
+            return;
+        }
+
         if (!this.ajaxUrl) {
             this.showEnhancedError('Service unavailable. Please reload the page.');
             return;
@@ -682,6 +688,10 @@ class BusinessCaseBuilder {
     }
 
     initializeReportCharts(container) {
+        if (typeof rtbcbAjax !== 'undefined' && rtbcbAjax.settings && !rtbcbAjax.settings.enable_charts) {
+            return;
+        }
+
         const chartCanvas = container.querySelector('#rtbcb-roi-chart');
         if (!chartCanvas) return;
 

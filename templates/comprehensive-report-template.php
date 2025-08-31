@@ -184,8 +184,8 @@ $processing_time = $metadata['processing_time'] ?? 0;
 	<?php endif; ?>
 
 	<!-- Interactive ROI Analysis Section with Charts -->
-	<?php if ( ! empty( $financial_analysis['roi_scenarios'] ) ) : ?>
-	<div class="rtbcb-section-enhanced rtbcb-financial-analysis-enhanced">
+        <?php if ( get_option( 'rtbcb_enable_charts', true ) && ! empty( $financial_analysis['roi_scenarios'] ) ) : ?>
+        <div class="rtbcb-section-enhanced rtbcb-financial-analysis-enhanced">
 		<div class="rtbcb-section-header-enhanced">
 			<h2 class="rtbcb-section-title">
 				<span class="rtbcb-section-icon">💰</span>
@@ -460,10 +460,10 @@ $processing_time = $metadata['processing_time'] ?? 0;
 <!-- Enhanced JavaScript for Interactivity -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-	// Initialize ROI Chart if Chart.js is available
-	if (typeof Chart !== 'undefined') {
-		initializeROIChart();
-	}
+        // Initialize ROI Chart if Chart.js is available
+        if (typeof Chart !== 'undefined' && <?php echo get_option( 'rtbcb_enable_charts', true ) ? 'true' : 'false'; ?>) {
+                initializeROIChart();
+        }
 	
 	// Initialize collapsible sections
 	initializeSectionToggles();

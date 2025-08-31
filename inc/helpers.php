@@ -1461,10 +1461,14 @@ function rtbcb_get_openai_responses_status() {
  * @return string|WP_Error Job identifier on success or WP_Error on failure.
  */
 function rtbcb_queue_comprehensive_analysis( $company_name ) {
-	$company_name = sanitize_text_field( $company_name );
-	if ( '' === $company_name ) {
-		return new WP_Error( 'invalid_company', __( 'Company name is required.', 'rtbcb' ) );
-	}
+        $company_name = sanitize_text_field( $company_name );
+        if ( '' === $company_name ) {
+                return new WP_Error( 'invalid_company', __( 'Company name is required.', 'rtbcb' ) );
+        }
+
+        if ( ! get_option( 'rtbcb_enable_ai_analysis', true ) ) {
+                return new WP_Error( 'analysis_disabled', __( 'AI analysis is disabled.', 'rtbcb' ) );
+        }
 
 	$job_id = wp_generate_uuid4();
 	wp_schedule_single_event(
@@ -1484,8 +1488,12 @@ function rtbcb_queue_comprehensive_analysis( $company_name ) {
  * @return void
  */
 function rtbcb_handle_comprehensive_analysis( $company_name, $job_id ) {
-	$company_name = sanitize_text_field( $company_name );
-	$job_id       = sanitize_key( $job_id );
+        if ( ! get_option( 'rtbcb_enable_ai_analysis', true ) ) {
+                return;
+        }
+
+        $company_name = sanitize_text_field( $company_name );
+        $job_id       = sanitize_key( $job_id );
 
 	$rag_context = [];
 	$vendor_list = [];

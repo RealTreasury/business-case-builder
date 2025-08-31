@@ -26,6 +26,8 @@ class RTBCB_Settings {
         ],
         'bank_fee_reduction'        => [ 'min' => 5, 'max' => 10 ],
         'baseline_bank_fee_multiplier' => 15000,
+        'enable_ai_analysis'        => true,
+        'enable_charts'             => true,
     ];
 
     /**

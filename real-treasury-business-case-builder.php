@@ -371,6 +371,8 @@ class Real_Treasury_BCB {
             'rtbcb_labor_cost_per_hour'=> 100,
             'rtbcb_bank_fee_baseline'  => 15000,
             'rtbcb_comprehensive_analysis' => true,
+            'rtbcb_enable_ai_analysis'   => true,
+            'rtbcb_enable_charts'        => true,
         ];
 
         foreach ( $defaults as $option => $value ) {
@@ -409,14 +411,16 @@ class Real_Treasury_BCB {
 			);
 		}
 
-	    // Chart.js for report visualizations
-	    wp_enqueue_script(
-	        'chartjs',
-	        RTBCB_URL . 'public/js/chart.min.js',
-	        [],
-	        '3.9.1',
-	        true
-	    );
+            $enable_charts = get_option( 'rtbcb_enable_charts', true );
+            if ( $enable_charts ) {
+                wp_enqueue_script(
+                    'chartjs',
+                    RTBCB_URL . 'public/js/chart.min.js',
+                    [],
+                    '3.9.1',
+                    true
+                );
+            }
 
 	    // DOMPurify for sanitization with CDN fallback
 	    $dompurify_cdn   = 'https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.2/purify.min.js';
@@ -446,15 +450,19 @@ class Real_Treasury_BCB {
 	        false // Load in header
 	    );
 
-		// Main report functionality
-		$report_file = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? 'rtbcb-report.js' : 'rtbcb-report.min.js';
-		wp_enqueue_script(
-			'rtbcb-report',
-			RTBCB_URL . 'public/js/' . $report_file,
-			[ 'chartjs', 'dompurify' ],
-			RTBCB_VERSION,
-			true
-		);
+                // Main report functionality
+                $report_file  = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? 'rtbcb-report.js' : 'rtbcb-report.min.js';
+                $report_deps = [ 'dompurify' ];
+                if ( $enable_charts ) {
+                        $report_deps[] = 'chartjs';
+                }
+                wp_enqueue_script(
+                        'rtbcb-report',
+                        RTBCB_URL . 'public/js/' . $report_file,
+                        $report_deps,
+                        RTBCB_VERSION,
+                        true
+                );
 
 		// Main plugin script
 		$main_script = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? 'rtbcb.js' : 'rtbcb.min.js';
@@ -495,11 +503,13 @@ class Real_Treasury_BCB {
 	                'select_pain_points'      => __( 'Please select at least one pain point.', 'rtbcb' ),
 	                'email_confirmation'      => __( 'Your report will arrive by email shortly.', 'rtbcb' ),
 	            ],
-	            'settings'    => [
-	                'pdf_enabled'            => get_option( 'rtbcb_pdf_enabled', true ),
-	                'comprehensive_analysis' => get_option( 'rtbcb_comprehensive_analysis', true ),
-	                'professional_reports'   => get_option( 'rtbcb_professional_reports', true ),
-	            ],
+                    'settings'    => [
+                        'pdf_enabled'            => get_option( 'rtbcb_pdf_enabled', true ),
+                        'comprehensive_analysis' => get_option( 'rtbcb_comprehensive_analysis', true ),
+                        'professional_reports'   => get_option( 'rtbcb_professional_reports', true ),
+                        'enable_ai_analysis'     => get_option( 'rtbcb_enable_ai_analysis', true ),
+                        'enable_charts'          => get_option( 'rtbcb_enable_charts', true ),
+                    ],
 	        ]
 	    );
 
@@ -740,9 +750,14 @@ return $use_comprehensive;
 	set_time_limit( $timeout );
 	}
 	
-	try {
-	// Collect and validate user inputs
-	$user_inputs = $this->collect_and_validate_inputs();
+        try {
+        if ( ! get_option( 'rtbcb_enable_ai_analysis', true ) ) {
+        wp_send_json_error( [ 'message' => __( 'AI analysis is disabled.', 'rtbcb' ) ], 400 );
+        return;
+        }
+
+        // Collect and validate user inputs
+        $user_inputs = $this->collect_and_validate_inputs();
 	if ( is_wp_error( $user_inputs ) ) {
 	wp_send_json_error( [ 'message' => $user_inputs->get_error_message() ], 400 );
 	return;
