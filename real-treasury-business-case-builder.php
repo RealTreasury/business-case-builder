@@ -20,6 +20,10 @@ define( 'RTBCB_FILE', __FILE__ );
 define( 'RTBCB_URL', plugin_dir_url( RTBCB_FILE ) );
 define( 'RTBCB_DIR', plugin_dir_path( RTBCB_FILE ) );
 
+if ( ! defined( 'RTBCB_DEBUG' ) ) {
+    define( 'RTBCB_DEBUG', false );
+}
+
 /**
  * Enhanced main plugin class.
  */
@@ -116,9 +120,11 @@ class Real_Treasury_BCB {
                 // OpenAI proxy handlers
                 add_action( 'wp_ajax_rtbcb_openai_responses', 'rtbcb_proxy_openai_responses' );
                 add_action( 'wp_ajax_nopriv_rtbcb_openai_responses', 'rtbcb_proxy_openai_responses' );
-		
-		// Debug handlers
-		$this->init_hooks_debug();
+
+                // Debug handlers
+                if ( defined( 'RTBCB_DEBUG' ) && RTBCB_DEBUG && function_exists( 'current_user_can' ) && current_user_can( 'manage_options' ) ) {
+                    $this->init_hooks_debug();
+                }
     }
 
     /**
@@ -126,14 +132,11 @@ class Real_Treasury_BCB {
      *
      * @return void
      */
-		private function init_hooks_debug() {
-		add_action( 'wp_ajax_rtbcb_debug_test', [ $this, 'debug_ajax_handler' ] );
-		add_action( 'wp_ajax_nopriv_rtbcb_debug_test', [ $this, 'debug_ajax_handler' ] );
-		add_action( 'wp_ajax_rtbcb_simple_test', [ $this, 'ajax_generate_case_simple' ] );
-		add_action( 'wp_ajax_nopriv_rtbcb_simple_test', [ $this, 'ajax_generate_case_simple' ] );
-		add_action( 'wp_ajax_rtbcb_debug_report', [ $this, 'debug_report_generation' ] );
-		add_action( 'wp_ajax_nopriv_rtbcb_debug_report', [ $this, 'debug_report_generation' ] );
-		}
+                private function init_hooks_debug() {
+                    add_action( 'wp_ajax_rtbcb_debug_test', [ $this, 'debug_ajax_handler' ] );
+                    add_action( 'wp_ajax_rtbcb_simple_test', [ $this, 'ajax_generate_case_simple' ] );
+                    add_action( 'wp_ajax_rtbcb_debug_report', [ $this, 'debug_report_generation' ] );
+                }
 
     /**
      * Include required files.
