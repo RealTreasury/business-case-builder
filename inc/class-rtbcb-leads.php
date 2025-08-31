@@ -19,6 +19,13 @@ class RTBCB_Leads {
     private static $table_name;
 
     /**
+     * Option name for cached statistics.
+     *
+     * @var string
+     */
+    private static $cache_option = 'rtbcb_lead_stats';
+
+    /**
      * Create the leads table with improved error handling.
      *
      * @return bool True on success, false on failure.
@@ -261,6 +268,7 @@ class RTBCB_Leads {
                     return false;
                 }
 
+                self::update_cached_statistics();
                 return intval( $existing_lead['id'] );
             } else {
                 // Insert new lead
@@ -275,7 +283,9 @@ class RTBCB_Leads {
                     return false;
                 }
 
-                return $wpdb->insert_id;
+                $lead_id = $wpdb->insert_id;
+                self::update_cached_statistics();
+                return $lead_id;
             }
         } catch ( Exception $e ) {
             error_log( 'RTBCB: Exception in save_lead: ' . $e->getMessage() );
@@ -432,10 +442,34 @@ class RTBCB_Leads {
 
         // Recent activity (last 30 days)
         $stats['recent_leads'] = $wpdb->get_var(
-            "SELECT COUNT(*) FROM " . self::$table_name . " 
+            "SELECT COUNT(*) FROM " . self::$table_name . "
              WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)"
         );
 
+        return $stats;
+    }
+
+    /**
+     * Update cached statistics option.
+     *
+     * @return array Cached statistics.
+     */
+    public static function update_cached_statistics() {
+        $stats = self::get_statistics();
+        update_option( self::$cache_option, $stats );
+        return $stats;
+    }
+
+    /**
+     * Retrieve cached statistics.
+     *
+     * @return array Cached statistics.
+     */
+    public static function get_cached_statistics() {
+        $stats = get_option( self::$cache_option, [] );
+        if ( empty( $stats ) ) {
+            $stats = self::update_cached_statistics();
+        }
         return $stats;
     }
 

@@ -293,6 +293,13 @@ wp_schedule_event( time(), 'hourly', 'rtbcb_cleanup_jobs' );
 }
 
 add_action( 'rtbcb_cleanup_jobs', [ 'RTBCB_Background_Job', 'cleanup' ] );
+
+        // Schedule lead metrics refresh
+        if ( ! wp_next_scheduled( 'rtbcb_refresh_lead_metrics' ) ) {
+            wp_schedule_event( time(), 'hourly', 'rtbcb_refresh_lead_metrics' );
+        }
+
+        add_action( 'rtbcb_refresh_lead_metrics', [ 'RTBCB_Leads', 'update_cached_statistics' ] );
 }
 
     /**
@@ -2277,6 +2284,7 @@ return $use_comprehensive;
         // Clear scheduled events
         wp_clear_scheduled_hook( 'rtbcb_rebuild_rag_index' );
         wp_clear_scheduled_hook( 'rtbcb_cleanup_data' );
+        wp_clear_scheduled_hook( 'rtbcb_refresh_lead_metrics' );
 
         // Flush rewrite rules
         flush_rewrite_rules();
@@ -2478,7 +2486,7 @@ if ( ! function_exists( 'rtbcb_get_leads_count' ) ) {
      * @return int
      */
     function rtbcb_get_leads_count() {
-        $stats = RTBCB_Leads::get_statistics();
+        $stats = RTBCB_Leads::get_cached_statistics();
         return intval( $stats['total_leads'] ?? 0 );
     }
 }
@@ -2490,7 +2498,7 @@ if ( ! function_exists( 'rtbcb_get_average_roi' ) ) {
      * @return float
      */
     function rtbcb_get_average_roi() {
-        $stats = RTBCB_Leads::get_statistics();
+        $stats = RTBCB_Leads::get_cached_statistics();
         return floatval( $stats['average_roi']['avg_base'] ?? 0 );
     }
 }

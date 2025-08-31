@@ -304,7 +304,7 @@ class RTBCB_Admin {
      * @return void
     */
     public function render_dashboard() {
-        $stats = RTBCB_Leads::get_statistics();
+        $stats = RTBCB_Leads::get_cached_statistics();
         $recent_leads_data = RTBCB_Leads::get_all_leads( [ 'per_page' => 5, 'orderby' => 'created_at', 'order' => 'DESC' ] );
 
         include RTBCB_DIR . 'admin/dashboard-page.php';
@@ -368,7 +368,7 @@ class RTBCB_Admin {
      * @return void
      */
     public function render_analytics() {
-        $stats = RTBCB_Leads::get_statistics();
+        $stats = RTBCB_Leads::get_cached_statistics();
         $monthly_trends = $this->get_monthly_trends();
         
         include RTBCB_DIR . 'admin/analytics-page.php';
