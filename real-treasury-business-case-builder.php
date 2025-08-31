@@ -11,14 +11,33 @@
  * @package RealTreasuryBusinessCaseBuilder
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
+	if ( ! defined( 'ABSPATH' ) ) {
     exit;
-}
+	}
 
 define( 'RTBCB_VERSION', '2.1.8' );
 define( 'RTBCB_FILE', __FILE__ );
 define( 'RTBCB_URL', plugin_dir_url( RTBCB_FILE ) );
 define( 'RTBCB_DIR', plugin_dir_path( RTBCB_FILE ) );
+
+/**
+ * Enable persistent MySQL connections.
+ *
+ * Reinitializes the WordPress database object with a persistent connection if
+ * the `DB_HOST` value is not already prefixed with `p:`. This allows MySQL to
+ * reuse connections between requests when supported by the server.
+ *
+ * @return void
+ */
+function rtbcb_enable_persistent_connection() {
+	global $wpdb;
+
+	if ( strpos( DB_HOST, 'p:' ) !== 0 ) {
+		$persistent_host = 'p:' . DB_HOST;
+		$wpdb            = new wpdb( DB_USER, DB_PASSWORD, DB_NAME, $persistent_host );
+	}
+}
+add_action( 'plugins_loaded', 'rtbcb_enable_persistent_connection', 0 );
 
 /**
  * Enhanced main plugin class.

@@ -70,19 +70,27 @@ Values outside the `256`–`128000` range are ignored.
 
 Update the list in `inc/helpers.php` if OpenAI changes temperature capabilities.
 
-### Step 3: Enable Persistent Object Cache
+### Step 3: Enable Persistent Database Connections
+
+For lower connection overhead, configure WordPress to use persistent MySQL connections. Prefix
+`DB_HOST` in your `wp-config.php` with `p:` or install a pooling plugin such as
+[HyperDB](https://github.com/Automattic/hyperdb). The plugin will reuse the persistent connection
+when available. See [docs/DB_CONNECTION.md](docs/DB_CONNECTION.md) for full details and pooling
+expectations.
+
+### Step 4: Enable Persistent Object Cache
 
 To persist cached API responses across requests, configure a persistent object cache such as
 [Redis](https://wordpress.org/plugins/redis-cache/) or
 [Memcached](https://wordpress.org/plugins/memcached/). See
 [docs/OBJECT_CACHE.md](docs/OBJECT_CACHE.md) for details.
 
-### Step 4: Configure Database Tables
+### Step 5: Configure Database Tables
 The plugin automatically creates required database tables on activation:
 - `wp_rtbcb_leads` - Lead tracking and analytics
 - `wp_rtbcb_rag_index` - Retrieval-augmented generation index
 
-### Step 5: Display the Form
+### Step 6: Display the Form
 Add the shortcode to any page or post to display a “Generate Business Case” button that launches the form in a modal:
 ```
 [rt_business_case_builder]
