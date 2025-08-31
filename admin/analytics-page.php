@@ -14,6 +14,7 @@ $recent_leads = $stats['recent_leads'] ?? 0;
 $category_stats = $stats['by_category'] ?? [];
 $size_stats = $stats['by_company_size'] ?? [];
 $roi_stats = $stats['average_roi'] ?? [];
+$enable_charts = get_option( 'rtbcb_enable_charts', true );
 ?>
 
 <div class="wrap rtbcb-admin-page">
@@ -77,6 +78,7 @@ $roi_stats = $stats['average_roi'] ?? [];
     </div>
 
     <!-- Charts Section -->
+    <?php if ( $enable_charts ) : ?>
     <div class="rtbcb-charts-grid">
         <!-- Category Distribution Chart -->
         <div class="rtbcb-chart-card">
@@ -165,6 +167,9 @@ $roi_stats = $stats['average_roi'] ?? [];
             </div>
         </div>
     </div>
+    <?php else : ?>
+    <p><?php esc_html_e( 'Charts are disabled in settings.', 'rtbcb' ); ?></p>
+    <?php endif; ?>
 
     <!-- Insights Section -->
     <div class="rtbcb-insights-section">

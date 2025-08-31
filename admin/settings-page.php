@@ -18,6 +18,8 @@ $bank_fee        = get_option( 'rtbcb_bank_fee_baseline', '' );
 $gpt5_timeout    = rtbcb_get_api_timeout();
 $gpt5_max_output_tokens = get_option( 'rtbcb_gpt5_max_output_tokens', 8000 );
 $gpt5_min_output_tokens = get_option( 'rtbcb_gpt5_min_output_tokens', 256 );
+$enable_ai_analysis = get_option( 'rtbcb_enable_ai_analysis', true );
+$enable_charts      = get_option( 'rtbcb_enable_charts', true );
 
 $chat_models = [
     'gpt-5'             => 'gpt-5',
@@ -145,6 +147,24 @@ $embedding_models = [
                 </th>
                 <td>
                     <input type="number" step="0.01" id="rtbcb_bank_fee_baseline" name="rtbcb_bank_fee_baseline" value="<?php echo esc_attr( $bank_fee ); ?>" class="regular-text" />
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="rtbcb_enable_ai_analysis"><?php echo esc_html__( 'Enable AI Analysis', 'rtbcb' ); ?></label>
+                </th>
+                <td>
+                    <input type="checkbox" id="rtbcb_enable_ai_analysis" name="rtbcb_enable_ai_analysis" value="1" <?php checked( $enable_ai_analysis ); ?> />
+                    <p class="description"><?php echo esc_html__( 'Allow AI-driven insights in reports.', 'rtbcb' ); ?></p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="rtbcb_enable_charts"><?php echo esc_html__( 'Enable Charts', 'rtbcb' ); ?></label>
+                </th>
+                <td>
+                    <input type="checkbox" id="rtbcb_enable_charts" name="rtbcb_enable_charts" value="1" <?php checked( $enable_charts ); ?> />
+                    <p class="description"><?php echo esc_html__( 'Display Chart.js visualizations.', 'rtbcb' ); ?></p>
                 </td>
             </tr>
         </table>

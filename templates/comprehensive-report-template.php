@@ -30,6 +30,8 @@ $company_name    = $metadata['company_name'] ?? __( 'Your Company', 'rtbcb' );
 $analysis_date   = $metadata['analysis_date'] ?? current_time( 'Y-m-d' );
 $confidence_level = round( ( $metadata['confidence_level'] ?? 0.85 ) * 100 );
 $processing_time = $metadata['processing_time'] ?? 0;
+$enable_ai_analysis = get_option( 'rtbcb_enable_ai_analysis', RTBCB_Settings::get_setting( 'enable_ai_analysis', true ) );
+$enable_charts      = get_option( 'rtbcb_enable_charts', RTBCB_Settings::get_setting( 'enable_charts', true ) );
 ?>
 
 <div class="rtbcb-enhanced-report" data-company="<?php echo esc_attr( $company_name ); ?>">
@@ -38,14 +40,14 @@ $processing_time = $metadata['processing_time'] ?? 0;
 	<div class="rtbcb-report-header-enhanced">
 		<div class="rtbcb-header-content">
 			<div class="rtbcb-header-main">
-				<div class="rtbcb-report-badge-enhanced">
-					<span class="rtbcb-badge-icon">🏆</span>
-					<span class="rtbcb-badge-text"><?php echo esc_html__( 'AI-ENHANCED ANALYSIS', 'rtbcb' ); ?></span>
-					<div class="rtbcb-confidence-meter">
-						<div class="rtbcb-confidence-bar" style="width: <?php echo esc_attr( $confidence_level ); ?>%"></div>
-						<span class="rtbcb-confidence-text"><?php echo esc_html( $confidence_level ); ?>% <?php echo esc_html__( 'Confidence', 'rtbcb' ); ?></span>
-					</div>
-				</div>
+                                <div class="rtbcb-report-badge-enhanced">
+                                        <span class="rtbcb-badge-icon">🏆</span>
+                                        <span class="rtbcb-badge-text"><?php echo $enable_ai_analysis ? esc_html__( 'AI-ENHANCED ANALYSIS', 'rtbcb' ) : esc_html__( 'STANDARD ANALYSIS', 'rtbcb' ); ?></span>
+                                        <div class="rtbcb-confidence-meter">
+                                                <div class="rtbcb-confidence-bar" style="width: <?php echo esc_attr( $confidence_level ); ?>%"></div>
+                                                <span class="rtbcb-confidence-text"><?php echo esc_html( $confidence_level ); ?>% <?php echo esc_html__( 'Confidence', 'rtbcb' ); ?></span>
+                                        </div>
+                                </div>
 				
 				<h1 class="rtbcb-report-title-enhanced">
 					<?php echo esc_html( $company_name ); ?> 
@@ -198,25 +200,27 @@ $processing_time = $metadata['processing_time'] ?? 0;
 		</div>
 		
 		<div id="financial-content" class="rtbcb-section-content">
-			<!-- ROI Scenarios Chart -->
-			<div class="rtbcb-roi-chart-container">
-				<h3><?php echo esc_html__( 'ROI Scenario Analysis', 'rtbcb' ); ?></h3>
-				<canvas id="rtbcb-roi-chart" width="800" height="400"></canvas>
-				<div class="rtbcb-chart-legend">
-					<div class="rtbcb-legend-item">
-						<span class="rtbcb-legend-color conservative"></span>
-						<span><?php echo esc_html__( 'Conservative Scenario', 'rtbcb' ); ?></span>
-					</div>
-					<div class="rtbcb-legend-item">
-						<span class="rtbcb-legend-color base"></span>
-						<span><?php echo esc_html__( 'Base Case', 'rtbcb' ); ?></span>
-					</div>
-					<div class="rtbcb-legend-item">
-						<span class="rtbcb-legend-color optimistic"></span>
-						<span><?php echo esc_html__( 'Optimistic Scenario', 'rtbcb' ); ?></span>
-					</div>
-				</div>
-			</div>
+                        <!-- ROI Scenarios Chart -->
+                        <?php if ( $enable_charts ) : ?>
+                        <div class="rtbcb-roi-chart-container">
+                                <h3><?php echo esc_html__( 'ROI Scenario Analysis', 'rtbcb' ); ?></h3>
+                                <canvas id="rtbcb-roi-chart" width="800" height="400"></canvas>
+                                <div class="rtbcb-chart-legend">
+                                        <div class="rtbcb-legend-item">
+                                                <span class="rtbcb-legend-color conservative"></span>
+                                                <span><?php echo esc_html__( 'Conservative Scenario', 'rtbcb' ); ?></span>
+                                        </div>
+                                        <div class="rtbcb-legend-item">
+                                                <span class="rtbcb-legend-color base"></span>
+                                                <span><?php echo esc_html__( 'Base Case', 'rtbcb' ); ?></span>
+                                        </div>
+                                        <div class="rtbcb-legend-item">
+                                                <span class="rtbcb-legend-color optimistic"></span>
+                                                <span><?php echo esc_html__( 'Optimistic Scenario', 'rtbcb' ); ?></span>
+                                        </div>
+                                </div>
+                        </div>
+                        <?php endif; ?>
 
 			<!-- ROI Breakdown -->
 			<div class="rtbcb-roi-breakdown-enhanced">
@@ -459,11 +463,12 @@ $processing_time = $metadata['processing_time'] ?? 0;
 
 <!-- Enhanced JavaScript for Interactivity -->
 <script>
+var rtbcbEnableCharts = <?php echo $enable_charts ? 'true' : 'false'; ?>;
 document.addEventListener('DOMContentLoaded', function() {
-	// Initialize ROI Chart if Chart.js is available
-	if (typeof Chart !== 'undefined') {
-		initializeROIChart();
-	}
+        // Initialize ROI Chart if Chart.js is available and charts enabled
+        if ( rtbcbEnableCharts && typeof Chart !== 'undefined' ) {
+                initializeROIChart();
+        }
 	
 	// Initialize collapsible sections
 	initializeSectionToggles();

@@ -37,7 +37,7 @@ class RTBCB_Ajax {
 	public static function process_comprehensive_case( $user_inputs ) {
                $request_start    = microtime( true );
                $workflow_tracker = new RTBCB_Workflow_Tracker();
-               $enable_ai        = RTBCB_Settings::get_setting( 'enable_ai_analysis', true );
+               $enable_ai        = get_option( 'rtbcb_enable_ai_analysis', RTBCB_Settings::get_setting( 'enable_ai_analysis', true ) );
 
 		add_action(
 			'rtbcb_llm_prompt_sent',

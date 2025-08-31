@@ -668,8 +668,10 @@ class BusinessCaseBuilder {
     }
 
     initializeEnhancedReport(container) {
-        // Initialize Chart.js charts
-        this.initializeReportCharts(container);
+        // Initialize Chart.js charts if enabled
+        if ( typeof rtbcbAjax !== 'undefined' && rtbcbAjax.settings && rtbcbAjax.settings.enable_charts ) {
+            this.initializeReportCharts(container);
+        }
 
         // Initialize collapsible sections
         this.initializeCollapsibleSections(container);
