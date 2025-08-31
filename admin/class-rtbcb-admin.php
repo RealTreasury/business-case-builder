@@ -19,6 +19,7 @@ class RTBCB_Admin {
         add_action( 'admin_init', [ $this, 'register_settings' ] );
         add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );
         add_action( 'admin_notices', [ $this, 'maybe_show_timeout_notice' ] );
+        add_action( 'admin_notices', [ $this, 'maybe_show_bypass_notice' ] );
 
         // AJAX handlers
         add_action( 'wp_ajax_rtbcb_test_connection', [ $this, 'test_api_connection' ] );
@@ -504,6 +505,7 @@ class RTBCB_Admin {
         register_setting( 'rtbcb_settings', 'rtbcb_gpt5_max_output_tokens', [ 'sanitize_callback' => 'rtbcb_sanitize_max_output_tokens' ] );
         register_setting( 'rtbcb_settings', 'rtbcb_gpt5_min_output_tokens', [ 'sanitize_callback' => 'rtbcb_sanitize_min_output_tokens' ] );
         register_setting( 'rtbcb_settings', 'rtbcb_fast_mode', [ 'sanitize_callback' => 'absint' ] );
+        register_setting( 'rtbcb_settings', 'rtbcb_disable_heavy_features', [ 'sanitize_callback' => 'absint' ] );
     }
 
     /**
@@ -1990,4 +1992,17 @@ class RTBCB_Admin {
                         echo '</p></div>';
                 }
         }
+
+
+    /**
+     * Display notice when heavy features are disabled.
+     *
+     * @return void
+     */
+    public function maybe_show_bypass_notice() {
+        if ( get_option( 'rtbcb_disable_heavy_features', 0 ) ) {
+            echo '<div class="notice notice-warning"><p>' . esc_html__( 'Heavy AI features are temporarily disabled. Remove the rtbcb_disable_heavy_features option to restore full functionality.', 'rtbcb' ) . '</p></div>';
+        }
+    }
+
 }

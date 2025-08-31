@@ -82,6 +82,15 @@ function rtbcb_has_openai_api_key() {
 }
 
 /**
+ * Check if heavy AI features are disabled.
+ *
+ * @return bool True if heavy features should be bypassed.
+ */
+function rtbcb_heavy_features_disabled() {
+	return (bool) ( get_option( 'rtbcb_disable_heavy_features', 0 ) || get_option( 'rtbcb_fast_mode', 0 ) );
+}
+
+/**
  * Perform a remote POST request with retry logic.
  *
  * Uses exponential backoff with jitter between attempts. Retries are

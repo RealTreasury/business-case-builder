@@ -716,6 +716,10 @@ USER,
      * @return array|WP_Error Comprehensive analysis array or error object.
      */
     public function generate_comprehensive_business_case( $user_inputs, $roi_data, $context_chunks = [], $chunk_callback = null ) {
+
+        if ( rtbcb_heavy_features_disabled() ) {
+            return new WP_Error( 'heavy_features_disabled', __( 'AI features are disabled.', 'rtbcb' ) );
+        }
         $this->current_inputs = $user_inputs;
 
         if ( empty( $this->api_key ) ) {
@@ -1882,6 +1886,10 @@ return $analysis;
 	 * @return array|WP_Error Enriched company profile or error.
 	 */
 	public function enrich_company_profile( $user_inputs ) {
+
+        if ( rtbcb_heavy_features_disabled() ) {
+            return new WP_Error( 'heavy_features_disabled', __( 'AI features are disabled.', 'rtbcb' ) );
+        }
 	if ( empty( $this->api_key ) ) {
 	return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
 	}
@@ -2060,6 +2068,10 @@ return $analysis;
 	 * @return array|WP_Error Strategic analysis or error.
 	 */
 	public function generate_strategic_analysis( $enriched_profile, $roi_scenarios, $recommendation, $rag_baseline ) {
+
+        if ( rtbcb_heavy_features_disabled() ) {
+            return new WP_Error( 'heavy_features_disabled', __( 'AI features are disabled.', 'rtbcb' ) );
+        }
 	if ( empty( $this->api_key ) ) {
 	return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
 	}
