@@ -531,21 +531,25 @@ class BusinessCaseBuilder {
             formContainer.style.display = 'none';
         }
 
-        const progressContainer = document.getElementById('rtbcb-progress-container');
-        if (progressContainer) {
-            const companyName = this.form.querySelector('[name="company_name"]')?.value || 'your company';
-            progressContainer.innerHTML = `
-                <div class="rtbcb-progress-content">
-                    <div class="rtbcb-progress-spinner"></div>
-                    <div class="rtbcb-progress-text">Generating Your Business Case</div>
-                    <div class="rtbcb-progress-step">
-                        <span class="rtbcb-progress-step-text" id="rtbcb-progress-status">Analyzing ${this.escapeHTML(companyName)}'s treasury operations...</span>
-                    </div>
-                </div>
-            `;
-            progressContainer.style.display = 'flex';
-        }
-    }
+const progressContainer = document.getElementById('rtbcb-progress-container');
+if (progressContainer) {
+const companyName = this.form.querySelector('[name="company_name"]')?.value || 'your company';
+progressContainer.innerHTML = `
+<div class="rtbcb-progress-content">
+<div class="rtbcb-progress-spinner"></div>
+<div class="rtbcb-progress-text">Generating Your Business Case</div>
+<div class="rtbcb-progress-step">
+<span class="rtbcb-progress-step-text" id="rtbcb-progress-status">Analyzing ${this.escapeHTML(companyName)}'s treasury operations...</span>
+</div>
+<div class="rtbcb-progress-provisional" id="rtbcb-provisional-data" style="display:none;">
+<div id="rtbcb-category"></div>
+<div id="rtbcb-basic-roi"></div>
+</div>
+</div>
+`;
+progressContainer.style.display = 'flex';
+}
+}
 
     hideLoading() {
         const progressContainer = document.getElementById('rtbcb-progress-container');
@@ -589,11 +593,30 @@ class BusinessCaseBuilder {
             const status = statusData.status;
             console.log(`RTBCB: Job status: ${status} (attempt ${attempt})`);
 
-            const progressStatus = document.getElementById('rtbcb-progress-status');
-            const progressMessage = statusData.step || statusData.message;
-            if (progressStatus && progressMessage) {
-                progressStatus.textContent = progressMessage;
-            }
+const progressStatus = document.getElementById('rtbcb-progress-status');
+const progressMessage = statusData.step || statusData.message;
+if (progressStatus && progressMessage) {
+progressStatus.textContent = progressMessage;
+}
+
+if (statusData.basic_roi || statusData.category) {
+const provisional = document.getElementById('rtbcb-provisional-data');
+if (provisional) {
+provisional.style.display = 'block';
+}
+if (statusData.category) {
+const categoryEl = document.getElementById('rtbcb-category');
+if (categoryEl) {
+categoryEl.textContent = `Category: ${statusData.category}`;
+}
+}
+if (statusData.basic_roi) {
+const roiEl = document.getElementById('rtbcb-basic-roi');
+if (roiEl) {
+roiEl.textContent = `Basic ROI: ${statusData.basic_roi}`;
+}
+}
+}
 
             if (status === 'completed') {
                 this.hideLoading();
