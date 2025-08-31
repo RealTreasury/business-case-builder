@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/wp-stubs.php';
 require_once __DIR__ . '/../inc/class-rtbcb-calculator.php';
 
 if ( ! function_exists( 'add_filter' ) ) {

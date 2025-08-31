@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/wp-stubs.php';
 /**
 	* Lints PHP files that output JSON to prevent stray output.
 	*

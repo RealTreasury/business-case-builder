@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/wp-stubs.php';
 require_once __DIR__ . '/../inc/class-rtbcb-llm.php';
 
 if ( ! function_exists( 'get_option' ) ) {

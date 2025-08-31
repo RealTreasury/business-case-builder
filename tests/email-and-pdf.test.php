@@ -1,8 +1,6 @@
 <?php
+require_once __DIR__ . '/wp-stubs.php';
 
-if ( ! defined( 'ABSPATH' ) ) {
-	define( 'ABSPATH', __DIR__ . '/' );
-}
 
 defined( 'ABSPATH' ) || exit;
 

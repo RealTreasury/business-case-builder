@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/wp-stubs.php';
 require_once __DIR__ . '/../inc/class-rtbcb-rag.php';
 
 if ( ! defined( 'ARRAY_A' ) ) {

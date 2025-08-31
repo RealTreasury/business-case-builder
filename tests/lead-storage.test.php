@@ -1,9 +1,9 @@
 <?php
+require_once __DIR__ . '/wp-stubs.php';
 if ( ! defined( 'ABSPATH' ) ) {
 $temp_root = sys_get_temp_dir() . '/wp-' . uniqid();
 mkdir( $temp_root . '/wp-admin/includes', 0777, true );
 file_put_contents( $temp_root . '/wp-admin/includes/upgrade.php', "<?php\nfunction dbDelta( \$sql ) {\n\tglobal \$wpdb;\n\t\$wpdb->query( \$sql );\n\treturn true;\n}\n" );
-define( 'ABSPATH', $temp_root . '/' );
 }
 
 defined( 'ABSPATH' ) || exit;

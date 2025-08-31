@@ -1,7 +1,6 @@
 <?php
+require_once __DIR__ . '/wp-stubs.php';
 use PHPUnit\Framework\TestCase;
-
-define( 'ABSPATH', __DIR__ . '/../' );
 
 if ( ! class_exists( 'WP_Error' ) ) {
 class WP_Error {

@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/wp-stubs.php';
 use PHPUnit\Framework\TestCase;
 
 if ( ! class_exists( 'WP_Error' ) ) {

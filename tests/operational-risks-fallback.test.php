@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/wp-stubs.php';
 if ( ! function_exists( '__' ) ) {
 function __( $text, $domain = null ) {
 return $text;
@@ -79,8 +80,6 @@ function get_file_data() {
 return [];
 }
 }
-
-define( 'ABSPATH', __DIR__ );
 $plugin_code = file_get_contents( __DIR__ . '/../real-treasury-business-case-builder.php' );
 $plugin_code = preg_replace( '/
 ?\/\/ Initialize the plugin\s*RTBCB_Main::instance\(\);/', '', $plugin_code );

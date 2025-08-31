@@ -1,7 +1,6 @@
 <?php
+require_once __DIR__ . '/wp-stubs.php';
 use PHPUnit\Framework\TestCase;
-
-define( 'ABSPATH', __DIR__ . '/../' );
 
 if ( ! function_exists( 'add_filter' ) ) {
 	function add_filter( $tag, $function_to_add, $priority = 10, $accepted_args = 1 ) {
