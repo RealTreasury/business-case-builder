@@ -29,7 +29,9 @@ if ( empty( $company ) ) {
 $results = [];
 
 if ( isset( $_POST['rtbcb_calculate_roi'] ) && check_admin_referer( 'rtbcb_calculate_roi', 'rtbcb_calculate_roi_nonce' ) ) {
-    $results = RTBCB_Calculator::calculate_roi( $company );
+    $results        = RTBCB_Calculator::calculate_roi( $company );
+    $recommendation = RTBCB_Category_Recommender::recommend_category( $company );
+    $results        = RTBCB_Calculator::calculate_category_refined_roi( $company, $recommendation['category_info'] );
     update_option( 'rtbcb_roi_results', $results );
 }
 

@@ -17,13 +17,12 @@ class RTBCB_Calculator {
      * Calculate ROI scenarios for given inputs.
      *
      * @param array $user_inputs User provided inputs.
+     * @param array $category    Optional category info.
      * @return array
      */
-    public static function calculate_roi( $user_inputs ) {
-        $settings       = RTBCB_Settings::get_all();
-        $recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
-        $category       = $recommendation['category_info'];
-        $industry_mult  = self::get_industry_benchmark( $user_inputs['industry'] ?? '' );
+    public static function calculate_roi( $user_inputs, $category = [] ) {
+        $settings      = RTBCB_Settings::get_all();
+        $industry_mult = self::get_industry_benchmark( $user_inputs['industry'] ?? '' );
 
         $scenarios = [];
         foreach ( [ 'conservative', 'base', 'optimistic' ] as $scenario ) {
@@ -31,6 +30,17 @@ class RTBCB_Calculator {
         }
 
         return $scenarios;
+    }
+
+    /**
+     * Recalculate ROI scenarios using recommended category info.
+     *
+     * @param array $user_inputs User provided inputs.
+     * @param array $category    Category info from recommender.
+     * @return array
+     */
+    public static function calculate_category_refined_roi( $user_inputs, $category ) {
+        return self::calculate_roi( $user_inputs, $category );
     }
 
     /**

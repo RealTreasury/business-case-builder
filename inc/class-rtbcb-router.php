@@ -47,8 +47,13 @@ class RTBCB_Router {
                 $report_type = sanitize_text_field( wp_unslash( $_POST['report_type'] ) );
             }
 
-            // Perform ROI calculations.
-            $calculations = RTBCB_Calculator::calculate_roi( $form_data );
+                        // Perform ROI calculations.
+                        $calculations    = RTBCB_Calculator::calculate_roi( $form_data );
+                        $recommendation  = RTBCB_Category_Recommender::recommend_category( $form_data );
+                        $calculations    = RTBCB_Calculator::calculate_category_refined_roi(
+                            $form_data,
+                            $recommendation['category_info']
+                        );
 
             $fast_mode = 'fast' === $report_type || ! empty( $_POST['fast_mode'] ) || get_option( 'rtbcb_fast_mode', 0 );
             if ( $fast_mode ) {

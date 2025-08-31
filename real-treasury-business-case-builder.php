@@ -785,15 +785,16 @@ return $use_comprehensive;
 					return;
 				}
 
-				$scenarios = RTBCB_Calculator::calculate_roi( $user_inputs );
+                                $scenarios = RTBCB_Calculator::calculate_roi( $user_inputs );
 
-				// Get category recommendation.
-				if ( ! class_exists( 'RTBCB_Category_Recommender' ) ) {
-					wp_send_json_error( [ 'message' => __( 'System error: Recommender not available.', 'rtbcb' ) ], 500 );
-					return;
-				}
+                                // Get category recommendation.
+                                if ( ! class_exists( 'RTBCB_Category_Recommender' ) ) {
+                                        wp_send_json_error( [ 'message' => __( 'System error: Recommender not available.', 'rtbcb' ) ], 500 );
+                                        return;
+                                }
 
                                $recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
+                               $scenarios      = RTBCB_Calculator::calculate_category_refined_roi( $user_inputs, $recommendation['category_info'] );
 
                                // Generate business case analysis with lazy RAG loading.
                                $analysis_data          = $this->generate_business_analysis( $user_inputs, $scenarios, $recommendation );
@@ -1451,6 +1452,7 @@ return $use_comprehensive;
 
             rtbcb_log_api_debug( 'Running category recommendation' );
             $recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
+            $scenarios      = RTBCB_Calculator::calculate_category_refined_roi( $user_inputs, $recommendation['category_info'] );
             rtbcb_log_api_debug( 'Category recommendation result', $recommendation );
             rtbcb_log_memory_usage( 'after_category_recommendation' );
 
