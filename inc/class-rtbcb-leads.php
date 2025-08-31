@@ -181,7 +181,7 @@ class RTBCB_Leads {
         }
 
     /**
-     * Compress existing report_html entries.
+     * Compress and encode existing report_html entries.
      *
      * @return void
      */
@@ -196,11 +196,15 @@ class RTBCB_Leads {
         );
 
         foreach ( $leads as $lead ) {
-            if ( false !== @gzuncompress( $lead['report_html'] ) ) {
+            $data    = $lead['report_html'];
+            $decoded = base64_decode( $data, true );
+            $decoded = false !== $decoded ? $decoded : $data;
+
+            if ( false !== @gzuncompress( $decoded ) ) {
                 continue;
             }
 
-            $compressed = gzcompress( $lead['report_html'] );
+            $compressed = base64_encode( gzcompress( $data ) );
             $wpdb->update(
                 self::$table_name,
                 [ 'report_html' => $compressed ],
@@ -251,7 +255,7 @@ class RTBCB_Leads {
         ];
 
         if ( ! empty( $sanitized_data['report_html'] ) ) {
-            $sanitized_data['report_html'] = gzcompress( $sanitized_data['report_html'] );
+            $sanitized_data['report_html'] = base64_encode( gzcompress( $sanitized_data['report_html'] ) );
         }
 
         // Prepare format array to match the sanitized data
@@ -342,7 +346,11 @@ class RTBCB_Leads {
             $result['pain_points'] = maybe_unserialize( $result['pain_points'] );
 
             if ( ! empty( $result['report_html'] ) ) {
-                $uncompressed = @gzuncompress( $result['report_html'] );
+                $data    = $result['report_html'];
+                $decoded = base64_decode( $data, true );
+                $decoded = false !== $decoded ? $decoded : $data;
+
+                $uncompressed = @gzuncompress( $decoded );
                 if ( false !== $uncompressed ) {
                     $result['report_html'] = $uncompressed;
                 }
@@ -372,7 +380,9 @@ class RTBCB_Leads {
             'date_to'     => '',
         ];
 
-        $args = wp_parse_args( $args, $defaults );
+        $args = function_exists( 'wp_parse_args' )
+            ? wp_parse_args( $args, $defaults )
+            : array_merge( $defaults, $args );
 
         // Build WHERE clause
         $where_conditions = [ '1=1' ];
@@ -423,7 +433,11 @@ class RTBCB_Leads {
             $lead['pain_points'] = maybe_unserialize( $lead['pain_points'] );
 
             if ( ! empty( $lead['report_html'] ) ) {
-                $uncompressed = @gzuncompress( $lead['report_html'] );
+                $data    = $lead['report_html'];
+                $decoded = base64_decode( $data, true );
+                $decoded = false !== $decoded ? $decoded : $data;
+
+                $uncompressed = @gzuncompress( $decoded );
                 if ( false !== $uncompressed ) {
                     $lead['report_html'] = $uncompressed;
                 }
