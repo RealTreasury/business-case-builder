@@ -320,104 +320,134 @@ class RTBCB_Leads {
         return $result;
     }
 
-    /**
-     * Get all leads with pagination and filtering.
-     *
-     * @param array $args Query arguments.
-     * @return array Leads data with pagination info.
-     */
-    public static function get_all_leads( $args = [] ) {
-        global $wpdb;
+	/**
+	 * Get all leads with pagination and filtering.
+	 *
+	 * @param array $args {
+	 *     Query arguments.
+	 *
+	 *     @type int  $per_page   Items per page. Use `0` for no limit.
+	 *     @type int  $page       Page number.
+	 *     @type string $orderby  Order by column.
+	 *     @type string $order    Order direction.
+	 *     @type string $search   Email search term.
+	 *     @type string $category Category filter.
+	 *     @type string $date_from Date range start.
+	 *     @type string $date_to   Date range end.
+	 *     @type bool  $count_total Whether to calculate total rows.
+	 * }
+	 * @return array Leads data with pagination info.
+	 */
+	public static function get_all_leads( $args = [] ) {
+	    global $wpdb;
 
-        $defaults = [
-            'per_page'    => 20,
-            'page'        => 1,
-            'orderby'     => 'created_at',
-            'order'       => 'DESC',
-            'search'      => '',
-            'category'    => '',
-            'date_from'   => '',
-            'date_to'     => '',
-        ];
+	    $defaults = [
+	        'per_page'    => 20,
+	        'page'        => 1,
+	        'orderby'     => 'created_at',
+	        'order'       => 'DESC',
+	        'search'      => '',
+	        'category'    => '',
+	        'date_from'   => '',
+	        'date_to'     => '',
+	        'count_total' => true,
+	    ];
 
-        $args = wp_parse_args( $args, $defaults );
+	    $args = wp_parse_args( $args, $defaults );
 
-        // Build WHERE clause
-        $where_conditions = [ '1=1' ];
-        $prepare_values = [];
+	    // Build WHERE clause.
+	    $where_conditions = [ '1=1' ];
+	    $prepare_values   = [];
 
-        if ( ! empty( $args['search'] ) ) {
-            $where_conditions[] = 'email LIKE %s';
-            $prepare_values[] = '%' . $wpdb->esc_like( $args['search'] ) . '%';
-        }
+	    if ( ! empty( $args['search'] ) ) {
+	        $where_conditions[] = 'email LIKE %s';
+	        $prepare_values[]   = '%' . $wpdb->esc_like( $args['search'] ) . '%';
+	    }
 
-        if ( ! empty( $args['category'] ) ) {
-            $where_conditions[] = 'recommended_category = %s';
-            $prepare_values[] = $args['category'];
-        }
+	    if ( ! empty( $args['category'] ) ) {
+	        $where_conditions[] = 'recommended_category = %s';
+	        $prepare_values[]   = $args['category'];
+	    }
 
-        if ( ! empty( $args['date_from'] ) ) {
-            $where_conditions[] = 'created_at >= %s';
-            $prepare_values[] = $args['date_from'] . ' 00:00:00';
-        }
+	    if ( ! empty( $args['date_from'] ) ) {
+	        $where_conditions[] = 'created_at >= %s';
+	        $prepare_values[]   = $args['date_from'] . ' 00:00:00';
+	    }
 
-        if ( ! empty( $args['date_to'] ) ) {
-            $where_conditions[] = 'created_at <= %s';
-            $prepare_values[] = $args['date_to'] . ' 23:59:59';
-        }
+	    if ( ! empty( $args['date_to'] ) ) {
+	        $where_conditions[] = 'created_at <= %s';
+	        $prepare_values[]   = $args['date_to'] . ' 23:59:59';
+	    }
 
-        $where_clause = implode( ' AND ', $where_conditions );
+	    $where_clause        = implode( ' AND ', $where_conditions );
+	    $count_prepare_values = $prepare_values;
 
-        // Get total count
-        $count_sql = "SELECT COUNT(*) FROM " . self::$table_name . " WHERE " . $where_clause;
-        if ( ! empty( $prepare_values ) ) {
-            $total_leads = $wpdb->get_var( $wpdb->prepare( $count_sql, $prepare_values ) );
-        } else {
-            $total_leads = $wpdb->get_var( $count_sql );
-        }
+	    // Get total count when needed.
+	    if ( $args['count_total'] ) {
+	        $count_sql = 'SELECT COUNT(*) FROM ' . self::$table_name . ' WHERE ' . $where_clause;
+	        if ( ! empty( $count_prepare_values ) ) {
+	            $total_leads = $wpdb->get_var( $wpdb->prepare( $count_sql, $count_prepare_values ) );
+	        } else {
+	            $total_leads = $wpdb->get_var( $count_sql );
+	        }
+	    } else {
+	        $total_leads = 0;
+	    }
 
-        // Get leads
-        $offset = ( $args['page'] - 1 ) * $args['per_page'];
-        $orderby = sanitize_sql_orderby( $args['orderby'] . ' ' . $args['order'] );
+	    // Get leads.
+	    $limit  = intval( $args['per_page'] );
+	    $offset = ( $args['page'] - 1 ) * $limit;
+	    $orderby = sanitize_sql_orderby( $args['orderby'] . ' ' . $args['order'] );
 
-        $sql = "SELECT * FROM " . self::$table_name . " WHERE " . $where_clause . " ORDER BY " . $orderby . " LIMIT %d OFFSET %d";
-        $prepare_values[] = $args['per_page'];
-        $prepare_values[] = $offset;
+	    $sql = 'SELECT * FROM ' . self::$table_name . ' WHERE ' . $where_clause . ' ORDER BY ' . $orderby;
+	    if ( $limit > 0 ) {
+	        $sql            .= ' LIMIT %d OFFSET %d';
+	        $prepare_values[] = $limit;
+	        $prepare_values[] = $offset;
+	    }
 
-        $leads = $wpdb->get_results( $wpdb->prepare( $sql, $prepare_values ), ARRAY_A );
+	    if ( ! empty( $prepare_values ) ) {
+	        $leads = $wpdb->get_results( $wpdb->prepare( $sql, $prepare_values ), ARRAY_A );
+	    } else {
+	        $leads = $wpdb->get_results( $sql, ARRAY_A );
+	    }
 
-        // Unserialize pain points
-        foreach ( $leads as &$lead ) {
-            $lead['pain_points'] = maybe_unserialize( $lead['pain_points'] );
-        }
+	    // Unserialize pain points.
+	    foreach ( $leads as &$lead ) {
+	        $lead['pain_points'] = maybe_unserialize( $lead['pain_points'] );
+	    }
 
-        return [
-            'leads'       => $leads,
-            'total'       => intval( $total_leads ),
-            'per_page'    => $args['per_page'],
-            'current_page'=> $args['page'],
-            'total_pages' => ceil( $total_leads / $args['per_page'] ),
-        ];
-    }
+	    if ( ! $args['count_total'] ) {
+	        $total_leads = count( $leads );
+	    }
 
-    /**
-     * Get lead statistics.
-     *
-     * @return array Statistics data.
-     */
-    public static function get_statistics() {
-        global $wpdb;
+	    return [
+	        'leads'        => $leads,
+	        'total'        => intval( $total_leads ),
+	        'per_page'     => $limit,
+	        'current_page' => intval( $args['page'] ),
+	        'total_pages'  => $limit > 0 ? ceil( $total_leads / $limit ) : 1,
+	    ];
+	}
 
-        $stats = [];
+	/**
+	 * Get lead statistics.
+	 *
+	 * @return array Statistics data.
+	 */
+	public static function get_statistics() {
+	    global $wpdb;
 
-        // Total leads
-        $stats['total_leads'] = $wpdb->get_var( "SELECT COUNT(*) FROM " . self::$table_name );
+	    $stats = [];
 
-        // Leads by category
-        $category_stats = $wpdb->get_results(
-            "SELECT recommended_category, COUNT(*) as count FROM " . self::$table_name . " 
-             WHERE recommended_category != '' 
-             GROUP BY recommended_category",
+	    // Total leads
+	    $stats['total_leads'] = $wpdb->get_var( "SELECT COUNT(*) FROM " . self::$table_name );
+
+	    // Leads by category
+	    $category_stats = $wpdb->get_results(
+	        "SELECT recommended_category, COUNT(*) as count FROM " . self::$table_name . " 
+	         WHERE recommended_category != '' 
+	         GROUP BY recommended_category",
             ARRAY_A
         );
         $stats['by_category'] = $category_stats;
@@ -473,67 +503,67 @@ class RTBCB_Leads {
         return $stats;
     }
 
-    /**
-     * Export leads to CSV.
-     *
-     * @param array $args Export arguments.
-     * @return string CSV content.
-     */
-    public static function export_to_csv( $args = [] ) {
-        $leads_data = self::get_all_leads( array_merge( $args, [ 'per_page' => -1 ] ) );
-        $leads = $leads_data['leads'];
+	/**
+	 * Export leads to CSV.
+	 *
+	 * @param array $args Export arguments.
+	 * @return string CSV content.
+	 */
+	public static function export_to_csv( $args = [] ) {
+	$leads_data = self::get_all_leads( array_merge( $args, [ 'per_page' => 0, 'count_total' => false ] ) );
+	    $leads = $leads_data['leads'];
 
-        $csv_content = '';
+	    $csv_content = '';
 
-        // Headers
-        $headers = [
-            'Email', 'Company Size', 'Industry', 'Hours Reconciliation',
-            'Hours Cash Positioning', 'Number of Banks', 'FTEs',
-            'Pain Points', 'Recommended Category', 'ROI Low', 'ROI Base',
-            'ROI High', 'Created At', 'UTM Source', 'UTM Medium', 'UTM Campaign'
-        ];
-        $csv_content .= implode( ',', $headers ) . "\n";
+	    // Headers
+	    $headers = [
+	        'Email', 'Company Size', 'Industry', 'Hours Reconciliation',
+	        'Hours Cash Positioning', 'Number of Banks', 'FTEs',
+	        'Pain Points', 'Recommended Category', 'ROI Low', 'ROI Base',
+	        'ROI High', 'Created At', 'UTM Source', 'UTM Medium', 'UTM Campaign'
+	    ];
+	    $csv_content .= implode( ',', $headers ) . "\n";
 
-        // Data rows
-        foreach ( $leads as $lead ) {
-            $row = [
-                '"' . str_replace( '"', '""', $lead['email'] ) . '"',
-                '"' . str_replace( '"', '""', $lead['company_size'] ) . '"',
-                '"' . str_replace( '"', '""', $lead['industry'] ) . '"',
-                $lead['hours_reconciliation'],
-                $lead['hours_cash_positioning'],
-                $lead['num_banks'],
-                $lead['ftes'],
-                '"' . str_replace( '"', '""', implode( '; ', (array) $lead['pain_points'] ) ) . '"',
-                '"' . str_replace( '"', '""', $lead['recommended_category'] ) . '"',
-                $lead['roi_low'],
-                $lead['roi_base'],
-                $lead['roi_high'],
-                $lead['created_at'],
-                '"' . str_replace( '"', '""', $lead['utm_source'] ) . '"',
-                '"' . str_replace( '"', '""', $lead['utm_medium'] ) . '"',
-                '"' . str_replace( '"', '""', $lead['utm_campaign'] ) . '"',
-            ];
-            $csv_content .= implode( ',', $row ) . "\n";
-        }
+	    // Data rows
+	    foreach ( $leads as $lead ) {
+	        $row = [
+	            '"' . str_replace( '"', '""', $lead['email'] ) . '"',
+	            '"' . str_replace( '"', '""', $lead['company_size'] ) . '"',
+	            '"' . str_replace( '"', '""', $lead['industry'] ) . '"',
+	            $lead['hours_reconciliation'],
+	            $lead['hours_cash_positioning'],
+	            $lead['num_banks'],
+	            $lead['ftes'],
+	            '"' . str_replace( '"', '""', implode( '; ', (array) $lead['pain_points'] ) ) . '"',
+	            '"' . str_replace( '"', '""', $lead['recommended_category'] ) . '"',
+	            $lead['roi_low'],
+	            $lead['roi_base'],
+	            $lead['roi_high'],
+	            $lead['created_at'],
+	            '"' . str_replace( '"', '""', $lead['utm_source'] ) . '"',
+	            '"' . str_replace( '"', '""', $lead['utm_medium'] ) . '"',
+	            '"' . str_replace( '"', '""', $lead['utm_campaign'] ) . '"',
+	        ];
+	        $csv_content .= implode( ',', $row ) . "\n";
+	    }
 
-        return $csv_content;
-    }
+	    return $csv_content;
+	}
 
-    /**
-     * Get client IP address.
-     *
-     * @return string IP address.
-     */
-    private static function get_client_ip() {
-        $ip_keys = [ 'HTTP_X_FORWARDED_FOR', 'HTTP_X_REAL_IP', 'HTTP_CLIENT_IP', 'REMOTE_ADDR' ];
+	/**
+	 * Get client IP address.
+	 *
+	 * @return string IP address.
+	 */
+	private static function get_client_ip() {
+	    $ip_keys = [ 'HTTP_X_FORWARDED_FOR', 'HTTP_X_REAL_IP', 'HTTP_CLIENT_IP', 'REMOTE_ADDR' ];
 
-        foreach ( $ip_keys as $key ) {
-            if ( ! empty( $_SERVER[ $key ] ) ) {
-                $ip = $_SERVER[ $key ];
-                if ( strpos( $ip, ',' ) !== false ) {
-                    $ip = trim( explode( ',', $ip )[0] );
-                }
+	    foreach ( $ip_keys as $key ) {
+	        if ( ! empty( $_SERVER[ $key ] ) ) {
+	            $ip = $_SERVER[ $key ];
+	            if ( strpos( $ip, ',' ) !== false ) {
+	                $ip = trim( explode( ',', $ip )[0] );
+	            }
                 if ( filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) ) {
                     return $ip;
                 }

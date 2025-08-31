@@ -77,12 +77,24 @@ To persist cached API responses across requests, configure a persistent object c
 [Memcached](https://wordpress.org/plugins/memcached/). See
 [docs/OBJECT_CACHE.md](docs/OBJECT_CACHE.md) for details.
 
-### Step 4: Configure Database Tables
+### Step 4: Configure Persistent Database Connections
+
+Reuse MySQL connections by prefixing the host with `p:` in `wp-config.php`:
+
+```php
+define( 'DB_HOST', 'p:localhost' );
+```
+
+For larger deployments, install a pooling plugin such as
+[HyperDB](https://wordpress.org/plugins/hyperdb/). See
+[docs/DATABASE_CONNECTIONS.md](docs/DATABASE_CONNECTIONS.md) for details.
+
+### Step 5: Configure Database Tables
 The plugin automatically creates required database tables on activation:
 - `wp_rtbcb_leads` - Lead tracking and analytics
 - `wp_rtbcb_rag_index` - Retrieval-augmented generation index
 
-### Step 5: Display the Form
+### Step 6: Display the Form
 Add the shortcode to any page or post to display a “Generate Business Case” button that launches the form in a modal:
 ```
 [rt_business_case_builder]
