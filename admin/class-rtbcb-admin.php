@@ -622,33 +622,30 @@ class RTBCB_Admin {
 			wp_send_json_error( [ 'message' => __( 'Missing API key.', 'rtbcb' ) ] );
 		}
 
-		$cache_key = 'rtbcb_openai_models';
-		$response  = wp_cache_get( $cache_key );
+				$cache_key = 'rtbcb_openai_models';
+				$response  = wp_remote_get(
+					'https://api.openai.com/v1/models',
+					[
+						'headers' => [
+							'Authorization' => 'Bearer ' . $api_key,
+							'Content-Type'  => 'application/json',
+						],
+						'timeout' => rtbcb_get_api_timeout(),
+					]
+				);
 
-		if ( false === $response ) {
-			$response = wp_remote_get( 'https://api.openai.com/v1/models', [
-			    'headers' => [
-			        'Authorization' => 'Bearer ' . $api_key,
-			        'Content-Type'  => 'application/json',
-			    ],
-			    'timeout' => rtbcb_get_api_timeout(),
-			] );
+				if ( is_wp_error( $response ) ) {
+					wp_send_json_error( [ 'message' => $response->get_error_message() ] );
+				}
 
-			if ( ! is_wp_error( $response ) ) {
-			    wp_cache_set( $cache_key, $response, '', HOUR_IN_SECONDS );
-			}
-		}
+				$code = wp_remote_retrieve_response_code( $response );
+				if ( 200 !== $code ) {
+					wp_send_json_error( [ 'message' => sprintf( __( 'API request failed (%d).', 'rtbcb' ), $code ) ] );
+				}
 
-		if ( is_wp_error( $response ) ) {
-			wp_send_json_error( [ 'message' => $response->get_error_message() ] );
-		}
+				wp_cache_set( $cache_key, $response, '', HOUR_IN_SECONDS );
 
-		$code = wp_remote_retrieve_response_code( $response );
-		if ( 200 !== $code ) {
-			wp_send_json_error( [ 'message' => sprintf( __( 'API request failed (%d).', 'rtbcb' ), $code ) ] );
-		}
-
-		wp_send_json_success( [ 'message' => __( 'Connection successful.', 'rtbcb' ) ] );
+				wp_send_json_success( [ 'message' => __( 'Connection successful.', 'rtbcb' ) ] );
 	}
 
     /**
