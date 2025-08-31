@@ -69,6 +69,17 @@ Values outside the `256`–`128000` range are ignored.
 
 Update the list in `inc/helpers.php` if OpenAI changes temperature capabilities.
 
+### Persistent Database Connections (Optional)
+To reduce MySQL connection overhead, enable persistent connections.
+1. Edit `wp-config.php` and prefix the host with `p:`:
+
+   ```php
+   define( 'DB_HOST', 'p:localhost' );
+   ```
+
+2. For high traffic sites, use a pooling plugin or external proxy.
+See [docs/DB_CONNECTION_SETTINGS.md](docs/DB_CONNECTION_SETTINGS.md) for full details.
+
 ### Step 3: Configure Database Tables
 The plugin automatically creates required database tables on activation:
 - `wp_rtbcb_leads` - Lead tracking and analytics
