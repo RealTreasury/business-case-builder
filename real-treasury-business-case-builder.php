@@ -1914,16 +1914,9 @@ return $use_comprehensive;
        $recommended_category = sanitize_text_field( $business_case_data['recommended_category'] ?: ( $business_case_data['recommendation']['recommended'] ?? 'treasury_management_system' ) );
        $category_details     = $business_case_data['category_info'] ?: ( $business_case_data['recommendation']['category_info'] ?? [] );
 
-       // Prepare operational and risk data with fallbacks.
-       $operational_analysis = array_map( 'sanitize_text_field', (array) $business_case_data['operational_analysis'] );
-       if ( empty( $operational_analysis ) ) {
-           $operational_analysis = [ __( 'No data provided', 'rtbcb' ) ];
-       }
-
+       // Prepare operational and risk data.
+       $operational_analysis  = array_map( 'sanitize_text_field', (array) $business_case_data['operational_analysis'] );
        $implementation_risks = array_map( 'sanitize_text_field', (array) $business_case_data['risks'] );
-       if ( empty( $implementation_risks ) ) {
-           $implementation_risks = [ __( 'No data provided', 'rtbcb' ) ];
-       }
 
        // Create structured data format expected by template.
        $report_data = [
@@ -2009,8 +2002,8 @@ return $use_comprehensive;
            ],
            'company_intelligence' => [],
            'technology_strategy'  => [],
-           'operational_insights' => [],
-           'risk_analysis'        => [ 'implementation_risks' => [] ],
+           'operational_insights' => [ __( 'No data provided', 'rtbcb' ) ],
+           'risk_analysis'        => [ 'implementation_risks' => [ __( 'No data provided', 'rtbcb' ) ] ],
            'action_plan'          => [
                'immediate_steps'       => [],
                'short_term_milestones' => [],
@@ -2021,7 +2014,7 @@ return $use_comprehensive;
        $missing_sections = [];
 
        foreach ( $required_sections as $section ) {
-           if ( empty( $report_data[ $section ] ) ) {
+           if ( $this->is_section_empty( $report_data[ $section ] ) ) {
                $missing_sections[] = $section;
                rtbcb_log_error(
                    'Missing report data section',
@@ -2047,6 +2040,26 @@ return $use_comprehensive;
        }
 
        return $report_data;
+   }
+
+   /**
+    * Determine if a report section is empty.
+    *
+    * @param mixed $section Section data to inspect.
+    *
+    * @return bool
+    */
+   private function is_section_empty( $section ) {
+       if ( is_array( $section ) ) {
+           foreach ( $section as $value ) {
+               if ( ! $this->is_section_empty( $value ) ) {
+                   return false;
+               }
+           }
+           return true;
+       }
+
+       return empty( $section );
    }
 
    /**
