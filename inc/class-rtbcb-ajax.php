@@ -27,6 +27,22 @@ class RTBCB_Ajax {
 		$job_id = RTBCB_Background_Job::enqueue( $user_inputs );
 		wp_send_json_success( [ 'job_id' => $job_id ] );
 	}
+	/**
+	 * Process the basic ROI calculation step.
+	 *
+	 * @param array $user_inputs User inputs.
+	 * @return array ROI block.
+	 */
+	public static function process_basic_roi_step( $user_inputs ) {
+		$roi_scenarios = RTBCB_Calculator::calculate_roi( $user_inputs );
+
+		return [
+			'financial_analysis' => [
+				'roi_scenarios' => self::format_roi_scenarios( $roi_scenarios ),
+			],
+		];
+	}
+
 
 	/**
 	 * Process comprehensive case generation.
@@ -156,19 +172,23 @@ class RTBCB_Ajax {
 			}
 		}
 
-		if (
-			'completed' === ( $response['status'] ?? '' ) &&
-			! empty( $status['result']['report_data'] )
-		) {
-			$result                  = $status['result'];
-			$response['report_data'] = $result['report_data'];
-			if ( is_array( $result ) ) {
-			       foreach ( $result as $key => $value ) {
-			               if ( 'report_data' === $key ) {
-			                       continue;
-			               }
-			               $response[ $key ] = $value;
-			       }
+		if ( isset( $status['result'] ) ) {
+			if (
+				'completed' === ( $response['status'] ?? '' ) &&
+				! empty( $status['result']['report_data'] )
+			) {
+				$result                  = $status['result'];
+				$response['report_data'] = $result['report_data'];
+				if ( is_array( $result ) ) {
+					foreach ( $result as $key => $value ) {
+						if ( 'report_data' === $key ) {
+							continue;
+						}
+						$response[ $key ] = $value;
+					}
+				}
+			} else {
+				$response['result'] = $status['result'];
 			}
 		}
 
