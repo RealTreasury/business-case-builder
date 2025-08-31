@@ -83,10 +83,10 @@ return [];
 define( 'ABSPATH', __DIR__ );
 $plugin_code = file_get_contents( __DIR__ . '/../real-treasury-business-case-builder.php' );
 $plugin_code = preg_replace( '/
-?\/\/ Initialize the plugin\s*Real_Treasury_BCB::instance\(\);/', '', $plugin_code );
+?\/\/ Initialize the plugin\s*RTBCB_Main::instance\(\);/', '', $plugin_code );
 eval( '?>' . $plugin_code );
 
-$ref  = new ReflectionClass( 'Real_Treasury_BCB' );
+$ref  = new ReflectionClass( 'RTBCB_Main' );
 $plugin = $ref->newInstanceWithoutConstructor();
 $method = $ref->getMethod( 'transform_data_for_template' );
 $method->setAccessible( true );

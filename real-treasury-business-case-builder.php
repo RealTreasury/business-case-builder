@@ -27,11 +27,11 @@ if ( ! defined( 'RTBCB_DEBUG' ) ) {
 /**
  * Enhanced main plugin class.
  */
-class Real_Treasury_BCB {
+class RTBCB_Main {
     /**
      * Singleton instance.
      *
-     * @var Real_Treasury_BCB|null
+     * @var RTBCB_Main|null
      */
     private static $instance = null;
 
@@ -52,7 +52,7 @@ class Real_Treasury_BCB {
     /**
      * Get plugin instance.
      *
-     * @return Real_Treasury_BCB
+     * @return RTBCB_Main
      */
     public static function instance() {
         if ( null === self::$instance ) {
@@ -2540,7 +2540,7 @@ return $use_comprehensive;
 }
 
 // Initialize the plugin
-Real_Treasury_BCB::instance();
+RTBCB_Main::instance();
 
 // Helper functions for use in templates and other plugins
 if ( ! function_exists( 'rtbcb_get_leads_count' ) ) {

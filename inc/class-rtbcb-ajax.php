@@ -53,8 +53,8 @@ class RTBCB_Ajax {
                 $scenarios      = RTBCB_Calculator::calculate_roi( $user_inputs );
                 $recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
 
-                $plugin = Real_Treasury_BCB::instance();
-                $method = new ReflectionMethod( Real_Treasury_BCB::class, 'generate_business_analysis' );
+                $plugin = RTBCB_Main::instance();
+                $method = new ReflectionMethod( RTBCB_Main::class, 'generate_business_analysis' );
                 $method->setAccessible( true );
 
                 $chunk_callback = function( $chunk ) {

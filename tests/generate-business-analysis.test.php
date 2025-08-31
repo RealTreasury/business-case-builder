@@ -70,7 +70,7 @@ return [ 'executive_summary' => 'summary', 'context_used' => $rag_context ];
 }
 }
 
-class Real_Treasury_BCB {
+class RTBCB_Main {
 public $fallback_called = false;
 
 private function generate_business_analysis( $user_inputs, $scenarios, $recommendation, $chunk_callback = null ) {
@@ -152,7 +152,7 @@ final class Generate_Business_Analysis_Test extends TestCase {
     private $plugin;
 
     protected function setUp(): void {
-        $this->plugin = new Real_Treasury_BCB();
+        $this->plugin = new RTBCB_Main();
     }
 
     private function invoke_generate_business_analysis() {
