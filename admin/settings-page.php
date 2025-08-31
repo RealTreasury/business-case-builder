@@ -153,6 +153,7 @@ $embedding_models = [
                     <label for="rtbcb_fast_mode"><?php echo esc_html__( 'Fast Mode', 'rtbcb' ); ?></label>
                 </th>
                 <td>
+                    <input type="hidden" name="rtbcb_fast_mode" value="0" />
                     <input type="checkbox" id="rtbcb_fast_mode" name="rtbcb_fast_mode" value="1" <?php checked( 1, $fast_mode ); ?> />
                     <p class="description"><?php echo esc_html__( 'Generate a basic ROI-only report without AI processing.', 'rtbcb' ); ?></p>
                 </td>
