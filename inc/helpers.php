@@ -129,7 +129,8 @@ function rtbcb_model_supports_temperature( $model ) {
 /**
  * Sanitize the API timeout option.
  *
- * Ensures the value stays within the allowed 1-600 second range.
+ * Ensures the value stays within the allowed 1-600 second range while
+ * preserving legacy zero values by falling back to the default 300 seconds.
  *
  * @param mixed $value Raw option value.
  * @return int Sanitized timeout in seconds.
@@ -137,7 +138,11 @@ function rtbcb_model_supports_temperature( $model ) {
 function rtbcb_sanitize_api_timeout( $value ) {
 	$value = intval( $value );
 
-	return min( 600, max( 1, $value ) );
+	if ( $value <= 0 ) {
+		return 300;
+	}
+
+	return min( 600, $value );
 }
 
 /**
