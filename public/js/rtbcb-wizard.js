@@ -677,8 +677,21 @@ class BusinessCaseBuilder {
         if (basic_roi) {
             const roiEl = document.getElementById('rtbcb-progress-basic-roi');
             if (roiEl && !roiEl.textContent) {
-                roiEl.textContent = `ROI: ${basic_roi}`;
-                roiEl.style.display = 'block';
+                let percentage = '';
+
+                if (typeof basic_roi === 'object') {
+                    const baseROI = basic_roi?.financial_analysis?.roi_scenarios?.base?.roi_percentage;
+                    if (typeof baseROI === 'number') {
+                        percentage = `${Math.round(baseROI)}%`;
+                    }
+                } else {
+                    percentage = `${basic_roi}`;
+                }
+
+                if (percentage) {
+                    roiEl.textContent = `ROI: ${percentage}`;
+                    roiEl.style.display = 'block';
+                }
             }
         }
     }

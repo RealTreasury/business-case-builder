@@ -35,7 +35,13 @@ describe('pollJob provisional data', () => {
                     success: true,
                     data: {
                         status: 'processing',
-                        basic_roi: '50%',
+                        basic_roi: {
+                            financial_analysis: {
+                                roi_scenarios: {
+                                    base: { roi_percentage: 50 }
+                                }
+                            }
+                        },
                         category: 'Treasury Tech'
                     }
                 })
