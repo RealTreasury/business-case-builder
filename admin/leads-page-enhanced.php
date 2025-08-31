@@ -4,9 +4,7 @@
  */
 
 // Exit if accessed directly.
-if ( ! defined( 'ABSPATH' ) ) {
-    exit;
-}
+defined( 'ABSPATH' ) || exit;
 
 $current_page = $leads_data['current_page'] ?? 1;
 $total_pages = $leads_data['total_pages'] ?? 1;

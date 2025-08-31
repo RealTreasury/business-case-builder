@@ -1,7 +1,9 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) {
-    define( 'ABSPATH', __DIR__ . '/../' );
+	define( 'ABSPATH', __DIR__ . '/../' );
 }
+
+defined( 'ABSPATH' ) || exit;
 
 if ( ! class_exists( 'WP_Error' ) ) {
     class WP_Error {

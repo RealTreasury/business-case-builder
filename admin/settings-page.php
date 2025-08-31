@@ -4,9 +4,7 @@
  */
 
 // Exit if accessed directly.
-if ( ! defined( 'ABSPATH' ) ) {
-    exit;
-}
+defined( 'ABSPATH' ) || exit;
 
 $api_key         = get_option( 'rtbcb_openai_api_key', '' );
 $mini_model      = get_option( 'rtbcb_mini_model', rtbcb_get_default_model( 'mini' ) );

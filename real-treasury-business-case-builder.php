@@ -11,9 +11,7 @@
  * @package RealTreasuryBusinessCaseBuilder
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-    exit;
-}
+defined( 'ABSPATH' ) || exit;
 
 define( 'RTBCB_VERSION', '2.1.8' );
 define( 'RTBCB_FILE', __FILE__ );

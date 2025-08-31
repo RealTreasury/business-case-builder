@@ -2,8 +2,10 @@
 // Generate a mock server-side OpenAI request body for temperature tests.
 
 if ( ! defined( 'ABSPATH' ) ) {
-    define( 'ABSPATH', __DIR__ . '/../../' );
+	define( 'ABSPATH', __DIR__ . '/../../' );
 }
+
+defined( 'ABSPATH' ) || exit;
 
 $model = getenv( 'RTBCB_TEST_MODEL' );
 $model = $model ? preg_replace( '/[^A-Za-z0-9\-_.]/', '', $model ) : 'gpt-5-mini';

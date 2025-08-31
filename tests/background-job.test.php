@@ -1,4 +1,9 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+	define( 'ABSPATH', __DIR__ . '/' );
+}
+defined( 'ABSPATH' ) || exit;
+
 if ( ! class_exists( 'WP_Error' ) ) {
     class WP_Error {
         private $code;
@@ -115,10 +120,6 @@ if ( ! defined( 'HOUR_IN_SECONDS' ) ) {
 }
 if ( ! defined( 'DAY_IN_SECONDS' ) ) {
     define( 'DAY_IN_SECONDS', 86400 );
-}
-
-if ( ! defined( 'ABSPATH' ) ) {
-    define( 'ABSPATH', __DIR__ . '/' );
 }
 
 if ( ! class_exists( 'RTBCB_Ajax' ) ) {

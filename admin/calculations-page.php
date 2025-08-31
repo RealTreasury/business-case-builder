@@ -6,9 +6,7 @@
  */
 
 // Exit if accessed directly.
-if ( ! defined( 'ABSPATH' ) ) {
-    exit;
-}
+defined( 'ABSPATH' ) || exit;
 
 $labor_cost = get_option( 'rtbcb_labor_cost_per_hour', 0 );
 $bank_fee   = get_option( 'rtbcb_bank_fee_baseline', 0 );

@@ -4,9 +4,7 @@
  */
 
 // Exit if accessed directly.
-if ( ! defined( 'ABSPATH' ) ) {
-    exit;
-}
+defined( 'ABSPATH' ) || exit;
 
 $categories = RTBCB_Category_Recommender::get_all_categories();
 $total_leads = $stats['total_leads'] ?? 0;

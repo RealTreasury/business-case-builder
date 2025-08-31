@@ -3,6 +3,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	define( 'ABSPATH', __DIR__ . '/../' );
 }
 
+defined( 'ABSPATH' ) || exit;
+
 ini_set( 'error_log', '/dev/null' );
 
 if ( ! function_exists( 'sanitize_text_field' ) ) {
