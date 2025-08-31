@@ -160,6 +160,7 @@ The analytics dashboard uses Chart.js for its visualizations. The library is bun
 * Fixed bulk lead deletion actions within the lead management dashboard.
 * Added test coverage to ensure asynchronous jobs are marked complete correctly.
 * Reshaped job status data for clearer progress reporting.
+* Introduced `rtbcb_disable_heavy_features` option to temporarily bypass AI enrichment, RAG, and intelligent recommendations.
 
 = 2.1.7 =
 * Update documentation to reflect version 2.1.7.

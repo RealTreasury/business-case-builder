@@ -52,8 +52,9 @@ class RTBCB_Ajax {
 	 */
         public static function process_comprehensive_case( $user_inputs, $job_id = '' ) {
                $request_start    = microtime( true );
-               $workflow_tracker = new RTBCB_Workflow_Tracker();
-               $enable_ai        = RTBCB_Settings::get_setting( 'enable_ai_analysis', true );
+$workflow_tracker = new RTBCB_Workflow_Tracker();
+$disable_heavy    = get_option( 'rtbcb_disable_heavy_features', 0 ) || get_option( 'rtbcb_fast_mode', 0 ) || ! empty( $user_inputs['fast_mode'] );
+$enable_ai        = $disable_heavy ? false : RTBCB_Settings::get_setting( 'enable_ai_analysis', true );
 
 		add_action(
 			'rtbcb_llm_prompt_sent',
@@ -64,8 +65,8 @@ class RTBCB_Ajax {
 
 		try {
                         $workflow_tracker->start_step( 'ai_enrichment' );
-                        if ( $enable_ai ) {
-                                $enriched_profile = new WP_Error( 'llm_missing', 'LLM service unavailable.' );
+if ( $enable_ai ) {
+$enriched_profile = new WP_Error( 'llm_missing', 'LLM service unavailable.' );
                                 if ( class_exists( 'RTBCB_LLM' ) ) {
                                         $llm = new RTBCB_LLM();
                                         if ( method_exists( $llm, 'enrich_company_profile' ) ) {
@@ -76,10 +77,14 @@ class RTBCB_Ajax {
                                         $enriched_profile = self::create_fallback_profile( $user_inputs );
                                         $workflow_tracker->add_warning( 'ai_enrichment_failed', $enriched_profile->get_error_message() );
                                 }
-                        } else {
-                                $enriched_profile = self::create_fallback_profile( $user_inputs );
-                                $workflow_tracker->add_warning( 'ai_enrichment_disabled', __( 'AI analysis disabled.', 'rtbcb' ) );
-                        }
+} else {
+$enriched_profile = self::create_fallback_profile( $user_inputs );
+if ( $disable_heavy ) {
+$workflow_tracker->add_warning( 'ai_enrichment_bypassed', __( 'Heavy features temporarily disabled.', 'rtbcb' ) );
+} else {
+$workflow_tracker->add_warning( 'ai_enrichment_disabled', __( 'AI analysis disabled.', 'rtbcb' ) );
+}
+}
                         $workflow_tracker->complete_step( 'ai_enrichment', $enriched_profile );
                         if ( $job_id ) {
                                 RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'enriched_profile' => $enriched_profile ] );
@@ -94,9 +99,12 @@ class RTBCB_Ajax {
                         }
 
 			$workflow_tracker->start_step( 'intelligent_recommendations' );
-			$intelligent_recommender = new RTBCB_Intelligent_Recommender();
-			$recommendation          = $intelligent_recommender->recommend_with_ai_insights( $user_inputs, $enriched_profile );
-                        $workflow_tracker->complete_step( 'intelligent_recommendations', $recommendation );
+$intelligent_recommender = new RTBCB_Intelligent_Recommender();
+$recommendation          = $intelligent_recommender->recommend_with_ai_insights( $user_inputs, $enriched_profile );
+if ( $disable_heavy ) {
+$workflow_tracker->add_warning( 'intelligent_recommendations_bypassed', __( 'Heavy features temporarily disabled.', 'rtbcb' ) );
+}
+$workflow_tracker->complete_step( 'intelligent_recommendations', $recommendation );
                         if ( $job_id ) {
                                 RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'category' => $recommendation['recommended'] ] );
                         }
@@ -117,11 +125,15 @@ class RTBCB_Ajax {
                                         $final_analysis = self::create_fallback_analysis( $enriched_profile, $roi_scenarios );
                                         $workflow_tracker->add_warning( 'final_analysis_failed', $final_analysis->get_error_message() );
                                 }
-                        } else {
-                                $rag_baseline  = [];
-                                $final_analysis = self::create_fallback_analysis( $enriched_profile, $roi_scenarios );
-                                $workflow_tracker->add_warning( 'hybrid_rag_disabled', __( 'AI analysis disabled.', 'rtbcb' ) );
-                        }
+} else {
+$rag_baseline  = [];
+$final_analysis = self::create_fallback_analysis( $enriched_profile, $roi_scenarios );
+if ( $disable_heavy ) {
+$workflow_tracker->add_warning( 'hybrid_rag_bypassed', __( 'Heavy features temporarily disabled.', 'rtbcb' ) );
+} else {
+$workflow_tracker->add_warning( 'hybrid_rag_disabled', __( 'AI analysis disabled.', 'rtbcb' ) );
+}
+}
                         $workflow_tracker->complete_step( 'hybrid_rag_analysis', $final_analysis );
                         if ( $job_id ) {
                                 RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'analysis' => $final_analysis ] );

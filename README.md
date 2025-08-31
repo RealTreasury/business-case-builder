@@ -10,6 +10,7 @@ A comprehensive WordPress plugin that helps treasury teams quantify the benefits
 - Reshaped job status data for clearer progress reporting.
 - 📚 Added detailed wizard and API flow documentation in [docs/WIZARD_FORM_API_FLOW.md](docs/WIZARD_FORM_API_FLOW.md).
 - Cached OpenAI model list via WordPress object caching for faster connection tests.
+- Introduced temporary bypass mode via `rtbcb_disable_heavy_features` option to skip heavy AI features.
 
 
 ## 📋 Installation & Setup

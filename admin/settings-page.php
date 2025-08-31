@@ -19,6 +19,7 @@ $gpt5_timeout    = rtbcb_get_api_timeout();
 $gpt5_max_output_tokens = get_option( 'rtbcb_gpt5_max_output_tokens', 8000 );
 $gpt5_min_output_tokens = get_option( 'rtbcb_gpt5_min_output_tokens', 256 );
 $fast_mode       = get_option( 'rtbcb_fast_mode', 0 );
+$disable_heavy_features = get_option( 'rtbcb_disable_heavy_features', 0 );
 $feature_settings    = get_option( 'rtbcb_settings', RTBCB_Settings::DEFAULTS );
 $enable_ai_analysis = isset( $feature_settings['enable_ai_analysis'] ) ? (bool) $feature_settings['enable_ai_analysis'] : true;
 $enable_charts      = isset( $feature_settings['enable_charts'] ) ? (bool) $feature_settings['enable_charts'] : true;
@@ -160,6 +161,15 @@ $embedding_models = [
                     <p class="description"><?php echo esc_html__( 'Generate a basic ROI-only report without AI processing.', 'rtbcb' ); ?></p>
                 </td>
             </tr>
+<tr>
+<th scope="row">
+<label for="rtbcb_disable_heavy_features"><?php echo esc_html__( 'Bypass Heavy Features', 'rtbcb' ); ?></label>
+</th>
+<td>
+<input type="checkbox" id="rtbcb_disable_heavy_features" name="rtbcb_disable_heavy_features" value="1" <?php checked( 1, $disable_heavy_features ); ?> />
+<p class="description"><?php echo esc_html__( 'Skip AI enrichment, RAG, and intelligent recommendations temporarily.', 'rtbcb' ); ?></p>
+</td>
+</tr>
             <tr>
                 <th scope="row">
                     <label for="rtbcb_enable_ai_analysis"><?php echo esc_html__( 'Enable AI Analysis', 'rtbcb' ); ?></label>
