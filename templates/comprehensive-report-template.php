@@ -25,6 +25,7 @@ $operational_insights = $report_data['operational_insights'] ?? [];
 $risk_analysis        = $report_data['risk_analysis'] ?? [];
 $action_plan          = $report_data['action_plan'] ?? [];
 $rag_context          = $report_data['rag_context'] ?? [];
+$enable_charts        = RTBCB_Settings::get_setting( 'enable_charts', true );
 
 $company_name    = $metadata['company_name'] ?? __( 'Your Company', 'rtbcb' );
 $analysis_date   = $metadata['analysis_date'] ?? current_time( 'Y-m-d' );
@@ -204,25 +205,27 @@ $processing_time = $metadata['processing_time'] ?? 0;
 		</div>
 		
 		<div id="financial-content" class="rtbcb-section-content">
-			<!-- ROI Scenarios Chart -->
-			<div class="rtbcb-roi-chart-container">
-				<h3><?php echo esc_html__( 'ROI Scenario Analysis', 'rtbcb' ); ?></h3>
-				<canvas id="rtbcb-roi-chart" width="800" height="400"></canvas>
-				<div class="rtbcb-chart-legend">
-					<div class="rtbcb-legend-item">
-						<span class="rtbcb-legend-color conservative"></span>
-						<span><?php echo esc_html__( 'Conservative Scenario', 'rtbcb' ); ?></span>
-					</div>
-					<div class="rtbcb-legend-item">
-						<span class="rtbcb-legend-color base"></span>
-						<span><?php echo esc_html__( 'Base Case', 'rtbcb' ); ?></span>
-					</div>
-					<div class="rtbcb-legend-item">
-						<span class="rtbcb-legend-color optimistic"></span>
-						<span><?php echo esc_html__( 'Optimistic Scenario', 'rtbcb' ); ?></span>
-					</div>
-				</div>
-			</div>
+                <!-- ROI Scenarios Chart -->
+                <?php if ( $enable_charts ) : ?>
+                <div class="rtbcb-roi-chart-container">
+                        <h3><?php echo esc_html__( 'ROI Scenario Analysis', 'rtbcb' ); ?></h3>
+                        <canvas id="rtbcb-roi-chart" width="800" height="400"></canvas>
+                        <div class="rtbcb-chart-legend">
+                                <div class="rtbcb-legend-item">
+                                        <span class="rtbcb-legend-color conservative"></span>
+                                        <span><?php echo esc_html__( 'Conservative Scenario', 'rtbcb' ); ?></span>
+                                </div>
+                                <div class="rtbcb-legend-item">
+                                        <span class="rtbcb-legend-color base"></span>
+                                        <span><?php echo esc_html__( 'Base Case', 'rtbcb' ); ?></span>
+                                </div>
+                                <div class="rtbcb-legend-item">
+                                        <span class="rtbcb-legend-color optimistic"></span>
+                                        <span><?php echo esc_html__( 'Optimistic Scenario', 'rtbcb' ); ?></span>
+                                </div>
+                        </div>
+                </div>
+                <?php endif; ?>
 
 			<!-- ROI Breakdown -->
 			<div class="rtbcb-roi-breakdown-enhanced">
@@ -479,8 +482,10 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeROIChart() {
-	const ctx = document.getElementById('rtbcb-roi-chart');
-	if (!ctx) return;
+        const ctx = document.getElementById('rtbcb-roi-chart');
+        if ( ! ctx || typeof Chart === 'undefined' ) {
+                return;
+        }
 	
 	const roiData = <?php echo wp_json_encode( $financial_analysis['roi_scenarios'] ?? [] ); ?>;
 	

@@ -74,13 +74,18 @@ class RTBCB_Admin {
             return;
 	}
 
-        wp_enqueue_script( 'chart-js', RTBCB_URL . 'public/js/chart.min.js', [], '3.9.1', true );
-        wp_enqueue_script( 
-            'rtbcb-admin', 
-            RTBCB_URL . 'admin/js/rtbcb-admin.js', 
-            [ 'jquery', 'chart-js' ], 
-            RTBCB_VERSION, 
-            true 
+        $deps          = [ 'jquery' ];
+        $enable_charts = RTBCB_Settings::get_setting( 'enable_charts', true );
+        if ( $enable_charts ) {
+            wp_enqueue_script( 'chart-js', RTBCB_URL . 'public/js/chart.min.js', [], '3.9.1', true );
+            $deps[] = 'chart-js';
+        }
+        wp_enqueue_script(
+            'rtbcb-admin',
+            RTBCB_URL . 'admin/js/rtbcb-admin.js',
+            $deps,
+            RTBCB_VERSION,
+            true
         );
         wp_enqueue_style(
             'rtbcb-admin',
@@ -487,6 +492,7 @@ class RTBCB_Admin {
      * @return void
      */
     public function register_settings() {
+        register_setting( 'rtbcb_settings', 'rtbcb_settings', [ 'sanitize_callback' => [ $this, 'sanitize_settings' ] ] );
         register_setting( 'rtbcb_settings', 'rtbcb_openai_api_key', [ 'sanitize_callback' => 'sanitize_text_field' ] );
         register_setting( 'rtbcb_settings', 'rtbcb_mini_model', [ 'sanitize_callback' => 'sanitize_text_field' ] );
         register_setting( 'rtbcb_settings', 'rtbcb_premium_model', [ 'sanitize_callback' => 'sanitize_text_field' ] );
@@ -497,7 +503,20 @@ class RTBCB_Admin {
 		register_setting( 'rtbcb_settings', 'rtbcb_gpt5_timeout', [ 'sanitize_callback' => 'rtbcb_sanitize_api_timeout' ] );
         register_setting( 'rtbcb_settings', 'rtbcb_gpt5_max_output_tokens', [ 'sanitize_callback' => 'rtbcb_sanitize_max_output_tokens' ] );
         register_setting( 'rtbcb_settings', 'rtbcb_gpt5_min_output_tokens', [ 'sanitize_callback' => 'rtbcb_sanitize_min_output_tokens' ] );
-		register_setting( 'rtbcb_settings', 'rtbcb_fast_mode', [ 'sanitize_callback' => 'absint' ] );
+        register_setting( 'rtbcb_settings', 'rtbcb_fast_mode', [ 'sanitize_callback' => 'absint' ] );
+    }
+
+    /**
+     * Sanitize rtbcb_settings option.
+     *
+     * @param array $settings Settings array.
+     * @return array
+     */
+    public function sanitize_settings( $settings ) {
+        $settings = is_array( $settings ) ? $settings : [];
+        $settings['enable_ai_analysis'] = isset( $settings['enable_ai_analysis'] ) ? (bool) $settings['enable_ai_analysis'] : false;
+        $settings['enable_charts']      = isset( $settings['enable_charts'] ) ? (bool) $settings['enable_charts'] : false;
+        return $settings;
     }
 
     /**
