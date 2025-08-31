@@ -1,6 +1,10 @@
 <?php
 defined( 'ABSPATH' ) || exit;
 
+if ( ! defined( 'RTBCB_ALLOWED_TIERS' ) ) {
+	define( 'RTBCB_ALLOWED_TIERS', [ 'basic', 'enhanced', 'premium' ] );
+}
+
 /**
  * Configuration defaults for Real Treasury Business Case Builder.
  *

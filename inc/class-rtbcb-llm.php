@@ -427,7 +427,7 @@ USER,
             'references'     => array_map( 'esc_url_raw', array_filter( (array) $json['references'] ) ),
             'metrics'        => $metrics,
             'generated_at'   => current_time( 'Y-m-d H:i:s' ),
-            'analysis_type'  => 'comprehensive_company_overview',
+            'analysis_type'  => rtbcb_get_analysis_type() . '_company_overview',
         ];
     }
 
