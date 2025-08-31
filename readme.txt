@@ -30,6 +30,10 @@ environment variable, or by creating a `rtbcb-config.json` file in the plugin di
 
 Values outside the 256–128,000 range are ignored.
 
+Administrators can temporarily bypass AI enrichment and related heavy features by enabling
+the **Disable Heavy Features** option on the settings page. This mode produces basic
+ROI-only reports and displays an admin notice until the option is turned off.
+
 == Testing Dashboard ==
 From the WordPress admin, go to **Real Treasury → Test Dashboard** and click
 **Run All Tests** to execute the full suite. A progress bar indicates overall

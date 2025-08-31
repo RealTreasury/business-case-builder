@@ -19,6 +19,7 @@ class RTBCB_Admin {
         add_action( 'admin_init', [ $this, 'register_settings' ] );
         add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );
         add_action( 'admin_notices', [ $this, 'maybe_show_timeout_notice' ] );
+        add_action( 'admin_notices', [ $this, 'maybe_show_bypass_notice' ] );
 
         // AJAX handlers
         add_action( 'wp_ajax_rtbcb_test_connection', [ $this, 'test_api_connection' ] );
@@ -497,7 +498,8 @@ class RTBCB_Admin {
         register_setting( 'rtbcb_settings', 'rtbcb_gpt5_timeout', [ 'sanitize_callback' => 'intval' ] );
         register_setting( 'rtbcb_settings', 'rtbcb_gpt5_max_output_tokens', [ 'sanitize_callback' => 'rtbcb_sanitize_max_output_tokens' ] );
         register_setting( 'rtbcb_settings', 'rtbcb_gpt5_min_output_tokens', [ 'sanitize_callback' => 'rtbcb_sanitize_min_output_tokens' ] );
-		register_setting( 'rtbcb_settings', 'rtbcb_fast_mode', [ 'sanitize_callback' => 'absint' ] );
+        register_setting( 'rtbcb_settings', 'rtbcb_fast_mode', [ 'sanitize_callback' => 'absint' ] );
+        register_setting( 'rtbcb_settings', 'rtbcb_disable_heavy_features', [ 'sanitize_callback' => 'absint' ] );
     }
 
     /**
@@ -1967,4 +1969,33 @@ class RTBCB_Admin {
                         echo '</p></div>';
                 }
         }
+
+       /**
+        * Display warning when heavy features are disabled.
+        *
+        * @return void
+        */
+       public function maybe_show_bypass_notice() {
+               if ( ! current_user_can( 'manage_options' ) ) {
+                       return;
+               }
+
+               if ( get_option( 'rtbcb_disable_heavy_features', 0 ) ) {
+                       $doc_url = esc_url( RTBCB_URL . 'docs/TEMPORARY_BYPASS_MODE.md' );
+                       echo '<div class="notice notice-warning is-dismissible"><p>';
+                       printf(
+                               wp_kses(
+                                       __( 'Heavy features are temporarily disabled. <a href="%s" target="_blank">Learn more</a>.', 'rtbcb' ),
+                                       [
+                                               'a' => [
+                                                       'href'   => [],
+                                                       'target' => [],
+                                               ],
+                                       ]
+                               ),
+                               $doc_url
+                       );
+                       echo '</p></div>';
+               }
+       }
 }

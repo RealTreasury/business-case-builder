@@ -50,10 +50,14 @@ class RTBCB_Ajax {
 	 * @param array $user_inputs User inputs.
 	 * @return array|WP_Error Result data or error.
 	 */
-	public static function process_comprehensive_case( $user_inputs ) {
+       public static function process_comprehensive_case( $user_inputs ) {
                $request_start    = microtime( true );
                $workflow_tracker = new RTBCB_Workflow_Tracker();
                $enable_ai        = RTBCB_Settings::get_setting( 'enable_ai_analysis', true );
+               $disable_heavy    = rtbcb_heavy_features_disabled();
+               if ( $disable_heavy ) {
+                       $enable_ai = false;
+               }
 
 		add_action(
 			'rtbcb_llm_prompt_sent',
@@ -87,10 +91,15 @@ class RTBCB_Ajax {
 			$roi_scenarios       = $enhanced_calculator->calculate_enhanced_roi( $user_inputs, $enriched_profile );
 			$workflow_tracker->complete_step( 'enhanced_roi_calculation', $roi_scenarios );
 
-			$workflow_tracker->start_step( 'intelligent_recommendations' );
-			$intelligent_recommender = new RTBCB_Intelligent_Recommender();
-			$recommendation          = $intelligent_recommender->recommend_with_ai_insights( $user_inputs, $enriched_profile );
-			$workflow_tracker->complete_step( 'intelligent_recommendations', $recommendation );
+                       $workflow_tracker->start_step( 'intelligent_recommendations' );
+                       if ( $disable_heavy ) {
+                               $recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
+                               $workflow_tracker->add_warning( 'intelligent_recommendations_disabled', __( 'AI analysis disabled.', 'rtbcb' ) );
+                       } else {
+                               $intelligent_recommender = new RTBCB_Intelligent_Recommender();
+                               $recommendation          = $intelligent_recommender->recommend_with_ai_insights( $user_inputs, $enriched_profile );
+                       }
+                       $workflow_tracker->complete_step( 'intelligent_recommendations', $recommendation );
 
                         $workflow_tracker->start_step( 'hybrid_rag_analysis' );
                         if ( $enable_ai ) {

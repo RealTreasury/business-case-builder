@@ -31,6 +31,23 @@ function rtbcb_get_api_timeout() {
 require_once __DIR__ . '/config.php';
 
 /**
+ * Check if heavy features are disabled globally.
+ *
+ * Combines the temporary bypass option and Fast Mode toggle to determine
+ * whether AI enrichment, RAG, and intelligent recommendations should run.
+ *
+ * @return bool True when heavy features should be skipped.
+ */
+function rtbcb_heavy_features_disabled() {
+        if ( function_exists( 'get_option' ) ) {
+                return (bool) get_option( 'rtbcb_disable_heavy_features', 0 )
+                        || (bool) get_option( 'rtbcb_fast_mode', 0 );
+        }
+
+        return false;
+}
+
+/**
  * Determine the current analysis tier.
  *
  * Uses plugin settings to detect enabled features and maps them to one of
@@ -39,13 +56,13 @@ require_once __DIR__ . '/config.php';
  * @return string Analysis type.
  */
 function rtbcb_get_analysis_type() {
-	$analysis_type = 'basic';
+       $analysis_type = 'basic';
 
-	$enable_ai = class_exists( 'RTBCB_Settings' ) ? RTBCB_Settings::get_setting( 'enable_ai_analysis', true ) : true;
+       $enable_ai = class_exists( 'RTBCB_Settings' ) ? RTBCB_Settings::get_setting( 'enable_ai_analysis', true ) : true;
 
-	if ( $enable_ai ) {
-		$analysis_type = 'enhanced';
-	}
+       if ( $enable_ai && ! rtbcb_heavy_features_disabled() ) {
+               $analysis_type = 'enhanced';
+       }
 
 	if ( function_exists( 'apply_filters' ) ) {
 		$analysis_type = apply_filters( 'rtbcb_analysis_type', $analysis_type );
