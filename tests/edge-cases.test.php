@@ -95,8 +95,19 @@ return rtrim( $string, '/\\' ) . '/';
 // Stub plugin classes.
 if ( ! class_exists( 'RTBCB_Calculator' ) ) {
 class RTBCB_Calculator {
-public static function calculate_roi( $data ) {
+public static function calculate_roi( $data, $category = [] ) {
 return [ 'roi_base' => 1000 ];
+}
+public static function calculate_category_refined_roi( $inputs, $category_output ) {
+return self::calculate_roi( $inputs, $category_output['category_info'] ?? [] );
+}
+}
+}
+
+if ( ! class_exists( 'RTBCB_Category_Recommender' ) ) {
+class RTBCB_Category_Recommender {
+public static function recommend_category( $inputs ) {
+return [ 'recommended' => 'cash_tools', 'category_info' => [] ];
 }
 }
 }

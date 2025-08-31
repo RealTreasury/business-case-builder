@@ -60,10 +60,12 @@ class RTBCB_Ajax {
 			}
 			$workflow_tracker->complete_step( 'ai_enrichment', $enriched_profile );
 
-			$workflow_tracker->start_step( 'enhanced_roi_calculation' );
-			$enhanced_calculator = new RTBCB_Enhanced_Calculator();
-			$roi_scenarios       = $enhanced_calculator->calculate_enhanced_roi( $user_inputs, $enriched_profile );
-			$workflow_tracker->complete_step( 'enhanced_roi_calculation', $roi_scenarios );
+						$workflow_tracker->start_step( 'enhanced_roi_calculation' );
+						$enhanced_calculator = new RTBCB_Enhanced_Calculator();
+						$roi_scenarios       = $enhanced_calculator->calculate_enhanced_roi( $user_inputs, $enriched_profile );
+						$category_output     = RTBCB_Category_Recommender::recommend_category( $user_inputs );
+						$roi_scenarios       = RTBCB_Calculator::calculate_category_refined_roi( $user_inputs, $category_output );
+						$workflow_tracker->complete_step( 'enhanced_roi_calculation', $roi_scenarios );
 
 			$workflow_tracker->start_step( 'intelligent_recommendations' );
 			$intelligent_recommender = new RTBCB_Intelligent_Recommender();
@@ -141,8 +143,8 @@ class RTBCB_Ajax {
 		$status = RTBCB_Background_Job::get_status( $job_id );
 		if ( is_wp_error( $status ) ) {
 			$status = [
-			       'status'  => 'error',
-			       'message' => sanitize_text_field( $status->get_error_message() ),
+				   'status'  => 'error',
+				   'message' => sanitize_text_field( $status->get_error_message() ),
 			];
 		}
 
@@ -152,7 +154,7 @@ class RTBCB_Ajax {
 
 		foreach ( [ 'step', 'message', 'percent' ] as $field ) {
 			if ( isset( $status[ $field ] ) ) {
-			       $response[ $field ] = 'percent' === $field ? floatval( $status[ $field ] ) : sanitize_text_field( $status[ $field ] );
+				   $response[ $field ] = 'percent' === $field ? floatval( $status[ $field ] ) : sanitize_text_field( $status[ $field ] );
 			}
 		}
 
@@ -163,19 +165,19 @@ class RTBCB_Ajax {
 			$result                  = $status['result'];
 			$response['report_data'] = $result['report_data'];
 			if ( is_array( $result ) ) {
-			       foreach ( $result as $key => $value ) {
-			               if ( 'report_data' === $key ) {
-			                       continue;
-			               }
-			               $response[ $key ] = $value;
-			       }
+				   foreach ( $result as $key => $value ) {
+						   if ( 'report_data' === $key ) {
+								   continue;
+						   }
+						   $response[ $key ] = $value;
+				   }
 			}
 		}
 
 		wp_send_json_success( $response );
-       }
+	   }
 
-       private static function collect_and_validate_user_inputs() {
+	   private static function collect_and_validate_user_inputs() {
 		$validator = new RTBCB_Validator();
 		$validated = $validator->validate( $_POST );
 
@@ -184,7 +186,7 @@ class RTBCB_Ajax {
 		}
 
 		return $validated;
-       }
+	   }
 
 	private static function create_fallback_profile( $user_inputs ) {
 		return [

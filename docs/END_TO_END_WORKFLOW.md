@@ -18,10 +18,11 @@ This document summarizes the workflow from internal company research to deliveri
 * `RTBCB_LLM::generate_business_case()` combines sanitized user inputs with ROI data and optional RAG context.
 * The LLM returns JSON containing executive summaries, operational analysis, industry insights, and financial analysis blocks.
 
-## 4. Category Recommendation
+## 4. Category Recommendation & ROI Refinement
 
 * The plugin categorizes the user's challenges without an LLM.
 * `RTBCB_Category_Recommender::recommend_category()` scores the input against predefined categories and returns a recommendation with reasoning and confidence.
+* `RTBCB_Calculator::calculate_category_refined_roi()` recomputes ROI using the recommended category.
 
 ## 5. Final Report Assembly
 
