@@ -2,6 +2,8 @@ const fs = require('fs');
 const vm = require('vm');
 const assert = require('assert');
 
+require('./jsdom-setup');
+
 const appended = [];
 const reportContainer = {
     innerHTML: '',

@@ -1,14 +1,11 @@
 const fs = require('fs');
 const vm = require('vm');
+require('./jsdom-setup');
 
 // Minimal DOM stubs for script execution
 const nodeGlobal = vm.runInThisContext('this');
-nodeGlobal.window = {};
-nodeGlobal.document = {
-    getElementById: () => null,
-    addEventListener: () => null,
-    body: { style: {} },
-};
+nodeGlobal.window = global.window;
+nodeGlobal.document = global.document;
 
 // Load the BusinessCaseBuilder script
 const code = fs.readFileSync('public/js/rtbcb-wizard.js', 'utf8');

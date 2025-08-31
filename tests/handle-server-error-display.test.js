@@ -2,6 +2,8 @@ const fs = require('fs');
 const vm = require('vm');
 const assert = require('assert');
 
+require('./jsdom-setup');
+
 global.rtbcbAjax = { ajax_url: 'test-url', nonce: 'test-nonce' };
 
 class SimpleFormData {
@@ -58,17 +60,18 @@ const form = {
     closest: () => ({ style: {} })
 };
 
-global.document = {
-    readyState: 'complete',
-    addEventListener: () => {},
-    getElementById: (id) => {
-        if (id === 'rtbcbForm') return form;
-        if (id === 'rtbcbModalOverlay') return {};
-        return null;
-    }
-};
+const formElem = document.createElement('form');
+formElem.id = 'rtbcbForm';
+Object.assign(formElem, form);
+document.body.appendChild(formElem);
 
-global.window = {};
+document.readyState = 'complete';
+const modalOverlay = document.createElement('div');
+modalOverlay.id = 'rtbcbModalOverlay';
+document.body.appendChild(modalOverlay);
+const progressContainer = document.createElement('div');
+progressContainer.id = 'rtbcb-progress-container';
+document.body.appendChild(progressContainer);
 
 const code = fs.readFileSync('public/js/rtbcb-wizard.js', 'utf8');
 vm.runInThisContext(code);

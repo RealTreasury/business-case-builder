@@ -3,6 +3,8 @@ const vm = require('vm');
 const assert = require('assert');
 const { JSDOM } = require('jsdom');
 
+require('./jsdom-setup');
+
 // Read sample report HTML from template
 const sampleReport = fs.readFileSync('templates/comprehensive-report-template.php', 'utf8');
 
