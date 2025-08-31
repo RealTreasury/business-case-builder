@@ -920,11 +920,12 @@ class BusinessCaseBuilder {
         });
     }
 
-    showEnhancedError(message, details = null) {
+    showEnhancedError(message, details = null, options = {}) {
         this.hideLoading();
 
         const progressContainer = document.getElementById('rtbcb-progress-container');
         if (progressContainer) {
+            const safeMessage = options.allowHTML ? message : this.escapeHTML(message);
             progressContainer.innerHTML = `
                 <div class="rtbcb-enhanced-error" style="padding: 40px; text-align: center; max-width: 600px;">
                     <div class="rtbcb-error-icon" style="font-size: 48px; color: #ef4444; margin-bottom: 20px;">
@@ -934,7 +935,7 @@ class BusinessCaseBuilder {
                         Unable to Generate Dashboard Report
                     </h3>
                     <p style="color: #4b5563; margin-bottom: 24px; font-size: 16px; line-height: 1.5;">
-                        ${this.escapeHTML(message)}
+                        ${safeMessage}
                     </p>
                     ${details ? `
                     <details style="margin-bottom: 24px; text-align: left;">
@@ -947,11 +948,11 @@ class BusinessCaseBuilder {
                     </details>
                     ` : ''}
                     <div class="rtbcb-error-actions" style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
-                        <button type="button" onclick="location.reload()" 
+                        <button type="button" onclick="location.reload()"
                                 style="background: #7216f4; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600;">
                             Try Again
                         </button>
-                        <a href="mailto:contact@realtreasury.com" 
+                        <a href="mailto:contact@realtreasury.com"
                            style="background: #f3f4f6; color: #4b5563; border: none; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">
                             Contact Support
                         </a>
@@ -1212,7 +1213,12 @@ class BusinessCaseBuilder {
         console.error('Timestamp:', errorData.timestamp);
         console.groupEnd();
 
-        this.showEnhancedError(this.getUserFriendlyMessage(message), errorData);
+        const friendly = this.getUserFriendlyMessage(message);
+        if (friendly && typeof friendly === 'object') {
+            this.showEnhancedError(friendly.message, errorData, friendly);
+        } else {
+            this.showEnhancedError(friendly, errorData);
+        }
     }
 
     getUserFriendlyMessage(serverMessage) {
@@ -1231,6 +1237,14 @@ class BusinessCaseBuilder {
             if (serverMessage.includes(key)) {
                 return message;
             }
+        }
+
+        if (serverMessage.includes('5-minute processing limit')) {
+            const processingUrl = (typeof rtbcbAjax !== 'undefined' && rtbcbAjax.processing_url) ? rtbcbAjax.processing_url : '/request-processing/';
+            return {
+                message: `Your request exceeded the 5-minute limit. Switch to Fast Mode or <a href="mailto:contact@realtreasury.com">get the report by email</a>. Track progress on the <a href="${processingUrl}" target="_blank" rel="noopener">Request Processing page</a>.`,
+                allowHTML: true
+            };
         }
 
         return 'An error occurred while processing your request. Please try again.';

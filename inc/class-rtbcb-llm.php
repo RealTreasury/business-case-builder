@@ -2721,7 +2721,13 @@ return $analysis;
 
         if ( false === $ok ) {
             if ( false !== strpos( strtolower( $error ), 'timed out' ) ) {
-                return new WP_Error( 'llm_timeout', __( 'The language model request timed out. Please try again.', 'rtbcb' ) );
+                return new WP_Error(
+                    'llm_timeout',
+                    __(
+                        'This request exceeded the 5-minute processing limit. Switch to Fast Mode or choose email delivery.',
+                        'rtbcb'
+                    )
+                );
             }
 
             return new WP_Error(
