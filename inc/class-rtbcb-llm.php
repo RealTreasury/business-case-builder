@@ -861,9 +861,9 @@ $batch_prompts['tech'] = [
                 'content' => $prompt,
             ],
         ];
-        $context = $this->build_context_for_responses( $history );
-        $tokens  = $this->tokens_for_report( 'comprehensive_business_case' );
-        $response = $this->call_openai_with_retry( $model, $context, $tokens );
+		$context = $this->build_context_for_responses( $history );
+		$tokens  = $this->tokens_for_report( 'comprehensive_business_case' );
+		$response = $this->call_openai_with_retry( $model, $context, $tokens, null, $chunk_callback );
 
         if ( is_wp_error( $response ) ) {
             return $response;
