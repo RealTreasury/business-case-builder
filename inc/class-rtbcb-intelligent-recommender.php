@@ -15,6 +15,10 @@ class RTBCB_Intelligent_Recommender extends RTBCB_Category_Recommender {
  * @return array Enhanced recommendation with confidence and alternatives.
  */
 public function recommend_with_ai_insights( $user_inputs, $enriched_profile ) {
+if ( rtbcb_heavy_features_disabled() ) {
+return parent::recommend_category( $user_inputs );
+}
+
 // Get baseline recommendation from parent class.
 $base_recommendation = parent::recommend_category( $user_inputs );
 

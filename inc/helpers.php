@@ -61,9 +61,32 @@ function rtbcb_has_openai_api_key() {
  * @return bool True if the error appears configuration related.
  */
 function rtbcb_is_openai_configuration_error( $e ) {
-	$message = strtolower( $e->getMessage() );
+        $message = strtolower( $e->getMessage() );
 
-	return false !== strpos( $message, 'api key' ) || false !== strpos( $message, 'model' );
+        return false !== strpos( $message, 'api key' ) || false !== strpos( $message, 'model' );
+}
+
+/**
+ * Determine if heavy features are disabled.
+ *
+ * Checks the global option or Fast Mode constant to see if AI enrichment,
+ * RAG, and intelligent recommendations should be bypassed.
+ *
+ * @return bool Whether heavy features are disabled.
+ */
+function rtbcb_heavy_features_disabled() {
+        $disabled = (bool) get_option( 'rtbcb_disable_heavy_features', false );
+
+        if ( defined( 'RTBCB_FAST_MODE' ) && RTBCB_FAST_MODE ) {
+                $disabled = true;
+        }
+
+        /**
+         * Filter whether heavy features are disabled.
+         *
+         * @param bool $disabled Current disabled state.
+         */
+        return (bool) apply_filters( 'rtbcb_heavy_features_disabled', $disabled );
 }
 
 /**

@@ -61,6 +61,9 @@ class RTBCB_RAG {
      * @return array Matching rows.
      */
     public function search_similar( $query, $top_k = 3 ) {
+        if ( rtbcb_heavy_features_disabled() ) {
+            return [];
+        }
         $query_embedding = $this->get_embedding( $query );
         return $this->cosine_similarity_search( $query_embedding, $top_k );
     }

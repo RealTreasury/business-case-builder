@@ -1687,10 +1687,13 @@ return $analysis;
 	 * @param array $user_inputs Validated user inputs.
 	 * @return array|WP_Error Enriched company profile or error.
 	 */
-	public function enrich_company_profile( $user_inputs ) {
-	if ( empty( $this->api_key ) ) {
-	return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
-	}
+       public function enrich_company_profile( $user_inputs ) {
+       if ( rtbcb_heavy_features_disabled() ) {
+       return new WP_Error( 'heavy_features_disabled', __( 'Heavy features disabled.', 'rtbcb' ) );
+       }
+       if ( empty( $this->api_key ) ) {
+       return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
+       }
 	
 	$system_prompt = $this->build_enrichment_system_prompt();
 	$user_prompt   = $this->build_enrichment_user_prompt( $user_inputs );
@@ -1865,10 +1868,13 @@ return $analysis;
 	 * @param array $rag_baseline     RAG search results.
 	 * @return array|WP_Error Strategic analysis or error.
 	 */
-	public function generate_strategic_analysis( $enriched_profile, $roi_scenarios, $recommendation, $rag_baseline ) {
-	if ( empty( $this->api_key ) ) {
-	return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
-	}
+       public function generate_strategic_analysis( $enriched_profile, $roi_scenarios, $recommendation, $rag_baseline ) {
+       if ( rtbcb_heavy_features_disabled() ) {
+       return new WP_Error( 'heavy_features_disabled', __( 'Heavy features disabled.', 'rtbcb' ) );
+       }
+       if ( empty( $this->api_key ) ) {
+       return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
+       }
 	
 	$system_prompt = $this->build_strategic_analysis_system_prompt();
 	$user_prompt   = $this->build_strategic_analysis_user_prompt(

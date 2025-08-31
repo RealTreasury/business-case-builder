@@ -113,7 +113,10 @@ fi
 echo "18. Running project growth path test..."
 php tests/project-growth-path.test.php
 
-echo "19. Running validator tests..."
+echo "19. Running heavy features bypass test..."
+php tests/heavy-features-bypass.test.php
+
+echo "20. Running validator tests..."
 phpunit -c phpunit.xml
 
 echo "================================================"

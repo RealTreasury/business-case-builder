@@ -45,47 +45,54 @@ class RTBCB_Ajax {
 			}
 		);
 
-		try {
-			$workflow_tracker->start_step( 'ai_enrichment' );
-			$enriched_profile = new WP_Error( 'llm_missing', 'LLM service unavailable.' );
-			if ( class_exists( 'RTBCB_LLM' ) ) {
-				$llm = new RTBCB_LLM();
-				if ( method_exists( $llm, 'enrich_company_profile' ) ) {
-					$enriched_profile = $llm->enrich_company_profile( $user_inputs );
-				}
-			}
-			if ( is_wp_error( $enriched_profile ) ) {
-				$enriched_profile = self::create_fallback_profile( $user_inputs );
-				$workflow_tracker->add_warning( 'ai_enrichment_failed', $enriched_profile->get_error_message() );
-			}
-			$workflow_tracker->complete_step( 'ai_enrichment', $enriched_profile );
+                try {
+                        $heavy_disabled = rtbcb_heavy_features_disabled();
 
-			$workflow_tracker->start_step( 'enhanced_roi_calculation' );
-			$enhanced_calculator = new RTBCB_Enhanced_Calculator();
-			$roi_scenarios       = $enhanced_calculator->calculate_enhanced_roi( $user_inputs, $enriched_profile );
-			$workflow_tracker->complete_step( 'enhanced_roi_calculation', $roi_scenarios );
+                        $workflow_tracker->start_step( 'ai_enrichment' );
+                        $enriched_profile = new WP_Error( 'llm_missing', 'LLM service unavailable.' );
+                        if ( ! $heavy_disabled && class_exists( 'RTBCB_LLM' ) ) {
+                                $llm = new RTBCB_LLM();
+                                if ( method_exists( $llm, 'enrich_company_profile' ) ) {
+                                        $enriched_profile = $llm->enrich_company_profile( $user_inputs );
+                                }
+                        }
+                        if ( is_wp_error( $enriched_profile ) ) {
+                                $enriched_profile = self::create_fallback_profile( $user_inputs );
+                                $workflow_tracker->add_warning( 'ai_enrichment_failed', $enriched_profile->get_error_message() );
+                        }
+                        $workflow_tracker->complete_step( 'ai_enrichment', $enriched_profile );
 
-			$workflow_tracker->start_step( 'intelligent_recommendations' );
-			$intelligent_recommender = new RTBCB_Intelligent_Recommender();
-			$recommendation          = $intelligent_recommender->recommend_with_ai_insights( $user_inputs, $enriched_profile );
-			$workflow_tracker->complete_step( 'intelligent_recommendations', $recommendation );
+                        $workflow_tracker->start_step( 'enhanced_roi_calculation' );
+                        $enhanced_calculator = new RTBCB_Enhanced_Calculator();
+                        $roi_scenarios       = $enhanced_calculator->calculate_enhanced_roi( $user_inputs, $enriched_profile );
+                        $workflow_tracker->complete_step( 'enhanced_roi_calculation', $roi_scenarios );
 
-			$workflow_tracker->start_step( 'hybrid_rag_analysis' );
-			$rag_baseline = [];
-			if ( class_exists( 'RTBCB_RAG' ) ) {
-				$rag          = new RTBCB_RAG();
-				$search_query = self::build_rag_search_query( $user_inputs, $enriched_profile );
-				$rag_baseline = $rag->search_similar( $search_query, 5 );
-			}
-			$final_analysis = new WP_Error( 'analysis_unavailable', 'Final analysis unavailable.' );
-			if ( isset( $llm ) && method_exists( $llm, 'generate_strategic_analysis' ) ) {
-				$final_analysis = $llm->generate_strategic_analysis( $enriched_profile, $roi_scenarios, $recommendation, $rag_baseline );
-			}
-			if ( is_wp_error( $final_analysis ) ) {
-				$final_analysis = self::create_fallback_analysis( $enriched_profile, $roi_scenarios );
-				$workflow_tracker->add_warning( 'final_analysis_failed', $final_analysis->get_error_message() );
-			}
-			$workflow_tracker->complete_step( 'hybrid_rag_analysis', $final_analysis );
+                        $workflow_tracker->start_step( 'intelligent_recommendations' );
+                        if ( $heavy_disabled ) {
+                                $intelligent_recommender = new RTBCB_Category_Recommender();
+                                $recommendation          = $intelligent_recommender->recommend_category( $user_inputs );
+                        } else {
+                                $intelligent_recommender = new RTBCB_Intelligent_Recommender();
+                                $recommendation          = $intelligent_recommender->recommend_with_ai_insights( $user_inputs, $enriched_profile );
+                        }
+                        $workflow_tracker->complete_step( 'intelligent_recommendations', $recommendation );
+
+                        $workflow_tracker->start_step( 'hybrid_rag_analysis' );
+                        $rag_baseline = [];
+                        if ( ! $heavy_disabled && class_exists( 'RTBCB_RAG' ) ) {
+                                $rag          = new RTBCB_RAG();
+                                $search_query = self::build_rag_search_query( $user_inputs, $enriched_profile );
+                                $rag_baseline = $rag->search_similar( $search_query, 5 );
+                        }
+                        $final_analysis = new WP_Error( 'analysis_unavailable', 'Final analysis unavailable.' );
+                        if ( ! $heavy_disabled && isset( $llm ) && method_exists( $llm, 'generate_strategic_analysis' ) ) {
+                                $final_analysis = $llm->generate_strategic_analysis( $enriched_profile, $roi_scenarios, $recommendation, $rag_baseline );
+                        }
+                        if ( is_wp_error( $final_analysis ) ) {
+                                $final_analysis = self::create_fallback_analysis( $enriched_profile, $roi_scenarios );
+                                $workflow_tracker->add_warning( 'final_analysis_failed', $final_analysis->get_error_message() );
+                        }
+                        $workflow_tracker->complete_step( 'hybrid_rag_analysis', $final_analysis );
 
 			$workflow_tracker->start_step( 'data_structuring' );
 			$structured_report_data = self::structure_report_data( $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, $request_start );
