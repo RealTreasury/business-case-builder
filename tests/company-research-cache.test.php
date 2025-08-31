@@ -98,13 +98,18 @@ if ( false === $cached ) {
 	exit( 1 );
 }
 
-$custom = [ 'stage' => 'cached', 'characteristics' => '', 'treasury_focus' => '', 'typical_challenges' => '' ];
+$custom = [
+	'business_stage'      => 'cached',
+	'key_characteristics' => '',
+	'treasury_priorities' => '',
+	'common_challenges'   => '',
+];
 rtbcb_set_research_cache( 'Cache Co', 'finance', 'company_profile', $custom );
 
 $result2 = $method->invoke( $llm, $inputs );
-if ( 'cached' !== ( $result2['company_profile']['stage'] ?? '' ) ) {
+if ( 'cached' !== ( $result2['company_profile']['business_stage'] ?? '' ) ) {
 	echo "Cache not used\n";
 	exit( 1 );
 }
 
-echo "company-profile-cache.test.php passed\n";
+echo "company-research-cache.test.php passed\n";
