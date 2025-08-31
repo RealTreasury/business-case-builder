@@ -33,11 +33,11 @@ $current['updated'] = time();
 set_transient( $job_id, $current, HOUR_IN_SECONDS );
 }
 	/**
-	 * Enqueue a case generation job.
-	 *
-	 * @param array $user_inputs Sanitized user inputs.
-	 * @return string Job ID.
-	 */
+	* Enqueue a case generation job.
+	*
+	* @param array $user_inputs Sanitized user inputs.
+	* @return string Job ID.
+	*/
 public static function enqueue( $user_inputs ) {
 $job_id = uniqid( 'rtbcb_job_', true );
 
@@ -58,12 +58,12 @@ self::update_status( $job_id, 'queued' );
 		}
 
 	/**
-	 * Process a queued job.
-	 *
-	 * @param string $job_id      Job identifier.
-	 * @param array  $user_inputs User inputs.
-	 * @return void
-	 */
+	* Process a queued job.
+	*
+	* @param string $job_id      Job identifier.
+	* @param array  $user_inputs User inputs.
+	* @return void
+	*/
 public static function process_job( $job_id, $user_inputs ) {
 self::update_status( $job_id, 'processing' );
 

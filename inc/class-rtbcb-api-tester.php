@@ -12,11 +12,11 @@ defined( 'ABSPATH' ) || exit;
 	*/
 class RTBCB_API_Tester {
 	/**
-	 * Test OpenAI API connection.
-	 *
-	 * @param string $api_key Optional API key to test.
-	 * @return array Test result.
-	 */
+	* Test OpenAI API connection.
+	*
+	* @param string $api_key Optional API key to test.
+	* @return array Test result.
+	*/
 	public static function test_connection( $api_key = null ) {
 		$api_key = $api_key ?: rtbcb_get_openai_api_key();
 
@@ -40,11 +40,11 @@ class RTBCB_API_Tester {
 	}
 
 	/**
-	 * Test API with a simple completion request.
-	 *
-	 * @param string $api_key API key.
-	 * @return array Test result.
-	 */
+	* Test API with a simple completion request.
+	*
+	* @param string $api_key API key.
+	* @return array Test result.
+	*/
 	private static function test_completion( $api_key ) {
 		$model  = get_option( 'rtbcb_mini_model', rtbcb_get_default_model( 'mini' ) );
 		$config = rtbcb_get_gpt5_config();

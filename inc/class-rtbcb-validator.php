@@ -12,11 +12,11 @@ defined( 'ABSPATH' ) || exit;
 	*/
 class RTBCB_Validator {
 	/**
-	 * Validate and sanitize form data.
-	 *
-	 * @param array $data Raw form data.
-	 * @return array Sanitized data or array with 'error' key.
-	 */
+	* Validate and sanitize form data.
+	*
+	* @param array $data Raw form data.
+	* @return array Sanitized data or array with 'error' key.
+	*/
 	public function validate( array $data ): array {
 		$sanitized = rtbcb_sanitize_form_data( wp_unslash( $data ) );
 
@@ -38,23 +38,23 @@ class RTBCB_Validator {
 			}
 		}
 
-	   $numeric_fields = [
-			   'hours_reconciliation',
-			   'hours_cash_positioning',
-			   'num_banks',
-			   'ftes',
-	   ];
+	$numeric_fields = [
+			'hours_reconciliation',
+			'hours_cash_positioning',
+			'num_banks',
+			'ftes',
+	];
 
-	   foreach ( $numeric_fields as $field ) {
-			   if ( isset( $data[ $field ] ) && '' !== $data[ $field ] && ! is_numeric( $data[ $field ] ) ) {
-					   return [
-							   'error' => sprintf(
-									   __( '%s must be a numeric value.', 'rtbcb' ),
-									   ucwords( str_replace( '_', ' ', $field ) )
-							   ),
-					   ];
-			   }
-	   }
+	foreach ( $numeric_fields as $field ) {
+			if ( isset( $data[ $field ] ) && '' !== $data[ $field ] && ! is_numeric( $data[ $field ] ) ) {
+					return [
+							'error' => sprintf(
+									__( '%s must be a numeric value.', 'rtbcb' ),
+									ucwords( str_replace( '_', ' ', $field ) )
+							),
+					];
+			}
+	}
 
 		if ( ! rtbcb_is_business_email( $sanitized['email'] ) ) {
 			return [

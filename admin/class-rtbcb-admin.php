@@ -12,8 +12,8 @@ defined( 'ABSPATH' ) || exit;
 	*/
 class RTBCB_Admin {
 	/**
-	 * Constructor.
-	 */
+	* Constructor.
+	*/
 	public function __construct() {
 		add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
 		add_action( 'admin_init', [ $this, 'register_settings' ] );
@@ -64,11 +64,11 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * Enqueue admin assets.
-	 *
-	 * @param string $hook Page hook.
-	 * @return void
-	 */
+	* Enqueue admin assets.
+	*
+	* @param string $hook Page hook.
+	* @return void
+	*/
 	public function enqueue_admin_assets( $hook ) {
 		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
 		if ( strpos( $hook, 'rtbcb' ) === false && strpos( $page, 'rtbcb' ) === false ) {
@@ -215,10 +215,10 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * Register admin menu and submenus.
-	 *
-	 * @return void
-	 */
+	* Register admin menu and submenus.
+	*
+	* @return void
+	*/
 	public function add_admin_menu() {
 		add_menu_page(
 			__( 'Business Case Builder', 'rtbcb' ),
@@ -305,9 +305,9 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * Render enhanced dashboard with statistics.
-	 *
-	 * @return void
+	* Render enhanced dashboard with statistics.
+	*
+	* @return void
 	*/
 	public function render_dashboard() {
 		$stats = RTBCB_Leads::get_cached_statistics();
@@ -317,19 +317,19 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * Render settings page.
-	 *
-	 * @return void
-	 */
+	* Render settings page.
+	*
+	* @return void
+	*/
 	public function render_settings() {
 		include RTBCB_DIR . 'admin/settings-page.php';
 	}
 
 	/**
-	 * Render enhanced leads page with filtering and export.
-	 *
-	 * @return void
-	 */
+	* Render enhanced leads page with filtering and export.
+	*
+	* @return void
+	*/
 	public function render_leads() {
 		$page = isset( $_GET['paged'] ) ? intval( wp_unslash( $_GET['paged'] ) ) : 1;
 		$search = isset( $_GET['search'] ) ? sanitize_text_field( wp_unslash( $_GET['search'] ) ) : '';
@@ -369,10 +369,10 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * Render analytics page with charts and insights.
-	 *
-	 * @return void
-	 */
+	* Render analytics page with charts and insights.
+	*
+	* @return void
+	*/
 	public function render_analytics() {
 		$stats = RTBCB_Leads::get_cached_statistics();
 		$monthly_trends = $this->get_monthly_trends();
@@ -381,19 +381,19 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * Render calculation info page.
-	 *
-	 * @return void
-	 */
+	* Render calculation info page.
+	*
+	* @return void
+	*/
 	public function render_calculation_info() {
 		include RTBCB_DIR . 'admin/calculations-page.php';
 	}
 
 	/**
-	 * Render test dashboard page.
-	 *
-	 * @return void
-	 */
+	* Render test dashboard page.
+	*
+	* @return void
+	*/
 	public function render_test_dashboard() {
 		$test_results   = get_option( 'rtbcb_test_results', [] );
 		$openai_key     = get_option( 'rtbcb_openai_api_key', '' );
@@ -408,10 +408,10 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * Render API logs page.
-	 *
-	 * @return void
-	 */
+	* Render API logs page.
+	*
+	* @return void
+	*/
 	public function render_api_logs() {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
@@ -426,10 +426,10 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * AJAX handler to save test results from dashboard.
-	 *
-	 * @return void
-	 */
+	* AJAX handler to save test results from dashboard.
+	*
+	* @return void
+	*/
 	public function ajax_save_test_results() {
 		check_ajax_referer( 'rtbcb_test_dashboard', 'nonce' );
 
@@ -488,10 +488,10 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * Register plugin settings.
-	 *
-	 * @return void
-	 */
+	* Register plugin settings.
+	*
+	* @return void
+	*/
 	public function register_settings() {
 		register_setting( 'rtbcb_settings', 'rtbcb_settings', [ 'sanitize_callback' => [ $this, 'sanitize_settings' ] ] );
 		register_setting( 'rtbcb_settings', 'rtbcb_openai_api_key', [ 'sanitize_callback' => 'sanitize_text_field' ] );
@@ -509,11 +509,11 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * Sanitize rtbcb_settings option.
-	 *
-	 * @param array $settings Settings array.
-	 * @return array
-	 */
+	* Sanitize rtbcb_settings option.
+	*
+	* @param array $settings Settings array.
+	* @return array
+	*/
 	public function sanitize_settings( $settings ) {
 		$settings = is_array( $settings ) ? $settings : [];
 		$settings['enable_ai_analysis'] = isset( $settings['enable_ai_analysis'] ) ? (bool) $settings['enable_ai_analysis'] : false;
@@ -522,10 +522,10 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * Export leads to CSV.
-	 *
-	 * @return void
-	 */
+	* Export leads to CSV.
+	*
+	* @return void
+	*/
 	public function export_leads_csv() {
 		check_ajax_referer( 'rtbcb_nonce', 'nonce' );
 
@@ -550,10 +550,10 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * Delete a single lead.
-	 *
-	 * @return void
-	 */
+	* Delete a single lead.
+	*
+	* @return void
+	*/
 	public function delete_lead() {
 		check_ajax_referer( 'rtbcb_nonce', 'nonce' );
 
@@ -577,10 +577,10 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * Handle bulk actions on leads.
-	 *
-	 * @return void
-	 */
+	* Handle bulk actions on leads.
+	*
+	* @return void
+	*/
 	public function bulk_action_leads() {
 		check_ajax_referer( 'rtbcb_nonce', 'nonce' );
 
@@ -630,10 +630,10 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * Test the OpenAI API connection.
-	 *
-	 * @return void
-	 */
+	* Test the OpenAI API connection.
+	*
+	* @return void
+	*/
 	public function test_api_connection() {
 		check_ajax_referer( 'rtbcb_nonce', 'nonce' );
 
@@ -676,12 +676,12 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * Clear cached OpenAI models when API settings change.
-	 *
-	 * @param string $old_value Old API key.
-	 * @param string $value     New API key.
-	 * @return void
-	 */
+	* Clear cached OpenAI models when API settings change.
+	*
+	* @param string $old_value Old API key.
+	* @param string $value     New API key.
+	* @return void
+	*/
 	public function clear_openai_models_cache( $old_value, $value ) {
 		if ( $old_value !== $value ) {
 			wp_cache_delete( 'rtbcb_openai_models' );
@@ -689,10 +689,10 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * AJAX handler for comprehensive API test.
-	 *
-	 * @return void
-	 */
+	* AJAX handler for comprehensive API test.
+	*
+	* @return void
+	*/
 	public function ajax_test_api() {
 		check_ajax_referer( 'rtbcb_test_api', 'nonce' );
 
@@ -710,10 +710,10 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * AJAX handler for industry commentary testing.
-	 *
-	 * @return void
-	 */
+	* AJAX handler for industry commentary testing.
+	*
+	* @return void
+	*/
 	public function ajax_test_commentary() {
 		check_ajax_referer( 'rtbcb_test_commentary', 'nonce' );
 
@@ -744,14 +744,14 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * AJAX handler for company overview testing.
-	 *
-	 * Retrieves the company name from the request, stored options, or the
-	 * currently selected company. Returns an error only if no name can be
-	 * determined.
-	 *
-	 * @return void
-	 */
+	* AJAX handler for company overview testing.
+	*
+	* Retrieves the company name from the request, stored options, or the
+	* currently selected company. Returns an error only if no name can be
+	* determined.
+	*
+	* @return void
+	*/
 	public function ajax_test_company_overview() {
 		check_ajax_referer( 'rtbcb_test_company_overview', 'nonce' );
 
@@ -857,10 +857,10 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * AJAX handler for industry overview testing.
-	 *
-	 * @return void
-	 */
+	* AJAX handler for industry overview testing.
+	*
+	* @return void
+	*/
 	public function ajax_test_industry_overview() {
 		check_ajax_referer( 'rtbcb_test_industry_overview', 'nonce' );
 		$raw_data     = isset( $_POST['company_data'] ) ? wp_unslash( $_POST['company_data'] ) : '';
@@ -895,10 +895,10 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * AJAX handler for maturity model testing.
-	 *
-	 * @return void
-	 */
+	* AJAX handler for maturity model testing.
+	*
+	* @return void
+	*/
 	public function ajax_test_maturity_model() {
 		check_ajax_referer( 'rtbcb_test_maturity_model', 'nonce' );
 
@@ -921,10 +921,10 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * AJAX handler for RAG market analysis testing.
-	 *
-	 * @return void
-	 */
+	* AJAX handler for RAG market analysis testing.
+	*
+	* @return void
+	*/
 	public function ajax_test_rag_market_analysis() {
 		check_ajax_referer( 'rtbcb_test_rag_market_analysis', 'nonce' );
 
@@ -964,10 +964,10 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * AJAX handler for value proposition testing.
-	 *
-	 * @return void
-	 */
+	* AJAX handler for value proposition testing.
+	*
+	* @return void
+	*/
 	public function ajax_test_value_proposition() {
 		check_ajax_referer( 'rtbcb_test_value_proposition', 'nonce' );
 
@@ -989,15 +989,15 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * AJAX handler for treasury tech overview testing.
-	 *
-	 * @return void
-	 */
+	* AJAX handler for treasury tech overview testing.
+	*
+	* @return void
+	*/
 	/**
-	 * AJAX handler for real treasury overview testing.
-	 *
-	 * @return void
-	 */
+	* AJAX handler for real treasury overview testing.
+	*
+	* @return void
+	*/
 	public function ajax_test_real_treasury_overview() {
 		check_ajax_referer( 'rtbcb_test_real_treasury_overview', 'nonce' );
 
@@ -1048,10 +1048,10 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * AJAX handler to retrieve stored company data.
-	 *
-	 * @return void
-	 */
+	* AJAX handler to retrieve stored company data.
+	*
+	* @return void
+	*/
 	public function ajax_get_company_data() {
 		check_ajax_referer( 'rtbcb_test_real_treasury_overview', 'nonce' );
 
@@ -1076,17 +1076,17 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * AJAX handler for testing estimated benefits.
-	 *
-	 * @return void
-	 */
+	* AJAX handler for testing estimated benefits.
+	*
+	* @return void
+	*/
 	/**
-	 * AJAX handler to generate estimated benefits.
-	 *
-	 * Stores sanitized results to mark the section complete.
-	 *
-	 * @return void
-	 */
+	* AJAX handler to generate estimated benefits.
+	*
+	* Stores sanitized results to mark the section complete.
+	*
+	* @return void
+	*/
 	public function ajax_test_estimated_benefits() {
 		check_ajax_referer( 'rtbcb_test_estimated_benefits', 'nonce' );
 
@@ -1156,10 +1156,10 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * AJAX handler to calculate ROI from sample inputs.
-	 *
-	 * @return void
-	 */
+	* AJAX handler to calculate ROI from sample inputs.
+	*
+	* @return void
+	*/
 	public function ajax_test_calculate_roi() {
 		check_ajax_referer( 'rtbcb_test_calculate_roi', 'nonce' );
 
@@ -1188,10 +1188,10 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * AJAX handler for data enrichment testing.
-	 *
-	 * @return void
-	 */
+	* AJAX handler for data enrichment testing.
+	*
+	* @return void
+	*/
 	public function ajax_test_data_enrichment() {
 		check_ajax_referer( 'rtbcb_test_data_enrichment', 'nonce' );
 
@@ -1224,10 +1224,10 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * AJAX handler for data storage testing.
-	 *
-	 * @return void
-	 */
+	* AJAX handler for data storage testing.
+	*
+	* @return void
+	*/
 	public function ajax_test_data_storage() {
 		check_ajax_referer( 'rtbcb_test_data_storage', 'nonce' );
 
@@ -1267,10 +1267,10 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * AJAX handler for report assembly testing.
-	 *
-	 * @return void
-	 */
+	* AJAX handler for report assembly testing.
+	*
+	* @return void
+	*/
 	public function ajax_test_report_assembly() {
 		check_ajax_referer( 'rtbcb_test_report_assembly', 'nonce' );
 
@@ -1299,10 +1299,10 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * AJAX handler for tracking script testing.
-	 *
-	 * @return void
-	 */
+	* AJAX handler for tracking script testing.
+	*
+	* @return void
+	*/
 	public function ajax_test_tracking_script() {
 		check_ajax_referer( 'rtbcb_test_tracking_script', 'nonce' );
 
@@ -1328,10 +1328,10 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * AJAX handler for follow-up email testing.
-	 *
-	 * @return void
-	 */
+	* AJAX handler for follow-up email testing.
+	*
+	* @return void
+	*/
 	public function ajax_test_follow_up_email() {
 		check_ajax_referer( 'rtbcb_test_follow_up_email', 'nonce' );
 
@@ -1368,10 +1368,10 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * Rebuild the RAG index.
-	 *
-	 * @return void
-	 */
+	* Rebuild the RAG index.
+	*
+	* @return void
+	*/
 	public function rebuild_rag_index() {
 		check_ajax_referer( 'rtbcb_nonce', 'nonce' );
 
@@ -1394,10 +1394,10 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * Run integration diagnostics.
-	 *
-	 * @return void
-	 */
+	* Run integration diagnostics.
+	*
+	* @return void
+	*/
 	public function run_integration_tests() {
 		check_ajax_referer( 'rtbcb_nonce', 'nonce' );
 
@@ -1411,10 +1411,10 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * AJAX handler to set company name for tests.
-	 *
-	 * @return void
-	 */
+	* AJAX handler to set company name for tests.
+	*
+	* @return void
+	*/
 	public function ajax_set_test_company() {
 		check_ajax_referer( 'rtbcb_set_test_company', 'nonce' );
 
@@ -1471,10 +1471,10 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * AJAX handler to test Portal integration.
-	 *
-	 * @return void
-	 */
+	* AJAX handler to test Portal integration.
+	*
+	* @return void
+	*/
 	public function ajax_test_portal() {
 		check_ajax_referer( 'rtbcb_test_portal', 'nonce' );
 
@@ -1492,10 +1492,10 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * AJAX handler to test RAG index health.
-	 *
-	 * @return void
-	 */
+	* AJAX handler to test RAG index health.
+	*
+	* @return void
+	*/
 	public function ajax_test_rag() {
 		check_ajax_referer( 'rtbcb_test_rag', 'nonce' );
 
@@ -1525,10 +1525,10 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * Sync portal data to the local site.
-	 *
-	 * @return void
-	 */
+	* Sync portal data to the local site.
+	*
+	* @return void
+	*/
 	public function sync_to_local() {
 		check_ajax_referer( 'rtbcb_sync_local', 'nonce' );
 
@@ -1540,10 +1540,10 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * Get monthly trends data.
-	 *
-	 * @return array Monthly trends.
-	 */
+	* Get monthly trends data.
+	*
+	* @return array Monthly trends.
+	*/
 	private function get_monthly_trends() {
 		global $wpdb;
 		$table_name = $wpdb->prefix . 'rtbcb_leads';
@@ -1553,10 +1553,10 @@ class RTBCB_Admin {
 				DATE_FORMAT(created_at, '%Y-%m') as month,
 				COUNT(*) as leads,
 				AVG(roi_base) as avg_roi
-			 FROM {$table_name}
-			 WHERE created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
-			 GROUP BY DATE_FORMAT(created_at, '%Y-%m')
-			 ORDER BY month",
+			FROM {$table_name}
+			WHERE created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
+			GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+			ORDER BY month",
 			ARRAY_A
 		);
 
@@ -1564,29 +1564,29 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * Check if Portal integration is active.
-	 *
-	 * @return bool
-	 */
+	* Check if Portal integration is active.
+	*
+	* @return bool
+	*/
 	private function check_portal_integration() {
 		return (bool) ( has_filter( 'rt_portal_get_vendors' ) || has_filter( 'rt_portal_get_vendor_notes' ) );
 	}
 
 	/**
-	 * Get vendor count from portal.
-	 *
-	 * @return int
-	 */
+	* Get vendor count from portal.
+	*
+	* @return int
+	*/
 	private function get_vendor_count() {
 		$vendors = apply_filters( 'rt_portal_get_vendors', [] );
 		return is_array( $vendors ) ? count( $vendors ) : 0;
 	}
 
 	/**
-	 * Check RAG index health.
-	 *
-	 * @return array Health status.
-	 */
+	* Check RAG index health.
+	*
+	* @return array Health status.
+	*/
 	private function check_rag_health() {
 		global $wpdb;
 		$table_name = $wpdb->prefix . 'rtbcb_rag_index';
@@ -1628,10 +1628,10 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * AJAX handler to fetch phase completion percentages.
-	 *
-	 * @return void
-	 */
+	* AJAX handler to fetch phase completion percentages.
+	*
+	* @return void
+	*/
 	public function ajax_get_phase_completion() {
 		check_ajax_referer( 'rtbcb_test_dashboard', 'nonce' );
 
@@ -1643,10 +1643,10 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * AJAX handler to fetch sanitized configuration for a section.
-	 *
-	 * @return void
-	 */
+	* AJAX handler to fetch sanitized configuration for a section.
+	*
+	* @return void
+	*/
 	public function ajax_get_section_config() {
 		check_ajax_referer( 'rtbcb_test_dashboard', 'nonce' );
 
@@ -1672,10 +1672,10 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * AJAX handler to build test summary HTML.
-	 *
-	 * @return void
-	 */
+	* AJAX handler to build test summary HTML.
+	*
+	* @return void
+	*/
 	public function ajax_get_test_summary_html() {
 		check_ajax_referer( 'rtbcb_test_dashboard', 'nonce' );
 
@@ -1723,11 +1723,11 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * Recursively sanitize configuration data.
-	 *
-	 * @param mixed $data Configuration value.
-	 * @return mixed
-	 */
+	* Recursively sanitize configuration data.
+	*
+	* @param mixed $data Configuration value.
+	* @return mixed
+	*/
 	private function sanitize_section_config( $data ) {
 		if ( is_array( $data ) ) {
 			$clean = [];
@@ -1745,10 +1745,10 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * AJAX handler to generate comprehensive analysis.
-	 *
-	 * @return void
-	 */
+	* AJAX handler to generate comprehensive analysis.
+	*
+	* @return void
+	*/
 	public function ajax_generate_comprehensive_analysis() {
 		check_ajax_referer( 'rtbcb_test_dashboard', 'nonce' );
 		$company_name = isset( $_POST['company_name'] ) ? sanitize_text_field( wp_unslash( $_POST['company_name'] ) ) : '';
@@ -1770,10 +1770,10 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * Get status for a queued comprehensive analysis job.
-	 *
-	 * @return void
-	 */
+	* Get status for a queued comprehensive analysis job.
+	*
+	* @return void
+	*/
 	public function ajax_get_analysis_status() {
 		check_ajax_referer( 'rtbcb_test_dashboard', 'nonce' );
 
@@ -1795,10 +1795,10 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * Clear stored comprehensive analysis data.
-	 *
-	 * @return void
-	 */
+	* Clear stored comprehensive analysis data.
+	*
+	* @return void
+	*/
 	public function ajax_clear_analysis_data() {
 		check_ajax_referer( 'rtbcb_test_dashboard', 'nonce' );
 
@@ -1821,10 +1821,10 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * AJAX handler for deleting a single log entry.
-	 *
-	 * @return void
-	 */
+	* AJAX handler for deleting a single log entry.
+	*
+	* @return void
+	*/
 	public function ajax_delete_log() {
 		check_ajax_referer( 'rtbcb_api_logs', 'nonce' );
 
@@ -1847,10 +1847,10 @@ class RTBCB_Admin {
 	}
 
 	/**
-	 * AJAX handler for clearing all log entries.
-	 *
-	 * @return void
-	 */
+	* AJAX handler for clearing all log entries.
+	*
+	* @return void
+	*/
 	public function ajax_clear_logs() {
 		check_ajax_referer( 'rtbcb_api_logs', 'nonce' );
 
@@ -1920,10 +1920,10 @@ class RTBCB_Admin {
 		}
 
 		/**
-		 * Retrieve workflow history with lead metadata.
-		 *
-		 * @return array Workflow history entries.
-		 */
+		* Retrieve workflow history with lead metadata.
+		*
+		* @return array Workflow history entries.
+		*/
 		private function get_workflow_history_from_logs() {
 			$history = get_option( 'rtbcb_workflow_history', [] );
 			if ( ! is_array( $history ) ) {
@@ -1964,10 +1964,10 @@ class RTBCB_Admin {
 		}
 
 		/**
-		 * Display notice if PHP max execution time is lower than GPT-5 timeout.
-		 *
-		 * @return void
-		 */
+		* Display notice if PHP max execution time is lower than GPT-5 timeout.
+		*
+		* @return void
+		*/
 		public function maybe_show_timeout_notice() {
 				$php_limit   = (int) ini_get( 'max_execution_time' );
 				$gpt_timeout = (int) get_option( 'rtbcb_gpt5_timeout' );
@@ -1995,10 +1995,10 @@ class RTBCB_Admin {
 
 
 	/**
-	 * Display notice when heavy features are disabled.
-	 *
-	 * @return void
-	 */
+	* Display notice when heavy features are disabled.
+	*
+	* @return void
+	*/
 	public function maybe_show_bypass_notice() {
 		if ( get_option( 'rtbcb_disable_heavy_features', 0 ) ) {
 			echo '<div class="notice notice-warning"><p>' . esc_html__( 'Heavy AI features are temporarily disabled. Remove the rtbcb_disable_heavy_features option to restore full functionality.', 'rtbcb' ) . '</p></div>';

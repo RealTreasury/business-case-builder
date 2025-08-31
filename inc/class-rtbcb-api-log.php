@@ -12,17 +12,17 @@ defined( 'ABSPATH' ) || exit;
 	*/
 class RTBCB_API_Log {
 	/**
-	 * Database table name.
-	 *
-	 * @var string
-	 */
+	* Database table name.
+	*
+	* @var string
+	*/
 	private static $table_name;
 
 	/**
-	 * Initialize the table name and create the table.
-	 *
-	 * @return void
-	 */
+	* Initialize the table name and create the table.
+	*
+	* @return void
+	*/
 	public static function init() {
 		global $wpdb;
 
@@ -31,10 +31,10 @@ class RTBCB_API_Log {
 	}
 
 	/**
-	 * Create the API logs table.
-	 *
-	 * @return bool True on success, false on failure.
-	 */
+	* Create the API logs table.
+	*
+	* @return bool True on success, false on failure.
+	*/
 	private static function create_table() {
 		global $wpdb;
 
@@ -111,15 +111,15 @@ class RTBCB_API_Log {
 	}
 
 	/**
-	 * Save a log entry.
-	 *
-	 * @param array  $request      Request data.
-	 * @param array  $response     Response data.
-	 * @param int    $user_id      User ID.
-	 * @param string $user_email   User email.
-	 * @param string $company_name Company name.
-	 * @return void
-	 */
+	* Save a log entry.
+	*
+	* @param array  $request      Request data.
+	* @param array  $response     Response data.
+	* @param int    $user_id      User ID.
+	* @param string $user_email   User email.
+	* @param string $company_name Company name.
+	* @return void
+	*/
 	public static function save_log( $request, $response, $user_id, $user_email = '', $company_name = '' ) {
 		global $wpdb;
 
@@ -158,11 +158,11 @@ class RTBCB_API_Log {
 	}
 
 	/**
-	 * Retrieve recent logs.
-	 *
-	 * @param int $limit Number of logs to retrieve.
-	 * @return array Log rows.
-	 */
+	* Retrieve recent logs.
+	*
+	* @param int $limit Number of logs to retrieve.
+	* @return array Log rows.
+	*/
 	public static function get_logs( $limit = 50 ) {
 		global $wpdb;
 
@@ -181,11 +181,11 @@ class RTBCB_API_Log {
 	}
 
 	/**
-	 * Purge old logs.
-	 *
-	 * @param int $days Number of days to retain.
-	 * @return int Rows deleted.
-	 */
+	* Purge old logs.
+	*
+	* @param int $days Number of days to retain.
+	* @return int Rows deleted.
+	*/
 	public static function purge_logs( $days = 30 ) {
 		global $wpdb;
 
@@ -209,11 +209,11 @@ class RTBCB_API_Log {
 	}
 
 	/**
-	 * Delete a single log entry.
-	 *
-	 * @param int $id Log ID.
-	 * @return int Rows deleted.
-	 */
+	* Delete a single log entry.
+	*
+	* @param int $id Log ID.
+	* @return int Rows deleted.
+	*/
 	public static function delete_log( $id ) {
 		global $wpdb;
 
@@ -230,10 +230,10 @@ class RTBCB_API_Log {
 	}
 
 	/**
-	 * Clear all log entries.
-	 *
-	 * @return int Rows deleted.
-	 */
+	* Clear all log entries.
+	*
+	* @return int Rows deleted.
+	*/
 	public static function clear_logs() {
 		global $wpdb;
 
@@ -245,15 +245,15 @@ class RTBCB_API_Log {
 	}
 
 	/**
-	 * Retrieve logs with pagination support.
-	 *
-	 * @param int $paged    Current page number.
-	 * @param int $per_page Items per page.
-	 * @return array{
-	 *     logs: array,
-	 *     total: int
-	 * }
-	 */
+	* Retrieve logs with pagination support.
+	*
+	* @param int $paged    Current page number.
+	* @param int $per_page Items per page.
+	* @return array{
+	*     logs: array,
+	*     total: int
+	* }
+	*/
 	public static function get_logs_paginated( $paged = 1, $per_page = 20 ) {
 		global $wpdb;
 

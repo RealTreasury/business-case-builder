@@ -12,11 +12,11 @@ defined( 'ABSPATH' ) || exit;
 	*/
 class RTBCB_Maturity_Model {
 	/**
-	 * Assess maturity level using full-time equivalents.
-	 *
-	 * @param array $company_data Company data inputs.
-	 * @return array Assessment results.
-	 */
+	* Assess maturity level using full-time equivalents.
+	*
+	* @param array $company_data Company data inputs.
+	* @return array Assessment results.
+	*/
 	public function assess( $company_data ) {
 		$level = __( 'Basic', 'rtbcb' );
 		$ftes  = isset( $company_data['ftes'] ) ? floatval( $company_data['ftes'] ) : 1.0;
@@ -39,17 +39,17 @@ class RTBCB_Maturity_Model {
 	}
 
 	/**
-	 * Assess treasury maturity from user inputs.
-	 *
-	 * Sanitizes provided data and derives a maturity level
-	 * with explanatory rationale.
-	 *
-	 * @param array $user_inputs User-provided data.
-	 * @return array {
-	 *     @type string $level     Maturity level.
-	 *     @type string $rationale Explanation for the level.
-	 * }
-	 */
+	* Assess treasury maturity from user inputs.
+	*
+	* Sanitizes provided data and derives a maturity level
+	* with explanatory rationale.
+	*
+	* @param array $user_inputs User-provided data.
+	* @return array {
+	*     @type string $level     Maturity level.
+	*     @type string $rationale Explanation for the level.
+	* }
+	*/
 	private function assess_treasury_maturity( $user_inputs ) {
 		$sanitized = [];
 

@@ -12,10 +12,10 @@ defined( 'ABSPATH' ) || exit;
 	*/
 class RTBCB_Tests {
 	/**
-	 * Run all integration tests.
-	 *
-	 * @return array
-	 */
+	* Run all integration tests.
+	*
+	* @return array
+	*/
 	public static function run_integration_tests() {
 		$results = [];
 
@@ -28,10 +28,10 @@ class RTBCB_Tests {
 	}
 
 	/**
-	 * Verify portal integration hooks return data.
-	 *
-	 * @return array Test result.
-	 */
+	* Verify portal integration hooks return data.
+	*
+	* @return array Test result.
+	*/
 	private static function test_portal_integration() {
 		$vendors = apply_filters( 'rt_portal_get_vendors', [] );
 
@@ -49,10 +49,10 @@ class RTBCB_Tests {
 	}
 
 	/**
-	 * Ensure ROI calculator static method is available.
-	 *
-	 * @return array Test result.
-	 */
+	* Ensure ROI calculator static method is available.
+	*
+	* @return array Test result.
+	*/
 	private static function test_roi_calculations() {
 		if ( ! class_exists( 'RTBCB_Calculator' ) || ! is_callable( [ 'RTBCB_Calculator', 'calculate_roi' ] ) ) {
 			return [
@@ -68,10 +68,10 @@ class RTBCB_Tests {
 	}
 
 	/**
-	 * Check LLM integration readiness.
-	 *
-	 * @return array Test result.
-	 */
+	* Check LLM integration readiness.
+	*
+	* @return array Test result.
+	*/
 	private static function test_llm_integration() {
 		if ( ! class_exists( 'RTBCB_LLM' ) ) {
 			return [
@@ -121,10 +121,10 @@ class RTBCB_Tests {
 	}
 
 	/**
-	 * Verify RAG index search runs.
-	 *
-	 * @return array Test result.
-	 */
+	* Verify RAG index search runs.
+	*
+	* @return array Test result.
+	*/
 	private static function test_rag_index() {
 		if ( ! class_exists( 'RTBCB_RAG' ) ) {
 			return [

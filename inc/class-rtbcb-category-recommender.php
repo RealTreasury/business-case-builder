@@ -12,10 +12,10 @@ defined( 'ABSPATH' ) || exit;
 	*/
 class RTBCB_Category_Recommender {
 	/**
-	 * Category definitions with descriptions and criteria.
-	 *
-	 * @var array
-	 */
+	* Category definitions with descriptions and criteria.
+	*
+	* @var array
+	*/
 	public const CATEGORIES = [
 		'cash_tools' => [
 			'name'        => 'Cash Management Tools',
@@ -62,11 +62,11 @@ class RTBCB_Category_Recommender {
 	];
 
 	/**
-	 * Recommend the most appropriate category based on user inputs.
-	 *
-	 * @param array $user_inputs User form data.
-	 * @return array Recommendation with scoring details.
-	 */
+	* Recommend the most appropriate category based on user inputs.
+	*
+	* @param array $user_inputs User form data.
+	* @return array Recommendation with scoring details.
+	*/
 	public static function recommend_category( $user_inputs ) {
 		$empty = [
 			'recommended'   => '',
@@ -109,11 +109,11 @@ class RTBCB_Category_Recommender {
 	}
 
 	/**
-	 * Translate category info strings.
-	 *
-	 * @param array $category Category data.
-	 * @return array
-	 */
+	* Translate category info strings.
+	*
+	* @param array $category Category data.
+	* @return array
+	*/
 	private static function translate_category_info( $category ) {
 		$category['name']        = __( $category['name'], 'rtbcb' );
 		$category['description'] = __( $category['description'], 'rtbcb' );
@@ -129,12 +129,12 @@ class RTBCB_Category_Recommender {
 	}
 
 	/**
-	 * Calculate score for a specific category.
-	 *
-	 * @param string $category Category key.
-	 * @param array  $inputs   User inputs.
-	 * @return float Score (0-100).
-	 */
+	* Calculate score for a specific category.
+	*
+	* @param string $category Category key.
+	* @param array  $inputs   User inputs.
+	* @return float Score (0-100).
+	*/
 	private static function calculate_category_score( $category, $inputs ) {
 		$score     = 0;
 		$max_score = 0;
@@ -159,12 +159,12 @@ class RTBCB_Category_Recommender {
 	}
 
 	/**
-	 * Score based on company size.
-	 *
-	 * @param string $category     Category key.
-	 * @param string $company_size Company size.
-	 * @return float Score (0-100).
-	 */
+	* Score based on company size.
+	*
+	* @param string $category     Category key.
+	* @param string $company_size Company size.
+	* @return float Score (0-100).
+	*/
 	private static function score_company_size( $category, $company_size ) {
 		$size_scores = [
 			'cash_tools' => [
@@ -191,12 +191,12 @@ class RTBCB_Category_Recommender {
 	}
 
 	/**
-	 * Score based on operational complexity.
-	 *
-	 * @param string $category Category key.
-	 * @param array  $inputs   User inputs.
-	 * @return float Score (0-100).
-	 */
+	* Score based on operational complexity.
+	*
+	* @param string $category Category key.
+	* @param array  $inputs   User inputs.
+	* @return float Score (0-100).
+	*/
 	private static function score_complexity( $category, $inputs ) {
 		$num_banks   = intval( $inputs['num_banks'] ?? 0 );
 		$ftes        = floatval( $inputs['ftes'] ?? 0 );
@@ -238,12 +238,12 @@ class RTBCB_Category_Recommender {
 	}
 
 	/**
-	 * Score based on pain points alignment.
-	 *
-	 * @param string $category    Category key.
-	 * @param array  $pain_points Selected pain points.
-	 * @return float Score (0-100).
-	 */
+	* Score based on pain points alignment.
+	*
+	* @param string $category    Category key.
+	* @param array  $pain_points Selected pain points.
+	* @return float Score (0-100).
+	*/
 	private static function score_pain_points( $category, $pain_points ) {
 		if ( empty( $pain_points ) ) {
 			return 50;
@@ -290,12 +290,12 @@ class RTBCB_Category_Recommender {
 	}
 
 	/**
-	 * Score based on transaction volume indicators.
-	 *
-	 * @param string $category Category key.
-	 * @param array  $inputs   User inputs.
-	 * @return float Score (0-100).
-	 */
+	* Score based on transaction volume indicators.
+	*
+	* @param string $category Category key.
+	* @param array  $inputs   User inputs.
+	* @return float Score (0-100).
+	*/
 	private static function score_volume( $category, $inputs ) {
 		$num_banks = intval( $inputs['num_banks'] ?? 0 );
 		$ftes      = floatval( $inputs['ftes'] ?? 0 );
@@ -319,11 +319,11 @@ class RTBCB_Category_Recommender {
 	}
 
 	/**
-	 * Calculate confidence level in recommendation.
-	 *
-	 * @param array $scores Category scores.
-	 * @return float Confidence (0-1).
-	 */
+	* Calculate confidence level in recommendation.
+	*
+	* @param array $scores Category scores.
+	* @return float Confidence (0-1).
+	*/
 	private static function calculate_confidence( $scores ) {
 		$score_values = array_values( $scores );
 		$top_score    = $score_values[0];
@@ -336,12 +336,12 @@ class RTBCB_Category_Recommender {
 	}
 
 	/**
-	 * Generate human-readable reasoning for the recommendation.
-	 *
-	 * @param string $recommended Recommended category.
-	 * @param array  $inputs      User inputs.
-	 * @return string Reasoning text.
-	 */
+	* Generate human-readable reasoning for the recommendation.
+	*
+	* @param string $recommended Recommended category.
+	* @param array  $inputs      User inputs.
+	* @return string Reasoning text.
+	*/
 	private static function generate_reasoning( $recommended, $inputs ) {
 		$company_size = $inputs['company_size'] ?? '';
 		$num_banks    = intval( $inputs['num_banks'] ?? 0 );
@@ -417,12 +417,12 @@ class RTBCB_Category_Recommender {
 	}
 
 	/**
-	 * Get alternative recommendations.
-	 *
-	 * @param array  $scores       All category scores.
-	 * @param string $recommended  Primary recommendation.
-	 * @return array Alternative categories.
-	 */
+	* Get alternative recommendations.
+	*
+	* @param array  $scores       All category scores.
+	* @param string $recommended  Primary recommendation.
+	* @return array Alternative categories.
+	*/
 	private static function get_alternatives( $scores, $recommended ) {
 		$alternatives = [];
 
@@ -440,11 +440,11 @@ class RTBCB_Category_Recommender {
 	}
 
 	/**
-	 * Get category information by key.
-	 *
-	 * @param string $category_key Category key.
-	 * @return array|null Category information.
-	 */
+	* Get category information by key.
+	*
+	* @param string $category_key Category key.
+	* @return array|null Category information.
+	*/
 	public static function get_category_info( $category_key ) {
 		if ( ! isset( self::CATEGORIES[ $category_key ] ) ) {
 			return null;
@@ -453,10 +453,10 @@ class RTBCB_Category_Recommender {
 	}
 
 	/**
-	 * Get all available categories.
-	 *
-	 * @return array All categories.
-	 */
+	* Get all available categories.
+	*
+	* @return array All categories.
+	*/
 	public static function get_all_categories() {
 		$translated = [];
 		foreach ( self::CATEGORIES as $key => $category ) {

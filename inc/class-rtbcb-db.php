@@ -12,15 +12,15 @@ defined( 'ABSPATH' ) || exit;
 	*/
 class RTBCB_DB {
 	/**
-	 * Current database version.
-	 */
+	* Current database version.
+	*/
 	const DB_VERSION = '2.0.3';
 
 	/**
-	 * Initialize database and handle upgrades.
-	 *
-	 * @return void
-	 */
+	* Initialize database and handle upgrades.
+	*
+	* @return void
+	*/
 	public static function init() {
 		$current = get_option( 'rtbcb_db_version', '1.0.0' );
 
@@ -39,11 +39,11 @@ class RTBCB_DB {
 	}
 
 	/**
-	 * Perform database upgrades.
-	 *
-	 * @param string $from_version Previous database version.
-	 * @return void
-	 */
+	* Perform database upgrades.
+	*
+	* @param string $from_version Previous database version.
+	* @return void
+	*/
 	private static function upgrade( $from_version ) {
 		// Run table creation/migration for leads.
 		RTBCB_Leads::init();
@@ -73,10 +73,10 @@ class RTBCB_DB {
 	}
 
 	/**
-	 * Create the RAG index table if it does not exist.
-	 *
-	 * @return void
-	 */
+	* Create the RAG index table if it does not exist.
+	*
+	* @return void
+	*/
 	private static function create_rag_table() {
 		global $wpdb;
 
@@ -103,10 +103,10 @@ class RTBCB_DB {
 	}
 
 	/**
-	 * Add embedding_norm index to the RAG table if missing.
-	 *
-	 * @return void
-	 */
+	* Add embedding_norm index to the RAG table if missing.
+	*
+	* @return void
+	*/
 	private static function add_embedding_norm_index() {
 		global $wpdb;
 
@@ -118,10 +118,10 @@ class RTBCB_DB {
 	}
 
 	/**
-	 * Seed sample data into the RAG index when empty.
-	 *
-	 * @return void
-	 */
+	* Seed sample data into the RAG index when empty.
+	*
+	* @return void
+	*/
 	private static function seed_rag_sample_data() {
 		global $wpdb;
 

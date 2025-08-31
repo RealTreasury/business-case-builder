@@ -12,24 +12,24 @@ defined( 'ABSPATH' ) || exit;
 	*/
 class RTBCB_Leads {
 	/**
-	 * Database table name.
-	 *
-	 * @var string
-	 */
+	* Database table name.
+	*
+	* @var string
+	*/
 	private static $table_name;
 
 	/**
-	 * Option name for cached statistics.
-	 *
-	 * @var string
-	 */
+	* Option name for cached statistics.
+	*
+	* @var string
+	*/
 	private static $cache_option = 'rtbcb_lead_stats';
 
 	/**
-	 * Create the leads table with improved error handling.
-	 *
-	 * @return bool True on success, false on failure.
-	 */
+	* Create the leads table with improved error handling.
+	*
+	* @return bool True on success, false on failure.
+	*/
 	private static function create_table() {
 		global $wpdb;
 
@@ -139,8 +139,8 @@ class RTBCB_Leads {
 	}
 
 	/**
-	 * Initialize the class with better error handling.
-	 */
+	* Initialize the class with better error handling.
+	*/
 	public static function init() {
 		global $wpdb;
 		self::$table_name = $wpdb->prefix . 'rtbcb_leads';
@@ -160,12 +160,12 @@ class RTBCB_Leads {
 		}
 	}
 	/**
-	 * Add missing indexes to the leads table.
-	 *
-	 * Ensures unique and secondary indexes exist for commonly queried fields.
-	 *
-	 * @return void
-	 */
+	* Add missing indexes to the leads table.
+	*
+	* Ensures unique and secondary indexes exist for commonly queried fields.
+	*
+	* @return void
+	*/
 		public static function add_missing_indexes() {
 				global $wpdb;
 
@@ -188,10 +188,10 @@ class RTBCB_Leads {
 		}
 
 	/**
-	 * Compress existing report_html entries.
-	 *
-	 * @return void
-	 */
+	* Compress existing report_html entries.
+	*
+	* @return void
+	*/
 	public static function compress_existing_report_html() {
 		global $wpdb;
 
@@ -220,11 +220,11 @@ class RTBCB_Leads {
 
 
 	/**
-	 * Save a lead to the database.
-	 *
-	 * @param array $lead_data Lead information.
-	 * @return int|false Lead ID or false on failure.
-	 */
+	* Save a lead to the database.
+	*
+	* @param array $lead_data Lead information.
+	* @return int|false Lead ID or false on failure.
+	*/
 	public static function save_lead( $lead_data ) {
 		global $wpdb;
 
@@ -334,11 +334,11 @@ class RTBCB_Leads {
 	}
 
 	/**
-	 * Get a lead by email address.
-	 *
-	 * @param string $email Email address.
-	 * @return array|null Lead data or null if not found.
-	 */
+	* Get a lead by email address.
+	*
+	* @param string $email Email address.
+	* @return array|null Lead data or null if not found.
+	*/
 	public static function get_lead_by_email( $email ) {
 		global $wpdb;
 
@@ -365,11 +365,11 @@ class RTBCB_Leads {
 	}
 
 	/**
-	 * Get all leads with pagination and filtering.
-	 *
-	 * @param array $args Query arguments.
-	 * @return array Leads data with pagination info.
-	 */
+	* Get all leads with pagination and filtering.
+	*
+	* @param array $args Query arguments.
+	* @return array Leads data with pagination info.
+	*/
 	public static function get_all_leads( $args = [] ) {
 		global $wpdb;
 
@@ -446,10 +446,10 @@ class RTBCB_Leads {
 	}
 
 	/**
-	 * Get lead statistics.
-	 *
-	 * @return array Statistics data.
-	 */
+	* Get lead statistics.
+	*
+	* @return array Statistics data.
+	*/
 	public static function get_statistics() {
 		global $wpdb;
 
@@ -461,8 +461,8 @@ class RTBCB_Leads {
 		// Leads by category
 		$category_stats = $wpdb->get_results(
 			"SELECT recommended_category, COUNT(*) as count FROM " . self::$table_name . "
-			 WHERE recommended_category != ''
-			 GROUP BY recommended_category",
+			WHERE recommended_category != ''
+			GROUP BY recommended_category",
 			ARRAY_A
 		);
 		$stats['by_category'] = $category_stats;
@@ -470,8 +470,8 @@ class RTBCB_Leads {
 		// Leads by company size
 		$size_stats = $wpdb->get_results(
 			"SELECT company_size, COUNT(*) as count FROM " . self::$table_name . "
-			 WHERE company_size != ''
-			 GROUP BY company_size",
+			WHERE company_size != ''
+			GROUP BY company_size",
 			ARRAY_A
 		);
 		$stats['by_company_size'] = $size_stats;
@@ -479,8 +479,8 @@ class RTBCB_Leads {
 		// Average ROI
 		$roi_stats = $wpdb->get_row(
 			"SELECT AVG(roi_low) as avg_low, AVG(roi_base) as avg_base, AVG(roi_high) as avg_high
-			 FROM " . self::$table_name . "
-			 WHERE roi_base > 0",
+			FROM " . self::$table_name . "
+			WHERE roi_base > 0",
 			ARRAY_A
 		);
 		$stats['average_roi'] = $roi_stats;
@@ -488,17 +488,17 @@ class RTBCB_Leads {
 		// Recent activity (last 30 days)
 		$stats['recent_leads'] = $wpdb->get_var(
 			"SELECT COUNT(*) FROM " . self::$table_name . "
-			 WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)"
+			WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)"
 		);
 
 		return $stats;
 	}
 
 	/**
-	 * Update cached statistics option.
-	 *
-	 * @return array Cached statistics.
-	 */
+	* Update cached statistics option.
+	*
+	* @return array Cached statistics.
+	*/
 	public static function update_cached_statistics() {
 		$stats = self::get_statistics();
 		update_option( self::$cache_option, $stats );
@@ -506,10 +506,10 @@ class RTBCB_Leads {
 	}
 
 	/**
-	 * Retrieve cached statistics.
-	 *
-	 * @return array Cached statistics.
-	 */
+	* Retrieve cached statistics.
+	*
+	* @return array Cached statistics.
+	*/
 	public static function get_cached_statistics() {
 		$stats = get_option( self::$cache_option, [] );
 		if ( empty( $stats ) ) {
@@ -519,11 +519,11 @@ class RTBCB_Leads {
 	}
 
 	/**
-	 * Export leads to CSV.
-	 *
-	 * @param array $args Export arguments.
-	 * @return string CSV content.
-	 */
+	* Export leads to CSV.
+	*
+	* @param array $args Export arguments.
+	* @return string CSV content.
+	*/
 	public static function export_to_csv( $args = [] ) {
 		$leads_data = self::get_all_leads( array_merge( $args, [ 'per_page' => -1 ] ) );
 		$leads = $leads_data['leads'];
@@ -566,10 +566,10 @@ class RTBCB_Leads {
 	}
 
 	/**
-	 * Get client IP address.
-	 *
-	 * @return string IP address.
-	 */
+	* Get client IP address.
+	*
+	* @return string IP address.
+	*/
 	private static function get_client_ip() {
 		$ip_keys = [ 'HTTP_X_FORWARDED_FOR', 'HTTP_X_REAL_IP', 'HTTP_CLIENT_IP', 'REMOTE_ADDR' ];
 

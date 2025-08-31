@@ -8,10 +8,10 @@ defined( 'ABSPATH' ) || exit;
 	*/
 class RTBCB_Ajax {
 	/**
-	 * Generate comprehensive case via AJAX.
-	 *
-	 * @return void
-	 */
+	* Generate comprehensive case via AJAX.
+	*
+	* @return void
+	*/
 		public static function generate_comprehensive_case() {
 				if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
 						wp_send_json_error( __( 'Security check failed.', 'rtbcb' ), 403 );
@@ -29,10 +29,10 @@ class RTBCB_Ajax {
 		}
 
 		/**
-		 * Stream business analysis chunks via AJAX.
-		 *
-		 * @return void
-		 */
+		* Stream business analysis chunks via AJAX.
+		*
+		* @return void
+		*/
 		public static function stream_analysis() {
 				if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
 						wp_send_json_error( __( 'Security check failed.', 'rtbcb' ), 403 );
@@ -79,11 +79,11 @@ $method = new ReflectionMethod( RTBCB_Main::class, 'generate_business_analysis' 
 				exit;
 		}
 	/**
-	 * Process the basic ROI calculation step.
-	 *
-	 * @param array $user_inputs User inputs.
-	 * @return array ROI block.
-	 */
+	* Process the basic ROI calculation step.
+	*
+	* @param array $user_inputs User inputs.
+	* @return array ROI block.
+	*/
 	public static function process_basic_roi_step( $user_inputs ) {
 		$roi_scenarios = RTBCB_Calculator::calculate_roi( $user_inputs );
 
@@ -96,16 +96,16 @@ $method = new ReflectionMethod( RTBCB_Main::class, 'generate_business_analysis' 
 
 
 	/**
-	 * Process comprehensive case generation.
-	 *
-	 * @param array $user_inputs User inputs.
-	 * @return array|WP_Error Result data or error.
-	 */
+	* Process comprehensive case generation.
+	*
+	* @param array $user_inputs User inputs.
+	* @return array|WP_Error Result data or error.
+	*/
 		public static function process_comprehensive_case( $user_inputs, $job_id = '' ) {
-			   $request_start    = microtime( true );
-			   $workflow_tracker = new RTBCB_Workflow_Tracker();
-			   $bypass_heavy    = rtbcb_heavy_features_disabled();
-			   $enable_ai        = ! $bypass_heavy && RTBCB_Settings::get_setting( 'enable_ai_analysis', true );
+			$request_start    = microtime( true );
+			$workflow_tracker = new RTBCB_Workflow_Tracker();
+			$bypass_heavy    = rtbcb_heavy_features_disabled();
+			$enable_ai        = ! $bypass_heavy && RTBCB_Settings::get_setting( 'enable_ai_analysis', true );
 
 		add_action(
 			'rtbcb_llm_prompt_sent',
@@ -235,15 +235,15 @@ $method = new ReflectionMethod( RTBCB_Main::class, 'generate_business_analysis' 
 								$final_analysis = self::create_fallback_analysis( $enriched_profile, $roi_scenarios );
 								$workflow_tracker->add_warning( 'hybrid_rag_disabled', __( 'AI analysis disabled.', 'rtbcb' ) );
 						}
-					   $workflow_tracker->complete_step( 'hybrid_rag_analysis', $final_analysis );
-					   if ( $job_id ) {
-							   RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'analysis' => $final_analysis ] );
-					   }
+					$workflow_tracker->complete_step( 'hybrid_rag_analysis', $final_analysis );
+					if ( $job_id ) {
+							RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'analysis' => $final_analysis ] );
+					}
 
-					   $chart_data = self::prepare_chart_data( $roi_scenarios );
+					$chart_data = self::prepare_chart_data( $roi_scenarios );
 
-					   $workflow_tracker->start_step( 'data_structuring' );
-					   $structured_report_data = self::structure_report_data( $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, $chart_data, $request_start );
+					$workflow_tracker->start_step( 'data_structuring' );
+					$structured_report_data = self::structure_report_data( $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, $chart_data, $request_start );
 						$workflow_tracker->complete_step( 'data_structuring', $structured_report_data );
 						if ( $job_id ) {
 								RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'report_data' => $structured_report_data ] );
@@ -263,7 +263,7 @@ $method = new ReflectionMethod( RTBCB_Main::class, 'generate_business_analysis' 
 				'report_data'   => $structured_report_data,
 				'workflow_info' => $debug_info,
 				'lead_id'       => $lead_id,
-							   'analysis_type' => rtbcb_get_analysis_type(),
+							'analysis_type' => rtbcb_get_analysis_type(),
 			];
 		} catch ( Exception $e ) {
 			$workflow_tracker->add_error( 'exception', $e->getMessage() );
@@ -280,10 +280,10 @@ $method = new ReflectionMethod( RTBCB_Main::class, 'generate_business_analysis' 
 	}
 
 	/**
-	 * Get background job status.
-	 *
-	 * @return void
-	 */
+	* Get background job status.
+	*
+	* @return void
+	*/
 	public static function get_job_status() {
 		if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
 			wp_send_json_error( __( 'Security check failed.', 'rtbcb' ), 403 );
@@ -344,9 +344,9 @@ $method = new ReflectionMethod( RTBCB_Main::class, 'generate_business_analysis' 
 		}
 
 		wp_send_json_success( $response );
-	   }
+	}
 
-	   private static function collect_and_validate_user_inputs() {
+	private static function collect_and_validate_user_inputs() {
 		$validator = new RTBCB_Validator();
 		$validated = $validator->validate( $_POST );
 
@@ -355,7 +355,7 @@ $method = new ReflectionMethod( RTBCB_Main::class, 'generate_business_analysis' 
 		}
 
 		return $validated;
-	   }
+	}
 
 	private static function create_fallback_profile( $user_inputs ) {
 		return [
@@ -400,7 +400,7 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 			'metadata' => [
 				'company_name'   => $user_inputs['company_name'],
 				'analysis_date'  => current_time( 'Y-m-d' ),
-							   'analysis_type'  => rtbcb_get_analysis_type(),
+							'analysis_type'  => rtbcb_get_analysis_type(),
 				'confidence_level' => $final_analysis['confidence_level'] ?? 0.85,
 				'processing_time' => microtime( true ) - $request_start,
 			],
@@ -417,13 +417,13 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 				'maturity_assessment' => $enriched_profile['maturity_assessment'] ?? [],
 				'competitive_position'=> $enriched_profile['competitive_position'] ?? [],
 			],
-					   'financial_analysis' => [
-							   'roi_scenarios'        => self::format_roi_scenarios( $roi_scenarios ),
-							   'investment_breakdown' => $final_analysis['financial_analysis']['investment_breakdown'] ?? [],
-							   'payback_analysis'     => $final_analysis['financial_analysis']['payback_analysis'] ?? [],
-							   'sensitivity_analysis' => $roi_scenarios['sensitivity_analysis'] ?? [],
-							   'chart_data'           => $chart_data,
-					   ],
+					'financial_analysis' => [
+							'roi_scenarios'        => self::format_roi_scenarios( $roi_scenarios ),
+							'investment_breakdown' => $final_analysis['financial_analysis']['investment_breakdown'] ?? [],
+							'payback_analysis'     => $final_analysis['financial_analysis']['payback_analysis'] ?? [],
+							'sensitivity_analysis' => $roi_scenarios['sensitivity_analysis'] ?? [],
+							'chart_data'           => $chart_data,
+					],
 			'technology_strategy' => [
 				'recommended_category' => $recommendation['recommended'],
 				'category_details'     => $recommendation['category_info'],
@@ -480,78 +480,78 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 				return null;
 		}
 
-	   /**
+	/**
 		* Prepare chart data for ROI visualization.
 		*
 		* @param array $roi_scenarios ROI scenarios.
 		* @return array Chart.js compatible data structure.
 		*/
-	   private static function prepare_chart_data( $roi_scenarios ) {
-			   return [
-					   'labels'   => [
-							   __( 'Labor Savings', 'rtbcb' ),
-							   __( 'Fee Savings', 'rtbcb' ),
-							   __( 'Error Reduction', 'rtbcb' ),
-							   __( 'Total Benefit', 'rtbcb' ),
-					   ],
-					   'datasets' => [
-							   [
-									   'label'           => __( 'Conservative', 'rtbcb' ),
-									   'data'            => [
-											   $roi_scenarios['conservative']['labor_savings'] ?? 0,
-											   $roi_scenarios['conservative']['fee_savings'] ?? 0,
-											   $roi_scenarios['conservative']['error_reduction'] ?? 0,
-											   $roi_scenarios['conservative']['total_annual_benefit'] ?? 0,
-									   ],
-									   'backgroundColor' => 'rgba(239, 68, 68, 0.8)',
-									   'borderColor'     => 'rgba(239, 68, 68, 1)',
-									   'borderWidth'     => 1,
-							   ],
-							   [
-									   'label'           => __( 'Base Case', 'rtbcb' ),
-									   'data'            => [
-											   $roi_scenarios['base']['labor_savings'] ?? 0,
-											   $roi_scenarios['base']['fee_savings'] ?? 0,
-											   $roi_scenarios['base']['error_reduction'] ?? 0,
-											   $roi_scenarios['base']['total_annual_benefit'] ?? 0,
-									   ],
-									   'backgroundColor' => 'rgba(59, 130, 246, 0.8)',
-									   'borderColor'     => 'rgba(59, 130, 246, 1)',
-									   'borderWidth'     => 1,
-							   ],
-							   [
-									   'label'           => __( 'Optimistic', 'rtbcb' ),
-									   'data'            => [
-											   $roi_scenarios['optimistic']['labor_savings'] ?? 0,
-											   $roi_scenarios['optimistic']['fee_savings'] ?? 0,
-											   $roi_scenarios['optimistic']['error_reduction'] ?? 0,
-											   $roi_scenarios['optimistic']['total_annual_benefit'] ?? 0,
-									   ],
-									   'backgroundColor' => 'rgba(16, 185, 129, 0.8)',
-									   'borderColor'     => 'rgba(16, 185, 129, 1)',
-									   'borderWidth'     => 1,
-							   ],
-					   ],
-			   ];
-	   }
+	private static function prepare_chart_data( $roi_scenarios ) {
+			return [
+					'labels'   => [
+							__( 'Labor Savings', 'rtbcb' ),
+							__( 'Fee Savings', 'rtbcb' ),
+							__( 'Error Reduction', 'rtbcb' ),
+							__( 'Total Benefit', 'rtbcb' ),
+					],
+					'datasets' => [
+							[
+									'label'           => __( 'Conservative', 'rtbcb' ),
+									'data'            => [
+											$roi_scenarios['conservative']['labor_savings'] ?? 0,
+											$roi_scenarios['conservative']['fee_savings'] ?? 0,
+											$roi_scenarios['conservative']['error_reduction'] ?? 0,
+											$roi_scenarios['conservative']['total_annual_benefit'] ?? 0,
+									],
+									'backgroundColor' => 'rgba(239, 68, 68, 0.8)',
+									'borderColor'     => 'rgba(239, 68, 68, 1)',
+									'borderWidth'     => 1,
+							],
+							[
+									'label'           => __( 'Base Case', 'rtbcb' ),
+									'data'            => [
+											$roi_scenarios['base']['labor_savings'] ?? 0,
+											$roi_scenarios['base']['fee_savings'] ?? 0,
+											$roi_scenarios['base']['error_reduction'] ?? 0,
+											$roi_scenarios['base']['total_annual_benefit'] ?? 0,
+									],
+									'backgroundColor' => 'rgba(59, 130, 246, 0.8)',
+									'borderColor'     => 'rgba(59, 130, 246, 1)',
+									'borderWidth'     => 1,
+							],
+							[
+									'label'           => __( 'Optimistic', 'rtbcb' ),
+									'data'            => [
+											$roi_scenarios['optimistic']['labor_savings'] ?? 0,
+											$roi_scenarios['optimistic']['fee_savings'] ?? 0,
+											$roi_scenarios['optimistic']['error_reduction'] ?? 0,
+											$roi_scenarios['optimistic']['total_annual_benefit'] ?? 0,
+									],
+									'backgroundColor' => 'rgba(16, 185, 129, 0.8)',
+									'borderColor'     => 'rgba(16, 185, 129, 1)',
+									'borderWidth'     => 1,
+							],
+					],
+			];
+	}
 
-	   private static function calculate_business_case_strength( $roi_scenarios, $recommendation ) {
-			   $base = $roi_scenarios['base']['total_annual_benefit'] ?? 0;
-			   return $base > 0 ? 'strong' : 'weak';
-	   }
+	private static function calculate_business_case_strength( $roi_scenarios, $recommendation ) {
+			$base = $roi_scenarios['base']['total_annual_benefit'] ?? 0;
+			return $base > 0 ? 'strong' : 'weak';
+	}
 
 	private static function format_roi_scenarios( $roi_scenarios ) {
 		return $roi_scenarios;
 	}
 
 /**
-	 * Store workflow history and associated lead metadata.
-	 *
-	 * @param array     $debug_info  Workflow debug information.
-	 * @param int|null  $lead_id     Lead ID.
-	 * @param string    $lead_email  Lead email address.
-	 * @return void
-	 */
+	* Store workflow history and associated lead metadata.
+	*
+	* @param array     $debug_info  Workflow debug information.
+	* @param int|null  $lead_id     Lead ID.
+	* @param string    $lead_email  Lead email address.
+	* @return void
+	*/
 	private static function store_workflow_history( $debug_info, $lead_id = null, $lead_email = '' ) {
 		$history = get_option( 'rtbcb_workflow_history', [] );
 		if ( ! is_array( $history ) ) {

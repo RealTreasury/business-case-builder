@@ -12,19 +12,19 @@ defined( 'ABSPATH' ) || exit;
 	*/
 class RTBCB_RAG {
 	/**
-	 * Constructor.
-	 */
+	* Constructor.
+	*/
 	public function __construct() {
 		RTBCB_DB::init();
 	}
 
 	/**
-	 * Rebuild the RAG index from portal data.
-	 *
-	 * Optionally invalidates cached search results.
-	 *
-	 * @return void
-	 */
+	* Rebuild the RAG index from portal data.
+	*
+	* Optionally invalidates cached search results.
+	*
+	* @return void
+	*/
 	public function rebuild_index() {
 		// Ensure the index table exists.
 		RTBCB_DB::init();
@@ -67,15 +67,15 @@ class RTBCB_RAG {
 	}
 
 	/**
-	 * Search the index for similar content.
-	 *
-	 * Caches results using the WordPress object cache.
-	 *
-	 * @param string $query Query string.
-	 * @param int    $top_k Number of results.
-	 *
-	 * @return array Matching rows.
-	 */
+	* Search the index for similar content.
+	*
+	* Caches results using the WordPress object cache.
+	*
+	* @param string $query Query string.
+	* @param int    $top_k Number of results.
+	*
+	* @return array Matching rows.
+	*/
 	public function search_similar( $query, $top_k = 3 ) {
 
 		if ( rtbcb_heavy_features_disabled() ) {
@@ -102,17 +102,17 @@ class RTBCB_RAG {
 	}
 
 	/**
-	 * Retrieve context metadata for a query.
-	 *
-	 * Calls {@see search_similar()} and returns only the metadata portion of
-	 * the results. If embeddings cannot be generated, an empty array is
-	 * returned.
-	 *
-	 * @param string $query Query string.
-	 * @param int    $top_k Number of results to retrieve.
-	 *
-	 * @return array List of metadata arrays.
-	 */
+	* Retrieve context metadata for a query.
+	*
+	* Calls {@see search_similar()} and returns only the metadata portion of
+	* the results. If embeddings cannot be generated, an empty array is
+	* returned.
+	*
+	* @param string $query Query string.
+	* @param int    $top_k Number of results to retrieve.
+	*
+	* @return array List of metadata arrays.
+	*/
 	public function get_context( $query, $top_k = 3 ) {
 
 		if ( rtbcb_heavy_features_disabled() ) {
@@ -136,12 +136,12 @@ class RTBCB_RAG {
 	}
 
 	/**
-	 * Index a vendor record.
-	 *
-	 * @param array $vendor Vendor data.
-	 *
-	 * @return void
-	 */
+	* Index a vendor record.
+	*
+	* @param array $vendor Vendor data.
+	*
+	* @return void
+	*/
 	private function index_vendor( $vendor ) {
 		global $wpdb;
 		$table_name = $wpdb->prefix . 'rtbcb_rag_index';
@@ -171,12 +171,12 @@ class RTBCB_RAG {
 	}
 
 	/**
-	 * Index a note record.
-	 *
-	 * @param array $note Note data.
-	 *
-	 * @return void
-	 */
+	* Index a note record.
+	*
+	* @param array $note Note data.
+	*
+	* @return void
+	*/
 	private function index_note( $note ) {
 		global $wpdb;
 		$table_name = $wpdb->prefix . 'rtbcb_rag_index';
@@ -200,12 +200,12 @@ class RTBCB_RAG {
 	}
 
 	/**
-	 * Retrieve embedding vector for text.
-	 *
-	 * @param string $text Text to embed.
-	 *
-	 * @return array Embedding vector.
-	 */
+	* Retrieve embedding vector for text.
+	*
+	* @param string $text Text to embed.
+	*
+	* @return array Embedding vector.
+	*/
 	private function get_embedding( $text ) {
 		$api_key = get_option( 'rtbcb_openai_api_key' );
 		$model   = get_option( 'rtbcb_embedding_model', 'text-embedding-3-small' );
@@ -241,13 +241,13 @@ $response = rtbcb_wp_remote_post_with_retry( $endpoint, $args );
 	}
 
 	/**
-	 * Search embeddings using cosine similarity.
-	 *
-	 * @param array $query_embedding Query embedding.
-	 * @param int   $top_k           Number of results.
-	 *
-	 * @return array
-	 */
+	* Search embeddings using cosine similarity.
+	*
+	* @param array $query_embedding Query embedding.
+	* @param int   $top_k           Number of results.
+	*
+	* @return array
+	*/
 	private function cosine_similarity_search( $query_embedding, $top_k ) {
 		global $wpdb;
 		$table_name = $wpdb->prefix . 'rtbcb_rag_index';
@@ -301,12 +301,12 @@ $response = rtbcb_wp_remote_post_with_retry( $endpoint, $args );
 	}
 
 	/**
-	 * Calculate the Euclidean norm of an embedding vector.
-	 *
-	 * @param array $embedding Embedding vector.
-	 *
-	 * @return float Vector norm.
-	 */
+	* Calculate the Euclidean norm of an embedding vector.
+	*
+	* @param array $embedding Embedding vector.
+	*
+	* @return float Vector norm.
+	*/
 	private function calculate_embedding_norm( $embedding ) {
 		$norm = 0;
 		foreach ( $embedding as $value ) {
@@ -316,13 +316,13 @@ $response = rtbcb_wp_remote_post_with_retry( $endpoint, $args );
 	}
 
 	/**
-	 * Calculate cosine similarity between two vectors.
-	 *
-	 * @param array $a Vector A.
-	 * @param array $b Vector B.
-	 *
-	 * @return float Similarity score.
-	 */
+	* Calculate cosine similarity between two vectors.
+	*
+	* @param array $a Vector A.
+	* @param array $b Vector B.
+	*
+	* @return float Similarity score.
+	*/
 	private function cosine_similarity( $a, $b ) {
 		$dot = 0;
 		$norm_a = 0;
