@@ -836,11 +836,11 @@ function rtbcb_log_memory_usage( $stage ) {
 }
 
 function rtbcb_get_memory_status() {
-        return [
-                'current' => memory_get_usage( true ),
-                'peak'    => memory_get_peak_usage( true ),
-                'limit'   => wp_convert_hr_to_bytes( ini_get( 'memory_limit' ) ),
-        ];
+		return [
+		        'current' => memory_get_usage( true ),
+		        'peak'    => memory_get_peak_usage( true ),
+		        'limit'   => wp_convert_hr_to_bytes( ini_get( 'memory_limit' ) ),
+		];
 }
 
 /**
@@ -861,26 +861,26 @@ function rtbcb_get_memory_status() {
  * @return bool True when synchronous execution is allowed.
  */
 function rtbcb_is_simple_case( $user_inputs ) {
-        $user_inputs = is_array( $user_inputs ) ? $user_inputs : [];
+		$user_inputs = is_array( $user_inputs ) ? $user_inputs : [];
 
-        // Thresholds for determining a simple case.
-        $max_banks = 2;  // No more than two banking relationships.
-        $max_ftes  = 2;  // Teams of two FTEs or fewer.
-        $max_hours = 20; // Twenty or fewer total manual hours per week.
+		// Thresholds for determining a simple case.
+		$max_banks = 2;  // No more than two banking relationships.
+		$max_ftes  = 2;  // Teams of two FTEs or fewer.
+		$max_hours = 20; // Twenty or fewer total manual hours per week.
 
-        $num_banks = absint( $user_inputs['num_banks'] ?? 0 );
-        $ftes      = absint( $user_inputs['ftes'] ?? 0 );
-        $hours     = absint( $user_inputs['hours_reconciliation'] ?? 0 ) + absint( $user_inputs['hours_cash_positioning'] ?? 0 );
+		$num_banks = absint( $user_inputs['num_banks'] ?? 0 );
+		$ftes      = absint( $user_inputs['ftes'] ?? 0 );
+		$hours     = absint( $user_inputs['hours_reconciliation'] ?? 0 ) + absint( $user_inputs['hours_cash_positioning'] ?? 0 );
 
-        $is_simple = ( $num_banks <= $max_banks && $ftes <= $max_ftes && $hours <= $max_hours );
+		$is_simple = ( $num_banks <= $max_banks && $ftes <= $max_ftes && $hours <= $max_hours );
 
-        /**
-         * Filter whether a case is simple enough for synchronous execution.
-         *
-         * @param bool  $is_simple   Whether case is considered simple.
-         * @param array $user_inputs User input data.
-         */
-        return (bool) apply_filters( 'rtbcb_is_simple_case', $is_simple, $user_inputs );
+		/**
+		 * Filter whether a case is simple enough for synchronous execution.
+		 *
+		 * @param bool  $is_simple   Whether case is considered simple.
+		 * @param array $user_inputs User input data.
+		 */
+		return (bool) apply_filters( 'rtbcb_is_simple_case', $is_simple, $user_inputs );
 }
 
 /**
@@ -1006,23 +1006,23 @@ function rtbcb_test_generate_category_recommendation( $analysis ) {
 			$input .= "\nExtra Requirements: {$payload['extra_requirements']}";
 		}
 
-                $response = rtbcb_wp_remote_post_with_retry(
-                        'https://api.openai.com/v1/responses',
-                        [
-                                'headers' => [
-                                        'Content-Type'  => 'application/json',
-                                        'Authorization' => 'Bearer ' . $api_key,
-                                ],
-                                'body'    => wp_json_encode(
-                                        [
-                                                'model'        => $model,
-                                                'instructions' => $system_prompt,
-                                                'input'        => $input,
-                                        ]
-                                ),
-                                'timeout' => rtbcb_get_api_timeout(),
-                        ]
-                );
+		        $response = rtbcb_wp_remote_post_with_retry(
+		                'https://api.openai.com/v1/responses',
+		                [
+		                        'headers' => [
+		                                'Content-Type'  => 'application/json',
+		                                'Authorization' => 'Bearer ' . $api_key,
+		                        ],
+		                        'body'    => wp_json_encode(
+		                                [
+		                                        'model'        => $model,
+		                                        'instructions' => $system_prompt,
+		                                        'input'        => $input,
+		                                ]
+		                        ),
+		                        'timeout' => rtbcb_get_api_timeout(),
+		                ]
+		        );
 
 		if ( is_wp_error( $response ) ) {
 			return new WP_Error( 'llm_failure', __( 'Unable to generate recommendation at this time.', 'rtbcb' ) );
@@ -1536,17 +1536,17 @@ function rtbcb_handle_openai_responses_job( $job_id, $user_id ) {
 		$timeout = 120;
 	}
 
-        $response = rtbcb_wp_remote_post_with_retry(
-                'https://api.openai.com/v1/responses',
-                [
-                        'headers' => [
-                                'Content-Type'  => 'application/json',
-                                'Authorization' => 'Bearer ' . $api_key,
-                        ],
-                        'body'    => $body,
-                        'timeout' => $timeout,
-                ]
-        );
+		$response = rtbcb_wp_remote_post_with_retry(
+		        'https://api.openai.com/v1/responses',
+		        [
+		                'headers' => [
+		                        'Content-Type'  => 'application/json',
+		                        'Authorization' => 'Bearer ' . $api_key,
+		                ],
+		                'body'    => $body,
+		                'timeout' => $timeout,
+		        ]
+		);
 
 	if ( is_wp_error( $response ) ) {
 			    if ( class_exists( 'RTBCB_API_Log' ) ) {
@@ -1881,7 +1881,7 @@ function rtbcb_get_report_allowed_html() {
 		$allowed[ $tag ]['data-*'] = true;
 	}
 
-        return $allowed;
+		return $allowed;
 }
 
 /**
@@ -1890,9 +1890,39 @@ function rtbcb_get_report_allowed_html() {
  * @return void
  */
 function rtbcb_invalidate_rag_cache() {
-	if ( function_exists( 'get_option' ) && function_exists( 'update_option' ) ) {
-		$version = (int) get_option( 'rtbcb_rag_cache_version', 1 );
-		update_option( 'rtbcb_rag_cache_version', $version + 1 );
+		if ( function_exists( 'get_option' ) && function_exists( 'update_option' ) ) {
+		        $version = (int) get_option( 'rtbcb_rag_cache_version', 1 );
+		        update_option( 'rtbcb_rag_cache_version', $version + 1 );
+		}
+}
+
+/**
+ * Clear cached report HTML entries.
+ *
+ * Retrieves the current report cache version for versioned cache keys.
+ *
+ * @return int
+ */
+function rtbcb_get_report_cache_version() {
+	$version = wp_cache_get( 'report_cache_version', 'rtbcb_reports' );
+
+	if ( false === $version ) {
+		$version = 1;
+		wp_cache_set( 'report_cache_version', $version, 'rtbcb_reports' );
 	}
+
+	return (int) $version;
+}
+
+/**
+ * Clear cached report HTML entries.
+ *
+ * Bumps the report cache version so previously cached templates are ignored.
+ *
+ * @return void
+ */
+function rtbcb_clear_report_cache() {
+	$version = rtbcb_get_report_cache_version();
+	wp_cache_set( 'report_cache_version', $version + 1, 'rtbcb_reports' );
 }
 
