@@ -105,6 +105,7 @@ node tests/export-to-pdf-button.test.js
 node tests/wizard-report-flow.test.js
 npx --yes jest tests/poll-job-completed.test.js --config '{"testEnvironment":"node"}'
 npx --yes jest tests/poll-job-show-results.test.js --config '{"testEnvironment":"node"}'
+npx --yes jest tests/poll-job-progress-text.test.js --config '{"testEnvironment":"node"}'
 
 # WordPress coding standards (if installed)
 if command -v phpcs &> /dev/null; then

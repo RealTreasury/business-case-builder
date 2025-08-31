@@ -524,7 +524,7 @@ class BusinessCaseBuilder {
 
     showLoading() {
         // Hide form
-        const formContainer = this.form.closest('.rtbcb-form-container');
+        const formContainer = ( this.form && typeof this.form.closest === 'function' ) ? this.form.closest('.rtbcb-form-container') : null;
         if (formContainer) {
             formContainer.style.display = 'none';
         }
@@ -537,7 +537,7 @@ class BusinessCaseBuilder {
                     <div class="rtbcb-progress-spinner"></div>
                     <div class="rtbcb-progress-text">Generating Your Business Case</div>
                     <div class="rtbcb-progress-step">
-                        <span class="rtbcb-progress-step-text">Analyzing ${this.escapeHTML(companyName)}'s treasury operations...</span>
+                        <span class="rtbcb-progress-step-text" id="rtbcb-progress-status">Analyzing ${this.escapeHTML(companyName)}'s treasury operations...</span>
                     </div>
                 </div>
             `;
@@ -552,7 +552,7 @@ class BusinessCaseBuilder {
             progressContainer.innerHTML = '';
         }
 
-        const formContainer = this.form.closest('.rtbcb-form-container');
+        const formContainer = ( this.form && typeof this.form.closest === 'function' ) ? this.form.closest('.rtbcb-form-container') : null;
         if (formContainer) {
             formContainer.style.display = 'block';
         }
@@ -587,7 +587,14 @@ class BusinessCaseBuilder {
             const status = statusData.status;
             console.log(`RTBCB: Job status: ${status} (attempt ${attempt})`);
 
+            const progressStatus = document.getElementById('rtbcb-progress-status');
+            const progressMessage = statusData.step || statusData.message;
+            if (progressStatus && progressMessage) {
+                progressStatus.textContent = progressMessage;
+            }
+
             if (status === 'completed') {
+                this.hideLoading();
                 if (statusData.report_html) {
                     this.handleSuccess(statusData);
                 } else if (statusData.report_data) {
@@ -596,6 +603,7 @@ class BusinessCaseBuilder {
                     this.handleError({ message: 'Report data missing from completed job', type: 'job_error' });
                 }
             } else if (status === 'error') {
+                this.hideLoading();
                 this.handleError({ message: statusData.message || 'Job failed', type: 'job_error' });
             } else {
                 // Continue polling
