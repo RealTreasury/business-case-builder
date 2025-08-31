@@ -1805,10 +1805,12 @@ return $use_comprehensive;
             $report_data = $this->transform_data_for_template( $business_case_data );
 
             if ( is_wp_error( $report_data ) ) {
+                $error_data = $report_data->get_error_data();
                 rtbcb_log_error(
                     'Report data transformation failed',
                     [
-                        'error' => $report_data->get_error_message(),
+                        'error'        => $report_data->get_error_message(),
+                        'missing_keys' => $error_data['status']['missing_keys'] ?? [],
                     ]
                 );
 
@@ -2035,6 +2037,14 @@ return $use_comprehensive;
            'valid'        => empty( $missing_sections ),
            'missing_keys' => $missing_sections,
        ];
+
+       if ( ! empty( $missing_sections ) ) {
+           return new WP_Error(
+               'rtbcb_missing_report_sections',
+               __( 'Missing required report sections.', 'rtbcb' ),
+               $report_data
+           );
+       }
 
        return $report_data;
    }

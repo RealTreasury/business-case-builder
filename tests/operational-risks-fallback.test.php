@@ -4,6 +4,33 @@ function __( $text, $domain = null ) {
 return $text;
 }
 }
+if ( ! class_exists( 'WP_Error' ) ) {
+class WP_Error {
+public $errors;
+public $error_data;
+public function __construct( $code = '', $message = '', $data = '' ) {
+$this->errors     = [ $code => [ $message ] ];
+$this->error_data = [ $code => $data ];
+}
+public function get_error_message( $code = '' ) {
+if ( empty( $code ) ) {
+$code = key( $this->errors );
+}
+return $this->errors[ $code ][0];
+}
+public function get_error_data( $code = '' ) {
+if ( empty( $code ) ) {
+$code = key( $this->error_data );
+}
+return $this->error_data[ $code ];
+}
+}
+}
+if ( ! function_exists( 'is_wp_error' ) ) {
+function is_wp_error( $thing ) {
+return $thing instanceof WP_Error;
+}
+}
 if ( ! function_exists( 'current_time' ) ) {
 function current_time( $type ) {
 return '2024-01-01';
@@ -65,11 +92,16 @@ $method = $ref->getMethod( 'transform_data_for_template' );
 $method->setAccessible( true );
 
 $result = $method->invoke( $plugin, [] );
-if ( $result['operational_insights'][0] !== 'No data provided' ) {
+if ( ! is_wp_error( $result ) ) {
+echo "Validation did not produce WP_Error\n";
+exit( 1 );
+}
+$data = $result->get_error_data();
+if ( $data['operational_insights'][0] !== 'No data provided' ) {
 echo "Operational fallback failed\n";
 exit( 1 );
 }
-if ( $result['risk_analysis']['implementation_risks'][0] !== 'No data provided' ) {
+if ( $data['risk_analysis']['implementation_risks'][0] !== 'No data provided' ) {
 echo "Risk fallback failed\n";
 exit( 1 );
 }
