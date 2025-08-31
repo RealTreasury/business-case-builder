@@ -57,6 +57,9 @@ php tests/lead-storage.test.php
 echo "12. Rendering comprehensive report template..."
 php tests/render-comprehensive-template.test.php
 
+echo "12a. Rendering fast report template..."
+php tests/render-fast-template.test.php
+
 echo "13. Running report memory usage test..."
 php tests/report-memory-usage.test.php
 

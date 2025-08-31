@@ -47,6 +47,14 @@ class RTBCB_Router {
                 $report_type = sanitize_text_field( wp_unslash( $_POST['report_type'] ) );
             }
 
+            $fast_mode = false;
+            if ( isset( $_POST['fast_mode'] ) ) {
+                $fast_mode = '1' === sanitize_text_field( wp_unslash( $_POST['fast_mode'] ) );
+            }
+            if ( 'fast' === $report_type ) {
+                $fast_mode = true;
+            }
+
             // Instantiate necessary classes.
             $llm = new RTBCB_LLM();
             $rag = new RTBCB_RAG();
@@ -88,9 +96,13 @@ class RTBCB_Router {
             }
 
             // Generate report HTML based on type.
-            $report_html = 'comprehensive' === $report_type ?
-                $this->get_comprehensive_report_html( $business_case_data ) :
-                $this->get_report_html( $business_case_data );
+            if ( 'comprehensive' === $report_type ) {
+                $report_html = $this->get_comprehensive_report_html( $business_case_data );
+            } elseif ( $fast_mode ) {
+                $report_html = $this->get_fast_report_html( $business_case_data );
+            } else {
+                $report_html = $this->get_report_html( $business_case_data );
+            }
 
             // Save the lead.
             $leads   = new RTBCB_Leads();
@@ -218,6 +230,29 @@ class RTBCB_Router {
      */
     public function get_report_html( $business_case_data ) {
         $template_path = RTBCB_DIR . 'templates/report-template.php';
+
+        if ( ! file_exists( $template_path ) ) {
+            return '';
+        }
+
+        $business_case_data = is_array( $business_case_data ) ? $business_case_data : [];
+
+        ob_start();
+        include $template_path;
+        $html = ob_get_clean();
+
+        return wp_kses( $html, rtbcb_get_report_allowed_html() );
+    }
+
+    /**
+     * Generate fast report HTML from template.
+     *
+     * @param array $business_case_data Business case data.
+     *
+     * @return string Report HTML.
+     */
+    public function get_fast_report_html( $business_case_data ) {
+        $template_path = RTBCB_DIR . 'templates/fast-report-template.php';
 
         if ( ! file_exists( $template_path ) ) {
             return '';
