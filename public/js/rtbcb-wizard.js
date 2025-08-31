@@ -915,6 +915,29 @@ class BusinessCaseBuilder {
 
         const progressContainer = document.getElementById('rtbcb-progress-container');
         if (progressContainer) {
+            const isTimeout = (details && details.type === 'timeout') || message.includes('5 minutes');
+            const actionButtons = isTimeout
+                ? `
+                        <a href="/request-processing/"
+                           style="background: #7216f4; color: white; border: none; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">
+                            Request Processing
+                        </a>
+                        <a href="mailto:contact@realtreasury.com"
+                           style="background: #f3f4f6; color: #4b5563; border: none; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">
+                            Email My Report
+                        </a>
+                    `
+                : `
+                        <button type="button" onclick="location.reload()"
+                                style="background: #7216f4; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                            Try Again
+                        </button>
+                        <a href="mailto:contact@realtreasury.com"
+                           style="background: #f3f4f6; color: #4b5563; border: none; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">
+                            Contact Support
+                        </a>
+                    `;
+
             progressContainer.innerHTML = `
                 <div class="rtbcb-enhanced-error" style="padding: 40px; text-align: center; max-width: 600px;">
                     <div class="rtbcb-error-icon" style="font-size: 48px; color: #ef4444; margin-bottom: 20px;">
@@ -937,14 +960,7 @@ class BusinessCaseBuilder {
                     </details>
                     ` : ''}
                     <div class="rtbcb-error-actions" style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
-                        <button type="button" onclick="location.reload()" 
-                                style="background: #7216f4; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600;">
-                            Try Again
-                        </button>
-                        <a href="mailto:contact@realtreasury.com" 
-                           style="background: #f3f4f6; color: #4b5563; border: none; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">
-                            Contact Support
-                        </a>
+                    ${actionButtons}
                     </div>
                 </div>
             `;
@@ -1214,7 +1230,8 @@ class BusinessCaseBuilder {
             'Invalid email address': 'Please enter a valid email address.',
             'PHP error occurred': 'Server error encountered. Please try again.',
             'Server returned invalid JSON response': 'Server communication error. Please try again.',
-            'Unexpected server response': 'Server communication error. Please try again.'
+            'Unexpected server response': 'Server communication error. Please try again.',
+            '5-minute processing limit': 'Your analysis took longer than 5 minutes. Visit the Request Processing page to try Fast Mode or request email delivery.'
         };
 
         for (const [key, message] of Object.entries(errorMappings)) {
