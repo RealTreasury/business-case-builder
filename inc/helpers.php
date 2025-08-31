@@ -1926,3 +1926,37 @@ function rtbcb_clear_report_cache() {
 	wp_cache_set( 'report_cache_version', $version + 1, 'rtbcb_reports' );
 }
 
+
+/**
+ * Enable persistent database connections when supported.
+ *
+ * Reconnects using a host prefixed with `p:` if the current connection is
+ * not already persistent and persistent connections are allowed. Behavior can
+ * be filtered with `rtbcb_enable_persistent_connection`.
+ *
+ * @return void
+ */
+function rtbcb_enable_persistent_connection() {
+	global $wpdb;
+
+	if ( strpos( DB_HOST, 'p:' ) === 0 ) {
+		return;
+	}
+
+	if ( ! ini_get( 'mysqli.allow_persistent' ) ) {
+		return;
+	}
+
+	$enable_persistent = apply_filters( 'rtbcb_enable_persistent_connection', true );
+	if ( ! $enable_persistent ) {
+		return;
+	}
+
+	$wpdb->dbhost = 'p:' . DB_HOST;
+	if ( method_exists( $wpdb, 'close' ) ) {
+		$wpdb->close();
+	}
+	$wpdb->db_connect();
+}
+
+add_action( 'plugins_loaded', 'rtbcb_enable_persistent_connection', 1 );

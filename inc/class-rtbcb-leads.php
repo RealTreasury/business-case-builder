@@ -410,25 +410,19 @@ class RTBCB_Leads {
             $prepare_values[] = $args['date_to'] . ' 23:59:59';
         }
 
-        $where_clause = implode( ' AND ', $where_conditions );
+		$where_clause = implode( ' AND ', $where_conditions );
 
-        // Get total count
-        $count_sql = "SELECT COUNT(*) FROM " . self::$table_name . " WHERE " . $where_clause;
-        if ( ! empty( $prepare_values ) ) {
-            $total_leads = $wpdb->get_var( $wpdb->prepare( $count_sql, $prepare_values ) );
-        } else {
-            $total_leads = $wpdb->get_var( $count_sql );
-        }
+		// Build pagination.
+		$offset  = ( $args['page'] - 1 ) * $args['per_page'];
+		$orderby = sanitize_sql_orderby( $args['orderby'] . ' ' . $args['order'] );
 
-        // Get leads
-        $offset = ( $args['page'] - 1 ) * $args['per_page'];
-        $orderby = sanitize_sql_orderby( $args['orderby'] . ' ' . $args['order'] );
+		// Fetch leads and total in a single batched query.
+		$sql             = "SELECT SQL_CALC_FOUND_ROWS * FROM " . self::$table_name . " WHERE " . $where_clause . " ORDER BY " . $orderby . " LIMIT %d OFFSET %d";
+		$prepare_values[] = $args['per_page'];
+		$prepare_values[] = $offset;
 
-        $sql = "SELECT * FROM " . self::$table_name . " WHERE " . $where_clause . " ORDER BY " . $orderby . " LIMIT %d OFFSET %d";
-        $prepare_values[] = $args['per_page'];
-        $prepare_values[] = $offset;
-
-        $leads = $wpdb->get_results( $wpdb->prepare( $sql, $prepare_values ), ARRAY_A );
+		$leads       = $wpdb->get_results( $wpdb->prepare( $sql, $prepare_values ), ARRAY_A );
+		$total_leads = (int) $wpdb->get_var( 'SELECT FOUND_ROWS()' );
 
         // Unserialize pain points and decompress report HTML.
         foreach ( $leads as &$lead ) {
