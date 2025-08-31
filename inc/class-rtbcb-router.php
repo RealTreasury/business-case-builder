@@ -8,6 +8,9 @@ defined( 'ABSPATH' ) || exit;
  */
 
 require_once __DIR__ . '/helpers.php';
+if ( ! class_exists( 'RTBCB_Background_Job' ) ) {
+	require_once __DIR__ . '/class-rtbcb-background-job.php';
+}
 
 /**
  * Class RTBCB_Router.
@@ -598,5 +601,44 @@ class RTBCB_Router {
            __( 'Expand functionality and integration capabilities', 'rtbcb' ),
        ];
    }
+    /**
+     * Register request processing endpoint.
+     *
+     * @return void
+     */
+    public static function register_request_endpoint() {
+        add_rewrite_rule( '^rtbcb-request/?$', 'index.php?rtbcb_request=1', 'top' );
+        add_rewrite_tag( '%rtbcb_request%', '1' );
+    }
+
+    /**
+     * Maybe render request processing page or final report.
+     *
+     * @return void
+     */
+    public static function maybe_render_request_page() {
+        if ( ! get_query_var( 'rtbcb_request' ) ) {
+            return;
+        }
+
+        $job_id = sanitize_text_field( wp_unslash( $_GET['job_id'] ?? '' ) );
+        if ( empty( $job_id ) ) {
+            wp_die( esc_html__( 'Missing job ID.', 'rtbcb' ) );
+        }
+
+        $status = RTBCB_Background_Job::get_status( $job_id );
+        if ( ! is_wp_error( $status ) && 'completed' === ( $status['status'] ?? '' ) && ! empty( $status['result']['report_data'] ) ) {
+            $router        = new self();
+            $analysis_type = $status['result']['analysis_type'] ?? '';
+            $report_html   = ( 'comprehensive' === $analysis_type ) ? $router->get_comprehensive_report_html( $status['result'] ) : $router->get_report_html( $status['result'] );
+            echo $report_html;
+        } else {
+            include RTBCB_DIR . 'templates/request-processing.php';
+        }
+        exit;
+    }
 }
 
+
+add_action( 'init', [ 'RTBCB_Router', 'register_request_endpoint' ] );
+add_action( 'template_redirect', [ 'RTBCB_Router', 'maybe_render_request_page' ] );

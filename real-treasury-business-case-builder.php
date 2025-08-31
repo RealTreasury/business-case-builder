@@ -493,6 +493,7 @@ add_action( 'rtbcb_cleanup_jobs', [ 'RTBCB_Background_Job', 'cleanup' ] );
 	        'rtbcbAjax',
 	        [
 	            'ajax_url'    => admin_url( 'admin-ajax.php' ),
+                    'processing_url' => home_url( 'rtbcb-request' ),
 	            'nonce'       => wp_create_nonce( 'rtbcb_generate' ),
 	            'strings'     => [
 	                'error'                   => __( 'An error occurred. Please try again.', 'rtbcb' ),
@@ -2270,6 +2271,7 @@ return $use_comprehensive;
         set_transient( 'rtbcb_show_upgrade_notice', true, 30 );
 
         // Flush rewrite rules
+        RTBCB_Router::register_request_endpoint();
         flush_rewrite_rules();
 
         error_log( 'RTBCB: Plugin activated successfully' );
@@ -2287,6 +2289,7 @@ return $use_comprehensive;
         wp_clear_scheduled_hook( 'rtbcb_refresh_lead_metrics' );
 
         // Flush rewrite rules
+        RTBCB_Router::register_request_endpoint();
         flush_rewrite_rules();
 
         error_log( 'RTBCB: Plugin deactivated' );
