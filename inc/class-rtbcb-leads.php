@@ -202,21 +202,34 @@ class RTBCB_Leads {
 			ARRAY_A
 		);
 
-		foreach ( $leads as $lead ) {
-			if ( false !== @gzuncompress( $lead['report_html'] ) || false !== @gzuncompress( base64_decode( $lead['report_html'], true ) ) ) {
-				continue;
-			}
+foreach ( $leads as $lead ) {
+$decoded = base64_decode( $lead['report_html'], true );
+if ( false !== $decoded && false !== @gzuncompress( $decoded ) ) {
+continue;
+}
 
-			$compressed = base64_encode( gzcompress( $lead['report_html'] ) );
-			$wpdb->update(
-				self::$table_name,
-				[ 'report_html' => $compressed ],
-				[ 'id' => $lead['id'] ],
-				[ '%s' ],
-				[ '%d' ]
-			);
-		}
-	}
+$gz_data = @gzuncompress( $lead['report_html'] );
+if ( false !== $gz_data ) {
+$wpdb->update(
+self::$table_name,
+[ 'report_html' => base64_encode( $lead['report_html'] ) ],
+[ 'id' => $lead['id'] ],
+[ '%s' ],
+[ '%d' ]
+);
+continue;
+}
+
+$compressed = base64_encode( gzcompress( $lead['report_html'] ) );
+$wpdb->update(
+self::$table_name,
+[ 'report_html' => $compressed ],
+[ 'id' => $lead['id'] ],
+[ '%s' ],
+[ '%d' ]
+);
+}
+}
 
 
 	/**
@@ -357,15 +370,20 @@ class RTBCB_Leads {
 		if ( $result ) {
 			$result['pain_points'] = maybe_unserialize( $result['pain_points'] );
 
-			if ( ! empty( $result['report_html'] ) ) {
-				$decoded = base64_decode( $result['report_html'], true );
-				if ( false !== $decoded ) {
-					$uncompressed = @gzuncompress( $decoded );
-					if ( false !== $uncompressed ) {
-						$result['report_html'] = $uncompressed;
-					}
-				}
-			}
+if ( ! empty( $result['report_html'] ) ) {
+$decoded = base64_decode( $result['report_html'], true );
+if ( false !== $decoded ) {
+$uncompressed = @gzuncompress( $decoded );
+if ( false !== $uncompressed ) {
+$result['report_html'] = $uncompressed;
+}
+} else {
+$uncompressed = @gzuncompress( $result['report_html'] );
+if ( false !== $uncompressed ) {
+$result['report_html'] = $uncompressed;
+}
+}
+}
 		}
 
 		return $result;
@@ -432,19 +450,24 @@ class RTBCB_Leads {
 		$total_leads = (int) $wpdb->get_var( 'SELECT FOUND_ROWS()' );
 
 		// Unserialize pain points and decompress report HTML.
-		foreach ( $leads as &$lead ) {
-			$lead['pain_points'] = maybe_unserialize( $lead['pain_points'] );
+foreach ( $leads as &$lead ) {
+$lead['pain_points'] = maybe_unserialize( $lead['pain_points'] );
 
-			if ( ! empty( $lead['report_html'] ) ) {
-				$decoded = base64_decode( $lead['report_html'], true );
-				if ( false !== $decoded ) {
-					$uncompressed = @gzuncompress( $decoded );
-					if ( false !== $uncompressed ) {
-						$lead['report_html'] = $uncompressed;
-					}
-				}
-			}
-		}
+if ( ! empty( $lead['report_html'] ) ) {
+$decoded = base64_decode( $lead['report_html'], true );
+if ( false !== $decoded ) {
+$uncompressed = @gzuncompress( $decoded );
+if ( false !== $uncompressed ) {
+$lead['report_html'] = $uncompressed;
+}
+} else {
+$uncompressed = @gzuncompress( $lead['report_html'] );
+if ( false !== $uncompressed ) {
+$lead['report_html'] = $uncompressed;
+}
+}
+}
+}
 
 		return [
 			'leads'       => $leads,
