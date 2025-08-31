@@ -16,6 +16,14 @@ vm.runInThisContext(code);
 const BusinessCaseBuilder = vm.runInThisContext('BusinessCaseBuilder');
 
 describe('pollJob', () => {
+    beforeEach(() => {
+        jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+        jest.useRealTimers();
+    });
+
     test('calls handleSuccess when job is completed', async () => {
         const reportData = { result: 'ok' };
 
@@ -37,7 +45,9 @@ describe('pollJob', () => {
         builder.handleSuccess = jest.fn();
         builder.handleError = jest.fn();
 
-        await builder.pollJob('123');
+        const pollingPromise = builder.pollJob('123');
+        jest.runAllTimers();
+        await pollingPromise;
 
         expect(builder.handleSuccess).toHaveBeenCalledWith(reportData);
     });

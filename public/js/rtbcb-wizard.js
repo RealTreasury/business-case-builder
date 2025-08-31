@@ -23,6 +23,9 @@ window.closeBusinessCaseModal = function() {
     if (overlay) {
         overlay.classList.remove('active');
         document.body.style.overflow = '';
+        if (window.businessCaseBuilder && typeof window.businessCaseBuilder.cancelJob === 'function') {
+            window.businessCaseBuilder.cancelJob();
+        }
     }
 };
 
@@ -44,6 +47,10 @@ class BusinessCaseBuilder {
         this.form = document.getElementById('rtbcbForm');
         this.overlay = document.getElementById('rtbcbModalOverlay');
         this.ajaxUrl = ( typeof rtbcbAjax !== 'undefined' && rtbcbAjax.ajax_url ) ? rtbcbAjax.ajax_url : '';
+        this.currentJobId = null;
+        this.pollingTimeout = null;
+        this.abortController = null;
+        this.pollingCancelled = false;
 
         if ( ! this.form ) {
             return;
@@ -409,13 +416,18 @@ class BusinessCaseBuilder {
                 }
             }
 
-            // Handle JSON response
+            if ((data && data.data && data.data.job_id) || (data && data.job_id)) {
+                const jobId = data.data && data.data.job_id ? data.data.job_id : data.job_id;
+                this.currentJobId = jobId;
+                this.pollingCancelled = false;
+                this.abortController = new AbortController();
+                this.pollJob(jobId, Date.now(), 0);
+                return;
+            }
+
+            // Handle JSON response without job ID
             if (data.success) {
-                if (data.data && data.data.job_id) {
-                    // Background job approach
-                    this.pollJob(data.data.job_id, Date.now(), 0);
-                } else if (data.data) {
-                    // Direct HTML or structured data response
+                if (data.data) {
                     if (data.data.report_html) {
                         this.handleSuccess(data.data);
                     } else if (data.data.report_data) {
@@ -558,53 +570,98 @@ class BusinessCaseBuilder {
         }
     }
 
-    async pollJob(jobId, startTime = Date.now(), attempt = 0) {
+    pollJob(jobId, startTime = Date.now(), attempt = 0) {
         const MAX_DURATION = 20 * 60 * 1000; // 20 minutes
         const MAX_ATTEMPTS = 600; // 600 attempts * 2s = 20 minutes max
-        
-        if (Date.now() - startTime > MAX_DURATION || attempt > MAX_ATTEMPTS) {
-            this.handleError({ 
-                message: 'The request timed out after 20 minutes. Please try again later.', 
-                type: 'timeout' 
-            });
-            return;
-        }
-        
-        try {
-            const response = await fetch(`${this.ajaxUrl}?action=rtbcb_job_status&job_id=${encodeURIComponent(jobId)}&rtbcb_nonce=${rtbcbAjax.nonce}`, {
-                credentials: 'same-origin',
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            });
-            
-            const data = await response.json();
-            
-            if (!data.success) {
-                this.handleError({ message: 'Unable to retrieve job status', type: 'polling_error' });
-                return;
-            }
-            
-            const statusData = data.data;
-            const status = statusData.status;
-            console.log(`RTBCB: Job status: ${status} (attempt ${attempt})`);
 
-            if (status === 'completed') {
-                if (statusData.report_html) {
-                    this.handleSuccess(statusData);
-                } else if (statusData.report_data) {
-                    this.handleSuccess(statusData.report_data);
-                } else {
-                    this.handleError({ message: 'Report data missing from completed job', type: 'job_error' });
-                }
-            } else if (status === 'error') {
-                this.handleError({ message: statusData.message || 'Job failed', type: 'job_error' });
-            } else {
-                // Continue polling
-                setTimeout(() => this.pollJob(jobId, startTime, attempt + 1), 2000);
-            }
-        } catch (error) {
-            console.error('RTBCB: Job polling error:', error);
-            this.handleError({ message: error.message || 'An unexpected error occurred', type: 'polling_error' });
+        if (this.pollingCancelled) {
+            return Promise.resolve();
         }
+
+        if (Date.now() - startTime > MAX_DURATION || attempt > MAX_ATTEMPTS) {
+            this.handleError({
+                message: 'The request timed out after 20 minutes. Please try again later.',
+                type: 'timeout'
+            });
+            return Promise.resolve();
+        }
+
+        return new Promise((resolve) => {
+            this.pollingTimeout = setTimeout(async () => {
+                if (this.pollingCancelled) {
+                    resolve();
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`${this.ajaxUrl}?action=rtbcb_job_status&job_id=${encodeURIComponent(jobId)}&rtbcb_nonce=${rtbcbAjax.nonce}`, {
+                        credentials: 'same-origin',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        signal: this.abortController?.signal
+                    });
+
+                    const data = await response.json();
+
+                    if (!data.success) {
+                        this.handleError({ message: 'Unable to retrieve job status', type: 'polling_error' });
+                        resolve();
+                        return;
+                    }
+
+                    const statusData = data.data;
+                    const status = statusData.status;
+                    console.log(`RTBCB: Job status: ${status} (attempt ${attempt})`);
+
+                    const progressContainer = document.getElementById('rtbcb-progress-container');
+                    if (progressContainer) {
+                        const progressText = progressContainer.querySelector('.rtbcb-progress-text');
+                        const progressStep = progressContainer.querySelector('.rtbcb-progress-step-text');
+                        if (typeof statusData.percent === 'number' && progressText) {
+                            progressText.textContent = `Generating Your Business Case (${Math.round(statusData.percent)}%)`;
+                        }
+                        if ((statusData.message || statusData.step) && progressStep) {
+                            progressStep.textContent = statusData.message || `Step ${statusData.step}`;
+                        }
+                    }
+
+                    if (status === 'completed') {
+                        if (statusData.report_html) {
+                            this.handleSuccess(statusData);
+                        } else if (statusData.report_data) {
+                            this.handleSuccess(statusData.report_data);
+                        } else {
+                            this.handleError({ message: 'Report data missing from completed job', type: 'job_error' });
+                        }
+                        resolve();
+                    } else if (status === 'error') {
+                        this.handleError({ message: statusData.message || 'Job failed', type: 'job_error' });
+                        resolve();
+                    } else {
+                        this.pollJob(jobId, startTime, attempt + 1).then(resolve);
+                    }
+                } catch (error) {
+                    if (error.name !== 'AbortError') {
+                        console.error('RTBCB: Job polling error:', error);
+                        this.handleError({ message: error.message || 'An unexpected error occurred', type: 'polling_error' });
+                    }
+                    resolve();
+                }
+            }, 2000);
+        });
+    }
+
+    cancelJob() {
+        this.pollingCancelled = true;
+        if (this.pollingTimeout) {
+            clearTimeout(this.pollingTimeout);
+            this.pollingTimeout = null;
+        }
+        if (this.abortController) {
+            this.abortController.abort();
+            this.abortController = null;
+        }
+        this.currentJobId = null;
+        this.hideLoading();
     }
 
     handleSuccess(data) {
