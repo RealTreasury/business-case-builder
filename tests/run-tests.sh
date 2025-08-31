@@ -9,6 +9,7 @@ export RTBCB_TEST_MODEL="${RTBCB_TEST_MODEL:-gpt-5-mini}"
 
 # Install JS dependencies for headless browser tests
 npm install --no-save --no-package-lock jsdom >/dev/null 2>&1
+export NODE_OPTIONS="--require ./tests/jsdom-setup.js"
 
 # PHP Lint
 echo "1. Running PHP syntax check..."

@@ -4,6 +4,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 defined( 'ABSPATH' ) || exit;
+require_once __DIR__ . '/wp-stubs.php';
 
 ini_set( 'error_log', '/dev/null' );
 
