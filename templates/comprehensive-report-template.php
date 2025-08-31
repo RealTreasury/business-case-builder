@@ -20,6 +20,7 @@ $metadata             = $report_data['metadata'] ?? [];
 $executive_summary    = $report_data['executive_summary'] ?? [];
 $company_intelligence = $report_data['company_intelligence'] ?? [];
 $financial_analysis   = $report_data['financial_analysis'] ?? [];
+$chart_data           = $financial_analysis['chart_data'] ?? RTBCB_Ajax::prepare_chart_data( $financial_analysis['roi_scenarios'] ?? [] );
 $technology_strategy  = $report_data['technology_strategy'] ?? [];
 $operational_insights = $report_data['operational_insights'] ?? [];
 $risk_analysis        = $report_data['risk_analysis'] ?? [];
@@ -79,8 +80,8 @@ $processing_time = $metadata['processing_time'] ?? 0;
 
 			<!-- Key Metrics Dashboard -->
 			<div class="rtbcb-metrics-dashboard">
-				<?php if ( ! empty( $financial_analysis['roi_scenarios'] ) ) : ?>
-					<?php $base_roi = $financial_analysis['roi_scenarios']['base'] ?? []; ?>
+				<?php if ( ! empty( $chart_data ) ) : ?>
+					<?php $base_roi = $chart_data['base'] ?? []; ?>
 					<div class="rtbcb-metric-card primary">
 						<div class="rtbcb-metric-icon">💰</div>
 						<div class="rtbcb-metric-content">
@@ -190,7 +191,7 @@ $processing_time = $metadata['processing_time'] ?? 0;
 	<?php endif; ?>
 
 	<!-- Interactive ROI Analysis Section with Charts -->
-	<?php if ( ! empty( $financial_analysis['roi_scenarios'] ) ) : ?>
+    <?php if ( ! empty( $chart_data ) ) : ?>
 	<div class="rtbcb-section-enhanced rtbcb-financial-analysis-enhanced">
 		<div class="rtbcb-section-header-enhanced">
 			<h2 class="rtbcb-section-title">
@@ -228,7 +229,7 @@ $processing_time = $metadata['processing_time'] ?? 0;
 			<div class="rtbcb-roi-breakdown-enhanced">
 				<h3><?php echo esc_html__( 'ROI Component Breakdown', 'rtbcb' ); ?></h3>
 				<div class="rtbcb-roi-components">
-					<?php foreach ( $financial_analysis['roi_scenarios'] as $scenario_name => $scenario ) : ?>
+                                    <?php foreach ( $chart_data as $scenario_name => $scenario ) : ?>
 						<div class="rtbcb-scenario-card <?php echo esc_attr( $scenario_name ); ?>">
 							<h4><?php echo esc_html( ucfirst( $scenario_name ) ); ?> <?php echo esc_html__( 'Case', 'rtbcb' ); ?></h4>
 							<div class="rtbcb-scenario-metrics">
@@ -482,7 +483,7 @@ function initializeROIChart() {
 	const ctx = document.getElementById('rtbcb-roi-chart');
 	if (!ctx) return;
 	
-	const roiData = <?php echo wp_json_encode( $financial_analysis['roi_scenarios'] ?? [] ); ?>;
+    const roiData = <?php echo wp_json_encode( $chart_data ?? [] ); ?>;
 	
 	new Chart(ctx, {
 		type: 'bar',
@@ -593,7 +594,7 @@ function rtbcbExportPDF() {
 <?php
 // Pass structured data to JavaScript for charts and interactivity
 wp_localize_script( 'rtbcb-report', 'rtbcbReportData', [
-	'roiScenarios' => $financial_analysis['roi_scenarios'] ?? [],
+    'roiScenarios' => $chart_data ?? [],
 	'companyName' => $company_name,
 	'confidence' => $confidence_level,
 	'strings' => [

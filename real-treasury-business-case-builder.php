@@ -1938,13 +1938,13 @@ return $use_comprehensive;
                'executive_recommendation' => wp_kses_post( $business_case_data['executive_recommendation'] ?: $business_case_data['recommendation'] ),
                'business_case_strength'  => $this->determine_business_case_strength( $business_case_data ),
            ],
-           'financial_analysis' => [
-               'roi_scenarios'      => $this->format_roi_scenarios( $business_case_data ),
+          'financial_analysis' => [
+               'chart_data'        => $this->prepare_chart_data( $business_case_data ),
                'payback_analysis'   => [
-                   'payback_months' => sanitize_text_field( $business_case_data['payback_months'] ),
-               ],
-               'sensitivity_analysis' => $business_case_data['sensitivity_analysis'],
-           ],
+                  'payback_months' => sanitize_text_field( $business_case_data['payback_months'] ),
+              ],
+              'sensitivity_analysis' => $business_case_data['sensitivity_analysis'],
+          ],
            'company_intelligence' => [
                'enriched_profile' => [
                    'enhanced_description' => wp_kses_post( $business_case_data['company_analysis'] ),
@@ -2002,11 +2002,11 @@ return $use_comprehensive;
                'executive_recommendation' => '',
                'business_case_strength'  => '',
            ],
-           'financial_analysis' => [
-               'roi_scenarios'      => [],
+          'financial_analysis' => [
+               'chart_data'        => [],
                'payback_analysis'   => [ 'payback_months' => '' ],
                'sensitivity_analysis' => [],
-           ],
+          ],
            'company_intelligence' => [],
            'technology_strategy'  => [],
            'operational_insights' => [],
@@ -2070,13 +2070,13 @@ return $use_comprehensive;
    }
 
    /**
-    * Format ROI scenarios for template.
+    * Prepare ROI chart data for templates.
     *
     * @param array $data Business case data.
     *
     * @return array
     */
-   private function format_roi_scenarios( $data ) {
+   private function prepare_chart_data( $data ) {
        // Try to get ROI data from various possible locations.
        if ( ! empty( $data['scenarios'] ) ) {
            return $data['scenarios'];

@@ -33,15 +33,15 @@ class RTBCB_Ajax {
 	 * @param array $user_inputs User inputs.
 	 * @return array ROI block.
 	 */
-	public static function process_basic_roi_step( $user_inputs ) {
-		$roi_scenarios = RTBCB_Calculator::calculate_roi( $user_inputs );
+       public static function process_basic_roi_step( $user_inputs ) {
+               $roi_scenarios = RTBCB_Calculator::calculate_roi( $user_inputs );
 
-		return [
-			'financial_analysis' => [
-				'roi_scenarios' => self::format_roi_scenarios( $roi_scenarios ),
-			],
-		];
-	}
+               return [
+                       'financial_analysis' => [
+                               'roi_scenarios' => $roi_scenarios,
+                       ],
+               ];
+       }
 
 
 	/**
@@ -113,11 +113,13 @@ class RTBCB_Ajax {
                                 $final_analysis = self::create_fallback_analysis( $enriched_profile, $roi_scenarios );
                                 $workflow_tracker->add_warning( 'hybrid_rag_disabled', __( 'AI analysis disabled.', 'rtbcb' ) );
                         }
-                        $workflow_tracker->complete_step( 'hybrid_rag_analysis', $final_analysis );
+                       $workflow_tracker->complete_step( 'hybrid_rag_analysis', $final_analysis );
 
-			$workflow_tracker->start_step( 'data_structuring' );
-			$structured_report_data = self::structure_report_data( $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, $request_start );
-			$workflow_tracker->complete_step( 'data_structuring', $structured_report_data );
+                       $chart_data = self::prepare_chart_data( $roi_scenarios );
+
+                       $workflow_tracker->start_step( 'data_structuring' );
+                       $structured_report_data = self::structure_report_data( $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, $chart_data, $request_start );
+                       $workflow_tracker->complete_step( 'data_structuring', $structured_report_data );
 
 			$lead_id    = self::save_lead_data_async( $user_inputs, $structured_report_data );
 			$lead_email = ! empty( $user_inputs['email'] ) ? sanitize_email( $user_inputs['email'] ) : '';
@@ -238,7 +240,7 @@ class RTBCB_Ajax {
 		];
 	}
 
-private static function structure_report_data( $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, $request_start ) {
+private static function structure_report_data( $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, $chart_data, $request_start ) {
 	$operational_analysis = (array) ( $final_analysis['operational_analysis'] ?? [] );
 	$current_state_assessment = (array) ( $operational_analysis['current_state_assessment'] ?? [] );
 	if ( empty( $current_state_assessment ) ) {
@@ -278,12 +280,12 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 				'maturity_assessment' => $enriched_profile['maturity_assessment'] ?? [],
 				'competitive_position'=> $enriched_profile['competitive_position'] ?? [],
 			],
-			'financial_analysis' => [
-				'roi_scenarios'        => self::format_roi_scenarios( $roi_scenarios ),
-				'investment_breakdown' => $final_analysis['financial_analysis']['investment_breakdown'] ?? [],
-				'payback_analysis'     => $final_analysis['financial_analysis']['payback_analysis'] ?? [],
-				'sensitivity_analysis' => $roi_scenarios['sensitivity_analysis'] ?? [],
-			],
+                       'financial_analysis' => [
+                               'chart_data'          => $chart_data,
+                               'investment_breakdown' => $final_analysis['financial_analysis']['investment_breakdown'] ?? [],
+                               'payback_analysis'     => $final_analysis['financial_analysis']['payback_analysis'] ?? [],
+                               'sensitivity_analysis' => $roi_scenarios['sensitivity_analysis'] ?? [],
+                       ],
 			'technology_strategy' => [
 				'recommended_category' => $recommendation['recommended'],
 				'category_details'     => $recommendation['category_info'],
@@ -340,14 +342,20 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 		return null;
 	}
 
-	private static function calculate_business_case_strength( $roi_scenarios, $recommendation ) {
-		$base = $roi_scenarios['base']['total_annual_benefit'] ?? 0;
-		return $base > 0 ? 'strong' : 'weak';
-	}
+       private static function calculate_business_case_strength( $roi_scenarios, $recommendation ) {
+               $base = $roi_scenarios['base']['total_annual_benefit'] ?? 0;
+               return $base > 0 ? 'strong' : 'weak';
+       }
 
-	private static function format_roi_scenarios( $roi_scenarios ) {
-		return $roi_scenarios;
-	}
+       /**
+        * Prepare ROI chart data structure.
+        *
+        * @param array $roi_scenarios ROI calculations.
+        * @return array
+        */
+       private static function prepare_chart_data( $roi_scenarios ) {
+               return $roi_scenarios;
+       }
 
 /**
 	 * Store workflow history and associated lead metadata.

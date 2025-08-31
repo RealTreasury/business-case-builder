@@ -971,7 +971,7 @@ class BusinessCaseBuilder {
         // Map nested report data to expected structure
         const mapped = {
             companyName: data.company_name || data.metadata?.company_name || 'Your Company',
-            scenarios: data.scenarios || data.financial_analysis?.roi_scenarios || {},
+            scenarios: data.scenarios || data.financial_analysis?.chart_data || {},
             recommendation: {
                 category_info: data.recommendation?.category_info || data.technology_strategy?.category_details || {},
                 confidence: data.recommendation?.confidence || data.metadata?.confidence_level || 0.75,

@@ -412,7 +412,7 @@ class RTBCB_Router {
                'business_case_strength'  => $this->determine_business_case_strength( $business_case_data ),
            ],
            'financial_analysis' => [
-               'roi_scenarios'      => $this->format_roi_scenarios( $business_case_data ),
+               'chart_data'        => $this->prepare_chart_data( $business_case_data ),
                'payback_analysis'   => [
                    'payback_months' => sanitize_text_field( $business_case_data['payback_months'] ),
                ],
@@ -482,13 +482,13 @@ class RTBCB_Router {
    }
 
    /**
-    * Format ROI scenarios for template.
+    * Prepare ROI chart data for templates.
     *
     * @param array $data Business case data.
     *
     * @return array
     */
-   private function format_roi_scenarios( $data ) {
+   private function prepare_chart_data( $data ) {
        // Try to get ROI data from various possible locations.
        if ( ! empty( $data['scenarios'] ) ) {
            return $data['scenarios'];
