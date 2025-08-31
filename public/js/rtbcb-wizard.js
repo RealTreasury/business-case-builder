@@ -668,8 +668,14 @@ class BusinessCaseBuilder {
     }
 
     initializeEnhancedReport(container) {
-        // Initialize Chart.js charts
-        this.initializeReportCharts(container);
+        // Initialize Chart.js charts only after final stage completes
+        if (window.rtbcbReportData?.finalStageComplete) {
+            this.initializeReportCharts(container);
+        } else {
+            document.addEventListener('rtbcbFinalStageComplete', () => {
+                this.initializeReportCharts(container);
+            }, { once: true });
+        }
 
         // Initialize collapsible sections
         this.initializeCollapsibleSections(container);
@@ -683,7 +689,14 @@ class BusinessCaseBuilder {
 
     initializeReportCharts(container) {
         const chartCanvas = container.querySelector('#rtbcb-roi-chart');
-        if (!chartCanvas) return;
+        if (!chartCanvas) {
+            return;
+        }
+
+        if (!window.rtbcbReportData?.finalStageComplete) {
+            console.log('RTBCB: Final stage incomplete, deferring chart initialization');
+            return;
+        }
 
         console.log('RTBCB: Initializing ROI chart');
 
@@ -693,7 +706,6 @@ class BusinessCaseBuilder {
         }
 
         try {
-            // Get chart data from the page or from localized data
             const roiData = this.extractROIDataFromReport(container);
             console.log('RTBCB: Extracted ROI data', roiData);
 
@@ -702,7 +714,8 @@ class BusinessCaseBuilder {
                 return;
             }
 
-            this.createROIChart(chartCanvas, roiData);
+            const chartData = this.prepare_chart_data(roiData);
+            this.createROIChart(chartCanvas, chartData);
         } catch (error) {
             console.error('Failed to initialize chart:', error);
         }
@@ -768,7 +781,39 @@ class BusinessCaseBuilder {
         return metrics;
     }
 
-    createROIChart(canvas, roiData) {
+    prepare_chart_data(roiData) {
+        const chartData = {
+            labels: ['Labor Savings', 'Fee Savings', 'Error Reduction', 'Total Benefit'],
+            datasets: []
+        };
+
+        const colors = {
+            conservative: { bg: 'rgba(239, 68, 68, 0.8)', border: 'rgba(239, 68, 68, 1)' },
+            base: { bg: 'rgba(59, 130, 246, 0.8)', border: 'rgba(59, 130, 246, 1)' },
+            optimistic: { bg: 'rgba(16, 185, 129, 0.8)', border: 'rgba(16, 185, 129, 1)' }
+        };
+
+        Object.keys(roiData).forEach(scenario => {
+            const data = roiData[scenario];
+            const color = colors[scenario] || colors.base;
+            chartData.datasets.push({
+                label: this.formatScenarioLabel(scenario),
+                data: [
+                    data.labor_savings || 0,
+                    data.fee_savings || 0,
+                    data.error_reduction || 0,
+                    data.total_annual_benefit || 0
+                ],
+                backgroundColor: color.bg,
+                borderColor: color.border,
+                borderWidth: 1
+            });
+        });
+
+        return chartData;
+    }
+
+    createROIChart(canvas, chartData) {
         console.log('RTBCB: Creating ROI chart');
         const ctx = canvas.getContext('2d');
         if (!ctx) {
@@ -783,36 +828,6 @@ class BusinessCaseBuilder {
             }
             return;
         }
-
-        const chartData = {
-            labels: ['Labor Savings', 'Fee Savings', 'Error Reduction', 'Total Benefit'],
-            datasets: []
-        };
-
-        const colors = {
-            conservative: { bg: 'rgba(239, 68, 68, 0.8)', border: 'rgba(239, 68, 68, 1)' },
-            base: { bg: 'rgba(59, 130, 246, 0.8)', border: 'rgba(59, 130, 246, 1)' },
-            optimistic: { bg: 'rgba(16, 185, 129, 0.8)', border: 'rgba(16, 185, 129, 1)' }
-        };
-
-        // Create datasets for each scenario
-        Object.keys(roiData).forEach(scenario => {
-            const data = roiData[scenario];
-            const color = colors[scenario] || colors.base;
-
-            chartData.datasets.push({
-                label: this.formatScenarioLabel(scenario),
-                data: [
-                    data.labor_savings || 0,
-                    data.fee_savings || 0,
-                    data.error_reduction || 0,
-                    data.total_annual_benefit || 0
-                ],
-                backgroundColor: color.bg,
-                borderColor: color.border,
-                borderWidth: 1
-            });
-        });
 
         new Chart(ctx, {
             type: 'bar',

@@ -152,6 +152,8 @@ const vm = require('vm');
         global.__chartConfig = config;
     };
 
+    global.window = { rtbcbReportData: { finalStageComplete: true } };
+
     builder.initializeReportCharts(container);
     const chartConfig = global.__chartConfig;
     assert.ok(chartConfig, 'Chart was not initialized');

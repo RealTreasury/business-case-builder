@@ -587,14 +587,18 @@ function rtbcbExportPDF() {
 <?php
 // Pass structured data to JavaScript for charts and interactivity
 wp_localize_script( 'rtbcb-report', 'rtbcbReportData', [
-	'roiScenarios' => $financial_analysis['roi_scenarios'] ?? [],
-	'companyName' => $company_name,
-	'confidence' => $confidence_level,
-	'strings' => [
-		'exportPDF' => __( 'Export as PDF', 'rtbcb' ),
-		'printReport' => __( 'Print Report', 'rtbcb' ),
-		'expandSection' => __( 'Expand Section', 'rtbcb' ),
-		'collapseSection' => __( 'Collapse Section', 'rtbcb' )
-	]
+        'roiScenarios' => $financial_analysis['roi_scenarios'] ?? [],
+        'companyName' => $company_name,
+        'confidence' => $confidence_level,
+        'finalStageComplete' => true,
+        'strings' => [
+                'exportPDF' => __( 'Export as PDF', 'rtbcb' ),
+                'printReport' => __( 'Print Report', 'rtbcb' ),
+                'expandSection' => __( 'Expand Section', 'rtbcb' ),
+                'collapseSection' => __( 'Collapse Section', 'rtbcb' )
+        ]
 ] );
 ?>
+<script>
+document.dispatchEvent(new Event('rtbcbFinalStageComplete'));
+</script>
