@@ -710,11 +710,11 @@ USER,
      *
      * @param array $user_inputs    Sanitized user inputs.
      * @param array $roi_data       ROI calculation data.
-     * @param array $context_chunks Optional context strings for the prompt.
+     * @param callable|null $context_fetcher Optional callback that returns context strings for the prompt.
      *
      * @return array|WP_Error Comprehensive analysis array or error object.
      */
-    public function generate_comprehensive_business_case( $user_inputs, $roi_data, $context_chunks = [] ) {
+    public function generate_comprehensive_business_case( $user_inputs, $roi_data, $context_fetcher = null ) {
         $this->current_inputs = $user_inputs;
 
         if ( empty( $this->api_key ) ) {
@@ -729,7 +729,8 @@ USER,
         $industry_analysis  = rtbcb_get_research_cache( $company_name, $industry, 'industry' );
         $tech_landscape     = rtbcb_get_research_cache( $company_name, $industry, 'treasury' );
 
-        $batch_prompts = [];
+        $context_chunks = [];
+        $batch_prompts  = [];
 
         if ( false === $company_research ) {
             $batch_prompts['company'] = [
@@ -746,6 +747,9 @@ USER,
         }
 
         if ( false === $tech_landscape ) {
+            if ( is_callable( $context_fetcher ) ) {
+                $context_chunks = (array) $context_fetcher();
+            }
             $tech_prompt = 'Briefly summarize treasury technology solutions relevant to a ' . $company_size . ' company in the ' . $industry . ' industry.';
             if ( ! empty( $context_chunks ) ) {
                 $tech_prompt .= '\nContext: ' . implode( '\n', array_map( 'sanitize_text_field', $context_chunks ) );

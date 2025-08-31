@@ -777,11 +777,8 @@ return $use_comprehensive;
 
 				$recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
 
-				// Get RAG context if available.
-				$rag_context = $this->get_rag_context( $user_inputs, $recommendation );
-
-				// Generate business case analysis.
-				$comprehensive_analysis = $this->generate_business_analysis( $user_inputs, $scenarios, $rag_context );
+                                // Generate business case analysis and lazily fetch RAG context.
+                                list( $comprehensive_analysis, $rag_context ) = $this->generate_business_analysis( $user_inputs, $scenarios, $recommendation );
 
 				if ( is_wp_error( $comprehensive_analysis ) ) {
 					wp_send_json_error( [ 'message' => $comprehensive_analysis->get_error_message() ], 500 );
@@ -957,39 +954,50 @@ return $use_comprehensive;
 	/**
 	 * Generate comprehensive business analysis using LLM.
 	 */
-        private function generate_business_analysis( $user_inputs, $scenarios, $rag_context ) {
-        if ( ! class_exists( 'RTBCB_LLM' ) ) {
-        return new WP_Error( 'llm_unavailable', __( 'AI analysis service unavailable.', 'rtbcb' ) );
-        }
-
-        if ( ! rtbcb_has_openai_api_key() ) {
-        // Return fallback analysis instead of failing.
-        return $this->generate_fallback_analysis( $user_inputs, $scenarios );
-        }
-
-        try {
-        $llm    = new RTBCB_LLM();
-        $result = $llm->generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context );
-
-        if ( is_wp_error( $result ) ) {
-        // Fall back to structured analysis.
-        return $this->generate_fallback_analysis( $user_inputs, $scenarios );
-        }
-
-        $required_keys = [ 'executive_summary', 'financial_analysis', 'industry_analysis', 'implementation_roadmap', 'risk_mitigation', 'next_steps' ];
-        $missing_keys  = array_diff( $required_keys, array_keys( $result ) );
-
-        if ( ! empty( $missing_keys ) ) {
-        rtbcb_log_error( 'LLM missing required sections', [ 'missing' => $missing_keys ] );
-        return $this->generate_fallback_analysis( $user_inputs, $scenarios );
-        }
-
-        return $result;
-        } catch ( Exception $e ) {
-        rtbcb_log_error( 'LLM analysis failed', $e->getMessage() );
-        return $this->generate_fallback_analysis( $user_inputs, $scenarios );
-        }
-        }
+	private function generate_business_analysis( $user_inputs, $scenarios, $recommendation ) {
+	$rag_context = [];
+	$deadline    = $_SERVER['REQUEST_TIME_FLOAT'] + rtbcb_get_api_timeout();
+	$fetch_rag   = function() use ( &$rag_context, $user_inputs, $recommendation, $deadline ) {
+	if ( microtime( true ) > $deadline - 1 ) {
+	rtbcb_log_api_debug( 'RAG fetch skipped due to timeout', [ 'time_left' => $deadline - microtime( true ) ] );
+	return [];
+	}
+	$rag_context = $this->get_rag_context( $user_inputs, $recommendation );
+	return $rag_context;
+	};
+	
+	if ( ! class_exists( 'RTBCB_LLM' ) ) {
+	return [ new WP_Error( 'llm_unavailable', __( 'AI analysis service unavailable.', 'rtbcb' ) ), $rag_context ];
+	}
+	
+	if ( ! rtbcb_has_openai_api_key() ) {
+	// Return fallback analysis instead of failing.
+	return [ $this->generate_fallback_analysis( $user_inputs, $scenarios ), $rag_context ];
+	}
+	
+	try {
+	$llm    = new RTBCB_LLM();
+	$result = $llm->generate_comprehensive_business_case( $user_inputs, $scenarios, $fetch_rag );
+	
+	if ( is_wp_error( $result ) ) {
+	// Fall back to structured analysis.
+	return [ $this->generate_fallback_analysis( $user_inputs, $scenarios ), $rag_context ];
+	}
+	
+	$required_keys = [ 'executive_summary', 'financial_analysis', 'industry_analysis', 'implementation_roadmap', 'risk_mitigation', 'next_steps' ];
+	$missing_keys  = array_diff( $required_keys, array_keys( $result ) );
+	
+	if ( ! empty( $missing_keys ) ) {
+	rtbcb_log_error( 'LLM missing required sections', [ 'missing' => $missing_keys ] );
+	return [ $this->generate_fallback_analysis( $user_inputs, $scenarios ), $rag_context ];
+	}
+	
+	return [ $result, $rag_context ];
+	} catch ( Exception $e ) {
+	rtbcb_log_error( 'LLM analysis failed', $e->getMessage() );
+	return [ $this->generate_fallback_analysis( $user_inputs, $scenarios ), $rag_context ];
+	}
+}
 	
 	/**
 	 * Generate fallback analysis when LLM is unavailable.

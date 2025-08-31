@@ -103,11 +103,11 @@ return [ 'roi_base' => 1000 ];
 
 if ( ! class_exists( 'RTBCB_LLM' ) ) {
 class RTBCB_LLM {
-public function generate_business_case( $form_data, $calculations, $rag_context, $model ) {
+public function generate_business_case( $form_data, $calculations, $context_fetcher, $model ) {
 return [ 'roi_base' => 1000 ];
 }
 
-public function generate_comprehensive_business_case( $form_data, $calculations, $rag_context ) {
+public function generate_comprehensive_business_case( $form_data, $calculations, $context_fetcher ) {
 return [ 'roi_base' => 1000 ];
 }
 }
