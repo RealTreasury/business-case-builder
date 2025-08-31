@@ -97,16 +97,16 @@ function rtbcb_heavy_features_disabled() {
  * triggered for transport errors, HTTP 429 responses and server errors.
  * Client errors (4xx) other than 429 will return immediately.
  *
- * @param string $url         Endpoint URL.
- * @param array  $args        Arguments for {@see wp_remote_post()}.
- * @param int    $max_retries Optional. Number of attempts. Default 3.
+ * @param string $url		  Endpoint URL.
+ * @param array	 $args		  Arguments for {@see wp_remote_post()}.
+ * @param int	 $max_retries Optional. Number of attempts. Default 3.
  * @return array|WP_Error HTTP response array or WP_Error on failure.
  */
 function rtbcb_wp_remote_post_with_retry( $url, $args = [], $max_retries = 3 ) {
-	$url         = function_exists( 'esc_url_raw' ) ? esc_url_raw( $url ) : $url;
+	$url		 = function_exists( 'esc_url_raw' ) ? esc_url_raw( $url ) : $url;
 	$max_retries = max( 1, (int) $max_retries );
 
-	$base_timeout   = isset( $args['timeout'] ) ? (int) $args['timeout'] : rtbcb_get_api_timeout();
+	$base_timeout	= isset( $args['timeout'] ) ? (int) $args['timeout'] : rtbcb_get_api_timeout();
 	$max_retry_time = isset( $args['max_retry_time'] ) ? (int) $args['max_retry_time'] : $base_timeout * $max_retries;
 	unset( $args['max_retry_time'] );
 
@@ -118,7 +118,7 @@ function rtbcb_wp_remote_post_with_retry( $url, $args = [], $max_retries = 3 ) {
 	}
 
 	$current_timeout = $base_timeout;
-	$start_time      = microtime( true );
+	$start_time		 = microtime( true );
 
 	for ( $attempt = 1; $attempt <= $max_retries; $attempt++ ) {
 		$elapsed = microtime( true ) - $start_time;
@@ -126,7 +126,7 @@ function rtbcb_wp_remote_post_with_retry( $url, $args = [], $max_retries = 3 ) {
 			break;
 		}
 
-		$remaining       = $max_retry_time - $elapsed;
+		$remaining		 = $max_retry_time - $elapsed;
 		$args['timeout'] = min( $current_timeout, $remaining );
 
 		$response = wp_remote_post( $url, $args );
@@ -149,7 +149,7 @@ function rtbcb_wp_remote_post_with_retry( $url, $args = [], $max_retries = 3 ) {
 			$current_timeout = min( $current_timeout + 5, $max_retry_time );
 
 			$elapsed = microtime( true ) - $start_time;
-			$delay   = min( pow( 2, $attempt - 1 ), $max_retry_time - $elapsed );
+			$delay	 = min( pow( 2, $attempt - 1 ), $max_retry_time - $elapsed );
 			if ( $delay > 0 ) {
 				$jitter = wp_rand( 0, 1000 ) / 1000;
 				usleep( (int) ( ( $delay + $jitter ) * 1000000 ) );
@@ -228,9 +228,9 @@ function rtbcb_get_model_capabilities() {
  * @return bool Whether the model supports temperature.
  */
 function rtbcb_model_supports_temperature( $model ) {
-        $capabilities = include RTBCB_DIR . 'inc/model-capabilities.php';
-        $unsupported = $capabilities['temperature']['unsupported'] ?? [];
-        return ! in_array( $model, $unsupported, true );
+		$capabilities = include RTBCB_DIR . 'inc/model-capabilities.php';
+		$unsupported = $capabilities['temperature']['unsupported'] ?? [];
+		return ! in_array( $model, $unsupported, true );
 }
 
 /**
@@ -307,109 +307,109 @@ function rtbcb_get_dashboard_sections( $test_results = null ) {
 		}
 
 		$sections = [
-		'rtbcb-test-company-overview'      => [
-			'label'    => __( 'Company Overview', 'rtbcb' ),
+		'rtbcb-test-company-overview'	   => [
+			'label'	   => __( 'Company Overview', 'rtbcb' ),
 			'option'   => 'rtbcb_current_company',
 			'requires' => [],
-			'phase'    => 1,
+			'phase'	   => 1,
 			'action'   => 'rtbcb_test_company_overview',
 		],
-		'rtbcb-test-data-enrichment'       => [
-			'label'    => __( 'Data Enrichment', 'rtbcb' ),
+		'rtbcb-test-data-enrichment'	   => [
+			'label'	   => __( 'Data Enrichment', 'rtbcb' ),
 			'option'   => 'rtbcb_data_enrichment',
 			'requires' => [ 'rtbcb-test-company-overview' ],
-			'phase'    => 1,
+			'phase'	   => 1,
 			'action'   => 'rtbcb_test_data_enrichment',
 		],
-		'rtbcb-test-data-storage'          => [
-			'label'    => __( 'Data Storage', 'rtbcb' ),
+		'rtbcb-test-data-storage'		   => [
+			'label'	   => __( 'Data Storage', 'rtbcb' ),
 			'option'   => 'rtbcb_data_storage',
 			'requires' => [ 'rtbcb-test-data-enrichment' ],
-			'phase'    => 1,
+			'phase'	   => 1,
 			'action'   => 'rtbcb_test_data_storage',
 		],
-		'rtbcb-test-maturity-model'        => [
-			'label'    => __( 'Maturity Model', 'rtbcb' ),
+		'rtbcb-test-maturity-model'		   => [
+			'label'	   => __( 'Maturity Model', 'rtbcb' ),
 			'option'   => 'rtbcb_maturity_model',
 			'requires' => [ 'rtbcb-test-data-storage' ],
-			'phase'    => 2,
+			'phase'	   => 2,
 			'action'   => 'rtbcb_test_maturity_model',
 		],
 		'rtbcb-test-rag-market-analysis'   => [
-			'label'    => __( 'RAG Market Analysis', 'rtbcb' ),
+			'label'	   => __( 'RAG Market Analysis', 'rtbcb' ),
 			'option'   => 'rtbcb_rag_market_analysis',
 			'requires' => [ 'rtbcb-test-maturity-model' ],
-			'phase'    => 2,
+			'phase'	   => 2,
 			'action'   => 'rtbcb_test_rag_market_analysis',
 		],
-		'rtbcb-test-value-proposition'     => [
-			'label'    => __( 'Value Proposition', 'rtbcb' ),
+		'rtbcb-test-value-proposition'	   => [
+			'label'	   => __( 'Value Proposition', 'rtbcb' ),
 			'option'   => 'rtbcb_value_proposition',
 			'requires' => [ 'rtbcb-test-rag-market-analysis' ],
-			'phase'    => 2,
+			'phase'	   => 2,
 			'action'   => 'rtbcb_test_value_proposition',
 		],
-		'rtbcb-test-industry-overview'      => [
-			'label'    => __( 'Industry Overview', 'rtbcb' ),
+		'rtbcb-test-industry-overview'		=> [
+			'label'	   => __( 'Industry Overview', 'rtbcb' ),
 			'option'   => 'rtbcb_industry_insights',
 			'requires' => [ 'rtbcb-test-value-proposition' ],
-			'phase'    => 2,
+			'phase'	   => 2,
 			'action'   => 'rtbcb_test_industry_overview',
 		],
 		'rtbcb-test-real-treasury-overview' => [
-			'label'    => __( 'Real Treasury Overview', 'rtbcb' ),
+			'label'	   => __( 'Real Treasury Overview', 'rtbcb' ),
 			'option'   => 'rtbcb_real_treasury_overview',
 			'requires' => [ 'rtbcb-test-industry-overview' ],
-			'phase'    => 2,
+			'phase'	   => 2,
 			'action'   => 'rtbcb_test_real_treasury_overview',
 		],
-		'rtbcb-test-roadmap-generator'      => [
-			'label'    => __( 'Roadmap Generator', 'rtbcb' ),
+		'rtbcb-test-roadmap-generator'		=> [
+			'label'	   => __( 'Roadmap Generator', 'rtbcb' ),
 			'option'   => 'rtbcb_roadmap_plan',
 			'requires' => [ 'rtbcb-test-real-treasury-overview' ],
-			'phase'    => 3,
+			'phase'	   => 3,
 		],
-		'rtbcb-test-roi-calculator'         => [
-			'label'    => __( 'ROI Calculator', 'rtbcb' ),
+		'rtbcb-test-roi-calculator'			=> [
+			'label'	   => __( 'ROI Calculator', 'rtbcb' ),
 			'option'   => 'rtbcb_roi_results',
 			'requires' => [ 'rtbcb-test-roadmap-generator' ],
-			'phase'    => 3,
+			'phase'	   => 3,
 			'action'   => 'rtbcb_test_calculate_roi',
 		],
-		'rtbcb-test-estimated-benefits'     => [
-			'label'    => __( 'Estimated Benefits', 'rtbcb' ),
+		'rtbcb-test-estimated-benefits'		=> [
+			'label'	   => __( 'Estimated Benefits', 'rtbcb' ),
 			'option'   => 'rtbcb_estimated_benefits',
 			'requires' => [ 'rtbcb-test-roi-calculator' ],
-			'phase'    => 3,
+			'phase'	   => 3,
 			'action'   => 'rtbcb_test_estimated_benefits',
 		],
-		'rtbcb-test-report-assembly'        => [
-			'label'    => __( 'Report Assembly & Delivery', 'rtbcb' ),
+		'rtbcb-test-report-assembly'		=> [
+			'label'	   => __( 'Report Assembly & Delivery', 'rtbcb' ),
 			'option'   => 'rtbcb_executive_summary',
 			'requires' => [ 'rtbcb-test-estimated-benefits' ],
-			'phase'    => 4,
+			'phase'	   => 4,
 			'action'   => 'rtbcb_test_report_assembly',
 		],
-		'rtbcb-test-tracking-script'        => [
-			'label'    => __( 'Tracking Scripts', 'rtbcb' ),
+		'rtbcb-test-tracking-script'		=> [
+			'label'	   => __( 'Tracking Scripts', 'rtbcb' ),
 			'option'   => 'rtbcb_tracking_script',
 			'requires' => [ 'rtbcb-test-report-assembly' ],
-			'phase'    => 5,
+			'phase'	   => 5,
 			'action'   => 'rtbcb_test_tracking_script',
 		],
-		'rtbcb-test-follow-up-email'        => [
-			'label'    => __( 'Follow-up Emails', 'rtbcb' ),
+		'rtbcb-test-follow-up-email'		=> [
+			'label'	   => __( 'Follow-up Emails', 'rtbcb' ),
 			'option'   => 'rtbcb_follow_up_queue',
 			'requires' => [ 'rtbcb-test-tracking-script' ],
-			'phase'    => 5,
+			'phase'	   => 5,
 			'action'   => 'rtbcb_test_follow_up_email',
 		],
 	];
 
 		foreach ( $sections as $id => &$section ) {
-			    $result               = rtbcb_get_last_test_result( $id, $test_results );
-			    $status               = $result['status'] ?? '';
-			    $section['completed'] = ( 'success' === $status );
+				$result				  = rtbcb_get_last_test_result( $id, $test_results );
+				$status				  = $result['status'] ?? '';
+				$section['completed'] = ( 'success' === $status );
 		}
 
 		return $sections;
@@ -423,19 +423,19 @@ function rtbcb_get_dashboard_sections( $test_results = null ) {
  * Calculate completion percentages for each phase.
  *
  * @param array $sections Dashboard sections.
- * @param array $phases   Optional phase numbers to include in the result.
+ * @param array $phases	  Optional phase numbers to include in the result.
  * @return array Percentages keyed by phase number.
  */
 function rtbcb_calculate_phase_completion( $sections, $phases = [] ) {
 	$totals = [];
-	$done   = [];
+	$done	= [];
 
 	foreach ( $sections as $section ) {
 		$phase = isset( $section['phase'] ) ? (int) $section['phase'] : 0;
 		if ( $phase ) {
 			if ( ! isset( $totals[ $phase ] ) ) {
 				$totals[ $phase ] = 0;
-				$done[ $phase ]   = 0;
+				$done[ $phase ]	  = 0;
 			}
 			$totals[ $phase ]++;
 			if ( ! empty( $section['completed'] ) ) {
@@ -444,7 +444,7 @@ function rtbcb_calculate_phase_completion( $sections, $phases = [] ) {
 		}
 	}
 
-	$phase_keys  = $phases ? $phases : array_keys( $totals );
+	$phase_keys	 = $phases ? $phases : array_keys( $totals );
 	$percentages = array_fill_keys( $phase_keys, 0 );
 
 	foreach ( $totals as $phase => $total ) {
@@ -463,7 +463,7 @@ function rtbcb_calculate_phase_completion( $sections, $phases = [] ) {
  * that has not been completed.
  *
  * @param string $section_id Section identifier to check.
- * @param array  $sections   All dashboard sections.
+ * @param array	 $sections	 All dashboard sections.
  * @return string|null The first incomplete dependency or null if all met.
  */
 function rtbcb_get_first_incomplete_dependency( $section_id, $sections, $visited = [] ) {
@@ -497,14 +497,14 @@ function rtbcb_get_first_incomplete_dependency( $section_id, $sections, $visited
  * are missing.
  *
  * @param string $current_section Current section ID.
- * @param bool   $display_notice  Optional. Whether to show an admin notice.
- *                                Defaults to true.
+ * @param bool	 $display_notice  Optional. Whether to show an admin notice.
+ *								  Defaults to true.
  * @return bool True when allowed, false otherwise.
  */
 function rtbcb_require_completed_steps( $current_section, $display_notice = true ) {
 	static $displayed = [];
 
-	$sections   = rtbcb_get_dashboard_sections();
+	$sections	= rtbcb_get_dashboard_sections();
 	$dependency = rtbcb_get_first_incomplete_dependency( $current_section, $sections );
 
 	if ( null === $dependency ) {
@@ -512,9 +512,9 @@ function rtbcb_require_completed_steps( $current_section, $display_notice = true
 	}
 
 	if ( $display_notice && ! in_array( $dependency, $displayed, true ) ) {
-		$phase  = isset( $sections[ $dependency ]['phase'] ) ? (int) $sections[ $dependency ]['phase'] : 0;
+		$phase	= isset( $sections[ $dependency ]['phase'] ) ? (int) $sections[ $dependency ]['phase'] : 0;
 		$anchor = $phase ? 'rtbcb-phase' . $phase : $dependency;
-		$url    = admin_url( 'admin.php?page=rtbcb-test-dashboard#' . $anchor );
+		$url	= admin_url( 'admin.php?page=rtbcb-test-dashboard#' . $anchor );
 		echo '<div class="notice notice-error"><p>' .
 			sprintf(
 				esc_html__( 'Please complete %s first.', 'rtbcb' ),
@@ -531,7 +531,7 @@ function rtbcb_require_completed_steps( $current_section, $display_notice = true
 /**
  * Retrieve the most recent test result for a section.
  *
- * @param string     $section_id   Section identifier.
+ * @param string	 $section_id   Section identifier.
  * @param array|null $test_results Optional preloaded test results.
  * @return array|null Matching result or null when none found.
  */
@@ -573,7 +573,7 @@ function rtbcb_check_database_health() {
 	global $wpdb;
 
 	$tables = [
-		'rtbcb_leads'     => $wpdb->prefix . 'rtbcb_leads',
+		'rtbcb_leads'	  => $wpdb->prefix . 'rtbcb_leads',
 		'rtbcb_rag_index' => $wpdb->prefix . 'rtbcb_rag_index',
 	];
 
@@ -583,7 +583,7 @@ function rtbcb_check_database_health() {
 		$exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) );
 		$status[ $key ] = [
 			'exists' => ! empty( $exists ),
-			'name'   => $table_name,
+			'name'	 => $table_name,
 		];
 	}
 
@@ -614,10 +614,10 @@ function rtbcb_sanitize_form_data( $data ) {
 	
 	// Numeric fields
 	$numeric_fields = [
-		'hours_reconciliation'   => [ 'min' => 0,   'max' => 168 ],
-		'hours_cash_positioning' => [ 'min' => 0,   'max' => 168 ],
-		'num_banks'              => [ 'min' => 1,   'max' => 50 ],
-		'ftes'                   => [ 'min' => 0.5, 'max' => 100 ],
+		'hours_reconciliation'	 => [ 'min' => 0,	'max' => 168 ],
+		'hours_cash_positioning' => [ 'min' => 0,	'max' => 168 ],
+		'num_banks'				 => [ 'min' => 1,	'max' => 50 ],
+		'ftes'					 => [ 'min' => 0.5, 'max' => 100 ],
 	];
 	
 	foreach ( $numeric_fields as $field => $limits ) {
@@ -693,7 +693,7 @@ function rtbcb_normalize_model_name( $model ) {
 /**
  * Send the generated report to the user via email.
  *
- * @param array  $form_data   Form submission data.
+ * @param array	 $form_data	  Form submission data.
  * @param string $report_path Absolute path to the HTML report file.
  *
  * @return void
@@ -701,9 +701,9 @@ function rtbcb_normalize_model_name( $model ) {
 /**
  * Send the generated report to the user via email.
  *
- * @param array    $form_data   Submitted form data.
+ * @param array	   $form_data	Submitted form data.
  * @param string   $report_path Path to the generated report file.
- * @param callable $mailer      Optional mailer function for testing.
+ * @param callable $mailer		Optional mailer function for testing.
  */
 function rtbcb_send_report_email( $form_data, $report_path, $mailer = 'wp_mail' ) {
 	$email = isset( $form_data['email'] ) ? sanitize_email( $form_data['email'] ) : '';
@@ -727,10 +727,10 @@ function rtbcb_send_report_email( $form_data, $report_path, $mailer = 'wp_mail' 
  */
 function rtbcb_get_client_info() {
 	return [
-		'ip'          => rtbcb_get_client_ip(),
+		'ip'		  => rtbcb_get_client_ip(),
 		'user_agent'  => isset( $_SERVER['HTTP_USER_AGENT'] ) ?
 			sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '',
-		'referrer'    => isset( $_SERVER['HTTP_REFERER'] ) ?
+		'referrer'	  => isset( $_SERVER['HTTP_REFERER'] ) ?
 			esc_url_raw( wp_unslash( $_SERVER['HTTP_REFERER'] ) ) : '',
 		'utm_source'  => isset( $_GET['utm_source'] ) ?
 			sanitize_text_field( wp_unslash( $_GET['utm_source'] ) ) : '',
@@ -794,7 +794,7 @@ function rtbcb_recursive_sanitize_text_field( $data ) {
  * Log API debug messages.
  *
  * @param string $message Log message.
- * @param mixed  $data    Optional data.
+ * @param mixed	 $data	  Optional data.
  * @return void
  */
 function rtbcb_log_api_debug( $message, $data = null ) {
@@ -822,7 +822,7 @@ function rtbcb_setup_ajax_logging() {
 }
 
 function rtbcb_increase_memory_limit() {
-	$current       = ini_get( 'memory_limit' );
+	$current	   = ini_get( 'memory_limit' );
 	$current_bytes = wp_convert_hr_to_bytes( $current );
 	$required_bytes = 256 * 1024 * 1024;
 
@@ -846,9 +846,9 @@ function rtbcb_log_memory_usage( $stage ) {
 
 function rtbcb_get_memory_status() {
 		return [
-		        'current' => memory_get_usage( true ),
-		        'peak'    => memory_get_peak_usage( true ),
-		        'limit'   => wp_convert_hr_to_bytes( ini_get( 'memory_limit' ) ),
+				'current' => memory_get_usage( true ),
+				'peak'	  => memory_get_peak_usage( true ),
+				'limit'	  => wp_convert_hr_to_bytes( ini_get( 'memory_limit' ) ),
 		];
 }
 
@@ -873,20 +873,20 @@ function rtbcb_is_simple_case( $user_inputs ) {
 		$user_inputs = is_array( $user_inputs ) ? $user_inputs : [];
 
 		// Thresholds for determining a simple case.
-		$max_banks = 2;  // No more than two banking relationships.
-		$max_ftes  = 2;  // Teams of two FTEs or fewer.
+		$max_banks = 2;	 // No more than two banking relationships.
+		$max_ftes  = 2;	 // Teams of two FTEs or fewer.
 		$max_hours = 20; // Twenty or fewer total manual hours per week.
 
 		$num_banks = absint( $user_inputs['num_banks'] ?? 0 );
-		$ftes      = absint( $user_inputs['ftes'] ?? 0 );
-		$hours     = absint( $user_inputs['hours_reconciliation'] ?? 0 ) + absint( $user_inputs['hours_cash_positioning'] ?? 0 );
+		$ftes	   = absint( $user_inputs['ftes'] ?? 0 );
+		$hours	   = absint( $user_inputs['hours_reconciliation'] ?? 0 ) + absint( $user_inputs['hours_cash_positioning'] ?? 0 );
 
 		$is_simple = ( $num_banks <= $max_banks && $ftes <= $max_ftes && $hours <= $max_hours );
 
 		/**
 		 * Filter whether a case is simple enough for synchronous execution.
 		 *
-		 * @param bool  $is_simple   Whether case is considered simple.
+		 * @param bool	$is_simple	 Whether case is considered simple.
 		 * @param array $user_inputs User input data.
 		 */
 		return (bool) apply_filters( 'rtbcb_is_simple_case', $is_simple, $user_inputs );
@@ -899,21 +899,21 @@ function rtbcb_is_simple_case( $user_inputs ) {
  */
 function rtbcb_get_sample_inputs() {
 	return [
-		'company_name'           => 'Acme Manufacturing Corp',
-		'company_size'           => '$500M-$2B',
-		'industry'               => 'Manufacturing',
-		'hours_reconciliation'   => 15,
+		'company_name'			 => 'Acme Manufacturing Corp',
+		'company_size'			 => '$500M-$2B',
+		'industry'				 => 'Manufacturing',
+		'hours_reconciliation'	 => 15,
 		'hours_cash_positioning' => 10,
-		'num_banks'              => 5,
-		'ftes'                   => 3,
-		'pain_points'            => [
+		'num_banks'				 => 5,
+		'ftes'					 => 3,
+		'pain_points'			 => [
 			'manual_processes',
 			'poor_visibility',
 			'forecast_accuracy'
 		],
-		'business_objective'     => 'reduce_costs',
+		'business_objective'	 => 'reduce_costs',
 		'implementation_timeline'=> '6_months',
-		'budget_range'           => '100k_500k',
+		'budget_range'			 => '100k_500k',
 	];
 }
 
@@ -926,21 +926,21 @@ function rtbcb_get_sample_report_forms() {
 	return [
 		'enterprise_manufacturer' => [
 			'label' => __( 'Enterprise Manufacturer', 'rtbcb' ),
-			'data'  => [
-				'company_name'  => 'Acme Manufacturing',
-				'company_size'  => '1000-5000',
-				'industry'      => 'Manufacturing',
-				'location'      => 'USA',
+			'data'	=> [
+				'company_name'	=> 'Acme Manufacturing',
+				'company_size'	=> '1000-5000',
+				'industry'		=> 'Manufacturing',
+				'location'		=> 'USA',
 				'analysis_date' => current_time( 'Y-m-d' ),
 			],
 		],
-		'tech_startup'           => [
+		'tech_startup'			 => [
 			'label' => __( 'Tech Startup', 'rtbcb' ),
-			'data'  => [
-				'company_name'  => 'Innovatech',
-				'company_size'  => '1-50',
-				'industry'      => 'Technology',
-				'location'      => 'UK',
+			'data'	=> [
+				'company_name'	=> 'Innovatech',
+				'company_size'	=> '1-50',
+				'industry'		=> 'Technology',
+				'location'		=> 'UK',
 				'analysis_date' => current_time( 'Y-m-d' ),
 			],
 		],
@@ -950,7 +950,7 @@ function rtbcb_get_sample_report_forms() {
 /**
  * Map scenario keys to sample report inputs.
  *
- * @param array  $inputs       Default inputs.
+ * @param array	 $inputs	   Default inputs.
  * @param string $scenario_key Scenario identifier.
  * @return array Filtered inputs.
  */
@@ -990,9 +990,9 @@ function rtbcb_test_generate_category_recommendation( $analysis ) {
 	$analysis = is_array( $analysis ) ? $analysis : [];
 
 	$payload = [
-		'company_overview'    => sanitize_textarea_field( $analysis['company_overview'] ?? '' ),
-		'industry_insights'   => sanitize_textarea_field( $analysis['industry_insights'] ?? '' ),
-		'maturity_model'      => sanitize_textarea_field( $analysis['maturity_model'] ?? '' ),
+		'company_overview'	  => sanitize_textarea_field( $analysis['company_overview'] ?? '' ),
+		'industry_insights'	  => sanitize_textarea_field( $analysis['industry_insights'] ?? '' ),
+		'maturity_model'	  => sanitize_textarea_field( $analysis['maturity_model'] ?? '' ),
 		'treasury_challenges' => sanitize_textarea_field( $analysis['treasury_challenges'] ?? '' ),
 		'extra_requirements'  => sanitize_textarea_field( $analysis['extra_requirements'] ?? '' ),
 	];
@@ -1015,29 +1015,29 @@ function rtbcb_test_generate_category_recommendation( $analysis ) {
 			$input .= "\nExtra Requirements: {$payload['extra_requirements']}";
 		}
 
-		        $response = rtbcb_wp_remote_post_with_retry(
-		                'https://api.openai.com/v1/responses',
-		                [
-		                        'headers' => [
-		                                'Content-Type'  => 'application/json',
-		                                'Authorization' => 'Bearer ' . $api_key,
-		                        ],
-		                        'body'    => wp_json_encode(
-		                                [
-		                                        'model'        => $model,
-		                                        'instructions' => $system_prompt,
-		                                        'input'        => $input,
-		                                ]
-		                        ),
-		                        'timeout' => rtbcb_get_api_timeout(),
-		                ]
-		        );
+				$response = rtbcb_wp_remote_post_with_retry(
+						'https://api.openai.com/v1/responses',
+						[
+								'headers' => [
+										'Content-Type'	=> 'application/json',
+										'Authorization' => 'Bearer ' . $api_key,
+								],
+								'body'	  => wp_json_encode(
+										[
+												'model'		   => $model,
+												'instructions' => $system_prompt,
+												'input'		   => $input,
+										]
+								),
+								'timeout' => rtbcb_get_api_timeout(),
+						]
+				);
 
 		if ( is_wp_error( $response ) ) {
 			return new WP_Error( 'llm_failure', __( 'Unable to generate recommendation at this time.', 'rtbcb' ) );
 		}
 
-		$body    = wp_remote_retrieve_body( $response );
+		$body	 = wp_remote_retrieve_body( $response );
 		$decoded = json_decode( $body, true );
 		$content = '';
 
@@ -1070,7 +1070,7 @@ function rtbcb_test_generate_category_recommendation( $analysis ) {
 		}
 
 		$recommended_key = sanitize_key( $json['recommended'] ?? '' );
-		$category_info   = RTBCB_Category_Recommender::get_category_info( $recommended_key );
+		$category_info	 = RTBCB_Category_Recommender::get_category_info( $recommended_key );
 
 		$alternatives = [];
 		if ( ! empty( $json['alternatives'] ) && is_array( $json['alternatives'] ) ) {
@@ -1079,8 +1079,8 @@ function rtbcb_test_generate_category_recommendation( $analysis ) {
 				$alt_info = RTBCB_Category_Recommender::get_category_info( $alt_key );
 				if ( $alt_key && $alt_info ) {
 					$alternatives[] = [
-						'key'       => $alt_key,
-						'name'      => $alt_info['name'] ?? '',
+						'key'		=> $alt_key,
+						'name'		=> $alt_info['name'] ?? '',
 						'reasoning' => sanitize_text_field( $alt['reasoning'] ?? '' ),
 					];
 				}
@@ -1089,13 +1089,13 @@ function rtbcb_test_generate_category_recommendation( $analysis ) {
 
 		return [
 			'recommended' => [
-				'key'         => $recommended_key,
-				'name'        => $category_info['name'] ?? '',
+				'key'		  => $recommended_key,
+				'name'		  => $category_info['name'] ?? '',
 				'description' => $category_info['description'] ?? '',
-				'features'    => $category_info['features'] ?? [],
-				'ideal_for'   => $category_info['ideal_for'] ?? '',
+				'features'	  => $category_info['features'] ?? [],
+				'ideal_for'	  => $category_info['ideal_for'] ?? '',
 			],
-			'reasoning'    => sanitize_textarea_field( $json['reasoning'] ?? '' ),
+			'reasoning'	   => sanitize_textarea_field( $json['reasoning'] ?? '' ),
 			'alternatives' => $alternatives,
 		];
 	} catch ( \Throwable $e ) {
@@ -1113,7 +1113,7 @@ function rtbcb_test_generate_industry_commentary( $industry ) {
 	$industry = sanitize_text_field( $industry );
 
 	try {
-		$llm        = new RTBCB_LLM();
+		$llm		= new RTBCB_LLM();
 		$commentary = $llm->generate_industry_commentary( $industry );
 	} catch ( \Throwable $e ) {
 		return new WP_Error( 'llm_exception', __( 'Unable to generate commentary at this time.', 'rtbcb' ) );
@@ -1136,7 +1136,7 @@ function rtbcb_test_generate_company_overview( $company_name ) {
 	$company_name = sanitize_text_field( $company_name );
 
 	try {
-		$llm      = new RTBCB_LLM();
+		$llm	  = new RTBCB_LLM();
 		$overview = $llm->generate_company_overview( $company_name );
 	} catch ( \Throwable $e ) {
 		return new WP_Error( 'llm_exception', $e->getMessage() );
@@ -1162,7 +1162,7 @@ function rtbcb_test_generate_maturity_model( $company_data ) {
 		return new WP_Error( 'missing_class', __( 'Maturity model class not available', 'rtbcb' ) );
 	}
 
-	$model       = new RTBCB_Maturity_Model();
+	$model		 = new RTBCB_Maturity_Model();
 	$company_data = is_array( $company_data ) ? $company_data : [];
 	return $model->assess( $company_data );
 }
@@ -1178,8 +1178,8 @@ function rtbcb_test_rag_market_analysis( $query ) {
 		return new WP_Error( 'missing_class', __( 'RAG class not available', 'rtbcb' ) );
 	}
 
-	$rag    = new RTBCB_RAG();
-	$query  = sanitize_text_field( $query );
+	$rag	= new RTBCB_RAG();
+	$query	= sanitize_text_field( $query );
 	$result = $rag->get_context( $query, 3 );
 
 	$vendors = [];
@@ -1203,15 +1203,15 @@ function rtbcb_test_generate_value_proposition( $company_data ) {
 	$company_name = isset( $company_data['name'] ) ? sanitize_text_field( $company_data['name'] ) : '';
 
 	if ( class_exists( 'RTBCB_Maturity_Model' ) ) {
-		$model      = new RTBCB_Maturity_Model();
+		$model		= new RTBCB_Maturity_Model();
 		$assessment = $model->assess( $company_data );
-		$level      = $assessment['level'];
+		$level		= $assessment['level'];
 	} else {
 		$level = __( 'basic', 'rtbcb' );
 	}
 
 	$business_case_data = [
-		'company_name'      => $company_name,
+		'company_name'		=> $company_name,
 		'executive_summary' => [
 			'strategic_positioning' => sprintf(
 				__( 'Real Treasury helps %1$s advance from %2$s maturity toward optimized performance.', 'rtbcb' ),
@@ -1236,7 +1236,7 @@ function rtbcb_test_generate_value_proposition( $company_data ) {
  * Test generating an industry overview using company data.
  *
  * @param array $company_data Company information including industry, size,
- *                            geography, and business model.
+ *							  geography, and business model.
  * @return string|WP_Error Overview text or error object.
  */
 function rtbcb_test_generate_industry_overview( $company_data ) {
@@ -1246,7 +1246,7 @@ function rtbcb_test_generate_industry_overview( $company_data ) {
 
 	$company_data = is_array( $company_data ) ? $company_data : [];
 	$industry = isset( $company_data['industry'] ) ? sanitize_text_field( $company_data['industry'] ) : '';
-	$size     = isset( $company_data['size'] ) ? sanitize_text_field( $company_data['size'] ) : '';
+	$size	  = isset( $company_data['size'] ) ? sanitize_text_field( $company_data['size'] ) : '';
 
 	if ( empty( $industry ) || empty( $size ) ) {
 		return new WP_Error( 'missing_data', __( 'Industry and company size required', 'rtbcb' ) );
@@ -1260,13 +1260,13 @@ function rtbcb_test_generate_industry_overview( $company_data ) {
  * Test generating a Real Treasury overview using the LLM.
  *
  * @param array $company_data {
- *     Company context data.
+ *	   Company context data.
  *
- *     @type bool   $include_portal Include portal integration details.
- *     @type string $company_size   Company size description.
- *     @type string $industry       Company industry.
- *     @type array  $challenges     List of identified challenges.
- *     @type array  $categories     Optional vendor categories to highlight.
+ *	   @type bool	$include_portal Include portal integration details.
+ *	   @type string $company_size	Company size description.
+ *	   @type string $industry		Company industry.
+ *	   @type array	$challenges		List of identified challenges.
+ *	   @type array	$categories		Optional vendor categories to highlight.
  * }
  * @return string|WP_Error Overview text or error object.
  */
@@ -1282,10 +1282,10 @@ function rtbcb_test_generate_real_treasury_overview( $include_portal = false, $c
 
 	$company_data = [
 		'include_portal' => (bool) $include_portal,
-		'company_size'   => sanitize_text_field( $company['size'] ?? '' ),
-		'industry'       => sanitize_text_field( $company['industry'] ?? '' ),
-		'challenges'     => array_map( 'sanitize_text_field', $company['challenges'] ?? [] ),
-		'categories'     => array_map( 'sanitize_text_field', (array) $categories ),
+		'company_size'	 => sanitize_text_field( $company['size'] ?? '' ),
+		'industry'		 => sanitize_text_field( $company['industry'] ?? '' ),
+		'challenges'	 => array_map( 'sanitize_text_field', $company['challenges'] ?? [] ),
+		'categories'	 => array_map( 'sanitize_text_field', (array) $categories ),
 	];
 
 	$llm = new RTBCB_LLM();
@@ -1295,19 +1295,19 @@ function rtbcb_test_generate_real_treasury_overview( $include_portal = false, $c
 /**
  * Test generating a benefits estimate using the LLM.
  *
- * @param array  $company_data        Company context including revenue, staff count and efficiency.
+ * @param array	 $company_data		  Company context including revenue, staff count and efficiency.
  * @param string $recommended_category Solution category.
  * @return array|WP_Error Structured estimate array or error object.
  */
 function rtbcb_test_generate_benefits_estimate( $company_data, $recommended_category ) {
 	$company_data = is_array( $company_data ) ? $company_data : [];
-	$revenue      = isset( $company_data['revenue'] ) ? floatval( $company_data['revenue'] ) : 0;
+	$revenue	  = isset( $company_data['revenue'] ) ? floatval( $company_data['revenue'] ) : 0;
 	$staff_count  = isset( $company_data['staff_count'] ) ? intval( $company_data['staff_count'] ) : 0;
-	$efficiency   = isset( $company_data['efficiency'] ) ? floatval( $company_data['efficiency'] ) : 0;
+	$efficiency	  = isset( $company_data['efficiency'] ) ? floatval( $company_data['efficiency'] ) : 0;
 	$recommended_category = sanitize_text_field( $recommended_category );
 
 	try {
-		$llm      = new RTBCB_LLM();
+		$llm	  = new RTBCB_LLM();
 		$estimate = $llm->generate_benefits_estimate( $revenue, $staff_count, $efficiency, $recommended_category );
 	} catch ( \Throwable $e ) {
 		return new WP_Error( 'llm_exception', __( 'Unable to estimate benefits at this time.', 'rtbcb' ) );
@@ -1327,10 +1327,10 @@ function rtbcb_test_generate_executive_summary() {
 	}
 
 	$company = rtbcb_get_current_company();
-	$roi     = get_option( 'rtbcb_roi_results', [] );
+	$roi	 = get_option( 'rtbcb_roi_results', [] );
 
-       $llm    = new RTBCB_LLM();
-       $result = $llm->generate_comprehensive_business_case( $company, $roi, [], null );
+	   $llm	   = new RTBCB_LLM();
+	   $result = $llm->generate_comprehensive_business_case( $company, $roi, [], null );
 
 	if ( is_wp_error( $result ) ) {
 		return $result;
@@ -1339,9 +1339,9 @@ function rtbcb_test_generate_executive_summary() {
 	$summary = isset( $result['executive_summary'] ) ? $result['executive_summary'] : [];
 
 	$summary = [
-		'strategic_positioning'   => sanitize_text_field( $summary['strategic_positioning'] ?? '' ),
+		'strategic_positioning'	  => sanitize_text_field( $summary['strategic_positioning'] ?? '' ),
 		'business_case_strength'  => sanitize_text_field( $summary['business_case_strength'] ?? '' ),
-		'key_value_drivers'       => array_map( 'sanitize_text_field', $summary['key_value_drivers'] ?? [] ),
+		'key_value_drivers'		  => array_map( 'sanitize_text_field', $summary['key_value_drivers'] ?? [] ),
 		'executive_recommendation'=> sanitize_text_field( $summary['executive_recommendation'] ?? '' ),
 	];
 
@@ -1361,17 +1361,17 @@ function rtbcb_parse_gpt5_business_case_response( $response ) {
 	$parsed = rtbcb_parse_gpt5_response( $response );
 
 	$result = [
-		'text'           => $parsed['output_text'],
+		'text'			 => $parsed['output_text'],
 		'reasoning_notes' => $parsed['reasoning'],
 		'function_calls' => $parsed['function_calls'],
-		'quality_score'  => 0,
-		'alerts'         => [],
+		'quality_score'	 => 0,
+		'alerts'		 => [],
 	];
 
 	// Quality validation for business case content.
-	$text        = $result['text'];
+	$text		 = $result['text'];
 	$text_length = strlen( $text );
-	$word_count  = str_word_count( $text );
+	$word_count	 = str_word_count( $text );
 
 	// Score based on content quality indicators.
 	if ( $text_length > 500 ) {
@@ -1440,20 +1440,20 @@ function rtbcb_proxy_openai_responses() {
 
 		$body_array = json_decode( $body, true );
 		if ( ! is_array( $body_array ) ) {
-			    $body_array = [];
+				$body_array = [];
 		}
 
-		$company      = rtbcb_get_current_company();
-		$user_email   = isset( $company['email'] ) ? sanitize_email( $company['email'] ) : '';
+		$company	  = rtbcb_get_current_company();
+		$user_email	  = isset( $company['email'] ) ? sanitize_email( $company['email'] ) : '';
 		$company_name = isset( $company['name'] ) ? sanitize_text_field( $company['name'] ) : '';
 
-	$config            = rtbcb_get_gpt5_config();
+	$config			   = rtbcb_get_gpt5_config();
 	$max_output_tokens = intval( $body_array['max_output_tokens'] ?? $config['max_output_tokens'] );
-	$min_tokens        = intval( $config['min_output_tokens'] );
+	$min_tokens		   = intval( $config['min_output_tokens'] );
 	$max_output_tokens = min( 128000, max( $min_tokens, $max_output_tokens ) );
 	$body_array['max_output_tokens'] = $max_output_tokens;
-	$body_array['stream']            = true;
-	$payload                         = wp_json_encode( $body_array );
+	$body_array['stream']			 = true;
+	$payload						 = wp_json_encode( $body_array );
 
 	nocache_headers();
 	header( 'Content-Type: text/event-stream' );
@@ -1481,7 +1481,7 @@ function rtbcb_proxy_openai_responses() {
 		return strlen( $data );
 	} );
 
-	$ok    = curl_exec( $ch );
+	$ok	   = curl_exec( $ch );
 	$error = curl_error( $ch );
 	curl_close( $ch );
 
@@ -1497,11 +1497,11 @@ function rtbcb_proxy_openai_responses() {
  * Background handler for OpenAI response jobs.
  *
  * @param string $job_id  Job identifier.
- * @param int    $user_id User identifier.
+ * @param int	 $user_id User identifier.
  * @return void
  */
 function rtbcb_handle_openai_responses_job( $job_id, $user_id ) {
-	$job_id  = sanitize_key( $job_id );
+	$job_id	 = sanitize_key( $job_id );
 	$user_id = intval( $user_id );
 
 	$api_key = get_option( 'rtbcb_openai_api_key' );
@@ -1533,11 +1533,11 @@ function rtbcb_handle_openai_responses_job( $job_id, $user_id ) {
 
 		$body_array = json_decode( $body, true );
 		if ( ! is_array( $body_array ) ) {
-			    $body_array = [];
+				$body_array = [];
 		}
 
-		$company      = rtbcb_get_current_company();
-		$user_email   = isset( $company['email'] ) ? sanitize_email( $company['email'] ) : '';
+		$company	  = rtbcb_get_current_company();
+		$user_email	  = isset( $company['email'] ) ? sanitize_email( $company['email'] ) : '';
 		$company_name = isset( $company['name'] ) ? sanitize_text_field( $company['name'] ) : '';
 
 		$timeout = intval( get_option( 'rtbcb_responses_timeout', 120 ) );
@@ -1546,21 +1546,21 @@ function rtbcb_handle_openai_responses_job( $job_id, $user_id ) {
 	}
 
 		$response = rtbcb_wp_remote_post_with_retry(
-		        'https://api.openai.com/v1/responses',
-		        [
-		                'headers' => [
-		                        'Content-Type'  => 'application/json',
-		                        'Authorization' => 'Bearer ' . $api_key,
-		                ],
-		                'body'    => $body,
-		                'timeout' => $timeout,
-		        ]
+				'https://api.openai.com/v1/responses',
+				[
+						'headers' => [
+								'Content-Type'	=> 'application/json',
+								'Authorization' => 'Bearer ' . $api_key,
+						],
+						'body'	  => $body,
+						'timeout' => $timeout,
+				]
 		);
 
 	if ( is_wp_error( $response ) ) {
-			    if ( class_exists( 'RTBCB_API_Log' ) ) {
-				    RTBCB_API_Log::save_log( $body_array, [ 'error' => $response->get_error_message() ], $user_id, $user_email, $company_name );
-			    }
+				if ( class_exists( 'RTBCB_API_Log' ) ) {
+					RTBCB_API_Log::save_log( $body_array, [ 'error' => $response->get_error_message() ], $user_id, $user_email, $company_name );
+				}
 		set_transient(
 			'rtbcb_openai_job_' . $job_id,
 			[
@@ -1572,7 +1572,7 @@ function rtbcb_handle_openai_responses_job( $job_id, $user_id ) {
 		return;
 	}
 
-	$code      = wp_remote_retrieve_response_code( $response );
+	$code	   = wp_remote_retrieve_response_code( $response );
 	$resp_body = wp_remote_retrieve_body( $response );
 	$decoded   = json_decode( $resp_body, true );
 	if ( ! is_array( $decoded ) ) {
@@ -1580,14 +1580,14 @@ function rtbcb_handle_openai_responses_job( $job_id, $user_id ) {
 	}
 
 		if ( class_exists( 'RTBCB_API_Log' ) ) {
-			    RTBCB_API_Log::save_log( $body_array, $decoded, $user_id, $user_email, $company_name );
+				RTBCB_API_Log::save_log( $body_array, $decoded, $user_id, $user_email, $company_name );
 		}
 
 	set_transient(
 		'rtbcb_openai_job_' . $job_id,
 		[
 			'status'   => 'complete',
-			'code'     => $code,
+			'code'	   => $code,
 			'response' => $decoded,
 		],
 		HOUR_IN_SECONDS
@@ -1647,19 +1647,19 @@ function rtbcb_queue_comprehensive_analysis( $company_name ) {
  * Background handler for comprehensive analysis jobs.
  *
  * @param string $company_name Company name.
- * @param string $job_id       Job identifier.
+ * @param string $job_id	   Job identifier.
  * @return void
  */
 function rtbcb_handle_comprehensive_analysis( $company_name, $job_id ) {
 	$company_name = sanitize_text_field( $company_name );
-	$job_id       = sanitize_key( $job_id );
+	$job_id		  = sanitize_key( $job_id );
 
 	$rag_context = [];
 	$vendor_list = [];
 
 	if ( function_exists( 'rtbcb_test_rag_market_analysis' ) && function_exists( 'rtbcb_get_current_company' ) ) {
 		$company = rtbcb_get_current_company();
-		$terms   = [];
+		$terms	 = [];
 
 		if ( ! empty( $company['industry'] ) ) {
 			$terms[] = sanitize_text_field( $company['industry'] );
@@ -1677,7 +1677,7 @@ function rtbcb_handle_comprehensive_analysis( $company_name, $job_id ) {
 			$terms[] = $company_name;
 		}
 
-		$query       = sanitize_text_field( implode( ' ', $terms ) );
+		$query		 = sanitize_text_field( implode( ' ', $terms ) );
 		$vendor_list = rtbcb_test_rag_market_analysis( $query );
 
 		if ( is_wp_error( $vendor_list ) ) {
@@ -1687,15 +1687,15 @@ function rtbcb_handle_comprehensive_analysis( $company_name, $job_id ) {
 		$rag_context = array_map( 'sanitize_text_field', $vendor_list );
 	}
 
-       $llm      = new RTBCB_LLM();
-       $analysis = $llm->generate_comprehensive_business_case( [ 'company_name' => $company_name ], [], $rag_context, null );
+	   $llm		 = new RTBCB_LLM();
+	   $analysis = $llm->generate_comprehensive_business_case( [ 'company_name' => $company_name ], [], $rag_context, null );
 
 	if ( is_wp_error( $analysis ) ) {
 		update_option(
 			'rtbcb_analysis_job_' . $job_id,
 			[
-				'success'    => false,
-				'message'    => $analysis->get_error_message(),
+				'success'	 => false,
+				'message'	 => $analysis->get_error_message(),
 				'error_code' => $analysis->get_error_code(),
 			]
 		);
@@ -1715,35 +1715,35 @@ function rtbcb_handle_comprehensive_analysis( $company_name, $job_id ) {
 
 	$results = [
 		'company_overview' => [
-			'summary'   => $analysis['company_overview'],
+			'summary'	=> $analysis['company_overview'],
 			'stored_in' => 'rtbcb_current_company',
 		],
 		'industry_analysis' => [
-			'summary'   => $analysis['industry_analysis'],
+			'summary'	=> $analysis['industry_analysis'],
 			'stored_in' => 'rtbcb_industry_insights',
 		],
 		'treasury_maturity' => [
-			'summary'   => $analysis['treasury_maturity'],
+			'summary'	=> $analysis['treasury_maturity'],
 			'stored_in' => 'rtbcb_maturity_model',
 		],
 		'market_analysis' => [
-			'summary'   => $vendor_list,
+			'summary'	=> $vendor_list,
 			'stored_in' => 'rtbcb_rag_market_analysis',
 		],
 		'implementation_roadmap' => [
-			'summary'   => $analysis['implementation_roadmap'],
+			'summary'	=> $analysis['implementation_roadmap'],
 			'stored_in' => 'rtbcb_roadmap_plan',
 		],
 		'value_proposition' => [
-			'summary'   => $analysis['executive_summary'],
+			'summary'	=> $analysis['executive_summary'],
 			'stored_in' => 'rtbcb_value_proposition',
 		],
 		'financial_analysis' => [
-			'summary'   => $analysis['financial_analysis'],
+			'summary'	=> $analysis['financial_analysis'],
 			'stored_in' => 'rtbcb_estimated_benefits',
 		],
 		'executive_summary' => [
-			'summary'   => $analysis['executive_summary'],
+			'summary'	=> $analysis['executive_summary'],
 			'stored_in' => 'rtbcb_executive_summary',
 		],
 	];
@@ -1762,10 +1762,10 @@ function rtbcb_handle_comprehensive_analysis( $company_name, $job_id ) {
 	update_option(
 		'rtbcb_analysis_job_' . $job_id,
 		[
-			'success'              => true,
-			'timestamp'            => $timestamp,
-			'results'              => $results,
-			'usage_map'            => $usage_map,
+			'success'			   => true,
+			'timestamp'			   => $timestamp,
+			'results'			   => $results,
+			'usage_map'			   => $usage_map,
 			'components_generated' => 7,
 		]
 	);
@@ -1790,14 +1790,14 @@ function rtbcb_get_analysis_job_result( $job_id ) {
  *
  * @param string $company  Company name.
  * @param string $industry Industry name.
- * @param string $type     Cache segment identifier.
+ * @param string $type	   Cache segment identifier.
  *
  * @return string Cache key.
  */
 function rtbcb_get_research_cache_key( $company, $industry, $type ) {
 	$company  = sanitize_title( $company );
 	$industry = sanitize_title( $industry );
-	$type     = sanitize_key( $type );
+	$type	  = sanitize_key( $type );
 
 	return 'rtbcb_' . $type . '_' . md5( $company . '_' . $industry );
 }
@@ -1807,7 +1807,7 @@ function rtbcb_get_research_cache_key( $company, $industry, $type ) {
  *
  * @param string $company  Company name.
  * @param string $industry Industry name.
- * @param string $type     Cache segment identifier.
+ * @param string $type	   Cache segment identifier.
  *
  * @return mixed Cached data or false when not found.
  */
@@ -1821,9 +1821,9 @@ function rtbcb_get_research_cache( $company, $industry, $type ) {
  *
  * @param string $company  Company name.
  * @param string $industry Industry name.
- * @param string $type     Cache segment identifier.
- * @param mixed  $data     Data to cache.
- * @param int    $ttl      Optional TTL in seconds.
+ * @param string $type	   Cache segment identifier.
+ * @param mixed	 $data	   Data to cache.
+ * @param int	 $ttl	   Optional TTL in seconds.
  */
 function rtbcb_set_research_cache( $company, $industry, $type, $data, $ttl = 0 ) {
 	$key = rtbcb_get_research_cache_key( $company, $industry, $type );
@@ -1850,7 +1850,7 @@ function rtbcb_set_research_cache( $company, $industry, $type, $data, $ttl = 0 )
  *
  * @param string $company  Company name.
  * @param string $industry Industry name.
- * @param string $type     Cache segment identifier.
+ * @param string $type	   Cache segment identifier.
  */
 function rtbcb_delete_research_cache( $company, $industry, $type ) {
 $key = rtbcb_get_research_cache_key( $company, $industry, $type );
@@ -1868,21 +1868,21 @@ function rtbcb_get_report_allowed_html() {
 	$allowed = wp_kses_allowed_html( 'post' );
 
 	$allowed['canvas'] = [
-		'class'  => true,
-		'id'     => true,
-		'width'  => true,
+		'class'	 => true,
+		'id'	 => true,
+		'width'	 => true,
 		'height' => true,
-		'style'  => true,
+		'style'	 => true,
 		'data-*' => true,
 	];
 
 	$allowed['button'] = [
-		'class'  => true,
-		'id'     => true,
-		'type'   => true,
-		'name'   => true,
-		'value'  => true,
-		'style'  => true,
+		'class'	 => true,
+		'id'	 => true,
+		'type'	 => true,
+		'name'	 => true,
+		'value'	 => true,
+		'style'	 => true,
 		'data-*' => true,
 	];
 
@@ -1900,8 +1900,8 @@ function rtbcb_get_report_allowed_html() {
  */
 function rtbcb_invalidate_rag_cache() {
 		if ( function_exists( 'get_option' ) && function_exists( 'update_option' ) ) {
-		        $version = (int) get_option( 'rtbcb_rag_cache_version', 1 );
-		        update_option( 'rtbcb_rag_cache_version', $version + 1 );
+				$version = (int) get_option( 'rtbcb_rag_cache_version', 1 );
+				update_option( 'rtbcb_rag_cache_version', $version + 1 );
 		}
 }
 

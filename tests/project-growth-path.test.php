@@ -97,7 +97,7 @@ $research_method->setAccessible( true );
 $research = $research_method->invoke( $llm, [
 	'company_name' => 'Test Co',
 	'company_size' => '$50M-$500M',
-	'industry'     => 'technology',
+	'industry'	   => 'technology',
 ] );
 
 if ( ! is_array( $research ) ) {

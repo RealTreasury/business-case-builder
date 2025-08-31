@@ -12,8 +12,8 @@ class RTBCB_Background_Job {
  * Update job status data and accumulate payload.
  *
  * @param string $job_id  Job identifier.
- * @param string $state   New job state.
- * @param array  $payload Additional fields such as step, percent, or partial results.
+ * @param string $state	  New job state.
+ * @param array	 $payload Additional fields such as step, percent, or partial results.
  * @return void
  */
 public static function update_status( $job_id, $state, $payload = [] ) {
@@ -26,9 +26,9 @@ $current = [
 if ( ! isset( $current['created'] ) ) {
 $current['created'] = time();
 }
-$existing_payload   = isset( $current['payload'] ) && is_array( $current['payload'] ) ? $current['payload'] : [];
+$existing_payload	= isset( $current['payload'] ) && is_array( $current['payload'] ) ? $current['payload'] : [];
 $current['payload'] = array_merge( $existing_payload, $payload );
-$current['state']   = $state;
+$current['state']	= $state;
 $current['updated'] = time();
 set_transient( $job_id, $current, HOUR_IN_SECONDS );
 }
@@ -43,25 +43,25 @@ $job_id = uniqid( 'rtbcb_job_', true );
 
 self::update_status( $job_id, 'queued' );
 
-                wp_schedule_single_event(
-                        time(),
-                        'rtbcb_process_job',
-                        [ $job_id, $user_inputs ]
-                );
+				wp_schedule_single_event(
+						time(),
+						'rtbcb_process_job',
+						[ $job_id, $user_inputs ]
+				);
 
 		// Trigger cron immediately in a non-blocking way.
 		if ( function_exists( 'spawn_cron' ) && ! wp_doing_cron() ) {
 			spawn_cron();
 		}
 
-                return $job_id;
-        }
+				return $job_id;
+		}
 
 	/**
 	 * Process a queued job.
 	 *
-	 * @param string $job_id      Job identifier.
-	 * @param array  $user_inputs User inputs.
+	 * @param string $job_id	  Job identifier.
+	 * @param array	 $user_inputs User inputs.
 	 * @return void
 	 */
 public static function process_job( $job_id, $user_inputs ) {
@@ -73,8 +73,8 @@ self::update_status(
 $job_id,
 'processing',
 [
-'step'      => 'basic_roi_calculation',
-'percent'   => 10,
+'step'		=> 'basic_roi_calculation',
+'percent'	=> 10,
 'basic_roi' => $basic_roi,
 ],
 );
@@ -84,18 +84,18 @@ add_action(
 'rtbcb_workflow_step_completed',
 function ( $step ) use ( $job_id ) {
 		$map = [
-			'ai_enrichment'             => 30,
-			'enhanced_roi_calculation'  => 50,
+			'ai_enrichment'				=> 30,
+			'enhanced_roi_calculation'	=> 50,
 			'intelligent_recommendations' => 70,
-			'hybrid_rag_analysis'       => 85,
-			'data_structuring'          => 95,
+			'hybrid_rag_analysis'		=> 85,
+			'data_structuring'			=> 95,
 		];
 if ( isset( $map[ $step ] ) ) {
 self::update_status(
 $job_id,
 'processing',
 [
-'step'    => $step,
+'step'	  => $step,
 'percent' => $map[ $step ],
 ]
 );
@@ -128,12 +128,12 @@ if ( is_wp_error( $result ) ) {
 		$report_html = '<html></html>';
 	}
 
-	$upload_dir  = function_exists( 'wp_upload_dir' ) ? wp_upload_dir() : [
+	$upload_dir	 = function_exists( 'wp_upload_dir' ) ? wp_upload_dir() : [
 		'basedir' => sys_get_temp_dir(),
 		'baseurl' => 'http://example.com/uploads',
 	];
-	$base_dir    = isset( $upload_dir['basedir'] ) ? $upload_dir['basedir'] : sys_get_temp_dir();
-	$base_url    = isset( $upload_dir['baseurl'] ) ? $upload_dir['baseurl'] : '';
+	$base_dir	 = isset( $upload_dir['basedir'] ) ? $upload_dir['basedir'] : sys_get_temp_dir();
+	$base_url	 = isset( $upload_dir['baseurl'] ) ? $upload_dir['baseurl'] : '';
 	$reports_dir = rtrim( $base_dir, '/\\' ) . '/rtbcb-reports';
 	if ( ! file_exists( $reports_dir ) ) {
 		if ( function_exists( 'wp_mkdir_p' ) ) {
@@ -157,8 +157,8 @@ if ( is_wp_error( $result ) ) {
 		$job_id,
 		'completed',
 		[
-			'percent'      => 100,
-			'result'       => $result,
+			'percent'	   => 100,
+			'result'	   => $result,
 			'download_url' => $download_url,
 		]
 	);
@@ -191,14 +191,14 @@ public static function cleanup() {
 global $wpdb;
 
 $default_threshold = defined( 'DAY_IN_SECONDS' ) ? DAY_IN_SECONDS : 86400;
-$threshold         = function_exists( 'apply_filters' ) ? (int) apply_filters( 'rtbcb_job_cleanup_threshold', $default_threshold ) : $default_threshold;
+$threshold		   = function_exists( 'apply_filters' ) ? (int) apply_filters( 'rtbcb_job_cleanup_threshold', $default_threshold ) : $default_threshold;
 
 if ( isset( $wpdb ) ) {
-$like         = $wpdb->esc_like( '_transient_rtbcb_job_' ) . '%';
+$like		  = $wpdb->esc_like( '_transient_rtbcb_job_' ) . '%';
 $option_names = $wpdb->get_col( "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE '{$like}' OR option_name LIKE '_transient_timeout_rtbcb_job_%'" );
 foreach ( $option_names as $option_name ) {
 $job_id = str_replace( [ '_transient_', '_transient_timeout_' ], '', $option_name );
-$data   = get_transient( $job_id );
+$data	= get_transient( $job_id );
 $created = is_array( $data ) ? ( $data['created'] ?? 0 ) : 0;
 if ( false === $data || 'error' === ( $data['state'] ?? '' ) || ( $created && time() - $created > $threshold ) ) {
 delete_transient( $job_id );
@@ -207,7 +207,7 @@ delete_transient( $job_id );
 } elseif ( isset( $GLOBALS['transients'] ) && is_array( $GLOBALS['transients'] ) ) {
 foreach ( array_keys( $GLOBALS['transients'] ) as $job_id ) {
 if ( 0 === strpos( $job_id, 'rtbcb_job_' ) ) {
-$data    = $GLOBALS['transients'][ $job_id ];
+$data	 = $GLOBALS['transients'][ $job_id ];
 $created = is_array( $data ) ? ( $data['created'] ?? 0 ) : 0;
 if ( ! is_array( $data ) || 'error' === ( $data['state'] ?? '' ) || ( $created && time() - $created > $threshold ) ) {
 unset( $GLOBALS['transients'][ $job_id ] );

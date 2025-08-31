@@ -6,13 +6,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 if ( ! function_exists( 'sanitize_email' ) ) {
 	function sanitize_email( $email ) {
-	    return filter_var( $email, FILTER_SANITIZE_EMAIL );
+		return filter_var( $email, FILTER_SANITIZE_EMAIL );
 	}
 }
 
 if ( ! function_exists( '__' ) ) {
 	function __( $text, $domain = null ) {
-	    return $text;
+		return $text;
 	}
 }
 
@@ -25,9 +25,9 @@ $sent_mail = [];
 function rtbcb_mock_mail( $to, $subject, $message, $headers = [], $attachments = [] ) {
 	global $sent_mail;
 	$sent_mail = [
-	    'to'          => $to,
-	    'subject'     => $subject,
-	    'attachments' => $attachments,
+		'to'		  => $to,
+		'subject'	  => $subject,
+		'attachments' => $attachments,
 	];
 	return true;
 }

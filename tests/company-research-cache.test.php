@@ -84,7 +84,7 @@ $method->setAccessible( true );
 $inputs = [
 	'company_name' => 'Cache Co',
 	'company_size' => '$50M-$500M',
-	'industry'     => 'finance',
+	'industry'	   => 'finance',
 ];
 
 $result = $method->invoke( $llm, $inputs );
@@ -101,10 +101,10 @@ if ( false === $cached ) {
 }
 
 $custom = [
-	'business_stage'      => 'cached',
+	'business_stage'	  => 'cached',
 	'key_characteristics' => '',
 	'treasury_priorities' => '',
-	'common_challenges'   => '',
+	'common_challenges'	  => '',
 ];
 rtbcb_set_research_cache( 'Cache Co', 'finance', 'company_profile', $custom );
 

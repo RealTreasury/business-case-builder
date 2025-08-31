@@ -43,7 +43,7 @@ function wp_send_json_success( $data, $status = 200 ) {
 global $last_response;
 $last_response = [
 'success' => true,
-'data'    => $data,
+'data'	  => $data,
 'status'  => $status,
 ];
 return $last_response;
@@ -55,7 +55,7 @@ function wp_send_json_error( $data, $status = 400 ) {
 global $last_response;
 $last_response = [
 'success' => false,
-'data'    => $data,
+'data'	  => $data,
 'status'  => $status,
 ];
 return $last_response;
@@ -164,7 +164,7 @@ final class RTBCB_EdgeCasesTest extends TestCase {
 public function test_handle_form_submission( $post_data, $expected_success ) {
 global $last_response;
 $last_response = null;
-$_POST         = $post_data;
+$_POST		   = $post_data;
 
 $router = new RTBCB_Router();
 $router->handle_form_submission();
@@ -177,21 +177,21 @@ public function edge_case_provider() {
 return [
 'extreme_numeric_values' => [
 [
-'company_name'           => 'MegaCorp',
-'company_size'           => '999999',
-'industry'               => 'finance',
-'hours_reconciliation'   => 10000,
+'company_name'			 => 'MegaCorp',
+'company_size'			 => '999999',
+'industry'				 => 'finance',
+'hours_reconciliation'	 => 10000,
 'hours_cash_positioning' => 20000,
-'num_banks'              => 1000,
-'ftes'                   => 1000,
-'current_tech'           => 'legacy',
-'business_objective'     => 'growth',
+'num_banks'				 => 1000,
+'ftes'					 => 1000,
+'current_tech'			 => 'legacy',
+'business_objective'	 => 'growth',
 'implementation_timeline'=> 'immediate',
-'decision_makers'        => [ 'CFO', 'CEO' ],
-'budget_range'           => 'over-9000',
-'email'                  => 'edge@example.com',
-'consent'                => '1',
-'rtbcb_nonce'            => 'nonce',
+'decision_makers'		 => [ 'CFO', 'CEO' ],
+'budget_range'			 => 'over-9000',
+'email'					 => 'edge@example.com',
+'consent'				 => '1',
+'rtbcb_nonce'			 => 'nonce',
 ],
 true,
 ],
@@ -199,40 +199,40 @@ true,
 [
 'company_name' => 'Minimal LLC',
 'company_size' => 'small',
-'email'        => 'minimal@example.com',
-'consent'      => '1',
+'email'		   => 'minimal@example.com',
+'consent'	   => '1',
 'rtbcb_nonce'  => 'nonce',
 ],
 true,
 ],
 'unusual_character_sets' => [
 [
-'company_name'       => '公司🚀',
-'company_size'       => '中',
-'industry'           => '金融',
+'company_name'		 => '公司🚀',
+'company_size'		 => '中',
+'industry'			 => '金融',
 'business_objective' => 'Expand to new markets 🌐',
-'email'              => 'unicode@example.com',
-'consent'            => '1',
-'rtbcb_nonce'        => 'nonce',
+'email'				 => 'unicode@example.com',
+'consent'			 => '1',
+'rtbcb_nonce'		 => 'nonce',
 ],
 true,
 ],
 'negative_numeric_values' => [
 [
-'company_name'         => 'Negative Co',
-'company_size'         => 'small',
-'email'                => 'neg@example.com',
-'consent'              => '1',
+'company_name'		   => 'Negative Co',
+'company_size'		   => 'small',
+'email'				   => 'neg@example.com',
+'consent'			   => '1',
 'hours_reconciliation' => -5,
-'rtbcb_nonce'          => 'nonce',
+'rtbcb_nonce'		   => 'nonce',
 ],
 false,
 ],
 'missing_required_field' => [
 [
 'company_size' => 'small',
-'email'        => 'no-name@example.com',
-'consent'      => '1',
+'email'		   => 'no-name@example.com',
+'consent'	   => '1',
 'rtbcb_nonce'  => 'nonce',
 ],
 false,

@@ -8,8 +8,8 @@ defined( 'ABSPATH' ) || exit;
  */
 
 // Default values for template arguments
-$style   = $style ?? 'default';
-$title   = $title ?? __( 'Treasury Tech Business Case Builder', 'rtbcb' );
+$style	 = $style ?? 'default';
+$title	 = $title ?? __( 'Treasury Tech Business Case Builder', 'rtbcb' );
 $subtitle = $subtitle ?? __( 'Generate a data-driven business case for your treasury technology investment.', 'rtbcb' );
 
 // Get categories for display
@@ -18,436 +18,436 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 
 <!-- Trigger Button -->
 <div class="rtbcb-trigger-container">
-    <button type="button" class="rtbcb-trigger-btn" onclick="openBusinessCaseModal()">
-        <span class="rtbcb-trigger-icon">📊</span>
-        <span class="rtbcb-trigger-text"><?php esc_html_e( 'Build Your Business Case', 'rtbcb' ); ?></span>
-        <span class="rtbcb-trigger-subtitle"><?php esc_html_e( 'Generate ROI analysis in minutes', 'rtbcb' ); ?></span>
-    </button>
+	<button type="button" class="rtbcb-trigger-btn" onclick="openBusinessCaseModal()">
+		<span class="rtbcb-trigger-icon">📊</span>
+		<span class="rtbcb-trigger-text"><?php esc_html_e( 'Build Your Business Case', 'rtbcb' ); ?></span>
+		<span class="rtbcb-trigger-subtitle"><?php esc_html_e( 'Generate ROI analysis in minutes', 'rtbcb' ); ?></span>
+	</button>
 </div>
 
 <!-- Modal Overlay -->
 <div class="rtbcb-modal-overlay" id="rtbcbModalOverlay">
-    <div class="rtbcb-modal-container rtbcb-modal">
-        <!-- Modal Header -->
-        <div class="rtbcb-modal-header">
-            <button type="button" class="rtbcb-modal-close" onclick="closeBusinessCaseModal()">&times;</button>
-            <h2 class="rtbcb-modal-title"><?php echo esc_html( $title ); ?></h2>
-            <p class="rtbcb-modal-subtitle"><?php echo esc_html( $subtitle ); ?></p>
-        </div>
+	<div class="rtbcb-modal-container rtbcb-modal">
+		<!-- Modal Header -->
+		<div class="rtbcb-modal-header">
+			<button type="button" class="rtbcb-modal-close" onclick="closeBusinessCaseModal()">&times;</button>
+			<h2 class="rtbcb-modal-title"><?php echo esc_html( $title ); ?></h2>
+			<p class="rtbcb-modal-subtitle"><?php echo esc_html( $subtitle ); ?></p>
+		</div>
 
-        <!-- Modal Body -->
-        <div class="rtbcb-modal-body">
-            <div class="rtbcb-form-container">
-                <form id="rtbcbForm" class="rtbcb-form rtbcb-wizard" method="post" novalidate>
+		<!-- Modal Body -->
+		<div class="rtbcb-modal-body">
+			<div class="rtbcb-form-container">
+				<form id="rtbcbForm" class="rtbcb-form rtbcb-wizard" method="post" novalidate>
 
-                    <!-- Progress Indicator -->
-                    <div class="rtbcb-wizard-progress">
-                        <div class="rtbcb-progress-line"></div>
-                        <div class="rtbcb-progress-steps">
-                            <div class="rtbcb-progress-step active" data-step="1">
-                                <div class="rtbcb-progress-number">1</div>
-                                <div class="rtbcb-progress-label"><?php esc_html_e( 'Company', 'rtbcb' ); ?></div>
-                            </div>
-                            <div class="rtbcb-progress-step" data-step="2">
-                                <div class="rtbcb-progress-number">2</div>
-                                <div class="rtbcb-progress-label"><?php esc_html_e( 'Operations', 'rtbcb' ); ?></div>
-                            </div>
-                            <div class="rtbcb-progress-step" data-step="3">
-                                <div class="rtbcb-progress-number">3</div>
-                                <div class="rtbcb-progress-label"><?php esc_html_e( 'Challenges', 'rtbcb' ); ?></div>
-                            </div>
-                            <div class="rtbcb-progress-step" data-step="4">
-                                <div class="rtbcb-progress-number">4</div>
-                                <div class="rtbcb-progress-label"><?php esc_html_e( 'Strategy', 'rtbcb' ); ?></div>
-                            </div>
-                            <div class="rtbcb-progress-step" data-step="5">
-                                <div class="rtbcb-progress-number">5</div>
-                                <div class="rtbcb-progress-label"><?php esc_html_e( 'Contact', 'rtbcb' ); ?></div>
-                            </div>
-                        </div>
-                    </div>
+					<!-- Progress Indicator -->
+					<div class="rtbcb-wizard-progress">
+						<div class="rtbcb-progress-line"></div>
+						<div class="rtbcb-progress-steps">
+							<div class="rtbcb-progress-step active" data-step="1">
+								<div class="rtbcb-progress-number">1</div>
+								<div class="rtbcb-progress-label"><?php esc_html_e( 'Company', 'rtbcb' ); ?></div>
+							</div>
+							<div class="rtbcb-progress-step" data-step="2">
+								<div class="rtbcb-progress-number">2</div>
+								<div class="rtbcb-progress-label"><?php esc_html_e( 'Operations', 'rtbcb' ); ?></div>
+							</div>
+							<div class="rtbcb-progress-step" data-step="3">
+								<div class="rtbcb-progress-number">3</div>
+								<div class="rtbcb-progress-label"><?php esc_html_e( 'Challenges', 'rtbcb' ); ?></div>
+							</div>
+							<div class="rtbcb-progress-step" data-step="4">
+								<div class="rtbcb-progress-number">4</div>
+								<div class="rtbcb-progress-label"><?php esc_html_e( 'Strategy', 'rtbcb' ); ?></div>
+							</div>
+							<div class="rtbcb-progress-step" data-step="5">
+								<div class="rtbcb-progress-number">5</div>
+								<div class="rtbcb-progress-label"><?php esc_html_e( 'Contact', 'rtbcb' ); ?></div>
+							</div>
+						</div>
+					</div>
 
-                    <!-- Steps Container -->
-                    <div class="rtbcb-wizard-steps">
-            <!-- Step 1: Company Profile - UPDATED -->
-            <div class="rtbcb-wizard-step active" data-step="1">
-                <div class="rtbcb-step-header">
-                    <h3><?php esc_html_e( 'Tell us about your company', 'rtbcb' ); ?></h3>
-                    <p><?php esc_html_e( 'This helps us provide relevant recommendations for your organization.', 'rtbcb' ); ?></p>
-                </div>
+					<!-- Steps Container -->
+					<div class="rtbcb-wizard-steps">
+			<!-- Step 1: Company Profile - UPDATED -->
+			<div class="rtbcb-wizard-step active" data-step="1">
+				<div class="rtbcb-step-header">
+					<h3><?php esc_html_e( 'Tell us about your company', 'rtbcb' ); ?></h3>
+					<p><?php esc_html_e( 'This helps us provide relevant recommendations for your organization.', 'rtbcb' ); ?></p>
+				</div>
 
-                <div class="rtbcb-step-content">
-                    <!-- NEW: Company Name Field -->
-                    <div class="rtbcb-field rtbcb-field-required">
-                        <label for="company_name">
-                            <?php esc_html_e( 'Company Name', 'rtbcb' ); ?>
-                        </label>
-                        <input type="text" name="company_name" id="company_name" 
-                               placeholder="<?php esc_attr_e( 'Enter your company name', 'rtbcb' ); ?>" 
-                               required 
-                               maxlength="100" />
-                        <div class="rtbcb-field-help">
-                            <?php esc_html_e( 'This will be used to personalize your business case report', 'rtbcb' ); ?>
-                        </div>
-                    </div>
+				<div class="rtbcb-step-content">
+					<!-- NEW: Company Name Field -->
+					<div class="rtbcb-field rtbcb-field-required">
+						<label for="company_name">
+							<?php esc_html_e( 'Company Name', 'rtbcb' ); ?>
+						</label>
+						<input type="text" name="company_name" id="company_name" 
+							   placeholder="<?php esc_attr_e( 'Enter your company name', 'rtbcb' ); ?>" 
+							   required 
+							   maxlength="100" />
+						<div class="rtbcb-field-help">
+							<?php esc_html_e( 'This will be used to personalize your business case report', 'rtbcb' ); ?>
+						</div>
+					</div>
 
-                    <div class="rtbcb-field rtbcb-field-required">
-                        <label for="company_size">
-                            <?php esc_html_e( 'Company Size (Annual Revenue)', 'rtbcb' ); ?>
-                        </label>
-                        <select name="company_size" id="company_size" required>
-                            <option value=""><?php esc_html_e( 'Select your company size...', 'rtbcb' ); ?></option>
-                            <option value="&lt;$50M"><?php esc_html_e( 'Small Business (&lt;$50M)', 'rtbcb' ); ?></option>
-                            <option value="$50M-$500M"><?php esc_html_e( 'Mid-Market ($50M-$500M)', 'rtbcb' ); ?></option>
-                            <option value="$500M-$2B"><?php esc_html_e( 'Large Enterprise ($500M-$2B)', 'rtbcb' ); ?></option>
-                            <option value="&gt;$2B"><?php esc_html_e( 'Fortune 500 (&gt;$2B)', 'rtbcb' ); ?></option>
-                        </select>
-                    </div>
+					<div class="rtbcb-field rtbcb-field-required">
+						<label for="company_size">
+							<?php esc_html_e( 'Company Size (Annual Revenue)', 'rtbcb' ); ?>
+						</label>
+						<select name="company_size" id="company_size" required>
+							<option value=""><?php esc_html_e( 'Select your company size...', 'rtbcb' ); ?></option>
+							<option value="&lt;$50M"><?php esc_html_e( 'Small Business (&lt;$50M)', 'rtbcb' ); ?></option>
+							<option value="$50M-$500M"><?php esc_html_e( 'Mid-Market ($50M-$500M)', 'rtbcb' ); ?></option>
+							<option value="$500M-$2B"><?php esc_html_e( 'Large Enterprise ($500M-$2B)', 'rtbcb' ); ?></option>
+							<option value="&gt;$2B"><?php esc_html_e( 'Fortune 500 (&gt;$2B)', 'rtbcb' ); ?></option>
+						</select>
+					</div>
 
-                    <div class="rtbcb-field rtbcb-field-required">
-                        <label for="industry">
-                            <?php esc_html_e( 'Industry', 'rtbcb' ); ?>
-                        </label>
-                        <select name="industry" id="industry" required>
-                            <option value=""><?php esc_html_e( 'Select your industry...', 'rtbcb' ); ?></option>
-                            <option value="manufacturing"><?php esc_html_e( 'Manufacturing', 'rtbcb' ); ?></option>
-                            <option value="retail"><?php esc_html_e( 'Retail & E-commerce', 'rtbcb' ); ?></option>
-                            <option value="healthcare"><?php esc_html_e( 'Healthcare', 'rtbcb' ); ?></option>
-                            <option value="technology"><?php esc_html_e( 'Technology', 'rtbcb' ); ?></option>
-                            <option value="financial_services"><?php esc_html_e( 'Financial Services', 'rtbcb' ); ?></option>
-                            <option value="energy"><?php esc_html_e( 'Energy & Utilities', 'rtbcb' ); ?></option>
-                            <option value="real_estate"><?php esc_html_e( 'Real Estate', 'rtbcb' ); ?></option>
-                            <option value="professional_services"><?php esc_html_e( 'Professional Services', 'rtbcb' ); ?></option>
-                            <option value="transportation"><?php esc_html_e( 'Transportation & Logistics', 'rtbcb' ); ?></option>
-                            <option value="education"><?php esc_html_e( 'Education', 'rtbcb' ); ?></option>
-                            <option value="government"><?php esc_html_e( 'Government', 'rtbcb' ); ?></option>
-                            <option value="other"><?php esc_html_e( 'Other', 'rtbcb' ); ?></option>
-                        </select>
-                    </div>
+					<div class="rtbcb-field rtbcb-field-required">
+						<label for="industry">
+							<?php esc_html_e( 'Industry', 'rtbcb' ); ?>
+						</label>
+						<select name="industry" id="industry" required>
+							<option value=""><?php esc_html_e( 'Select your industry...', 'rtbcb' ); ?></option>
+							<option value="manufacturing"><?php esc_html_e( 'Manufacturing', 'rtbcb' ); ?></option>
+							<option value="retail"><?php esc_html_e( 'Retail & E-commerce', 'rtbcb' ); ?></option>
+							<option value="healthcare"><?php esc_html_e( 'Healthcare', 'rtbcb' ); ?></option>
+							<option value="technology"><?php esc_html_e( 'Technology', 'rtbcb' ); ?></option>
+							<option value="financial_services"><?php esc_html_e( 'Financial Services', 'rtbcb' ); ?></option>
+							<option value="energy"><?php esc_html_e( 'Energy & Utilities', 'rtbcb' ); ?></option>
+							<option value="real_estate"><?php esc_html_e( 'Real Estate', 'rtbcb' ); ?></option>
+							<option value="professional_services"><?php esc_html_e( 'Professional Services', 'rtbcb' ); ?></option>
+							<option value="transportation"><?php esc_html_e( 'Transportation & Logistics', 'rtbcb' ); ?></option>
+							<option value="education"><?php esc_html_e( 'Education', 'rtbcb' ); ?></option>
+							<option value="government"><?php esc_html_e( 'Government', 'rtbcb' ); ?></option>
+							<option value="other"><?php esc_html_e( 'Other', 'rtbcb' ); ?></option>
+						</select>
+					</div>
 
-                    <!-- Optional: Add current position field for more personalization -->
-                    <div class="rtbcb-field">
-                        <label for="job_title"><?php esc_html_e( 'Your Role (Optional)', 'rtbcb' ); ?></label>
-                        <select name="job_title" id="job_title">
-                            <option value=""><?php esc_html_e( 'Select your role...', 'rtbcb' ); ?></option>
-                            <option value="cfo"><?php esc_html_e( 'CFO', 'rtbcb' ); ?></option>
-                            <option value="treasurer"><?php esc_html_e( 'Treasurer', 'rtbcb' ); ?></option>
-                            <option value="finance_director"><?php esc_html_e( 'Finance Director', 'rtbcb' ); ?></option>
-                            <option value="finance_manager"><?php esc_html_e( 'Finance Manager', 'rtbcb' ); ?></option>
-                            <option value="treasury_analyst"><?php esc_html_e( 'Treasury Analyst', 'rtbcb' ); ?></option>
-                            <option value="controller"><?php esc_html_e( 'Controller', 'rtbcb' ); ?></option>
-                            <option value="other"><?php esc_html_e( 'Other', 'rtbcb' ); ?></option>
-                        </select>
-                        <div class="rtbcb-field-help">
-                            <?php esc_html_e( 'Helps us tailor recommendations to your perspective', 'rtbcb' ); ?>
-                        </div>
-                    </div>
-                </div>
-            </div>
+					<!-- Optional: Add current position field for more personalization -->
+					<div class="rtbcb-field">
+						<label for="job_title"><?php esc_html_e( 'Your Role (Optional)', 'rtbcb' ); ?></label>
+						<select name="job_title" id="job_title">
+							<option value=""><?php esc_html_e( 'Select your role...', 'rtbcb' ); ?></option>
+							<option value="cfo"><?php esc_html_e( 'CFO', 'rtbcb' ); ?></option>
+							<option value="treasurer"><?php esc_html_e( 'Treasurer', 'rtbcb' ); ?></option>
+							<option value="finance_director"><?php esc_html_e( 'Finance Director', 'rtbcb' ); ?></option>
+							<option value="finance_manager"><?php esc_html_e( 'Finance Manager', 'rtbcb' ); ?></option>
+							<option value="treasury_analyst"><?php esc_html_e( 'Treasury Analyst', 'rtbcb' ); ?></option>
+							<option value="controller"><?php esc_html_e( 'Controller', 'rtbcb' ); ?></option>
+							<option value="other"><?php esc_html_e( 'Other', 'rtbcb' ); ?></option>
+						</select>
+						<div class="rtbcb-field-help">
+							<?php esc_html_e( 'Helps us tailor recommendations to your perspective', 'rtbcb' ); ?>
+						</div>
+					</div>
+				</div>
+			</div>
 
-            <!-- Step 2: Treasury Operations -->
-            <div class="rtbcb-wizard-step" data-step="2">
-                <div class="rtbcb-step-header">
-                    <h3><?php esc_html_e( 'Your current treasury operations', 'rtbcb' ); ?></h3>
-                      <p><?php esc_html_e( 'Help us understand your current workload and banking relationships.', 'rtbcb' ); ?></p>
-                </div>
-                
-                <div class="rtbcb-step-content">
-                    <div class="rtbcb-field rtbcb-field-required">
-                        <label for="hours_reconciliation">
-                            <?php esc_html_e( 'Weekly Hours: Bank Reconciliation', 'rtbcb' ); ?>
-                        </label>
-                        <input type="number" name="hours_reconciliation" id="hours_reconciliation"
-                               min="0" max="168" step="0.5" placeholder="0" required inputmode="decimal" />
-                        <div class="rtbcb-field-help">
-                            <?php esc_html_e( 'Total weekly hours spent on bank reconciliation tasks', 'rtbcb' ); ?>
-                        </div>
-                    </div>
+			<!-- Step 2: Treasury Operations -->
+			<div class="rtbcb-wizard-step" data-step="2">
+				<div class="rtbcb-step-header">
+					<h3><?php esc_html_e( 'Your current treasury operations', 'rtbcb' ); ?></h3>
+					  <p><?php esc_html_e( 'Help us understand your current workload and banking relationships.', 'rtbcb' ); ?></p>
+				</div>
+				
+				<div class="rtbcb-step-content">
+					<div class="rtbcb-field rtbcb-field-required">
+						<label for="hours_reconciliation">
+							<?php esc_html_e( 'Weekly Hours: Bank Reconciliation', 'rtbcb' ); ?>
+						</label>
+						<input type="number" name="hours_reconciliation" id="hours_reconciliation"
+							   min="0" max="168" step="0.5" placeholder="0" required inputmode="decimal" />
+						<div class="rtbcb-field-help">
+							<?php esc_html_e( 'Total weekly hours spent on bank reconciliation tasks', 'rtbcb' ); ?>
+						</div>
+					</div>
 
-                    <div class="rtbcb-field rtbcb-field-required">
-                        <label for="hours_cash_positioning">
-                            <?php esc_html_e( 'Weekly Hours: Cash Positioning', 'rtbcb' ); ?>
-                        </label>
-                        <input type="number" name="hours_cash_positioning" id="hours_cash_positioning"
-                               min="0" max="168" step="0.5" placeholder="0" required inputmode="decimal" />
-                        <div class="rtbcb-field-help">
-                            <?php esc_html_e( 'Time spent on cash visibility, forecasting, and positioning', 'rtbcb' ); ?>
-                        </div>
-                    </div>
+					<div class="rtbcb-field rtbcb-field-required">
+						<label for="hours_cash_positioning">
+							<?php esc_html_e( 'Weekly Hours: Cash Positioning', 'rtbcb' ); ?>
+						</label>
+						<input type="number" name="hours_cash_positioning" id="hours_cash_positioning"
+							   min="0" max="168" step="0.5" placeholder="0" required inputmode="decimal" />
+						<div class="rtbcb-field-help">
+							<?php esc_html_e( 'Time spent on cash visibility, forecasting, and positioning', 'rtbcb' ); ?>
+						</div>
+					</div>
 
-                    <div class="rtbcb-field rtbcb-field-required">
-                        <label for="num_banks">
-                            <?php esc_html_e( 'Number of Banking Relationships', 'rtbcb' ); ?>
-                        </label>
-                        <input type="number" name="num_banks" id="num_banks"
-                               min="1" max="50" placeholder="0" required inputmode="decimal" />
-                        <div class="rtbcb-field-help">
-                            <?php esc_html_e( 'Total number of banks where your company maintains accounts', 'rtbcb' ); ?>
-                        </div>
-                    </div>
+					<div class="rtbcb-field rtbcb-field-required">
+						<label for="num_banks">
+							<?php esc_html_e( 'Number of Banking Relationships', 'rtbcb' ); ?>
+						</label>
+						<input type="number" name="num_banks" id="num_banks"
+							   min="1" max="50" placeholder="0" required inputmode="decimal" />
+						<div class="rtbcb-field-help">
+							<?php esc_html_e( 'Total number of banks where your company maintains accounts', 'rtbcb' ); ?>
+						</div>
+					</div>
 
-                    <div class="rtbcb-field rtbcb-field-required">
-                        <label for="ftes">
-                            <?php esc_html_e( 'Treasury Team Size (FTEs)', 'rtbcb' ); ?>
-                        </label>
-                        <input type="number" name="ftes" id="ftes"
-                               min="0.5" max="100" step="0.5" placeholder="0" required inputmode="decimal" />
-                        <div class="rtbcb-field-help">
-                            <?php esc_html_e( 'Full-time equivalent employees dedicated to treasury functions', 'rtbcb' ); ?>
-                        </div>
-                    </div>
-                </div>
-            </div>
+					<div class="rtbcb-field rtbcb-field-required">
+						<label for="ftes">
+							<?php esc_html_e( 'Treasury Team Size (FTEs)', 'rtbcb' ); ?>
+						</label>
+						<input type="number" name="ftes" id="ftes"
+							   min="0.5" max="100" step="0.5" placeholder="0" required inputmode="decimal" />
+						<div class="rtbcb-field-help">
+							<?php esc_html_e( 'Full-time equivalent employees dedicated to treasury functions', 'rtbcb' ); ?>
+						</div>
+					</div>
+				</div>
+			</div>
 
-            <!-- Step 3: Treasury Challenges -->
-            <div class="rtbcb-wizard-step" data-step="3">
-                <div class="rtbcb-step-header">
-                    <h3><?php esc_html_e( 'What are your biggest challenges?', 'rtbcb' ); ?></h3>
-                    <p><?php esc_html_e( 'Select the pain points that best describe your current treasury challenges.', 'rtbcb' ); ?></p>
-                </div>
-                
-                <div class="rtbcb-step-content">
-                    <div class="rtbcb-pain-points-grid">
-                        <div class="rtbcb-pain-point-card">
-                            <label class="rtbcb-pain-point-label">
-                                <input type="checkbox" name="pain_points[]" value="manual_processes" />
-                                <div class="rtbcb-pain-point-content">
-                                    <div class="rtbcb-pain-point-icon">⚙️</div>
-                                    <div class="rtbcb-pain-point-title"><?php esc_html_e( 'Manual Processes', 'rtbcb' ); ?></div>
-                                    <div class="rtbcb-pain-point-description">
-                                        <?php esc_html_e( 'Time-consuming manual data entry and reconciliation', 'rtbcb' ); ?>
-                                    </div>
-                                </div>
-                            </label>
-                        </div>
+			<!-- Step 3: Treasury Challenges -->
+			<div class="rtbcb-wizard-step" data-step="3">
+				<div class="rtbcb-step-header">
+					<h3><?php esc_html_e( 'What are your biggest challenges?', 'rtbcb' ); ?></h3>
+					<p><?php esc_html_e( 'Select the pain points that best describe your current treasury challenges.', 'rtbcb' ); ?></p>
+				</div>
+				
+				<div class="rtbcb-step-content">
+					<div class="rtbcb-pain-points-grid">
+						<div class="rtbcb-pain-point-card">
+							<label class="rtbcb-pain-point-label">
+								<input type="checkbox" name="pain_points[]" value="manual_processes" />
+								<div class="rtbcb-pain-point-content">
+									<div class="rtbcb-pain-point-icon">⚙️</div>
+									<div class="rtbcb-pain-point-title"><?php esc_html_e( 'Manual Processes', 'rtbcb' ); ?></div>
+									<div class="rtbcb-pain-point-description">
+										<?php esc_html_e( 'Time-consuming manual data entry and reconciliation', 'rtbcb' ); ?>
+									</div>
+								</div>
+							</label>
+						</div>
 
-                        <div class="rtbcb-pain-point-card">
-                            <label class="rtbcb-pain-point-label">
-                                <input type="checkbox" name="pain_points[]" value="poor_visibility" />
-                                <div class="rtbcb-pain-point-content">
-                                    <div class="rtbcb-pain-point-icon">👁️</div>
-                                    <div class="rtbcb-pain-point-title"><?php esc_html_e( 'Poor Cash Visibility', 'rtbcb' ); ?></div>
-                                    <div class="rtbcb-pain-point-description">
-                                        <?php esc_html_e( 'Lack of real-time visibility into cash positions', 'rtbcb' ); ?>
-                                    </div>
-                                </div>
-                            </label>
-                        </div>
+						<div class="rtbcb-pain-point-card">
+							<label class="rtbcb-pain-point-label">
+								<input type="checkbox" name="pain_points[]" value="poor_visibility" />
+								<div class="rtbcb-pain-point-content">
+									<div class="rtbcb-pain-point-icon">👁️</div>
+									<div class="rtbcb-pain-point-title"><?php esc_html_e( 'Poor Cash Visibility', 'rtbcb' ); ?></div>
+									<div class="rtbcb-pain-point-description">
+										<?php esc_html_e( 'Lack of real-time visibility into cash positions', 'rtbcb' ); ?>
+									</div>
+								</div>
+							</label>
+						</div>
 
-                        <div class="rtbcb-pain-point-card">
-                            <label class="rtbcb-pain-point-label">
-                                <input type="checkbox" name="pain_points[]" value="forecast_accuracy" />
-                                <div class="rtbcb-pain-point-content">
-                                    <div class="rtbcb-pain-point-icon">📊</div>
-                                    <div class="rtbcb-pain-point-title"><?php esc_html_e( 'Forecast Accuracy', 'rtbcb' ); ?></div>
-                                    <div class="rtbcb-pain-point-description">
-                                        <?php esc_html_e( 'Inaccurate cash forecasting and planning', 'rtbcb' ); ?>
-                                    </div>
-                                </div>
-                            </label>
-                        </div>
+						<div class="rtbcb-pain-point-card">
+							<label class="rtbcb-pain-point-label">
+								<input type="checkbox" name="pain_points[]" value="forecast_accuracy" />
+								<div class="rtbcb-pain-point-content">
+									<div class="rtbcb-pain-point-icon">📊</div>
+									<div class="rtbcb-pain-point-title"><?php esc_html_e( 'Forecast Accuracy', 'rtbcb' ); ?></div>
+									<div class="rtbcb-pain-point-description">
+										<?php esc_html_e( 'Inaccurate cash forecasting and planning', 'rtbcb' ); ?>
+									</div>
+								</div>
+							</label>
+						</div>
 
-                        <div class="rtbcb-pain-point-card">
-                            <label class="rtbcb-pain-point-label">
-                                <input type="checkbox" name="pain_points[]" value="compliance_risk" />
-                                <div class="rtbcb-pain-point-content">
-                                    <div class="rtbcb-pain-point-icon">🛡️</div>
-                                    <div class="rtbcb-pain-point-title"><?php esc_html_e( 'Compliance & Risk', 'rtbcb' ); ?></div>
-                                    <div class="rtbcb-pain-point-description">
-                                        <?php esc_html_e( 'Regulatory compliance and risk management concerns', 'rtbcb' ); ?>
-                                    </div>
-                                </div>
-                            </label>
-                        </div>
+						<div class="rtbcb-pain-point-card">
+							<label class="rtbcb-pain-point-label">
+								<input type="checkbox" name="pain_points[]" value="compliance_risk" />
+								<div class="rtbcb-pain-point-content">
+									<div class="rtbcb-pain-point-icon">🛡️</div>
+									<div class="rtbcb-pain-point-title"><?php esc_html_e( 'Compliance & Risk', 'rtbcb' ); ?></div>
+									<div class="rtbcb-pain-point-description">
+										<?php esc_html_e( 'Regulatory compliance and risk management concerns', 'rtbcb' ); ?>
+									</div>
+								</div>
+							</label>
+						</div>
 
-                        <div class="rtbcb-pain-point-card">
-                            <label class="rtbcb-pain-point-label">
-                                <input type="checkbox" name="pain_points[]" value="bank_fees" />
-                                <div class="rtbcb-pain-point-content">
-                                    <div class="rtbcb-pain-point-icon">💰</div>
-                                    <div class="rtbcb-pain-point-title"><?php esc_html_e( 'High Bank Fees', 'rtbcb' ); ?></div>
-                                    <div class="rtbcb-pain-point-description">
-                                        <?php esc_html_e( 'Excessive banking fees and suboptimal cash positioning', 'rtbcb' ); ?>
-                                    </div>
-                                </div>
-                            </label>
-                        </div>
+						<div class="rtbcb-pain-point-card">
+							<label class="rtbcb-pain-point-label">
+								<input type="checkbox" name="pain_points[]" value="bank_fees" />
+								<div class="rtbcb-pain-point-content">
+									<div class="rtbcb-pain-point-icon">💰</div>
+									<div class="rtbcb-pain-point-title"><?php esc_html_e( 'High Bank Fees', 'rtbcb' ); ?></div>
+									<div class="rtbcb-pain-point-description">
+										<?php esc_html_e( 'Excessive banking fees and suboptimal cash positioning', 'rtbcb' ); ?>
+									</div>
+								</div>
+							</label>
+						</div>
 
-                        <div class="rtbcb-pain-point-card">
-                            <label class="rtbcb-pain-point-label">
-                                <input type="checkbox" name="pain_points[]" value="integration_issues" />
-                                <div class="rtbcb-pain-point-content">
-                                    <div class="rtbcb-pain-point-icon">🔗</div>
-                                    <div class="rtbcb-pain-point-title"><?php esc_html_e( 'System Integration', 'rtbcb' ); ?></div>
-                                    <div class="rtbcb-pain-point-description">
-                                        <?php esc_html_e( 'Disconnected systems and data silos', 'rtbcb' ); ?>
-                                    </div>
-                                </div>
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <div class="rtbcb-pain-points-validation">
-                        <div class="rtbcb-validation-message" style="display: none;">
-                            <?php esc_html_e( 'Please select at least one challenge that applies to your organization.', 'rtbcb' ); ?>
-                        </div>
-                    </div>
-                </div>
-            </div>
+						<div class="rtbcb-pain-point-card">
+							<label class="rtbcb-pain-point-label">
+								<input type="checkbox" name="pain_points[]" value="integration_issues" />
+								<div class="rtbcb-pain-point-content">
+									<div class="rtbcb-pain-point-icon">🔗</div>
+									<div class="rtbcb-pain-point-title"><?php esc_html_e( 'System Integration', 'rtbcb' ); ?></div>
+									<div class="rtbcb-pain-point-description">
+										<?php esc_html_e( 'Disconnected systems and data silos', 'rtbcb' ); ?>
+									</div>
+								</div>
+							</label>
+						</div>
+					</div>
+					
+					<div class="rtbcb-pain-points-validation">
+						<div class="rtbcb-validation-message" style="display: none;">
+							<?php esc_html_e( 'Please select at least one challenge that applies to your organization.', 'rtbcb' ); ?>
+						</div>
+					</div>
+				</div>
+			</div>
 
-            <!-- Step 4: Strategic Context -->
-            <div class="rtbcb-wizard-step" data-step="4">
-                <div class="rtbcb-step-header">
-                    <h3><?php esc_html_e( 'Strategic context for your initiative', 'rtbcb' ); ?></h3>
-                    <p><?php esc_html_e( 'Help us understand the goals and constraints for your project.', 'rtbcb' ); ?></p>
-                </div>
+			<!-- Step 4: Strategic Context -->
+			<div class="rtbcb-wizard-step" data-step="4">
+				<div class="rtbcb-step-header">
+					<h3><?php esc_html_e( 'Strategic context for your initiative', 'rtbcb' ); ?></h3>
+					<p><?php esc_html_e( 'Help us understand the goals and constraints for your project.', 'rtbcb' ); ?></p>
+				</div>
 
-                <div class="rtbcb-step-content">
-                    <div class="rtbcb-field">
-                        <label for="current_tech"><?php esc_html_e( 'Current Treasury Technology', 'rtbcb' ); ?></label>
-                        <input type="text" name="current_tech" id="current_tech" />
-                    </div>
+				<div class="rtbcb-step-content">
+					<div class="rtbcb-field">
+						<label for="current_tech"><?php esc_html_e( 'Current Treasury Technology', 'rtbcb' ); ?></label>
+						<input type="text" name="current_tech" id="current_tech" />
+					</div>
 
-                    <div class="rtbcb-field rtbcb-field-required">
-                        <label for="business_objective">
-                            <?php esc_html_e( 'Primary Business Objective', 'rtbcb' ); ?>
-                        </label>
-                        <select name="business_objective" id="business_objective" required>
-                            <option value=""><?php esc_html_e( 'Select an objective...', 'rtbcb' ); ?></option>
-                            <option value="cost_reduction"><?php esc_html_e( 'Cost reduction', 'rtbcb' ); ?></option>
-                            <option value="risk_management"><?php esc_html_e( 'Risk management', 'rtbcb' ); ?></option>
-                            <option value="growth_support"><?php esc_html_e( 'Growth support', 'rtbcb' ); ?></option>
-                            <option value="compliance"><?php esc_html_e( 'Compliance', 'rtbcb' ); ?></option>
-                        </select>
-                    </div>
+					<div class="rtbcb-field rtbcb-field-required">
+						<label for="business_objective">
+							<?php esc_html_e( 'Primary Business Objective', 'rtbcb' ); ?>
+						</label>
+						<select name="business_objective" id="business_objective" required>
+							<option value=""><?php esc_html_e( 'Select an objective...', 'rtbcb' ); ?></option>
+							<option value="cost_reduction"><?php esc_html_e( 'Cost reduction', 'rtbcb' ); ?></option>
+							<option value="risk_management"><?php esc_html_e( 'Risk management', 'rtbcb' ); ?></option>
+							<option value="growth_support"><?php esc_html_e( 'Growth support', 'rtbcb' ); ?></option>
+							<option value="compliance"><?php esc_html_e( 'Compliance', 'rtbcb' ); ?></option>
+						</select>
+					</div>
 
-                    <div class="rtbcb-field rtbcb-field-required">
-                        <label for="implementation_timeline">
-                            <?php esc_html_e( 'Implementation Timeline', 'rtbcb' ); ?>
-                        </label>
-                        <select name="implementation_timeline" id="implementation_timeline" required>
-                            <option value=""><?php esc_html_e( 'Select a timeline...', 'rtbcb' ); ?></option>
-                            <option value="3-6"><?php esc_html_e( '3-6 months', 'rtbcb' ); ?></option>
-                            <option value="6-12"><?php esc_html_e( '6-12 months', 'rtbcb' ); ?></option>
-                            <option value="12+"><?php esc_html_e( '12+ months', 'rtbcb' ); ?></option>
-                        </select>
-                    </div>
+					<div class="rtbcb-field rtbcb-field-required">
+						<label for="implementation_timeline">
+							<?php esc_html_e( 'Implementation Timeline', 'rtbcb' ); ?>
+						</label>
+						<select name="implementation_timeline" id="implementation_timeline" required>
+							<option value=""><?php esc_html_e( 'Select a timeline...', 'rtbcb' ); ?></option>
+							<option value="3-6"><?php esc_html_e( '3-6 months', 'rtbcb' ); ?></option>
+							<option value="6-12"><?php esc_html_e( '6-12 months', 'rtbcb' ); ?></option>
+							<option value="12+"><?php esc_html_e( '12+ months', 'rtbcb' ); ?></option>
+						</select>
+					</div>
 
-                    <div class="rtbcb-field">
-                        <label for="decision_makers"><?php esc_html_e( 'Decision Makers', 'rtbcb' ); ?></label>
-                        <select name="decision_makers[]" id="decision_makers" multiple>
-                            <option value="cfo"><?php esc_html_e( 'CFO', 'rtbcb' ); ?></option>
-                            <option value="treasurer"><?php esc_html_e( 'Treasurer', 'rtbcb' ); ?></option>
-                            <option value="finance_team"><?php esc_html_e( 'Finance Team', 'rtbcb' ); ?></option>
-                            <option value="it"><?php esc_html_e( 'IT', 'rtbcb' ); ?></option>
-                        </select>
-                    </div>
+					<div class="rtbcb-field">
+						<label for="decision_makers"><?php esc_html_e( 'Decision Makers', 'rtbcb' ); ?></label>
+						<select name="decision_makers[]" id="decision_makers" multiple>
+							<option value="cfo"><?php esc_html_e( 'CFO', 'rtbcb' ); ?></option>
+							<option value="treasurer"><?php esc_html_e( 'Treasurer', 'rtbcb' ); ?></option>
+							<option value="finance_team"><?php esc_html_e( 'Finance Team', 'rtbcb' ); ?></option>
+							<option value="it"><?php esc_html_e( 'IT', 'rtbcb' ); ?></option>
+						</select>
+					</div>
 
-                    <div class="rtbcb-field rtbcb-field-required">
-                        <label for="budget_range">
-                            <?php esc_html_e( 'Budget Range', 'rtbcb' ); ?>
-                        </label>
-                        <select name="budget_range" id="budget_range" required>
-                            <option value=""><?php esc_html_e( 'Select a range...', 'rtbcb' ); ?></option>
-                            <option value="50-100"><?php esc_html_e( '$50K-$100K', 'rtbcb' ); ?></option>
-                            <option value="100-250"><?php esc_html_e( '$100K-$250K', 'rtbcb' ); ?></option>
-                            <option value="250-500"><?php esc_html_e( '$250K-$500K', 'rtbcb' ); ?></option>
-                            <option value="500+"><?php esc_html_e( '$500K+', 'rtbcb' ); ?></option>
-                        </select>
-                    </div>
-                </div>
-            </div>
+					<div class="rtbcb-field rtbcb-field-required">
+						<label for="budget_range">
+							<?php esc_html_e( 'Budget Range', 'rtbcb' ); ?>
+						</label>
+						<select name="budget_range" id="budget_range" required>
+							<option value=""><?php esc_html_e( 'Select a range...', 'rtbcb' ); ?></option>
+							<option value="50-100"><?php esc_html_e( '$50K-$100K', 'rtbcb' ); ?></option>
+							<option value="100-250"><?php esc_html_e( '$100K-$250K', 'rtbcb' ); ?></option>
+							<option value="250-500"><?php esc_html_e( '$250K-$500K', 'rtbcb' ); ?></option>
+							<option value="500+"><?php esc_html_e( '$500K+', 'rtbcb' ); ?></option>
+						</select>
+					</div>
+				</div>
+			</div>
 
-            <!-- Step 5: Contact Information -->
-            <div class="rtbcb-wizard-step" data-step="5">
-                <div class="rtbcb-step-header">
-                    <h3><?php esc_html_e( 'Get your business case', 'rtbcb' ); ?></h3>
-                    <p><?php esc_html_e( 'Enter your email to receive your personalized ROI analysis and recommendations.', 'rtbcb' ); ?></p>
-                </div>
-                
-                <div class="rtbcb-step-content">
-                    <div class="rtbcb-field rtbcb-field-required">
-                        <label for="email">
-                            <?php esc_html_e( 'Business Email Address', 'rtbcb' ); ?>
-                        </label>
-                        <input type="email" name="email" id="email" 
-                               placeholder="yourname@company.com" required />
-                        <div class="rtbcb-field-help">
-                            <?php esc_html_e( 'We\'ll send your business case report to this email address', 'rtbcb' ); ?>
-                        </div>
-                    </div>
+			<!-- Step 5: Contact Information -->
+			<div class="rtbcb-wizard-step" data-step="5">
+				<div class="rtbcb-step-header">
+					<h3><?php esc_html_e( 'Get your business case', 'rtbcb' ); ?></h3>
+					<p><?php esc_html_e( 'Enter your email to receive your personalized ROI analysis and recommendations.', 'rtbcb' ); ?></p>
+				</div>
+				
+				<div class="rtbcb-step-content">
+					<div class="rtbcb-field rtbcb-field-required">
+						<label for="email">
+							<?php esc_html_e( 'Business Email Address', 'rtbcb' ); ?>
+						</label>
+						<input type="email" name="email" id="email" 
+							   placeholder="yourname@company.com" required />
+						<div class="rtbcb-field-help">
+							<?php esc_html_e( 'We\'ll send your business case report to this email address', 'rtbcb' ); ?>
+						</div>
+					</div>
 
-                    <div class="rtbcb-consent-container">
-                        <div class="rtbcb-field">
-                            <div class="rtbcb-consent-wrapper">
-                                <label class="rtbcb-consent-label">
-                                    <input type="checkbox" name="consent" required />
-                                    <span class="rtbcb-consent-text">
-                                        <?php
-                                        printf(
-                                            wp_kses(
-                                                __( 'I agree to receive my business case report and occasional treasury insights. You can unsubscribe at any time. View our <a href="%s" target="_blank">privacy policy</a>.', 'rtbcb' ),
-                                                [ 'a' => [ 'href' => [], 'target' => [] ] ]
-                                            ),
-                                            '#'
-                                        );
-                                        ?>
-                                    </span>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="rtbcb-field">
-                        <label>
-                            <input type="checkbox" name="fast_mode" id="fast_mode" value="1" />
-                            <?php esc_html_e( 'Enable fast mode (ROI only)', 'rtbcb' ); ?>
-                        </label>
-                        <div class="rtbcb-field-help">
-                            <?php esc_html_e( 'Skip AI analysis and only calculate ROI.', 'rtbcb' ); ?>
-                        </div>
-                    </div>
+					<div class="rtbcb-consent-container">
+						<div class="rtbcb-field">
+							<div class="rtbcb-consent-wrapper">
+								<label class="rtbcb-consent-label">
+									<input type="checkbox" name="consent" required />
+									<span class="rtbcb-consent-text">
+										<?php
+										printf(
+											wp_kses(
+												__( 'I agree to receive my business case report and occasional treasury insights. You can unsubscribe at any time. View our <a href="%s" target="_blank">privacy policy</a>.', 'rtbcb' ),
+												[ 'a' => [ 'href' => [], 'target' => [] ] ]
+											),
+											'#'
+										);
+										?>
+									</span>
+								</label>
+							</div>
+						</div>
+					</div>
+					<div class="rtbcb-field">
+						<label>
+							<input type="checkbox" name="fast_mode" id="fast_mode" value="1" />
+							<?php esc_html_e( 'Enable fast mode (ROI only)', 'rtbcb' ); ?>
+						</label>
+						<div class="rtbcb-field-help">
+							<?php esc_html_e( 'Skip AI analysis and only calculate ROI.', 'rtbcb' ); ?>
+						</div>
+					</div>
 
-                    <!-- What You'll Receive Preview -->
-                    <div class="rtbcb-preview-container">
-                        <div class="rtbcb-results-preview">
-                            <h4><?php esc_html_e( 'What You\'ll Receive:', 'rtbcb' ); ?></h4>
-                            <ul class="rtbcb-preview-list">
-                                <li>📊 <?php esc_html_e( 'Detailed ROI projections (conservative, base case, optimistic)', 'rtbcb' ); ?></li>
-                                <li>🎯 <?php esc_html_e( 'Personalized solution category recommendation', 'rtbcb' ); ?></li>
-                                <li>📄 <?php esc_html_e( 'Professional PDF report ready for stakeholders', 'rtbcb' ); ?></li>
-                                <li>🗺️ <?php esc_html_e( 'Implementation roadmap and next steps', 'rtbcb' ); ?></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+					<!-- What You'll Receive Preview -->
+					<div class="rtbcb-preview-container">
+						<div class="rtbcb-results-preview">
+							<h4><?php esc_html_e( 'What You\'ll Receive:', 'rtbcb' ); ?></h4>
+							<ul class="rtbcb-preview-list">
+								<li>📊 <?php esc_html_e( 'Detailed ROI projections (conservative, base case, optimistic)', 'rtbcb' ); ?></li>
+								<li>🎯 <?php esc_html_e( 'Personalized solution category recommendation', 'rtbcb' ); ?></li>
+								<li>📄 <?php esc_html_e( 'Professional PDF report ready for stakeholders', 'rtbcb' ); ?></li>
+								<li>🗺️ <?php esc_html_e( 'Implementation roadmap and next steps', 'rtbcb' ); ?></li>
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
 
-        <!-- Navigation Controls -->
-        <div class="rtbcb-wizard-navigation">
-            <button type="button" class="rtbcb-nav-btn rtbcb-nav-prev" style="display: none;">
-                <span class="rtbcb-nav-icon">←</span>
-                <?php esc_html_e( 'Previous', 'rtbcb' ); ?>
-            </button>
+		<!-- Navigation Controls -->
+		<div class="rtbcb-wizard-navigation">
+			<button type="button" class="rtbcb-nav-btn rtbcb-nav-prev" style="display: none;">
+				<span class="rtbcb-nav-icon">←</span>
+				<?php esc_html_e( 'Previous', 'rtbcb' ); ?>
+			</button>
 
-            <div class="rtbcb-nav-spacer"></div>
+			<div class="rtbcb-nav-spacer"></div>
 
-            <button type="button" class="rtbcb-nav-btn rtbcb-nav-next">
-                <?php esc_html_e( 'Next', 'rtbcb' ); ?>
-                <span class="rtbcb-nav-icon">→</span>
-            </button>
+			<button type="button" class="rtbcb-nav-btn rtbcb-nav-next">
+				<?php esc_html_e( 'Next', 'rtbcb' ); ?>
+				<span class="rtbcb-nav-icon">→</span>
+			</button>
 
-            <?php wp_nonce_field( 'rtbcb_generate', 'rtbcb_nonce' ); ?>
+			<?php wp_nonce_field( 'rtbcb_generate', 'rtbcb_nonce' ); ?>
 
-            <button type="submit" id="rtbcb-submit-button" class="rtbcb-nav-btn rtbcb-nav-submit" style="display: none;">
-                <span class="rtbcb-nav-icon">🚀</span>
-                <?php esc_html_e( 'Generate Business Case', 'rtbcb' ); ?>
-            </button>
+			<button type="submit" id="rtbcb-submit-button" class="rtbcb-nav-btn rtbcb-nav-submit" style="display: none;">
+				<span class="rtbcb-nav-icon">🚀</span>
+				<?php esc_html_e( 'Generate Business Case', 'rtbcb' ); ?>
+			</button>
 
-        </div>
-                </form>
-            <div id="rtbcbSuccessMessage" class="rtbcb-success-message" style="display:none"></div>
-            </div>
+		</div>
+				</form>
+			<div id="rtbcbSuccessMessage" class="rtbcb-success-message" style="display:none"></div>
+			</div>
 <div id="rtbcb-progress-container" class="rtbcb-progress-overlay" style="display: none;">
 <div class="rtbcb-progress-content">
 <div class="rtbcb-progress-spinner"></div>
@@ -458,43 +458,43 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 </div>
 </div>
 </div>
-        </div>
-    </div>
+		</div>
+	</div>
 </div>
 
 <!-- Results Section (separate from modal) -->
 <div id="rtbcbResults" class="rtbcb-results" style="display: none;">
-    <!-- Results will be populated by JavaScript -->
+	<!-- Results will be populated by JavaScript -->
 </div>
 
 <!-- Category Information Modal (Hidden by default) -->
 <div id="rtbcb-category-modal" class="rtbcb-modal" style="display: none;">
-    <div class="rtbcb-modal-content">
-        <div class="rtbcb-modal-header">
-            <h3><?php esc_html_e( 'Treasury Solution Categories', 'rtbcb' ); ?></h3>
-            <button type="button" class="rtbcb-modal-close">&times;</button>
-        </div>
-        <div class="rtbcb-modal-body">
-            <?php foreach ( $categories as $key => $category ) : ?>
-                <div class="rtbcb-category-info">
-                    <h4><?php echo esc_html( $category['name'] ); ?></h4>
-                    <p><?php echo esc_html( $category['description'] ); ?></p>
-                    <div class="rtbcb-category-features">
-                        <strong><?php esc_html_e( 'Key Features:', 'rtbcb' ); ?></strong>
-                        <ul>
-                            <?php foreach ( array_slice( $category['features'], 0, 3 ) as $feature ) : ?>
-                                <li><?php echo esc_html( $feature ); ?></li>
-                            <?php endforeach; ?>
-                        </ul>
-                    </div>
-                    <div class="rtbcb-category-ideal">
-                        <strong><?php esc_html_e( 'Ideal for:', 'rtbcb' ); ?></strong>
-                        <?php echo esc_html( $category['ideal_for'] ); ?>
-                    </div>
-                </div>
-            <?php endforeach; ?>
-        </div>
-    </div>
+	<div class="rtbcb-modal-content">
+		<div class="rtbcb-modal-header">
+			<h3><?php esc_html_e( 'Treasury Solution Categories', 'rtbcb' ); ?></h3>
+			<button type="button" class="rtbcb-modal-close">&times;</button>
+		</div>
+		<div class="rtbcb-modal-body">
+			<?php foreach ( $categories as $key => $category ) : ?>
+				<div class="rtbcb-category-info">
+					<h4><?php echo esc_html( $category['name'] ); ?></h4>
+					<p><?php echo esc_html( $category['description'] ); ?></p>
+					<div class="rtbcb-category-features">
+						<strong><?php esc_html_e( 'Key Features:', 'rtbcb' ); ?></strong>
+						<ul>
+							<?php foreach ( array_slice( $category['features'], 0, 3 ) as $feature ) : ?>
+								<li><?php echo esc_html( $feature ); ?></li>
+							<?php endforeach; ?>
+						</ul>
+					</div>
+					<div class="rtbcb-category-ideal">
+						<strong><?php esc_html_e( 'Ideal for:', 'rtbcb' ); ?></strong>
+						<?php echo esc_html( $category['ideal_for'] ); ?>
+					</div>
+				</div>
+			<?php endforeach; ?>
+		</div>
+	</div>
 </div>
 
 

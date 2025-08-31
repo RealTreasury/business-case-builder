@@ -9,7 +9,7 @@ class WP_Error {
 public $errors;
 public $error_data;
 public function __construct( $code = '', $message = '', $data = '' ) {
-$this->errors     = [ $code => [ $message ] ];
+$this->errors	  = [ $code => [ $message ] ];
 $this->error_data = [ $code => $data ];
 }
 public function get_error_message( $code = '' ) {

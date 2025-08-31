@@ -8,9 +8,9 @@ private $message;
 private $data;
 
 public function __construct( $code = '', $message = '', $data = [] ) {
-$this->code    = $code;
+$this->code	   = $code;
 $this->message = $message;
-$this->data    = $data;
+$this->data	   = $data;
 }
 
 public function get_error_code() {
@@ -68,56 +68,56 @@ return new WP_Error( 'llm_timeout', 'Request timed out' );
 
 class Real_Treasury_BCB {
 private function generate_business_analysis( $user_inputs, $scenarios, $recommendation, $chunk_callback = null ) {
-$start_time      = microtime( true );
-$timeout         = rtbcb_get_api_timeout();
-$time_remaining  = static function() use ( $start_time, $timeout ) {
+$start_time		 = microtime( true );
+$timeout		 = rtbcb_get_api_timeout();
+$time_remaining	 = static function() use ( $start_time, $timeout ) {
 return $timeout - ( microtime( true ) - $start_time );
 };
-$rag_context     = [];
-$rag_loader      = function() use ( &$rag_context ) {
+$rag_context	 = [];
+$rag_loader		 = function() use ( &$rag_context ) {
 return $rag_context;
 };
 
 if ( ! class_exists( 'RTBCB_LLM' ) ) {
 return [
-'analysis'    => new WP_Error( 'llm_unavailable', __( 'AI analysis service unavailable.', 'rtbcb' ) ),
+'analysis'	  => new WP_Error( 'llm_unavailable', __( 'AI analysis service unavailable.', 'rtbcb' ) ),
 'rag_context' => [],
 ];
 }
 
 if ( ! rtbcb_has_openai_api_key() ) {
 return [
-'analysis'    => $this->generate_fallback_analysis( $user_inputs, $scenarios ),
+'analysis'	  => $this->generate_fallback_analysis( $user_inputs, $scenarios ),
 'rag_context' => [],
 ];
 }
 
 if ( $time_remaining() < 5 ) {
 return [
-'analysis'    => $this->generate_fallback_analysis( $user_inputs, $scenarios ),
+'analysis'	  => $this->generate_fallback_analysis( $user_inputs, $scenarios ),
 'rag_context' => [],
 ];
 }
 
 try {
-$llm    = new RTBCB_LLM();
+$llm	= new RTBCB_LLM();
 $result = $llm->generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_loader, $chunk_callback );
 
 if ( is_wp_error( $result ) ) {
 return [
-'analysis'    => $this->generate_fallback_analysis( $user_inputs, $scenarios ),
+'analysis'	  => $this->generate_fallback_analysis( $user_inputs, $scenarios ),
 'rag_context' => [],
 ];
 }
 
 return [
-'analysis'    => $result,
+'analysis'	  => $result,
 'rag_context' => $rag_context,
 ];
 } catch ( Exception $e ) {
 rtbcb_log_error( 'LLM analysis failed', $e->getMessage() );
 return [
-'analysis'    => $this->generate_fallback_analysis( $user_inputs, $scenarios ),
+'analysis'	  => $this->generate_fallback_analysis( $user_inputs, $scenarios ),
 'rag_context' => [],
 ];
 }
@@ -125,35 +125,35 @@ return [
 
 private function generate_fallback_analysis( $user_inputs, $scenarios ) {
 $company_name = $user_inputs['company_name'];
-$base_roi     = $scenarios['base']['total_annual_benefit'] ?? 0;
+$base_roi	  = $scenarios['base']['total_annual_benefit'] ?? 0;
 
 return [
 'executive_summary' => sprintf(
 __( '%s has significant opportunities to improve treasury operations through technology automation. Based on current processes, implementing a modern treasury management system could deliver substantial ROI while reducing operational risk.', 'rtbcb' ),
 $company_name
 ),
-'narrative'         => sprintf(
+'narrative'			=> sprintf(
 __( 'Our analysis of %s treasury operations reveals opportunities for process automation and efficiency gains. Key areas for improvement include cash management, bank reconciliation, and reporting processes.', 'rtbcb' ),
 $company_name
 ),
-'key_benefits'      => [
+'key_benefits'		=> [
 __( 'Automated cash positioning and forecasting', 'rtbcb' ),
 __( 'Streamlined bank reconciliation processes', 'rtbcb' ),
 __( 'Enhanced regulatory compliance and reporting', 'rtbcb' ),
 __( 'Improved operational risk management', 'rtbcb' ),
 ],
-'risks'             => [
+'risks'				=> [
 __( 'Implementation complexity and timeline risk', 'rtbcb' ),
 __( 'User adoption and change management challenges', 'rtbcb' ),
 __( 'Integration complexity with existing systems', 'rtbcb' ),
 ],
-'next_actions'      => [
+'next_actions'		=> [
 __( 'Secure executive sponsorship and project funding', 'rtbcb' ),
 __( 'Conduct detailed requirements analysis', 'rtbcb' ),
 __( 'Evaluate treasury technology vendors', 'rtbcb' ),
 __( 'Develop implementation roadmap and timeline', 'rtbcb' ),
 ],
-'confidence'        => 0.75,
+'confidence'		=> 0.75,
 'enhanced_fallback' => true,
 ];
 }
@@ -161,12 +161,12 @@ __( 'Develop implementation roadmap and timeline', 'rtbcb' ),
 
 final class RTBCB_GenerateBusinessAnalysisTimeoutTest extends TestCase {
 public function test_timeout_returns_fallback_analysis() {
-$plugin  = new Real_Treasury_BCB();
-$method  = new ReflectionMethod( Real_Treasury_BCB::class, 'generate_business_analysis' );
+$plugin	 = new Real_Treasury_BCB();
+$method	 = new ReflectionMethod( Real_Treasury_BCB::class, 'generate_business_analysis' );
 $method->setAccessible( true );
 
 $user_inputs = [ 'company_name' => 'Test Co' ];
-$scenarios   = [ 'base' => [ 'total_annual_benefit' => 1000 ] ];
+$scenarios	 = [ 'base' => [ 'total_annual_benefit' => 1000 ] ];
 
 $result = $method->invoke( $plugin, $user_inputs, $scenarios, [] );
 

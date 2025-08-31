@@ -76,10 +76,10 @@ return $default;
 }
 
 class WPDB_Memory {
-    public $prefix = '';
-    public $insert_id = 0;
-    public $last_error = '';
-    private $dbh;
+	public $prefix = '';
+	public $insert_id = 0;
+	public $last_error = '';
+	private $dbh;
 
 public function __construct() {
 $this->dbh = new SQLite3( ':memory:' );
@@ -132,32 +132,32 @@ $fmt  = $format[ $i ];
 $val  = $data[ $col ];
 $vals[] = '%s' === $fmt ? "'" . str_replace( "'", "''", $val ) . "'" : $val;
 }
-        $sql = "INSERT INTO $table (" . implode( ',', $cols ) . ") VALUES (" . implode( ',', $vals ) . ")";
-        $ok  = $this->dbh->exec( $sql );
-        if ( $ok ) {
-            $this->insert_id = $this->dbh->lastInsertRowID();
-            return 1;
-        }
-        $this->last_error = $this->dbh->lastErrorMsg();
-        return false;
+		$sql = "INSERT INTO $table (" . implode( ',', $cols ) . ") VALUES (" . implode( ',', $vals ) . ")";
+		$ok	 = $this->dbh->exec( $sql );
+		if ( $ok ) {
+			$this->insert_id = $this->dbh->lastInsertRowID();
+			return 1;
+		}
+		$this->last_error = $this->dbh->lastErrorMsg();
+		return false;
 }
 
 public function update( $table, $data, $where, $format, $where_format ) {
 $sets = [];
 foreach ( $data as $col => $val ) {
-$fmt    = array_shift( $format );
+$fmt	= array_shift( $format );
 $sets[] = '%s' === $fmt ? "$col = '" . str_replace( "'", "''", $val ) . "'" : "$col = $val";
 }
 $where_col = key( $where );
 $where_val = current( $where );
 $where_fmt = $where_format[0];
 $where_sql = '%s' === $where_fmt ? "'" . str_replace( "'", "''", $where_val ) . "'" : $where_val;
-$sql       = "UPDATE $table SET " . implode( ', ', $sets ) . " WHERE $where_col = $where_sql";
-        $ok = $this->dbh->exec( $sql );
-        if ( ! $ok ) {
-            $this->last_error = $this->dbh->lastErrorMsg();
-        }
-        return $ok;
+$sql	   = "UPDATE $table SET " . implode( ', ', $sets ) . " WHERE $where_col = $where_sql";
+		$ok = $this->dbh->exec( $sql );
+		if ( ! $ok ) {
+			$this->last_error = $this->dbh->lastErrorMsg();
+		}
+		return $ok;
 }
 
 public function last_error() {
@@ -171,7 +171,7 @@ $wpdb = new WPDB_Memory();
 require_once __DIR__ . '/../inc/class-rtbcb-leads.php';
 
 $reflect = new ReflectionClass( 'RTBCB_Leads' );
-$prop    = $reflect->getProperty( 'table_name' );
+$prop	 = $reflect->getProperty( 'table_name' );
 $prop->setAccessible( true );
 $prop->setValue( null, $wpdb->prefix . 'rtbcb_leads' );
 
@@ -200,17 +200,17 @@ created_at TEXT,
 updated_at TEXT
 )' );
 
-$_SERVER['REMOTE_ADDR']     = '127.0.0.1';
+$_SERVER['REMOTE_ADDR']		= '127.0.0.1';
 $_SERVER['HTTP_USER_AGENT'] = 'test-agent';
 
 $lead_data = [
-'email'         => 'test@example.com',
-'company_size'  => '100-500',
-'pain_points'   => [ 'delays', 'errors' ],
-'roi_low'       => 1000,
-'roi_base'      => 2000,
-'roi_high'      => 3000,
-'report_html'   => '<p>Report</p>',
+'email'			=> 'test@example.com',
+'company_size'	=> '100-500',
+'pain_points'	=> [ 'delays', 'errors' ],
+'roi_low'		=> 1000,
+'roi_base'		=> 2000,
+'roi_high'		=> 3000,
+'report_html'	=> '<p>Report</p>',
 ];
 
 $lead_id = RTBCB_Leads::save_lead( $lead_data );

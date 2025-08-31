@@ -66,16 +66,16 @@ $this->start_time = microtime( true );
 /**
  * Start a new workflow step.
  *
- * @param string $step_name  Step identifier.
- * @param mixed  $input_data Optional input data.
+ * @param string $step_name	 Step identifier.
+ * @param mixed	 $input_data Optional input data.
  * @return void
  */
 public function start_step( $step_name, $input_data = null ) {
 $this->current_step = [
-'name'       => $step_name,
+'name'		 => $step_name,
 'start_time' => microtime( true ),
 'input_data' => $input_data,
-'status'     => 'running',
+'status'	 => 'running',
 ];
 
 error_log( "RTBCB Workflow: Starting step '{$step_name}'" );
@@ -84,23 +84,23 @@ error_log( "RTBCB Workflow: Starting step '{$step_name}'" );
 /**
  * Complete the current workflow step.
  *
- * @param string $step_name   Step identifier.
- * @param mixed  $output_data Optional output data.
+ * @param string $step_name	  Step identifier.
+ * @param mixed	 $output_data Optional output data.
  * @return void
  */
 public function complete_step( $step_name, $output_data = null ) {
 if ( $this->current_step && $this->current_step['name'] === $step_name ) {
-$this->current_step['end_time']     = microtime( true );
-$this->current_step['duration']     = $this->current_step['end_time'] - $this->current_step['start_time'];
-$this->current_step['output_data']  = $output_data;
-$this->current_step['status']       = 'completed';
+$this->current_step['end_time']		= microtime( true );
+$this->current_step['duration']		= $this->current_step['end_time'] - $this->current_step['start_time'];
+$this->current_step['output_data']	= $output_data;
+$this->current_step['status']		= 'completed';
 $this->current_step['memory_usage'] = memory_get_usage( true );
 
 if ( $this->is_ai_step( $step_name ) ) {
 $this->ai_calls++;
 }
 
-$this->steps[]     = $this->current_step;
+$this->steps[]	   = $this->current_step;
 $this->current_step = null;
 
 do_action( 'rtbcb_workflow_step_completed', $step_name );
@@ -112,17 +112,17 @@ error_log( 'RTBCB Workflow: Completed step ' . $step_name . ' in ' . round( $thi
 /**
  * Add a warning to the current or last step.
  *
- * @param string $code    Warning code.
+ * @param string $code	  Warning code.
  * @param string $message Warning message.
  * @return void
  */
 public function add_warning( $code, $message ) {
 $step_name = $this->current_step ? $this->current_step['name'] : ( $this->steps ? end( $this->steps )['name'] : 'unknown' );
 $warning   = [
-'code'      => $code,
-'message'   => $message,
+'code'		=> $code,
+'message'	=> $message,
 'timestamp' => microtime( true ),
-'step'      => $step_name,
+'step'		=> $step_name,
 ];
 
 $this->warnings[] = $warning;
@@ -132,17 +132,17 @@ error_log( "RTBCB Workflow Warning [{$code}]: {$message}" );
 /**
  * Add an error to the workflow.
  *
- * @param string $code    Error code.
+ * @param string $code	  Error code.
  * @param string $message Error message.
  * @return void
  */
 public function add_error( $code, $message ) {
 $step_name = $this->current_step ? $this->current_step['name'] : ( $this->steps ? end( $this->steps )['name'] : 'unknown' );
-$error     = [
-'code'      => $code,
-'message'   => $message,
+$error	   = [
+'code'		=> $code,
+'message'	=> $message,
 'timestamp' => microtime( true ),
-'step'      => $step_name,
+'step'		=> $step_name,
 ];
 
 $this->errors[] = $error;
@@ -158,9 +158,9 @@ public function get_completed_steps() {
 return array_map(
 function( $step ) {
 return [
-'name'     => $step['name'],
-'duration'  => round( $step['duration'], 2 ),
-'status'    => $step['status'],
+'name'	   => $step['name'],
+'duration'	=> round( $step['duration'], 2 ),
+'status'	=> $step['status'],
 'memory_mb' => round( $step['memory_usage'] / 1024 / 1024, 1 ),
 ];
 },
@@ -175,12 +175,12 @@ $this->steps
  * @return void
  */
 public function add_prompt( $prompt ) {
-$step_name      = $this->current_step ? $this->current_step['name'] : 'unknown';
+$step_name		= $this->current_step ? $this->current_step['name'] : 'unknown';
 $this->prompts[] = [
-'step'         => $step_name,
+'step'		   => $step_name,
 'instructions' => sanitize_textarea_field( $prompt['instructions'] ?? '' ),
-'input'        => sanitize_textarea_field( $prompt['input'] ?? '' ),
-'timestamp'    => microtime( true ),
+'input'		   => sanitize_textarea_field( $prompt['input'] ?? '' ),
+'timestamp'	   => microtime( true ),
 ];
 }
 
@@ -218,15 +218,15 @@ return $this->warnings;
  */
 public function get_debug_info() {
 return [
-'total_steps'    => count( $this->steps ),
+'total_steps'	 => count( $this->steps ),
 'total_duration' => microtime( true ) - $this->start_time,
-'ai_calls'       => $this->ai_calls,
+'ai_calls'		 => $this->ai_calls,
 'warnings_count' => count( $this->warnings ),
-'errors_count'   => count( $this->errors ),
-'steps'          => $this->get_completed_steps(),
-'prompts'        => $this->prompts,
-'warnings'       => $this->warnings,
-'errors'         => $this->errors,
+'errors_count'	 => count( $this->errors ),
+'steps'			 => $this->get_completed_steps(),
+'prompts'		 => $this->prompts,
+'warnings'		 => $this->warnings,
+'errors'		 => $this->errors,
 ];
 }
 
