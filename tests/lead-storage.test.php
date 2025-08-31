@@ -65,6 +65,16 @@ return $text;
 }
 }
 
+if ( ! function_exists( 'update_option' ) ) {
+function update_option( $option, $value ) {}
+}
+
+if ( ! function_exists( 'get_option' ) ) {
+function get_option( $option, $default = false ) {
+return $default;
+}
+}
+
 class WPDB_Memory {
     public $prefix = '';
     public $insert_id = 0;
