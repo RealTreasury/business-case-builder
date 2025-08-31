@@ -3,6 +3,8 @@ const fs = require('fs');
 const vm = require('vm');
 const { execSync } = require('child_process');
 
+require('./jsdom-setup');
+
 async function runTests() {
     const code = fs.readFileSync('public/js/rtbcb-report.js', 'utf8');
     vm.runInThisContext(code);

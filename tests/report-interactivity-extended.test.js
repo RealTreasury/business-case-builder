@@ -2,6 +2,8 @@ const assert = require('assert');
 const fs = require('fs');
 const vm = require('vm');
 
+require('./jsdom-setup');
+
 // Test for initializeSectionToggles
 (() => {
     const content = { style: { display: 'none' } };

@@ -1,23 +1,27 @@
 const fs = require('fs');
 const vm = require('vm');
+require('./jsdom-setup');
 
 describe('pollJob completion', () => {
     test('invokes showResults with report data and clears progress', async () => {
         const nodeGlobal = vm.runInThisContext('this');
 
-        const progressContainer = { style: { display: 'block' }, innerHTML: 'loading' };
-        const resultsContainer = { innerHTML: '', style: {}, scrollIntoView: () => {} };
+        const progressContainer = document.createElement('div');
+        progressContainer.id = 'rtbcb-progress-container';
+        progressContainer.style.display = 'block';
+        progressContainer.innerHTML = 'loading';
+
+        const resultsContainer = document.createElement('div');
+        resultsContainer.id = 'rtbcbResults';
+        resultsContainer.innerHTML = '';
+        resultsContainer.style = {};
+        resultsContainer.scrollIntoView = () => {};
+
+        document.body.appendChild(progressContainer);
+        document.body.appendChild(resultsContainer);
 
         nodeGlobal.window = { closeBusinessCaseModal: () => {} };
-        nodeGlobal.document = {
-            getElementById: (id) => {
-                if (id === 'rtbcb-progress-container') return progressContainer;
-                if (id === 'rtbcbResults') return resultsContainer;
-                return null;
-            },
-            addEventListener: () => {},
-            body: { style: {} }
-        };
+        nodeGlobal.document = global.document;
         nodeGlobal.rtbcbAjax = { nonce: 'test-nonce' };
 
         const code = fs.readFileSync('public/js/rtbcb-wizard.js', 'utf8');

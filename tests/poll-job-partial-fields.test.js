@@ -1,5 +1,7 @@
 const fs = require('fs');
+const fs = require('fs');
 const vm = require('vm');
+require('./jsdom-setup');
 
 describe('pollJob partial updates', () => {
 test('renders provisional ROI and category while processing', async () => {
@@ -7,39 +9,21 @@ jest.useFakeTimers();
 
 const nodeGlobal = vm.runInThisContext('this');
 
-const progressStatus = { textContent: '' };
-const roiElem = { textContent: '', style: { display: 'none' } };
-const categoryElem = { textContent: '', style: { display: 'none' } };
+const progressStatus = document.createElement('div');
+progressStatus.id = 'rtbcb-progress-status';
+const roiElem = document.createElement('div');
+roiElem.id = 'rtbcb-partial-basic-roi';
+roiElem.style.display = 'none';
+const categoryElem = document.createElement('div');
+categoryElem.id = 'rtbcb-partial-category';
+categoryElem.style.display = 'none';
+
+document.body.appendChild(progressStatus);
+document.body.appendChild(roiElem);
+document.body.appendChild(categoryElem);
 
 nodeGlobal.window = {};
-nodeGlobal.document = {
-getElementById: (id) => {
-if (id === 'rtbcb-progress-status') {
-return progressStatus;
-}
-if (id === 'rtbcb-partial-basic-roi') {
-return roiElem;
-}
-if (id === 'rtbcb-partial-category') {
-return categoryElem;
-}
-return null;
-},
-addEventListener: () => {},
-createElement: () => {
-const elem = { innerHTML: '' };
-Object.defineProperty(elem, 'textContent', {
-get() {
-return this.innerHTML;
-},
-set(v) {
-this.innerHTML = v;
-}
-});
-return elem;
-},
-body: { style: {} }
-};
+nodeGlobal.document = global.document;
 
 nodeGlobal.rtbcbAjax = { nonce: 'test-nonce' };
 

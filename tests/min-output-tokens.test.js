@@ -2,6 +2,8 @@ const assert = require('assert');
 const fs = require('fs');
 const vm = require('vm');
 
+require('./jsdom-setup');
+
 async function runTests() {
     const code = fs.readFileSync('public/js/rtbcb-report.js', 'utf8');
     vm.runInThisContext(code);

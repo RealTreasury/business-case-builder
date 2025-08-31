@@ -1,5 +1,6 @@
 const fs = require('fs');
 const vm = require('vm');
+require('./jsdom-setup');
 
 describe('pollJob progress updates', () => {
     test('updates progress text with job status', async () => {
@@ -7,19 +8,13 @@ describe('pollJob progress updates', () => {
 
         const nodeGlobal = vm.runInThisContext('this');
 
-        const progressStatus = { textContent: '' };
+        const progressStatus = document.createElement('div');
+        progressStatus.id = 'rtbcb-progress-status';
+        progressStatus.textContent = '';
+        document.body.appendChild(progressStatus);
 
         nodeGlobal.window = {};
-        nodeGlobal.document = {
-            getElementById: (id) => {
-                if (id === 'rtbcb-progress-status') {
-                    return progressStatus;
-                }
-                return null;
-            },
-            addEventListener: () => {},
-            body: { style: {} }
-        };
+        nodeGlobal.document = global.document;
 
         nodeGlobal.rtbcbAjax = { nonce: 'test-nonce' };
 
