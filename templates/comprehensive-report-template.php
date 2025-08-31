@@ -460,90 +460,49 @@ $processing_time = $metadata['processing_time'] ?? 0;
 <!-- Enhanced JavaScript for Interactivity -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-	// Initialize ROI Chart if Chart.js is available
-	if (typeof Chart !== 'undefined') {
-		initializeROIChart();
-	}
-	
-	// Initialize collapsible sections
-	initializeSectionToggles();
-	
-	// Initialize interactive elements
-	initializeInteractiveFeatures();
+        // Initialize collapsible sections
+        initializeSectionToggles();
+
+        // Initialize interactive elements
+        initializeInteractiveFeatures();
+});
+
+document.addEventListener('rtbcbFinalStageComplete', function() {
+        if (typeof Chart !== 'undefined') {
+                initializeROIChart();
+        }
 });
 
 function initializeROIChart() {
-	const ctx = document.getElementById('rtbcb-roi-chart');
-	if (!ctx) return;
-	
-	const roiData = <?php echo wp_json_encode( $financial_analysis['roi_scenarios'] ?? [] ); ?>;
-	
-	new Chart(ctx, {
-		type: 'bar',
-		data: {
-			labels: ['<?php echo esc_js( __( 'Labor Savings', 'rtbcb' ) ); ?>', '<?php echo esc_js( __( 'Fee Savings', 'rtbcb' ) ); ?>', '<?php echo esc_js( __( 'Error Reduction', 'rtbcb' ) ); ?>', '<?php echo esc_js( __( 'Total Benefit', 'rtbcb' ) ); ?>'],
-			datasets: [
-				{
-					label: '<?php echo esc_js( __( 'Conservative', 'rtbcb' ) ); ?>',
-					data: [
-						roiData.conservative?.labor_savings || 0,
-						roiData.conservative?.fee_savings || 0, 
-						roiData.conservative?.error_reduction || 0,
-						roiData.conservative?.total_annual_benefit || 0
-					],
-					backgroundColor: 'rgba(239, 68, 68, 0.8)',
-					borderColor: 'rgba(239, 68, 68, 1)',
-					borderWidth: 1
-				},
-				{
-					label: '<?php echo esc_js( __( 'Base Case', 'rtbcb' ) ); ?>',
-					data: [
-						roiData.base?.labor_savings || 0,
-						roiData.base?.fee_savings || 0,
-						roiData.base?.error_reduction || 0,
-						roiData.base?.total_annual_benefit || 0
-					],
-					backgroundColor: 'rgba(59, 130, 246, 0.8)',
-					borderColor: 'rgba(59, 130, 246, 1)',
-					borderWidth: 1
-				},
-				{
-					label: '<?php echo esc_js( __( 'Optimistic', 'rtbcb' ) ); ?>',
-					data: [
-						roiData.optimistic?.labor_savings || 0,
-						roiData.optimistic?.fee_savings || 0,
-						roiData.optimistic?.error_reduction || 0,
-						roiData.optimistic?.total_annual_benefit || 0
-					],
-					backgroundColor: 'rgba(16, 185, 129, 0.8)',
-					borderColor: 'rgba(16, 185, 129, 1)',
-					borderWidth: 1
-				}
-			]
-		},
-		options: {
-			responsive: true,
-			scales: {
-				y: {
-					beginAtZero: true,
-					ticks: {
-						callback: function(value) {
-							return '$' + new Intl.NumberFormat().format(value);
-						}
-					}
-				}
-			},
-			plugins: {
-				tooltip: {
-					callbacks: {
-						label: function(context) {
-							return context.dataset.label + ': $' + new Intl.NumberFormat().format(context.raw);
-						}
-					}
-				}
-			}
-		}
-	});
+        const ctx = document.getElementById('rtbcb-roi-chart');
+        if (!ctx || !rtbcbReportData?.chartData) return;
+
+        new Chart(ctx, {
+                type: 'bar',
+                data: rtbcbReportData.chartData,
+                options: {
+                        responsive: true,
+                        scales: {
+                                y: {
+                                        beginAtZero: true,
+                                        ticks: {
+                                                callback: function(value) {
+                                                        return '$' + new Intl.NumberFormat().format(value);
+                                                }
+                                        }
+                                }
+                        },
+                        plugins: {
+                                tooltip: {
+                                        callbacks: {
+                                                label: function(context) {
+                                                        return context.dataset.label + ': $' + new Intl.NumberFormat().format(context.raw);
+                                                }
+                                        }
+                                }
+                        }
+                }
+        });
 }
 
 function initializeSectionToggles() {
@@ -587,14 +546,14 @@ function rtbcbExportPDF() {
 <?php
 // Pass structured data to JavaScript for charts and interactivity
 wp_localize_script( 'rtbcb-report', 'rtbcbReportData', [
-	'roiScenarios' => $financial_analysis['roi_scenarios'] ?? [],
-	'companyName' => $company_name,
-	'confidence' => $confidence_level,
-	'strings' => [
-		'exportPDF' => __( 'Export as PDF', 'rtbcb' ),
-		'printReport' => __( 'Print Report', 'rtbcb' ),
-		'expandSection' => __( 'Expand Section', 'rtbcb' ),
-		'collapseSection' => __( 'Collapse Section', 'rtbcb' )
-	]
+        'chartData'   => $financial_analysis['chart_data'] ?? [],
+        'companyName' => $company_name,
+        'confidence'  => $confidence_level,
+        'strings'     => [
+                'exportPDF'      => __( 'Export as PDF', 'rtbcb' ),
+                'printReport'    => __( 'Print Report', 'rtbcb' ),
+                'expandSection'  => __( 'Expand Section', 'rtbcb' ),
+                'collapseSection'=> __( 'Collapse Section', 'rtbcb' )
+        ]
 ] );
 ?>

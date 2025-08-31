@@ -679,6 +679,8 @@ class BusinessCaseBuilder {
 
         // Add print and export functionality
         this.initializeExportFunctions(container);
+
+        document.dispatchEvent(new Event('rtbcbFinalStageComplete'));
     }
 
     initializeReportCharts(container) {
@@ -692,83 +694,19 @@ class BusinessCaseBuilder {
             return;
         }
 
+        const chartData = window.rtbcbReportData?.chartData;
+        if (!chartData || !chartData.datasets || !chartData.datasets.length) {
+            console.warn('RTBCB: ROI chart data is empty. Chart will not be rendered');
+            return;
+        }
+
         try {
-            // Get chart data from the page or from localized data
-            const roiData = this.extractROIDataFromReport(container);
-            console.log('RTBCB: Extracted ROI data', roiData);
-
-            if (!roiData || Object.keys(roiData).length === 0) {
-                console.warn('RTBCB: ROI data is empty. Chart will not be rendered');
-                return;
-            }
-
-            this.createROIChart(chartCanvas, roiData);
+            this.createROIChart(chartCanvas, chartData);
         } catch (error) {
             console.error('Failed to initialize chart:', error);
         }
     }
-
-    extractROIDataFromReport(container) {
-        const roiData = {};
-
-        // Look for scenario data in the DOM
-        const scenarioCards = container.querySelectorAll('.rtbcb-scenario-card');
-        scenarioCards.forEach(card => {
-            const scenarioName = this.getScenarioNameFromCard(card);
-            if (scenarioName) {
-                roiData[scenarioName] = this.extractMetricsFromCard(card);
-            }
-        });
-
-        return roiData;
-    }
-
-    getScenarioNameFromCard(card) {
-        if (card.classList.contains('conservative')) return 'conservative';
-        if (card.classList.contains('base')) return 'base';
-        if (card.classList.contains('optimistic')) return 'optimistic';
-
-        // Try to extract from heading
-        const heading = card.querySelector('h4');
-        if (heading) {
-            const text = heading.textContent.toLowerCase();
-            if (text.includes('conservative')) return 'conservative';
-            if (text.includes('base')) return 'base';
-            if (text.includes('optimistic')) return 'optimistic';
-        }
-
-        return null;
-    }
-
-    extractMetricsFromCard(card) {
-        const metrics = {};
-
-        const metricElements = card.querySelectorAll('.rtbcb-scenario-metric');
-        metricElements.forEach(metric => {
-            const label = metric.querySelector('.rtbcb-metric-label');
-            const value = metric.querySelector('.rtbcb-metric-value');
-
-            if (label && value) {
-                const labelText = label.textContent.trim();
-                const valueText = value.textContent.replace(/[$,]/g, '').trim();
-                const numValue = parseFloat(valueText) || 0;
-
-                if (labelText.includes('Total Annual')) {
-                    metrics.total_annual_benefit = numValue;
-                } else if (labelText.includes('Labor')) {
-                    metrics.labor_savings = numValue;
-                } else if (labelText.includes('Fee')) {
-                    metrics.fee_savings = numValue;
-                } else if (labelText.includes('Error')) {
-                    metrics.error_reduction = numValue;
-                }
-            }
-        });
-
-        return metrics;
-    }
-
-    createROIChart(canvas, roiData) {
+    createROIChart(canvas, chartData) {
         console.log('RTBCB: Creating ROI chart');
         const ctx = canvas.getContext('2d');
         if (!ctx) {
@@ -783,36 +721,6 @@ class BusinessCaseBuilder {
             }
             return;
         }
-
-        const chartData = {
-            labels: ['Labor Savings', 'Fee Savings', 'Error Reduction', 'Total Benefit'],
-            datasets: []
-        };
-
-        const colors = {
-            conservative: { bg: 'rgba(239, 68, 68, 0.8)', border: 'rgba(239, 68, 68, 1)' },
-            base: { bg: 'rgba(59, 130, 246, 0.8)', border: 'rgba(59, 130, 246, 1)' },
-            optimistic: { bg: 'rgba(16, 185, 129, 0.8)', border: 'rgba(16, 185, 129, 1)' }
-        };
-
-        // Create datasets for each scenario
-        Object.keys(roiData).forEach(scenario => {
-            const data = roiData[scenario];
-            const color = colors[scenario] || colors.base;
-
-            chartData.datasets.push({
-                label: this.formatScenarioLabel(scenario),
-                data: [
-                    data.labor_savings || 0,
-                    data.fee_savings || 0,
-                    data.error_reduction || 0,
-                    data.total_annual_benefit || 0
-                ],
-                backgroundColor: color.bg,
-                borderColor: color.border,
-                borderWidth: 1
-            });
-        });
 
         new Chart(ctx, {
             type: 'bar',
@@ -834,7 +742,7 @@ class BusinessCaseBuilder {
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                return context.dataset.label + ': $' + 
+                                return context.dataset.label + ': $' +
                                        new Intl.NumberFormat().format(context.raw);
                             }
                         }
@@ -847,15 +755,6 @@ class BusinessCaseBuilder {
             }
         });
         console.log('RTBCB: ROI chart created');
-    }
-
-    formatScenarioLabel(scenario) {
-        switch (scenario) {
-            case 'conservative': return 'Conservative';
-            case 'base': return 'Base Case';
-            case 'optimistic': return 'Optimistic';
-            default: return scenario.charAt(0).toUpperCase() + scenario.slice(1);
-        }
     }
 
     initializeCollapsibleSections(container) {

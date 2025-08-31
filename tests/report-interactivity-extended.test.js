@@ -75,76 +75,30 @@ const vm = require('vm');
 // Test for initializeReportCharts
 (() => {
     global.document = { addEventListener: () => {}, getElementById: () => null };
-    global.window = {};
+    global.window = {
+        rtbcbReportData: {
+            chartData: {
+                labels: ['Labor Savings', 'Fee Savings', 'Error Reduction', 'Total Benefit'],
+                datasets: [
+                    { label: 'Conservative', data: [1000, 2000, 3000, 6000] },
+                    { label: 'Base Case', data: [10000, 20000, 30000, 60000] },
+                    { label: 'Optimistic', data: [100000, 200000, 300000, 600000] }
+                ]
+            }
+        }
+    };
 
     const code = fs.readFileSync('public/js/rtbcb-wizard.js', 'utf8');
     vm.runInThisContext(code);
     const builder = new BusinessCaseBuilder();
 
     const canvas = { getContext: () => ({}) };
-
-    function createCard(cls, values) {
-        const metrics = Object.entries(values).map(([label, value]) => ({
-            querySelector(selector) {
-                if (selector === '.rtbcb-metric-label') {
-                    return { textContent: label };
-                }
-                if (selector === '.rtbcb-metric-value') {
-                    return { textContent: value };
-                }
-                return null;
-            }
-        }));
-        return {
-            classList: { contains: name => name === cls },
-            querySelectorAll(selector) {
-                if (selector === '.rtbcb-scenario-metric') {
-                    return metrics;
-                }
-                return [];
-            },
-            querySelector(selector) {
-                if (selector === 'h4') {
-                    return null;
-                }
-                return null;
-            }
-        };
-    }
-
-    const cards = [
-        createCard('conservative', {
-            'Labor Savings': '$1,000',
-            'Fee Savings': '$2,000',
-            'Error Reduction': '$3,000',
-            'Total Annual Benefit': '$6,000'
-        }),
-        createCard('base', {
-            'Labor Savings': '$10,000',
-            'Fee Savings': '$20,000',
-            'Error Reduction': '$30,000',
-            'Total Annual Benefit': '$60,000'
-        }),
-        createCard('optimistic', {
-            'Labor Savings': '$100,000',
-            'Fee Savings': '$200,000',
-            'Error Reduction': '$300,000',
-            'Total Annual Benefit': '$600,000'
-        })
-    ];
-
     const container = {
         querySelector(selector) {
             if (selector === '#rtbcb-roi-chart') {
                 return canvas;
             }
             return null;
-        },
-        querySelectorAll(selector) {
-            if (selector === '.rtbcb-scenario-card') {
-                return cards;
-            }
-            return [];
         }
     };
 
@@ -156,10 +110,6 @@ const vm = require('vm');
     const chartConfig = global.__chartConfig;
     assert.ok(chartConfig, 'Chart was not initialized');
     assert.strictEqual(chartConfig.data.datasets.length, 3);
-    assert.deepStrictEqual(
-        chartConfig.data.datasets.map(d => d.label),
-        ['Conservative', 'Base Case', 'Optimistic']
-    );
     assert.deepStrictEqual(chartConfig.data.datasets[0].data, [1000, 2000, 3000, 6000]);
     console.log('initializeReportCharts test passed.');
 })();

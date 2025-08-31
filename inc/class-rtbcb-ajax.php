@@ -232,61 +232,64 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 	if ( empty( $automation_opportunities ) ) {
 	$automation_opportunities = [ __( 'No data provided', 'rtbcb' ) ];
 	}
-	$implementation_risks = (array) ( $final_analysis['risk_mitigation']['implementation_risks'] ?? [] );
-	if ( empty( $implementation_risks ) ) {
-	$implementation_risks = [ __( 'No data provided', 'rtbcb' ) ];
-	}
+       $implementation_risks = (array) ( $final_analysis['risk_mitigation']['implementation_risks'] ?? [] );
+       if ( empty( $implementation_risks ) ) {
+       $implementation_risks = [ __( 'No data provided', 'rtbcb' ) ];
+       }
 
-	return [
-			'metadata' => [
-				'company_name'   => $user_inputs['company_name'],
-				'analysis_date'  => current_time( 'Y-m-d' ),
-				'analysis_type'  => 'comprehensive_enhanced',
-				'confidence_level' => $final_analysis['confidence_level'] ?? 0.85,
-				'processing_time' => microtime( true ) - $request_start,
-			],
-			'executive_summary' => [
-				'strategic_positioning'   => $final_analysis['executive_summary']['strategic_positioning'] ?? '',
-				'business_case_strength'  => self::calculate_business_case_strength( $roi_scenarios, $recommendation ),
-				'key_value_drivers'       => $final_analysis['executive_summary']['key_value_drivers'] ?? [],
-				'executive_recommendation' => $final_analysis['executive_summary']['executive_recommendation'] ?? '',
-				'confidence_level'        => $final_analysis['executive_summary']['confidence_level'] ?? 0.85,
-			],
-			'company_intelligence' => [
-				'enriched_profile'    => $enriched_profile['company_profile'],
-				'industry_context'    => $enriched_profile['industry_context'],
-				'maturity_assessment' => $enriched_profile['maturity_assessment'] ?? [],
-				'competitive_position'=> $enriched_profile['competitive_position'] ?? [],
-			],
-			'financial_analysis' => [
-				'roi_scenarios'        => self::format_roi_scenarios( $roi_scenarios ),
-				'investment_breakdown' => $final_analysis['financial_analysis']['investment_breakdown'] ?? [],
-				'payback_analysis'     => $final_analysis['financial_analysis']['payback_analysis'] ?? [],
-				'sensitivity_analysis' => $roi_scenarios['sensitivity_analysis'] ?? [],
-			],
-			'technology_strategy' => [
-				'recommended_category' => $recommendation['recommended'],
-				'category_details'     => $recommendation['category_info'],
-				'implementation_roadmap' => $final_analysis['implementation_roadmap'] ?? [],
-				'vendor_considerations'=> $final_analysis['vendor_considerations'] ?? [],
-			],
-			'operational_insights' => [
-							'current_state_assessment' => $current_state_assessment,
-							'process_improvements'     => $process_improvements,
-							'automation_opportunities' => $automation_opportunities,
-			],
-			'risk_analysis' => [
-							'implementation_risks' => $implementation_risks,
-							'mitigation_strategies' => $final_analysis['risk_mitigation']['mitigation_strategies'] ?? [],
-							'success_factors'      => $final_analysis['risk_mitigation']['success_factors'] ?? [],
-			],
-			'action_plan' => [
-				'immediate_steps'    => $final_analysis['next_steps']['immediate'] ?? [],
-				'short_term_milestones' => $final_analysis['next_steps']['short_term'] ?? [],
-				'long_term_objectives'  => $final_analysis['next_steps']['long_term'] ?? [],
-			],
-		];
-	}
+       $formatted_roi_scenarios = self::format_roi_scenarios( $roi_scenarios );
+
+       return [
+                       'metadata' => [
+                               'company_name'   => $user_inputs['company_name'],
+                               'analysis_date'  => current_time( 'Y-m-d' ),
+                               'analysis_type'  => 'comprehensive_enhanced',
+                               'confidence_level' => $final_analysis['confidence_level'] ?? 0.85,
+                               'processing_time' => microtime( true ) - $request_start,
+                       ],
+                       'executive_summary' => [
+                               'strategic_positioning'   => $final_analysis['executive_summary']['strategic_positioning'] ?? '',
+                               'business_case_strength'  => self::calculate_business_case_strength( $roi_scenarios, $recommendation ),
+                               'key_value_drivers'       => $final_analysis['executive_summary']['key_value_drivers'] ?? [],
+                               'executive_recommendation' => $final_analysis['executive_summary']['executive_recommendation'] ?? '',
+                               'confidence_level'        => $final_analysis['executive_summary']['confidence_level'] ?? 0.85,
+                       ],
+                       'company_intelligence' => [
+                               'enriched_profile'    => $enriched_profile['company_profile'],
+                               'industry_context'    => $enriched_profile['industry_context'],
+                               'maturity_assessment' => $enriched_profile['maturity_assessment'] ?? [],
+                               'competitive_position'=> $enriched_profile['competitive_position'] ?? [],
+                       ],
+                       'financial_analysis' => [
+                               'roi_scenarios'        => $formatted_roi_scenarios,
+                               'chart_data'           => self::prepare_chart_data( $formatted_roi_scenarios ),
+                               'investment_breakdown' => $final_analysis['financial_analysis']['investment_breakdown'] ?? [],
+                               'payback_analysis'     => $final_analysis['financial_analysis']['payback_analysis'] ?? [],
+                               'sensitivity_analysis' => $roi_scenarios['sensitivity_analysis'] ?? [],
+                       ],
+                       'technology_strategy' => [
+                               'recommended_category' => $recommendation['recommended'],
+                               'category_details'     => $recommendation['category_info'],
+                               'implementation_roadmap' => $final_analysis['implementation_roadmap'] ?? [],
+                               'vendor_considerations'=> $final_analysis['vendor_considerations'] ?? [],
+                       ],
+                       'operational_insights' => [
+                                                       'current_state_assessment' => $current_state_assessment,
+                                                       'process_improvements'     => $process_improvements,
+                                                       'automation_opportunities' => $automation_opportunities,
+                       ],
+                       'risk_analysis' => [
+                                                       'implementation_risks' => $implementation_risks,
+                                                       'mitigation_strategies' => $final_analysis['risk_mitigation']['mitigation_strategies'] ?? [],
+                                                       'success_factors'      => $final_analysis['risk_mitigation']['success_factors'] ?? [],
+                       ],
+                       'action_plan' => [
+                               'immediate_steps'    => $final_analysis['next_steps']['immediate'] ?? [],
+                               'short_term_milestones' => $final_analysis['next_steps']['short_term'] ?? [],
+                               'long_term_objectives'  => $final_analysis['next_steps']['long_term'] ?? [],
+                       ],
+               ];
+       }
 
 	private static function build_rag_search_query( $user_inputs, $enriched_profile ) {
 		$query_parts = [
@@ -325,9 +328,71 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 		return $base > 0 ? 'strong' : 'weak';
 	}
 
-	private static function format_roi_scenarios( $roi_scenarios ) {
-		return $roi_scenarios;
-	}
+       private static function format_roi_scenarios( $roi_scenarios ) {
+               return $roi_scenarios;
+       }
+
+       /**
+        * Prepare chart dataset from ROI scenarios.
+        *
+        * @param array $roi_scenarios ROI scenarios.
+        * @return array
+        */
+       private static function prepare_chart_data( $roi_scenarios ) {
+               $labels = [
+                       __( 'Labor Savings', 'rtbcb' ),
+                       __( 'Fee Savings', 'rtbcb' ),
+                       __( 'Error Reduction', 'rtbcb' ),
+                       __( 'Total Benefit', 'rtbcb' ),
+               ];
+
+               $colors = [
+                       'conservative' => [ 'bg' => 'rgba(239, 68, 68, 0.8)', 'border' => 'rgba(239, 68, 68, 1)' ],
+                       'base'         => [ 'bg' => 'rgba(59, 130, 246, 0.8)', 'border' => 'rgba(59, 130, 246, 1)' ],
+                       'optimistic'   => [ 'bg' => 'rgba(16, 185, 129, 0.8)', 'border' => 'rgba(16, 185, 129, 1)' ],
+               ];
+
+               $datasets = [];
+               foreach ( $roi_scenarios as $scenario => $data ) {
+                       $color = $colors[ $scenario ] ?? $colors['base'];
+                       $datasets[] = [
+                               'label'           => self::format_scenario_label( $scenario ),
+                               'data'            => [
+                                       floatval( $data['labor_savings'] ?? 0 ),
+                                       floatval( $data['fee_savings'] ?? 0 ),
+                                       floatval( $data['error_reduction'] ?? 0 ),
+                                       floatval( $data['total_annual_benefit'] ?? 0 ),
+                               ],
+                               'backgroundColor' => $color['bg'],
+                               'borderColor'     => $color['border'],
+                               'borderWidth'     => 1,
+                       ];
+               }
+
+               return [
+                       'labels'   => $labels,
+                       'datasets' => $datasets,
+               ];
+       }
+
+       /**
+        * Format scenario label for charts.
+        *
+        * @param string $scenario Scenario key.
+        * @return string
+        */
+       private static function format_scenario_label( $scenario ) {
+               switch ( $scenario ) {
+                       case 'conservative':
+                               return __( 'Conservative', 'rtbcb' );
+                       case 'base':
+                               return __( 'Base Case', 'rtbcb' );
+                       case 'optimistic':
+                               return __( 'Optimistic', 'rtbcb' );
+                       default:
+                               return ucfirst( $scenario );
+               }
+       }
 
 /**
 	 * Store workflow history and associated lead metadata.
