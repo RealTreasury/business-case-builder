@@ -39,6 +39,16 @@ class RTBCB_Ajax {
                $workflow_tracker = new RTBCB_Workflow_Tracker();
                $enable_ai        = RTBCB_Settings::get_setting( 'enable_ai_analysis', true );
 
+               $disable_heavy = get_option( 'rtbcb_disable_heavy_features', 0 ) || get_option( 'rtbcb_fast_mode', 0 );
+               if ( ! empty( $user_inputs['fast_mode'] ) ) {
+                       $disable_heavy = true;
+               }
+
+               if ( $disable_heavy ) {
+                       $enable_ai = false;
+                       $workflow_tracker->add_warning( 'heavy_features_disabled', __( 'Heavy features bypassed.', 'rtbcb' ) );
+               }
+
 		add_action(
 			'rtbcb_llm_prompt_sent',
 			function( $prompt ) use ( $workflow_tracker ) {

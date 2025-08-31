@@ -77,6 +77,9 @@ class RTBCB_RAG {
      * @return array Matching rows.
      */
     public function search_similar( $query, $top_k = 3 ) {
+        if ( get_option( 'rtbcb_disable_heavy_features', 0 ) || get_option( 'rtbcb_fast_mode', 0 ) ) {
+                return [];
+        }
         $normalized = strtolower( trim( function_exists( 'wp_strip_all_tags' ) ? wp_strip_all_tags( $query ) : strip_tags( $query ) ) );
         $version    = function_exists( 'get_option' ) ? (int) get_option( 'rtbcb_rag_cache_version', 1 ) : 1;
         $cache_key  = 'rtbcb_rag_' . md5( $normalized . '|' . $top_k . '|' . $version );
@@ -110,6 +113,9 @@ class RTBCB_RAG {
      * @return array List of metadata arrays.
      */
     public function get_context( $query, $top_k = 3 ) {
+        if ( get_option( 'rtbcb_disable_heavy_features', 0 ) || get_option( 'rtbcb_fast_mode', 0 ) ) {
+                return [];
+        }
         $embedding = $this->get_embedding( $query );
         if ( empty( $embedding ) ) {
             return [];

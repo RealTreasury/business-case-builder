@@ -7,44 +7,49 @@ defined( 'ABSPATH' ) || exit;
  * @package RealTreasuryBusinessCaseBuilder
  */
 class RTBCB_Intelligent_Recommender extends RTBCB_Category_Recommender {
-/**
- * Generate recommendations using AI insights and rule-based scoring.
- *
- * @param array $user_inputs      Original user inputs.
- * @param array $enriched_profile AI-enriched company profile.
- * @return array Enhanced recommendation with confidence and alternatives.
- */
-public function recommend_with_ai_insights( $user_inputs, $enriched_profile ) {
-// Get baseline recommendation from parent class.
-$base_recommendation = parent::recommend_category( $user_inputs );
+       /**
+        * Generate recommendations using AI insights and rule-based scoring.
+        *
+        * @param array $user_inputs      Original user inputs.
+        * @param array $enriched_profile AI-enriched company profile.
+        * @return array Enhanced recommendation with confidence and alternatives.
+        */
+       public function recommend_with_ai_insights( $user_inputs, $enriched_profile ) {
+               // Bypass heavy processing when disabled or in Fast Mode.
+               if ( get_option( 'rtbcb_disable_heavy_features', 0 ) || get_option( 'rtbcb_fast_mode', 0 ) || ! empty( $user_inputs['fast_mode'] ) ) {
+                       return parent::recommend_category( $user_inputs );
+               }
 
-// Apply AI insights to enhance recommendation.
-$ai_factors      = $this->extract_ai_recommendation_factors( $enriched_profile );
-$enhanced_scores = $this->apply_ai_insights_to_scoring(
-$base_recommendation['scores'],
-$ai_factors
-);
+               // Get baseline recommendation from parent class.
+               $base_recommendation = parent::recommend_category( $user_inputs );
 
-// Recalculate recommendation with enhanced scores.
-arsort( $enhanced_scores );
-$recommended = array_key_first( $enhanced_scores );
+               // Apply AI insights to enhance recommendation.
+               $ai_factors      = $this->extract_ai_recommendation_factors( $enriched_profile );
+               $enhanced_scores = $this->apply_ai_insights_to_scoring(
+                       $base_recommendation['scores'],
+                       $ai_factors
+               );
 
-return [
-'recommended'   => $recommended,
-'category_info' => self::get_category_info( $recommended ),
-'scores'        => $enhanced_scores,
-'base_scores'   => $base_recommendation['scores'],
-'confidence'    => $this->calculate_enhanced_confidence( $enhanced_scores, $enriched_profile ),
-'reasoning'     => $this->generate_ai_enhanced_reasoning( $recommended, $enriched_profile, $ai_factors ),
-'alternatives'  => $this->get_intelligent_alternatives( $enhanced_scores, $enriched_profile ),
-'ai_insights'   => [
-'maturity_assessment'    => $ai_factors['maturity_alignment'],
-'implementation_readiness'=> $ai_factors['implementation_readiness'],
-'strategic_fit'          => $ai_factors['strategic_alignment'],
-'risk_assessment'        => $ai_factors['risk_factors'],
-],
-];
-}
+               // Recalculate recommendation with enhanced scores.
+               arsort( $enhanced_scores );
+               $recommended = array_key_first( $enhanced_scores );
+
+               return [
+                       'recommended'   => $recommended,
+                       'category_info' => self::get_category_info( $recommended ),
+                       'scores'        => $enhanced_scores,
+                       'base_scores'   => $base_recommendation['scores'],
+                       'confidence'    => $this->calculate_enhanced_confidence( $enhanced_scores, $enriched_profile ),
+                       'reasoning'     => $this->generate_ai_enhanced_reasoning( $recommended, $enriched_profile, $ai_factors ),
+                       'alternatives'  => $this->get_intelligent_alternatives( $enhanced_scores, $enriched_profile ),
+                       'ai_insights'   => [
+                               'maturity_assessment'     => $ai_factors['maturity_alignment'],
+                               'implementation_readiness'=> $ai_factors['implementation_readiness'],
+                               'strategic_fit'           => $ai_factors['strategic_alignment'],
+                               'risk_assessment'         => $ai_factors['risk_factors'],
+                       ],
+               ];
+       }
 
 /**
  * Extract AI-based recommendation factors.

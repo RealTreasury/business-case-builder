@@ -50,7 +50,7 @@ class RTBCB_Router {
             // Perform ROI calculations.
             $calculations = RTBCB_Calculator::calculate_roi( $form_data );
 
-            $fast_mode = ! empty( $_POST['fast_mode'] ) || get_option( 'rtbcb_fast_mode', 0 );
+            $fast_mode = ! empty( $_POST['fast_mode'] ) || get_option( 'rtbcb_fast_mode', 0 ) || get_option( 'rtbcb_disable_heavy_features', 0 );
             if ( $fast_mode ) {
                 $report_html = $this->get_fast_report_html( $form_data, $calculations );
 
