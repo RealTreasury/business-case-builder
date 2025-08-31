@@ -56,10 +56,11 @@ class RTBCB_Admin {
         add_action( 'wp_ajax_rtbcb_get_analysis_status', [ $this, 'ajax_get_analysis_status' ] );
         add_action( 'wp_ajax_rtbcb_clear_analysis_data', [ $this, 'ajax_clear_analysis_data' ] );
         add_action( 'wp_ajax_rtbcb_delete_log', [ $this, 'ajax_delete_log' ] );
-        add_action( 'wp_ajax_rtbcb_clear_logs', [ $this, 'ajax_clear_logs' ] );
+		add_action( 'wp_ajax_rtbcb_clear_logs', [ $this, 'ajax_clear_logs' ] );
 		add_action( 'wp_ajax_rtbcb_get_workflow_history', [ $this, 'ajax_get_workflow_history' ] );
 		add_action( 'wp_ajax_rtbcb_clear_workflow_history', [ $this, 'ajax_clear_workflow_history' ] );
-    }
+		add_action( 'update_option_rtbcb_openai_api_key', [ $this, 'clear_openai_models_cache' ], 10, 2 );
+	}
 
     /**
      * Enqueue admin assets.
@@ -609,48 +610,70 @@ class RTBCB_Admin {
      *
      * @return void
      */
-    public function test_api_connection() {
-        check_ajax_referer( 'rtbcb_nonce', 'nonce' );
+	public function test_api_connection() {
+		check_ajax_referer( 'rtbcb_nonce', 'nonce' );
 
-        if ( ! current_user_can( 'manage_options' ) ) {
-            wp_send_json_error( [ 'message' => __( 'Permission denied.', 'rtbcb' ) ], 403 );
-        }
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'rtbcb' ) ], 403 );
+		}
 
-        $api_key = get_option( 'rtbcb_openai_api_key' );
-        if ( empty( $api_key ) ) {
-            wp_send_json_error( [ 'message' => __( 'Missing API key.', 'rtbcb' ) ] );
-        }
+		$api_key = get_option( 'rtbcb_openai_api_key' );
+		if ( empty( $api_key ) ) {
+			wp_send_json_error( [ 'message' => __( 'Missing API key.', 'rtbcb' ) ] );
+		}
 
-        $response = wp_remote_get( 'https://api.openai.com/v1/models', [
-            'headers' => [
-                'Authorization' => 'Bearer ' . $api_key,
-                'Content-Type'  => 'application/json',
-            ],
-            'timeout' => rtbcb_get_api_timeout(),
-        ] );
+		$cache_key = 'rtbcb_openai_models';
+		$response  = wp_cache_get( $cache_key );
 
-        if ( is_wp_error( $response ) ) {
-            wp_send_json_error( [ 'message' => $response->get_error_message() ] );
-        }
+		if ( false === $response ) {
+			$response = wp_remote_get( 'https://api.openai.com/v1/models', [
+			    'headers' => [
+			        'Authorization' => 'Bearer ' . $api_key,
+			        'Content-Type'  => 'application/json',
+			    ],
+			    'timeout' => rtbcb_get_api_timeout(),
+			] );
 
-        $code = wp_remote_retrieve_response_code( $response );
-        if ( 200 !== $code ) {
-            wp_send_json_error( [ 'message' => sprintf( __( 'API request failed (%d).', 'rtbcb' ), $code ) ] );
-        }
+			if ( ! is_wp_error( $response ) ) {
+			    wp_cache_set( $cache_key, $response, '', HOUR_IN_SECONDS );
+			}
+		}
 
-        wp_send_json_success( [ 'message' => __( 'Connection successful.', 'rtbcb' ) ] );
-    }
+		if ( is_wp_error( $response ) ) {
+			wp_send_json_error( [ 'message' => $response->get_error_message() ] );
+		}
+
+		$code = wp_remote_retrieve_response_code( $response );
+		if ( 200 !== $code ) {
+			wp_send_json_error( [ 'message' => sprintf( __( 'API request failed (%d).', 'rtbcb' ), $code ) ] );
+		}
+
+		wp_send_json_success( [ 'message' => __( 'Connection successful.', 'rtbcb' ) ] );
+	}
 
     /**
-     * AJAX handler for comprehensive API test.
+     * Clear cached OpenAI models when API settings change.
      *
+     * @param string $old_value Old API key.
+     * @param string $value     New API key.
      * @return void
      */
-    public function ajax_test_api() {
-        check_ajax_referer( 'rtbcb_test_api', 'nonce' );
+	public function clear_openai_models_cache( $old_value, $value ) {
+		if ( $old_value !== $value ) {
+		    wp_cache_delete( 'rtbcb_openai_models' );
+		}
+	}
 
-        if ( ! current_user_can( 'manage_options' ) ) {
-            wp_send_json_error( __( 'Permission denied', 'rtbcb' ) );
+	/**
+	 * AJAX handler for comprehensive API test.
+	 *
+	 * @return void
+	 */
+	public function ajax_test_api() {
+		check_ajax_referer( 'rtbcb_test_api', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Permission denied', 'rtbcb' ) );
         }
 
         $result = RTBCB_API_Tester::test_connection();

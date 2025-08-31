@@ -9,6 +9,7 @@ A comprehensive WordPress plugin that helps treasury teams quantify the benefits
 - Added test coverage to ensure asynchronous jobs are marked complete correctly.
 - Reshaped job status data for clearer progress reporting.
 - 📚 Added detailed wizard and API flow documentation in [docs/WIZARD_FORM_API_FLOW.md](docs/WIZARD_FORM_API_FLOW.md).
+- Cached OpenAI model list via WordPress object caching for faster connection tests.
 
 
 ## 📋 Installation & Setup
@@ -69,12 +70,19 @@ Values outside the `256`–`128000` range are ignored.
 
 Update the list in `inc/helpers.php` if OpenAI changes temperature capabilities.
 
-### Step 3: Configure Database Tables
+### Step 3: Enable Persistent Object Cache
+
+To persist cached API responses across requests, configure a persistent object cache such as
+[Redis](https://wordpress.org/plugins/redis-cache/) or
+[Memcached](https://wordpress.org/plugins/memcached/). See
+[docs/OBJECT_CACHE.md](docs/OBJECT_CACHE.md) for details.
+
+### Step 4: Configure Database Tables
 The plugin automatically creates required database tables on activation:
 - `wp_rtbcb_leads` - Lead tracking and analytics
 - `wp_rtbcb_rag_index` - Retrieval-augmented generation index
 
-### Step 4: Display the Form
+### Step 5: Display the Form
 Add the shortcode to any page or post to display a “Generate Business Case” button that launches the form in a modal:
 ```
 [rt_business_case_builder]
