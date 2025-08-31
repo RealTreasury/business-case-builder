@@ -1711,47 +1711,51 @@ return $use_comprehensive;
 	* @return string|WP_Error
 	*/
 	private function get_comprehensive_report_html( $business_case_data ) {
-	$use_comprehensive = $this->should_use_comprehensive_template();
+        $use_comprehensive = $this->should_use_comprehensive_template();
+        $business_case_data = is_array( $business_case_data ) ? $business_case_data : [];
+        $cache_key          = rtbcb_get_report_cache_key( $business_case_data, $use_comprehensive ? 'comprehensive' : 'report' );
+        $cached_html        = wp_cache_get( $cache_key, 'rtbcb_reports' );
+        if ( false !== $cached_html ) {
+                return $cached_html;
+        }
 
-	if ( $use_comprehensive ) {
-	$template_path = RTBCB_DIR . 'templates/comprehensive-report-template.php';
-	rtbcb_log_api_debug(
-	'Using comprehensive report template',
-	[
-	'template_path'    => $template_path,
-	'use_comprehensive' => $use_comprehensive,
-	]
-	);
-	} else {
-	$template_path = RTBCB_DIR . 'templates/report-template.php';
-	rtbcb_log_api_debug(
-	'Using basic report template',
-	[
-	'template_path'    => $template_path,
-	'use_comprehensive' => $use_comprehensive,
-	]
-	);
-	}
+        if ( $use_comprehensive ) {
+                $template_path = RTBCB_DIR . 'templates/comprehensive-report-template.php';
+                rtbcb_log_api_debug(
+                        'Using comprehensive report template',
+                        [
+                                'template_path'    => $template_path,
+                                'use_comprehensive' => $use_comprehensive,
+                        ]
+                );
+        } else {
+                $template_path = RTBCB_DIR . 'templates/report-template.php';
+                rtbcb_log_api_debug(
+                        'Using basic report template',
+                        [
+                                'template_path'    => $template_path,
+                                'use_comprehensive' => $use_comprehensive,
+                        ]
+                );
+        }
 
-	if ( ! file_exists( $template_path ) ) {
-	rtbcb_log_error( 'Report template missing', [ 'template_path' => $template_path ] );
+        if ( ! file_exists( $template_path ) ) {
+                rtbcb_log_error( 'Report template missing', [ 'template_path' => $template_path ] );
 
-	return new WP_Error(
-	'rtbcb_template_missing',
-	__( 'Report template not found.', 'rtbcb' )
-	);
-	}
+                return new WP_Error(
+                        'rtbcb_template_missing',
+                        __( 'Report template not found.', 'rtbcb' )
+                );
+        }
 
-	if ( ! is_readable( $template_path ) ) {
-	rtbcb_log_error( 'Report template not readable', [ 'template_path' => $template_path ] );
+        if ( ! is_readable( $template_path ) ) {
+                rtbcb_log_error( 'Report template not readable', [ 'template_path' => $template_path ] );
 
-	return new WP_Error(
-	'rtbcb_template_unreadable',
-	__( 'Report template is not readable.', 'rtbcb' )
-	);
-	}
-
-	$business_case_data = is_array( $business_case_data ) ? $business_case_data : [];
+                return new WP_Error(
+                        'rtbcb_template_unreadable',
+                        __( 'Report template is not readable.', 'rtbcb' )
+                );
+        }
 
         // Transform data structure for template.
         $report_data = $this->transform_data_for_template( $business_case_data );
@@ -1783,39 +1787,42 @@ return $use_comprehensive;
 	}
 	);
 
-	ob_start();
-	include $template_path;
-	$html = ob_get_clean();
-	restore_error_handler();
+        ob_start();
+        include $template_path;
+        $html = ob_get_clean();
+        restore_error_handler();
 
-	if ( false === $html ) {
-	rtbcb_log_error( 'ob_get_clean returned false', [ 'template_path' => $template_path ] );
+        if ( false === $html ) {
+                rtbcb_log_error( 'ob_get_clean returned false', [ 'template_path' => $template_path ] );
 
-	return new WP_Error(
-	'rtbcb_ob_get_clean_failed',
-	__( 'Failed to capture report output.', 'rtbcb' )
-	);
-	}
-	} catch ( Throwable $e ) {
-	if ( ob_get_level() > 0 ) {
-	ob_end_clean();
-	}
-	restore_error_handler();
-	rtbcb_log_error(
-	'Report template include failed',
-	[
-	'template_path' => $template_path,
-	'error'         => $e->getMessage(),
-	]
-	);
+                return new WP_Error(
+                        'rtbcb_ob_get_clean_failed',
+                        __( 'Failed to capture report output.', 'rtbcb' )
+                );
+        }
+        } catch ( Throwable $e ) {
+                if ( ob_get_level() > 0 ) {
+                        ob_end_clean();
+                }
+                restore_error_handler();
+                rtbcb_log_error(
+                        'Report template include failed',
+                        [
+                                'template_path' => $template_path,
+                                'error'         => $e->getMessage(),
+                        ]
+                );
 
-	return new WP_Error(
-	'rtbcb_template_include_failed',
-	__( 'Error rendering report template.', 'rtbcb' )
-	);
-	}
+                return new WP_Error(
+                        'rtbcb_template_include_failed',
+                        __( 'Error rendering report template.', 'rtbcb' )
+                );
+        }
 
-	return wp_kses( $html, rtbcb_get_report_allowed_html() );
+        $sanitized = wp_kses( $html, rtbcb_get_report_allowed_html() );
+        wp_cache_set( $cache_key, $sanitized, 'rtbcb_reports', HOUR_IN_SECONDS );
+
+        return $sanitized;
 }
 
    /**

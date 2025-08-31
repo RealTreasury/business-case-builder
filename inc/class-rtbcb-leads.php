@@ -1,6 +1,8 @@
 <?php
 defined( 'ABSPATH' ) || exit;
 
+require_once __DIR__ . '/helpers.php';
+
 /**
  * Enhanced leads management for tracking form submissions.
  *
@@ -228,12 +230,14 @@ class RTBCB_Leads {
                     [ '%s' ]
                 );
 
-                if ( false === $result ) {
+               if ( false === $result ) {
                     error_log( 'RTBCB: Database update failed: ' . $wpdb->last_error );
                     return false;
                 }
 
-                return intval( $existing_lead['id'] );
+               rtbcb_purge_report_cache( $sanitized_data );
+
+               return intval( $existing_lead['id'] );
             } else {
                 // Insert new lead
                 $result = $wpdb->insert(
@@ -246,6 +250,8 @@ class RTBCB_Leads {
                     error_log( 'RTBCB: Database insert failed: ' . $wpdb->last_error );
                     return false;
                 }
+
+                rtbcb_purge_report_cache( $sanitized_data );
 
                 return $wpdb->insert_id;
             }

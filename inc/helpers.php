@@ -53,6 +53,32 @@ function rtbcb_has_openai_api_key() {
 }
 
 /**
+ * Generate a cache key for report templates based on input data.
+ *
+ * @param array  $data Input data array.
+ * @param string $type Report type slug.
+ * @return string Cache key.
+ */
+function rtbcb_get_report_cache_key( $data, $type = 'report' ) {
+	$data = is_array( $data ) ? $data : [];
+	$hash = md5( wp_json_encode( $data ) );
+
+	return "rtbcb_{$type}_{$hash}";
+}
+
+/**
+ * Purge cached report templates for the given data.
+ *
+ * @param array $data Input data array.
+ * @return void
+ */
+function rtbcb_purge_report_cache( $data ) {
+	foreach ( [ 'report', 'comprehensive' ] as $type ) {
+		wp_cache_delete( rtbcb_get_report_cache_key( $data, $type ), 'rtbcb_reports' );
+	}
+}
+
+/**
  * Determine if an error indicates an OpenAI configuration issue.
  *
  * Checks for common phrases like a missing API key or invalid model.
