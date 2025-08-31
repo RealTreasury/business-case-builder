@@ -572,4 +572,3 @@ wp_localize_script( 'rtbcb-report', 'rtbcbReportData', [
 		'collapseSection' => __( 'Collapse Section', 'rtbcb' )
 	]
 ] );
-?>
