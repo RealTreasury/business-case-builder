@@ -77,7 +77,7 @@ class RTBCB_LLM {
         $default = rtbcb_get_default_model( $tier );
         $model   = get_option( "rtbcb_{$tier}_model", $default );
 
-        return sanitize_text_field( $model );
+	return sanitize_text_field( $model );
     }
 
     /**
@@ -86,7 +86,7 @@ class RTBCB_LLM {
      * @return array|null Last request body.
      */
     public function get_last_request() {
-        return $this->last_request;
+	return $this->last_request;
     }
 
     /**
@@ -95,7 +95,7 @@ class RTBCB_LLM {
      * @return array|WP_Error|null Last response or WP_Error.
      */
     public function get_last_response() {
-        return $this->last_response;
+	return $this->last_response;
     }
 
     /**
@@ -111,7 +111,7 @@ class RTBCB_LLM {
         $min_tokens  = intval( $this->gpt5_config['min_output_tokens'] ?? 1 );
         $limit       = min( 128000, max( $min_tokens, $limit ) );
 
-        return max( $min_tokens, min( $tokens, $limit ) );
+	return max( $min_tokens, min( $tokens, $limit ) );
     }
 
     /**
@@ -138,7 +138,7 @@ class RTBCB_LLM {
 
         $words = $targets[ $type ] ?? 800;
 
-        return $this->estimate_tokens( $words );
+	return $this->estimate_tokens( $words );
     }
 
     /**
@@ -228,7 +228,7 @@ class RTBCB_LLM {
             'financial_analysis' => $this->build_financial_analysis( $roi_data, $inputs ),
         ];
 
-        return $analysis;
+	return $analysis;
     }
 
     /**
@@ -268,7 +268,7 @@ class RTBCB_LLM {
             return new WP_Error( 'llm_empty_response', __( 'No commentary returned.', 'rtbcb' ) );
         }
 
-        return $commentary;
+	return $commentary;
     }
 
     /**
@@ -420,7 +420,7 @@ USER,
             'baseline_efficiency' => floatval( $json['metrics']['baseline_efficiency'] ?? 0 ),
         ];
 
-        return [
+	return [
             'company_name'   => $company_name,
             'analysis'       => sanitize_textarea_field( $json['analysis'] ),
             'recommendations' => array_map( 'sanitize_text_field', array_filter( (array) $json['recommendations'] ) ),
@@ -475,7 +475,7 @@ USER,
             return new WP_Error( 'llm_empty_response', __( 'No overview returned.', 'rtbcb' ) );
         }
 
-        return $overview;
+	return $overview;
     }
 
     /**
@@ -525,7 +525,7 @@ USER,
             return new WP_Error( 'llm_empty_response', __( 'No overview returned.', 'rtbcb' ) );
         }
 
-        return $overview;
+	return $overview;
     }
 
     /**
@@ -591,7 +591,7 @@ USER,
             return new WP_Error( 'llm_empty_response', __( 'No overview returned.', 'rtbcb' ) );
         }
 
-        return $overview;
+	return $overview;
     }
 
     /**
@@ -636,7 +636,7 @@ USER,
             return new WP_Error( 'llm_empty_response', __( 'No recommendation details returned.', 'rtbcb' ) );
         }
 
-        return [
+	return [
             'roadmap'        => sanitize_textarea_field( $parsed['roadmap'] ?? '' ),
             'success_factors' => sanitize_textarea_field( $parsed['success_factors'] ?? '' ),
         ];
@@ -699,7 +699,7 @@ USER,
             'productivity_gain_percent'=> floatval( $parsed['productivity_gain_percent'] ?? 0 ),
         ];
 
-        return $estimate;
+	return $estimate;
     }
 
     /**
@@ -870,7 +870,7 @@ USER,
 
         $analysis = $this->enhance_with_research( $parsed, $company_research, $industry_analysis, $tech_landscape );
 
-        return [
+	return [
             'executive_summary'      => $analysis['executive_summary'] ?? [],
             'company_overview'       => $analysis['research']['company']['company_profile'] ?? [],
             'industry_analysis'      => $analysis['industry_insights'] ?? [],
@@ -929,7 +929,7 @@ USER,
             );
         }
 
-        return [
+	return [
             'executive_summary'      => [
                 'strategic_positioning'   => sanitize_text_field( $json['executive_summary']['strategic_positioning'] ?? '' ),
                 'business_case_strength'  => sanitize_text_field( $json['executive_summary']['business_case_strength'] ?? '' ),
@@ -1030,8 +1030,9 @@ USER,
 	];
 
 	$this->last_company_research = wp_json_encode( $research );
+	rtbcb_set_research_cache( $company_name, $industry, 'company', $research );
 
-        return $research;
+	return $research;
     }
 
     /**
@@ -1067,7 +1068,7 @@ USER,
         
         $profile = $size_profiles[$company_size] ?? $size_profiles['$50M-$500M'];
         
-        return [
+	return [
             'company_name' => $company_name,
             'revenue_segment' => $company_size,
             'business_stage' => $profile['stage'],
@@ -1104,7 +1105,7 @@ USER,
             // Add more industries as needed
         ];
         
-        return $contexts[$industry] ?? [
+	return $contexts[$industry] ?? [
             'cash_flow_pattern' => 'varies by business model',
             'working_capital_intensity' => 'moderate',
             'regulatory_environment' => 'standard compliance requirements',
@@ -1198,7 +1199,7 @@ USER,
             return $default;
         }
 
-        return [
+	return [
             'competitors' => $competitors,
         ];
     }
@@ -1241,7 +1242,7 @@ USER,
             'growth' => 'moderate',
         ];
 
-        return [
+	return [
             'market_share'   => sanitize_text_field( $market_shares[ $company_size ] ?? 'unknown' ),
             'peers'          => array_map( 'sanitize_text_field', $selected['peers'] ),
             'growth_outlook' => sanitize_text_field( $selected['growth'] ),
@@ -1287,7 +1288,7 @@ USER,
             $ftes
         );
 
-        return [
+	return [
             'level'     => sanitize_text_field( $level ),
             'rationale' => sanitize_text_field( $rationale ),
         ];
@@ -1327,7 +1328,7 @@ USER,
         $size_data     = $size_outlooks[ $company_size ] ?? [ 'tier' => 'baseline', 'description' => __( 'stable', 'rtbcb' ) ];
         $industry_data = $industry_outlooks[ $industry ] ?? [ 'tier' => 'neutral',  'description' => __( 'neutral', 'rtbcb' ) ];
 
-        return [
+	return [
             'size_tier'        => sanitize_text_field( $size_data['tier'] ),
             'size_outlook'     => sanitize_text_field( $size_data['description'] ),
             'industry_tier'    => sanitize_text_field( $industry_data['tier'] ),
@@ -1437,7 +1438,7 @@ SYSTEM;
 
         $this->last_company_research = wp_json_encode( $company_research );
 
-        return [
+	return [
             'company_research' => $company_research,
             'industry_analysis' => $industry_analysis,
             'tech_landscape'    => $tech_landscape,
@@ -1536,7 +1537,7 @@ SYSTEM;
             }
         }
 
-        return $results;
+	return $results;
     }
 
     /**
@@ -1606,7 +1607,7 @@ SYSTEM;
             return new WP_Error( 'llm_parse_error', __( 'Invalid response from language model.', 'rtbcb' ) );
         }
 
-        return [
+	return [
             'analysis'        => sanitize_text_field( $json['analysis'] ?? '' ),
             'recommendations' => array_map( 'sanitize_text_field', $json['recommendations'] ?? [] ),
             'references'      => array_map( 'sanitize_text_field', $json['references'] ?? [] ),
@@ -1656,7 +1657,7 @@ SYSTEM;
             return new WP_Error( 'llm_empty_response', __( 'No technology research returned.', 'rtbcb' ) );
         }
 
-        return $summary;
+	return $summary;
     }
 
     /**
@@ -1673,7 +1674,7 @@ SYSTEM;
             $model = $this->get_model( 'premium' );
         }
 
-        return sanitize_text_field( $model );
+	return sanitize_text_field( $model );
     }
 
     /**
@@ -1833,7 +1834,7 @@ SYSTEM;
             ]
         ], JSON_PRETTY_PRINT);
         
-        return $prompt;
+	return $prompt;
     }
 
     /**
@@ -2572,7 +2573,7 @@ return $analysis;
 		
 		        $this->gpt5_config['timeout'] = $base_timeout;
 
-        return $response; // Return last error
+	return $response; // Return last error
     }
 
     /**
@@ -2603,7 +2604,7 @@ return $analysis;
 
         $instructions = function_exists( 'sanitize_textarea_field' ) ? sanitize_textarea_field( $system_prompt ) : $system_prompt;
 
-        return [
+	return [
             'instructions' => $instructions,
             'input'        => implode( "\n", $input_parts ),
         ];
@@ -2788,7 +2789,7 @@ return $analysis;
             return new WP_Error( 'llm_http_status', $message, [ 'status' => $http_code ] );
         }
 
-        return $response;
+	return $response;
     }
 
     /**
@@ -2819,7 +2820,7 @@ return $analysis;
         }
 
         // Low effort for simple requests
-        return 'low';
+	return 'low';
     }
 
     /**
@@ -2843,7 +2844,7 @@ return $analysis;
         }
 
         // Medium verbosity for standard generation
-        return 'medium';
+	return 'medium';
     }
 
     /**
@@ -2931,7 +2932,7 @@ return $analysis;
             $content = is_array( $decoded['output_text'] ) ? implode( ' ', (array) $decoded['output_text'] ) : $decoded['output_text'];
         }
 
-        return [ $content, $decoded ];
+	return [ $content, $decoded ];
     }
 
     // Helper methods for enhanced analysis
@@ -2942,14 +2943,14 @@ return $analysis;
         
         if ( $hours_per_fte < 5 ) return 'Good';
         if ( $hours_per_fte < 15 ) return 'Fair'; 
-        return 'Poor';
+	return 'Poor';
     }
 
     private function get_automation_level( $user_inputs ) {
         $pain_points = $user_inputs['pain_points'] ?? [];
         if ( in_array( 'manual_processes', $pain_points ) ) return 'low';
         if ( in_array( 'integration_issues', $pain_points ) ) return 'moderate';
-        return 'moderate';
+	return 'moderate';
     }
 
     private function analyze_process_inefficiencies( $user_inputs ) {
@@ -2982,7 +2983,7 @@ return $analysis;
             }
         }
         
-        return $inefficiencies;
+	return $inefficiencies;
     }
 
     private function identify_automation_opportunities( $user_inputs ) {
@@ -3004,7 +3005,7 @@ return $analysis;
             ];
         }
         
-        return $opportunities;
+	return $opportunities;
     }
 
     private function get_industry_trends( $industry ) {
@@ -3014,14 +3015,14 @@ return $analysis;
             'retail' => 'Omnichannel payment processing and seasonal cash flow management are key drivers for treasury technology investment'
         ];
         
-        return $trends[$industry] ?? 'Companies across industries are modernizing treasury operations to improve efficiency and risk management';
+	return $trends[$industry] ?? 'Companies across industries are modernizing treasury operations to improve efficiency and risk management';
     }
 
     private function build_financial_analysis( $roi_data, $user_inputs ) {
         $base_benefit = $roi_data['base']['total_annual_benefit'] ?? 0;
         $estimated_cost = $base_benefit * 0.4; // Rough estimate
         
-        return [
+	return [
             'investment_breakdown' => [
                 'software_licensing' => '$' . number_format( $estimated_cost * 0.6 ) . ' - $' . number_format( $estimated_cost * 0.8 ),
                 'implementation_services' => '$' . number_format( $estimated_cost * 0.15 ) . ' - $' . number_format( $estimated_cost * 0.25 ),
@@ -3058,7 +3059,7 @@ function rtbcb_parse_gpt5_response( $response, $store_raw = false ) {
     $decoded = json_decode( $body, true );
 
     if ( ! is_array( $decoded ) ) {
-        return [
+	return [
             'output_text'    => '',
             'reasoning'      => [],
             'function_calls' => [],
