@@ -708,9 +708,9 @@ USER,
      * Returns a {@see WP_Error} when the API key is missing or when the LLM
      * call or response parsing fails.
      *
-     * @param array $user_inputs    Sanitized user inputs.
-     * @param array $roi_data       ROI calculation data.
-     * @param array $context_chunks Optional context strings for the prompt.
+     * @param array                     $user_inputs    Sanitized user inputs.
+     * @param array                     $roi_data       ROI calculation data.
+     * @param callable|array|Traversable $context_chunks Optional context provider or strings for the prompt.
      *
      * @return array|WP_Error Comprehensive analysis array or error object.
      */
@@ -745,16 +745,26 @@ USER,
             ];
         }
 
-        if ( false === $tech_landscape ) {
-            $tech_prompt = 'Briefly summarize treasury technology solutions relevant to a ' . $company_size . ' company in the ' . $industry . ' industry.';
-            if ( ! empty( $context_chunks ) ) {
-                $tech_prompt .= '\nContext: ' . implode( '\n', array_map( 'sanitize_text_field', $context_chunks ) );
-            }
-            $batch_prompts['tech'] = [
-                'instructions' => 'Return plain text summary.',
-                'input'        => $tech_prompt,
-            ];
-        }
+if ( false === $tech_landscape ) {
+$tech_prompt = 'Briefly summarize treasury technology solutions relevant to a ' . $company_size . ' company in the ' . $industry . ' industry.';
+
+if ( is_callable( $context_chunks ) ) {
+$context_chunks = $context_chunks();
+}
+
+if ( $context_chunks instanceof Traversable ) {
+$context_chunks = iterator_to_array( $context_chunks );
+}
+
+if ( ! empty( $context_chunks ) ) {
+$tech_prompt .= '\nContext: ' . implode( '\n', array_map( 'sanitize_text_field', (array) $context_chunks ) );
+}
+
+$batch_prompts['tech'] = [
+'instructions' => 'Return plain text summary.',
+'input'        => $tech_prompt,
+];
+}
 
         $batch_results = [];
         if ( ! empty( $batch_prompts ) ) {
@@ -1341,8 +1351,8 @@ USER,
     /**
      * Execute company, industry, and technology research in a single LLM call.
      *
-     * @param array $user_inputs    Sanitized user inputs.
-     * @param array $context_chunks Optional context strings.
+     * @param array                     $user_inputs    Sanitized user inputs.
+     * @param callable|array|Traversable $context_chunks Optional context strings.
      * @return array|WP_Error {
      *     @type array  $company_research  Company research data.
      *     @type array  $industry_analysis Industry analysis data.
@@ -1664,14 +1674,21 @@ SYSTEM;
     /**
      * Select the optimal model for comprehensive analysis.
      *
-     * @param array $user_inputs    Sanitized user inputs.
-     * @param array $context_chunks Optional context strings.
+      * @param array                     $user_inputs    Sanitized user inputs.
+      * @param callable|array|Traversable $context_chunks Optional context strings.
      * @return string Model identifier.
      */
     private function select_optimal_model( $user_inputs, $context_chunks ) {
-        $model = $this->get_model( 'advanced' );
+        $model         = $this->get_model( 'advanced' );
+        $context_count = 0;
 
-        if ( count( $context_chunks ) < 3 ) {
+        if ( is_callable( $context_chunks ) || $context_chunks instanceof Traversable ) {
+            // Lazily provided context; treat as empty without invoking.
+        } elseif ( is_array( $context_chunks ) || $context_chunks instanceof Countable ) {
+            $context_count = count( $context_chunks );
+        }
+
+        if ( $context_count < 3 ) {
             $model = $this->get_model( 'premium' );
         }
 

@@ -67,37 +67,59 @@ return new WP_Error( 'llm_timeout', 'Request timed out' );
 }
 
 class Real_Treasury_BCB {
-private function generate_business_analysis( $user_inputs, $scenarios, $rag_context ) {
-$start_time = microtime( true );
-$timeout    = rtbcb_get_api_timeout();
-$time_remaining = static function() use ( $start_time, $timeout ) {
+private function generate_business_analysis( $user_inputs, $scenarios, $recommendation ) {
+$start_time      = microtime( true );
+$timeout         = rtbcb_get_api_timeout();
+$time_remaining  = static function() use ( $start_time, $timeout ) {
 return $timeout - ( microtime( true ) - $start_time );
+};
+$rag_context     = [];
+$rag_loader      = function() use ( &$rag_context ) {
+return $rag_context;
 };
 
 if ( ! class_exists( 'RTBCB_LLM' ) ) {
-return new WP_Error( 'llm_unavailable', __( 'AI analysis service unavailable.', 'rtbcb' ) );
+return [
+'analysis'    => new WP_Error( 'llm_unavailable', __( 'AI analysis service unavailable.', 'rtbcb' ) ),
+'rag_context' => [],
+];
 }
 
 if ( ! rtbcb_has_openai_api_key() ) {
-return $this->generate_fallback_analysis( $user_inputs, $scenarios );
+return [
+'analysis'    => $this->generate_fallback_analysis( $user_inputs, $scenarios ),
+'rag_context' => [],
+];
 }
 
 if ( $time_remaining() < 5 ) {
-return $this->generate_fallback_analysis( $user_inputs, $scenarios );
+return [
+'analysis'    => $this->generate_fallback_analysis( $user_inputs, $scenarios ),
+'rag_context' => [],
+];
 }
 
 try {
 $llm    = new RTBCB_LLM();
-$result = $llm->generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context );
+$result = $llm->generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_loader );
 
 if ( is_wp_error( $result ) ) {
-return $this->generate_fallback_analysis( $user_inputs, $scenarios );
+return [
+'analysis'    => $this->generate_fallback_analysis( $user_inputs, $scenarios ),
+'rag_context' => [],
+];
 }
 
-return $result;
+return [
+'analysis'    => $result,
+'rag_context' => $rag_context,
+];
 } catch ( Exception $e ) {
 rtbcb_log_error( 'LLM analysis failed', $e->getMessage() );
-return $this->generate_fallback_analysis( $user_inputs, $scenarios );
+return [
+'analysis'    => $this->generate_fallback_analysis( $user_inputs, $scenarios ),
+'rag_context' => [],
+];
 }
 }
 
@@ -149,9 +171,10 @@ $scenarios   = [ 'base' => [ 'total_annual_benefit' => 1000 ] ];
 $result = $method->invoke( $plugin, $user_inputs, $scenarios, [] );
 
 $this->assertIsArray( $result );
-$this->assertArrayHasKey( 'enhanced_fallback', $result );
-$this->assertTrue( $result['enhanced_fallback'] );
-$this->assertArrayHasKey( 'executive_summary', $result );
+$this->assertArrayHasKey( 'analysis', $result );
+$this->assertArrayHasKey( 'enhanced_fallback', $result['analysis'] );
+$this->assertTrue( $result['analysis']['enhanced_fallback'] );
+$this->assertArrayHasKey( 'executive_summary', $result['analysis'] );
 }
 }
 

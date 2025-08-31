@@ -54,67 +54,98 @@ if ( ! function_exists( 'rtbcb_get_api_timeout' ) ) {
 }
 
 if ( ! class_exists( 'RTBCB_LLM' ) ) {
-    class RTBCB_LLM {
-        public static $called = false;
-        public static $sleep  = 0;
-        public function generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context ) {
-            self::$called = true;
-            if ( self::$sleep > 0 ) {
-                usleep( self::$sleep );
-            }
-            return [ 'executive_summary' => 'summary' ];
-        }
-    }
+class RTBCB_LLM {
+public static $called = false;
+public static $sleep  = 0;
+public function generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context ) {
+self::$called = true;
+if ( is_callable( $rag_context ) ) {
+$rag_context = $rag_context();
+}
+if ( self::$sleep > 0 ) {
+usleep( self::$sleep );
+}
+return [ 'executive_summary' => 'summary', 'context_used' => $rag_context ];
+}
+}
 }
 
 class Real_Treasury_BCB {
-    public $fallback_called = false;
+public $fallback_called = false;
 
-    private function generate_business_analysis( $user_inputs, $scenarios, $rag_context ) {
-        $start_time = microtime( true );
-        $timeout    = rtbcb_get_api_timeout();
-        $time_remaining = static function() use ( $start_time, $timeout ) {
-            return $timeout - ( microtime( true ) - $start_time );
-        };
+private function generate_business_analysis( $user_inputs, $scenarios, $recommendation ) {
+$start_time      = microtime( true );
+$timeout         = rtbcb_get_api_timeout();
+$time_remaining  = static function() use ( $start_time, $timeout ) {
+return $timeout - ( microtime( true ) - $start_time );
+};
+$rag_context     = [];
+$rag_used        = false;
+$rag_loader      = function() use ( &$rag_context, &$rag_used ) {
+$rag_used    = true;
+$rag_context = [ 'ctx' ];
+return $rag_context;
+};
 
-        if ( ! class_exists( 'RTBCB_LLM' ) ) {
-            return new WP_Error( 'llm_unavailable', __( 'AI analysis service unavailable.', 'rtbcb' ) );
-        }
+if ( ! class_exists( 'RTBCB_LLM' ) ) {
+return [
+'analysis'    => new WP_Error( 'llm_unavailable', __( 'AI analysis service unavailable.', 'rtbcb' ) ),
+'rag_context' => [],
+];
+}
 
-        if ( ! rtbcb_has_openai_api_key() ) {
-            return $this->generate_fallback_analysis( $user_inputs, $scenarios );
-        }
+if ( ! rtbcb_has_openai_api_key() ) {
+return [
+'analysis'    => $this->generate_fallback_analysis( $user_inputs, $scenarios ),
+'rag_context' => [],
+];
+}
 
-        if ( $time_remaining() < 5 ) {
-            return $this->generate_fallback_analysis( $user_inputs, $scenarios );
-        }
+if ( $time_remaining() < 5 ) {
+return [
+'analysis'    => $this->generate_fallback_analysis( $user_inputs, $scenarios ),
+'rag_context' => [],
+];
+}
 
-        try {
-            $llm    = new RTBCB_LLM();
-            $result = $llm->generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context );
+try {
+$llm    = new RTBCB_LLM();
+$result = $llm->generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_loader );
 
-            if ( is_wp_error( $result ) ) {
-                return $this->generate_fallback_analysis( $user_inputs, $scenarios );
-            }
+if ( is_wp_error( $result ) ) {
+return [
+'analysis'    => $this->generate_fallback_analysis( $user_inputs, $scenarios ),
+'rag_context' => [],
+];
+}
 
-            if ( $time_remaining() < 2 ) {
-                return [
-                    'executive_summary' => $result['executive_summary'] ?? '',
-                    'partial'          => true,
-                ];
-            }
+if ( $time_remaining() < 2 ) {
+return [
+'analysis'    => [
+'executive_summary' => $result['executive_summary'] ?? '',
+'partial'          => true,
+],
+'rag_context' => $rag_used ? $rag_context : [],
+];
+}
 
-            return $result;
-        } catch ( Exception $e ) {
-            rtbcb_log_error( 'LLM analysis failed', $e->getMessage() );
-            return $this->generate_fallback_analysis( $user_inputs, $scenarios );
-        }
-    }
+return [
+'analysis'    => $result,
+'rag_context' => $rag_used ? $rag_context : [],
+];
+} catch ( Exception $e ) {
+rtbcb_log_error( 'LLM analysis failed', $e->getMessage() );
+return [
+'analysis'    => $this->generate_fallback_analysis( $user_inputs, $scenarios ),
+'rag_context' => [],
+];
+}
+}
 
-    private function generate_fallback_analysis( $user_inputs, $scenarios ) {
-        $this->fallback_called = true;
-        return [ 'fallback' => true ];
-    }
+private function generate_fallback_analysis( $user_inputs, $scenarios ) {
+$this->fallback_called = true;
+return [ 'fallback' => true ];
+}
 }
 
 final class Generate_Business_Analysis_Test extends TestCase {
@@ -177,7 +208,8 @@ final class Generate_Business_Analysis_Test extends TestCase {
         $result = $this->invoke_generate_business_analysis();
 
         $this->assertTrue( RTBCB_LLM::$called, 'LLM should be called when time permits.' );
-        $this->assertArrayHasKey( 'partial', $result, 'Partial result expected when time runs out.' );
+        $this->assertArrayHasKey( 'analysis', $result );
+        $this->assertArrayHasKey( 'partial', $result['analysis'], 'Partial result expected when time runs out.' );
     }
 }
 
