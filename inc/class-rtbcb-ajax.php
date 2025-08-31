@@ -167,13 +167,15 @@ class RTBCB_Ajax {
                                 $final_analysis = self::create_fallback_analysis( $enriched_profile, $roi_scenarios );
                                 $workflow_tracker->add_warning( 'hybrid_rag_disabled', __( 'AI analysis disabled.', 'rtbcb' ) );
                         }
-                        $workflow_tracker->complete_step( 'hybrid_rag_analysis', $final_analysis );
-                        if ( $job_id ) {
-                                RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'analysis' => $final_analysis ] );
-                        }
+                       $workflow_tracker->complete_step( 'hybrid_rag_analysis', $final_analysis );
+                       if ( $job_id ) {
+                               RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'analysis' => $final_analysis ] );
+                       }
 
-			$workflow_tracker->start_step( 'data_structuring' );
-			$structured_report_data = self::structure_report_data( $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, $request_start );
+                       $chart_data = self::prepare_chart_data( $roi_scenarios );
+
+                       $workflow_tracker->start_step( 'data_structuring' );
+                       $structured_report_data = self::structure_report_data( $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, $chart_data, $request_start );
                         $workflow_tracker->complete_step( 'data_structuring', $structured_report_data );
                         if ( $job_id ) {
                                 RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'report_data' => $structured_report_data ] );
@@ -307,7 +309,7 @@ class RTBCB_Ajax {
 		];
 	}
 
-private static function structure_report_data( $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, $request_start ) {
+private static function structure_report_data( $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, $chart_data, $request_start ) {
 	$operational_analysis = (array) ( $final_analysis['operational_analysis'] ?? [] );
 	$current_state_assessment = (array) ( $operational_analysis['current_state_assessment'] ?? [] );
 	if ( empty( $current_state_assessment ) ) {
@@ -347,12 +349,13 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 				'maturity_assessment' => $enriched_profile['maturity_assessment'] ?? [],
 				'competitive_position'=> $enriched_profile['competitive_position'] ?? [],
 			],
-			'financial_analysis' => [
-				'roi_scenarios'        => self::format_roi_scenarios( $roi_scenarios ),
-				'investment_breakdown' => $final_analysis['financial_analysis']['investment_breakdown'] ?? [],
-				'payback_analysis'     => $final_analysis['financial_analysis']['payback_analysis'] ?? [],
-				'sensitivity_analysis' => $roi_scenarios['sensitivity_analysis'] ?? [],
-			],
+                       'financial_analysis' => [
+                               'roi_scenarios'        => self::format_roi_scenarios( $roi_scenarios ),
+                               'investment_breakdown' => $final_analysis['financial_analysis']['investment_breakdown'] ?? [],
+                               'payback_analysis'     => $final_analysis['financial_analysis']['payback_analysis'] ?? [],
+                               'sensitivity_analysis' => $roi_scenarios['sensitivity_analysis'] ?? [],
+                               'chart_data'           => $chart_data,
+                       ],
 			'technology_strategy' => [
 				'recommended_category' => $recommendation['recommended'],
 				'category_details'     => $recommendation['category_info'],
@@ -401,18 +404,73 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 		];
 	}
 
-	private static function save_lead_data_async( $user_inputs, $structured_report_data ) {
-		if ( class_exists( 'RTBCB_Leads' ) ) {
-			$lead_data = array_merge( $user_inputs, [ 'report_data' => $structured_report_data ] );
-			return RTBCB_Leads::save_lead( $lead_data );
-		}
-		return null;
-	}
+        private static function save_lead_data_async( $user_inputs, $structured_report_data ) {
+                if ( class_exists( 'RTBCB_Leads' ) ) {
+                        $lead_data = array_merge( $user_inputs, [ 'report_data' => $structured_report_data ] );
+                        return RTBCB_Leads::save_lead( $lead_data );
+                }
+                return null;
+        }
 
-	private static function calculate_business_case_strength( $roi_scenarios, $recommendation ) {
-		$base = $roi_scenarios['base']['total_annual_benefit'] ?? 0;
-		return $base > 0 ? 'strong' : 'weak';
-	}
+       /**
+        * Prepare chart data for ROI visualization.
+        *
+        * @param array $roi_scenarios ROI scenarios.
+        * @return array Chart.js compatible data structure.
+        */
+       private static function prepare_chart_data( $roi_scenarios ) {
+               return [
+                       'labels'   => [
+                               __( 'Labor Savings', 'rtbcb' ),
+                               __( 'Fee Savings', 'rtbcb' ),
+                               __( 'Error Reduction', 'rtbcb' ),
+                               __( 'Total Benefit', 'rtbcb' ),
+                       ],
+                       'datasets' => [
+                               [
+                                       'label'           => __( 'Conservative', 'rtbcb' ),
+                                       'data'            => [
+                                               $roi_scenarios['conservative']['labor_savings'] ?? 0,
+                                               $roi_scenarios['conservative']['fee_savings'] ?? 0,
+                                               $roi_scenarios['conservative']['error_reduction'] ?? 0,
+                                               $roi_scenarios['conservative']['total_annual_benefit'] ?? 0,
+                                       ],
+                                       'backgroundColor' => 'rgba(239, 68, 68, 0.8)',
+                                       'borderColor'     => 'rgba(239, 68, 68, 1)',
+                                       'borderWidth'     => 1,
+                               ],
+                               [
+                                       'label'           => __( 'Base Case', 'rtbcb' ),
+                                       'data'            => [
+                                               $roi_scenarios['base']['labor_savings'] ?? 0,
+                                               $roi_scenarios['base']['fee_savings'] ?? 0,
+                                               $roi_scenarios['base']['error_reduction'] ?? 0,
+                                               $roi_scenarios['base']['total_annual_benefit'] ?? 0,
+                                       ],
+                                       'backgroundColor' => 'rgba(59, 130, 246, 0.8)',
+                                       'borderColor'     => 'rgba(59, 130, 246, 1)',
+                                       'borderWidth'     => 1,
+                               ],
+                               [
+                                       'label'           => __( 'Optimistic', 'rtbcb' ),
+                                       'data'            => [
+                                               $roi_scenarios['optimistic']['labor_savings'] ?? 0,
+                                               $roi_scenarios['optimistic']['fee_savings'] ?? 0,
+                                               $roi_scenarios['optimistic']['error_reduction'] ?? 0,
+                                               $roi_scenarios['optimistic']['total_annual_benefit'] ?? 0,
+                                       ],
+                                       'backgroundColor' => 'rgba(16, 185, 129, 0.8)',
+                                       'borderColor'     => 'rgba(16, 185, 129, 1)',
+                                       'borderWidth'     => 1,
+                               ],
+                       ],
+               ];
+       }
+
+       private static function calculate_business_case_strength( $roi_scenarios, $recommendation ) {
+               $base = $roi_scenarios['base']['total_annual_benefit'] ?? 0;
+               return $base > 0 ? 'strong' : 'weak';
+       }
 
 	private static function format_roi_scenarios( $roi_scenarios ) {
 		return $roi_scenarios;

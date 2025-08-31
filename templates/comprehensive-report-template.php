@@ -482,64 +482,27 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeROIChart() {
-        const ctx = document.getElementById('rtbcb-roi-chart');
-        if ( ! ctx || typeof Chart === 'undefined' ) {
-                return;
-        }
-	
-	const roiData = <?php echo wp_json_encode( $financial_analysis['roi_scenarios'] ?? [] ); ?>;
-	
-	new Chart(ctx, {
+	const ctx = document.getElementById('rtbcb-roi-chart');
+	if ( ! ctx || typeof Chart === 'undefined' ) {
+		return;
+	}
+
+	const chartData = <?php echo wp_json_encode( $financial_analysis['chart_data'] ?? [] ); ?>;
+	if ( ! chartData.labels ) {
+		return;
+	}
+
+	new Chart( ctx, {
 		type: 'bar',
-		data: {
-			labels: ['<?php echo esc_js( __( 'Labor Savings', 'rtbcb' ) ); ?>', '<?php echo esc_js( __( 'Fee Savings', 'rtbcb' ) ); ?>', '<?php echo esc_js( __( 'Error Reduction', 'rtbcb' ) ); ?>', '<?php echo esc_js( __( 'Total Benefit', 'rtbcb' ) ); ?>'],
-			datasets: [
-				{
-					label: '<?php echo esc_js( __( 'Conservative', 'rtbcb' ) ); ?>',
-					data: [
-						roiData.conservative?.labor_savings || 0,
-						roiData.conservative?.fee_savings || 0, 
-						roiData.conservative?.error_reduction || 0,
-						roiData.conservative?.total_annual_benefit || 0
-					],
-					backgroundColor: 'rgba(239, 68, 68, 0.8)',
-					borderColor: 'rgba(239, 68, 68, 1)',
-					borderWidth: 1
-				},
-				{
-					label: '<?php echo esc_js( __( 'Base Case', 'rtbcb' ) ); ?>',
-					data: [
-						roiData.base?.labor_savings || 0,
-						roiData.base?.fee_savings || 0,
-						roiData.base?.error_reduction || 0,
-						roiData.base?.total_annual_benefit || 0
-					],
-					backgroundColor: 'rgba(59, 130, 246, 0.8)',
-					borderColor: 'rgba(59, 130, 246, 1)',
-					borderWidth: 1
-				},
-				{
-					label: '<?php echo esc_js( __( 'Optimistic', 'rtbcb' ) ); ?>',
-					data: [
-						roiData.optimistic?.labor_savings || 0,
-						roiData.optimistic?.fee_savings || 0,
-						roiData.optimistic?.error_reduction || 0,
-						roiData.optimistic?.total_annual_benefit || 0
-					],
-					backgroundColor: 'rgba(16, 185, 129, 0.8)',
-					borderColor: 'rgba(16, 185, 129, 1)',
-					borderWidth: 1
-				}
-			]
-		},
+		data: chartData,
 		options: {
 			responsive: true,
 			scales: {
 				y: {
 					beginAtZero: true,
 					ticks: {
-						callback: function(value) {
-							return '$' + new Intl.NumberFormat().format(value);
+						callback: function( value ) {
+							return '$' + new Intl.NumberFormat().format( value );
 						}
 					}
 				}
@@ -547,15 +510,16 @@ function initializeROIChart() {
 			plugins: {
 				tooltip: {
 					callbacks: {
-						label: function(context) {
-							return context.dataset.label + ': $' + new Intl.NumberFormat().format(context.raw);
+						label: function( context ) {
+							return context.dataset.label + ': $' + new Intl.NumberFormat().format( context.raw );
 						}
 					}
 				}
 			}
 		}
-	});
+	} );
 }
+
 
 function initializeSectionToggles() {
 	document.querySelectorAll('.rtbcb-section-toggle').forEach(toggle => {
