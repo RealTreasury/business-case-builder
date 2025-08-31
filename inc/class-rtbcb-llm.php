@@ -1349,8 +1349,8 @@ $batch_prompts['tech'] = [
     /**
      * Execute company, industry, and technology research in a single LLM call.
      *
-     * @param array $user_inputs    Sanitized user inputs.
-     * @param array $context_chunks Optional context strings.
+     * @param array                     $user_inputs    Sanitized user inputs.
+     * @param callable|array|Traversable $context_chunks Optional context strings.
      * @return array|WP_Error {
      *     @type array  $company_research  Company research data.
      *     @type array  $industry_analysis Industry analysis data.
@@ -1672,14 +1672,21 @@ SYSTEM;
     /**
      * Select the optimal model for comprehensive analysis.
      *
-     * @param array $user_inputs    Sanitized user inputs.
-     * @param array $context_chunks Optional context strings.
+      * @param array                     $user_inputs    Sanitized user inputs.
+      * @param callable|array|Traversable $context_chunks Optional context strings.
      * @return string Model identifier.
      */
     private function select_optimal_model( $user_inputs, $context_chunks ) {
-        $model = $this->get_model( 'advanced' );
+        $model         = $this->get_model( 'advanced' );
+        $context_count = 0;
 
-        if ( count( $context_chunks ) < 3 ) {
+        if ( is_callable( $context_chunks ) || $context_chunks instanceof Traversable ) {
+            // Lazily provided context; treat as empty without invoking.
+        } elseif ( is_array( $context_chunks ) || $context_chunks instanceof Countable ) {
+            $context_count = count( $context_chunks );
+        }
+
+        if ( $context_count < 3 ) {
             $model = $this->get_model( 'premium' );
         }
 
