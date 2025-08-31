@@ -64,6 +64,10 @@ class RTBCB_Main {
 	* Constructor.
 	*/
 	private function __construct() {
+		if ( $this->is_jetpack_request() ) {
+			return;
+		}
+
 		$this->plugin_data = get_file_data( RTBCB_FILE, [
 			'Name'        => 'Plugin Name',
 			'Version'     => 'Version',
@@ -75,6 +79,30 @@ class RTBCB_Main {
 
 		$this->init_hooks();
 		$this->includes();
+	}
+
+	/**
+	* Check if the current request is from Jetpack.
+	*
+	* @return bool
+	*/
+	private function is_jetpack_request() {
+		if ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) {
+			return true;
+		}
+
+		if ( isset( $_SERVER['HTTP_X_JETPACK_SIGNATURE'] ) || isset( $_SERVER['HTTP_JETPACK_SIGNATURE'] ) ) {
+			return true;
+		}
+
+		if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
+			$request_uri = isset( $_SERVER['REQUEST_URI'] ) ? wp_unslash( $_SERVER['REQUEST_URI'] ) : '';
+			if ( false !== strpos( $request_uri, '/jetpack/' ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**
