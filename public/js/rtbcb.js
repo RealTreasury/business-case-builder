@@ -208,6 +208,32 @@ async function pollJobStatus(jobId, progressContainer, formContainer) {
     }
 }
 
+/**
+ * Stream analysis chunks to a callback.
+ * @param {FormData} formData Data to submit.
+ * @param {Function} onChunk  Callback for each chunk.
+ */
+async function rtbcbStreamAnalysis(formData, onChunk) {
+    formData.append('action', 'rtbcb_stream_analysis');
+    formData.append('rtbcb_nonce', rtbcbAjax.nonce);
+    const response = await fetch(rtbcbAjax.ajax_url, {
+        method: 'POST',
+        body: formData
+    });
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+            break;
+        }
+        const text = decoder.decode(value);
+        if (typeof onChunk === 'function') {
+            onChunk(text);
+        }
+    }
+}
+
 // Ensure the form submission is handled by our new function
 // eslint-disable-next-line @wordpress/no-global-event-listener
 document.addEventListener('DOMContentLoaded', function() {
