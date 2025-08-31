@@ -7,7 +7,7 @@ php_value upload_max_filesize 50M
 
 # Disable output compression for AJAX
 <IfModule mod_env.c>
-SetEnvIf Request_URI "admin-ajax\.php" no-gzip dont-vary
+SetEnvIf Request_URI "admin-ajax\.php\?action=rtbcb_" no-gzip dont-vary
 </IfModule>
 
 # Ensure proper content type for AJAX
