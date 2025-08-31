@@ -53,6 +53,76 @@ function rtbcb_has_openai_api_key() {
 }
 
 /**
+ * Perform a remote POST request with retry logic.
+ *
+ * Uses exponential backoff with jitter between attempts. Retries are
+ * triggered for transport errors, HTTP 429 responses and server errors.
+ * Client errors (4xx) other than 429 will return immediately.
+ *
+ * @param string $url         Endpoint URL.
+ * @param array  $args        Arguments for {@see wp_remote_post()}.
+ * @param int    $max_retries Optional. Number of attempts. Default 3.
+ * @return array|WP_Error HTTP response array or WP_Error on failure.
+ */
+function rtbcb_wp_remote_post_with_retry( $url, $args = [], $max_retries = 3 ) {
+	$url         = function_exists( 'esc_url_raw' ) ? esc_url_raw( $url ) : $url;
+	$max_retries = max( 1, (int) $max_retries );
+
+	$base_timeout   = isset( $args['timeout'] ) ? (int) $args['timeout'] : rtbcb_get_api_timeout();
+	$max_retry_time = isset( $args['max_retry_time'] ) ? (int) $args['max_retry_time'] : $base_timeout * $max_retries;
+	unset( $args['max_retry_time'] );
+
+	if ( $base_timeout <= 0 || $max_retry_time <= 0 ) {
+		return new WP_Error(
+			'invalid_timeout',
+			__( 'Request timeout must be greater than zero.', 'rtbcb' )
+		);
+	}
+
+	$current_timeout = $base_timeout;
+	$start_time      = microtime( true );
+
+	for ( $attempt = 1; $attempt <= $max_retries; $attempt++ ) {
+		$elapsed = microtime( true ) - $start_time;
+		if ( $elapsed >= $max_retry_time ) {
+			break;
+		}
+
+		$remaining       = $max_retry_time - $elapsed;
+		$args['timeout'] = min( $current_timeout, $remaining );
+
+		$response = wp_remote_post( $url, $args );
+		if ( ! is_wp_error( $response ) ) {
+			$status = (int) wp_remote_retrieve_response_code( $response );
+			if ( $status >= 200 && $status < 300 ) {
+				return $response;
+			}
+
+			if ( $status >= 400 && $status < 500 && 429 !== $status ) {
+				return new WP_Error(
+					'http_error',
+					sprintf( __( 'HTTP error %d', 'rtbcb' ), $status ),
+					[ 'status' => $status ]
+				);
+			}
+		}
+
+		if ( $attempt < $max_retries ) {
+			$current_timeout = min( $current_timeout + 5, $max_retry_time );
+
+			$elapsed = microtime( true ) - $start_time;
+			$delay   = min( pow( 2, $attempt - 1 ), $max_retry_time - $elapsed );
+			if ( $delay > 0 ) {
+				$jitter = wp_rand( 0, 1000 ) / 1000;
+				usleep( (int) ( ( $delay + $jitter ) * 1000000 ) );
+			}
+		}
+	}
+
+	return $response;
+}
+
+/**
  * Determine if an error indicates an OpenAI configuration issue.
  *
  * Checks for common phrases like a missing API key or invalid model.
@@ -888,23 +958,23 @@ function rtbcb_test_generate_category_recommendation( $analysis ) {
 			$input .= "\nExtra Requirements: {$payload['extra_requirements']}";
 		}
 
-		$response = wp_remote_post(
-			'https://api.openai.com/v1/responses',
-			[
-				'headers' => [
-					'Content-Type'  => 'application/json',
-					'Authorization' => 'Bearer ' . $api_key,
-				],
-				'body'    => wp_json_encode(
-					[
-						'model'        => $model,
-						'instructions' => $system_prompt,
-						'input'        => $input,
-					]
-				),
-			                   'timeout' => rtbcb_get_api_timeout(),
-			            ]
-			    );
+                $response = rtbcb_wp_remote_post_with_retry(
+                        'https://api.openai.com/v1/responses',
+                        [
+                                'headers' => [
+                                        'Content-Type'  => 'application/json',
+                                        'Authorization' => 'Bearer ' . $api_key,
+                                ],
+                                'body'    => wp_json_encode(
+                                        [
+                                                'model'        => $model,
+                                                'instructions' => $system_prompt,
+                                                'input'        => $input,
+                                        ]
+                                ),
+                                'timeout' => rtbcb_get_api_timeout(),
+                        ]
+                );
 
 		if ( is_wp_error( $response ) ) {
 			return new WP_Error( 'llm_failure', __( 'Unable to generate recommendation at this time.', 'rtbcb' ) );
@@ -1418,21 +1488,21 @@ function rtbcb_handle_openai_responses_job( $job_id, $user_id ) {
 		$timeout = 120;
 	}
 
-	$response = wp_remote_post(
-		'https://api.openai.com/v1/responses',
-		[
-			'headers' => [
-				'Content-Type'  => 'application/json',
-				'Authorization' => 'Bearer ' . $api_key,
-			],
-			'body'    => $body,
-			'timeout' => $timeout,
-		]
-	);
+        $response = rtbcb_wp_remote_post_with_retry(
+                'https://api.openai.com/v1/responses',
+                [
+                        'headers' => [
+                                'Content-Type'  => 'application/json',
+                                'Authorization' => 'Bearer ' . $api_key,
+                        ],
+                        'body'    => $body,
+                        'timeout' => $timeout,
+                ]
+        );
 
 	if ( is_wp_error( $response ) ) {
 			    if ( class_exists( 'RTBCB_API_Log' ) ) {
-			            RTBCB_API_Log::save_log( $body_array, [ 'error' => $response->get_error_message() ], $user_id, $user_email, $company_name );
+				    RTBCB_API_Log::save_log( $body_array, [ 'error' => $response->get_error_message() ], $user_id, $user_email, $company_name );
 			    }
 		set_transient(
 			'rtbcb_openai_job_' . $job_id,

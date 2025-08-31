@@ -70,7 +70,7 @@ class RTBCB_API_Tester {
             'timeout' => $timeout,
         ];
 
-        $response = wp_remote_post( 'https://api.openai.com/v1/responses', $args );
+$response = rtbcb_wp_remote_post_with_retry( 'https://api.openai.com/v1/responses', $args );
 
         if ( is_wp_error( $response ) ) {
             return [
