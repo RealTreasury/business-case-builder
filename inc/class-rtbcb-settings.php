@@ -12,10 +12,10 @@ defined( 'ABSPATH' ) || exit;
 	*/
 class RTBCB_Settings {
 	/**
-	 * Default settings.
-	 *
-	 * @var array
-	 */
+	* Default settings.
+	*
+	* @var array
+	*/
 	const DEFAULTS = [
 		'labor_cost_per_hour'       => 100,
 		'efficiency_ranges'         => [
@@ -31,22 +31,22 @@ class RTBCB_Settings {
 	];
 
 	/**
-	 * Retrieve a setting value.
-	 *
-	 * @param string $key     Setting key.
-	 * @param mixed  $default Default value.
-	 * @return mixed
-	 */
+	* Retrieve a setting value.
+	*
+	* @param string $key     Setting key.
+	* @param mixed  $default Default value.
+	* @return mixed
+	*/
 	public static function get_setting( $key, $default = null ) {
 		$settings = get_option( 'rtbcb_settings', self::DEFAULTS );
 		return $settings[ $key ] ?? $default;
 	}
 
 	/**
-	 * Retrieve all settings.
-	 *
-	 * @return array
-	 */
+	* Retrieve all settings.
+	*
+	* @return array
+	*/
 	public static function get_all() {
 		return get_option( 'rtbcb_settings', self::DEFAULTS );
 	}

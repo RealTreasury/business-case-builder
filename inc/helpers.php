@@ -18,10 +18,10 @@ function rtbcb_get_api_timeout() {
 	$timeout = rtbcb_sanitize_api_timeout( $timeout );
 
 	/**
-	 * Filter the API request timeout.
-	 *
-	 * @param int $timeout Timeout in seconds.
-	 */
+	* Filter the API request timeout.
+	*
+	* @param int $timeout Timeout in seconds.
+	*/
 	if ( function_exists( 'apply_filters' ) ) {
 		return (int) apply_filters( 'rtbcb_api_timeout', $timeout );
 	}
@@ -884,11 +884,11 @@ function rtbcb_is_simple_case( $user_inputs ) {
 		$is_simple = ( $num_banks <= $max_banks && $ftes <= $max_ftes && $hours <= $max_hours );
 
 		/**
-		 * Filter whether a case is simple enough for synchronous execution.
-		 *
-		 * @param bool  $is_simple   Whether case is considered simple.
-		 * @param array $user_inputs User input data.
-		 */
+		* Filter whether a case is simple enough for synchronous execution.
+		*
+		* @param bool  $is_simple   Whether case is considered simple.
+		* @param array $user_inputs User input data.
+		*/
 		return (bool) apply_filters( 'rtbcb_is_simple_case', $is_simple, $user_inputs );
 }
 
@@ -1329,8 +1329,8 @@ function rtbcb_test_generate_executive_summary() {
 	$company = rtbcb_get_current_company();
 	$roi     = get_option( 'rtbcb_roi_results', [] );
 
-	   $llm    = new RTBCB_LLM();
-	   $result = $llm->generate_comprehensive_business_case( $company, $roi, [], null );
+	$llm    = new RTBCB_LLM();
+	$result = $llm->generate_comprehensive_business_case( $company, $roi, [], null );
 
 	if ( is_wp_error( $result ) ) {
 		return $result;
@@ -1687,8 +1687,8 @@ function rtbcb_handle_comprehensive_analysis( $company_name, $job_id ) {
 		$rag_context = array_map( 'sanitize_text_field', $vendor_list );
 	}
 
-	   $llm      = new RTBCB_LLM();
-	   $analysis = $llm->generate_comprehensive_business_case( [ 'company_name' => $company_name ], [], $rag_context, null );
+	$llm      = new RTBCB_LLM();
+	$analysis = $llm->generate_comprehensive_business_case( [ 'company_name' => $company_name ], [], $rag_context, null );
 
 	if ( is_wp_error( $analysis ) ) {
 		update_option(
@@ -1833,13 +1833,13 @@ function rtbcb_set_research_cache( $company, $industry, $type, $data, $ttl = 0 )
 	}
 
 	/**
-	 * Filter the research cache TTL.
-	 *
-	 * @param int $ttl Cache duration in seconds.
-	 * @param string $type Cache segment identifier.
-	 * @param string $company Sanitized company name.
-	 * @param string $industry Sanitized industry.
-	 */
+	* Filter the research cache TTL.
+	*
+	* @param int $ttl Cache duration in seconds.
+	* @param string $type Cache segment identifier.
+	* @param string $company Sanitized company name.
+	* @param string $industry Sanitized industry.
+	*/
 	$ttl = apply_filters( 'rtbcb_research_cache_ttl', $ttl, $type, $company, $industry );
 
 	set_transient( $key, $data, $ttl );

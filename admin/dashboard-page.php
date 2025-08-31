@@ -295,7 +295,7 @@ $avg_roi = intval( $roi_stats['avg_base'] ?? 0 );
 						</div>
 						<div class="rtbcb-category-bar">
 							<div class="rtbcb-category-fill rtbcb-cat-<?php echo esc_attr( $stat['recommended_category'] ); ?>"
-								 style="width: <?php echo esc_attr( $percentage ); ?>%"></div>
+								style="width: <?php echo esc_attr( $percentage ); ?>%"></div>
 						</div>
 						<div class="rtbcb-category-percentage"><?php echo esc_html( number_format( $percentage, 1 ) ); ?>%</div>
 					</div>
