@@ -53,18 +53,24 @@ class RTBCB_Ajax {
                 $scenarios      = RTBCB_Calculator::calculate_roi( $user_inputs );
                 $recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
 
-                $plugin = Real_Treasury_BCB::instance();
-                $method = new ReflectionMethod( Real_Treasury_BCB::class, 'generate_business_analysis' );
-                $method->setAccessible( true );
+		$plugin = Real_Treasury_BCB::instance();
 
-                $chunk_callback = function( $chunk ) {
-                        echo $chunk; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-                        if ( function_exists( 'flush' ) ) {
-                                flush();
-                        }
-                };
+		$chunk_callback = function( $chunk ) {
+			echo $chunk; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			if ( function_exists( 'flush' ) ) {
+				flush();
+			}
+		};
 
-                $result = $method->invoke( $plugin, $user_inputs, $scenarios, $recommendation, $chunk_callback );
+		try {
+			$method = new ReflectionMethod( Real_Treasury_BCB::class, 'generate_business_analysis' );
+			$method->setAccessible( true );
+			$result = $method->invoke( $plugin, $user_inputs, $scenarios, $recommendation, $chunk_callback );
+		} catch ( ReflectionException $e ) {
+			rtbcb_log_error( 'Reflection error: ' . $e->getMessage() );
+			wp_send_json_error( __( 'An unexpected error occurred.', 'rtbcb' ), 500 );
+			return;
+		}
 
                 echo 'data: ' . wp_json_encode( [ 'type' => 'final', 'payload' => $result ] ) . "\n\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
                 if ( function_exists( 'flush' ) ) {
