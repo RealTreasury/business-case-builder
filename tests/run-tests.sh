@@ -7,6 +7,19 @@ echo "================================================"
 export OPENAI_API_KEY="${OPENAI_API_KEY:-sk-test}"
 export RTBCB_TEST_MODEL="${RTBCB_TEST_MODEL:-gpt-5-mini}"
 
+# Prefer local binaries for tooling when available
+PHPUNIT="phpunit"
+if [ -x vendor/bin/phpunit ]; then
+    PHPUNIT="vendor/bin/phpunit"
+fi
+
+PHPCS_BIN="phpcs"
+if [ -x vendor/bin/phpcs ]; then
+    PHPCS_BIN="vendor/bin/phpcs"
+elif command -v phpcs >/dev/null 2>&1; then
+    PHPCS_BIN="$(command -v phpcs)"
+fi
+
 # Install JS dependencies for headless browser tests
 npm install --no-save --no-package-lock jsdom >/dev/null 2>&1
 export NODE_OPTIONS="--require ./tests/jsdom-setup.js"
@@ -73,10 +86,10 @@ php tests/email-and-pdf.test.php
 
 # AJAX error handling test (PHPUnit)
 echo "15. Running AJAX error handling tests..."
-phpunit tests/RTBCB_AjaxGenerateComprehensiveCaseErrorTest.php
-phpunit tests/RTBCB_AjaxGenerateComprehensiveCaseFatalErrorTest.php
-phpunit tests/RTBCB_GenerateBusinessAnalysisTimeoutTest.php
-phpunit tests/report-error-handling.test.php
+"$PHPUNIT" tests/RTBCB_AjaxGenerateComprehensiveCaseErrorTest.php
+"$PHPUNIT" tests/RTBCB_AjaxGenerateComprehensiveCaseFatalErrorTest.php
+"$PHPUNIT" tests/RTBCB_GenerateBusinessAnalysisTimeoutTest.php
+"$PHPUNIT" tests/report-error-handling.test.php
 
 # Background job test
 echo "14. Running background job tests..."
@@ -88,7 +101,7 @@ php tests/job-status.test.php
 
 # Business analysis generation test
 echo "14c. Running business analysis generation test..."
-phpunit tests/generate-business-analysis.test.php
+"$PHPUNIT" tests/generate-business-analysis.test.php
 
 # JavaScript tests
 echo "16. Running JavaScript tests..."
@@ -110,9 +123,9 @@ npx --yes jest tests/poll-job-progress-text.test.js --config '{"testEnvironment"
 npx --yes jest tests/poll-job-partial-fields.test.js --config '{"testEnvironment":"node"}'
 
 # WordPress coding standards (if installed)
-if command -v phpcs &> /dev/null; then
+if command -v "$PHPCS_BIN" >/dev/null 2>&1 || [ -x "$PHPCS_BIN" ]; then
     echo "17. Running WordPress coding standards check..."
-    phpcs --standard=WordPress --ignore=vendor .
+    "$PHPCS_BIN" --standard=WordPress --ignore=vendor .
 else
     echo "17. Skipping WordPress coding standards (phpcs not installed)"
 fi
@@ -124,7 +137,7 @@ echo "18b. Running company research cache test..."
 php tests/company-research-cache.test.php
 
 echo "19. Running validator tests..."
-phpunit -c phpunit.xml
+"$PHPUNIT" -c phpunit.xml
 
 echo "================================================"
 echo "Tests complete!"

@@ -53,6 +53,18 @@ return false === $unser && 'b:0;' !== $data ? $data : $unser;
 }
 }
 
+if ( ! function_exists( 'wp_parse_args' ) ) {
+function wp_parse_args( $args, $defaults = [] ) {
+return array_merge( $defaults, $args );
+}
+}
+
+if ( ! function_exists( 'sanitize_sql_orderby' ) ) {
+function sanitize_sql_orderby( $orderby ) {
+return preg_replace( '/[^a-zA-Z0-9_,\s]/', '', $orderby );
+}
+}
+
 if ( ! function_exists( 'wp_kses_post' ) ) {
 function wp_kses_post( $data ) {
 return $data;
@@ -76,10 +88,11 @@ return $default;
 }
 
 class WPDB_Memory {
-	public $prefix = '';
-	public $insert_id = 0;
-	public $last_error = '';
-	private $dbh;
+        public $prefix = '';
+        public $insert_id = 0;
+        public $last_error = '';
+        public $found_rows = 0;
+        private $dbh;
 
 public function __construct() {
 $this->dbh = new SQLite3( ':memory:' );
@@ -94,6 +107,9 @@ return $this->dbh->exec( $sql );
 }
 
 public function prepare( $query, ...$args ) {
+if ( 1 === count( $args ) && is_array( $args[0] ) ) {
+        $args = $args[0];
+}
 $escaped = array_map( function ( $arg ) {
 if ( is_string( $arg ) ) {
 return "'" . str_replace( "'", "''", $arg ) . "'";
@@ -107,7 +123,13 @@ public function get_var( $sql ) {
 if ( false !== strpos( $sql, 'information_schema.tables' ) ) {
 return 1;
 }
-$result = $this->dbh->query( $sql );
+        if ( false !== stripos( $sql, 'found_rows()' ) ) {
+                return $this->found_rows;
+        }
+        if ( false !== stripos( $sql, 'DATE_SUB' ) ) {
+                return 0;
+        }
+        $result = $this->dbh->query( $sql );
 if ( $result instanceof SQLite3Result ) {
 $row = $result->fetchArray( SQLITE3_NUM );
 return $row[0] ?? null;
@@ -122,6 +144,21 @@ $row = $result->fetchArray( SQLITE3_ASSOC );
 return $row ?: null;
 }
 return null;
+}
+
+public function get_results( $sql, $output = ARRAY_A ) {
+        $results = [];
+        if ( false !== stripos( $sql, 'SQL_CALC_FOUND_ROWS' ) ) {
+                $sql = str_ireplace( 'SQL_CALC_FOUND_ROWS', '', $sql );
+        }
+        $query = $this->dbh->query( $sql );
+        if ( $query instanceof SQLite3Result ) {
+                while ( $row = $query->fetchArray( SQLITE3_ASSOC ) ) {
+                        $results[] = $row;
+                }
+        }
+        $this->found_rows = count( $results );
+        return $results;
 }
 
 public function insert( $table, $data, $format ) {
