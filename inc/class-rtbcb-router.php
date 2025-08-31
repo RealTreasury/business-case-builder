@@ -268,12 +268,13 @@ class RTBCB_Router {
         }
 
         $business_case_data = is_array( $business_case_data ) ? $business_case_data : [];
-        $report_data        = $business_case_data['report_data'] ?? null;
-        $hash_source        = $report_data ?: $business_case_data;
-        $data_hash          = md5( wp_json_encode( $hash_source ) );
-        $cache_key          = md5( $template_path . ':' . $data_hash );
+	$report_data        = $business_case_data['report_data'] ?? null;
+	$hash_source        = $report_data ?: $business_case_data;
+	$data_hash          = md5( wp_json_encode( $hash_source ) );
+	$version            = rtbcb_get_report_cache_version();
+	$cache_key          = md5( $template_path . ':' . $data_hash . ':' . $version );
 
-        $cached_html = wp_cache_get( $cache_key, 'rtbcb_reports' );
+	$cached_html = wp_cache_get( $cache_key, 'rtbcb_reports' );
         if ( false !== $cached_html ) {
             return $cached_html;
         }
@@ -332,12 +333,13 @@ class RTBCB_Router {
 
        $business_case_data = is_array( $business_case_data ) ? $business_case_data : [];
 
-       $report_data = $business_case_data['report_data'] ?? null;
-       $hash_source = $report_data ?: $business_case_data;
-       $data_hash  = md5( wp_json_encode( $hash_source ) );
-       $cache_key  = md5( $template_path . ':' . $data_hash );
+	$report_data = $business_case_data['report_data'] ?? null;
+	$hash_source = $report_data ?: $business_case_data;
+	$data_hash  = md5( wp_json_encode( $hash_source ) );
+	$version    = rtbcb_get_report_cache_version();
+	$cache_key  = md5( $template_path . ':' . $data_hash . ':' . $version );
 
-       $cached_html = wp_cache_get( $cache_key, 'rtbcb_reports' );
+	$cached_html = wp_cache_get( $cache_key, 'rtbcb_reports' );
        if ( false !== $cached_html ) {
            return $cached_html;
        }
