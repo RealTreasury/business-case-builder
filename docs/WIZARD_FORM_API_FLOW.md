@@ -35,9 +35,10 @@ Field definitions come from `templates/business-case-form.php` and the field reg
 
 1. **ROI Calculation** – `RTBCB_Calculator::calculate_roi()` builds conservative, base, and optimistic scenarios.
 2. **Category Recommendation** – `RTBCB_Category_Recommender::recommend_category()` scores the selected challenges to suggest a treasury solution type.
-3. **RAG Search** – `RTBCB_RAG::search_similar()` retrieves supporting context using the company profile and pain points.
-4. **OpenAI Call** – `RTBCB_LLM::generate_comprehensive_business_case()` combines user inputs, ROI data, and RAG context to produce narrative analysis.
-5. **Report Assembly** – `get_comprehensive_report_html()` renders the final HTML which is returned in the AJAX response.
+3. **ROI Refinement** – `RTBCB_Calculator::calculate_category_refined_roi()` recomputes ROI using the recommended category.
+4. **RAG Search** – `RTBCB_RAG::search_similar()` retrieves supporting context using the company profile and pain points.
+5. **OpenAI Call** – `RTBCB_LLM::generate_comprehensive_business_case()` combines user inputs, ROI data, and RAG context to produce narrative analysis.
+6. **Report Assembly** – `get_comprehensive_report_html()` renders the final HTML which is returned in the AJAX response.
 
 ## End-to-End Flow
 
@@ -56,6 +57,7 @@ sequenceDiagram
     JS->>WP: POST rtbcb_generate_case
     WP->>ROI: calculate_roi()
     WP->>Cat: recommend_category()
+    WP->>ROI: calculate_category_refined_roi()
     WP->>RAG: search_similar()
     WP->>LLM: generate_comprehensive_business_case()
     LLM-->>WP: analysis

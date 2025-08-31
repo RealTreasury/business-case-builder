@@ -10,20 +10,17 @@ This document summarizes the workflow from internal company research to deliveri
 
 ## 2. User Form Submission (Public)
 
-* A public user completes the multi-step form rendered by `templates/business-case-form.php`.
-* Input data is sanitized and stored for downstream processing.
+- A public user completes the multi-step form rendered by `templates/business-case-form.php`.
+- Input data is sanitized and stored for downstream processing.
+- `RTBCB_Category_Recommender::recommend_category()` scores the input against predefined categories.
+- `RTBCB_Calculator::calculate_category_refined_roi()` recomputes ROI using the category output.
 
 ## 3. Business Case Generation
 
-* `RTBCB_LLM::generate_business_case()` combines sanitized user inputs with ROI data and optional RAG context.
-* The LLM returns JSON containing executive summaries, operational analysis, industry insights, and financial analysis blocks.
+- `RTBCB_LLM::generate_business_case()` combines sanitized user inputs with ROI data and optional RAG context.
+- The LLM returns JSON containing executive summaries, operational analysis, industry insights, and financial analysis blocks.
 
-## 4. Category Recommendation
+## 4. Final Report Assembly
 
-* The plugin categorizes the user's challenges without an LLM.
-* `RTBCB_Category_Recommender::recommend_category()` scores the input against predefined categories and returns a recommendation with reasoning and confidence.
-
-## 5. Final Report Assembly
-
-* Outputs from the LLM and category recommender are merged with ROI calculations.
-* The result is rendered via `templates/comprehensive-report-template.php` and enhanced in `public/js/rtbcb-report.js` before being shown to the user.
+- Outputs from the LLM and category recommender are merged with ROI calculations.
+- The result is rendered via `templates/comprehensive-report-template.php` and enhanced in `public/js/rtbcb-report.js` before being shown to the user.
