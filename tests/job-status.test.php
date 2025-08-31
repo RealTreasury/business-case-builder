@@ -79,7 +79,7 @@ function assert_same( $expected, $actual, $message ) {
 $_GET['rtbcb_nonce'] = 'nonce';
 $_GET['job_id']      = 'job1';
 RTBCB_Background_Job::$data['job1'] = [
-    'status'  => 'processing',
+    'state'   => 'processing',
     'step'    => 'enrich',
     'message' => 'Working',
     'percent' => 50,
@@ -97,7 +97,7 @@ assert_same( 50.0, $data['data']['percent'], 'Percent mismatch' );
 
 $_GET['job_id'] = 'job2';
 RTBCB_Background_Job::$data['job2'] = [
-    'status' => 'completed',
+    'state'  => 'completed',
     'result' => [ 'report_data' => [ 'foo' => 'bar' ], 'lead_id' => 5 ],
 ];
 try {
