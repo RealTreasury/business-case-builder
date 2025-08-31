@@ -117,6 +117,9 @@ fi
 echo "18. Running project growth path test..."
 php tests/project-growth-path.test.php
 
+echo "18b. Running company profile cache test..."
+php tests/company-profile-cache.test.php
+
 echo "19. Running validator tests..."
 phpunit -c phpunit.xml
 
