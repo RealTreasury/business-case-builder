@@ -65,12 +65,20 @@ function rtbcb_has_openai_api_key() {
  * @return array|WP_Error HTTP response array or WP_Error on failure.
  */
 function rtbcb_wp_remote_post_with_retry( $url, $args = [], $max_retries = 3 ) {
-$url         = function_exists( 'esc_url_raw' ) ? esc_url_raw( $url ) : $url;
+	$url         = function_exists( 'esc_url_raw' ) ? esc_url_raw( $url ) : $url;
 	$max_retries = max( 1, (int) $max_retries );
 
-	$base_timeout    = isset( $args['timeout'] ) ? (int) $args['timeout'] : rtbcb_get_api_timeout();
-	$max_retry_time  = isset( $args['max_retry_time'] ) ? (int) $args['max_retry_time'] : $base_timeout * $max_retries;
+	$base_timeout   = isset( $args['timeout'] ) ? (int) $args['timeout'] : rtbcb_get_api_timeout();
+	$max_retry_time = isset( $args['max_retry_time'] ) ? (int) $args['max_retry_time'] : $base_timeout * $max_retries;
 	unset( $args['max_retry_time'] );
+
+	if ( $base_timeout <= 0 || $max_retry_time <= 0 ) {
+		return new WP_Error(
+			'invalid_timeout',
+			__( 'Request timeout must be greater than zero.', 'rtbcb' )
+		);
+	}
+
 	$current_timeout = $base_timeout;
 	$start_time      = microtime( true );
 
