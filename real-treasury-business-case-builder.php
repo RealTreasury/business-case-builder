@@ -483,13 +483,14 @@ add_action( 'rtbcb_cleanup_jobs', [ 'RTBCB_Background_Job', 'cleanup' ] );
 	    // Wizard configuration
 	    wp_localize_script(
 	        'rtbcb-wizard',
-	        'rtbcbAjax',
-	        [
-	            'ajax_url'    => admin_url( 'admin-ajax.php' ),
-	            'nonce'       => wp_create_nonce( 'rtbcb_generate' ),
-	            'strings'     => [
-	                'error'                   => __( 'An error occurred. Please try again.', 'rtbcb' ),
-	                'generating'              => __( 'Generating your comprehensive business case...', 'rtbcb' ),
+                'rtbcbAjax',
+                [
+                    'ajax_url'    => admin_url( 'admin-ajax.php' ),
+                    'nonce'       => wp_create_nonce( 'rtbcb_generate' ),
+                    'processing_url' => home_url( '/rtbcb-processing/' ),
+                    'strings'     => [
+                        'error'                   => __( 'An error occurred. Please try again.', 'rtbcb' ),
+                        'generating'              => __( 'Generating your comprehensive business case...', 'rtbcb' ),
 	                'analyzing'               => __( 'Analyzing your treasury operations...', 'rtbcb' ),
 	                'financial_modeling'      => __( 'Building financial models...', 'rtbcb' ),
 	                'risk_assessment'         => __( 'Conducting risk assessment...', 'rtbcb' ),

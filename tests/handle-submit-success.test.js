@@ -2,7 +2,7 @@ const fs = require('fs');
 const vm = require('vm');
 const assert = require('assert');
 
-global.rtbcbAjax = { ajax_url: 'test-url', nonce: 'test-nonce' };
+global.rtbcbAjax = { ajax_url: 'test-url', nonce: 'test-nonce', processing_url: 'process-url' };
 
 class SimpleFormData {
     constructor(form) {
@@ -31,22 +31,22 @@ global.FormData = SimpleFormData;
   const originalWarn = console.warn;
   console.warn = () => { warnCalled = true; };
 
-  global.fetch = function(url, options) {
-      receivedHeaders = options.headers;
-      const payload = {
-          success: true,
-          data: { job_id: 'job-123' }
-      };
-      const response = {
-          ok: true,
-          status: 200,
-          json: async () => payload,
-          text: async () => JSON.stringify(payload),
-          headers: { get: () => 'application/json' },
-          clone() { return this; }
-      };
-      return Promise.resolve(response);
-  };
+global.fetch = function(url, options) {
+    receivedHeaders = options.headers;
+    const payload = {
+        success: true,
+        data: { job_id: 'job-123' }
+    };
+    const response = {
+        ok: true,
+        status: 200,
+        json: async () => payload,
+        text: async () => JSON.stringify(payload),
+        headers: { get: () => 'application/json' },
+        clone() { return this; }
+    };
+    return Promise.resolve(response);
+};
 
 const form = {
     fields: {
@@ -79,7 +79,7 @@ global.document = {
     }
 };
 
-global.window = {};
+global.window = { location: { href: '' } };
 
   const code = fs.readFileSync('public/js/rtbcb-wizard.js', 'utf8');
   vm.runInThisContext(code);
@@ -90,11 +90,9 @@ global.window = {};
   builder.showProgress = () => {};
   builder.showResults = (data) => { resultsData = data; };
   builder.showEnhancedError = () => {};
-  builder.pollJob = () => { builder.handleSuccess({ report_html: '<div>Report</div>' }); };
-
 (async () => {
     await builder.handleSubmit();
-    assert.strictEqual(resultsData.report_html, '<div>Report</div>');
+    assert.strictEqual(window.location.href, 'process-url?job_id=job-123');
     assert.strictEqual(receivedHeaders['Accept'], 'application/json, text/html');
     assert.strictEqual(warnCalled, false);
     console.warn = originalWarn;
