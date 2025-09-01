@@ -5,7 +5,7 @@ const assert = require('assert');
 require('./jsdom-setup');
 
 // Ensure the localization object is undefined
-delete global.rtbcbAjax;
+delete global.rtbcb_ajax;
 
 class SimpleFormData {
     constructor(form) {

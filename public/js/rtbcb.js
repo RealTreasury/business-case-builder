@@ -102,7 +102,7 @@ async function handleSubmit(e) {
     }
     rtbcbIsSubmitting = true;
 
-    if (typeof rtbcbAjax === 'undefined') {
+    if (typeof rtbcb_ajax === 'undefined') {
         handleSubmissionError('Service unavailable. Please reload the page.', '');
         rtbcbIsSubmitting = false;
         return;
@@ -111,8 +111,8 @@ async function handleSubmit(e) {
     var form = e.target;
     var formData = new FormData(form);
     formData.append('action', 'rtbcb_generate_case');
-    if (rtbcbAjax.nonce) {
-        formData.append('rtbcb_nonce', rtbcbAjax.nonce);
+    if (rtbcb_ajax.nonce) {
+        formData.append('rtbcb_nonce', rtbcb_ajax.nonce);
     }
     var progressContainer = document.getElementById('rtbcb-progress-container');
     var formContainer = document.querySelector('.rtbcb-form-container');
@@ -123,16 +123,16 @@ async function handleSubmit(e) {
     }
     if (progressContainer) {
         var progressText = progressContainer.querySelector('.rtbcb-progress-text');
-        if (rtbcbAjax && rtbcbAjax.strings && rtbcbAjax.strings.generating) {
+        if (rtbcb_ajax && rtbcb_ajax.strings && rtbcb_ajax.strings.generating) {
             if (progressText) {
-                progressText.textContent = rtbcbAjax.strings.generating;
+                progressText.textContent = rtbcb_ajax.strings.generating;
             } else {
-                progressContainer.textContent = rtbcbAjax.strings.generating;
+                progressContainer.textContent = rtbcb_ajax.strings.generating;
             }
         }
         progressContainer.style.display = 'block';
     }
-    if (!isValidUrl(rtbcbAjax.ajax_url)) {
+    if (!isValidUrl(rtbcb_ajax.ajax_url)) {
         handleSubmissionError('Service unavailable. Please reload the page.', '');
         rtbcbIsSubmitting = false;
         return;
@@ -144,12 +144,12 @@ async function handleSubmit(e) {
     var response;
     var responseText;
     try {
-        if (!isValidUrl(rtbcbAjax.ajax_url)) {
+        if (!isValidUrl(rtbcb_ajax.ajax_url)) {
             handleSubmissionError('Service unavailable. Please reload the page.', '');
             rtbcbIsSubmitting = false;
             return;
         }
-        response = await fetch(rtbcbAjax.ajax_url, {
+        response = await fetch(rtbcb_ajax.ajax_url, {
             method: 'POST',
             body: formData
         });
@@ -198,13 +198,13 @@ async function handleSubmit(e) {
 
 async function pollJobStatus(jobId, progressContainer, formContainer) {
     try {
-        if (!rtbcbAjax || !isValidUrl(rtbcbAjax.ajax_url)) {
+        if (!rtbcb_ajax || !isValidUrl(rtbcb_ajax.ajax_url)) {
             handleSubmissionError('Service unavailable. Please reload the page.', '');
             rtbcbIsSubmitting = false;
             return;
         }
-        const nonce = rtbcbAjax.nonce ? rtbcbAjax.nonce : '';
-        const response = await fetch(`${rtbcbAjax.ajax_url}?action=rtbcb_job_status&job_id=${encodeURIComponent(jobId)}&rtbcb_nonce=${nonce}`);
+        const nonce = rtbcb_ajax.nonce ? rtbcb_ajax.nonce : '';
+        const response = await fetch(`${rtbcb_ajax.ajax_url}?action=rtbcb_job_status&job_id=${encodeURIComponent(jobId)}&rtbcb_nonce=${nonce}`);
         const data = await response.json();
 
         if (!data.success) {
@@ -218,11 +218,11 @@ async function pollJobStatus(jobId, progressContainer, formContainer) {
         if (status === 'completed') {
             if (progressContainer) {
                 var progressTextSuccess = progressContainer.querySelector('.rtbcb-progress-text');
-                if (rtbcbAjax && rtbcbAjax.strings && rtbcbAjax.strings.email_confirmation) {
+                if (rtbcb_ajax && rtbcb_ajax.strings && rtbcb_ajax.strings.email_confirmation) {
                     if (progressTextSuccess) {
-                        progressTextSuccess.textContent = rtbcbAjax.strings.email_confirmation;
+                        progressTextSuccess.textContent = rtbcb_ajax.strings.email_confirmation;
                     } else {
-                        progressContainer.textContent = rtbcbAjax.strings.email_confirmation;
+                        progressContainer.textContent = rtbcb_ajax.strings.email_confirmation;
                     }
                 }
                 setTimeout(() => {
@@ -261,15 +261,15 @@ document.addEventListener('DOMContentLoaded', function() {
  * @return {Promise<void>} Promise that resolves when streaming completes.
  */
 async function rtbcbStreamAnalysis(formData, onChunk) {
-    if (!rtbcbAjax || !isValidUrl(rtbcbAjax.ajax_url)) {
+    if (!rtbcb_ajax || !isValidUrl(rtbcb_ajax.ajax_url)) {
         handleSubmissionError('Service unavailable. Please reload the page.', '');
         return;
     }
     formData.append('action', 'rtbcb_stream_analysis');
-    if (rtbcbAjax.nonce) {
-        formData.append('rtbcb_nonce', rtbcbAjax.nonce);
+    if (rtbcb_ajax.nonce) {
+        formData.append('rtbcb_nonce', rtbcb_ajax.nonce);
     }
-    const response = await fetch(rtbcbAjax.ajax_url, {
+    const response = await fetch(rtbcb_ajax.ajax_url, {
         method: 'POST',
         body: formData
     });

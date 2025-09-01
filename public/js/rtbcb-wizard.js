@@ -69,7 +69,7 @@ class BusinessCaseBuilder {
         this.totalSteps = 5;
         this.form = document.getElementById('rtbcbForm');
         this.overlay = document.getElementById('rtbcbModalOverlay');
-        this.ajaxUrl = ( typeof rtbcbAjax !== 'undefined' && rtbcbAjax.ajax_url ) ? rtbcbAjax.ajax_url : '';
+        this.ajaxUrl = ( typeof rtbcb_ajax !== 'undefined' && rtbcb_ajax.ajax_url ) ? rtbcb_ajax.ajax_url : '';
         this.pollTimeout = null;
         this.pollingCancelled = false;
         this.activeJobId = null;
@@ -495,8 +495,8 @@ class BusinessCaseBuilder {
         }
 
         formData.append('action', 'rtbcb_generate_case');
-        if (typeof rtbcbAjax !== 'undefined' && rtbcbAjax.nonce) {
-            formData.append('rtbcb_nonce', rtbcbAjax.nonce);
+        if (typeof rtbcb_ajax !== 'undefined' && rtbcb_ajax.nonce) {
+            formData.append('rtbcb_nonce', rtbcb_ajax.nonce);
         }
         const fastMode = this.form.querySelector('#fast_mode');
         formData.append('fast_mode', fastMode && fastMode.checked ? '1' : '0');
@@ -572,7 +572,7 @@ formContainer.style.display = 'none';
 const progressContainer = document.getElementById('rtbcb-progress-container');
 if (progressContainer) {
 const companyName = this.form.querySelector('[name="company_name"]')?.value || 'your company';
-const initialText = window.rtbcbAjax?.settings?.enable_ai_analysis
+const initialText = window.rtbcb_ajax?.settings?.enable_ai_analysis
 ? `Analyzing ${this.escapeHTML(companyName)}'s treasury operations...`
 : 'Calculating ROI...';
 progressContainer.innerHTML = `
@@ -637,7 +637,7 @@ progressContainer.style.display = 'flex';
         }
 
         try {
-            const nonce = ( typeof rtbcbAjax !== 'undefined' && rtbcbAjax.nonce ) ? rtbcbAjax.nonce : '';
+            const nonce = ( typeof rtbcb_ajax !== 'undefined' && rtbcb_ajax.nonce ) ? rtbcb_ajax.nonce : '';
             const response = await fetch(`${this.ajaxUrl}?action=rtbcb_job_status&job_id=${encodeURIComponent(jobId)}&rtbcb_nonce=${nonce}`, {
                 credentials: 'same-origin',
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
@@ -784,7 +784,7 @@ categoryContainer.style.display = 'block';
     }
 
     initializeReportCharts(container) {
-        if ( window.rtbcbAjax?.settings && window.rtbcbAjax.settings.enable_charts === false ) {
+        if ( window.rtbcb_ajax?.settings && window.rtbcb_ajax.settings.enable_charts === false ) {
             console.log('RTBCB: Charts disabled in settings');
             return;
         }

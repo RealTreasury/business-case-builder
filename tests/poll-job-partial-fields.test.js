@@ -25,7 +25,7 @@ document.body.appendChild(categoryElem);
 nodeGlobal.window = {};
 nodeGlobal.document = global.document;
 
-nodeGlobal.rtbcbAjax = { nonce: 'test-nonce' };
+nodeGlobal.rtbcb_ajax = { nonce: 'test-nonce' };
 
 const code = fs.readFileSync('public/js/rtbcb-wizard.js', 'utf8');
 vm.runInThisContext(code);
