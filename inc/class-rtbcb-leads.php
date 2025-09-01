@@ -202,21 +202,26 @@ class RTBCB_Leads {
 			ARRAY_A
 		);
 
-               foreach ( $leads as $lead ) {
-                       $decoded = base64_decode( $lead['report_html'], true );
-                       if ( $decoded && false !== @gzuncompress( $decoded ) ) {
-                               continue;
-                       }
+		foreach ( $leads as $lead ) {
+			$decoded = base64_decode( $lead['report_html'], true );
+			if ( false !== $decoded && false !== @gzuncompress( $decoded ) ) {
+				continue;
+			}
 
-                       $compressed = base64_encode( gzcompress( $lead['report_html'] ) );
-                       $wpdb->update(
-                               self::$table_name,
-                               [ 'report_html' => $compressed ],
-                               [ 'id' => $lead['id'] ],
-                               [ '%s' ],
-                               [ '%d' ]
-                       );
-               }
+			if ( false !== @gzuncompress( $lead['report_html'] ) ) {
+				$compressed = base64_encode( $lead['report_html'] );
+			} else {
+				$compressed = base64_encode( gzcompress( $lead['report_html'] ) );
+			}
+
+			$wpdb->update(
+				self::$table_name,
+				[ 'report_html' => $compressed ],
+				[ 'id' => $lead['id'] ],
+				[ '%s' ],
+				[ '%d' ]
+			);
+		}
 	}
 
 
