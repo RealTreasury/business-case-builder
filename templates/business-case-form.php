@@ -448,16 +448,137 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 				</form>
 			<div id="rtbcbSuccessMessage" class="rtbcb-success-message" style="display:none"></div>
 			</div>
-<div id="rtbcb-progress-container" class="rtbcb-progress-overlay" style="display: none;">
+<?php
+// FIXED: Progress container with proper structure and classes
+// Replace the existing progress container section in business-case-form.php with this:
+?>
+
+<!-- FIXED: Progress Container with proper structure -->
+<div id="rtbcb-progress-container" class="rtbcb-progress-overlay" style="display: none;" role="dialog" aria-hidden="true">
+<!-- Content will be dynamically inserted by JavaScript -->
 <div class="rtbcb-progress-content">
 <div class="rtbcb-progress-spinner"></div>
-<div class="rtbcb-progress-text"><?php esc_html_e( 'Generating your business case. It will arrive by email shortly...', 'rtbcb' ); ?></div>
+
+<div class="rtbcb-progress-text">
+<?php esc_html_e( 'Generating Your Business Case', 'rtbcb' ); ?>
+</div>
+
+<div class="rtbcb-progress-step">
+<span class="rtbcb-progress-step-text">
+<?php esc_html_e( 'Preparing your analysis...', 'rtbcb' ); ?>
+</span>
+</div>
+
 <div class="rtbcb-progress-partial">
-<div id="rtbcb-partial-basic-roi" style="display:none"></div>
-<div id="rtbcb-partial-category" style="display:none"></div>
+<!-- Partial results will be shown here -->
 </div>
 </div>
 </div>
+
+<?php
+// Additional CSS variables to add to your rtbcb-variables.css file
+?>
+<style>
+/* FIXED: Additional CSS variables for better consistency */
+:root {
+/* Progress loader specific variables */
+--loader-bg: rgba(0, 0, 0, 0.8);
+--loader-content-bg: #ffffff;
+--loader-border: rgba(199, 125, 255, 0.3);
+--loader-text-primary: #1f2937;
+--loader-text-secondary: #4b5563;
+--loader-success: #10b981;
+--loader-error: #ef4444;
+--loader-spinner: var(--primary-purple);
+
+/* Mobile adjustments */
+--loader-mobile-padding: 20px;
+--loader-mobile-max-width: 95vw;
+}
+
+/* FIXED: Dark mode support */
+@media (prefers-color-scheme: dark) {
+:root {
+--loader-content-bg: #1f2937;
+--loader-text-primary: #f9fafb;
+--loader-text-secondary: #d1d5db;
+--loader-border: rgba(139, 92, 246, 0.3);
+}
+}
+</style>
+
+<?php
+// FIXED: Add this JavaScript for better error handling and accessibility
+?>
+<script>
+document.addEventListener( 'DOMContentLoaded', function() {
+// FIXED: Enhanced progress container initialization
+const progressContainer = document.getElementById( 'rtbcb-progress-container' );
+
+if ( progressContainer ) {
+// Add keyboard support for closing on Escape
+document.addEventListener( 'keydown', function( e ) {
+if ( e.key === 'Escape' && progressContainer.style.display === 'flex' ) {
+if ( window.businessCaseBuilder && typeof window.businessCaseBuilder.cancelPolling === 'function' ) {
+window.businessCaseBuilder.cancelPolling();
+}
+if ( window.businessCaseBuilder && typeof window.businessCaseBuilder.hideLoading === 'function' ) {
+window.businessCaseBuilder.hideLoading();
+} else {
+progressContainer.style.display = 'none';
+const formContainer = document.querySelector( '.rtbcb-form-container' );
+if ( formContainer ) {
+formContainer.style.display = '';
+}
+}
+document.body.style.overflow = '';
+}
+} );
+
+// Add click outside to close (optional, can be removed if not desired)
+progressContainer.addEventListener( 'click', function( e ) {
+if ( e.target === progressContainer ) {
+// Only allow closing if not in critical processing phase
+const content = progressContainer.querySelector( '.rtbcb-progress-content' );
+if ( content && ! content.querySelector( '.rtbcb-progress-spinner' ) ) {
+progressContainer.style.display = 'none';
+document.body.style.overflow = '';
+}
+}
+} );
+
+// FIXED: Observe visibility changes for better UX
+const observer = new MutationObserver( function( mutations ) {
+mutations.forEach( function( mutation ) {
+if ( mutation.type === 'attributes' && mutation.attributeName === 'style' ) {
+const isVisible = progressContainer.style.display === 'flex';
+progressContainer.setAttribute( 'aria-hidden', isVisible ? 'false' : 'true' );
+
+// Announce to screen readers when visible
+if ( isVisible ) {
+const announcement = document.createElement( 'div' );
+announcement.setAttribute( 'aria-live', 'polite' );
+announcement.setAttribute( 'aria-atomic', 'true' );
+announcement.style.position = 'absolute';
+announcement.style.left = '-10000px';
+announcement.textContent = 'Business case generation started';
+document.body.appendChild( announcement );
+
+setTimeout( () => {
+document.body.removeChild( announcement );
+}, 1000 );
+}
+}
+} );
+} );
+
+observer.observe( progressContainer, {
+attributes: true,
+attributeFilter: [ 'style' ],
+} );
+}
+} );
+</script>
 		</div>
 	</div>
 </div>
