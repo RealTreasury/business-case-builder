@@ -173,10 +173,6 @@ return true;
 	* @return void
 	*/
 	private function init_hooks() {
-               register_activation_hook( RTBCB_FILE, [ $this, 'activation_handler' ] );
-               register_deactivation_hook( RTBCB_FILE, [ $this, 'deactivation_handler' ] );
-               register_uninstall_hook( RTBCB_FILE, [ __CLASS__, 'uninstall' ] );
-
 		add_action( 'init', [ $this, 'init' ] );
 		add_action( 'plugins_loaded', [ $this, 'plugins_loaded' ] );
 		add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_assets' ] );
@@ -2774,6 +2770,19 @@ if ( ! class_exists( 'Real_Treasury_BCB' ) ) {
 
 // Initialize the plugin once WordPress is ready.
 if ( ! defined( 'RTBCB_NO_BOOTSTRAP' ) ) {
+	register_activation_hook(
+		RTBCB_FILE,
+		function() {
+			RTBCB_Main::instance()->activation_handler();
+		}
+	);
+	register_deactivation_hook(
+		RTBCB_FILE,
+		function() {
+			RTBCB_Main::instance()->deactivation_handler();
+		}
+	);
+	register_uninstall_hook( RTBCB_FILE, [ RTBCB_Main::class, 'uninstall' ] );
 	add_action(
 		'plugins_loaded',
 		function() {
