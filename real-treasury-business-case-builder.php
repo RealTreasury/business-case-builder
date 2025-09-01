@@ -77,8 +77,8 @@ class RTBCB_Main {
 		'RequiresPHP' => 'Requires PHP',
 		] );
 
-		$this->init_hooks();
 		$this->includes();
+		$this->init_hooks();
 	}
 
 	/**
@@ -138,16 +138,28 @@ class RTBCB_Main {
 		add_filter( 'plugin_action_links_' . plugin_basename( RTBCB_FILE ), [ $this, 'plugin_action_links' ] );
 
 		// AJAX handler for comprehensive case generation
-		add_action( 'wp_ajax_rtbcb_generate_case', [ 'RTBCB_Ajax', 'generate_comprehensive_case' ] );
-		add_action( 'wp_ajax_nopriv_rtbcb_generate_case', [ 'RTBCB_Ajax', 'generate_comprehensive_case' ] );
+		if ( class_exists( 'RTBCB_Ajax' ) ) {
+			add_action( 'wp_ajax_rtbcb_generate_case', [ 'RTBCB_Ajax', 'generate_comprehensive_case' ] );
+		}
+		if ( class_exists( 'RTBCB_Ajax' ) ) {
+			add_action( 'wp_ajax_nopriv_rtbcb_generate_case', [ 'RTBCB_Ajax', 'generate_comprehensive_case' ] );
+		}
 
 		// Job status handlers
-		add_action( 'wp_ajax_rtbcb_job_status', [ 'RTBCB_Ajax', 'get_job_status' ] );
-		add_action( 'wp_ajax_nopriv_rtbcb_job_status', [ 'RTBCB_Ajax', 'get_job_status' ] );
+		if ( class_exists( 'RTBCB_Ajax' ) ) {
+			add_action( 'wp_ajax_rtbcb_job_status', [ 'RTBCB_Ajax', 'get_job_status' ] );
+		}
+		if ( class_exists( 'RTBCB_Ajax' ) ) {
+			add_action( 'wp_ajax_nopriv_rtbcb_job_status', [ 'RTBCB_Ajax', 'get_job_status' ] );
+		}
 
 		// Streamed analysis handler
-		add_action( 'wp_ajax_rtbcb_stream_analysis', [ 'RTBCB_Ajax', 'stream_analysis' ] );
-		add_action( 'wp_ajax_nopriv_rtbcb_stream_analysis', [ 'RTBCB_Ajax', 'stream_analysis' ] );
+		if ( class_exists( 'RTBCB_Ajax' ) ) {
+			add_action( 'wp_ajax_rtbcb_stream_analysis', [ 'RTBCB_Ajax', 'stream_analysis' ] );
+		}
+		if ( class_exists( 'RTBCB_Ajax' ) ) {
+			add_action( 'wp_ajax_nopriv_rtbcb_stream_analysis', [ 'RTBCB_Ajax', 'stream_analysis' ] );
+		}
 
 		// OpenAI proxy handlers
 		add_action( 'wp_ajax_rtbcb_openai_responses', 'rtbcb_proxy_openai_responses' );
