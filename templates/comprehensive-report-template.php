@@ -1,6 +1,21 @@
 <?php
 defined( 'ABSPATH' ) || exit;
 
+// Add safety checks for all main variables.
+$report_data           = $report_data ?? [];
+$metadata              = $report_data['metadata'] ?? [];
+$executive_summary     = $report_data['executive_summary'] ?? [];
+$company_intelligence  = $report_data['company_intelligence'] ?? [];
+$financial_analysis    = $report_data['financial_analysis'] ?? [];
+$technology_strategy   = $report_data['technology_strategy'] ?? [];
+$operational_insights  = $report_data['operational_insights'] ?? [];
+$risk_analysis         = $report_data['risk_analysis'] ?? [];
+$action_plan           = $report_data['action_plan'] ?? [];
+$rag_context           = $report_data['rag_context'] ?? [];
+
+// Ensure classes exist.
+$enable_charts         = class_exists( 'RTBCB_Settings' ) ? RTBCB_Settings::get_setting( 'enable_charts', true ) : true;
+
 /**
  * Enhanced Comprehensive Report Template
  *
@@ -14,18 +29,6 @@ defined( 'ABSPATH' ) || exit;
  * @package RealTreasuryBusinessCaseBuilder
  * @var array $report_data Structured report data from the new workflow
  */
-
-// Extract structured data sections
-$metadata             = $report_data['metadata'] ?? [];
-$executive_summary    = $report_data['executive_summary'] ?? [];
-$company_intelligence = $report_data['company_intelligence'] ?? [];
-$financial_analysis   = $report_data['financial_analysis'] ?? [];
-$technology_strategy  = $report_data['technology_strategy'] ?? [];
-$operational_insights = $report_data['operational_insights'] ?? [];
-$risk_analysis        = $report_data['risk_analysis'] ?? [];
-$action_plan          = $report_data['action_plan'] ?? [];
-$rag_context          = $report_data['rag_context'] ?? [];
-$enable_charts        = class_exists( 'RTBCB_Settings' ) ? RTBCB_Settings::get_setting( 'enable_charts', true ) : true;
 
 $company_name    = $metadata['company_name'] ?? __( 'Your Company', 'rtbcb' );
 $analysis_date   = $metadata['analysis_date'] ?? current_time( 'Y-m-d' );
