@@ -30,9 +30,7 @@ function supportsTemperature(model) {
 }
 
 async function buildEnhancedPrompt(businessContext) {
-    if (!/^https?:\/\//i.test(rtbcbReport.template_url)) {
-        console.error('Invalid template URL:', rtbcbReport.template_url);
-        throw new Error('Invalid template URL');
+        throw new Error('Template URL must use HTTP or HTTPS protocol');
     }
     const response = await fetch(rtbcbReport.template_url);
     const template = await response.text();
