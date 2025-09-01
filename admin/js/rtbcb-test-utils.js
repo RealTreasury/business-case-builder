@@ -1,10 +1,12 @@
-(function($){
+ (function($){
     'use strict';
+
+    const { __ } = wp.i18n;
 
     const utils = {
         showLoading(button, text) {
             const original = button.text();
-            button.prop('disabled', true).text(text || original);
+            button.prop('disabled', true).text(text || __( 'Processing...', 'rtbcb' ));
             return original;
         },
         hideLoading(button, original) {
@@ -24,15 +26,18 @@
             const notice = $('<div class="notice notice-success" />');
             notice.append('<div class="rtbcb-result-text" />');
             notice.find('.rtbcb-result-text').text(text);
-            notice.append('<p class="rtbcb-result-meta">Word count: ' + wordCount + ' | Generated: ' + timestamp + ' | Elapsed: ' + elapsed + 's</p>');
+            notice.append('<p class="rtbcb-result-meta">' +
+                __( 'Word count', 'rtbcb' ) + ': ' + wordCount +
+                ' | ' + __( 'Generated', 'rtbcb' ) + ': ' + timestamp +
+                ' | ' + __( 'Elapsed', 'rtbcb' ) + ': ' + elapsed + 's</p>');
             container.html(notice);
             return notice;
         },
         renderError(container, message, retryCallback) {
             const notice = $('<div class="notice notice-error" />');
-            const p = $('<p />').html('<strong>Error:</strong> ' + message + ' ');
+            const p = $('<p />').html('<strong>' + __( 'Error:', 'rtbcb' ) + '</strong> ' + message + ' ');
             if (retryCallback) {
-                const retry = $('<a href="#" class="rtbcb-retry">Retry</a>');
+                const retry = $('<a href="#" class="rtbcb-retry"></a>').text( __( 'Retry', 'rtbcb' ) );
                 retry.on('click', function(e){
                     e.preventDefault();
                     retryCallback();
@@ -57,7 +62,7 @@
             try {
                 const successful = document.execCommand('copy');
                 document.body.removeChild(textarea);
-                return successful ? Promise.resolve() : Promise.reject(new Error('Copy failed'));
+                return successful ? Promise.resolve() : Promise.reject(new Error( __( 'Copy failed', 'rtbcb' ) ));
             } catch (err) {
                 document.body.removeChild(textarea);
                 return Promise.reject(err);
