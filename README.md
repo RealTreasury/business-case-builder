@@ -468,7 +468,7 @@ capability. AJAX actions from the dashboard require nonces such as
 reporting flow is available in [docs/TEST_DASHBOARD_FLOW.md](docs/TEST_DASHBOARD_FLOW.md).
 
 ### Automated Tests
-Run `composer install` before executing tests to ensure PHP dependencies like PHPUnit are installed.
+Run `composer install` before executing `tests/run-tests.sh`. This installs `phpunit/phpunit` in `vendor/bin/phpunit`, which the test script relies on.
 The plugin includes integration tests for all major components. These can be run programmatically:
 ```php
 // Run integration tests
