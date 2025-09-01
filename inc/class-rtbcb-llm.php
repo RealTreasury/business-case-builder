@@ -55,8 +55,8 @@ function_exists( 'get_option' ) ? get_option( 'rtbcb_gpt5_config', [] ) : [],
 'max_output_tokens' => $max_output_tokens,
 ]
 )
-);
-		$this->gpt5_config = $config;
+					);
+				$this->gpt5_config = $config;
 
 		if ( empty( $this->api_key ) ) {
 			error_log( 'RTBCB: OpenAI API key not configured' );
@@ -194,7 +194,7 @@ return function_exists( 'sanitize_text_field' ) ? sanitize_text_field( $model_op
 		];
 		$context = $this->build_context_for_responses( $history );
 		$tokens  = $this->tokens_for_report( 'business_case' );
-		$response = $this->call_openai_with_retry( $selected_model, $context, $tokens );
+					$response = $this->call_openai_with_retry( $selected_model, $context, $tokens );
 
 		if ( is_wp_error( $response ) ) {
 			return new WP_Error( 'llm_failure', __( 'Unable to generate analysis at this time.', 'rtbcb' ) );
@@ -800,8 +800,7 @@ $batch_prompts['tech'] = [
 			if ( false === $company_research ) {
 				$company_research = $this->conduct_company_research( $user_inputs );
 			}
-
-			if ( ! is_wp_error( $company_research ) ) {
+					if ( ! is_wp_error( $company_research ) ) {
 				rtbcb_set_research_cache( $company_name, $industry, 'company', $company_research );
 			} else {
 				return $company_research;
@@ -2534,9 +2533,8 @@ return $analysis;
 			return $response;
 			}
 		}
-
-		$max_retries     = $max_retries ?? intval( $this->gpt5_config['max_retries'] );
-	$base_timeout    = intval( $this->gpt5_config['timeout'] ?? 300 );
+		$max_retries     = min( 3, $max_retries ?? intval( $this->gpt5_config['max_retries'] ) );
+		$base_timeout    = intval( $this->gpt5_config['timeout'] ?? 300 );
 		$current_timeout = $base_timeout;
 		$current_tokens  = $max_output_tokens;
 		$max_retry_time  = max( $base_timeout, intval( $this->gpt5_config['max_retry_time'] ?? $base_timeout ) );
@@ -2547,62 +2545,65 @@ return $analysis;
 					if ( $elapsed >= $max_retry_time ) {
 						break;
 					}
-
-					$remaining                    = $max_retry_time - $elapsed;
-					$this->gpt5_config['timeout'] = min( $current_timeout, $remaining );
-
+				$remaining                    = $max_retry_time - $elapsed;
+				$this->gpt5_config['timeout'] = min( $current_timeout, $remaining );
+				try {
 					$response = $this->call_openai( $model, $prompt, $current_tokens, $chunk_handler );
 
-		if ( ! is_wp_error( $response ) ) {
-		$this->gpt5_config['timeout'] = $base_timeout;
-		if ( isset( $response['body'] ) ) {
-		$max_size = (int) apply_filters( 'rtbcb_llm_cache_max_size', 100000, $cache_key, $model, $prompt );
-		$body     = (string) $response['body'];
-		if ( strlen( $body ) <= $max_size ) {
-		wp_cache_set( $cache_key, $body, 'rtbcb_llm', $ttl );
-		set_transient( $cache_key, $body, $ttl );
-		}
-		}
-		return $response;
-		}
+					if ( ! is_wp_error( $response ) ) {
+	$this->gpt5_config['timeout'] = $base_timeout;
+if ( isset( $response['body'] ) ) {
+							$max_size = (int) apply_filters( 'rtbcb_llm_cache_max_size', 100000, $cache_key, $model, $prompt );
+$body     = (string) $response['body'];
+if ( strlen( $body ) <= $max_size ) {
+wp_cache_set( $cache_key, $body, 'rtbcb_llm', $ttl );
+set_transient( $cache_key, $body, $ttl );
+}
+}
+	return ;
+}
 
-					$error_code = $response->get_error_code();
-					if ( in_array( $error_code, [ 'no_api_key', 'empty_prompt' ], true ) ) {
-						$this->gpt5_config['timeout'] = $base_timeout;
-						return $response;
+$error_code = $response->get_error_code();
+if ( 'llm_http_status' === $error_code ) {
+$data   = $response->get_error_data();
+$status = isset( $data['status'] ) ? intval( $data['status'] ) : 0;
+if ( $status >= 400 && $status < 500 && 429 !== $status ) {
+					break;
+}
+}
+
+if ( ! in_array( $error_code, [ 'llm_timeout', 'llm_http_status' ], true ) ) {
+break;
+}
+				} catch ( Throwable $e ) {
+					$error_message = sanitize_text_field( $e->getMessage() );
+					$response      = new WP_Error(
+						'llm_exception',
+						sprintf( __( 'Language model request failed: %s', 'rtbcb' ), $error_message )
+);
+					$this->last_response = $response;
+					error_log( 'RTBCB: API call failed: ' . $error_message );
+break;
+}
+
+				error_log( "RTBCB: OpenAI attempt {$attempt} failed: " . $response->get_error_message() );
+
+				if ( $attempt < $max_retries ) {
+					if ( null !== $current_tokens ) {
+						$min_tokens    = intval( $this->gpt5_config['min_output_tokens'] ?? 1 );
+						$current_tokens = max( $min_tokens, (int) ( $current_tokens * 0.9 ) );
 					}
 
-					if ( 'llm_http_status' === $error_code ) {
-						$data   = $response->get_error_data();
-						$status = isset( $data['status'] ) ? intval( $data['status'] ) : 0;
-						if ( $status >= 400 && $status < 500 && 429 !== $status ) {
-							$this->gpt5_config['timeout'] = $base_timeout;
-							return $response;
-						}
-					}
+					$current_timeout = min( $current_timeout + 5, $max_retry_time );
 
-					error_log( "RTBCB: OpenAI attempt {$attempt} failed: " . $response->get_error_message() );
-
-					if ( $attempt < $max_retries ) {
-						if ( null !== $current_tokens ) {
-							$min_tokens    = intval( $this->gpt5_config['min_output_tokens'] ?? 1 );
-							$current_tokens = max( $min_tokens, (int) ( $current_tokens * 0.9 ) );
-						}
-
-						$current_timeout = min( $current_timeout + 5, $max_retry_time );
-
-						$elapsed = microtime( true ) - $start_time;
-						$delay   = min( pow( 2, $attempt - 1 ), $max_retry_time - $elapsed );
-						if ( $delay > 0 ) {
-							$jitter = wp_rand( 0, 1000 ) / 1000;
-							usleep( (int) ( ( $delay + $jitter ) * 1000000 ) );
-						}
-					}
+					$delay = min( 5, pow( 2, $attempt - 1 ) );
+					usleep( (int) ( $delay * 1000000 ) );
 				}
+			}
 
-				$this->gpt5_config['timeout'] = $base_timeout;
+	$this->gpt5_config['timeout'] = $base_timeout;
 
-		return $response; // Return last error
+	return $response; // Return last error
 	}
 
 	/**
