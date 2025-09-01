@@ -73,10 +73,10 @@ php tests/email-and-pdf.test.php
 
 # AJAX error handling test (PHPUnit)
 echo "15. Running AJAX error handling tests..."
-phpunit tests/RTBCB_AjaxGenerateComprehensiveCaseErrorTest.php
-phpunit tests/RTBCB_AjaxGenerateComprehensiveCaseFatalErrorTest.php
-phpunit tests/RTBCB_GenerateBusinessAnalysisTimeoutTest.php
-phpunit tests/report-error-handling.test.php
+vendor/bin/phpunit tests/RTBCB_AjaxGenerateComprehensiveCaseErrorTest.php
+vendor/bin/phpunit tests/RTBCB_AjaxGenerateComprehensiveCaseFatalErrorTest.php
+vendor/bin/phpunit tests/RTBCB_GenerateBusinessAnalysisTimeoutTest.php
+vendor/bin/phpunit tests/report-error-handling.test.php
 
 # Background job test
 echo "14. Running background job tests..."
@@ -88,7 +88,7 @@ php tests/job-status.test.php
 
 # Business analysis generation test
 echo "14c. Running business analysis generation test..."
-phpunit tests/generate-business-analysis.test.php
+vendor/bin/phpunit tests/generate-business-analysis.test.php
 echo "14d. Running Jetpack compatibility test..."
 php tests/jetpack-compatibility.test.php
 
@@ -132,7 +132,7 @@ echo "18c. Running Jetpack cron test..."
 php tests/jetpack-cron.test.php
 
 echo "19. Running validator tests..."
-phpunit -c phpunit.xml
+vendor/bin/phpunit -c phpunit.xml
 
 echo "================================================"
 echo "Tests complete!"
