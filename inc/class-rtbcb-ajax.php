@@ -60,24 +60,22 @@ class RTBCB_Ajax {
 				$scenarios      = RTBCB_Calculator::calculate_roi( $user_inputs );
 				$recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
 
-$plugin = RTBCB_Main::instance();
+				$plugin = RTBCB_Main::instance();
 
-		$chunk_callback = function( $chunk ) {
-			echo $chunk; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			if ( function_exists( 'flush' ) ) {
-				flush();
-			}
-		};
+				$chunk_callback = function( $chunk ) {
+					echo $chunk; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+					if ( function_exists( 'flush' ) ) {
+						flush();
+				}
+				};
 
-		try {
-$method = new ReflectionMethod( RTBCB_Main::class, 'generate_business_analysis' );
-			$method->setAccessible( true );
-			$result = $method->invoke( $plugin, $user_inputs, $scenarios, $recommendation, $chunk_callback );
-		} catch ( ReflectionException $e ) {
-			rtbcb_log_error( 'Reflection error: ' . $e->getMessage() );
-			wp_send_json_error( __( 'An unexpected error occurred.', 'rtbcb' ), 500 );
-			return;
-		}
+				try {
+				$result = $plugin->generate_business_analysis( $user_inputs, $scenarios, $recommendation, $chunk_callback );
+				} catch ( Exception $e ) {
+				rtbcb_log_error( 'Analysis error: ' . $e->getMessage() );
+				wp_send_json_error( __( 'An unexpected error occurred.', 'rtbcb' ), 500 );
+				return;
+}
 
 				echo 'data: ' . wp_json_encode( [ 'type' => 'final', 'payload' => $result ] ) . "\n\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 				if ( function_exists( 'flush' ) ) {
