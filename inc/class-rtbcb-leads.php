@@ -504,9 +504,11 @@ class RTBCB_Leads {
 	* @return array Cached statistics.
 	*/
 	public static function update_cached_statistics() {
-		$stats = self::get_statistics();
-		update_option( self::$cache_option, $stats );
-		return $stats;
+$stats = self::get_statistics();
+if ( function_exists( 'update_option' ) ) {
+update_option( self::$cache_option, $stats );
+}
+return $stats;
 	}
 
 	/**
@@ -515,7 +517,7 @@ class RTBCB_Leads {
 	* @return array Cached statistics.
 	*/
 	public static function get_cached_statistics() {
-		$stats = get_option( self::$cache_option, [] );
+$stats = function_exists( 'get_option' ) ? get_option( self::$cache_option, [] ) : [];
 		if ( empty( $stats ) ) {
 			$stats = self::update_cached_statistics();
 		}

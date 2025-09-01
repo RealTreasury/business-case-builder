@@ -67,9 +67,9 @@ function rtbcb_get_analysis_type() {
 	* @return string Sanitized API key.
 	*/
 function rtbcb_get_openai_api_key() {
-	$api_key = get_option( 'rtbcb_openai_api_key', '' );
+       $api_key = function_exists( 'get_option' ) ? get_option( 'rtbcb_openai_api_key', '' ) : '';
 
-	return sanitize_text_field( $api_key );
+       return function_exists( 'sanitize_text_field' ) ? sanitize_text_field( $api_key ) : $api_key;
 }
 
 /**
@@ -87,7 +87,10 @@ function rtbcb_has_openai_api_key() {
 	* @return bool True if heavy features should be bypassed.
 	*/
 function rtbcb_heavy_features_disabled() {
-	return (bool) ( get_option( 'rtbcb_disable_heavy_features', 0 ) || get_option( 'rtbcb_fast_mode', 0 ) );
+       $disabled = function_exists( 'get_option' ) ? get_option( 'rtbcb_disable_heavy_features', 0 ) : 0;
+       $fast     = function_exists( 'get_option' ) ? get_option( 'rtbcb_fast_mode', 0 ) : 0;
+
+       return (bool) ( $disabled || $fast );
 }
 
 /**
@@ -180,7 +183,7 @@ function rtbcb_is_openai_configuration_error( $e ) {
 	* @return array Current company data.
 	*/
 function rtbcb_get_current_company() {
-	return get_option( 'rtbcb_current_company', [] );
+return function_exists( 'get_option' ) ? get_option( 'rtbcb_current_company', [] ) : [];
 }
 
 /**
@@ -298,9 +301,9 @@ function rtbcb_get_dashboard_sections( $test_results = null ) {
 	}
 
 	try {
-		if ( null === $test_results ) {
-			$test_results = get_option( 'rtbcb_test_results', [] );
-		}
+if ( null === $test_results ) {
+$test_results = function_exists( 'get_option' ) ? get_option( 'rtbcb_test_results', [] ) : [];
+}
 
 		if ( ! is_array( $test_results ) ) {
 			$test_results = [];
@@ -536,9 +539,9 @@ function rtbcb_require_completed_steps( $current_section, $display_notice = true
 	* @return array|null Matching result or null when none found.
 	*/
 function rtbcb_get_last_test_result( $section_id, $test_results = null ) {
-	if ( null === $test_results ) {
-		$test_results = get_option( 'rtbcb_test_results', [] );
-	}
+if ( null === $test_results ) {
+$test_results = function_exists( 'get_option' ) ? get_option( 'rtbcb_test_results', [] ) : [];
+}
 
 	if ( ! is_array( $test_results ) ) {
 		return null;
@@ -1000,12 +1003,13 @@ function rtbcb_test_generate_category_recommendation( $analysis ) {
 	];
 
 	try {
-		$api_key = get_option( 'rtbcb_openai_api_key' );
-		if ( empty( $api_key ) ) {
-			return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
-		}
+$api_key = function_exists( 'get_option' ) ? get_option( 'rtbcb_openai_api_key' ) : '';
+if ( empty( $api_key ) ) {
+return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
+}
 
-		$model = sanitize_text_field( get_option( 'rtbcb_mini_model', rtbcb_get_default_model( 'mini' ) ) );
+$model_option = function_exists( 'get_option' ) ? get_option( 'rtbcb_mini_model', rtbcb_get_default_model( 'mini' ) ) : rtbcb_get_default_model( 'mini' );
+$model        = function_exists( 'sanitize_text_field' ) ? sanitize_text_field( $model_option ) : $model_option;
 
 		$system_prompt = 'You are a treasury technology advisor. Based on the company overview, industry insights, technology overview, and treasury challenges provided, recommend the most suitable solution category (cash_tools, tms_lite, trms). Return JSON with keys "recommended", "reasoning", and "alternatives" (array of objects with "category" and "reasoning").';
 
@@ -1329,7 +1333,7 @@ function rtbcb_test_generate_executive_summary() {
 	}
 
 	$company = rtbcb_get_current_company();
-	$roi     = get_option( 'rtbcb_roi_results', [] );
+$roi     = function_exists( 'get_option' ) ? get_option( 'rtbcb_roi_results', [] ) : [];
 
 	$llm    = new RTBCB_LLM();
 	$result = $llm->generate_comprehensive_business_case( $company, $roi, [], null );
@@ -1426,10 +1430,10 @@ function rtbcb_parse_gpt5_business_case_response( $response ) {
 	* @return void
 	*/
 function rtbcb_proxy_openai_responses() {
-	$api_key = get_option( 'rtbcb_openai_api_key' );
-	if ( empty( $api_key ) ) {
-		wp_send_json_error( [ 'message' => __( 'OpenAI API key not configured.', 'rtbcb' ) ], 500 );
-	}
+$api_key = function_exists( 'get_option' ) ? get_option( 'rtbcb_openai_api_key' ) : '';
+if ( empty( $api_key ) ) {
+wp_send_json_error( [ 'message' => __( 'OpenAI API key not configured.', 'rtbcb' ) ], 500 );
+}
 
 	if ( isset( $_POST['nonce'] ) ) {
 		check_ajax_referer( 'rtbcb_openai_responses', 'nonce' );
@@ -1469,7 +1473,7 @@ function rtbcb_proxy_openai_responses() {
 	header( 'Cache-Control: no-cache' );
 	header( 'Connection: keep-alive' );
 
-	$timeout = intval( get_option( 'rtbcb_responses_timeout', 120 ) );
+$timeout = intval( function_exists( 'get_option' ) ? get_option( 'rtbcb_responses_timeout', 120 ) : 120 );
 	if ( $timeout <= 0 ) {
 		$timeout = 120;
 	}
@@ -1513,7 +1517,7 @@ function rtbcb_handle_openai_responses_job( $job_id, $user_id ) {
 	$job_id  = sanitize_key( $job_id );
 	$user_id = intval( $user_id );
 
-	$api_key = get_option( 'rtbcb_openai_api_key' );
+$api_key = function_exists( 'get_option' ) ? get_option( 'rtbcb_openai_api_key' ) : '';
 	if ( empty( $api_key ) ) {
 		set_transient(
 			'rtbcb_openai_job_' . $job_id,
@@ -1549,10 +1553,10 @@ function rtbcb_handle_openai_responses_job( $job_id, $user_id ) {
 		$user_email   = isset( $company['email'] ) ? sanitize_email( $company['email'] ) : '';
 		$company_name = isset( $company['name'] ) ? sanitize_text_field( $company['name'] ) : '';
 
-		$timeout = intval( get_option( 'rtbcb_responses_timeout', 120 ) );
-	if ( $timeout <= 0 ) {
-		$timeout = 120;
-	}
+$timeout = intval( function_exists( 'get_option' ) ? get_option( 'rtbcb_responses_timeout', 120 ) : 120 );
+if ( $timeout <= 0 ) {
+$timeout = 120;
+}
 
 		$response = rtbcb_wp_remote_post_with_retry(
 				'https://api.openai.com/v1/responses',
@@ -1790,8 +1794,8 @@ if ( function_exists( 'add_action' ) ) {
 	* @return mixed|null Stored result array or null if pending.
 	*/
 function rtbcb_get_analysis_job_result( $job_id ) {
-	$job_id = sanitize_key( $job_id );
-	return get_option( 'rtbcb_analysis_job_' . $job_id, null );
+$job_id = sanitize_key( $job_id );
+return function_exists( 'get_option' ) ? get_option( 'rtbcb_analysis_job_' . $job_id, null ) : null;
 }
 
 /**

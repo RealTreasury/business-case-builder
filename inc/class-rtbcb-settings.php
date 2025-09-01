@@ -37,17 +37,17 @@ class RTBCB_Settings {
 	* @param mixed  $default Default value.
 	* @return mixed
 	*/
-	public static function get_setting( $key, $default = null ) {
-		$settings = get_option( 'rtbcb_settings', self::DEFAULTS );
-		return $settings[ $key ] ?? $default;
-	}
+       public static function get_setting( $key, $default = null ) {
+               $settings = function_exists( 'get_option' ) ? get_option( 'rtbcb_settings', self::DEFAULTS ) : self::DEFAULTS;
+               return $settings[ $key ] ?? $default;
+       }
 
 	/**
 	* Retrieve all settings.
 	*
 	* @return array
 	*/
-	public static function get_all() {
-		return get_option( 'rtbcb_settings', self::DEFAULTS );
-	}
+       public static function get_all() {
+               return function_exists( 'get_option' ) ? get_option( 'rtbcb_settings', self::DEFAULTS ) : self::DEFAULTS;
+       }
 }

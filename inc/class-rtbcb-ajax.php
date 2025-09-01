@@ -112,7 +112,7 @@ $method = new ReflectionMethod( RTBCB_Main::class, 'generate_business_analysis' 
 			$request_start    = microtime( true );
 			$workflow_tracker = new RTBCB_Workflow_Tracker();
 			$bypass_heavy    = rtbcb_heavy_features_disabled();
-			$enable_ai        = ! $bypass_heavy && RTBCB_Settings::get_setting( 'enable_ai_analysis', true );
+$enable_ai        = ! $bypass_heavy && ( class_exists( 'RTBCB_Settings' ) ? RTBCB_Settings::get_setting( 'enable_ai_analysis', true ) : true );
 
 		add_action(
 			'rtbcb_llm_prompt_sent',
@@ -555,28 +555,30 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 		return $roi_scenarios;
 	}
 
-/**
-	* Store workflow history and associated lead metadata.
-	*
-	* @param array     $debug_info  Workflow debug information.
-	* @param int|null  $lead_id     Lead ID.
-	* @param string    $lead_email  Lead email address.
-	* @return void
-	*/
-	private static function store_workflow_history( $debug_info, $lead_id = null, $lead_email = '' ) {
-		$history = get_option( 'rtbcb_workflow_history', [] );
-		if ( ! is_array( $history ) ) {
-		$history = [];
-		}
-		$debug_info['lead_id'] = $lead_id ? intval( $lead_id ) : null;
-		if ( ! empty( $lead_email ) ) {
-		$debug_info['lead_email'] = sanitize_email( $lead_email );
-		}
-		$history[] = $debug_info;
-		if ( count( $history ) > 20 ) {
-		$history = array_slice( $history, -20 );
-		}
-		update_option( 'rtbcb_workflow_history', $history, false );
-	}
+       /**
+        * Store workflow history and associated lead metadata.
+        *
+        * @param array     $debug_info  Workflow debug information.
+        * @param int|null  $lead_id     Lead ID.
+        * @param string    $lead_email  Lead email address.
+        * @return void
+        */
+       private static function store_workflow_history( $debug_info, $lead_id = null, $lead_email = '' ) {
+               $history = function_exists( 'get_option' ) ? get_option( 'rtbcb_workflow_history', [] ) : [];
+               if ( ! is_array( $history ) ) {
+                       $history = [];
+               }
+               $debug_info['lead_id'] = $lead_id ? intval( $lead_id ) : null;
+               if ( ! empty( $lead_email ) ) {
+                       $debug_info['lead_email'] = sanitize_email( $lead_email );
+               }
+               $history[] = $debug_info;
+               if ( count( $history ) > 20 ) {
+                       $history = array_slice( $history, -20 );
+               }
+               if ( function_exists( 'update_option' ) ) {
+                       update_option( 'rtbcb_workflow_history', $history, false );
+               }
+       }
 }
 

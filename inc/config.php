@@ -46,9 +46,9 @@ function rtbcb_get_gpt5_config( $overrides = [] ) {
 		'min_output_tokens' => 256,
 		'temperature'       => 0.7,
 		'store'             => true,
-		'timeout'           => function_exists( 'rtbcb_get_api_timeout' ) ? rtbcb_get_api_timeout() : (int) get_option( 'rtbcb_gpt5_timeout', 300 ),
+               'timeout'           => function_exists( 'rtbcb_get_api_timeout' ) ? rtbcb_get_api_timeout() : ( function_exists( 'get_option' ) ? (int) get_option( 'rtbcb_gpt5_timeout', 300 ) : 300 ),
 		'max_retries'       => 2,
-		'max_retry_time'    => function_exists( 'rtbcb_get_api_timeout' ) ? rtbcb_get_api_timeout() : (int) get_option( 'rtbcb_gpt5_timeout', 300 ),
+               'max_retry_time'    => function_exists( 'rtbcb_get_api_timeout' ) ? rtbcb_get_api_timeout() : ( function_exists( 'get_option' ) ? (int) get_option( 'rtbcb_gpt5_timeout', 300 ) : 300 ),
 		'reasoning_effort'  => 'medium',
 		'text_verbosity'    => 'medium',
 	];
@@ -76,11 +76,11 @@ function rtbcb_get_gpt5_config( $overrides = [] ) {
 		$file_overrides['min_output_tokens'] = $env_min_tokens;
 	}
 
-	$option_tokens = get_option( 'rtbcb_gpt5_max_output_tokens', false );
+       $option_tokens = function_exists( 'get_option' ) ? get_option( 'rtbcb_gpt5_max_output_tokens', false ) : false;
 	if ( false !== $option_tokens && '' !== $option_tokens ) {
 		$file_overrides['max_output_tokens'] = $option_tokens;
 	}
-	$option_min_tokens = get_option( 'rtbcb_gpt5_min_output_tokens', false );
+       $option_min_tokens = function_exists( 'get_option' ) ? get_option( 'rtbcb_gpt5_min_output_tokens', false ) : false;
 	if ( false !== $option_min_tokens && '' !== $option_min_tokens ) {
 		$file_overrides['min_output_tokens'] = $option_min_tokens;
 	}

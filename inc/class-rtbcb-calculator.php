@@ -21,7 +21,7 @@ class RTBCB_Calculator {
 	* @return array
 	*/
 	public static function calculate_roi( $user_inputs, $category = [] ) {
-		$settings      = RTBCB_Settings::get_all();
+               $settings      = class_exists( 'RTBCB_Settings' ) ? RTBCB_Settings::get_all() : [];
 		$industry_mult = self::get_industry_benchmark( $user_inputs['industry'] ?? '' );
 
 		$scenarios = [];

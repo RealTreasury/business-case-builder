@@ -76,7 +76,7 @@ class RTBCB_Admin {
 	}
 
 		$deps          = [ 'jquery' ];
-		$enable_charts = RTBCB_Settings::get_setting( 'enable_charts', true );
+$enable_charts = class_exists( 'RTBCB_Settings' ) ? RTBCB_Settings::get_setting( 'enable_charts', true ) : true;
 		if ( $enable_charts ) {
 			wp_enqueue_script( 'chart-js', RTBCB_URL . 'public/js/chart.min.js', [], '3.9.1', true );
 			$deps[] = 'chart-js';

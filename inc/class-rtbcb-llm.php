@@ -45,17 +45,17 @@ class RTBCB_LLM {
 	public function __construct() {
 		$this->api_key = rtbcb_get_openai_api_key();
 
-		$timeout           = rtbcb_get_api_timeout();
-		$max_output_tokens = intval( get_option( 'rtbcb_gpt5_max_output_tokens', 8000 ) );
-		$config            = rtbcb_get_gpt5_config(
-			array_merge(
-				get_option( 'rtbcb_gpt5_config', [] ),
-				[
-					'timeout'           => $timeout,
-					'max_output_tokens' => $max_output_tokens,
-				]
-			)
-		);
+$timeout           = rtbcb_get_api_timeout();
+$max_output_tokens = intval( function_exists( 'get_option' ) ? get_option( 'rtbcb_gpt5_max_output_tokens', 8000 ) : 8000 );
+$config            = rtbcb_get_gpt5_config(
+array_merge(
+function_exists( 'get_option' ) ? get_option( 'rtbcb_gpt5_config', [] ) : [],
+[
+'timeout'           => $timeout,
+'max_output_tokens' => $max_output_tokens,
+]
+)
+);
 		$this->gpt5_config = $config;
 
 		if ( empty( $this->api_key ) ) {
@@ -75,9 +75,8 @@ class RTBCB_LLM {
 	private function get_model( $tier ) {
 		$tier    = sanitize_key( $tier );
 		$default = rtbcb_get_default_model( $tier );
-		$model   = get_option( "rtbcb_{$tier}_model", $default );
-
-		return sanitize_text_field( $model );
+$model_option = function_exists( 'get_option' ) ? get_option( "rtbcb_{$tier}_model", $default ) : $default;
+return function_exists( 'sanitize_text_field' ) ? sanitize_text_field( $model_option ) : $model_option;
 	}
 
 	/**
