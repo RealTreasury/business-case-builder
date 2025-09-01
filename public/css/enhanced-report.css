@@ -253,3 +253,20 @@
 	border-left: 4px solid #3b82f6;
 	padding-left: 16px;
 }
+
+
+
+/* ROI Scenario Table */
+.rtbcb-roi-table {
+	width: 100%;
+	border-collapse: collapse;
+	margin-top: 20px;
+}
+.rtbcb-roi-table th, .rtbcb-roi-table td {
+	padding: 8px 12px;
+	border: 1px solid #e5e7eb;
+	text-align: left;
+}
+.rtbcb-roi-table th {
+	background: #f3f4f6;
+}

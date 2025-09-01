@@ -260,7 +260,41 @@ $processing_time = $metadata['processing_time'] ?? 0;
 				</div>
 			</div>
 
-			<!-- Sensitivity Analysis -->
+			
+			<!-- ROI Scenario Table -->
+			<?php if ( ! empty( $financial_analysis['roi_scenarios'] ) ) : ?>
+			<table class="rtbcb-roi-table">
+				<thead>
+					<tr>
+						<th><?php esc_html_e( 'Scenario', 'rtbcb' ); ?></th>
+						<th><?php esc_html_e( 'Labor Savings', 'rtbcb' ); ?></th>
+						<th><?php esc_html_e( 'Fee Savings', 'rtbcb' ); ?></th>
+						<th><?php esc_html_e( 'Error Reduction', 'rtbcb' ); ?></th>
+						<th><?php esc_html_e( 'Total Benefit', 'rtbcb' ); ?></th>
+						<th><?php esc_html_e( 'ROI %', 'rtbcb' ); ?></th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php foreach ( $financial_analysis['roi_scenarios'] as $scenario_name => $scenario ) : ?>
+						<?php
+						if ( in_array( $scenario_name, array( 'sensitivity_analysis', 'confidence_metrics' ), true ) ) {
+							continue;
+						}
+						?>
+						<tr>
+							<td><?php echo esc_html( ucfirst( $scenario_name ) ); ?></td>
+							<td><?php echo esc_html( number_format_i18n( $scenario['labor_savings'] ?? 0 ) ); ?></td>
+							<td><?php echo esc_html( number_format_i18n( $scenario['fee_savings'] ?? 0 ) ); ?></td>
+							<td><?php echo esc_html( number_format_i18n( $scenario['error_reduction'] ?? 0 ) ); ?></td>
+							<td><?php echo esc_html( number_format_i18n( $scenario['total_annual_benefit'] ?? 0 ) ); ?></td>
+							<td><?php echo esc_html( number_format_i18n( $scenario['roi_percentage'] ?? 0 ) ); ?>%</td>
+						</tr>
+					<?php endforeach; ?>
+				</tbody>
+			</table>
+			<?php endif; ?>
+
+<!-- Sensitivity Analysis -->
 			<?php if ( ! empty( $financial_analysis['sensitivity_analysis'] ) ) : ?>
 				<div class="rtbcb-sensitivity-analysis">
 					<h3><?php echo esc_html__( 'Sensitivity Analysis', 'rtbcb' ); ?></h3>
