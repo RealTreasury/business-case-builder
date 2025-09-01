@@ -54,7 +54,7 @@ class RTBCB_Main {
 	*/
 	public static function instance() {
 		if ( null === self::$instance ) {
-			self::$instance = new self();
+		self::$instance = new self();
 		}
 
 		return self::$instance;
@@ -65,16 +65,16 @@ class RTBCB_Main {
 	*/
 	private function __construct() {
 		if ( $this->is_jetpack_request() ) {
-			return;
+		return;
 		}
 
 		$this->plugin_data = get_file_data( RTBCB_FILE, [
-			'Name'        => 'Plugin Name',
-			'Version'     => 'Version',
-			'Description' => 'Description',
-			'Author'      => 'Author',
-			'RequiresWP'  => 'Requires at least',
-			'RequiresPHP' => 'Requires PHP',
+		'Name'        => 'Plugin Name',
+		'Version'     => 'Version',
+		'Description' => 'Description',
+		'Author'      => 'Author',
+		'RequiresWP'  => 'Requires at least',
+		'RequiresPHP' => 'Requires PHP',
 		] );
 
 		$this->init_hooks();
@@ -88,22 +88,22 @@ class RTBCB_Main {
 	*/
 	private function is_jetpack_request() {
 		if ( function_exists( 'wp_doing_cron' ) && wp_doing_cron() ) {
-			return false;
+		return false;
 		}
 
 		if ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) {
-			return true;
+		return true;
 		}
 
 		if ( isset( $_SERVER['HTTP_X_JETPACK_SIGNATURE'] ) || isset( $_SERVER['HTTP_JETPACK_SIGNATURE'] ) ) {
-			return true;
+		return true;
 		}
 
 		if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
-			$request_uri = isset( $_SERVER['REQUEST_URI'] ) ? wp_unslash( $_SERVER['REQUEST_URI'] ) : '';
-			if ( false !== strpos( $request_uri, '/jetpack/' ) ) {
-				return true;
-			}
+		$request_uri = isset( $_SERVER['REQUEST_URI'] ) ? wp_unslash( $_SERVER['REQUEST_URI'] ) : '';
+		if ( false !== strpos( $request_uri, '/jetpack/' ) ) {
+			return true;
+		}
 		}
 
 		return false;
@@ -127,10 +127,12 @@ class RTBCB_Main {
 		add_shortcode( 'rt_business_case_builder', [ $this, 'shortcode_handler' ] );
 
 		// Portal integration hooks
+		add_action( 'rtbcb_portal_data_changed', [ $this, 'handle_portal_data_change' ] );
+		// Compatibility with legacy portal hook name.
 		add_action( 'rt_portal_data_changed', [ $this, 'handle_portal_data_change' ] );
 
-		// Admin notices
-		add_action( 'admin_notices', [ $this, 'admin_notices' ] );
+               // Admin notices
+               add_action( 'admin_notices', [ $this, 'admin_notices' ], 10 );
 
 		// Plugin action links
 		add_filter( 'plugin_action_links_' . plugin_basename( RTBCB_FILE ), [ $this, 'plugin_action_links' ] );
@@ -153,7 +155,7 @@ class RTBCB_Main {
 
 		// Debug handlers
 		if ( defined( 'RTBCB_DEBUG' ) && RTBCB_DEBUG && function_exists( 'current_user_can' ) && current_user_can( 'manage_options' ) ) {
-			$this->init_hooks_debug();
+		$this->init_hooks_debug();
 		}
 	}
 
@@ -247,7 +249,7 @@ class RTBCB_Main {
 	public function plugins_loaded() {
 		// Check compatibility
 		if ( ! $this->check_compatibility() ) {
-			return;
+		return;
 		}
 
 		// Initialize database tables and data
@@ -268,30 +270,30 @@ class RTBCB_Main {
 	private function check_compatibility() {
 		// Check PHP version
 		if ( version_compare( PHP_VERSION, '7.4', '<' ) ) {
-			add_action( 'admin_notices', function() {
-				echo '<div class="notice notice-error"><p>';
-				printf(
-					esc_html__( 'Real Treasury Business Case Builder requires PHP %1$s or higher. You are running %2$s.', 'rtbcb' ),
-					'7.4',
-					PHP_VERSION
-				);
-				echo '</p></div>';
-			} );
-			return false;
+		add_action( 'admin_notices', function() {
+			echo '<div class="notice notice-error"><p>';
+			printf(
+				esc_html__( 'Real Treasury Business Case Builder requires PHP %1$s or higher. You are running %2$s.', 'rtbcb' ),
+				'7.4',
+				PHP_VERSION
+			);
+			echo '</p></div>';
+		} );
+		return false;
 		}
 
 		// Check WordPress version
 		if ( version_compare( get_bloginfo( 'version' ), '5.0', '<' ) ) {
-			add_action( 'admin_notices', function() {
-				echo '<div class="notice notice-error"><p>';
-				printf(
-					esc_html__( 'Real Treasury Business Case Builder requires WordPress %1$s or higher. You are running %2$s.', 'rtbcb' ),
-					'5.0',
-					get_bloginfo( 'version' )
-				);
-				echo '</p></div>';
-			} );
-			return false;
+		add_action( 'admin_notices', function() {
+			echo '<div class="notice notice-error"><p>';
+			printf(
+				esc_html__( 'Real Treasury Business Case Builder requires WordPress %1$s or higher. You are running %2$s.', 'rtbcb' ),
+				'5.0',
+				get_bloginfo( 'version' )
+			);
+			echo '</p></div>';
+		} );
+		return false;
 		}
 
 		// Check required PHP extensions.
@@ -299,28 +301,28 @@ class RTBCB_Main {
 		$missing_extensions  = [];
 
 		foreach ( $required_extensions as $extension ) {
-			if ( ! extension_loaded( $extension ) ) {
-				$missing_extensions[] = $extension;
-			}
+		if ( ! extension_loaded( $extension ) ) {
+			$missing_extensions[] = $extension;
+		}
 		}
 
 		if ( ! empty( $missing_extensions ) ) {
-			add_action( 'admin_notices', function() use ( $missing_extensions ) {
-				echo '<div class="notice notice-error"><p>';
-				printf(
-					esc_html(
-						_n(
-							'Real Treasury Business Case Builder requires the following PHP extension: %s.',
-							'Real Treasury Business Case Builder requires the following PHP extensions: %s.',
-							count( $missing_extensions ),
-							'rtbcb'
-						)
-					),
-					esc_html( implode( ', ', $missing_extensions ) )
-				);
-				echo '</p></div>';
-			} );
-			return false;
+		add_action( 'admin_notices', function() use ( $missing_extensions ) {
+			echo '<div class="notice notice-error"><p>';
+			printf(
+				esc_html(
+					_n(
+						'Real Treasury Business Case Builder requires the following PHP extension: %s.',
+						'Real Treasury Business Case Builder requires the following PHP extensions: %s.',
+						count( $missing_extensions ),
+						'rtbcb'
+					)
+				),
+				esc_html( implode( ', ', $missing_extensions ) )
+			);
+			echo '</p></div>';
+		} );
+		return false;
 		}
 
 		return true;
@@ -351,9 +353,9 @@ class RTBCB_Main {
 	private function setup_capabilities() {
 		$admin = get_role( 'administrator' );
 		if ( $admin ) {
-			$admin->add_cap( 'manage_rtbcb' );
-			$admin->add_cap( 'view_rtbcb_leads' );
-			$admin->add_cap( 'export_rtbcb_data' );
+		$admin->add_cap( 'manage_rtbcb' );
+		$admin->add_cap( 'view_rtbcb_leads' );
+		$admin->add_cap( 'export_rtbcb_data' );
 		}
 	}
 
@@ -382,9 +384,6 @@ class RTBCB_Main {
                        wp_schedule_event( time(), 'hourly', 'rtbcb_cleanup_jobs' );
                }
 
-               if ( class_exists( 'RTBCB_Background_Job' ) ) {
-                       add_action( 'rtbcb_cleanup_jobs', [ 'RTBCB_Background_Job', 'cleanup' ] );
-               }
 
                // Schedule lead metrics refresh
                if ( ! wp_next_scheduled( 'rtbcb_refresh_lead_metrics' ) ) {
@@ -405,8 +404,8 @@ class RTBCB_Main {
 		$current_version = get_option( 'rtbcb_version', '1.0.0' );
 
 		if ( version_compare( $current_version, RTBCB_VERSION, '<' ) ) {
-			$this->upgrade_plugin( $current_version );
-			update_option( 'rtbcb_version', RTBCB_VERSION );
+		$this->upgrade_plugin( $current_version );
+		update_option( 'rtbcb_version', RTBCB_VERSION );
 		}
 	}
 
@@ -419,23 +418,23 @@ class RTBCB_Main {
 	private function upgrade_plugin( $from_version ) {
 		// Upgrade from 1.x to 2.x
 		if ( version_compare( $from_version, '2.0.0', '<' ) ) {
-			$this->migrate_v1_settings();
-			$this->init_database();
-			$this->set_default_options();
+		$this->migrate_v1_settings();
+		$this->init_database();
+		$this->set_default_options();
 		}
 
 		// Add new options introduced in 2.1.0
 		if ( version_compare( $from_version, '2.1.0', '<' ) ) {
-			$new_options = [
-				'rtbcb_advanced_model'        => 'gpt-5-mini',
-				'rtbcb_comprehensive_analysis' => true,
-			];
+		$new_options = [
+			'rtbcb_advanced_model'        => 'gpt-5-mini',
+			'rtbcb_comprehensive_analysis' => true,
+		];
 
-			foreach ( $new_options as $option => $value ) {
-				if ( get_option( $option ) === false ) {
-					add_option( $option, $value );
-				}
+		foreach ( $new_options as $option => $value ) {
+			if ( get_option( $option ) === false ) {
+				add_option( $option, $value );
 			}
+		}
 		}
 
 		// Clear any caches
@@ -455,13 +454,13 @@ class RTBCB_Main {
 		$old_settings = get_option( 'rtbcb_old_settings', [] );
 
 		if ( ! empty( $old_settings ) ) {
-			// Convert old format to new format
-			foreach ( $old_settings as $key => $value ) {
-				update_option( 'rtbcb_' . $key, $value );
-			}
+		// Convert old format to new format
+		foreach ( $old_settings as $key => $value ) {
+			update_option( 'rtbcb_' . $key, $value );
+		}
 
-			// Remove old settings
-			delete_option( 'rtbcb_old_settings' );
+		// Remove old settings
+		delete_option( 'rtbcb_old_settings' );
 		}
 	}
 
@@ -472,19 +471,19 @@ class RTBCB_Main {
 	*/
 	private function set_default_options() {
 		$defaults = [
-			'rtbcb_mini_model'         => rtbcb_get_default_model( 'mini' ),
-			'rtbcb_premium_model'      => rtbcb_get_default_model( 'premium' ),
-			'rtbcb_advanced_model'     => rtbcb_get_default_model( 'advanced' ),
-			'rtbcb_embedding_model'    => rtbcb_get_default_model( 'embedding' ),
-			'rtbcb_labor_cost_per_hour'=> 100,
-			'rtbcb_bank_fee_baseline'  => 15000,
-			'rtbcb_comprehensive_analysis' => true,
+		'rtbcb_mini_model'         => rtbcb_get_default_model( 'mini' ),
+		'rtbcb_premium_model'      => rtbcb_get_default_model( 'premium' ),
+		'rtbcb_advanced_model'     => rtbcb_get_default_model( 'advanced' ),
+		'rtbcb_embedding_model'    => rtbcb_get_default_model( 'embedding' ),
+		'rtbcb_labor_cost_per_hour'=> 100,
+		'rtbcb_bank_fee_baseline'  => 15000,
+		'rtbcb_comprehensive_analysis' => true,
 		];
 
 		foreach ( $defaults as $option => $value ) {
-			if ( get_option( $option ) === false ) {
-				add_option( $option, $value );
-			}
+		if ( get_option( $option ) === false ) {
+			add_option( $option, $value );
+		}
 		}
 	}
 
@@ -495,15 +494,15 @@ class RTBCB_Main {
 	*/
 	public function enqueue_assets() {
 		if ( ! $this->should_load_assets() ) {
-			return;
+		return;
 		}
 
 		// Base Styles
 		wp_enqueue_style(
-			'rtbcb-style',
-			RTBCB_URL . 'public/css/rtbcb.css',
-			[],
-			RTBCB_VERSION
+		'rtbcb-style',
+		RTBCB_URL . 'public/css/rtbcb.css',
+		[],
+		RTBCB_VERSION
 		);
 
                // Enhanced Report Styles
@@ -541,48 +540,48 @@ class RTBCB_Main {
 		$dompurify_cdn   = 'https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.2/purify.min.js';
 		$dompurify_local = RTBCB_URL . 'public/js/dompurify.min.js';
 		wp_enqueue_script(
-			'dompurify',
-			$dompurify_cdn,
-			[],
-			'3.0.2',
-			true
+		'dompurify',
+		$dompurify_cdn,
+		[],
+		'3.0.2',
+		true
 		);
 		wp_add_inline_script(
-			'dompurify',
-			sprintf(
-				'window.DOMPurify||function(){var s=document.createElement("script");s.src="%s";document.head.appendChild(s);}();',
-				esc_url( $dompurify_local )
-			)
+		'dompurify',
+		sprintf(
+			'window.DOMPurify||function(){var s=document.createElement("script");s.src="%s";document.head.appendChild(s);}();',
+			esc_url( $dompurify_local )
+		)
 		);
 
 		// Wizard script (loaded early for modal functions)
 		$wizard_file = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? 'rtbcb-wizard.js' : 'rtbcb-wizard.min.js';
 		wp_enqueue_script(
-			'rtbcb-wizard',
-			RTBCB_URL . 'public/js/' . $wizard_file,
-			[ 'jquery' ],
-			RTBCB_VERSION,
-			false // Load in header
+		'rtbcb-wizard',
+		RTBCB_URL . 'public/js/' . $wizard_file,
+		[ 'jquery' ],
+		RTBCB_VERSION,
+		false // Load in header
 		);
 
 		// Main report functionality
 		$report_file = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? 'rtbcb-report.js' : 'rtbcb-report.min.js';
 		wp_enqueue_script(
-				'rtbcb-report',
-				RTBCB_URL . 'public/js/' . $report_file,
-				array_merge( $report_deps, [ 'dompurify' ] ),
-				RTBCB_VERSION,
-				true
-			);
+			'rtbcb-report',
+			RTBCB_URL . 'public/js/' . $report_file,
+			array_merge( $report_deps, [ 'dompurify' ] ),
+			RTBCB_VERSION,
+			true
+		);
 
 		// Main plugin script
 		$main_script = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? 'rtbcb.js' : 'rtbcb.min.js';
 		wp_enqueue_script(
-			'rtbcb-script',
-			RTBCB_URL . 'public/js/' . $main_script,
-			[ 'jquery', 'rtbcb-wizard', 'rtbcb-report' ],
-			RTBCB_VERSION,
-			true
+		'rtbcb-script',
+		RTBCB_URL . 'public/js/' . $main_script,
+		[ 'jquery', 'rtbcb-wizard', 'rtbcb-report' ],
+		RTBCB_VERSION,
+		true
 		);
 		// Localize scripts with configuration
 		$this->localize_scripts();
@@ -639,24 +638,24 @@ class RTBCB_Main {
 		$model_capabilities = rtbcb_get_model_capabilities();
 
 		wp_localize_script(
-			'rtbcb-report',
-			'rtbcbReport',
-			[
-				'report_model'       => get_option( 'rtbcb_advanced_model', 'gpt-5-mini' ),
-				'max_output_tokens'  => intval( $config['max_output_tokens'] ),
-				'min_output_tokens'  => intval( $config['min_output_tokens'] ),
-				'model_capabilities' => $model_capabilities,
+		'rtbcb-report',
+		'rtbcbReport',
+		[
+			'report_model'       => get_option( 'rtbcb_advanced_model', 'gpt-5-mini' ),
+			'max_output_tokens'  => intval( $config['max_output_tokens'] ),
+			'min_output_tokens'  => intval( $config['min_output_tokens'] ),
+			'model_capabilities' => $model_capabilities,
 'ajax_url'           => admin_url( 'admin-ajax.php' ),
 'template_url'       => esc_url( plugins_url( 'public/templates/report-template.html', RTBCB_FILE ) ),
 'timeout_ms'         => rtbcb_get_api_timeout() * 1000,
-				'nonce'              => wp_create_nonce( 'rtbcb_generate' ),
-				'strings'            => [
-					'exportPDF'      => __( 'Export as PDF', 'rtbcb' ),
-					'printReport'    => __( 'Print Report', 'rtbcb' ),
-					'expandSection'  => __( 'Expand Section', 'rtbcb' ),
-					'collapseSection' => __( 'Collapse Section', 'rtbcb' ),
-				],
-			]
+			'nonce'              => wp_create_nonce( 'rtbcb_generate' ),
+			'strings'            => [
+				'exportPDF'      => __( 'Export as PDF', 'rtbcb' ),
+				'printReport'    => __( 'Print Report', 'rtbcb' ),
+				'expandSection'  => __( 'Expand Section', 'rtbcb' ),
+				'collapseSection' => __( 'Collapse Section', 'rtbcb' ),
+			],
+		]
 		);
 	}
 
@@ -668,38 +667,38 @@ class RTBCB_Main {
 	private function should_load_assets() {
 		// Always load on admin pages for this plugin.
 		if ( is_admin() ) {
-			$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
-			if ( false !== strpos( $page, 'rtbcb' ) ) {
-				return true;
-			}
+		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
+		if ( false !== strpos( $page, 'rtbcb' ) ) {
+			return true;
+		}
 		}
 
 		// Load when shortcode is present on the page.
 		if ( is_singular() ) {
-			$post = get_post();
-			if ( $post && has_shortcode( $post->post_content, 'rt_business_case_builder' ) ) {
-				return true;
-			}
+		$post = get_post();
+		if ( $post && has_shortcode( $post->post_content, 'rt_business_case_builder' ) ) {
+			return true;
+		}
 		}
 
 		// Load on specific public pages.
 		$slugs = (array) apply_filters(
-			'rtbcb_asset_page_slugs',
-			[ 'business-case', 'business-case-report', 'business-case-builder' ]
+		'rtbcb_asset_page_slugs',
+		[ 'business-case', 'business-case-report', 'business-case-builder' ]
 		);
 		if ( is_page( $slugs ) ) {
-			return true;
+		return true;
 		}
 
 		return false;
 	}
 
-			/**
-				* Determine if comprehensive template should be used.
-				*
-				* @return bool
-				*/
-			private function should_use_comprehensive_template() {
+		/**
+			* Determine if comprehensive template should be used.
+			*
+			* @return bool
+			*/
+		private function should_use_comprehensive_template() {
 $comprehensive_enabled = get_option( 'rtbcb_comprehensive_analysis', true );
 
 $template_path  = RTBCB_DIR . 'templates/comprehensive-report-template.php';
@@ -733,9 +732,9 @@ return $use_comprehensive;
 	public function shortcode_handler( $atts = [] ) {
 		// Parse attributes
 		$atts = shortcode_atts( [
-			'style'    => 'default',
-			'title'    => __( 'Treasury Tech Business Case Builder', 'rtbcb' ),
-			'subtitle' => __( 'Generate a data-driven business case for your treasury technology investment.', 'rtbcb' ),
+		'style'    => 'default',
+		'title'    => __( 'Treasury Tech Business Case Builder', 'rtbcb' ),
+		'subtitle' => __( 'Generate a data-driven business case for your treasury technology investment.', 'rtbcb' ),
 		], $atts, 'rt_business_case_builder' );
 
 		// Start output buffering
@@ -743,9 +742,9 @@ return $use_comprehensive;
 
 		// Pass attributes to template
 		$template_args = [
-			'style'    => sanitize_text_field( $atts['style'] ),
-			'title'    => sanitize_text_field( $atts['title'] ),
-			'subtitle' => sanitize_text_field( $atts['subtitle'] ),
+		'style'    => sanitize_text_field( $atts['style'] ),
+		'title'    => sanitize_text_field( $atts['title'] ),
+		'subtitle' => sanitize_text_field( $atts['subtitle'] ),
 		];
 
 		// Load template
@@ -765,11 +764,11 @@ return $use_comprehensive;
 		$template_path = RTBCB_DIR . "templates/{$template}.php";
 
 		if ( file_exists( $template_path ) ) {
-			// Extract arguments to variables
-			extract( $args );
-			include $template_path;
+		// Extract arguments to variables
+		extract( $args );
+		include $template_path;
 		} else {
-			echo '<div class="rtbcb-error">' . esc_html__( 'Template not found.', 'rtbcb' ) . '</div>';
+		echo '<div class="rtbcb-error">' . esc_html__( 'Template not found.', 'rtbcb' ) . '</div>';
 		}
 	}
 
@@ -781,7 +780,7 @@ return $use_comprehensive;
 	public function handle_portal_data_change() {
 		// Rebuild RAG index when portal data changes
 		if ( class_exists( 'RTBCB_RAG' ) ) {
-			wp_schedule_single_event( time() + 60, 'rtbcb_rebuild_rag_index' );
+		wp_schedule_single_event( time() + 60, 'rtbcb_rebuild_rag_index' );
 		}
 
 		// Log the event
@@ -795,15 +794,15 @@ return $use_comprehensive;
 	*/
 	public function scheduled_rag_rebuild() {
 		if ( ! class_exists( 'RTBCB_RAG' ) ) {
-			return;
+		return;
 		}
 
 		try {
-			$rag = new RTBCB_RAG();
-			$rag->rebuild_index();
-			error_log( 'RTBCB: Scheduled RAG index rebuild completed successfully' );
+		$rag = new RTBCB_RAG();
+		$rag->rebuild_index();
+		error_log( 'RTBCB: Scheduled RAG index rebuild completed successfully' );
 		} catch ( Exception $e ) {
-			error_log( 'RTBCB: Scheduled RAG index rebuild failed: ' . $e->getMessage() );
+		error_log( 'RTBCB: Scheduled RAG index rebuild failed: ' . $e->getMessage() );
 		}
 	}
 
@@ -820,33 +819,33 @@ return $use_comprehensive;
 		$temp_dir = $upload_dir['basedir'] . '/rtbcb-temp';
 
 		if ( is_dir( $temp_dir ) ) {
-			$files = glob( $temp_dir . '/*' );
-			$old_time = time() - ( 7 * DAY_IN_SECONDS ); // 7 days old
+		$files = glob( $temp_dir . '/*' );
+		$old_time = time() - ( 7 * DAY_IN_SECONDS ); // 7 days old
 
-			foreach ( $files as $file ) {
-				if ( is_file( $file ) && filemtime( $file ) < $old_time ) {
-					unlink( $file );
-				}
+		foreach ( $files as $file ) {
+			if ( is_file( $file ) && filemtime( $file ) < $old_time ) {
+				unlink( $file );
 			}
+		}
 		}
 
 		// Clean up old lead data (optional, configurable)
 		$retention_days = apply_filters( 'rtbcb_lead_retention_days', 0 ); // 0 = keep forever
 
 		if ( $retention_days > 0 ) {
-			$cutoff_date = date( 'Y-m-d H:i:s', time() - ( $retention_days * DAY_IN_SECONDS ) );
-			$table_name = $wpdb->prefix . 'rtbcb_leads';
+		$cutoff_date = date( 'Y-m-d H:i:s', time() - ( $retention_days * DAY_IN_SECONDS ) );
+		$table_name = $wpdb->prefix . 'rtbcb_leads';
 
-			$deleted = $wpdb->query(
-				$wpdb->prepare(
-					"DELETE FROM {$table_name} WHERE created_at < %s",
-					$cutoff_date
-				)
-			);
+		$deleted = $wpdb->query(
+			$wpdb->prepare(
+				"DELETE FROM {$table_name} WHERE created_at < %s",
+				$cutoff_date
+			)
+		);
 
-			if ( $deleted > 0 ) {
-				error_log( "RTBCB: Cleaned up {$deleted} old lead records" );
-			}
+		if ( $deleted > 0 ) {
+			error_log( "RTBCB: Cleaned up {$deleted} old lead records" );
+		}
 		}
 	}
 
@@ -855,27 +854,27 @@ return $use_comprehensive;
 		* Enhanced AJAX handler for comprehensive case generation.
 		*/
 		public function ajax_generate_comprehensive_case_enhanced() {
-			// Security and setup.
-			if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
-				wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
-				return;
-			}
+		// Security and setup.
+		if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
+			wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
+			return;
+		}
 
-			// Setup environment.
-			rtbcb_setup_ajax_logging();
-			rtbcb_increase_memory_limit();
+		// Setup environment.
+		rtbcb_setup_ajax_logging();
+		rtbcb_increase_memory_limit();
 
-			$timeout = absint( rtbcb_get_api_timeout() );
-			if ( ! ini_get( 'safe_mode' ) && $timeout > 0 ) {
-				set_time_limit( $timeout );
-			}
+		$timeout = absint( rtbcb_get_api_timeout() );
+		if ( ! ini_get( 'safe_mode' ) && $timeout > 0 ) {
+			set_time_limit( $timeout );
+		}
 
-			// Collect and validate user inputs.
-			$user_inputs = $this->collect_and_validate_inputs();
-			if ( is_wp_error( $user_inputs ) ) {
-				wp_send_json_error( [ 'message' => $user_inputs->get_error_message() ], 400 );
-				return;
-			}
+		// Collect and validate user inputs.
+		$user_inputs = $this->collect_and_validate_inputs();
+		if ( is_wp_error( $user_inputs ) ) {
+			wp_send_json_error( [ 'message' => $user_inputs->get_error_message() ], 400 );
+			return;
+		}
 
                        // Handle simple inputs synchronously; queue complex cases for background processing.
                        if ( ! rtbcb_is_simple_case( $user_inputs ) ) {
@@ -889,84 +888,84 @@ return $use_comprehensive;
                                return;
                        }
 
-			try {
-				// Calculate ROI scenarios.
-				if ( ! class_exists( 'RTBCB_Calculator' ) ) {
-					wp_send_json_error( [ 'message' => __( 'System error: Calculator not available.', 'rtbcb' ) ], 500 );
-					return;
-				}
+		try {
+			// Calculate ROI scenarios.
+			if ( ! class_exists( 'RTBCB_Calculator' ) ) {
+				wp_send_json_error( [ 'message' => __( 'System error: Calculator not available.', 'rtbcb' ) ], 500 );
+				return;
+			}
 
-								$scenarios = RTBCB_Calculator::calculate_roi( $user_inputs );
+							$scenarios = RTBCB_Calculator::calculate_roi( $user_inputs );
 
-								// Get category recommendation.
-								if ( ! class_exists( 'RTBCB_Category_Recommender' ) ) {
-										wp_send_json_error( [ 'message' => __( 'System error: Recommender not available.', 'rtbcb' ) ], 500 );
-										return;
-								}
-
-							$recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
-							$scenarios      = RTBCB_Calculator::calculate_category_refined_roi( $user_inputs, $recommendation['category_info'] );
-
-							// Generate business case analysis with lazy RAG loading.
-							$analysis_data          = $this->generate_business_analysis( $user_inputs, $scenarios, $recommendation );
-							$comprehensive_analysis = $analysis_data['analysis'];
-							$rag_context            = $analysis_data['rag_context'];
-
-							if ( is_wp_error( $comprehensive_analysis ) ) {
-									wp_send_json_error( [ 'message' => $comprehensive_analysis->get_error_message() ], 500 );
+							// Get category recommendation.
+							if ( ! class_exists( 'RTBCB_Category_Recommender' ) ) {
+									wp_send_json_error( [ 'message' => __( 'System error: Recommender not available.', 'rtbcb' ) ], 500 );
 									return;
 							}
 
-							// Merge all data for report generation.
-							$report_data = array_merge(
-									$comprehensive_analysis,
-									[
-											'company_name'    => $user_inputs['company_name'],
-											'scenarios'       => $scenarios,
-											'recommendation'  => $recommendation,
-											'rag_context'     => $rag_context,
-											'processing_time' => microtime( true ) - $_SERVER['REQUEST_TIME_FLOAT'],
-									]
-							);
+						$recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
+						$scenarios      = RTBCB_Calculator::calculate_category_refined_roi( $user_inputs, $recommendation['category_info'] );
 
-				// Generate HTML report using our fixed method.
-				$report_html = $this->get_comprehensive_report_html( $report_data );
+						// Generate business case analysis with lazy RAG loading.
+						$analysis_data          = $this->generate_business_analysis( $user_inputs, $scenarios, $recommendation );
+						$comprehensive_analysis = $analysis_data['analysis'];
+						$rag_context            = $analysis_data['rag_context'];
 
-				if ( is_wp_error( $report_html ) ) {
-					wp_send_json_error( [ 'message' => $report_html->get_error_message() ], 500 );
-					return;
-				}
+						if ( is_wp_error( $comprehensive_analysis ) ) {
+								wp_send_json_error( [ 'message' => $comprehensive_analysis->get_error_message() ], 500 );
+								return;
+						}
 
-				if ( empty( $report_html ) ) {
-					wp_send_json_error( [ 'message' => __( 'Failed to generate report HTML.', 'rtbcb' ) ], 500 );
-					return;
-				}
+						// Merge all data for report generation.
+						$report_data = array_merge(
+								$comprehensive_analysis,
+								[
+										'company_name'    => $user_inputs['company_name'],
+										'scenarios'       => $scenarios,
+										'recommendation'  => $recommendation,
+										'rag_context'     => $rag_context,
+										'processing_time' => microtime( true ) - $_SERVER['REQUEST_TIME_FLOAT'],
+								]
+						);
 
-				// Save lead data.
-				$lead_id = $this->save_lead_data( $user_inputs, $scenarios, $recommendation, $report_html );
+			// Generate HTML report using our fixed method.
+			$report_html = $this->get_comprehensive_report_html( $report_data );
 
-				// Format response data.
-				$formatted_scenarios = $this->format_scenarios_for_response( $scenarios );
-
-				$response_data = [
-					'scenarios'              => $formatted_scenarios,
-					'recommendation'         => $recommendation,
-					'comprehensive_analysis' => $comprehensive_analysis,
-					'report_html'            => $report_html,
-					'lead_id'                => $lead_id,
-					'company_name'           => $user_inputs['company_name'],
-										'analysis_type'          => rtbcb_get_analysis_type(),
-					'memory_info'            => rtbcb_get_memory_status(),
-				];
-
-				wp_send_json_success( $response_data );
-			} catch ( Exception $e ) {
-				rtbcb_log_error( 'Ajax exception', $e->getMessage() );
-				wp_send_json_error( [ 'message' => __( 'An error occurred while generating your business case.', 'rtbcb' ) ], 500 );
-			} catch ( Error $e ) {
-				rtbcb_log_error( 'Ajax fatal error', $e->getMessage() );
-				wp_send_json_error( [ 'message' => __( 'A system error occurred. Please contact support.', 'rtbcb' ) ], 500 );
+			if ( is_wp_error( $report_html ) ) {
+				wp_send_json_error( [ 'message' => $report_html->get_error_message() ], 500 );
+				return;
 			}
+
+			if ( empty( $report_html ) ) {
+				wp_send_json_error( [ 'message' => __( 'Failed to generate report HTML.', 'rtbcb' ) ], 500 );
+				return;
+			}
+
+			// Save lead data.
+			$lead_id = $this->save_lead_data( $user_inputs, $scenarios, $recommendation, $report_html );
+
+			// Format response data.
+			$formatted_scenarios = $this->format_scenarios_for_response( $scenarios );
+
+			$response_data = [
+				'scenarios'              => $formatted_scenarios,
+				'recommendation'         => $recommendation,
+				'comprehensive_analysis' => $comprehensive_analysis,
+				'report_html'            => $report_html,
+				'lead_id'                => $lead_id,
+				'company_name'           => $user_inputs['company_name'],
+									'analysis_type'          => rtbcb_get_analysis_type(),
+				'memory_info'            => rtbcb_get_memory_status(),
+			];
+
+			wp_send_json_success( $response_data );
+		} catch ( Exception $e ) {
+			rtbcb_log_error( 'Ajax exception', $e->getMessage() );
+			wp_send_json_error( [ 'message' => __( 'An error occurred while generating your business case.', 'rtbcb' ) ], 500 );
+		} catch ( Error $e ) {
+			rtbcb_log_error( 'Ajax fatal error', $e->getMessage() );
+			wp_send_json_error( [ 'message' => __( 'A system error occurred. Please contact support.', 'rtbcb' ) ], 500 );
+		}
 		}
 
 	/**
@@ -1013,21 +1012,21 @@ return $use_comprehensive;
 	}
 
 		if ( '' !== $raw_hours_reconciliation && ! is_numeric( $raw_hours_reconciliation ) ) {
-				$validation_errors[] = __( 'Please enter valid reconciliation hours.', 'rtbcb' );
+			$validation_errors[] = __( 'Please enter valid reconciliation hours.', 'rtbcb' );
 		} elseif ( $user_inputs['hours_reconciliation'] < 0 ) {
-				$validation_errors[] = __( 'Please enter valid reconciliation hours.', 'rtbcb' );
+			$validation_errors[] = __( 'Please enter valid reconciliation hours.', 'rtbcb' );
 		}
 
 		if ( '' !== $raw_hours_cash_positioning && ! is_numeric( $raw_hours_cash_positioning ) ) {
-				$validation_errors[] = __( 'Please enter valid cash positioning hours.', 'rtbcb' );
+			$validation_errors[] = __( 'Please enter valid cash positioning hours.', 'rtbcb' );
 		}
 
 		if ( '' !== $raw_num_banks && ! is_numeric( $raw_num_banks ) ) {
-				$validation_errors[] = __( 'Please enter a valid number of banks.', 'rtbcb' );
+			$validation_errors[] = __( 'Please enter a valid number of banks.', 'rtbcb' );
 		}
 
 		if ( '' !== $raw_ftes && ! is_numeric( $raw_ftes ) ) {
-				$validation_errors[] = __( 'Please enter valid FTEs.', 'rtbcb' );
+			$validation_errors[] = __( 'Please enter valid FTEs.', 'rtbcb' );
 		}
 
 
@@ -1049,31 +1048,31 @@ return $use_comprehensive;
 	try {
 		$rag          = new RTBCB_RAG();
 		$search_query = implode(
-			' ',
-			array_merge(
-				[ $user_inputs['company_name'], $user_inputs['industry'] ],
-				$user_inputs['pain_points'],
-				[ $recommendation['recommended'] ?? '' ]
-			)
+		' ',
+		array_merge(
+			[ $user_inputs['company_name'], $user_inputs['industry'] ],
+			$user_inputs['pain_points'],
+			[ $recommendation['recommended'] ?? '' ]
+		)
 		);
 
 		$results   = $rag->search_similar( $search_query, 3 );
 		$sanitized = [];
 
 		foreach ( $results as $result ) {
-			$text = '';
+		$text = '';
 
-			if ( is_array( $result ) && isset( $result['metadata'] ) ) {
-				$metadata = $result['metadata'];
-				$text     = is_array( $metadata ) ? wp_json_encode( $metadata ) : (string) $metadata;
-			} elseif ( is_scalar( $result ) ) {
-				$text = (string) $result;
-			} else {
-				$text = wp_json_encode( $result );
-			}
+		if ( is_array( $result ) && isset( $result['metadata'] ) ) {
+			$metadata = $result['metadata'];
+			$text     = is_array( $metadata ) ? wp_json_encode( $metadata ) : (string) $metadata;
+		} elseif ( is_scalar( $result ) ) {
+			$text = (string) $result;
+		} else {
+			$text = wp_json_encode( $result );
+		}
 
-			$text        = sanitize_text_field( (string) $text );
-			$sanitized[] = mb_substr( $text, 0, 1000 );
+		$text        = sanitize_text_field( (string) $text );
+		$sanitized[] = mb_substr( $text, 0, 1000 );
 		}
 
 		return $sanitized;
@@ -1100,85 +1099,85 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 		$timeout    = absint( rtbcb_get_api_timeout() );
 
 		$time_remaining = static function() use ( $start_time, $timeout ) {
-			return $timeout - ( microtime( true ) - $start_time );
+		return $timeout - ( microtime( true ) - $start_time );
 		};
 
 		if ( ! class_exists( 'RTBCB_LLM' ) ) {
-			return [
-				'analysis'    => new WP_Error( 'llm_unavailable', __( 'AI analysis service unavailable.', 'rtbcb' ) ),
-				'rag_context' => [],
-			];
+		return [
+			'analysis'    => new WP_Error( 'llm_unavailable', __( 'AI analysis service unavailable.', 'rtbcb' ) ),
+			'rag_context' => [],
+		];
 		}
 
 		if ( ! rtbcb_has_openai_api_key() ) {
-			return [
-				'analysis'    => $this->generate_fallback_analysis( $user_inputs, $scenarios ),
-				'rag_context' => [],
-			];
+		return [
+			'analysis'    => $this->generate_fallback_analysis( $user_inputs, $scenarios ),
+			'rag_context' => [],
+		];
 		}
 
 		if ( $time_remaining() < 5 ) {
-			return [
-				'analysis'    => $this->generate_fallback_analysis( $user_inputs, $scenarios ),
-				'rag_context' => [],
-			];
+		return [
+			'analysis'    => $this->generate_fallback_analysis( $user_inputs, $scenarios ),
+			'rag_context' => [],
+		];
 		}
 
 		$rag_context = [];
 		$rag_used    = false;
 
 		$rag_loader = function() use ( $user_inputs, $recommendation, &$rag_context, &$rag_used, $time_remaining ) {
-			$rag_used = true;
-			if ( $time_remaining() < 10 ) {
-				$rag_context = [];
-			} else {
-				$rag_context = $this->get_rag_context( $user_inputs, $recommendation );
-			}
-			return $rag_context;
+		$rag_used = true;
+		if ( $time_remaining() < 10 ) {
+			$rag_context = [];
+		} else {
+			$rag_context = $this->get_rag_context( $user_inputs, $recommendation );
+		}
+		return $rag_context;
 		};
 
 		try {
-			$llm    = new RTBCB_LLM();
-			$result = $llm->generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_loader, $chunk_callback );
+		$llm    = new RTBCB_LLM();
+		$result = $llm->generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_loader, $chunk_callback );
 
-			if ( is_wp_error( $result ) ) {
-				return [
-					'analysis'    => $this->generate_fallback_analysis( $user_inputs, $scenarios ),
-					'rag_context' => [],
-				];
-			}
-
-			if ( $time_remaining() < 2 ) {
-				return [
-					'analysis'    => [
-						'executive_summary' => $result['executive_summary'] ?? '',
-						'partial'          => true,
-					],
-					'rag_context' => $rag_used ? $rag_context : [],
-				];
-			}
-
-			$required_keys = [ 'executive_summary', 'financial_analysis', 'industry_analysis', 'implementation_roadmap', 'risk_mitigation', 'next_steps' ];
-			$missing_keys  = array_diff( $required_keys, array_keys( $result ) );
-
-			if ( ! empty( $missing_keys ) ) {
-				rtbcb_log_error( 'LLM missing required sections', [ 'missing' => $missing_keys ] );
-				return [
-					'analysis'    => $this->generate_fallback_analysis( $user_inputs, $scenarios ),
-					'rag_context' => [],
-				];
-			}
-
-			return [
-				'analysis'    => $result,
-				'rag_context' => $rag_used ? $rag_context : [],
-			];
-		} catch ( Exception $e ) {
-			rtbcb_log_error( 'LLM analysis failed', $e->getMessage() );
+		if ( is_wp_error( $result ) ) {
 			return [
 				'analysis'    => $this->generate_fallback_analysis( $user_inputs, $scenarios ),
 				'rag_context' => [],
 			];
+		}
+
+		if ( $time_remaining() < 2 ) {
+			return [
+				'analysis'    => [
+					'executive_summary' => $result['executive_summary'] ?? '',
+					'partial'          => true,
+				],
+				'rag_context' => $rag_used ? $rag_context : [],
+			];
+		}
+
+		$required_keys = [ 'executive_summary', 'financial_analysis', 'industry_analysis', 'implementation_roadmap', 'risk_mitigation', 'next_steps' ];
+		$missing_keys  = array_diff( $required_keys, array_keys( $result ) );
+
+		if ( ! empty( $missing_keys ) ) {
+			rtbcb_log_error( 'LLM missing required sections', [ 'missing' => $missing_keys ] );
+			return [
+				'analysis'    => $this->generate_fallback_analysis( $user_inputs, $scenarios ),
+				'rag_context' => [],
+			];
+		}
+
+		return [
+			'analysis'    => $result,
+			'rag_context' => $rag_used ? $rag_context : [],
+		];
+		} catch ( Exception $e ) {
+		rtbcb_log_error( 'LLM analysis failed', $e->getMessage() );
+		return [
+			'analysis'    => $this->generate_fallback_analysis( $user_inputs, $scenarios ),
+			'rag_context' => [],
+		];
 		}
 	}
 
@@ -1260,30 +1259,30 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 	*/
 	private function format_scenarios_for_response( $scenarios ) {
 		$map       = [
-			'low'  => 'conservative',
-			'base' => 'base',
-			'high' => 'optimistic',
+		'low'  => 'conservative',
+		'base' => 'base',
+		'high' => 'optimistic',
 		];
 		$formatted = [];
 
 		foreach ( $map as $key => $source ) {
-			$scenario    = $scenarios[ $source ] ?? [];
-			$assumptions = $scenario['assumptions'] ?? [];
+		$scenario    = $scenarios[ $source ] ?? [];
+		$assumptions = $scenario['assumptions'] ?? [];
 
-			$formatted[ $key ] = [
-				'total_annual_benefit' => floatval( $scenario['total_annual_benefit'] ?? 0 ),
-				'labor_savings'        => floatval( $scenario['labor_savings'] ?? 0 ),
-				'fee_savings'          => floatval( $scenario['fee_savings'] ?? 0 ),
-				'error_reduction'      => floatval( $scenario['error_reduction'] ?? 0 ),
-				'roi_percentage'       => floatval( $scenario['roi_percentage'] ?? 0 ),
-				'assumptions'          => [
-					'name'                  => $assumptions['name'] ?? '',
-					'efficiency_improvement' => floatval( $assumptions['efficiency_improvement'] ?? 0 ),
-					'error_reduction'       => floatval( $assumptions['error_reduction'] ?? 0 ),
-					'fee_reduction'         => floatval( $assumptions['fee_reduction'] ?? 0 ),
-					'industry_benchmark'    => floatval( $assumptions['industry_benchmark'] ?? 0 ),
-				],
-			];
+		$formatted[ $key ] = [
+			'total_annual_benefit' => floatval( $scenario['total_annual_benefit'] ?? 0 ),
+			'labor_savings'        => floatval( $scenario['labor_savings'] ?? 0 ),
+			'fee_savings'          => floatval( $scenario['fee_savings'] ?? 0 ),
+			'error_reduction'      => floatval( $scenario['error_reduction'] ?? 0 ),
+			'roi_percentage'       => floatval( $scenario['roi_percentage'] ?? 0 ),
+			'assumptions'          => [
+				'name'                  => $assumptions['name'] ?? '',
+				'efficiency_improvement' => floatval( $assumptions['efficiency_improvement'] ?? 0 ),
+				'error_reduction'       => floatval( $assumptions['error_reduction'] ?? 0 ),
+				'fee_reduction'         => floatval( $assumptions['fee_reduction'] ?? 0 ),
+				'industry_benchmark'    => floatval( $assumptions['industry_benchmark'] ?? 0 ),
+			],
+		];
 		}
 
 		return $formatted;
@@ -1297,7 +1296,7 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 		error_log( 'RTBCB: Enter ajax_generate_comprehensive_case_debug' );
 
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			ini_set( 'display_errors', '1' );
+		ini_set( 'display_errors', '1' );
 		}
 
 		$post_keys = implode( ', ', array_keys( $_POST ) );
@@ -1310,26 +1309,26 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 		error_log( 'RTBCB: nonce verification: ' . ( $nonce_valid ? 'passed' : 'failed' ) );
 
 		if ( ! $nonce_valid ) {
-			wp_send_json_error( __( 'Security check failed.', 'rtbcb' ), 403 );
+		wp_send_json_error( __( 'Security check failed.', 'rtbcb' ), 403 );
 		}
 
 		$company = rtbcb_get_current_company();
 		if ( empty( $company ) ) {
-			wp_send_json_error( __( 'No company data found. Please run the company overview first.', 'rtbcb' ), 400 );
+		wp_send_json_error( __( 'No company data found. Please run the company overview first.', 'rtbcb' ), 400 );
 		}
 
 		$required_classes = [ 'RTBCB_Calculator', 'RTBCB_DB' ];
 		$missing_classes  = [];
 		foreach ( $required_classes as $class ) {
-			$exists = class_exists( $class );
-			error_log( 'RTBCB: class ' . $class . ' exists: ' . ( $exists ? 'yes' : 'no' ) );
-			if ( ! $exists ) {
-				$missing_classes[] = $class;
-			}
+		$exists = class_exists( $class );
+		error_log( 'RTBCB: class ' . $class . ' exists: ' . ( $exists ? 'yes' : 'no' ) );
+		if ( ! $exists ) {
+			$missing_classes[] = $class;
+		}
 		}
 
 		if ( ! empty( $missing_classes ) ) {
-			wp_send_json_error( __( 'Required components missing.', 'rtbcb' ), 500 );
+		wp_send_json_error( __( 'Required components missing.', 'rtbcb' ), 500 );
 		}
 
 	rtbcb_setup_ajax_logging();
@@ -1340,13 +1339,13 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 	}
 
 		try {
-			RTBCB_Ajax::generate_comprehensive_case();
+		RTBCB_Ajax::generate_comprehensive_case();
 		} catch ( Exception $e ) {
-			error_log( 'RTBCB Exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine() );
-			wp_send_json_error( __( 'An error occurred. Please try again later.', 'rtbcb' ), 500 );
+		error_log( 'RTBCB Exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine() );
+		wp_send_json_error( __( 'An error occurred. Please try again later.', 'rtbcb' ), 500 );
 		} catch ( Error $e ) {
-			error_log( 'RTBCB Error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine() );
-			wp_send_json_error( __( 'An error occurred. Please try again later.', 'rtbcb' ), 500 );
+		error_log( 'RTBCB Error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine() );
+		wp_send_json_error( __( 'An error occurred. Please try again later.', 'rtbcb' ), 500 );
 		}
 
 		error_log( 'RTBCB: Exit ajax_generate_comprehensive_case_debug' );
@@ -1374,355 +1373,311 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 		$start_time = time();
 
 		if ( ! ini_get( 'safe_mode' ) ) {
-			if ( $timeout <= 0 ) {
-				wp_send_json_error(
-					[ 'message' => __( 'Request timed out; please retry.', 'rtbcb' ) ],
-					504
-				);
-				return;
-			}
-			set_time_limit( $timeout );
+		if ( $timeout <= 0 ) {
+			wp_send_json_error(
+				[ 'message' => __( 'Request timed out; please retry.', 'rtbcb' ) ],
+				504
+			);
+			return;
+		}
+		set_time_limit( $timeout );
 		}
 
 		// Clear any buffered output before sending JSON responses.
 		$buffer_content = ob_get_level() ? ob_get_clean() : '';
 		if ( '' !== $buffer_content ) {
-			rtbcb_log_api_debug( 'Output buffer not empty before JSON response', $buffer_content );
+		rtbcb_log_api_debug( 'Output buffer not empty before JSON response', $buffer_content );
 		}
 
 		try {
-			// Verify nonce
-			if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
-				rtbcb_log_error( 'Nonce verification failed', $_POST );
-				wp_send_json_error( __( 'Security check failed.', 'rtbcb' ), 403 );
-				return;
+		// Verify nonce
+		if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
+			rtbcb_log_error( 'Nonce verification failed', $_POST );
+			wp_send_json_error( __( 'Security check failed.', 'rtbcb' ), 403 );
+			return;
+		}
+
+		$company_name = sanitize_text_field( wp_unslash( $_POST['company_name'] ?? '' ) );
+		$company_size = sanitize_text_field( wp_unslash( $_POST['company_size'] ?? '' ) );
+		$industry     = sanitize_text_field( wp_unslash( $_POST['industry'] ?? '' ) );
+
+		$company = rtbcb_get_current_company();
+		if ( empty( $company ) ) {
+			if ( $company_name && $company_size && $industry ) {
+				$company = [
+					'name'     => $company_name,
+					'size'     => $company_size,
+					'industry' => $industry,
+				];
+				update_option( 'rtbcb_current_company', $company );
+			} else {
+				if ( empty( $company_name ) ) {
+					wp_send_json_error( __( 'Please enter your company name.', 'rtbcb' ), 400 );
+					return;
+				}
+
+				if ( empty( $company_size ) ) {
+					wp_send_json_error( __( 'Please select your company size.', 'rtbcb' ), 400 );
+					return;
+				}
+
+				if ( empty( $industry ) ) {
+					wp_send_json_error( __( 'Please select your industry.', 'rtbcb' ), 400 );
+					return;
+				}
 			}
+		}
 
-			$company_name = sanitize_text_field( wp_unslash( $_POST['company_name'] ?? '' ) );
-			$company_size = sanitize_text_field( wp_unslash( $_POST['company_size'] ?? '' ) );
-			$industry     = sanitize_text_field( wp_unslash( $_POST['industry'] ?? '' ) );
+		rtbcb_log_memory_usage( 'after_nonce_verification' );
 
-			$company = rtbcb_get_current_company();
-			if ( empty( $company ) ) {
-				if ( $company_name && $company_size && $industry ) {
-					$company = [
-						'name'     => $company_name,
-						'size'     => $company_size,
-						'industry' => $industry,
-					];
-					update_option( 'rtbcb_current_company', $company );
-				} else {
-					if ( empty( $company_name ) ) {
-						wp_send_json_error( __( 'Please enter your company name.', 'rtbcb' ), 400 );
-						return;
-					}
+		// Collect and validate form data
+		$hours_reconciliation_raw   = isset( $_POST['hours_reconciliation'] ) ? wp_unslash( $_POST['hours_reconciliation'] ) : null;
+		$hours_cash_positioning_raw = isset( $_POST['hours_cash_positioning'] ) ? wp_unslash( $_POST['hours_cash_positioning'] ) : null;
+		$num_banks_raw              = isset( $_POST['num_banks'] ) ? wp_unslash( $_POST['num_banks'] ) : null;
+		$ftes_raw                   = isset( $_POST['ftes'] ) ? wp_unslash( $_POST['ftes'] ) : null;
 
-					if ( empty( $company_size ) ) {
-						wp_send_json_error( __( 'Please select your company size.', 'rtbcb' ), 400 );
-						return;
-					}
+		if ( ! is_numeric( $hours_reconciliation_raw ) ) {
+			wp_send_json_error( __( 'Please enter your weekly reconciliation hours.', 'rtbcb' ), 400 );
+			return;
+		}
+		if ( ! is_numeric( $hours_cash_positioning_raw ) ) {
+			wp_send_json_error( __( 'Please enter your weekly cash positioning hours.', 'rtbcb' ), 400 );
+			return;
+		}
+		if ( ! is_numeric( $num_banks_raw ) ) {
+			wp_send_json_error( __( 'Please enter the number of banking relationships.', 'rtbcb' ), 400 );
+			return;
+		}
+		if ( ! is_numeric( $ftes_raw ) ) {
+			wp_send_json_error( __( 'Please enter your treasury team size.', 'rtbcb' ), 400 );
+			return;
+		}
 
-					if ( empty( $industry ) ) {
-						wp_send_json_error( __( 'Please select your industry.', 'rtbcb' ), 400 );
+		$user_inputs = [
+			'email'                  => sanitize_email( wp_unslash( $_POST['email'] ?? '' ) ),
+			'company_name'           => $company_name,
+			'company_size'           => $company_size,
+			'industry'               => $industry,
+			'job_title'              => sanitize_text_field( wp_unslash( $_POST['job_title'] ?? '' ) ),
+			'hours_reconciliation'   => floatval( $hours_reconciliation_raw ),
+			'hours_cash_positioning' => floatval( $hours_cash_positioning_raw ),
+			'num_banks'              => intval( $num_banks_raw ),
+			'ftes'                   => floatval( $ftes_raw ),
+			'pain_points'            => array_map( 'sanitize_text_field', (array) wp_unslash( $_POST['pain_points'] ?? [] ) ),
+			'business_objective'     => sanitize_text_field( wp_unslash( $_POST['business_objective'] ?? '' ) ),
+			'implementation_timeline'=> sanitize_text_field( wp_unslash( $_POST['implementation_timeline'] ?? '' ) ),
+			'budget_range'           => sanitize_text_field( wp_unslash( $_POST['budget_range'] ?? '' ) ),
+		];
+
+		rtbcb_log_api_debug( 'Collected user inputs', $user_inputs );
+
+		rtbcb_log_api_debug( 'Validating user inputs' );
+
+		// Validate required fields
+		if ( empty( $user_inputs['email'] ) || ! is_email( $user_inputs['email'] ) ) {
+			rtbcb_log_error( 'Invalid email address', $user_inputs );
+			wp_send_json_error( __( 'Please enter a valid email address.', 'rtbcb' ), 400 );
+			return;
+		}
+
+		if ( empty( $user_inputs['company_name'] ) ) {
+			rtbcb_log_error( 'Missing company name', $user_inputs );
+			wp_send_json_error( __( 'Please enter your company name.', 'rtbcb' ), 400 );
+			return;
+		}
+
+		if ( empty( $user_inputs['company_size'] ) ) {
+			rtbcb_log_error( 'Missing company size', $user_inputs );
+			wp_send_json_error( __( 'Please select your company size.', 'rtbcb' ), 400 );
+			return;
+		}
+
+		if ( empty( $user_inputs['industry'] ) ) {
+			rtbcb_log_error( 'Missing industry', $user_inputs );
+			wp_send_json_error( __( 'Please select your industry.', 'rtbcb' ), 400 );
+			return;
+		}
+
+		if ( $user_inputs['hours_reconciliation'] < 0 ) {
+			rtbcb_log_error( 'Invalid reconciliation hours', $user_inputs );
+			wp_send_json_error( __( 'Please enter your weekly reconciliation hours.', 'rtbcb' ), 400 );
+			return;
+		}
+
+		if ( $user_inputs['hours_cash_positioning'] <= 0 ) {
+			rtbcb_log_error( 'Invalid cash positioning hours', $user_inputs );
+			wp_send_json_error( __( 'Please enter your weekly cash positioning hours.', 'rtbcb' ), 400 );
+			return;
+		}
+
+		if ( $user_inputs['num_banks'] <= 0 ) {
+			rtbcb_log_error( 'Invalid number of banks', $user_inputs );
+			wp_send_json_error( __( 'Please enter the number of banking relationships.', 'rtbcb' ), 400 );
+			return;
+		}
+
+		if ( $user_inputs['ftes'] <= 0 ) {
+			rtbcb_log_error( 'Invalid treasury team size', $user_inputs );
+			wp_send_json_error( __( 'Please enter your treasury team size.', 'rtbcb' ), 400 );
+			return;
+		}
+
+		if ( empty( $user_inputs['business_objective'] ) ) {
+			rtbcb_log_error( 'Missing business objective', $user_inputs );
+			wp_send_json_error( __( 'Please select a primary business objective.', 'rtbcb' ), 400 );
+			return;
+		}
+
+		if ( empty( $user_inputs['implementation_timeline'] ) ) {
+			rtbcb_log_error( 'Missing implementation timeline', $user_inputs );
+			wp_send_json_error( __( 'Please select an implementation timeline.', 'rtbcb' ), 400 );
+			return;
+		}
+
+		if ( empty( $user_inputs['budget_range'] ) ) {
+			rtbcb_log_error( 'Missing budget range', $user_inputs );
+			wp_send_json_error( __( 'Please select a budget range.', 'rtbcb' ), 400 );
+			return;
+		}
+
+		rtbcb_log_api_debug( 'Validation passed', $user_inputs );
+		rtbcb_log_memory_usage( 'after_validation' );
+
+		// Calculate ROI scenarios
+		if ( ! class_exists( 'RTBCB_Calculator' ) ) {
+			rtbcb_log_error( 'Calculator class not found' );
+			wp_send_json_error( __( 'System error: Calculator not available.', 'rtbcb' ), 500 );
+			return;
+		}
+
+		rtbcb_log_api_debug( 'Starting ROI calculation' );
+		$scenarios = RTBCB_Calculator::calculate_roi( $user_inputs );
+		rtbcb_log_api_debug( 'ROI scenarios calculated', $scenarios );
+		rtbcb_log_memory_usage( 'after_roi_calculation' );
+
+		// Get category recommendation
+		if ( ! class_exists( 'RTBCB_Category_Recommender' ) ) {
+			rtbcb_log_error( 'Category Recommender class not found' );
+			wp_send_json_error( __( 'System error: Recommender not available.', 'rtbcb' ), 500 );
+			return;
+		}
+
+		rtbcb_log_api_debug( 'Running category recommendation' );
+		$recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
+		$scenarios      = RTBCB_Calculator::calculate_category_refined_roi( $user_inputs, $recommendation['category_info'] );
+		rtbcb_log_api_debug( 'Category recommendation result', $recommendation );
+		rtbcb_log_memory_usage( 'after_category_recommendation' );
+
+		// Get RAG context (with memory monitoring)
+		$rag_context = [];
+		if ( class_exists( 'RTBCB_RAG' ) ) {
+			try {
+				$rag = new RTBCB_RAG();
+				$search_query = implode(
+					' ',
+					array_merge(
+						[ $user_inputs['company_name'], $user_inputs['industry'] ],
+						$user_inputs['pain_points'],
+						[ $recommendation['recommended'] ?? '' ]
+					)
+				);
+				rtbcb_log_api_debug( 'Performing RAG search', [ 'query' => $search_query ] );
+				$rag_context = $rag->search_similar( $search_query, 3 );
+				rtbcb_log_api_debug( 'RAG search results', $rag_context );
+				rtbcb_log_memory_usage( 'after_rag_search' );
+			} catch ( Exception $e ) {
+				rtbcb_log_error( 'RAG search failed', $e->getMessage() );
+			} catch ( Error $e ) {
+				rtbcb_log_error( 'RAG search fatal error', $e->getMessage() );
+			}
+		}
+
+		// Generate business case with memory optimization
+		$comprehensive_analysis = null;
+		if ( class_exists( 'RTBCB_LLM' ) ) {
+			try {
+				if ( function_exists( 'gc_collect_cycles' ) ) {
+					gc_collect_cycles();
+				}
+
+				rtbcb_log_memory_usage( 'before_llm_generation' );
+
+				if ( ! rtbcb_has_openai_api_key() ) {
+					$error_code = 'E_API_KEY_MISSING';
+					rtbcb_log_error( $error_code . ': ' . __( 'OpenAI API key not configured.', 'rtbcb' ) );
+					wp_send_json_error(
+						[
+							'message'    => __( 'OpenAI API key not configured.', 'rtbcb' ),
+							'error_code' => $error_code,
+						],
+						500
+					);
+					return;
+				}
+
+				$api_key = rtbcb_get_openai_api_key();
+				if ( class_exists( 'RTBCB_API_Tester' ) ) {
+					$connection_test = RTBCB_API_Tester::test_connection( $api_key );
+					if ( empty( $connection_test['success'] ) ) {
+						$error_code = 'E_API_TEST_FAILURE';
+						rtbcb_log_error( $error_code . ': ' . $connection_test['message'] );
+						wp_send_json_error(
+							[
+								'message'    => $connection_test['message'],
+								'details'    => $connection_test['details'] ?? '',
+								'error_code' => $error_code,
+							],
+							500
+						);
 						return;
 					}
 				}
-			}
 
-			rtbcb_log_memory_usage( 'after_nonce_verification' );
-
-			// Collect and validate form data
-			$hours_reconciliation_raw   = isset( $_POST['hours_reconciliation'] ) ? wp_unslash( $_POST['hours_reconciliation'] ) : null;
-			$hours_cash_positioning_raw = isset( $_POST['hours_cash_positioning'] ) ? wp_unslash( $_POST['hours_cash_positioning'] ) : null;
-			$num_banks_raw              = isset( $_POST['num_banks'] ) ? wp_unslash( $_POST['num_banks'] ) : null;
-			$ftes_raw                   = isset( $_POST['ftes'] ) ? wp_unslash( $_POST['ftes'] ) : null;
-
-			if ( ! is_numeric( $hours_reconciliation_raw ) ) {
-				wp_send_json_error( __( 'Please enter your weekly reconciliation hours.', 'rtbcb' ), 400 );
-				return;
-			}
-			if ( ! is_numeric( $hours_cash_positioning_raw ) ) {
-				wp_send_json_error( __( 'Please enter your weekly cash positioning hours.', 'rtbcb' ), 400 );
-				return;
-			}
-			if ( ! is_numeric( $num_banks_raw ) ) {
-				wp_send_json_error( __( 'Please enter the number of banking relationships.', 'rtbcb' ), 400 );
-				return;
-			}
-			if ( ! is_numeric( $ftes_raw ) ) {
-				wp_send_json_error( __( 'Please enter your treasury team size.', 'rtbcb' ), 400 );
-				return;
-			}
-
-			$user_inputs = [
-				'email'                  => sanitize_email( wp_unslash( $_POST['email'] ?? '' ) ),
-				'company_name'           => $company_name,
-				'company_size'           => $company_size,
-				'industry'               => $industry,
-				'job_title'              => sanitize_text_field( wp_unslash( $_POST['job_title'] ?? '' ) ),
-				'hours_reconciliation'   => floatval( $hours_reconciliation_raw ),
-				'hours_cash_positioning' => floatval( $hours_cash_positioning_raw ),
-				'num_banks'              => intval( $num_banks_raw ),
-				'ftes'                   => floatval( $ftes_raw ),
-				'pain_points'            => array_map( 'sanitize_text_field', (array) wp_unslash( $_POST['pain_points'] ?? [] ) ),
-				'business_objective'     => sanitize_text_field( wp_unslash( $_POST['business_objective'] ?? '' ) ),
-				'implementation_timeline'=> sanitize_text_field( wp_unslash( $_POST['implementation_timeline'] ?? '' ) ),
-				'budget_range'           => sanitize_text_field( wp_unslash( $_POST['budget_range'] ?? '' ) ),
-			];
-
-			rtbcb_log_api_debug( 'Collected user inputs', $user_inputs );
-
-			rtbcb_log_api_debug( 'Validating user inputs' );
-
-			// Validate required fields
-			if ( empty( $user_inputs['email'] ) || ! is_email( $user_inputs['email'] ) ) {
-				rtbcb_log_error( 'Invalid email address', $user_inputs );
-				wp_send_json_error( __( 'Please enter a valid email address.', 'rtbcb' ), 400 );
-				return;
-			}
-
-			if ( empty( $user_inputs['company_name'] ) ) {
-				rtbcb_log_error( 'Missing company name', $user_inputs );
-				wp_send_json_error( __( 'Please enter your company name.', 'rtbcb' ), 400 );
-				return;
-			}
-
-			if ( empty( $user_inputs['company_size'] ) ) {
-				rtbcb_log_error( 'Missing company size', $user_inputs );
-				wp_send_json_error( __( 'Please select your company size.', 'rtbcb' ), 400 );
-				return;
-			}
-
-			if ( empty( $user_inputs['industry'] ) ) {
-				rtbcb_log_error( 'Missing industry', $user_inputs );
-				wp_send_json_error( __( 'Please select your industry.', 'rtbcb' ), 400 );
-				return;
-			}
-
-			if ( $user_inputs['hours_reconciliation'] < 0 ) {
-				rtbcb_log_error( 'Invalid reconciliation hours', $user_inputs );
-				wp_send_json_error( __( 'Please enter your weekly reconciliation hours.', 'rtbcb' ), 400 );
-				return;
-			}
-
-			if ( $user_inputs['hours_cash_positioning'] <= 0 ) {
-				rtbcb_log_error( 'Invalid cash positioning hours', $user_inputs );
-				wp_send_json_error( __( 'Please enter your weekly cash positioning hours.', 'rtbcb' ), 400 );
-				return;
-			}
-
-			if ( $user_inputs['num_banks'] <= 0 ) {
-				rtbcb_log_error( 'Invalid number of banks', $user_inputs );
-				wp_send_json_error( __( 'Please enter the number of banking relationships.', 'rtbcb' ), 400 );
-				return;
-			}
-
-			if ( $user_inputs['ftes'] <= 0 ) {
-				rtbcb_log_error( 'Invalid treasury team size', $user_inputs );
-				wp_send_json_error( __( 'Please enter your treasury team size.', 'rtbcb' ), 400 );
-				return;
-			}
-
-			if ( empty( $user_inputs['business_objective'] ) ) {
-				rtbcb_log_error( 'Missing business objective', $user_inputs );
-				wp_send_json_error( __( 'Please select a primary business objective.', 'rtbcb' ), 400 );
-				return;
-			}
-
-			if ( empty( $user_inputs['implementation_timeline'] ) ) {
-				rtbcb_log_error( 'Missing implementation timeline', $user_inputs );
-				wp_send_json_error( __( 'Please select an implementation timeline.', 'rtbcb' ), 400 );
-				return;
-			}
-
-			if ( empty( $user_inputs['budget_range'] ) ) {
-				rtbcb_log_error( 'Missing budget range', $user_inputs );
-				wp_send_json_error( __( 'Please select a budget range.', 'rtbcb' ), 400 );
-				return;
-			}
-
-			rtbcb_log_api_debug( 'Validation passed', $user_inputs );
-			rtbcb_log_memory_usage( 'after_validation' );
-
-			// Calculate ROI scenarios
-			if ( ! class_exists( 'RTBCB_Calculator' ) ) {
-				rtbcb_log_error( 'Calculator class not found' );
-				wp_send_json_error( __( 'System error: Calculator not available.', 'rtbcb' ), 500 );
-				return;
-			}
-
-			rtbcb_log_api_debug( 'Starting ROI calculation' );
-			$scenarios = RTBCB_Calculator::calculate_roi( $user_inputs );
-			rtbcb_log_api_debug( 'ROI scenarios calculated', $scenarios );
-			rtbcb_log_memory_usage( 'after_roi_calculation' );
-
-			// Get category recommendation
-			if ( ! class_exists( 'RTBCB_Category_Recommender' ) ) {
-				rtbcb_log_error( 'Category Recommender class not found' );
-				wp_send_json_error( __( 'System error: Recommender not available.', 'rtbcb' ), 500 );
-				return;
-			}
-
-			rtbcb_log_api_debug( 'Running category recommendation' );
-			$recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
-			$scenarios      = RTBCB_Calculator::calculate_category_refined_roi( $user_inputs, $recommendation['category_info'] );
-			rtbcb_log_api_debug( 'Category recommendation result', $recommendation );
-			rtbcb_log_memory_usage( 'after_category_recommendation' );
-
-			// Get RAG context (with memory monitoring)
-			$rag_context = [];
-			if ( class_exists( 'RTBCB_RAG' ) ) {
-				try {
-					$rag = new RTBCB_RAG();
-					$search_query = implode(
-						' ',
-						array_merge(
-							[ $user_inputs['company_name'], $user_inputs['industry'] ],
-							$user_inputs['pain_points'],
-							[ $recommendation['recommended'] ?? '' ]
-						)
+				// Short-circuit if the remaining time is insufficient for LLM processing.
+				if ( ( time() - $start_time ) > ( $timeout - 5 ) ) {
+					wp_send_json_error(
+						[ 'message' => __( 'Request timed out; please retry.', 'rtbcb' ) ],
+						504
 					);
-					rtbcb_log_api_debug( 'Performing RAG search', [ 'query' => $search_query ] );
-					$rag_context = $rag->search_similar( $search_query, 3 );
-					rtbcb_log_api_debug( 'RAG search results', $rag_context );
-					rtbcb_log_memory_usage( 'after_rag_search' );
-				} catch ( Exception $e ) {
-					rtbcb_log_error( 'RAG search failed', $e->getMessage() );
-				} catch ( Error $e ) {
-					rtbcb_log_error( 'RAG search fatal error', $e->getMessage() );
+					return;
 				}
-			}
 
-			// Generate business case with memory optimization
-			$comprehensive_analysis = null;
-			if ( class_exists( 'RTBCB_LLM' ) ) {
-				try {
-					if ( function_exists( 'gc_collect_cycles' ) ) {
-						gc_collect_cycles();
-					}
+				// Consider offloading this LLM call to a background task and polling for completion to
+				// avoid keeping the HTTP connection open.
+				rtbcb_log_api_debug( 'Calling LLM for comprehensive business case' );
+				$llm = new RTBCB_LLM();
+				$comprehensive_analysis = $llm->generate_comprehensive_business_case(
+					$user_inputs,
+					$scenarios,
+					$rag_context
+				);
 
-					rtbcb_log_memory_usage( 'before_llm_generation' );
+				rtbcb_log_memory_usage( 'after_llm_generation' );
 
-					if ( ! rtbcb_has_openai_api_key() ) {
-						$error_code = 'E_API_KEY_MISSING';
-						rtbcb_log_error( $error_code . ': ' . __( 'OpenAI API key not configured.', 'rtbcb' ) );
+				if ( is_wp_error( $comprehensive_analysis ) ) {
+					$error_message  = $comprehensive_analysis->get_error_message();
+					$llm_error_code = method_exists( $comprehensive_analysis, 'get_error_code' ) ? $comprehensive_analysis->get_error_code() : '';
+					$error_data     = $comprehensive_analysis->get_error_data();
+					$status         = is_array( $error_data ) && isset( $error_data['status'] ) ? (int) $error_data['status'] : 500;
+
+					if ( 'llm_http_status' === $llm_error_code ) {
+						rtbcb_log_error( 'E_LLM_HTTP_STATUS: ' . $error_message, [ 'status' => $status ] );
 						wp_send_json_error(
 							[
-								'message'    => __( 'OpenAI API key not configured.', 'rtbcb' ),
-								'error_code' => $error_code,
+								'message'    => $error_message,
+								'error_code' => 'E_LLM_HTTP_STATUS',
 							],
-							500
+							$status
 						);
 						return;
 					}
 
-					$api_key = rtbcb_get_openai_api_key();
-					if ( class_exists( 'RTBCB_API_Tester' ) ) {
-						$connection_test = RTBCB_API_Tester::test_connection( $api_key );
-						if ( empty( $connection_test['success'] ) ) {
-							$error_code = 'E_API_TEST_FAILURE';
-							rtbcb_log_error( $error_code . ': ' . $connection_test['message'] );
-							wp_send_json_error(
-								[
-									'message'    => $connection_test['message'],
-									'details'    => $connection_test['details'] ?? '',
-									'error_code' => $error_code,
-								],
-								500
-							);
-							return;
-						}
-					}
-
-					// Short-circuit if the remaining time is insufficient for LLM processing.
-					if ( ( time() - $start_time ) > ( $timeout - 5 ) ) {
-						wp_send_json_error(
-							[ 'message' => __( 'Request timed out; please retry.', 'rtbcb' ) ],
-							504
-						);
-						return;
-					}
-
-					// Consider offloading this LLM call to a background task and polling for completion to
-					// avoid keeping the HTTP connection open.
-					rtbcb_log_api_debug( 'Calling LLM for comprehensive business case' );
-					$llm = new RTBCB_LLM();
-					$comprehensive_analysis = $llm->generate_comprehensive_business_case(
-						$user_inputs,
-						$scenarios,
-						$rag_context
-					);
-
-					rtbcb_log_memory_usage( 'after_llm_generation' );
-
-					if ( is_wp_error( $comprehensive_analysis ) ) {
-						$error_message  = $comprehensive_analysis->get_error_message();
-						$llm_error_code = method_exists( $comprehensive_analysis, 'get_error_code' ) ? $comprehensive_analysis->get_error_code() : '';
-						$error_data     = $comprehensive_analysis->get_error_data();
-						$status         = is_array( $error_data ) && isset( $error_data['status'] ) ? (int) $error_data['status'] : 500;
-
-						if ( 'llm_http_status' === $llm_error_code ) {
-							rtbcb_log_error( 'E_LLM_HTTP_STATUS: ' . $error_message, [ 'status' => $status ] );
-							wp_send_json_error(
-								[
-									'message'    => $error_message,
-									'error_code' => 'E_LLM_HTTP_STATUS',
-								],
-								$status
-							);
-							return;
-						}
-
-						$error_code      = 'no_api_key' === $llm_error_code ? 'E_NO_API_KEY' : 'E_LLM_WP_ERROR';
-						rtbcb_log_error( $error_code . ': ' . $error_message, [ 'wp_error_code' => $llm_error_code ] );
-						$guidance        = __( 'Check the OpenAI API key setting in plugin options.', 'rtbcb' );
-						$response_message = __( 'Our AI analysis service is temporarily unavailable.', 'rtbcb' ) . ' ' . $guidance;
-						if ( function_exists( 'wp_get_environment_type' ) && 'production' !== wp_get_environment_type() ) {
-							$response_message = $error_message . ' ' . $guidance;
-						}
-						wp_send_json_error(
-							[
-								'message'    => $response_message,
-								'error_code' => $error_code,
-							],
-							500
-						);
-						return;
-					}
-
-					if ( isset( $comprehensive_analysis['error'] ) ) {
-						$error_code = 'E_LLM_RESPONSE_ERROR';
-						rtbcb_log_error( $error_code . ': ' . $comprehensive_analysis['error'] );
-						$guidance        = __( 'Check the OpenAI API key setting in plugin options.', 'rtbcb' );
-						$response_message = __( 'Our AI analysis service is temporarily unavailable.', 'rtbcb' ) . ' ' . $guidance;
-						if ( function_exists( 'wp_get_environment_type' ) && 'production' !== wp_get_environment_type() ) {
-							$response_message = $comprehensive_analysis['error'] . ' ' . $guidance;
-						}
-						wp_send_json_error(
-							[
-								'message'    => $response_message,
-								'error_code' => $error_code,
-							],
-							500
-						);
-						return;
-					}
-					$required_sections = [ 'executive_summary', 'financial_analysis', 'industry_analysis', 'implementation_roadmap', 'risk_mitigation', 'next_steps' ];
-					$missing_sections  = array_diff( $required_sections, array_keys( $comprehensive_analysis ) );
-
-					if ( ! empty( $missing_sections ) ) {
-						rtbcb_log_error( 'LLM missing required sections', [ 'missing' => $missing_sections ] );
-						$comprehensive_analysis = $this->generate_fallback_analysis( $user_inputs, $scenarios );
-					} else {
-						rtbcb_log_api_debug( 'LLM generation succeeded' );
-					}
-				} catch ( Exception $e ) {
-					$error_code = 'E_LLM_EXCEPTION';
-					rtbcb_log_error( $error_code . ': ' . $e->getMessage() );
+					$error_code      = 'no_api_key' === $llm_error_code ? 'E_NO_API_KEY' : 'E_LLM_WP_ERROR';
+					rtbcb_log_error( $error_code . ': ' . $error_message, [ 'wp_error_code' => $llm_error_code ] );
 					$guidance        = __( 'Check the OpenAI API key setting in plugin options.', 'rtbcb' );
 					$response_message = __( 'Our AI analysis service is temporarily unavailable.', 'rtbcb' ) . ' ' . $guidance;
 					if ( function_exists( 'wp_get_environment_type' ) && 'production' !== wp_get_environment_type() ) {
-						$response_message = $e->getMessage() . ' ' . $guidance;
+						$response_message = $error_message . ' ' . $guidance;
 					}
 					wp_send_json_error(
 						[
@@ -1732,45 +1687,41 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 						500
 					);
 					return;
-				} catch ( Error $e ) {
-					// Developers: check server logs for E_LLM_FATAL stack trace.
-					$error_code    = 'E_LLM_FATAL';
-					$error_message = $e->getMessage();
-
-					rtbcb_log_error( $error_code . ': ' . $error_message, $e->getTraceAsString() );
-
-					if ( rtbcb_is_openai_configuration_error( $e ) ) {
-						$guidance          = __( 'Check the OpenAI API key setting in plugin options.', 'rtbcb' );
-						$sanitized_message = esc_html( $error_message );
-						$response_message  = __( 'Our AI analysis service is temporarily unavailable.', 'rtbcb' ) . ' ' . $guidance;
-
-						if ( function_exists( 'wp_get_environment_type' ) && 'production' !== wp_get_environment_type() ) {
-							$response_message = $sanitized_message . ' ' . $guidance;
-						} elseif ( current_user_can( 'manage_options' ) ) {
-							$response_message .= ' ' . $sanitized_message;
-						}
-					} else {
-						$response_message = __( 'Internal error. Please try again later.', 'rtbcb' );
-					}
-
-						wp_send_json_error(
-							[
-								'message'    => $response_message,
-								'error_code' => $error_code,
-							],
-							500
-						);
-						return;
-					}
 				}
 
-			if ( empty( $comprehensive_analysis ) ) {
-				$error_code = 'E_LLM_EMPTY';
-				rtbcb_log_error( $error_code . ': LLM returned empty analysis', $user_inputs );
+				if ( isset( $comprehensive_analysis['error'] ) ) {
+					$error_code = 'E_LLM_RESPONSE_ERROR';
+					rtbcb_log_error( $error_code . ': ' . $comprehensive_analysis['error'] );
+					$guidance        = __( 'Check the OpenAI API key setting in plugin options.', 'rtbcb' );
+					$response_message = __( 'Our AI analysis service is temporarily unavailable.', 'rtbcb' ) . ' ' . $guidance;
+					if ( function_exists( 'wp_get_environment_type' ) && 'production' !== wp_get_environment_type() ) {
+						$response_message = $comprehensive_analysis['error'] . ' ' . $guidance;
+					}
+					wp_send_json_error(
+						[
+							'message'    => $response_message,
+							'error_code' => $error_code,
+						],
+						500
+					);
+					return;
+				}
+				$required_sections = [ 'executive_summary', 'financial_analysis', 'industry_analysis', 'implementation_roadmap', 'risk_mitigation', 'next_steps' ];
+				$missing_sections  = array_diff( $required_sections, array_keys( $comprehensive_analysis ) );
+
+				if ( ! empty( $missing_sections ) ) {
+					rtbcb_log_error( 'LLM missing required sections', [ 'missing' => $missing_sections ] );
+					$comprehensive_analysis = $this->generate_fallback_analysis( $user_inputs, $scenarios );
+				} else {
+					rtbcb_log_api_debug( 'LLM generation succeeded' );
+				}
+			} catch ( Exception $e ) {
+				$error_code = 'E_LLM_EXCEPTION';
+				rtbcb_log_error( $error_code . ': ' . $e->getMessage() );
 				$guidance        = __( 'Check the OpenAI API key setting in plugin options.', 'rtbcb' );
 				$response_message = __( 'Our AI analysis service is temporarily unavailable.', 'rtbcb' ) . ' ' . $guidance;
 				if ( function_exists( 'wp_get_environment_type' ) && 'production' !== wp_get_environment_type() ) {
-					$response_message = __( 'LLM returned empty analysis.', 'rtbcb' ) . ' ' . $guidance;
+					$response_message = $e->getMessage() . ' ' . $guidance;
 				}
 				wp_send_json_error(
 					[
@@ -1780,134 +1731,182 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 					500
 				);
 				return;
-			}
+			} catch ( Error $e ) {
+				// Developers: check server logs for E_LLM_FATAL stack trace.
+				$error_code    = 'E_LLM_FATAL';
+				$error_message = $e->getMessage();
 
-			if ( empty( $comprehensive_analysis['company_name'] ) ) {
-				$comprehensive_analysis['company_name'] = $user_inputs['company_name'];
-			}
+				rtbcb_log_error( $error_code . ': ' . $error_message, $e->getTraceAsString() );
 
-			// Format scenarios
-			$formatted_scenarios = [
-				'low'  => [
-					'total_annual_benefit' => $scenarios['conservative']['total_annual_benefit'] ?? 0,
-					'labor_savings'        => $scenarios['conservative']['labor_savings'] ?? 0,
-					'fee_savings'          => $scenarios['conservative']['fee_savings'] ?? 0,
-					'error_reduction'      => $scenarios['conservative']['error_reduction'] ?? 0,
-				],
-				'base' => [
-					'total_annual_benefit' => $scenarios['base']['total_annual_benefit'] ?? 0,
-					'labor_savings'        => $scenarios['base']['labor_savings'] ?? 0,
-					'fee_savings'          => $scenarios['base']['fee_savings'] ?? 0,
-					'error_reduction'      => $scenarios['base']['error_reduction'] ?? 0,
-				],
-				'high' => [
-					'total_annual_benefit' => $scenarios['optimistic']['total_annual_benefit'] ?? 0,
-					'labor_savings'        => $scenarios['optimistic']['labor_savings'] ?? 0,
-					'fee_savings'          => $scenarios['optimistic']['fee_savings'] ?? 0,
-					'error_reduction'      => $scenarios['optimistic']['error_reduction'] ?? 0,
-				],
-			];
+				if ( rtbcb_is_openai_configuration_error( $e ) ) {
+					$guidance          = __( 'Check the OpenAI API key setting in plugin options.', 'rtbcb' );
+					$sanitized_message = esc_html( $error_message );
+					$response_message  = __( 'Our AI analysis service is temporarily unavailable.', 'rtbcb' ) . ' ' . $guidance;
 
-			rtbcb_log_memory_usage( 'after_scenario_formatting' );
+					if ( function_exists( 'wp_get_environment_type' ) && 'production' !== wp_get_environment_type() ) {
+						$response_message = $sanitized_message . ' ' . $guidance;
+					} elseif ( current_user_can( 'manage_options' ) ) {
+						$response_message .= ' ' . $sanitized_message;
+					}
+				} else {
+					$response_message = __( 'Internal error. Please try again later.', 'rtbcb' );
+				}
 
-			// Generate HTML report
-			$report_html = '';
-			try {
-				$report_html = $this->get_comprehensive_report_html( $comprehensive_analysis );
-				if ( is_wp_error( $report_html ) || empty( $report_html ) ) {
-					rtbcb_log_error(
-						'Report HTML generation failed',
-						is_wp_error( $report_html ) ? $report_html->get_error_message() : $comprehensive_analysis
-					);
 					wp_send_json_error(
-						[ 'message' => __( 'Failed to render business case report.', 'rtbcb' ) ],
+						[
+							'message'    => $response_message,
+							'error_code' => $error_code,
+						],
 						500
 					);
 					return;
 				}
-				rtbcb_log_memory_usage( 'after_report_generation' );
-			} catch ( Exception $e ) {
-				rtbcb_log_error( 'Report generation failed', $e->getMessage() );
+			}
+
+		if ( empty( $comprehensive_analysis ) ) {
+			$error_code = 'E_LLM_EMPTY';
+			rtbcb_log_error( $error_code . ': LLM returned empty analysis', $user_inputs );
+			$guidance        = __( 'Check the OpenAI API key setting in plugin options.', 'rtbcb' );
+			$response_message = __( 'Our AI analysis service is temporarily unavailable.', 'rtbcb' ) . ' ' . $guidance;
+			if ( function_exists( 'wp_get_environment_type' ) && 'production' !== wp_get_environment_type() ) {
+				$response_message = __( 'LLM returned empty analysis.', 'rtbcb' ) . ' ' . $guidance;
+			}
+			wp_send_json_error(
+				[
+					'message'    => $response_message,
+					'error_code' => $error_code,
+				],
+				500
+			);
+			return;
+		}
+
+		if ( empty( $comprehensive_analysis['company_name'] ) ) {
+			$comprehensive_analysis['company_name'] = $user_inputs['company_name'];
+		}
+
+		// Format scenarios
+		$formatted_scenarios = [
+			'low'  => [
+				'total_annual_benefit' => $scenarios['conservative']['total_annual_benefit'] ?? 0,
+				'labor_savings'        => $scenarios['conservative']['labor_savings'] ?? 0,
+				'fee_savings'          => $scenarios['conservative']['fee_savings'] ?? 0,
+				'error_reduction'      => $scenarios['conservative']['error_reduction'] ?? 0,
+			],
+			'base' => [
+				'total_annual_benefit' => $scenarios['base']['total_annual_benefit'] ?? 0,
+				'labor_savings'        => $scenarios['base']['labor_savings'] ?? 0,
+				'fee_savings'          => $scenarios['base']['fee_savings'] ?? 0,
+				'error_reduction'      => $scenarios['base']['error_reduction'] ?? 0,
+			],
+			'high' => [
+				'total_annual_benefit' => $scenarios['optimistic']['total_annual_benefit'] ?? 0,
+				'labor_savings'        => $scenarios['optimistic']['labor_savings'] ?? 0,
+				'fee_savings'          => $scenarios['optimistic']['fee_savings'] ?? 0,
+				'error_reduction'      => $scenarios['optimistic']['error_reduction'] ?? 0,
+			],
+		];
+
+		rtbcb_log_memory_usage( 'after_scenario_formatting' );
+
+		// Generate HTML report
+		$report_html = '';
+		try {
+			$report_html = $this->get_comprehensive_report_html( $comprehensive_analysis );
+			if ( is_wp_error( $report_html ) || empty( $report_html ) ) {
+				rtbcb_log_error(
+					'Report HTML generation failed',
+					is_wp_error( $report_html ) ? $report_html->get_error_message() : $comprehensive_analysis
+				);
 				wp_send_json_error(
 					[ 'message' => __( 'Failed to render business case report.', 'rtbcb' ) ],
 					500
 				);
 				return;
 			}
-
-			// Save lead data (non-blocking)
-			$lead_id = null;
-			if ( class_exists( 'RTBCB_Leads' ) ) {
-				try {
-					$lead_data = [
-						'email'                  => $user_inputs['email'],
-						'company_size'           => $user_inputs['company_size'],
-						'industry'               => $user_inputs['industry'],
-						'hours_reconciliation'   => $user_inputs['hours_reconciliation'],
-						'hours_cash_positioning' => $user_inputs['hours_cash_positioning'],
-						'num_banks'              => $user_inputs['num_banks'],
-						'ftes'                   => $user_inputs['ftes'],
-						'pain_points'            => $user_inputs['pain_points'],
-						'recommended_category'   => $recommendation['recommended'] ?? '',
-						'roi_low'                => $formatted_scenarios['low']['total_annual_benefit'],
-						'roi_base'               => $formatted_scenarios['base']['total_annual_benefit'],
-						'roi_high'               => $formatted_scenarios['high']['total_annual_benefit'],
-						'report_html'            => $report_html,
-					];
-
-					$lead_id = RTBCB_Leads::save_lead( $lead_data );
-					if ( false === $lead_id ) {
-						rtbcb_log_error( 'Failed to save lead', $lead_data );
-					}
-					rtbcb_log_memory_usage( 'after_lead_save' );
-				} catch ( Throwable $e ) {
-					rtbcb_log_error( 'Failed to save lead', $e->getMessage() );
-				}
-			}
-
-			// Prepare final response
-			$response_data = [
-				'scenarios'              => $formatted_scenarios,
-				'recommendation'         => $recommendation,
-				'comprehensive_analysis' => $comprehensive_analysis,
-				'narrative'              => $comprehensive_analysis,
-				'rag_context'            => $rag_context,
-				'report_html'            => $report_html,
-				'lead_id'                => $lead_id,
-				'company_name'           => $user_inputs['company_name'],
-				'analysis_type'          => rtbcb_get_analysis_type(),
-				'api_used'               => ! empty( get_option( 'rtbcb_openai_api_key' ) ),
-				'fallback_used'          => isset( $comprehensive_analysis['enhanced_fallback'] ),
-				'memory_info'            => rtbcb_get_memory_status(),
-			];
-
-			rtbcb_log_memory_usage( 'before_response' );
-
-			wp_send_json_success( $response_data );
+			rtbcb_log_memory_usage( 'after_report_generation' );
+		} catch ( Exception $e ) {
+			rtbcb_log_error( 'Report generation failed', $e->getMessage() );
+			wp_send_json_error(
+				[ 'message' => __( 'Failed to render business case report.', 'rtbcb' ) ],
+				500
+			);
 			return;
+		}
+
+		// Save lead data (non-blocking)
+		$lead_id = null;
+		if ( class_exists( 'RTBCB_Leads' ) ) {
+			try {
+				$lead_data = [
+					'email'                  => $user_inputs['email'],
+					'company_size'           => $user_inputs['company_size'],
+					'industry'               => $user_inputs['industry'],
+					'hours_reconciliation'   => $user_inputs['hours_reconciliation'],
+					'hours_cash_positioning' => $user_inputs['hours_cash_positioning'],
+					'num_banks'              => $user_inputs['num_banks'],
+					'ftes'                   => $user_inputs['ftes'],
+					'pain_points'            => $user_inputs['pain_points'],
+					'recommended_category'   => $recommendation['recommended'] ?? '',
+					'roi_low'                => $formatted_scenarios['low']['total_annual_benefit'],
+					'roi_base'               => $formatted_scenarios['base']['total_annual_benefit'],
+					'roi_high'               => $formatted_scenarios['high']['total_annual_benefit'],
+					'report_html'            => $report_html,
+				];
+
+				$lead_id = RTBCB_Leads::save_lead( $lead_data );
+				if ( false === $lead_id ) {
+					rtbcb_log_error( 'Failed to save lead', $lead_data );
+				}
+				rtbcb_log_memory_usage( 'after_lead_save' );
+			} catch ( Throwable $e ) {
+				rtbcb_log_error( 'Failed to save lead', $e->getMessage() );
+			}
+		}
+
+		// Prepare final response
+		$response_data = [
+			'scenarios'              => $formatted_scenarios,
+			'recommendation'         => $recommendation,
+			'comprehensive_analysis' => $comprehensive_analysis,
+			'narrative'              => $comprehensive_analysis,
+			'rag_context'            => $rag_context,
+			'report_html'            => $report_html,
+			'lead_id'                => $lead_id,
+			'company_name'           => $user_inputs['company_name'],
+			'analysis_type'          => rtbcb_get_analysis_type(),
+			'api_used'               => ! empty( get_option( 'rtbcb_openai_api_key' ) ),
+			'fallback_used'          => isset( $comprehensive_analysis['enhanced_fallback'] ),
+			'memory_info'            => rtbcb_get_memory_status(),
+		];
+
+		rtbcb_log_memory_usage( 'before_response' );
+
+		wp_send_json_success( $response_data );
+		return;
 
 		} catch ( Exception $e ) {
-			rtbcb_log_memory_usage( 'exception_occurred' );
-			rtbcb_log_error(
-				'Ajax exception',
-				$e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine()
-			);
-			wp_send_json_error(
-				[ 'message' => __( 'An error occurred while generating your business case. Please try again.', 'rtbcb' ) ],
-				500
-			);
-			return;
+		rtbcb_log_memory_usage( 'exception_occurred' );
+		rtbcb_log_error(
+			'Ajax exception',
+			$e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine()
+		);
+		wp_send_json_error(
+			[ 'message' => __( 'An error occurred while generating your business case. Please try again.', 'rtbcb' ) ],
+			500
+		);
+		return;
 		} catch ( Error $e ) {
-			rtbcb_log_memory_usage( 'fatal_error_occurred' );
-			rtbcb_log_error(
-				'Ajax fatal error',
-				$e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine()
-			);
-			wp_send_json_error(
-				[ 'message' => __( 'A system error occurred. Please contact support.', 'rtbcb' ) ],
-				500
-			);
-			return;
+		rtbcb_log_memory_usage( 'fatal_error_occurred' );
+		rtbcb_log_error(
+			'Ajax fatal error',
+			$e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine()
+		);
+		wp_send_json_error(
+			[ 'message' => __( 'A system error occurred. Please contact support.', 'rtbcb' ) ],
+			500
+		);
+		return;
 		}
 	}
 	/**
@@ -1968,34 +1967,34 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 
 	$cached_html = wp_cache_get( $cache_key, 'rtbcb_reports' );
 		if ( false !== $cached_html ) {
-			return $cached_html;
+		return $cached_html;
 		}
 
 		if ( null === $report_data ) {
-			// Transform data structure for template.
-			$report_data = $this->transform_data_for_template( $business_case_data );
+		// Transform data structure for template.
+		$report_data = $this->transform_data_for_template( $business_case_data );
 
-			if ( is_wp_error( $report_data ) ) {
-				$error_data = $report_data->get_error_data();
-				rtbcb_log_error(
-					'Report data transformation failed',
-					[
-						'error'        => $report_data->get_error_message(),
-						'missing_keys' => $error_data['status']['missing_keys'] ?? [],
-					]
-				);
+		if ( is_wp_error( $report_data ) ) {
+			$error_data = $report_data->get_error_data();
+			rtbcb_log_error(
+				'Report data transformation failed',
+				[
+					'error'        => $report_data->get_error_message(),
+					'missing_keys' => $error_data['status']['missing_keys'] ?? [],
+				]
+			);
 
-				return $report_data;
-			}
+			return $report_data;
+		}
 
-			if ( isset( $report_data['status'] ) && empty( $report_data['status']['valid'] ) ) {
-				rtbcb_log_error(
-					'Report data validation failed',
-					[
-						'missing_keys' => $report_data['status']['missing_keys'],
-					]
-				);
-			}
+		if ( isset( $report_data['status'] ) && empty( $report_data['status']['valid'] ) ) {
+			rtbcb_log_error(
+				'Report data validation failed',
+				[
+					'missing_keys' => $report_data['status']['missing_keys'],
+				]
+			);
+		}
 		}
 
 		try {
@@ -2099,54 +2098,54 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 	// Create structured data format expected by template.
 	$report_data = [
 		'metadata'           => [
-			'company_name'     => $company_name,
-			'analysis_date'    => current_time( 'Y-m-d' ),
-			'analysis_type'    => rtbcb_get_analysis_type(),
-			'confidence_level' => floatval( $business_case_data['confidence'] ),
-			'processing_time'  => intval( $business_case_data['processing_time'] ),
+		'company_name'     => $company_name,
+		'analysis_date'    => current_time( 'Y-m-d' ),
+		'analysis_type'    => rtbcb_get_analysis_type(),
+		'confidence_level' => floatval( $business_case_data['confidence'] ),
+		'processing_time'  => intval( $business_case_data['processing_time'] ),
 		],
 		'executive_summary'  => [
-			'strategic_positioning'    => wp_kses_post( $business_case_data['executive_summary'] ?: $business_case_data['narrative'] ),
-			'key_value_drivers'       => $this->extract_value_drivers( $business_case_data ),
-			'executive_recommendation' => wp_kses_post( $business_case_data['executive_recommendation'] ?: $business_case_data['recommendation'] ),
-			'business_case_strength'  => $this->determine_business_case_strength( $business_case_data ),
+		'strategic_positioning'    => wp_kses_post( $business_case_data['executive_summary'] ?: $business_case_data['narrative'] ),
+		'key_value_drivers'       => $this->extract_value_drivers( $business_case_data ),
+		'executive_recommendation' => wp_kses_post( $business_case_data['executive_recommendation'] ?: $business_case_data['recommendation'] ),
+		'business_case_strength'  => $this->determine_business_case_strength( $business_case_data ),
 		],
 		'financial_analysis' => [
-			'roi_scenarios'      => $this->format_roi_scenarios( $business_case_data ),
-			'payback_analysis'   => [
-				'payback_months' => sanitize_text_field( $business_case_data['payback_months'] ),
-			],
-			'sensitivity_analysis' => $business_case_data['sensitivity_analysis'],
+		'roi_scenarios'      => $this->format_roi_scenarios( $business_case_data ),
+		'payback_analysis'   => [
+			'payback_months' => sanitize_text_field( $business_case_data['payback_months'] ),
+		],
+		'sensitivity_analysis' => $business_case_data['sensitivity_analysis'],
 		],
 		'company_intelligence' => [
-			'enriched_profile' => [
-				'enhanced_description' => wp_kses_post( $business_case_data['company_analysis'] ),
-				'maturity_level'       => sanitize_text_field( $business_case_data['maturity_level'] ),
-				'treasury_maturity'    => [
-					'current_state' => wp_kses_post( $business_case_data['current_state_analysis'] ),
-				],
-			],
-			'industry_context' => [
-				'sector_analysis' => [
-					'market_dynamics' => wp_kses_post( $business_case_data['market_analysis'] ),
-				],
-				'benchmarking'   => [
-					'technology_penetration' => sanitize_text_field( $business_case_data['tech_adoption_level'] ),
-				],
+		'enriched_profile' => [
+			'enhanced_description' => wp_kses_post( $business_case_data['company_analysis'] ),
+			'maturity_level'       => sanitize_text_field( $business_case_data['maturity_level'] ),
+			'treasury_maturity'    => [
+				'current_state' => wp_kses_post( $business_case_data['current_state_analysis'] ),
 			],
 		],
+		'industry_context' => [
+			'sector_analysis' => [
+				'market_dynamics' => wp_kses_post( $business_case_data['market_analysis'] ),
+			],
+			'benchmarking'   => [
+				'technology_penetration' => sanitize_text_field( $business_case_data['tech_adoption_level'] ),
+			],
+		],
+		],
 		'technology_strategy' => [
-			'recommended_category' => $recommended_category,
-			'category_details'     => $category_details,
+		'recommended_category' => $recommended_category,
+		'category_details'     => $category_details,
 		],
 		'operational_insights' => $operational_analysis,
 		'risk_analysis'        => [
-			'implementation_risks' => $implementation_risks,
+		'implementation_risks' => $implementation_risks,
 		],
 		'action_plan'          => [
-			'immediate_steps'      => $this->extract_immediate_steps( $business_case_data ),
-			'short_term_milestones'=> $this->extract_short_term_steps( $business_case_data ),
-			'long_term_objectives' => $this->extract_long_term_steps( $business_case_data ),
+		'immediate_steps'      => $this->extract_immediate_steps( $business_case_data ),
+		'short_term_milestones'=> $this->extract_short_term_steps( $business_case_data ),
+		'long_term_objectives' => $this->extract_long_term_steps( $business_case_data ),
 		],
 	];
 
@@ -2163,31 +2162,31 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 
 	$section_defaults = [
 		'metadata'           => [
-			'company_name'     => '',
-			'analysis_date'    => '',
-			'analysis_type'    => '',
-			'confidence_level' => 0,
-			'processing_time'  => 0,
+		'company_name'     => '',
+		'analysis_date'    => '',
+		'analysis_type'    => '',
+		'confidence_level' => 0,
+		'processing_time'  => 0,
 		],
 		'executive_summary'  => [
-			'strategic_positioning'    => '',
-			'key_value_drivers'       => [],
-			'executive_recommendation' => '',
-			'business_case_strength'  => '',
+		'strategic_positioning'    => '',
+		'key_value_drivers'       => [],
+		'executive_recommendation' => '',
+		'business_case_strength'  => '',
 		],
 		'financial_analysis' => [
-			'roi_scenarios'      => [],
-			'payback_analysis'   => [ 'payback_months' => '' ],
-			'sensitivity_analysis' => [],
+		'roi_scenarios'      => [],
+		'payback_analysis'   => [ 'payback_months' => '' ],
+		'sensitivity_analysis' => [],
 		],
 		'company_intelligence' => [],
 		'technology_strategy'  => [],
 		'operational_insights' => [],
 		'risk_analysis'        => [ 'implementation_risks' => [] ],
 		'action_plan'          => [
-			'immediate_steps'       => [],
-			'short_term_milestones' => [],
-			'long_term_objectives'  => [],
+		'immediate_steps'       => [],
+		'short_term_milestones' => [],
+		'long_term_objectives'  => [],
 		],
 	];
 
@@ -2195,14 +2194,14 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 
 	foreach ( $required_sections as $section ) {
 		if ( empty( $report_data[ $section ] ) ) {
-			$missing_sections[] = $section;
-			rtbcb_log_error(
-				'Missing report data section',
-				[
-					'section' => $section,
-				]
-			);
-			$report_data[ $section ] = $section_defaults[ $section ];
+		$missing_sections[] = $section;
+		rtbcb_log_error(
+			'Missing report data section',
+			[
+				'section' => $section,
+			]
+		);
+		$report_data[ $section ] = $section_defaults[ $section ];
 		}
 	}
 
@@ -2213,9 +2212,9 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 
 	if ( ! empty( $missing_sections ) ) {
 		return new WP_Error(
-			'rtbcb_missing_report_sections',
-			__( 'Missing required report sections.', 'rtbcb' ),
-			$report_data
+		'rtbcb_missing_report_sections',
+		__( 'Missing required report sections.', 'rtbcb' ),
+		$report_data
 		);
 	}
 
@@ -2240,10 +2239,10 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 	} else {
 		// Default value drivers.
 		$drivers = [
-			__( 'Automated cash management processes', 'rtbcb' ),
-			__( 'Enhanced financial visibility and reporting', 'rtbcb' ),
-			__( 'Reduced operational risk and errors', 'rtbcb' ),
-			__( 'Improved regulatory compliance', 'rtbcb' ),
+		__( 'Automated cash management processes', 'rtbcb' ),
+		__( 'Enhanced financial visibility and reporting', 'rtbcb' ),
+		__( 'Reduced operational risk and errors', 'rtbcb' ),
+		__( 'Improved regulatory compliance', 'rtbcb' ),
 		];
 	}
 
@@ -2270,22 +2269,22 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 	// Fallback to default structure.
 	return [
 		'conservative' => [
-			'total_annual_benefit' => $data['roi_low'] ?? 0,
-			'labor_savings'        => ( $data['roi_low'] ?? 0 ) * 0.6,
-			'fee_savings'          => ( $data['roi_low'] ?? 0 ) * 0.3,
-			'error_reduction'      => ( $data['roi_low'] ?? 0 ) * 0.1,
+		'total_annual_benefit' => $data['roi_low'] ?? 0,
+		'labor_savings'        => ( $data['roi_low'] ?? 0 ) * 0.6,
+		'fee_savings'          => ( $data['roi_low'] ?? 0 ) * 0.3,
+		'error_reduction'      => ( $data['roi_low'] ?? 0 ) * 0.1,
 		],
 		'base' => [
-			'total_annual_benefit' => $data['roi_base'] ?? 0,
-			'labor_savings'        => ( $data['roi_base'] ?? 0 ) * 0.6,
-			'fee_savings'          => ( $data['roi_base'] ?? 0 ) * 0.3,
-			'error_reduction'      => ( $data['roi_base'] ?? 0 ) * 0.1,
+		'total_annual_benefit' => $data['roi_base'] ?? 0,
+		'labor_savings'        => ( $data['roi_base'] ?? 0 ) * 0.6,
+		'fee_savings'          => ( $data['roi_base'] ?? 0 ) * 0.3,
+		'error_reduction'      => ( $data['roi_base'] ?? 0 ) * 0.1,
 		],
 		'optimistic' => [
-			'total_annual_benefit' => $data['roi_high'] ?? 0,
-			'labor_savings'        => ( $data['roi_high'] ?? 0 ) * 0.6,
-			'fee_savings'          => ( $data['roi_high'] ?? 0 ) * 0.3,
-			'error_reduction'      => ( $data['roi_high'] ?? 0 ) * 0.1,
+		'total_annual_benefit' => $data['roi_high'] ?? 0,
+		'labor_savings'        => ( $data['roi_high'] ?? 0 ) * 0.6,
+		'fee_savings'          => ( $data['roi_high'] ?? 0 ) * 0.3,
+		'error_reduction'      => ( $data['roi_high'] ?? 0 ) * 0.1,
 		],
 	];
 	}
@@ -2371,31 +2370,31 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 	public function admin_notices() {
 		// Check if API key is configured
 		if ( current_user_can( 'manage_options' ) && empty( get_option( 'rtbcb_openai_api_key' ) ) ) {
-			$settings_url = admin_url( 'admin.php?page=rtbcb-settings' );
-			echo '<div class="notice notice-warning is-dismissible">';
-			echo '<p>';
-			printf(
-				wp_kses(
-					__( '<strong>Real Treasury Business Case Builder:</strong> Please <a href="%s">configure your OpenAI API key</a> to enable business case generation.', 'rtbcb' ),
-					[ 'strong' => [], 'a' => [ 'href' => [] ] ]
-				),
-				esc_url( $settings_url )
-			);
-			echo '</p>';
-			echo '</div>';
+		$settings_url = admin_url( 'admin.php?page=rtbcb-settings' );
+		echo '<div class="notice notice-warning is-dismissible">';
+		echo '<p>';
+		printf(
+			wp_kses(
+				__( '<strong>Real Treasury Business Case Builder:</strong> Please <a href="%s">configure your OpenAI API key</a> to enable business case generation.', 'rtbcb' ),
+				[ 'strong' => [], 'a' => [ 'href' => [] ] ]
+			),
+			esc_url( $settings_url )
+		);
+		echo '</p>';
+		echo '</div>';
 		}
 
 		// Show upgrade notice if applicable
 		if ( get_transient( 'rtbcb_show_upgrade_notice' ) ) {
-			echo '<div class="notice notice-success is-dismissible">';
-			echo '<p>';
-			printf(
-				esc_html__( 'Real Treasury Business Case Builder has been upgraded to version %s with new features including PDF reports, analytics, and enhanced lead tracking!', 'rtbcb' ),
-				RTBCB_VERSION
-			);
-			echo '</p>';
-			echo '</div>';
-			delete_transient( 'rtbcb_show_upgrade_notice' );
+		echo '<div class="notice notice-success is-dismissible">';
+		echo '<p>';
+		printf(
+			esc_html__( 'Real Treasury Business Case Builder has been upgraded to version %s with new features including PDF reports, analytics, and enhanced lead tracking!', 'rtbcb' ),
+			RTBCB_VERSION
+		);
+		echo '</p>';
+		echo '</div>';
+		delete_transient( 'rtbcb_show_upgrade_notice' );
 		}
 	}
 
@@ -2407,16 +2406,16 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 	*/
 	public function plugin_action_links( $links ) {
 		$custom_links = [
-			'settings' => sprintf(
-				'<a href="%s">%s</a>',
-				admin_url( 'admin.php?page=rtbcb-settings' ),
-				__( 'Settings', 'rtbcb' )
-			),
-			'dashboard' => sprintf(
-				'<a href="%s">%s</a>',
-				admin_url( 'admin.php?page=rtbcb-dashboard' ),
-				__( 'Dashboard', 'rtbcb' )
-			),
+		'settings' => sprintf(
+			'<a href="%s">%s</a>',
+			admin_url( 'admin.php?page=rtbcb-settings' ),
+			__( 'Settings', 'rtbcb' )
+		),
+		'dashboard' => sprintf(
+			'<a href="%s">%s</a>',
+			admin_url( 'admin.php?page=rtbcb-dashboard' ),
+			__( 'Dashboard', 'rtbcb' )
+		),
 		];
 
 		return array_merge( $custom_links, $links );
@@ -2476,62 +2475,62 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 
 		// Remove database tables
 		$tables = [
-			$wpdb->prefix . 'rtbcb_leads',
-			$wpdb->prefix . 'rtbcb_rag_index',
+		$wpdb->prefix . 'rtbcb_leads',
+		$wpdb->prefix . 'rtbcb_rag_index',
 		];
 
 		foreach ( $tables as $table ) {
-			$wpdb->query( "DROP TABLE IF EXISTS {$table}" );
+		$wpdb->query( "DROP TABLE IF EXISTS {$table}" );
 		}
 
 		// Remove options
 		$options = [
-			'rtbcb_version',
-			'rtbcb_db_version',
-			'rtbcb_openai_api_key',
-			'rtbcb_mini_model',
-			'rtbcb_premium_model',
-			'rtbcb_embedding_model',
-			'rtbcb_labor_cost_per_hour',
-			'rtbcb_bank_fee_baseline',
-			'rtbcb_pdf_enabled',
-			'rtbcb_last_indexed',
-			'rtbcb_settings',
-			'rtbcb_contact_form_id',
+		'rtbcb_version',
+		'rtbcb_db_version',
+		'rtbcb_openai_api_key',
+		'rtbcb_mini_model',
+		'rtbcb_premium_model',
+		'rtbcb_embedding_model',
+		'rtbcb_labor_cost_per_hour',
+		'rtbcb_bank_fee_baseline',
+		'rtbcb_pdf_enabled',
+		'rtbcb_last_indexed',
+		'rtbcb_settings',
+		'rtbcb_contact_form_id',
 		];
 
 		foreach ( $options as $option ) {
-			delete_option( $option );
+		delete_option( $option );
 		}
 
 		// Remove user capabilities
 		$roles = wp_roles();
 		foreach ( $roles->roles as $role_name => $role_info ) {
-			$role = get_role( $role_name );
-			if ( $role ) {
-				$role->remove_cap( 'manage_rtbcb' );
-				$role->remove_cap( 'view_rtbcb_leads' );
-				$role->remove_cap( 'export_rtbcb_data' );
-			}
+		$role = get_role( $role_name );
+		if ( $role ) {
+			$role->remove_cap( 'manage_rtbcb' );
+			$role->remove_cap( 'view_rtbcb_leads' );
+			$role->remove_cap( 'export_rtbcb_data' );
+		}
 		}
 
 		// Remove uploaded files
 		$upload_dir = wp_get_upload_dir();
 		$plugin_dirs = [
-			$upload_dir['basedir'] . '/rtbcb-reports',
-			$upload_dir['basedir'] . '/rtbcb-temp',
+		$upload_dir['basedir'] . '/rtbcb-reports',
+		$upload_dir['basedir'] . '/rtbcb-temp',
 		];
 
 		foreach ( $plugin_dirs as $dir ) {
-			if ( is_dir( $dir ) ) {
-				$files = glob( $dir . '/*' );
-				foreach ( $files as $file ) {
-					if ( is_file( $file ) ) {
-						unlink( $file );
-					}
+		if ( is_dir( $dir ) ) {
+			$files = glob( $dir . '/*' );
+			foreach ( $files as $file ) {
+				if ( is_file( $file ) ) {
+					unlink( $file );
 				}
-				rmdir( $dir );
 			}
+			rmdir( $dir );
+		}
 		}
 
 		error_log( 'RTBCB: Plugin uninstalled and data cleaned up' );
@@ -2545,7 +2544,7 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 	*/
 	public function get_plugin_data( $key = null ) {
 		if ( $key ) {
-			return $this->plugin_data[ $key ] ?? null;
+		return $this->plugin_data[ $key ] ?? null;
 		}
 		return $this->plugin_data;
 	}
@@ -2567,13 +2566,13 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 		$table_exists = ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) ) === $table_name );
 
 		$diagnostics = [
-			'wp_functions'     => function_exists( 'add_action' ) && function_exists( 'wp_send_json_success' ),
-			'required_classes' => class_exists( 'RTBCB_Calculator' ) && class_exists( 'RTBCB_DB' ),
-			'nonce_valid'      => $nonce_valid,
-			'post_keys'        => $post_keys,
-			'api_key_present'  => ! empty( $api_key ),
-			'db_table_exists'  => $table_exists,
-			'memory_usage'     => size_format( memory_get_usage( true ) ),
+		'wp_functions'     => function_exists( 'add_action' ) && function_exists( 'wp_send_json_success' ),
+		'required_classes' => class_exists( 'RTBCB_Calculator' ) && class_exists( 'RTBCB_DB' ),
+		'nonce_valid'      => $nonce_valid,
+		'post_keys'        => $post_keys,
+		'api_key_present'  => ! empty( $api_key ),
+		'db_table_exists'  => $table_exists,
+		'memory_usage'     => size_format( memory_get_usage( true ) ),
 		];
 
 		wp_send_json_success( $diagnostics );
@@ -2586,32 +2585,32 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 	*/
 	public function ajax_generate_case_simple() {
 		if ( ! check_ajax_referer( 'rtbcb_simple', 'rtbcb_nonce', false ) ) {
-			wp_send_json_error( __( 'Security check failed.', 'rtbcb' ), 403 );
+		wp_send_json_error( __( 'Security check failed.', 'rtbcb' ), 403 );
 		}
 
 		$investment_raw = wp_unslash( $_POST['investment'] ?? '' );
 		$returns_raw    = wp_unslash( $_POST['returns'] ?? '' );
 
 		if ( ! is_numeric( $investment_raw ) || ! is_numeric( $returns_raw ) ) {
-			wp_send_json_error( __( 'Invalid values provided.', 'rtbcb' ), 400 );
+		wp_send_json_error( __( 'Invalid values provided.', 'rtbcb' ), 400 );
 		}
 
 		$investment = floatval( $investment_raw );
 		$returns    = floatval( $returns_raw );
 
 		if ( $investment <= 0 || $returns <= 0 ) {
-			wp_send_json_error( __( 'Invalid values provided.', 'rtbcb' ), 400 );
+		wp_send_json_error( __( 'Invalid values provided.', 'rtbcb' ), 400 );
 		}
 
 		$roi = 0;
 		if ( $investment > 0 ) {
-			$roi = ( ( $returns - $investment ) / $investment ) * 100;
+		$roi = ( ( $returns - $investment ) / $investment ) * 100;
 		}
 
 		wp_send_json_success(
-			[
-				'roi' => round( $roi, 2 ),
-			]
+		[
+			'roi' => round( $roi, 2 ),
+		]
 		);
 	}
 
@@ -2730,9 +2729,9 @@ function rtbcb_handle_company_overview_simple() {
 
 	wp_send_json_success(
 		[
-			'message'         => sprintf( __( 'Processing started for %s', 'rtbcb' ), $company_name ),
-			'status'          => 'processing',
-			'simple_analysis' => rtbcb_get_simple_company_info( $company_name ),
+		'message'         => sprintf( __( 'Processing started for %s', 'rtbcb' ), $company_name ),
+		'status'          => 'processing',
+		'simple_analysis' => rtbcb_get_simple_company_info( $company_name ),
 		]
 	);
 }
@@ -2747,13 +2746,13 @@ function rtbcb_get_simple_company_info( $company_name ) {
 	return [
 		'analysis'        => sprintf( __( 'Analysis requested for %s. This is a placeholder response to test the connection without LLM calls.', 'rtbcb' ), $company_name ),
 		'recommendations' => [
-			__( 'Implement treasury management system', 'rtbcb' ),
-			__( 'Automate cash forecasting', 'rtbcb' ),
-			__( 'Improve bank connectivity', 'rtbcb' ),
+		__( 'Implement treasury management system', 'rtbcb' ),
+		__( 'Automate cash forecasting', 'rtbcb' ),
+		__( 'Improve bank connectivity', 'rtbcb' ),
 		],
 		'references'      => [
-			esc_url_raw( 'https://www.afponline.org' ),
-			esc_url_raw( 'https://www.treasury.gov' ),
+		esc_url_raw( 'https://www.afponline.org' ),
+		esc_url_raw( 'https://www.treasury.gov' ),
 		],
 		'generated_at'    => current_time( 'Y-m-d H:i:s' ),
 	];
@@ -2794,10 +2793,10 @@ function rtbcb_ajax_generate_company_overview() {
 		$overview = rtbcb_test_generate_company_overview( $company_name );
 
 		if ( is_wp_error( $overview ) ) {
-			wp_send_json_error( [
-				'message' => sanitize_text_field( $overview->get_error_message() ),
-			] );
-			return;
+		wp_send_json_error( [
+			'message' => sanitize_text_field( $overview->get_error_message() ),
+		] );
+		return;
 		}
 
 		$analysis        = $overview['analysis'] ?? '';
@@ -2809,35 +2808,35 @@ function rtbcb_ajax_generate_company_overview() {
 		$timestamp    = current_time( 'mysql' );
 
 		$company_data = [
-			'name'            => $company_name,
-			'summary'         => sanitize_textarea_field( wp_strip_all_tags( $analysis ) ),
-			'size'            => $company_size,
-			'industry'        => $industry,
-			'recommendations' => $recommendations,
-			'references'      => $references,
-			'word_count'      => intval( $word_count ),
-			'generated_at'    => $timestamp,
+		'name'            => $company_name,
+		'summary'         => sanitize_textarea_field( wp_strip_all_tags( $analysis ) ),
+		'size'            => $company_size,
+		'industry'        => $industry,
+		'recommendations' => $recommendations,
+		'references'      => $references,
+		'word_count'      => intval( $word_count ),
+		'generated_at'    => $timestamp,
 		];
 
 		update_option( 'rtbcb_current_company', $company_data );
 
 		wp_send_json_success(
-			[
-				'overview'        => wp_kses_post( $analysis ),
-				'company_name'    => $company_name,
-				'recommendations' => $recommendations,
-				'references'      => $references,
-				'word_count'      => intval( $word_count ),
-				'elapsed_time'    => round( $elapsed_time, 2 ),
-				'generated_at'    => $timestamp,
-			]
+		[
+			'overview'        => wp_kses_post( $analysis ),
+			'company_name'    => $company_name,
+			'recommendations' => $recommendations,
+			'references'      => $references,
+			'word_count'      => intval( $word_count ),
+			'elapsed_time'    => round( $elapsed_time, 2 ),
+			'generated_at'    => $timestamp,
+		]
 		);
 	} catch ( Exception $e ) {
 		error_log( 'RTBCB Company Overview Error: ' . $e->getMessage() );
 		wp_send_json_error(
-			[
-				'message' => __( 'An error occurred while generating the overview. Please try again.', 'rtbcb' ),
-			]
+		[
+			'message' => __( 'An error occurred while generating the overview. Please try again.', 'rtbcb' ),
+		]
 		);
 	}
 }
@@ -2897,8 +2896,8 @@ function rtbcb_ajax_generate_real_treasury_overview() {
 		$overview = rtbcb_test_generate_real_treasury_overview( $include_portal, $categories );
 
 		if ( is_wp_error( $overview ) ) {
-			wp_send_json_error( [ 'message' => sanitize_text_field( $overview->get_error_message() ) ] );
-			return;
+		wp_send_json_error( [ 'message' => sanitize_text_field( $overview->get_error_message() ) ] );
+		return;
 		}
 
 		$word_count   = str_word_count( wp_strip_all_tags( $overview ) );
@@ -2906,21 +2905,21 @@ function rtbcb_ajax_generate_real_treasury_overview() {
 		$timestamp    = current_time( 'mysql' );
 
 		wp_send_json_success(
-			[
-				'overview'       => wp_kses_post( $overview ),
-				'include_portal' => $include_portal,
-				'categories'     => $categories,
-				'word_count'     => intval( $word_count ),
-				'elapsed_time'   => round( $elapsed_time, 2 ),
-				'generated_at'   => $timestamp,
-			]
+		[
+			'overview'       => wp_kses_post( $overview ),
+			'include_portal' => $include_portal,
+			'categories'     => $categories,
+			'word_count'     => intval( $word_count ),
+			'elapsed_time'   => round( $elapsed_time, 2 ),
+			'generated_at'   => $timestamp,
+		]
 		);
 	} catch ( Exception $e ) {
 		error_log( 'RTBCB Real Treasury Overview Error: ' . $e->getMessage() );
 		wp_send_json_error(
-			[
-				'message' => __( 'An error occurred while generating the overview. Please try again.', 'rtbcb' ),
-			]
+		[
+			'message' => __( 'An error occurred while generating the overview. Please try again.', 'rtbcb' ),
+		]
 		);
 	}
 }
@@ -2968,9 +2967,9 @@ function rtbcb_ajax_generate_category_recommendation() {
 }
 
 // Enqueue admin scripts for company overview page.
-add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_company_overview_scripts' );
-add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_real_treasury_overview_scripts' );
-add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_recommended_category_scripts' );
+add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_company_overview_scripts', 20 );
+add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_real_treasury_overview_scripts', 20 );
+add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_recommended_category_scripts', 20 );
 
 /**
 	* Enqueue admin scripts for company overview page.
@@ -2982,28 +2981,28 @@ function rtbcb_enqueue_company_overview_scripts( $hook ) {
 	$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
 	if ( strpos( $hook, 'rtbcb' ) !== false && ( strpos( $hook, 'company-overview' ) !== false || 'rtbcb-test-dashboard' === $page ) ) {
 		wp_enqueue_script(
-			'rtbcb-test-utils',
-			plugin_dir_url( __FILE__ ) . 'admin/js/rtbcb-test-utils.js',
-			[ 'jquery' ],
-			'1.0.0',
-			true
+		'rtbcb-test-utils',
+		plugin_dir_url( __FILE__ ) . 'admin/js/rtbcb-test-utils.js',
+		[ 'jquery' ],
+		'1.0.0',
+		true
 		);
 		wp_enqueue_script(
-			'rtbcb-company-overview',
-			plugin_dir_url( __FILE__ ) . 'admin/js/company-overview.js',
-			[ 'jquery', 'rtbcb-test-utils' ],
-			'1.0.0',
-			true
+		'rtbcb-company-overview',
+		plugin_dir_url( __FILE__ ) . 'admin/js/company-overview.js',
+		[ 'jquery', 'rtbcb-test-utils' ],
+		'1.0.0',
+		true
 		);
 
 		wp_localize_script(
-			'rtbcb-company-overview',
-			'rtbcb_ajax',
-			[
-				'ajax_url' => admin_url( 'admin-ajax.php' ),
-				'nonce'    => wp_create_nonce( 'rtbcb_test_company_overview' ),
-				'timeout'  => rtbcb_get_api_timeout() * 1000,
-			]
+		'rtbcb-company-overview',
+		'rtbcb_ajax',
+		[
+			'ajax_url' => admin_url( 'admin-ajax.php' ),
+			'nonce'    => wp_create_nonce( 'rtbcb_test_company_overview' ),
+			'timeout'  => rtbcb_get_api_timeout() * 1000,
+		]
 		);
 	}
 }
@@ -3018,27 +3017,27 @@ function rtbcb_enqueue_real_treasury_overview_scripts( $hook ) {
 	$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
 	if ( strpos( $hook, 'rtbcb' ) !== false && ( strpos( $hook, 'real-treasury-overview' ) !== false || 'rtbcb-test-dashboard' === $page ) ) {
 		wp_enqueue_script(
-			'rtbcb-test-utils',
-			plugin_dir_url( __FILE__ ) . 'admin/js/rtbcb-test-utils.js',
-			[ 'jquery' ],
-			'1.0.0',
-			true
+		'rtbcb-test-utils',
+		plugin_dir_url( __FILE__ ) . 'admin/js/rtbcb-test-utils.js',
+		[ 'jquery' ],
+		'1.0.0',
+		true
 		);
 		wp_enqueue_script(
-			'rtbcb-real-treasury-overview',
-			plugin_dir_url( __FILE__ ) . 'admin/js/real-treasury-overview.js',
-			[ 'jquery', 'rtbcb-test-utils' ],
-			'1.0.0',
-			true
+		'rtbcb-real-treasury-overview',
+		plugin_dir_url( __FILE__ ) . 'admin/js/real-treasury-overview.js',
+		[ 'jquery', 'rtbcb-test-utils' ],
+		'1.0.0',
+		true
 		);
 
 		wp_localize_script(
-			'rtbcb-real-treasury-overview',
-			'rtbcb_ajax',
-			[
-				'ajax_url' => admin_url( 'admin-ajax.php' ),
-				'nonce'    => wp_create_nonce( 'rtbcb_test_real_treasury_overview' ),
-			]
+		'rtbcb-real-treasury-overview',
+		'rtbcb_ajax',
+		[
+			'ajax_url' => admin_url( 'admin-ajax.php' ),
+			'nonce'    => wp_create_nonce( 'rtbcb_test_real_treasury_overview' ),
+		]
 		);
 	}
 }
@@ -3054,27 +3053,27 @@ function rtbcb_enqueue_recommended_category_scripts( $hook ) {
 
 	if ( false !== strpos( $page, 'recommended-category' ) || 'rtbcb-test-dashboard' === $page ) {
 		wp_enqueue_script(
-			'rtbcb-test-utils',
-			plugin_dir_url( __FILE__ ) . 'admin/js/rtbcb-test-utils.js',
-			[ 'jquery' ],
-			'1.0.0',
-			true
+		'rtbcb-test-utils',
+		plugin_dir_url( __FILE__ ) . 'admin/js/rtbcb-test-utils.js',
+		[ 'jquery' ],
+		'1.0.0',
+		true
 		);
 		wp_enqueue_script(
-			'rtbcb-recommended-category',
-			plugin_dir_url( __FILE__ ) . 'admin/js/recommended-category.js',
-			[ 'jquery', 'rtbcb-test-utils' ],
-			'1.0.0',
-			true
+		'rtbcb-recommended-category',
+		plugin_dir_url( __FILE__ ) . 'admin/js/recommended-category.js',
+		[ 'jquery', 'rtbcb-test-utils' ],
+		'1.0.0',
+		true
 		);
 
 		wp_localize_script(
-			'rtbcb-recommended-category',
-			'rtbcb_ajax',
-			[
-				'ajax_url' => admin_url( 'admin-ajax.php' ),
-				'nonce'    => wp_create_nonce( 'rtbcb_test_category_recommendation' ),
-			]
+		'rtbcb-recommended-category',
+		'rtbcb_ajax',
+		[
+			'ajax_url' => admin_url( 'admin-ajax.php' ),
+			'nonce'    => wp_create_nonce( 'rtbcb_test_category_recommendation' ),
+		]
 		);
 	}
 }

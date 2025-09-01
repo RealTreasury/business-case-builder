@@ -17,9 +17,9 @@ class RTBCB_Admin {
 	public function __construct() {
 		add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
 		add_action( 'admin_init', [ $this, 'register_settings' ] );
-		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );
-		add_action( 'admin_notices', [ $this, 'maybe_show_timeout_notice' ] );
-		add_action( 'admin_notices', [ $this, 'maybe_show_bypass_notice' ] );
+		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ], 10 );
+		add_action( 'admin_notices', [ $this, 'maybe_show_timeout_notice' ], 10 );
+		add_action( 'admin_notices', [ $this, 'maybe_show_bypass_notice' ], 20 );
 
 		// AJAX handlers
 		add_action( 'wp_ajax_rtbcb_test_connection', [ $this, 'test_api_connection' ] );
