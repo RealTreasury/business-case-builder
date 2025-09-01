@@ -780,29 +780,34 @@ return true;
 			* @return bool
 			*/
 		private function should_use_comprehensive_template() {
-$comprehensive_enabled = get_option( 'rtbcb_comprehensive_analysis', true );
+		$comprehensive_enabled = get_option( 'rtbcb_comprehensive_analysis', true );
 
-$template_path	= RTBCB_DIR . 'templates/comprehensive-report-template.php';
-$template_exists = file_exists( $template_path );
+		$template_path  = RTBCB_DIR . 'templates/comprehensive-report-template.php';
+		$template_exists = file_exists( $template_path );
 
-$css_path   = RTBCB_DIR . 'public/css/enhanced-report.css';
-$css_exists = file_exists( $css_path );
+		$css_path   = RTBCB_DIR . 'public/css/enhanced-report.css';
+		$css_exists = file_exists( $css_path );
 
-$use_comprehensive = $comprehensive_enabled && $template_exists && $css_exists;
-rtbcb_log_api_debug(
-				'Comprehensive template check',
-[
-				'enabled'	   => $comprehensive_enabled,
+		$use_comprehensive = $comprehensive_enabled && $template_exists && $css_exists;
+
+		error_log( 'RTBCB: Template selection - enabled: ' . ( $comprehensive_enabled ? 'YES' : 'NO' ) .
+			', template_exists: ' . ( $template_exists ? 'YES' : 'NO' ) .
+			', css_exists: ' . ( $css_exists ? 'YES' : 'NO' ) );
+
+		rtbcb_log_api_debug(
+			'Comprehensive template check',
+			[
+				'enabled'          => $comprehensive_enabled,
 				'template_exists'  => $template_exists,
-				'css_exists'	   => $css_exists,
-				'template_path'	   => $template_path,
-				'css_path'	   => $css_path,
+				'css_exists'       => $css_exists,
+				'template_path'    => $template_path,
+				'css_path'         => $css_path,
 				'use_comprehensive' => $use_comprehensive,
-]
-);
+			]
+		);
 
-return $use_comprehensive;
-}
+		return $use_comprehensive;
+	}
 
 	/**
 	* Shortcode handler.
@@ -1998,6 +2003,12 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 	* @return string|WP_Error
 	*/
 	private function get_comprehensive_report_html( $business_case_data ) {
+	$comprehensive_template = RTBCB_DIR . 'templates/comprehensive-report-template.php';
+	$basic_template         = RTBCB_DIR . 'templates/report-template.php';
+
+	error_log( 'RTBCB: Comprehensive template exists: ' . ( file_exists( $comprehensive_template ) ? 'YES' : 'NO' ) );
+	error_log( 'RTBCB: Basic template exists: ' . ( file_exists( $basic_template ) ? 'YES' : 'NO' ) );
+
 	$use_comprehensive = $this->should_use_comprehensive_template();
 
 	if ( $use_comprehensive ) {
