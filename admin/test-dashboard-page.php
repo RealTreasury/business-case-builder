@@ -6,6 +6,10 @@ defined( 'ABSPATH' ) || exit;
  *
  * @package RealTreasuryBusinessCaseBuilder
  */
+
+if ( ! current_user_can( 'manage_options' ) ) {
+	return;
+}
 $company_data   = get_option( 'rtbcb_company_data', [] );
 $company_name   = isset( $company_data['name'] ) ? sanitize_text_field( $company_data['name'] ) : '';
 $test_results  = get_option( 'rtbcb_test_results', [] );

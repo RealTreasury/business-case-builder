@@ -5,6 +5,10 @@ defined( 'ABSPATH' ) || exit;
  * Enhanced Leads admin page for Real Treasury Business Case Builder plugin.
  */
 
+if ( ! current_user_can( 'manage_options' ) ) {
+	return;
+}
+
 $current_page = $leads_data['current_page'] ?? 1;
 $total_pages = $leads_data['total_pages'] ?? 1;
 $total_leads = $leads_data['total'] ?? 0;
@@ -31,10 +35,11 @@ $date_to   = isset( $leads_data['date_to'] ) ? sanitize_text_field( $leads_data[
 		</div>
 	</div>
 
-	<!-- Filters -->
+<!-- Filters -->
 	<div class="rtbcb-filters">
 		<form method="get" action="">
 			<input type="hidden" name="page" value="rtbcb-leads" />
+			<?php wp_nonce_field( 'rtbcb_leads_filter', 'rtbcb_leads_filter_nonce' ); ?>
 
 			<div class="rtbcb-filter-row">
 				<div class="rtbcb-filter-group">
@@ -45,13 +50,13 @@ $date_to   = isset( $leads_data['date_to'] ) ? sanitize_text_field( $leads_data[
 				<div class="rtbcb-filter-group">
 					<label for="category"><?php esc_html_e( 'Category:', 'rtbcb' ); ?></label>
 					<select id="category" name="category">
-						<option value=""><?php esc_html_e( 'All Categories', 'rtbcb' ); ?></option>
+				<option value=""><?php esc_html_e( 'All Categories', 'rtbcb' ); ?></option>
 						<?php foreach ( $categories as $key => $cat_info ) : ?>
-							<option value="<?php echo esc_attr( $key ); ?>" <?php selected( $category, $key ); ?>>
+				<option value="<?php echo esc_attr( $key ); ?>" <?php selected( $category, $key ); ?>>
 								<?php echo esc_html( $cat_info['name'] ); ?>
 							</option>
 						<?php endforeach; ?>
-					</select>
+			</select>
 				</div>
 
 				<div class="rtbcb-filter-group">
@@ -65,7 +70,7 @@ $date_to   = isset( $leads_data['date_to'] ) ? sanitize_text_field( $leads_data[
 				</div>
 
 				<div class="rtbcb-filter-actions">
-					<button type="submit" class="button button-primary"><?php esc_html_e( 'Filter', 'rtbcb' ); ?></button>
+			<button type="submit" class="button button-primary"><?php esc_html_e( 'Filter', 'rtbcb' ); ?></button>
 					<a href="<?php echo esc_url( admin_url( 'admin.php?page=rtbcb-leads' ) ); ?>" class="button button-secondary"><?php esc_html_e( 'Clear', 'rtbcb' ); ?></a>
 				</div>
 			</div>
@@ -74,11 +79,12 @@ $date_to   = isset( $leads_data['date_to'] ) ? sanitize_text_field( $leads_data[
 
 	<!-- Bulk Actions -->
 	<div class="rtbcb-bulk-actions">
-		<form id="rtbcb-bulk-form">
+		<form id="rtbcb-bulk-form" method="post">
 			<select id="rtbcb-bulk-action">
 				<option value=""><?php esc_html_e( 'Bulk Actions', 'rtbcb' ); ?></option>
 				<option value="delete"><?php esc_html_e( 'Delete', 'rtbcb' ); ?></option>
 			</select>
+			<?php wp_nonce_field( 'rtbcb_nonce', 'rtbcb_nonce' ); ?>
 			<button type="submit" class="button button-secondary" disabled><?php esc_html_e( 'Apply', 'rtbcb' ); ?></button>
 		</form>
 	</div>

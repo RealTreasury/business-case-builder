@@ -7,6 +7,10 @@ defined( 'ABSPATH' ) || exit;
  * @package RealTreasuryBusinessCaseBuilder
  */
 
+if ( ! current_user_can( 'manage_options' ) ) {
+	return;
+}
+
 $labor_cost = get_option( 'rtbcb_labor_cost_per_hour', 0 );
 $bank_fee   = get_option( 'rtbcb_bank_fee_baseline', 0 );
 ?>
