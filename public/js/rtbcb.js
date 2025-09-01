@@ -246,7 +246,6 @@ async function pollJobStatus(jobId, progressContainer, formContainer) {
 }
 
 // Ensure the form submission is handled by our new function
-// eslint-disable-next-line @wordpress/no-global-event-listener
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('rtbcbForm');
     if (form) {

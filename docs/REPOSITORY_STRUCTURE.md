@@ -4,7 +4,7 @@
 
 Output of `find . -maxdepth 2 -type d -not -path './.git*'`:
 
-```
+```text
 .
 ./docs
 ./vendor
