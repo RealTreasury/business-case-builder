@@ -2649,18 +2649,21 @@ return $analysis;
 	* @param callable|null $chunk_handler    Optional streaming handler.
 	* @return array|WP_Error HTTP response array or WP_Error on failure.
 	*/
-	private function call_openai( $model, $prompt, $max_output_tokens = null, $chunk_handler = null ) {
-		if ( empty( $this->api_key ) ) {
-			return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
-		}
+private function call_openai( $model, $prompt, $max_output_tokens = null, $chunk_handler = null ) {
+if ( rtbcb_heavy_features_disabled() ) {
+return new WP_Error( 'heavy_features_disabled', __( 'AI features temporarily disabled.', 'rtbcb' ) );
+}
+if ( empty( $this->api_key ) ) {
+return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
+}
 
-		$endpoint         = 'https://api.openai.com/v1/responses'; // Correct endpoint.
-		$model_name       = sanitize_text_field( $model ?: 'gpt-5-mini' );
-		$model_name       = rtbcb_normalize_model_name( $model_name );
-		$default_tokens    = intval( $this->gpt5_config['max_output_tokens'] ?? 8000 );
-		$max_output_tokens = intval( $max_output_tokens ?? $default_tokens );
-		$min_tokens        = intval( $this->gpt5_config['min_output_tokens'] ?? 1 );
-		$max_output_tokens = min( 128000, max( $min_tokens, $max_output_tokens ) );
+$endpoint         = 'https://api.openai.com/v1/responses'; // Correct endpoint.
+$model_name       = sanitize_text_field( $model ?: 'gpt-5-mini' );
+$model_name       = rtbcb_normalize_model_name( $model_name );
+$default_tokens    = intval( $this->gpt5_config['max_output_tokens'] ?? 8000 );
+$max_output_tokens = intval( $max_output_tokens ?? $default_tokens );
+$min_tokens        = intval( $this->gpt5_config['min_output_tokens'] ?? 1 );
+$max_output_tokens = min( 128000, max( $min_tokens, $max_output_tokens ) );
 
 		if ( is_array( $prompt ) && isset( $prompt['input'] ) ) {
 			$instructions = sanitize_textarea_field( $prompt['instructions'] ?? '' );

@@ -106,12 +106,15 @@ class RTBCB_Main {
 		return true;
 		}
 
-		if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
-		$request_uri = isset( $_SERVER['REQUEST_URI'] ) ? wp_unslash( $_SERVER['REQUEST_URI'] ) : '';
-		if ( false !== strpos( $request_uri, '/jetpack/' ) ) {
-			return true;
-		}
-		}
+if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
+$request_uri = isset( $_SERVER['REQUEST_URI'] ) ? wp_unslash( $_SERVER['REQUEST_URI'] ) : '';
+if (
+false !== strpos( $request_uri, '/jetpack/' ) ||
+false !== strpos( $request_uri, '/wp-admin/rest-proxy/' )
+) {
+return true;
+}
+}
 
 		return false;
 	}
