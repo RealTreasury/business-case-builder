@@ -1,11 +1,11 @@
 <?php
-/**
-	* Partial for Test ROI Calculator section.
-	*
-	* @package RealTreasuryBusinessCaseBuilder
-	*/
-
 defined( 'ABSPATH' ) || exit;
+
+/**
+ * Partial for Test ROI Calculator section.
+ *
+ * @package RealTreasuryBusinessCaseBuilder
+ */
 
 if ( ! rtbcb_require_completed_steps( 'rtbcb-test-roi-calculator', false ) ) {
 	echo '<div class="notice notice-warning inline"><p>' .

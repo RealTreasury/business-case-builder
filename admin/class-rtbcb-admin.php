@@ -1,11 +1,11 @@
 <?php
-/**
-	* Enhanced admin functionality for Real Treasury Business Case Builder plugin.
-	*
-	* @package RealTreasuryBusinessCaseBuilder
-	*/
-
 defined( 'ABSPATH' ) || exit;
+
+/**
+ * Enhanced admin functionality for Real Treasury Business Case Builder plugin.
+ *
+ * @package RealTreasuryBusinessCaseBuilder
+ */
 
 /**
 	* Enhanced admin class with full feature integration.

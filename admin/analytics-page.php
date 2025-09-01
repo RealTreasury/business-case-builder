@@ -1,10 +1,9 @@
 <?php
-/**
-	* Analytics admin page for Real Treasury Business Case Builder plugin.
-	*/
-
-// Exit if accessed directly.
 defined( 'ABSPATH' ) || exit;
+
+/**
+ * Analytics admin page for Real Treasury Business Case Builder plugin.
+ */
 
 $categories = RTBCB_Category_Recommender::get_all_categories();
 $total_leads = $stats['total_leads'] ?? 0;

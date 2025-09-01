@@ -1,11 +1,11 @@
 <?php
-/**
-	* Partial for Test Industry Overview section.
-	*
-	* @package RealTreasuryBusinessCaseBuilder
-	*/
-
 defined( 'ABSPATH' ) || exit;
+
+/**
+ * Partial for Test Industry Overview section.
+ *
+ * @package RealTreasuryBusinessCaseBuilder
+ */
 
 $allowed = rtbcb_require_completed_steps( 'rtbcb-test-industry-overview', false );
 if ( ! $allowed ) {

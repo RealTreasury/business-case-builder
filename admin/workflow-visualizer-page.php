@@ -1,11 +1,12 @@
 <?php
-/**
-	* Workflow Visualizer admin page.
-	*
-	* @package RealTreasuryBusinessCaseBuilder
-	*/
-
 defined( 'ABSPATH' ) || exit;
+
+/**
+ * Workflow Visualizer admin page.
+ *
+ * @package RealTreasuryBusinessCaseBuilder
+ */
+
 ?>
 <div class="wrap rtbcb-workflow-visualizer">
 <h1><?php echo esc_html__( 'Treasury Report Workflow Visualizer', 'rtbcb' ); ?></h1>

@@ -1,11 +1,11 @@
 <?php
-/**
-	* Partial for Test Maturity Model section.
-	*
-	* @package RealTreasuryBusinessCaseBuilder
-	*/
-
 defined( 'ABSPATH' ) || exit;
+
+/**
+ * Partial for Test Maturity Model section.
+ *
+ * @package RealTreasuryBusinessCaseBuilder
+ */
 
 if ( ! rtbcb_require_completed_steps( 'rtbcb-test-maturity-model', false ) ) {
 	echo '<div class="notice notice-warning inline"><p>' .

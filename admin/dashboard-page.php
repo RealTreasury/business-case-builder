@@ -1,10 +1,9 @@
 <?php
-/**
-	* Enhanced Dashboard admin page for Real Treasury Business Case Builder plugin.
-	*/
-
-// Exit if accessed directly.
 defined( 'ABSPATH' ) || exit;
+
+/**
+ * Enhanced Dashboard admin page for Real Treasury Business Case Builder plugin.
+ */
 
 $total_leads = $stats['total_leads'] ?? 0;
 $recent_leads = $stats['recent_leads'] ?? 0;

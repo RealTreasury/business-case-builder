@@ -1,12 +1,11 @@
 <?php
-/**
-	* Calculation info admin page for Real Treasury Business Case Builder plugin.
-	*
-	* @package RealTreasuryBusinessCaseBuilder
-	*/
-
-// Exit if accessed directly.
 defined( 'ABSPATH' ) || exit;
+
+/**
+ * Calculation info admin page for Real Treasury Business Case Builder plugin.
+ *
+ * @package RealTreasuryBusinessCaseBuilder
+ */
 
 $labor_cost = get_option( 'rtbcb_labor_cost_per_hour', 0 );
 $bank_fee   = get_option( 'rtbcb_bank_fee_baseline', 0 );

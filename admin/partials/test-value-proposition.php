@@ -1,11 +1,11 @@
 <?php
-/**
-	* Partial for Test Value Proposition section.
-	*
-	* @package RealTreasuryBusinessCaseBuilder
-	*/
-
 defined( 'ABSPATH' ) || exit;
+
+/**
+ * Partial for Test Value Proposition section.
+ *
+ * @package RealTreasuryBusinessCaseBuilder
+ */
 
 if ( ! rtbcb_require_completed_steps( 'rtbcb-test-value-proposition', false ) ) {
 	echo '<div class="notice notice-warning inline"><p>' .

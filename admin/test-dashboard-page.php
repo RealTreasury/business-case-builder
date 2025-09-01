@@ -1,10 +1,11 @@
 <?php
-/**
-	* Test Dashboard admin page.
-	*
-	* @package RealTreasuryBusinessCaseBuilder
-	*/
 defined( 'ABSPATH' ) || exit;
+
+/**
+ * Test Dashboard admin page.
+ *
+ * @package RealTreasuryBusinessCaseBuilder
+ */
 $company_data   = get_option( 'rtbcb_company_data', [] );
 $company_name   = isset( $company_data['name'] ) ? sanitize_text_field( $company_data['name'] ) : '';
 $test_results  = get_option( 'rtbcb_test_results', [] );

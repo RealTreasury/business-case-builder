@@ -1,11 +1,11 @@
 <?php
-/**
-	* Partial for Test Data Enrichment section.
-	*
-	* @package RealTreasuryBusinessCaseBuilder
-	*/
-
 defined( 'ABSPATH' ) || exit;
+
+/**
+ * Partial for Test Data Enrichment section.
+ *
+ * @package RealTreasuryBusinessCaseBuilder
+ */
 
 if ( ! rtbcb_require_completed_steps( 'rtbcb-test-data-enrichment', false ) ) {
 	echo '<div class="notice notice-warning inline"><p>' .

@@ -1,13 +1,13 @@
 <?php
-/**
-	* Template for generated business case report.
-	*
-	* @package RealTreasuryBusinessCaseBuilder
-	*
-	* @var array $business_case_data Business case data from the LLM.
-	*/
-
 defined( 'ABSPATH' ) || exit;
+
+/**
+ * Template for generated business case report.
+ *
+ * @package RealTreasuryBusinessCaseBuilder
+ *
+ * @var array $business_case_data Business case data from the LLM.
+ */
 
 $metadata      = $business_case_data['metadata'] ?? [];
 $analysis_type = $metadata['analysis_type'] ?? 'basic';

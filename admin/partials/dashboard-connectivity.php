@@ -1,11 +1,12 @@
 <?php
-/**
-	* Dashboard connectivity status and tests.
-	*
-	* @package RealTreasuryBusinessCaseBuilder
-	*/
-
 defined( 'ABSPATH' ) || exit;
+
+/**
+ * Dashboard connectivity status and tests.
+ *
+ * @package RealTreasuryBusinessCaseBuilder
+ */
+
 ?>
 <div class="card">
 	<h2 class="title"><?php esc_html_e( 'Connectivity Tests & Status', 'rtbcb' ); ?></h2>
