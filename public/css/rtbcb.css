@@ -1,6 +1,10 @@
 /* Enhanced Styles for Real Treasury Business Case Builder plugin */
 @import url("rtbcb-variables.css");
 
+html {
+    text-size-adjust: 100%;
+}
+
 /* Theme conflict prevention */
 .rtbcb-modal-overlay h1,
 .rtbcb-modal-overlay h2,
