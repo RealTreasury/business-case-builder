@@ -22,12 +22,14 @@ class RTBCB_DB {
 	* @return void
 	*/
 	public static function init() {
-		$current = get_option( 'rtbcb_db_version', '1.0.0' );
+$current = function_exists( 'get_option' ) ? get_option( 'rtbcb_db_version', '1.0.0' ) : '1.0.0';
 
-		if ( version_compare( $current, self::DB_VERSION, '<' ) ) {
-			self::upgrade( $current );
-			update_option( 'rtbcb_db_version', self::DB_VERSION );
-		}
+if ( version_compare( $current, self::DB_VERSION, '<' ) ) {
+self::upgrade( $current );
+if ( function_exists( 'update_option' ) ) {
+update_option( 'rtbcb_db_version', self::DB_VERSION );
+}
+}
 
 		// Ensure required tables exist.
 		RTBCB_Leads::init();

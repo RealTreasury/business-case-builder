@@ -6,18 +6,19 @@
 // Exit if accessed directly.
 defined( 'ABSPATH' ) || exit;
 
-$api_key         = get_option( 'rtbcb_openai_api_key', '' );
-$mini_model      = get_option( 'rtbcb_mini_model', rtbcb_get_default_model( 'mini' ) );
-$premium_model   = get_option( 'rtbcb_premium_model', rtbcb_get_default_model( 'premium' ) );
-$advanced_model  = get_option( 'rtbcb_advanced_model', rtbcb_get_default_model( 'advanced' ) );
-$embedding_model = get_option( 'rtbcb_embedding_model', rtbcb_get_default_model( 'embedding' ) );
-$labor_cost      = get_option( 'rtbcb_labor_cost_per_hour', '' );
-$bank_fee        = get_option( 'rtbcb_bank_fee_baseline', '' );
+$api_key         = function_exists( 'get_option' ) ? get_option( 'rtbcb_openai_api_key', '' ) : '';
+$mini_model      = function_exists( 'get_option' ) ? get_option( 'rtbcb_mini_model', rtbcb_get_default_model( 'mini' ) ) : rtbcb_get_default_model( 'mini' );
+$premium_model   = function_exists( 'get_option' ) ? get_option( 'rtbcb_premium_model', rtbcb_get_default_model( 'premium' ) ) : rtbcb_get_default_model( 'premium' );
+$advanced_model  = function_exists( 'get_option' ) ? get_option( 'rtbcb_advanced_model', rtbcb_get_default_model( 'advanced' ) ) : rtbcb_get_default_model( 'advanced' );
+$embedding_model = function_exists( 'get_option' ) ? get_option( 'rtbcb_embedding_model', rtbcb_get_default_model( 'embedding' ) ) : rtbcb_get_default_model( 'embedding' );
+$labor_cost      = function_exists( 'get_option' ) ? get_option( 'rtbcb_labor_cost_per_hour', '' ) : '';
+$bank_fee        = function_exists( 'get_option' ) ? get_option( 'rtbcb_bank_fee_baseline', '' ) : '';
 $gpt5_timeout    = rtbcb_get_api_timeout();
-$gpt5_max_output_tokens = get_option( 'rtbcb_gpt5_max_output_tokens', 8000 );
-$gpt5_min_output_tokens = get_option( 'rtbcb_gpt5_min_output_tokens', 256 );
-$fast_mode       = get_option( 'rtbcb_fast_mode', 0 );
-$feature_settings    = get_option( 'rtbcb_settings', RTBCB_Settings::DEFAULTS );
+$gpt5_max_output_tokens = function_exists( 'get_option' ) ? get_option( 'rtbcb_gpt5_max_output_tokens', 8000 ) : 8000;
+$gpt5_min_output_tokens = function_exists( 'get_option' ) ? get_option( 'rtbcb_gpt5_min_output_tokens', 256 ) : 256;
+$fast_mode       = function_exists( 'get_option' ) ? get_option( 'rtbcb_fast_mode', 0 ) : 0;
+$feature_defaults = class_exists( 'RTBCB_Settings' ) ? RTBCB_Settings::DEFAULTS : [];
+$feature_settings = function_exists( 'get_option' ) ? get_option( 'rtbcb_settings', $feature_defaults ) : $feature_defaults;
 $enable_ai_analysis = isset( $feature_settings['enable_ai_analysis'] ) ? (bool) $feature_settings['enable_ai_analysis'] : true;
 $enable_charts      = isset( $feature_settings['enable_charts'] ) ? (bool) $feature_settings['enable_charts'] : true;
 

@@ -46,8 +46,9 @@ class RTBCB_API_Tester {
 	* @return array Test result.
 	*/
 	private static function test_completion( $api_key ) {
-		$model  = get_option( 'rtbcb_mini_model', rtbcb_get_default_model( 'mini' ) );
-		$config = rtbcb_get_gpt5_config();
+$model_option = function_exists( 'get_option' ) ? get_option( 'rtbcb_mini_model', rtbcb_get_default_model( 'mini' ) ) : rtbcb_get_default_model( 'mini' );
+$model  = function_exists( 'sanitize_text_field' ) ? sanitize_text_field( $model_option ) : $model_option;
+$config = rtbcb_get_gpt5_config();
 
 		$body = [
 			'model'             => rtbcb_normalize_model_name( $model ),

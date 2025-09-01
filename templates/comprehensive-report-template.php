@@ -25,7 +25,7 @@ $operational_insights = $report_data['operational_insights'] ?? [];
 $risk_analysis        = $report_data['risk_analysis'] ?? [];
 $action_plan          = $report_data['action_plan'] ?? [];
 $rag_context          = $report_data['rag_context'] ?? [];
-$enable_charts        = RTBCB_Settings::get_setting( 'enable_charts', true );
+$enable_charts        = class_exists( 'RTBCB_Settings' ) ? RTBCB_Settings::get_setting( 'enable_charts', true ) : true;
 
 $company_name    = $metadata['company_name'] ?? __( 'Your Company', 'rtbcb' );
 $analysis_date   = $metadata['analysis_date'] ?? current_time( 'Y-m-d' );

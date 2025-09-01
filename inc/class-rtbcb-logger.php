@@ -27,17 +27,18 @@ defined( 'ABSPATH' ) || exit;
 
 		error_log( 'RTBCB_LOG: ' . wp_json_encode( $record ) );
 
-		$endpoint = sanitize_text_field( get_option( 'rtbcb_log_endpoint', '' ) );
-				if ( $endpoint ) {
-						rtbcb_wp_remote_post_with_retry(
-						$endpoint,
-						[
-						'headers' => [ 'Content-Type' => 'application/json' ],
-						'body'    => wp_json_encode( $record ),
-						'timeout' => 2,
-						]
-						);
-		}
+$endpoint = function_exists( 'get_option' ) ? get_option( 'rtbcb_log_endpoint', '' ) : '';
+$endpoint = function_exists( 'sanitize_text_field' ) ? sanitize_text_field( $endpoint ) : $endpoint;
+if ( $endpoint ) {
+rtbcb_wp_remote_post_with_retry(
+$endpoint,
+[
+'headers' => [ 'Content-Type' => 'application/json' ],
+'body'    => wp_json_encode( $record ),
+'timeout' => 2,
+]
+);
+}
 	}
 
 	/**
@@ -91,8 +92,8 @@ defined( 'ABSPATH' ) || exit;
 	* @param int $count Timeout count.
 	* @return void
 	*/
-	private static function send_timeout_alert( $count ) {
-		$admin_email = get_option( 'admin_email' );
+private static function send_timeout_alert( $count ) {
+$admin_email = function_exists( 'get_option' ) ? get_option( 'admin_email' ) : '';
 		$subject     = __( 'Business Case Builder timeout alert', 'rtbcb' );
 		$message     = sprintf(
 			__( 'The Business Case Builder API timed out %d times in the last five minutes.', 'rtbcb' ),

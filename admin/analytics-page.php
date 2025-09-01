@@ -12,7 +12,7 @@ $recent_leads = $stats['recent_leads'] ?? 0;
 $category_stats = $stats['by_category'] ?? [];
 $size_stats = $stats['by_company_size'] ?? [];
 $roi_stats = $stats['average_roi'] ?? [];
-$enable_charts = RTBCB_Settings::get_setting( 'enable_charts', true );
+$enable_charts = class_exists( 'RTBCB_Settings' ) ? RTBCB_Settings::get_setting( 'enable_charts', true ) : true;
 ?>
 
 <div class="wrap rtbcb-admin-page">

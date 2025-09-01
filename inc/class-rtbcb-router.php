@@ -205,9 +205,9 @@ class RTBCB_Router {
 		$complexity = $this->calculate_complexity( $inputs, $chunks );
 		$category   = RTBCB_Category_Recommender::recommend_category( $inputs )['recommended'];
 
-		// Get available models
-		$mini_model    = get_option( 'rtbcb_mini_model', rtbcb_get_default_model( 'mini' ) );
-		$premium_model = get_option( 'rtbcb_premium_model', rtbcb_get_default_model( 'premium' ) );
+// Get available models
+$mini_model    = function_exists( 'get_option' ) ? get_option( 'rtbcb_mini_model', rtbcb_get_default_model( 'mini' ) ) : rtbcb_get_default_model( 'mini' );
+$premium_model = function_exists( 'get_option' ) ? get_option( 'rtbcb_premium_model', rtbcb_get_default_model( 'premium' ) ) : rtbcb_get_default_model( 'premium' );
 
 		// Start with mini model as default
 		$model     = $mini_model;
