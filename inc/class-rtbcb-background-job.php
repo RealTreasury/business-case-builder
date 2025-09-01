@@ -65,104 +65,117 @@ $job_id = uniqid( 'rtbcb_job_', true );
 	* @return void
 	*/
 	public static function process_job( $job_id, $user_inputs ) {
-		self::update_status( $job_id, 'processing' );
-
-		$basic_roi = RTBCB_Ajax::process_basic_roi_step( $user_inputs );
-
-		self::update_status(
-$job_id,
-'processing',
-[
-'step'      => 'basic_roi_calculation',
-'percent'   => 10,
-'basic_roi' => $basic_roi,
-],
-);
-
-
-add_action(
-'rtbcb_workflow_step_completed',
-function ( $step ) use ( $job_id ) {
-		$map = [
-			'ai_enrichment'             => 30,
-			'enhanced_roi_calculation'  => 50,
-			'intelligent_recommendations' => 70,
-			'hybrid_rag_analysis'       => 85,
-			'data_structuring'          => 95,
-		];
-if ( isset( $map[ $step ] ) ) {
-self::update_status(
-$job_id,
-'processing',
-[
-'step'    => $step,
-'percent' => $map[ $step ],
-]
-);
-}
-},
-10,
-1
-);
-
-$result = RTBCB_Ajax::process_comprehensive_case( $user_inputs, $job_id );
-
-if ( is_wp_error( $result ) ) {
+	self::update_status( $job_id, 'processing' );
+	
+	try {
+	$basic_roi = RTBCB_Ajax::process_basic_roi_step( $user_inputs );
+	
 	self::update_status(
-		$job_id,
-		'error',
-		[
-			'message' => $result->get_error_message(),
-			'percent' => 100,
-		],
+	$job_id,
+	'processing',
+	[
+	'step'      => 'basic_roi_calculation',
+	'percent'   => 10,
+	'basic_roi' => $basic_roi,
+	],
 	);
-} else {
+	
+	add_action(
+	'rtbcb_workflow_step_completed',
+	function ( $step ) use ( $job_id ) {
+	$map = [
+	'ai_enrichment'             => 30,
+	'enhanced_roi_calculation'  => 50,
+	'intelligent_recommendations' => 70,
+	'hybrid_rag_analysis'       => 85,
+	'data_structuring'          => 95,
+	];
+	if ( isset( $map[ $step ] ) ) {
+	self::update_status(
+	$job_id,
+	'processing',
+	[
+	'step'    => $step,
+	'percent' => $map[ $step ],
+	],
+	);
+	}
+	},
+	10,
+	1
+	);
+	
+	$result = RTBCB_Ajax::process_comprehensive_case( $user_inputs, $job_id );
+	
+	if ( is_wp_error( $result ) ) {
+	self::update_status(
+	$job_id,
+	'error',
+	[
+	'message' => $result->get_error_message(),
+	'percent' => 100,
+	],
+	);
+	} else {
 	$report_html = '';
 	if ( isset( $result['report_data'] ) && function_exists( 'wp_kses' ) ) {
-		$report_data = $result['report_data'];
-		ob_start();
-		include RTBCB_DIR . 'templates/comprehensive-report-template.php';
-		$report_html = ob_get_clean();
-		$report_html = wp_kses( $report_html, rtbcb_get_report_allowed_html() );
+	$report_data = $result['report_data'];
+	ob_start();
+	include RTBCB_DIR . 'templates/comprehensive-report-template.php';
+	$report_html = ob_get_clean();
+	$report_html = wp_kses( $report_html, rtbcb_get_report_allowed_html() );
 	} else {
-		$report_html = '<html></html>';
+	$report_html = '<html></html>';
 	}
-
+	
 	$upload_dir  = function_exists( 'wp_upload_dir' ) ? wp_upload_dir() : [
-		'basedir' => sys_get_temp_dir(),
-		'baseurl' => 'http://example.com/uploads',
+	'basedir' => sys_get_temp_dir(),
+	'baseurl' => 'http://example.com/uploads',
 	];
 	$base_dir    = isset( $upload_dir['basedir'] ) ? $upload_dir['basedir'] : sys_get_temp_dir();
 	$base_url    = isset( $upload_dir['baseurl'] ) ? $upload_dir['baseurl'] : '';
 	$reports_dir = rtrim( $base_dir, '/\\' ) . '/rtbcb-reports';
 	if ( ! file_exists( $reports_dir ) ) {
-		if ( function_exists( 'wp_mkdir_p' ) ) {
-			wp_mkdir_p( $reports_dir );
-		} else {
-			mkdir( $reports_dir, 0777, true );
-		}
+	if ( function_exists( 'wp_mkdir_p' ) ) {
+	wp_mkdir_p( $reports_dir );
+	} else {
+	mkdir( $reports_dir, 0777, true );
+	}
 	}
 	$html_path = rtrim( $reports_dir, '/\\' ) . '/' . $job_id . '.html';
 	file_put_contents( $html_path, $report_html );
 	$pdf_path = rtrim( $reports_dir, '/\\' ) . '/' . $job_id . '.pdf';
 	file_put_contents( $pdf_path, $report_html );
-
+	
 	if ( function_exists( 'rtbcb_send_report_email' ) ) {
-		rtbcb_send_report_email( $user_inputs, $pdf_path );
+	rtbcb_send_report_email( $user_inputs, $pdf_path );
 	}
-
+	
 	$download_url = rtrim( $base_url, '/\\' ) . '/rtbcb-reports/' . $job_id . '.pdf';
-
+	
 	self::update_status(
-		$job_id,
-		'completed',
-		[
-			'percent'      => 100,
-			'result'       => $result,
-			'download_url' => $download_url,
-		]
+	$job_id,
+	'completed',
+	[
+	'percent'      => 100,
+	'result'       => $result,
+	'download_url' => $download_url,
+	],
 	);
-}
+	}
+	} catch ( \Throwable $e ) {
+	self::update_status(
+	$job_id,
+	'error',
+	[
+	'message' => $e->getMessage(),
+	'percent' => 100,
+	],
+	);
+	if ( function_exists( 'rtbcb_log_error' ) ) {
+	rtbcb_log_error( 'Job processing error: ' . $e->getMessage(), $e->getTraceAsString() );
+	}
+	}
 	}
 
 /**
