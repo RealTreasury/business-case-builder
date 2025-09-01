@@ -7,7 +7,7 @@ php_value upload_max_filesize 50M
 
 # Disable output compression for RTBCB-specific AJAX endpoints
 <IfModule mod_setenvif.c>
-SetEnvIfExpr "%{REQUEST_URI} =~ m#admin-ajax\.php$# && %{QUERY_STRING} =~ m#^action=rtbcb_#" no-gzip dont-vary
+SetEnvIfExpr "%{REQUEST_URI} =~ m#admin-ajax\.php$# && %{QUERY_STRING} =~ m#(^|&)action=rtbcb_#" no-gzip dont-vary
 </IfModule>
 
 # Ensure proper content type for AJAX
