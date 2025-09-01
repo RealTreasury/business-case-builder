@@ -80,9 +80,7 @@ $job_id,
 );
 
 
-add_action(
-'rtbcb_workflow_step_completed',
-function ( $step ) use ( $job_id ) {
+	$listener = function ( $step ) use ( $job_id ) {
 		$map = [
 			'ai_enrichment'             => 30,
 			'enhanced_roi_calculation'  => 50,
@@ -90,37 +88,49 @@ function ( $step ) use ( $job_id ) {
 			'hybrid_rag_analysis'       => 85,
 			'data_structuring'          => 95,
 		];
-if ( isset( $map[ $step ] ) ) {
-self::update_status(
-$job_id,
-'processing',
-[
-'step'    => $step,
-'percent' => $map[ $step ],
-]
-);
-}
-},
-10,
-1
-);
-$result = null;
-try {
-$result = RTBCB_Ajax::process_comprehensive_case( $user_inputs, $job_id );
-} catch ( \Throwable $e ) {
-if ( function_exists( 'rtbcb_log_error' ) ) {
-rtbcb_log_error( 'Background job error', $e->getMessage() );
-}
-self::update_status(
-$job_id,
-'error',
-[
-'message' => $e->getMessage(),
-'percent' => 100,
-]
-);
-return;
-}
+
+		if ( isset( $map[ $step ] ) ) {
+			self::update_status(
+				$job_id,
+				'processing',
+				[
+					'step'    => $step,
+					'percent' => $map[ $step ],
+				]
+			);
+		}
+	};
+
+	add_action( 'rtbcb_workflow_step_completed', $listener, 10, 1 );
+
+	$result = null;
+
+	try {
+		$result = RTBCB_Ajax::process_comprehensive_case( $user_inputs, $job_id );
+	} catch ( \Throwable $e ) {
+		if ( function_exists( 'rtbcb_log_error' ) ) {
+			rtbcb_log_error( 'Background job error', $e->getMessage() );
+		}
+
+		if ( function_exists( 'remove_action' ) ) {
+			remove_action( 'rtbcb_workflow_step_completed', $listener, 10 );
+		}
+
+		self::update_status(
+			$job_id,
+			'error',
+			[
+				'message' => $e->getMessage(),
+				'percent' => 100,
+			]
+		);
+
+		return;
+	}
+
+	if ( function_exists( 'remove_action' ) ) {
+		remove_action( 'rtbcb_workflow_step_completed', $listener, 10 );
+	}
 
 if ( is_wp_error( $result ) ) {
 	self::update_status(
