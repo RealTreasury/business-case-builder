@@ -261,7 +261,7 @@ document.addEventListener('DOMContentLoaded', function() {
  * @param {Function} onChunk  Callback for each streamed chunk.
  * @return {Promise<void>} Promise that resolves when streaming completes.
  */
-export async function rtbcbStreamAnalysis(formData, onChunk) {
+async function rtbcbStreamAnalysis(formData, onChunk) {
     if (!rtbcbAjax || !isValidUrl(rtbcbAjax.ajax_url)) {
         handleSubmissionError('Service unavailable. Please reload the page.', '');
         return;
@@ -287,3 +287,5 @@ export async function rtbcbStreamAnalysis(formData, onChunk) {
         }
     }
 }
+
+window.rtbcbStreamAnalysis = rtbcbStreamAnalysis;
