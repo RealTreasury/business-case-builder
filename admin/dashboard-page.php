@@ -17,8 +17,8 @@ $roi_stats = $stats['average_roi'] ?? [];
 $leads = $recent_leads_data['leads'] ?? [];
 
 // System health checks
-$api_key       = get_option( 'rtbcb_openai_api_key' );
-$api_key_configured = ! empty( $api_key );
+$api_key       = rtbcb_get_openai_api_key();
+$api_key_configured = rtbcb_has_openai_api_key();
 $api_key_valid = $api_key_configured && rtbcb_is_valid_openai_api_key( $api_key );
 $portal_active = (bool) ( has_filter( 'rt_portal_get_vendors' ) || has_filter( 'rt_portal_get_vendor_notes' ) );
 $last_indexed  = get_option( 'rtbcb_last_indexed', '' );

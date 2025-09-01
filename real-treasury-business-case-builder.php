@@ -2000,7 +2000,7 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 			'lead_id'		 => $lead_id,
 			'company_name'		 => $user_inputs['company_name'],
 			'analysis_type'		 => rtbcb_get_analysis_type(),
-			'api_used'		 => ! empty( get_option( 'rtbcb_openai_api_key' ) ),
+			'api_used'               => rtbcb_has_openai_api_key(),
 			'fallback_used'		 => isset( $comprehensive_analysis['enhanced_fallback'] ),
 			'memory_info'		 => rtbcb_get_memory_status(),
 		];
@@ -2503,8 +2503,8 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 	}
 
 	public function admin_notices() {
-		// Check if API key is configured
-		if ( current_user_can( 'manage_options' ) && empty( get_option( 'rtbcb_openai_api_key' ) ) ) {
+	// Check if API key is configured
+	if ( current_user_can( 'manage_options' ) && ! rtbcb_has_openai_api_key() ) {
 		$settings_url = admin_url( 'admin.php?page=rtbcb-settings' );
 		echo '<div class="notice notice-warning is-dismissible">';
 		echo '<p>';
@@ -2745,7 +2745,6 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 		$nonce_valid = wp_verify_nonce( $nonce, 'rtbcb_debug' );
 
 		$post_keys = array_map( 'sanitize_key', array_keys( $_POST ) );
-		$api_key   = get_option( 'rtbcb_openai_api_key', '' );
 
 		global $wpdb;
 		$table_name   = $wpdb->prefix . 'rtbcb_leads';
@@ -2756,7 +2755,7 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 		'required_classes' => class_exists( 'RTBCB_Calculator' ) && class_exists( 'RTBCB_DB' ),
 		'nonce_valid'	   => $nonce_valid,
 		'post_keys'	   => $post_keys,
-		'api_key_present'  => ! empty( $api_key ),
+		'api_key_present'  => rtbcb_has_openai_api_key(),
 		'db_table_exists'  => $table_exists,
 		'memory_usage'	   => size_format( memory_get_usage( true ) ),
 		];
@@ -2815,7 +2814,7 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 		'enhanced_css_exists'	      => file_exists( RTBCB_DIR . 'public/css/enhanced-report.css' ),
 		'chart_js_exists'	      => file_exists( RTBCB_DIR . 'public/js/chart.min.js' ),
 		'comprehensive_analysis_enabled' => get_option( 'rtbcb_comprehensive_analysis', true ),
-		'openai_key_configured'	      => ! empty( get_option( 'rtbcb_openai_api_key' ) ),
+		'openai_key_configured'       => rtbcb_has_openai_api_key(),
 		'required_classes'	      => [
 		'RTBCB_Calculator'	    => class_exists( 'RTBCB_Calculator' ),
 		'RTBCB_Category_Recommender'=> class_exists( 'RTBCB_Category_Recommender' ),
@@ -2954,9 +2953,9 @@ if ( ! function_exists( 'rtbcb_is_configured' ) ) {
 	*
 	* @return bool
 	*/
-	function rtbcb_is_configured() {
-		return ! empty( get_option( 'rtbcb_openai_api_key' ) );
-	}
+function rtbcb_is_configured() {
+	return rtbcb_has_openai_api_key();
+}
 }
 
 

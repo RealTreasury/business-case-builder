@@ -403,9 +403,9 @@ $enable_charts = class_exists( 'RTBCB_Settings' ) ? RTBCB_Settings::get_setting(
 	* @return void
 	*/
 	public function render_test_dashboard() {
-		$test_results   = get_option( 'rtbcb_test_results', [] );
-		$openai_key     = get_option( 'rtbcb_openai_api_key', '' );
-		$openai_status  = empty( $openai_key ) ? false : true;
+               $test_results   = get_option( 'rtbcb_test_results', [] );
+               $openai_key     = rtbcb_get_openai_api_key();
+               $openai_status  = rtbcb_has_openai_api_key();
 		$portal_active   = $this->check_portal_integration();
 		$rag_health_info = $this->check_rag_health();
 		$rag_health      = ( 'healthy' === ( $rag_health_info['status'] ?? '' ) );
@@ -649,10 +649,10 @@ $enable_charts = class_exists( 'RTBCB_Settings' ) ? RTBCB_Settings::get_setting(
 			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'rtbcb' ) ], 403 );
 		}
 
-		$api_key = get_option( 'rtbcb_openai_api_key' );
-		if ( empty( $api_key ) ) {
-			wp_send_json_error( [ 'message' => __( 'Missing API key.', 'rtbcb' ) ] );
-		}
+               $api_key = rtbcb_get_openai_api_key();
+               if ( ! rtbcb_has_openai_api_key() ) {
+                       wp_send_json_error( [ 'message' => __( 'Missing API key.', 'rtbcb' ) ] );
+               }
 
 		$cache_key = 'rtbcb_openai_models';
 		$response  = wp_cache_get( $cache_key );
