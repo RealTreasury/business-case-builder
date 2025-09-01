@@ -135,9 +135,9 @@ class RTBCB_Main {
 		// Plugin action links
 		add_filter( 'plugin_action_links_' . plugin_basename( RTBCB_FILE ), [ $this, 'plugin_action_links' ] );
 
-		// AJAX handlers - Use the enhanced version
-		add_action( 'wp_ajax_rtbcb_generate_case', [ $this, 'ajax_generate_comprehensive_case_enhanced' ] );
-		add_action( 'wp_ajax_nopriv_rtbcb_generate_case', [ $this, 'ajax_generate_comprehensive_case_enhanced' ] );
+		// AJAX handler for comprehensive case generation
+		add_action( 'wp_ajax_rtbcb_generate_case', [ 'RTBCB_Ajax', 'generate_comprehensive_case' ] );
+		add_action( 'wp_ajax_nopriv_rtbcb_generate_case', [ 'RTBCB_Ajax', 'generate_comprehensive_case' ] );
 
 		// Job status handlers
 		add_action( 'wp_ajax_rtbcb_job_status', [ 'RTBCB_Ajax', 'get_job_status' ] );
