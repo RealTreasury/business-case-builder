@@ -577,6 +577,9 @@ return true;
 		if ( ! $this->should_load_assets() ) {
 		return;
 		}
+		$request_uri = isset( $_SERVER['REQUEST_URI'] ) ? esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
+		error_log( 'RTBCB: Enqueuing assets for page: ' . $request_uri );
+
 
 		// Base Styles
 		wp_enqueue_style(
@@ -615,7 +618,9 @@ return true;
 			       true
 		       );
 		       $report_deps[] = 'chartjs';
-	       }
+		} else {
+			error_log( 'RTBCB: Chart.js not enqueued; charts feature disabled.' );
+		}
 
 		// DOMPurify for sanitization with CDN fallback
 		$dompurify_cdn	 = 'https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.2/purify.min.js';
