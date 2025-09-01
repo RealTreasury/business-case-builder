@@ -1,4 +1,8 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+	define( 'ABSPATH', __DIR__ );
+}
+defined( 'ABSPATH' ) || exit;
 if ( ! function_exists( 'add_filter' ) ) {
 	$GLOBALS['rtbcb_filters'] = [];
 	function add_filter( $tag, $function_to_add, $priority = 10, $accepted_args = 1 ) {
@@ -15,7 +19,6 @@ if ( ! function_exists( 'add_filter' ) ) {
 	}
 }
 
-define( 'ABSPATH', __DIR__ );
 require_once __DIR__ . '/../inc/helpers.php';
 
 $received = '';

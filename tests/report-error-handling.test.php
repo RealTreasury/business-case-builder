@@ -1,7 +1,10 @@
 <?php
-use PHPUnit\Framework\TestCase;
+if ( ! defined( 'ABSPATH' ) ) {
+	define( 'ABSPATH', __DIR__ . '/../' );
+}
+defined( 'ABSPATH' ) || exit;
 
-define( 'ABSPATH', __DIR__ . '/../' );
+use PHPUnit\Framework\TestCase;
 
 if ( ! class_exists( 'WP_Error' ) ) {
 class WP_Error {

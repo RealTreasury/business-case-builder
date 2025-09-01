@@ -1,8 +1,12 @@
 <?php
-if ( ! function_exists( '__' ) ) {
-function __( $text, $domain = null ) {
-return $text;
+if ( ! defined( 'ABSPATH' ) ) {
+	define( 'ABSPATH', __DIR__ );
 }
+defined( 'ABSPATH' ) || exit;
+if ( ! function_exists( '__' ) ) {
+	function __( $text, $domain = null ) {
+		return $text;
+	}
 }
 if ( ! class_exists( 'WP_Error' ) ) {
 class WP_Error {
@@ -80,7 +84,6 @@ return [];
 }
 }
 
-define( 'ABSPATH', __DIR__ );
 $plugin_code = file_get_contents( __DIR__ . '/../real-treasury-business-case-builder.php' );
 $plugin_code = preg_replace( '/
 ?\/\/ Initialize the plugin\s*RTBCB_Main::instance\(\);/', '', $plugin_code );

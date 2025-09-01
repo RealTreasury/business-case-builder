@@ -1,7 +1,10 @@
 <?php
-use PHPUnit\Framework\TestCase;
+if ( ! defined( 'ABSPATH' ) ) {
+	define( 'ABSPATH', __DIR__ . '/../' );
+}
+defined( 'ABSPATH' ) || exit;
 
-define( 'ABSPATH', __DIR__ . '/../' );
+use PHPUnit\Framework\TestCase;
 require_once __DIR__ . '/wp-stubs.php';
 
 if ( ! function_exists( '__' ) ) {

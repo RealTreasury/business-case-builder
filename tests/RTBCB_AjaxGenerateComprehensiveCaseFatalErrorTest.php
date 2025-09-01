@@ -1,4 +1,9 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+	define( 'ABSPATH', __DIR__ . '/../' );
+}
+defined( 'ABSPATH' ) || exit;
+
 use PHPUnit\Framework\TestCase;
 
 if ( ! class_exists( 'WP_Error' ) ) {

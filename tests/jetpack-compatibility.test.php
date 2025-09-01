@@ -1,5 +1,8 @@
 <?php
-define( 'ABSPATH', __DIR__ . '/../' );
+if ( ! defined( 'ABSPATH' ) ) {
+	define( 'ABSPATH', __DIR__ . '/../' );
+}
+defined( 'ABSPATH' ) || exit;
 require_once __DIR__ . '/wp-stubs.php';
 
 if ( ! function_exists( 'plugin_dir_url' ) ) {
