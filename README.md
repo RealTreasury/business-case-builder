@@ -504,7 +504,7 @@ For manual verification during development, `debug_ajax_handler()` includes runt
 
 - **Missing API Key Logging**
   ```php
-  if ( '' === get_option( 'rtbcb_openai_api_key' ) ) {
+  if ( ! rtbcb_has_openai_api_key() ) {
       error_log( 'rtbcb_openai_api_key option is empty' );
   }
   ```
