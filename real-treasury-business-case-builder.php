@@ -2698,9 +2698,23 @@ if ( ! class_exists( 'Real_Treasury_BCB' ) ) {
 	class_alias( RTBCB_Main::class, 'Real_Treasury_BCB' );
 }
 
-// Initialize the plugin
+// Initialize the plugin with crash protection
 if ( ! defined( 'RTBCB_NO_BOOTSTRAP' ) ) {
-	RTBCB_Main::instance();
+	try {
+		RTBCB_Main::instance();
+	} catch ( Throwable $e ) {
+		error_log( 'RTBCB: Plugin failed to start: ' . $e->getMessage() );
+
+		// Show admin notice instead of crashing
+		add_action( 'admin_notices', function() use ( $e ) {
+			if ( current_user_can( 'manage_options' ) ) {
+				echo '<div class="notice notice-error is-dismissible">';
+				echo '<p><strong>' . esc_html__( 'Real Treasury Business Case Builder Error:', 'rtbcb' ) . '</strong> ';
+				echo esc_html( $e->getMessage() );
+				echo '</p></div>';
+			}
+		} );
+	}
 }
 
 
