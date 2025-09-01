@@ -1497,7 +1497,6 @@ SYSTEM;
 			$body['temperature'] = floatval( $this->gpt5_config['temperature'] ?? 0.7 );
 		}
 
-	$timeout  = intval( $this->gpt5_config['timeout'] ?? 300 );
 		$response = wp_remote_post(
 			'https://api.openai.com/v1/responses',
 			[
@@ -1506,7 +1505,7 @@ SYSTEM;
 					'Content-Type'  => 'application/json',
 				],
 				'body'    => wp_json_encode( $body ),
-				'timeout' => $timeout,
+				'timeout' => 600,
 			]
 		);
 
