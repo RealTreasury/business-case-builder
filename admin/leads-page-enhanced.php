@@ -12,6 +12,10 @@ $total_leads = $leads_data['total'] ?? 0;
 $leads = $leads_data['leads'] ?? [];
 $orderby = isset( $orderby ) ? sanitize_key( $orderby ) : 'created_at';
 $order   = isset( $order ) ? sanitize_key( $order ) : 'DESC';
+$search    = isset( $leads_data['search'] ) ? sanitize_text_field( $leads_data['search'] ) : '';
+$category  = isset( $leads_data['category'] ) ? sanitize_text_field( $leads_data['category'] ) : '';
+$date_from = isset( $leads_data['date_from'] ) ? sanitize_text_field( $leads_data['date_from'] ) : '';
+$date_to   = isset( $leads_data['date_to'] ) ? sanitize_text_field( $leads_data['date_to'] ) : '';
 ?>
 
 <div class="wrap rtbcb-admin-page">
