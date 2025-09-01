@@ -21,6 +21,13 @@ function isValidUrl(url) {
     }
 }
 
+// Normalize global AJAX URL if provided.
+if ( typeof rtbcb_ajax !== 'undefined' && ! isValidUrl( rtbcb_ajax.ajax_url ) ) {
+    if ( typeof ajaxurl !== 'undefined' && isValidUrl( ajaxurl ) ) {
+        rtbcb_ajax.ajax_url = ajaxurl;
+    }
+}
+
 // Ensure modal functions are available immediately
 window.openBusinessCaseModal = function() {
     const overlay = document.getElementById('rtbcbModalOverlay');
@@ -69,7 +76,7 @@ class BusinessCaseBuilder {
         this.totalSteps = 5;
         this.form = document.getElementById('rtbcbForm');
         this.overlay = document.getElementById('rtbcbModalOverlay');
-        this.ajaxUrl = ( typeof rtbcb_ajax !== 'undefined' && rtbcb_ajax.ajax_url ) ? rtbcb_ajax.ajax_url : '';
+        this.ajaxUrl = ( typeof rtbcb_ajax !== 'undefined' && isValidUrl( rtbcb_ajax.ajax_url ) ) ? rtbcb_ajax.ajax_url : '';
         this.pollTimeout = null;
         this.pollingCancelled = false;
         this.activeJobId = null;

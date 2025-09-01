@@ -5,6 +5,33 @@ if ( typeof ajaxurl === 'undefined' ) {
     var ajaxurl = window.location.origin + '/wp-admin/admin-ajax.php';
 }
 
+/**
+ * Validate a URL uses http or https.
+ *
+ * @param {string} url URL to validate.
+ * @return {boolean} True if the URL is valid.
+ */
+function isValidUrl( url ) {
+    if ( ! url ) {
+        return false;
+    }
+
+    try {
+        var parsed = new URL( url, window.location.origin );
+        return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+    } catch ( e ) {
+        return false;
+    }
+}
+
+// Ensure admin AJAX URL is valid to prevent about:blank requests.
+if ( 'object' !== typeof window.rtbcbAdmin ) {
+    window.rtbcbAdmin = {};
+}
+if ( ! isValidUrl( window.rtbcbAdmin.ajax_url ) ) {
+    window.rtbcbAdmin.ajax_url = isValidUrl( ajaxurl ) ? ajaxurl : '';
+}
+
 jQuery(document).ready(function($) {
     'use strict';
     

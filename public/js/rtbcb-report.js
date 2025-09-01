@@ -47,6 +47,13 @@ function isValidUrl(url) {
     }
 }
 
+// Fallback for missing or invalid AJAX URL to avoid about:blank requests.
+if ( typeof rtbcbReport !== 'undefined' && ! isValidUrl( rtbcbReport.ajax_url ) ) {
+    if ( typeof ajaxurl !== 'undefined' && isValidUrl( ajaxurl ) ) {
+        rtbcbReport.ajax_url = ajaxurl;
+    }
+}
+
 async function buildEnhancedPrompt(businessContext) {
     if (!isValidUrl(rtbcbReport.template_url)) {
         throw new Error('Template URL must use HTTP or HTTPS protocol');
