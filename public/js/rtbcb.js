@@ -66,6 +66,24 @@ function handleSubmissionError(errorMessage, errorCode) {
 }
 
 /**
+ * Check if a URL uses http or https scheme.
+ *
+ * @param {string} url URL to validate.
+ * @return {boolean} True if URL is valid.
+ */
+function isValidUrl(url) {
+    if (!url) {
+        return false;
+    }
+    try {
+        const parsed = new URL(url);
+        return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+    } catch (e) {
+        return false;
+    }
+}
+
+/**
  * Handles the form submission by sending data to the backend.
  * @param {Event} e - The form submission event.
  */
@@ -106,8 +124,8 @@ async function handleSubmit(e) {
         }
         progressContainer.style.display = 'block';
     }
-    if (typeof rtbcbAjax === 'undefined' || !rtbcbAjax.ajax_url) {
-        handleSubmissionError('Unable to submit form. Please refresh the page and try again.', '');
+    if (typeof rtbcbAjax === 'undefined' || !isValidUrl(rtbcbAjax.ajax_url)) {
+        handleSubmissionError('Service unavailable. Please reload the page.', '');
         rtbcbIsSubmitting = false;
         return;
     }
@@ -118,6 +136,11 @@ async function handleSubmit(e) {
     var response;
     var responseText;
     try {
+        if (!isValidUrl(rtbcbAjax.ajax_url)) {
+            handleSubmissionError('Service unavailable. Please reload the page.', '');
+            rtbcbIsSubmitting = false;
+            return;
+        }
         response = await fetch(rtbcbAjax.ajax_url, {
             method: 'POST',
             body: formData
@@ -167,6 +190,11 @@ async function handleSubmit(e) {
 
 async function pollJobStatus(jobId, progressContainer, formContainer) {
     try {
+        if (!isValidUrl(rtbcbAjax.ajax_url)) {
+            handleSubmissionError('Service unavailable. Please reload the page.', '');
+            rtbcbIsSubmitting = false;
+            return;
+        }
         const response = await fetch(`${rtbcbAjax.ajax_url}?action=rtbcb_job_status&job_id=${encodeURIComponent(jobId)}&rtbcb_nonce=${rtbcbAjax.nonce}`);
         const data = await response.json();
 
@@ -225,7 +253,8 @@ document.addEventListener('DOMContentLoaded', function() {
  * @return {Promise<void>} Promise that resolves when streaming completes.
  */
 export async function rtbcbStreamAnalysis(formData, onChunk) {
-    if (!rtbcbAjax || !rtbcbAjax.ajax_url) {
+    if (!rtbcbAjax || !isValidUrl(rtbcbAjax.ajax_url)) {
+        handleSubmissionError('Service unavailable. Please reload the page.', '');
         return;
     }
     formData.append('action', 'rtbcb_stream_analysis');

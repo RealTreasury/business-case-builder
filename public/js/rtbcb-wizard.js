@@ -3,6 +3,24 @@
  * Handles multi-step form navigation, validation, and submission
  */
 
+/**
+ * Check if a URL uses http or https scheme.
+ *
+ * @param {string} url URL to validate.
+ * @return {boolean} True if URL is valid.
+ */
+function isValidUrl(url) {
+    if (!url) {
+        return false;
+    }
+    try {
+        const parsed = new URL(url);
+        return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+    } catch (e) {
+        return false;
+    }
+}
+
 // Ensure modal functions are available immediately
 window.openBusinessCaseModal = function() {
     const overlay = document.getElementById('rtbcbModalOverlay');
@@ -371,7 +389,7 @@ class BusinessCaseBuilder {
             event.preventDefault();
         }
         
-        if (!this.ajaxUrl) {
+        if (!isValidUrl(this.ajaxUrl)) {
             this.showEnhancedError('Service unavailable. Please reload the page.');
             return;
         }
@@ -384,6 +402,10 @@ class BusinessCaseBuilder {
             this.validateFormData(formData);
 
             // SIMPLIFIED APPROACH: Direct submission instead of background jobs
+            if (!isValidUrl(this.ajaxUrl)) {
+                this.showEnhancedError('Service unavailable. Please reload the page.');
+                return;
+            }
             const response = await fetch(this.ajaxUrl, {
                 method: 'POST',
                 body: formData,
@@ -602,6 +624,12 @@ progressContainer.style.display = 'flex';
                 message: 'The request timed out after 20 minutes. Please try again later.',
                 type: 'timeout'
             });
+            this.cancelPolling();
+            return;
+        }
+
+        if (!isValidUrl(this.ajaxUrl)) {
+            this.handleError({ message: 'Service unavailable. Please reload the page.', type: 'polling_error' });
             this.cancelPolling();
             return;
         }
