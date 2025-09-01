@@ -1033,13 +1033,13 @@ function rtbcb_test_generate_category_recommendation( $analysis ) {
 	];
 
 	try {
-$api_key = function_exists( 'get_option' ) ? get_option( 'rtbcb_openai_api_key' ) : '';
-if ( empty( $api_key ) ) {
-return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
-}
+		$api_key = rtbcb_get_openai_api_key();
+		if ( ! rtbcb_has_openai_api_key() ) {
+			return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
+		}
 
-$model_option = function_exists( 'get_option' ) ? get_option( 'rtbcb_mini_model', rtbcb_get_default_model( 'mini' ) ) : rtbcb_get_default_model( 'mini' );
-$model        = function_exists( 'sanitize_text_field' ) ? sanitize_text_field( $model_option ) : $model_option;
+		$model_option = function_exists( 'get_option' ) ? get_option( 'rtbcb_mini_model', rtbcb_get_default_model( 'mini' ) ) : rtbcb_get_default_model( 'mini' );
+		$model        = function_exists( 'sanitize_text_field' ) ? sanitize_text_field( $model_option ) : $model_option;
 
 		$system_prompt = 'You are a treasury technology advisor. Based on the company overview, industry insights, technology overview, and treasury challenges provided, recommend the most suitable solution category (cash_tools, tms_lite, trms). Return JSON with keys "recommended", "reasoning", and "alternatives" (array of objects with "category" and "reasoning").';
 
@@ -1460,13 +1460,13 @@ function rtbcb_parse_gpt5_business_case_response( $response ) {
 	* @return void
 	*/
 function rtbcb_proxy_openai_responses() {
-$api_key = function_exists( 'get_option' ) ? get_option( 'rtbcb_openai_api_key' ) : '';
-if ( empty( $api_key ) ) {
-wp_send_json_error( [ 'message' => __( 'OpenAI API key not configured.', 'rtbcb' ) ], 500 );
-}
-if ( ! function_exists( 'curl_init' ) ) {
-wp_send_json_error( [ 'message' => __( 'The cURL PHP extension is required.', 'rtbcb' ) ], 500 );
-}
+		$api_key = rtbcb_get_openai_api_key();
+		if ( ! rtbcb_has_openai_api_key() ) {
+			wp_send_json_error( [ 'message' => __( 'OpenAI API key not configured.', 'rtbcb' ) ], 500 );
+		}
+		if ( ! function_exists( 'curl_init' ) ) {
+			wp_send_json_error( [ 'message' => __( 'The cURL PHP extension is required.', 'rtbcb' ) ], 500 );
+		}
 
         if ( isset( $_POST['nonce'] ) ) {
                 check_ajax_referer( 'rtbcb_openai_responses', 'nonce' );
@@ -1550,8 +1550,8 @@ function rtbcb_handle_openai_responses_job( $job_id, $user_id ) {
 	$job_id  = sanitize_key( $job_id );
 	$user_id = intval( $user_id );
 
-$api_key = function_exists( 'get_option' ) ? get_option( 'rtbcb_openai_api_key' ) : '';
-	if ( empty( $api_key ) ) {
+	$api_key = rtbcb_get_openai_api_key();
+	if ( ! rtbcb_has_openai_api_key() ) {
 		set_transient(
 			'rtbcb_openai_job_' . $job_id,
 			[
