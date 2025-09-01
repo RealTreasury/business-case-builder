@@ -702,6 +702,16 @@ categoryContainer.style.display = 'block';
                 this.cancelPolling();
                 this.hideLoading();
                 this.handleError({ message: statusData.message || 'Job failed', type: 'job_error' });
+            } else if (typeof percent === 'number' && percent >= 100) {
+                this.cancelPolling();
+                this.hideLoading();
+                if (statusData.report_html) {
+                    this.handleSuccess(statusData);
+                } else if (statusData.report_data) {
+                    this.handleSuccess(statusData.report_data);
+                } else {
+                    this.handleError({ message: 'Report data missing from completed job', type: 'job_error' });
+                }
             } else if (!this.pollingCancelled) {
                 // Continue polling
                 this.pollTimeout = setTimeout(
