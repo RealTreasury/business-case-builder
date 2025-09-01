@@ -136,20 +136,20 @@ class RTBCB_Main {
 		add_filter( 'plugin_action_links_' . plugin_basename( RTBCB_FILE ), [ $this, 'plugin_action_links' ] );
 
 		// AJAX handlers - Use the enhanced version
-				add_action( 'wp_ajax_rtbcb_generate_case', [ $this, 'ajax_generate_comprehensive_case_enhanced' ] );
-				add_action( 'wp_ajax_nopriv_rtbcb_generate_case', [ $this, 'ajax_generate_comprehensive_case_enhanced' ] );
+		add_action( 'wp_ajax_rtbcb_generate_case', [ $this, 'ajax_generate_comprehensive_case_enhanced' ] );
+		add_action( 'wp_ajax_nopriv_rtbcb_generate_case', [ $this, 'ajax_generate_comprehensive_case_enhanced' ] );
 
-				// Job status handlers
-				add_action( 'wp_ajax_rtbcb_job_status', [ 'RTBCB_Ajax', 'get_job_status' ] );
-				add_action( 'wp_ajax_nopriv_rtbcb_job_status', [ 'RTBCB_Ajax', 'get_job_status' ] );
+		// Job status handlers
+		add_action( 'wp_ajax_rtbcb_job_status', [ 'RTBCB_Ajax', 'get_job_status' ] );
+		add_action( 'wp_ajax_nopriv_rtbcb_job_status', [ 'RTBCB_Ajax', 'get_job_status' ] );
 
-				// Streamed analysis handler
-				add_action( 'wp_ajax_rtbcb_stream_analysis', [ 'RTBCB_Ajax', 'stream_analysis' ] );
-				add_action( 'wp_ajax_nopriv_rtbcb_stream_analysis', [ 'RTBCB_Ajax', 'stream_analysis' ] );
+		// Streamed analysis handler
+		add_action( 'wp_ajax_rtbcb_stream_analysis', [ 'RTBCB_Ajax', 'stream_analysis' ] );
+		add_action( 'wp_ajax_nopriv_rtbcb_stream_analysis', [ 'RTBCB_Ajax', 'stream_analysis' ] );
 
-				// OpenAI proxy handlers
-				add_action( 'wp_ajax_rtbcb_openai_responses', 'rtbcb_proxy_openai_responses' );
-				add_action( 'wp_ajax_nopriv_rtbcb_openai_responses', 'rtbcb_proxy_openai_responses' );
+		// OpenAI proxy handlers
+		add_action( 'wp_ajax_rtbcb_openai_responses', 'rtbcb_proxy_openai_responses' );
+		add_action( 'wp_ajax_nopriv_rtbcb_openai_responses', 'rtbcb_proxy_openai_responses' );
 
 				// Debug handlers
 				if ( defined( 'RTBCB_DEBUG' ) && RTBCB_DEBUG && function_exists( 'current_user_can' ) && current_user_can( 'manage_options' ) ) {
