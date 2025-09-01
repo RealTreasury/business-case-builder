@@ -22,15 +22,6 @@ if ( ! ini_get( 'safe_mode' ) ) {
 	set_time_limit( 60 );
 }
 
-// Add error handler to catch fatal errors.
-register_shutdown_function(
-	function() {
-		$error = error_get_last();
-		if ( $error && in_array( $error['type'], [ E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR ], true ) ) {
-			error_log( 'RTBCB Fatal Error: ' . $error['message'] . ' in ' . $error['file'] . ':' . $error['line'] );
-		}
-	}
-);
 
 define( 'RTBCB_VERSION', '2.1.9' );
 define( 'RTBCB_FILE', __FILE__ );
@@ -91,14 +82,23 @@ class RTBCB_Main {
 		return self::$instance;
 	}
 
-	/**
-	* Constructor.
-	*/
-	private function __construct() {
-		try {
-			if ( $this->is_jetpack_request() ) {
-				return;
+/**
+ * Constructor.
+ */
+private function __construct() {
+	// Add error handler to catch fatal errors.
+	register_shutdown_function(
+		function() {
+			$error = error_get_last();
+			if ( $error && in_array( $error['type'], [ E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR ], true ) ) {
+				error_log( 'RTBCB Fatal Error: ' . $error['message'] . ' in ' . $error['file'] . ':' . $error['line'] );
 			}
+		}
+	);
+	try {
+		if ( $this->is_jetpack_request() ) {
+			return;
+		}
 
 			$this->plugin_data = get_file_data( RTBCB_FILE, [
 				'Name'	      => 'Plugin Name',
