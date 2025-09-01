@@ -76,7 +76,7 @@ echo "15. Running AJAX error handling tests..."
 vendor/bin/phpunit tests/RTBCB_AjaxGenerateComprehensiveCaseErrorTest.php
 vendor/bin/phpunit tests/RTBCB_AjaxGenerateComprehensiveCaseFatalErrorTest.php
 vendor/bin/phpunit tests/RTBCB_GenerateBusinessAnalysisTimeoutTest.php
-vendor/bin/phpunit tests/report-error-handling.test.php
+vendor/bin/phpunit tests/RTBCB_ReportErrorHandlingTest.php
 
 # Background job test
 echo "14. Running background job tests..."
@@ -88,7 +88,7 @@ php tests/job-status.test.php
 
 # Business analysis generation test
 echo "14c. Running business analysis generation test..."
-vendor/bin/phpunit tests/generate-business-analysis.test.php
+vendor/bin/phpunit tests/RTBCB_GenerateBusinessAnalysisTest.php
 echo "14d. Running Jetpack compatibility test..."
 php tests/jetpack-compatibility.test.php
 

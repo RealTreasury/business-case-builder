@@ -53,6 +53,18 @@ return false === $unser && 'b:0;' !== $data ? $data : $unser;
 }
 }
 
+if ( ! function_exists( 'wp_parse_args' ) ) {
+function wp_parse_args( $args, $defaults = [] ) {
+return array_merge( $defaults, $args );
+}
+}
+
+if ( ! function_exists( 'sanitize_sql_orderby' ) ) {
+function sanitize_sql_orderby( $orderby ) {
+return $orderby;
+}
+}
+
 if ( ! function_exists( 'wp_kses_post' ) ) {
 function wp_kses_post( $data ) {
 return $data;
@@ -76,93 +88,20 @@ return $default;
 }
 
 class WPDB_Memory {
-	public $prefix = '';
-	public $insert_id = 0;
-	public $last_error = '';
-	private $dbh;
+public $prefix = '';
+public $insert_id = 0;
+public $last_error = '';
+private $rows = [];
 
-public function __construct() {
-$this->dbh = new SQLite3( ':memory:' );
-}
-
-public function get_charset_collate() {
-return '';
-}
-
-public function query( $sql ) {
-return $this->dbh->exec( $sql );
-}
-
-public function prepare( $query, ...$args ) {
-$escaped = array_map( function ( $arg ) {
-if ( is_string( $arg ) ) {
-return "'" . str_replace( "'", "''", $arg ) . "'";
-}
-return $arg;
-}, $args );
-return vsprintf( $query, $escaped );
-}
-
-public function get_var( $sql ) {
-if ( false !== strpos( $sql, 'information_schema.tables' ) ) {
-return 1;
-}
-$result = $this->dbh->query( $sql );
-if ( $result instanceof SQLite3Result ) {
-$row = $result->fetchArray( SQLITE3_NUM );
-return $row[0] ?? null;
-}
-return null;
-}
-
-public function get_row( $sql, $output = ARRAY_A ) {
-$result = $this->dbh->query( $sql );
-if ( $result instanceof SQLite3Result ) {
-$row = $result->fetchArray( SQLITE3_ASSOC );
-return $row ?: null;
-}
-return null;
-}
-
-public function insert( $table, $data, $format ) {
-$cols  = array_keys( $data );
-$vals  = [];
-foreach ( $cols as $i => $col ) {
-$fmt  = $format[ $i ];
-$val  = $data[ $col ];
-$vals[] = '%s' === $fmt ? "'" . str_replace( "'", "''", $val ) . "'" : $val;
-}
-		$sql = "INSERT INTO $table (" . implode( ',', $cols ) . ") VALUES (" . implode( ',', $vals ) . ")";
-		$ok  = $this->dbh->exec( $sql );
-		if ( $ok ) {
-			$this->insert_id = $this->dbh->lastInsertRowID();
-			return 1;
-		}
-		$this->last_error = $this->dbh->lastErrorMsg();
-		return false;
-}
-
-public function update( $table, $data, $where, $format, $where_format ) {
-$sets = [];
-foreach ( $data as $col => $val ) {
-$fmt    = array_shift( $format );
-$sets[] = '%s' === $fmt ? "$col = '" . str_replace( "'", "''", $val ) . "'" : "$col = $val";
-}
-$where_col = key( $where );
-$where_val = current( $where );
-$where_fmt = $where_format[0];
-$where_sql = '%s' === $where_fmt ? "'" . str_replace( "'", "''", $where_val ) . "'" : $where_val;
-$sql       = "UPDATE $table SET " . implode( ', ', $sets ) . " WHERE $where_col = $where_sql";
-		$ok = $this->dbh->exec( $sql );
-		if ( ! $ok ) {
-			$this->last_error = $this->dbh->lastErrorMsg();
-		}
-		return $ok;
-}
-
-public function last_error() {
-return $this->dbh->lastErrorMsg();
-}
+public function get_charset_collate() { return ''; }
+public function query( $sql ) { return true; }
+public function prepare( $query, ...$args ) { return $query; }
+public function get_var( $sql ) { return 1; }
+public function get_row( $sql, $output = ARRAY_A ) { return $this->rows[0] ?? null; }
+public function get_results( $sql, $output = ARRAY_A ) { return $this->rows; }
+public function insert( $table, $data, $format ) { $this->rows[] = $data; $this->insert_id = count( $this->rows ); return 1; }
+public function update( $table, $data, $where, $format, $where_format ) { foreach ( $this->rows as &$row ) { if ( $row[ key( $where ) ] === current( $where ) ) { $row = array_merge( $row, $data ); return true; } } return false; }
+public function last_error() { return $this->last_error; }
 }
 
 global $wpdb;

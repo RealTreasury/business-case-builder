@@ -134,7 +134,7 @@ $processing_time = $metadata['processing_time'] ?? 0;
 
 	<!-- Executive Summary with Enhanced Visual Design -->
 	<?php if ( ! empty( $executive_summary ) ) : ?>
-	<div class="rtbcb-section-enhanced rtbcb-executive-summary-enhanced">
+<div class="rtbcb-section-enhanced rtbcb-executive-summary rtbcb-executive-summary-enhanced">
 		<div class="rtbcb-section-header-enhanced">
 			<h2 class="rtbcb-section-title">
 				<span class="rtbcb-section-icon">📋</span>
@@ -479,7 +479,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 	// Initialize interactive elements
 	initializeInteractiveFeatures();
-});
+	});
 
 function initializeROIChart() {
 	const ctx = document.getElementById('rtbcb-roi-chart');
@@ -487,7 +487,7 @@ function initializeROIChart() {
 		return;
 	}
 
-	const chartData = <?php echo wp_json_encode( $financial_analysis['chart_data'] ?? [] ); ?>;
+	const chartData = <?php echo function_exists( 'wp_json_encode' ) ? wp_json_encode( $financial_analysis['chart_data'] ?? [] ) : json_encode( $financial_analysis['chart_data'] ?? [] ); ?>;
 	if ( ! chartData.labels ) {
 		return;
 	}
@@ -532,7 +532,7 @@ function initializeSectionToggles() {
 			if (content) {
 				content.style.display = content.style.display === 'none' ? 'block' : 'none';
 				arrow.textContent = content.style.display === 'none' ? '▼' : '▲';
-				text.textContent = content.style.display === 'none' ? '<?php echo esc_js( __( 'Expand', 'rtbcb' ) ); ?>' : '<?php echo esc_js( __( 'Collapse', 'rtbcb' ) ); ?>';
+				text.textContent = content.style.display === 'none' ? '<?php echo function_exists( 'esc_js' ) ? esc_js( __( 'Expand', 'rtbcb' ) ) : htmlspecialchars( __( 'Expand', 'rtbcb' ), ENT_QUOTES ); ?>' : '<?php echo function_exists( 'esc_js' ) ? esc_js( __( 'Collapse', 'rtbcb' ) ) : htmlspecialchars( __( 'Collapse', 'rtbcb' ), ENT_QUOTES ); ?>';
 			}
 		});
 	});
@@ -560,15 +560,20 @@ function rtbcbExportPDF() {
 </script>
 
 <?php
-// Pass structured data to JavaScript for charts and interactivity
-wp_localize_script( 'rtbcb-report', 'rtbcbReportData', [
-	'roiScenarios' => $financial_analysis['roi_scenarios'] ?? [],
-	'companyName' => $company_name,
-	'confidence' => $confidence_level,
-	'strings' => [
-		'exportPDF' => __( 'Export as PDF', 'rtbcb' ),
-		'printReport' => __( 'Print Report', 'rtbcb' ),
-		'expandSection' => __( 'Expand Section', 'rtbcb' ),
-		'collapseSection' => __( 'Collapse Section', 'rtbcb' )
-	]
-] );
+	// Pass structured data to JavaScript for charts and interactivity.
+	$data = [
+		'roiScenarios' => $financial_analysis['roi_scenarios'] ?? [],
+		'companyName'  => $company_name,
+		'confidence'   => $confidence_level,
+		'strings'      => [
+			'exportPDF'       => __( 'Export as PDF', 'rtbcb' ),
+			'printReport'     => __( 'Print Report', 'rtbcb' ),
+			'expandSection'   => __( 'Expand Section', 'rtbcb' ),
+			'collapseSection' => __( 'Collapse Section', 'rtbcb' ),
+		],
+	];
+	if ( function_exists( 'wp_localize_script' ) ) {
+		wp_localize_script( 'rtbcb-report', 'rtbcbReportData', $data );
+	} else {
+		echo '<script>var rtbcbReportData = ' . ( function_exists( 'wp_json_encode' ) ? wp_json_encode( $data ) : json_encode( $data ) ) . '</script>';
+}
