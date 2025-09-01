@@ -55,6 +55,15 @@ if ( ! empty( $plugin_headers ) ) {
 	exit( 1 );
 }
 
+$reflection = new ReflectionClass( 'RTBCB_Main' );
+$method      = $reflection->getMethod( 'is_jetpack_request' );
+$method->setAccessible( true );
+$instance    = RTBCB_Main::instance();
+if ( ! $method->invoke( $instance ) ) {
+	echo "Jetpack 'for' parameter not detected\n";
+	exit( 1 );
+}
+
 header_remove();
 ob_start();
 header( 'Content-Type: text/xml' );
