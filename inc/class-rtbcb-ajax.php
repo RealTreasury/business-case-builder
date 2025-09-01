@@ -12,10 +12,18 @@ class RTBCB_Ajax {
 	*
 	* @return void
 	*/
-               public static function generate_comprehensive_case() {
-                               if ( ! function_exists( 'check_ajax_referer' ) ) {
-                                               wp_die( 'WordPress not ready' );
-                               }
+	public static function generate_comprehensive_case() {
+		if ( ! function_exists( 'check_ajax_referer' ) ) {
+			wp_die( 'WordPress not ready' );
+		}
+
+		rtbcb_increase_memory_limit();
+		$timeout = absint( rtbcb_get_api_timeout() );
+		if ( ! ini_get( 'safe_mode' ) && $timeout > 0 ) {
+			set_time_limit( $timeout );
+		}
+		rtbcb_log_memory_usage( 'start' );
+
 
                                if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
                                                wp_send_json_error( __( 'Security check failed.', 'rtbcb' ), 403 );
@@ -47,14 +55,22 @@ class RTBCB_Ajax {
 		*
 		* @return void
 		*/
-                public static function stream_analysis() {
-                                if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) {
-                                                wp_die( 'Invalid request' );
-                                }
+	public static function stream_analysis() {
+
+		if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) {
+			wp_die( 'Invalid request' );
+		}
 
                                 if ( ! function_exists( 'check_ajax_referer' ) ) {
                                                 wp_die( 'WordPress not ready' );
                                 }
+
+		rtbcb_increase_memory_limit();
+		$timeout = absint( rtbcb_get_api_timeout() );
+		if ( ! ini_get( 'safe_mode' ) && $timeout > 0 ) {
+			set_time_limit( $timeout );
+		}
+		rtbcb_log_memory_usage( 'start' );
 
                                 if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
                                                 wp_send_json_error( __( 'Security check failed.', 'rtbcb' ), 403 );

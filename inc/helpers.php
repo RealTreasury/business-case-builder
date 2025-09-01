@@ -864,17 +864,17 @@ function rtbcb_increase_memory_limit() {
 	}
 }
 
-function rtbcb_log_memory_usage( $stage ) {
+/**
+	* Log current and peak memory usage.
+	*
+	* @param string $checkpoint Identifier for log position.
+	* @return void
+	*/
+function rtbcb_log_memory_usage( $checkpoint ) {
 	$usage = memory_get_usage( true );
 	$peak  = memory_get_peak_usage( true );
-	error_log(
-		sprintf(
-			'RTBCB Memory [%s]: Current: %s, Peak: %s',
-			$stage,
-			size_format( $usage ),
-			size_format( $peak )
-		)
-	);
+
+	error_log( 'RTBCB Memory [' . $checkpoint . ']: Current=' . size_format( $usage ) . ', Peak=' . size_format( $peak ) );
 }
 
 function rtbcb_get_memory_status() {
