@@ -142,8 +142,17 @@ class RTBCB_Router {
 				$this->get_report_html( $business_case_data );
 
 			// Save the lead.
-			$leads   = new RTBCB_Leads();
-			$lead_id = $leads->save_lead( $form_data, $business_case_data );
+			$lead_data = array_merge(
+				$form_data,
+				[
+					'recommended_category' => $recommendation['recommended'] ?? '',
+					'roi_low'              => $calculations['conservative']['roi_percentage'] ?? 0,
+					'roi_base'             => $calculations['base']['roi_percentage'] ?? 0,
+					'roi_high'             => $calculations['optimistic']['roi_percentage'] ?? 0,
+					'report_html'          => $report_html,
+				]
+			);
+			$lead_id = RTBCB_Leads::save_lead( $lead_data );
 
 			// Write report HTML to temporary file in uploads directory.
 			$upload_dir  = wp_upload_dir();
