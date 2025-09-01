@@ -522,7 +522,15 @@ if ( e.key === 'Escape' && progressContainer.style.display === 'flex' ) {
 if ( window.businessCaseBuilder && typeof window.businessCaseBuilder.cancelPolling === 'function' ) {
 window.businessCaseBuilder.cancelPolling();
 }
+if ( window.businessCaseBuilder && typeof window.businessCaseBuilder.hideLoading === 'function' ) {
+window.businessCaseBuilder.hideLoading();
+} else {
 progressContainer.style.display = 'none';
+const formContainer = document.querySelector( '.rtbcb-form-container' );
+if ( formContainer ) {
+formContainer.style.display = '';
+}
+}
 document.body.style.overflow = '';
 }
 } );
