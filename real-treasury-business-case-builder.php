@@ -197,10 +197,10 @@ return true;
 
 		// AJAX handler for comprehensive case generation
 		if ( class_exists( 'RTBCB_Ajax' ) ) {
-			add_action( 'wp_ajax_rtbcb_generate_case', [ 'RTBCB_Ajax', 'generate_comprehensive_case' ] );
+			add_action( 'wp_ajax_rtbcb_generate_case', 'rtbcb_ajax_generate_case' );
 		}
 		if ( class_exists( 'RTBCB_Ajax' ) ) {
-			add_action( 'wp_ajax_nopriv_rtbcb_generate_case', [ 'RTBCB_Ajax', 'generate_comprehensive_case' ] );
+			add_action( 'wp_ajax_nopriv_rtbcb_generate_case', 'rtbcb_ajax_generate_case' );
 		}
 
 		// Job status handlers
@@ -2782,6 +2782,21 @@ if ( ! class_exists( 'Real_Treasury_BCB' ) ) {
 		}
 	}
 
+
+if ( ! function_exists( 'rtbcb_ajax_generate_case' ) ) {
+	/**
+	 * Handle AJAX requests for comprehensive case generation.
+	 *
+	 * @return void
+	 */
+	function rtbcb_ajax_generate_case() {
+		if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) {
+			wp_die( __( 'Invalid request', 'rtbcb' ) );
+		}
+
+		RTBCB_Ajax::generate_comprehensive_case();
+	}
+}
 
 // Helper functions for use in templates and other plugins
 if ( ! function_exists( 'rtbcb_get_leads_count' ) ) {
