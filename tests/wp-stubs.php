@@ -1,7 +1,23 @@
 <?php
 defined( 'ABSPATH' ) || exit;
+if ( ! defined( 'DOING_AJAX' ) ) {
+        define( 'DOING_AJAX', true );
+}
+
+if ( ! function_exists( 'wp_die' ) ) {
+        function wp_die( $message = '' ) {
+                throw new Exception( $message );
+        }
+}
+
+if ( ! function_exists( 'is_admin' ) ) {
+        function is_admin() {
+                return false;
+        }
+}
+
 if ( ! function_exists( 'add_filter' ) ) {
-	function add_filter( $tag, $function_to_add, $priority = 10, $accepted_args = 1 ) {}
+        function add_filter( $tag, $function_to_add, $priority = 10, $accepted_args = 1 ) {}
 }
 if ( ! function_exists( 'apply_filters' ) ) {
 	function apply_filters( $tag, $value ) {

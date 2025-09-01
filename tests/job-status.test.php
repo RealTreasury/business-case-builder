@@ -5,8 +5,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 defined( 'ABSPATH' ) || exit;
 
+if ( ! defined( 'DOING_AJAX' ) ) {
+        define( 'DOING_AJAX', true );
+}
+
+if ( ! function_exists( 'wp_die' ) ) {
+        function wp_die( $message = '' ) {
+                throw new Exception( $message );
+        }
+}
+
 if ( ! class_exists( 'WP_Error' ) ) {
-	class WP_Error {
+        class WP_Error {
 		private $code;
 		private $message;
 		public function __construct( $code = '', $message = '' ) {

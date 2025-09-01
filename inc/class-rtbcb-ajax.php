@@ -13,6 +13,14 @@ class RTBCB_Ajax {
 	* @return void
 	*/
                public static function generate_comprehensive_case() {
+                               if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) {
+                                               wp_die( 'Invalid request' );
+                               }
+
+                               if ( ! function_exists( 'check_ajax_referer' ) ) {
+                                               wp_die( 'WordPress not ready' );
+                               }
+
                                if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
                                                wp_send_json_error( __( 'Security check failed.', 'rtbcb' ), 403 );
                                                return;
@@ -43,11 +51,19 @@ class RTBCB_Ajax {
 		*
 		* @return void
 		*/
-		public static function stream_analysis() {
-				if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
-						wp_send_json_error( __( 'Security check failed.', 'rtbcb' ), 403 );
-						return;
-				}
+                public static function stream_analysis() {
+                                if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) {
+                                                wp_die( 'Invalid request' );
+                                }
+
+                                if ( ! function_exists( 'check_ajax_referer' ) ) {
+                                                wp_die( 'WordPress not ready' );
+                                }
+
+                                if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
+                                                wp_send_json_error( __( 'Security check failed.', 'rtbcb' ), 403 );
+                                                return;
+                                }
 
 				$user_inputs = self::collect_and_validate_user_inputs();
 				if ( is_wp_error( $user_inputs ) ) {
@@ -299,11 +315,19 @@ $enable_ai        = ! $bypass_heavy && ( class_exists( 'RTBCB_Settings' ) ? RTBC
 	*
 	* @return void
 	*/
-	public static function get_job_status() {
-		if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
-			wp_send_json_error( __( 'Security check failed.', 'rtbcb' ), 403 );
-			return;
-		}
+       public static function get_job_status() {
+               if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) {
+                       wp_die( 'Invalid request' );
+               }
+
+               if ( ! function_exists( 'check_ajax_referer' ) ) {
+                       wp_die( 'WordPress not ready' );
+               }
+
+               if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
+                       wp_send_json_error( __( 'Security check failed.', 'rtbcb' ), 403 );
+                       return;
+               }
 
 		$job_id = sanitize_text_field( wp_unslash( $_GET['job_id'] ?? '' ) );
 		if ( empty( $job_id ) ) {
