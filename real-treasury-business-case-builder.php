@@ -151,10 +151,10 @@ class RTBCB_Main {
 		add_action( 'wp_ajax_rtbcb_openai_responses', 'rtbcb_proxy_openai_responses' );
 		add_action( 'wp_ajax_nopriv_rtbcb_openai_responses', 'rtbcb_proxy_openai_responses' );
 
-				// Debug handlers
-				if ( defined( 'RTBCB_DEBUG' ) && RTBCB_DEBUG && function_exists( 'current_user_can' ) && current_user_can( 'manage_options' ) ) {
-					$this->init_hooks_debug();
-				}
+		// Debug handlers
+		if ( defined( 'RTBCB_DEBUG' ) && RTBCB_DEBUG && function_exists( 'current_user_can' ) && current_user_can( 'manage_options' ) ) {
+			$this->init_hooks_debug();
+		}
 	}
 
 	/**
@@ -162,11 +162,11 @@ class RTBCB_Main {
 	*
 	* @return void
 	*/
-				private function init_hooks_debug() {
-					add_action( 'wp_ajax_rtbcb_debug_test', [ $this, 'debug_ajax_handler' ] );
-					add_action( 'wp_ajax_rtbcb_simple_test', [ $this, 'ajax_generate_case_simple' ] );
-					add_action( 'wp_ajax_rtbcb_debug_report', [ $this, 'debug_report_generation' ] );
-				}
+	private function init_hooks_debug() {
+		add_action( 'wp_ajax_rtbcb_debug_test', [ $this, 'debug_ajax_handler' ] );
+		add_action( 'wp_ajax_rtbcb_simple_test', [ $this, 'ajax_generate_case_simple' ] );
+		add_action( 'wp_ajax_rtbcb_debug_report', [ $this, 'debug_report_generation' ] );
+	}
 
 	/**
 	* Include required files.
