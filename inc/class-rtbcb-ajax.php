@@ -12,21 +12,31 @@ class RTBCB_Ajax {
 	*
 	* @return void
 	*/
-		public static function generate_comprehensive_case() {
-				if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
-						wp_send_json_error( __( 'Security check failed.', 'rtbcb' ), 403 );
-						return;
-				}
+               public static function generate_comprehensive_case() {
+                               if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
+                                               wp_send_json_error( __( 'Security check failed.', 'rtbcb' ), 403 );
+                                               return;
+                               }
 
-				$user_inputs = self::collect_and_validate_user_inputs();
-				if ( is_wp_error( $user_inputs ) ) {
-						wp_send_json_error( $user_inputs->get_error_message(), 400 );
-						return;
-				}
+                               $user_inputs = self::collect_and_validate_user_inputs();
+                               if ( is_wp_error( $user_inputs ) ) {
+                                               wp_send_json_error( $user_inputs->get_error_message(), 400 );
+                                               return;
+                               }
 
-				$job_id = RTBCB_Background_Job::enqueue( $user_inputs );
-				wp_send_json_success( [ 'job_id' => $job_id ] );
-		}
+                               try {
+                                               $job_id = RTBCB_Background_Job::enqueue( $user_inputs );
+                                               if ( is_wp_error( $job_id ) ) {
+                                                               wp_send_json_error( $job_id->get_error_message(), 500 );
+                                                               return;
+                                               }
+
+                                               wp_send_json_success( [ 'job_id' => $job_id ] );
+                               } catch ( \Exception $e ) {
+                                               rtbcb_log_error( 'Business case generation error: ' . $e->getMessage() );
+                                               wp_send_json_error( __( 'An unexpected error occurred.', 'rtbcb' ), 500 );
+                               }
+               }
 
 		/**
 		* Stream business analysis chunks via AJAX.
