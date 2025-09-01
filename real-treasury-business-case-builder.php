@@ -21,6 +21,7 @@ if ( ! defined( 'RTBCB_DEBUG' ) ) {
 define( 'RTBCB_DEBUG', false );
 }
 
+
 if ( ! function_exists( 'rt_bcb_log' ) ) {
 /**
  * Simple logger for debugging.
@@ -306,7 +307,8 @@ return true;
 		       error_log( 'RTBCB: Fatal error during class loading: ' . $e->getMessage() );
 		       return false;
 	       }
-       }
+	}
+
 
 	/**
 	* Plugin initialization.
@@ -2853,25 +2855,35 @@ if ( ! function_exists( 'rtbcb_ajax_generate_case' ) ) {
 	 *
 	 * @return void
 	 */
-       function rtbcb_ajax_generate_case() {
-               error_log( 'RTBCB: AJAX request received - Action: rtbcb_generate_case' );
-               error_log( 'RTBCB: POST data keys: ' . implode( ', ', array_keys( $_POST ) ) );
-               error_log( 'RTBCB: User agent: ' . ( $_SERVER['HTTP_USER_AGENT'] ?? 'unknown' ) );
+	function rtbcb_ajax_generate_case() {
+		rtbcb_increase_memory_limit();
+		$timeout = absint( rtbcb_get_api_timeout() );
+		if ( ! ini_get( 'safe_mode' ) && $timeout > 0 ) {
+			set_time_limit( $timeout );
+		}
 
-               if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) {
-                       error_log( 'RTBCB: Not an AJAX request' );
-                       wp_die( __( 'Invalid request', 'rtbcb' ) );
-               }
+		rtbcb_log_memory_usage( 'start' );
 
-               if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
-                       error_log( 'RTBCB: Nonce verification failed' );
-                       error_log( 'RTBCB: Expected action: rtbcb_generate' );
-                       error_log( 'RTBCB: Provided nonce: ' . ( $_POST['rtbcb_nonce'] ?? 'none' ) );
-                       wp_send_json_error( __( 'Security check failed.', 'rtbcb' ), 403 );
-                       return;
-               }
+		error_log( 'RTBCB: AJAX request received - Action: rtbcb_generate_case' );
+		error_log( 'RTBCB: POST data keys: ' . implode( ', ', array_keys( $_POST ) ) );
+		error_log( 'RTBCB: User agent: ' . ( $_SERVER['HTTP_USER_AGENT'] ?? 'unknown' ) );
 
-               RTBCB_Ajax::generate_comprehensive_case();
+		if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) {
+			error_log( 'RTBCB: Not an AJAX request' );
+			wp_die( __( 'Invalid request', 'rtbcb' ) );
+		}
+
+
+		if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
+			error_log( 'RTBCB: Nonce verification failed' );
+			error_log( 'RTBCB: Expected action: rtbcb_generate' );
+			error_log( 'RTBCB: Provided nonce: ' . ( $_POST['rtbcb_nonce'] ?? 'none' ) );
+			wp_send_json_error( __( 'Security check failed.', 'rtbcb' ), 403 );
+			return;
+		}
+
+
+		RTBCB_Ajax::generate_comprehensive_case();
        }
 }
 
