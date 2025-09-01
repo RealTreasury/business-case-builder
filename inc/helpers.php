@@ -14,7 +14,7 @@ defined( 'ABSPATH' ) || exit;
 	* @return int Timeout in seconds.
 	*/
 function rtbcb_get_api_timeout() {
-	$timeout = (int) get_option( 'rtbcb_gpt5_timeout', 300 );
+	$timeout = function_exists( 'get_option' ) ? (int) get_option( 'rtbcb_gpt5_timeout', 300 ) : 300;
 	$timeout = rtbcb_sanitize_api_timeout( $timeout );
 
 	/**
@@ -974,7 +974,9 @@ function rtbcb_map_sample_report_inputs( $inputs, $scenario_key ) {
 		return $empty;
 	}
 }
-add_filter( 'rtbcb_sample_report_inputs', 'rtbcb_map_sample_report_inputs', 10, 2 );
+if ( function_exists( 'add_filter' ) ) {
+	add_filter( 'rtbcb_sample_report_inputs', 'rtbcb_map_sample_report_inputs', 10, 2 );
+}
 
 /**
 	* Generate a category recommendation with enriched context for testing.
