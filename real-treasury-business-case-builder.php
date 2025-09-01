@@ -947,7 +947,10 @@ return $use_comprehensive;
 
 		$timeout = absint( rtbcb_get_api_timeout() );
 		if ( ! ini_get( 'safe_mode' ) && $timeout > 0 ) {
-			set_time_limit( $timeout );
+			$disabled_functions = array_map( 'trim', explode( ',', ini_get( 'disable_functions' ) ) );
+			if ( function_exists( 'set_time_limit' ) && ! in_array( 'set_time_limit', $disabled_functions, true ) ) {
+				set_time_limit( $timeout );
+			}
 		}
 
 		// Collect and validate user inputs.
@@ -1416,7 +1419,10 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 	rtbcb_increase_memory_limit();
 	$timeout = absint( rtbcb_get_api_timeout() );
 	if ( ! ini_get( 'safe_mode' ) && $timeout > 0 ) {
-		set_time_limit( $timeout );
+		$disabled_functions = array_map( 'trim', explode( ',', ini_get( 'disable_functions' ) ) );
+		if ( function_exists( 'set_time_limit' ) && ! in_array( 'set_time_limit', $disabled_functions, true ) ) {
+			set_time_limit( $timeout );
+		}
 	}
 
 		try {
@@ -1461,7 +1467,10 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 			);
 			return;
 		}
-		set_time_limit( $timeout );
+		$disabled_functions = array_map( 'trim', explode( ',', ini_get( 'disable_functions' ) ) );
+		if ( function_exists( 'set_time_limit' ) && ! in_array( 'set_time_limit', $disabled_functions, true ) ) {
+			set_time_limit( $timeout );
+		}
 		}
 
 		// Clear any buffered output before sending JSON responses.
@@ -2842,7 +2851,10 @@ if ( ! function_exists( 'rtbcb_ajax_generate_case' ) ) {
 
                $timeout = absint( rtbcb_get_api_timeout() );
                if ( ! ini_get( 'safe_mode' ) && $timeout > 0 ) {
-                       set_time_limit( $timeout );
+                       $disabled_functions = array_map( 'trim', explode( ',', ini_get( 'disable_functions' ) ) );
+                       if ( function_exists( 'set_time_limit' ) && ! in_array( 'set_time_limit', $disabled_functions, true ) ) {
+                               set_time_limit( $timeout );
+                       }
                }
 
                rtbcb_log_memory_usage( 'ajax_start' );
