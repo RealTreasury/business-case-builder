@@ -2,8 +2,7 @@
 <phpunit>
   <testsuites>
     <testsuite name="rtbcb">
-      <file>tests/validator.test.php</file>
-      <file>tests/edge-cases.test.php</file>
+      <file>tests/RTBCB_ValidatorTest.php</file>
     </testsuite>
   </testsuites>
 </phpunit>

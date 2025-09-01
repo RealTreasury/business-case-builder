@@ -6,6 +6,7 @@ defined( 'ABSPATH' ) || exit;
 
 use PHPUnit\Framework\TestCase;
 require_once __DIR__ . '/wp-stubs.php';
+require_once __DIR__ . '/../inc/helpers.php';
 
 if ( ! function_exists( '__' ) ) {
 function __( $text, $domain = null ) {
@@ -13,10 +14,11 @@ return $text;
 }
 }
 
-require_once __DIR__ . '/../inc/helpers.php';
-require_once __DIR__ . '/../inc/class-rtbcb-validator.php';
-
 final class RTBCB_ValidatorTest extends TestCase {
+	protected function setUp(): void {
+		require_once __DIR__ . '/../inc/class-rtbcb-validator.php';
+	}
+
 public function test_missing_required_fields() {
 $validator = new RTBCB_Validator();
 
