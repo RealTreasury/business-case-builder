@@ -180,11 +180,20 @@ function displayReport(htmlContent) {
 }
 
 function exportToPDF(htmlContent) {
-    const printWindow = window.open('', '_blank');
-    const doc = printWindow.document;
-    doc.documentElement.innerHTML = sanitizeReportHTML(htmlContent);
-    printWindow.focus();
-    printWindow.print();
+    const sanitized = sanitizeReportHTML(htmlContent);
+    const blob = new Blob([sanitized], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const printWindow = window.open(url, '_blank');
+
+    if (printWindow) {
+        printWindow.focus();
+        printWindow.onload = function() {
+            printWindow.print();
+            URL.revokeObjectURL(url);
+        };
+    } else {
+        console.error('Failed to open print window');
+    }
 }
 
 async function generateAndDisplayReport(businessContext) {
