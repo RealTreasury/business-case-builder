@@ -1,4 +1,9 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+	define( 'ABSPATH', __DIR__ . '/../' );
+}
+defined( 'ABSPATH' ) || exit;
+
 /**
 	* Lints PHP files that output JSON to prevent stray output.
 	*

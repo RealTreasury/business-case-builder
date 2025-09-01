@@ -1,4 +1,9 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+	define( 'ABSPATH', __DIR__ . '/../' );
+}
+defined( 'ABSPATH' ) || exit;
+
 require_once __DIR__ . '/../inc/helpers.php';
 
 if ( ! function_exists( '__' ) ) {

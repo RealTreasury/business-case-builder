@@ -1,6 +1,8 @@
 <?php
-
-define( 'ABSPATH', __DIR__ . '/../' );
+if ( ! defined( 'ABSPATH' ) ) {
+	define( 'ABSPATH', __DIR__ . '/../' );
+}
+defined( 'ABSPATH' ) || exit;
 
 if ( ! function_exists( 'add_filter' ) ) {
 	function add_filter( $tag, $function_to_add, $priority = 10, $accepted_args = 1 ) {

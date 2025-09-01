@@ -1,9 +1,10 @@
 <?php
-if (!defined('ABSPATH')) {
-	define('ABSPATH', __DIR__);
+if ( ! defined( 'ABSPATH' ) ) {
+	define( 'ABSPATH', __DIR__ );
 }
-if (!function_exists('__')) {
-	function __($text, $domain = null) {
+defined( 'ABSPATH' ) || exit;
+if ( ! function_exists( '__' ) ) {
+	function __( $text, $domain = null ) {
 		return $text;
 	}
 }
@@ -28,7 +29,7 @@ if (!function_exists('esc_html')) {
 }
 if (!function_exists('esc_attr')) {
 function esc_attr($text) {
-return $text;
+		return $text;
 }
 }
 if (!function_exists('wp_convert_hr_to_bytes')) {
