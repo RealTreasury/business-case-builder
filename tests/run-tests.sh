@@ -7,6 +7,12 @@ echo "================================================"
 export OPENAI_API_KEY="${OPENAI_API_KEY:-sk-test}"
 export RTBCB_TEST_MODEL="${RTBCB_TEST_MODEL:-gpt-5-mini}"
 
+# Ensure PHPUnit is installed
+if [ ! -f "vendor/bin/phpunit" ]; then
+    echo "Run \`composer install\` to install PHPUnit"
+    exit 1
+fi
+
 # Install JS dependencies for headless browser tests
 npm install --no-save --no-package-lock jsdom >/dev/null 2>&1
 export NODE_OPTIONS="--require ./tests/jsdom-setup.js"
