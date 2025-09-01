@@ -1,19 +1,19 @@
 <?php
-/**
-* Enhanced Comprehensive Report Template
-*
-* This template now handles structured data from the refactored workflow
-* and generates a modern dashboard-style interface with:
-* - Interactive charts and metrics
-* - Collapsible sections
-* - Enhanced visual design
-* - Mobile-responsive layout
-*
-* @package RealTreasuryBusinessCaseBuilder
-* @var array $report_data Structured report data from the new workflow
-*/
-
 defined( 'ABSPATH' ) || exit;
+
+/**
+ * Enhanced Comprehensive Report Template
+ *
+ * This template now handles structured data from the refactored workflow
+ * and generates a modern dashboard-style interface with:
+ * - Interactive charts and metrics
+ * - Collapsible sections
+ * - Enhanced visual design
+ * - Mobile-responsive layout
+ *
+ * @package RealTreasuryBusinessCaseBuilder
+ * @var array $report_data Structured report data from the new workflow
+ */
 
 // Extract structured data sections
 $metadata             = $report_data['metadata'] ?? [];

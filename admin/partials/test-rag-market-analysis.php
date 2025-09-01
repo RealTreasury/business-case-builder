@@ -1,11 +1,11 @@
 <?php
-/**
-	* Partial for Test RAG Market Analysis section.
-	*
-	* @package RealTreasuryBusinessCaseBuilder
-	*/
-
 defined( 'ABSPATH' ) || exit;
+
+/**
+ * Partial for Test RAG Market Analysis section.
+ *
+ * @package RealTreasuryBusinessCaseBuilder
+ */
 
 if ( ! rtbcb_require_completed_steps( 'rtbcb-test-rag-market-analysis', false ) ) {
 	echo '<div class="notice notice-warning inline"><p>' .

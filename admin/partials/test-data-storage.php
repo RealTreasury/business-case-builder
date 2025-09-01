@@ -1,11 +1,11 @@
 <?php
-/**
-	* Partial for Test Data Storage section.
-	*
-	* @package RealTreasuryBusinessCaseBuilder
-	*/
-
 defined( 'ABSPATH' ) || exit;
+
+/**
+ * Partial for Test Data Storage section.
+ *
+ * @package RealTreasuryBusinessCaseBuilder
+ */
 
 if ( ! rtbcb_require_completed_steps( 'rtbcb-test-data-storage', false ) ) {
 	echo '<div class="notice notice-warning inline"><p>' .

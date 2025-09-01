@@ -1,11 +1,11 @@
 <?php
-/**
-	* Tracking script injection test.
-	*
-	* @package RealTreasuryBusinessCaseBuilder
-	*/
-
 defined( 'ABSPATH' ) || exit;
+
+/**
+ * Tracking script injection test.
+ *
+ * @package RealTreasuryBusinessCaseBuilder
+ */
 
 if ( ! rtbcb_require_completed_steps( 'rtbcb-test-tracking-script', false ) ) {
 	echo '<div class="notice notice-warning inline"><p>' .

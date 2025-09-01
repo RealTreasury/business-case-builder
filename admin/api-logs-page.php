@@ -1,11 +1,12 @@
 <?php
-/**
-	* API logs admin page.
-	*
-	* @package RealTreasuryBusinessCaseBuilder
-	*/
-
 defined( 'ABSPATH' ) || exit;
+
+/**
+ * API logs admin page.
+ *
+ * @package RealTreasuryBusinessCaseBuilder
+ */
+
 ?>
 <div class="wrap">
 	<h1><?php echo esc_html__( 'API Logs', 'rtbcb' ); ?></h1>

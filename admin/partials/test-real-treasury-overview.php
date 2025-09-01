@@ -1,11 +1,11 @@
 <?php
-/**
-	* Partial for Test Real Treasury Overview section.
-	*
-	* @package RealTreasuryBusinessCaseBuilder
-	*/
-
 defined( 'ABSPATH' ) || exit;
+
+/**
+ * Partial for Test Real Treasury Overview section.
+ *
+ * @package RealTreasuryBusinessCaseBuilder
+ */
 
 if ( ! rtbcb_require_completed_steps( 'rtbcb-test-real-treasury-overview', false ) ) {
 	echo '<div class="notice notice-warning inline"><p>' .

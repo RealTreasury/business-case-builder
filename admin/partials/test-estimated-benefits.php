@@ -1,11 +1,11 @@
 <?php
-/**
-	* Partial for Test Estimated Benefits section.
-	*
-	* @package RealTreasuryBusinessCaseBuilder
-	*/
-
 defined( 'ABSPATH' ) || exit;
+
+/**
+ * Partial for Test Estimated Benefits section.
+ *
+ * @package RealTreasuryBusinessCaseBuilder
+ */
 
 if ( ! rtbcb_require_completed_steps( 'rtbcb-test-estimated-benefits', false ) ) {
 	echo '<div class="notice notice-warning inline"><p>' .

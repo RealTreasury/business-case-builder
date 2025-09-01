@@ -1,11 +1,11 @@
 <?php
-/**
-	* Dashboard recent test results.
-	*
-	* @package RealTreasuryBusinessCaseBuilder
-	*/
-
 defined( 'ABSPATH' ) || exit;
+
+/**
+ * Dashboard recent test results.
+ *
+ * @package RealTreasuryBusinessCaseBuilder
+ */
 
 $max_results  = 10;
 $recent_results = [];

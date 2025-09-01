@@ -1,10 +1,9 @@
 <?php
-/**
-	* Enhanced Leads admin page for Real Treasury Business Case Builder plugin.
-	*/
-
-// Exit if accessed directly.
 defined( 'ABSPATH' ) || exit;
+
+/**
+ * Enhanced Leads admin page for Real Treasury Business Case Builder plugin.
+ */
 
 $current_page = $leads_data['current_page'] ?? 1;
 $total_pages = $leads_data['total_pages'] ?? 1;

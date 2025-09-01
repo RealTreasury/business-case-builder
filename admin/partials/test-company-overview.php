@@ -1,11 +1,11 @@
 <?php
-/**
-	* Partial for Test Company Overview section.
-	*
-	* @package RealTreasuryBusinessCaseBuilder
-	*/
-
 defined( 'ABSPATH' ) || exit;
+
+/**
+ * Partial for Test Company Overview section.
+ *
+ * @package RealTreasuryBusinessCaseBuilder
+ */
 
 if ( ! rtbcb_require_completed_steps( 'rtbcb-test-company-overview', false ) ) {
 	echo '<div class="notice notice-warning inline"><p>' .

@@ -1,11 +1,11 @@
 <?php
-/**
-	* Report assembly and delivery test section.
-	*
-	* @package RealTreasuryBusinessCaseBuilder
-	*/
-
 defined( 'ABSPATH' ) || exit;
+
+/**
+ * Report assembly and delivery test section.
+ *
+ * @package RealTreasuryBusinessCaseBuilder
+ */
 
 $allowed = rtbcb_require_completed_steps( 'rtbcb-test-report-assembly', false );
 if ( ! $allowed ) {

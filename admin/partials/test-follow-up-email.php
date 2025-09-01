@@ -1,11 +1,11 @@
 <?php
-/**
-	* Follow-up email queue test.
-	*
-	* @package RealTreasuryBusinessCaseBuilder
-	*/
-
 defined( 'ABSPATH' ) || exit;
+
+/**
+ * Follow-up email queue test.
+ *
+ * @package RealTreasuryBusinessCaseBuilder
+ */
 
 if ( ! rtbcb_require_completed_steps( 'rtbcb-test-follow-up-email', false ) ) {
 	echo '<div class="notice notice-warning inline"><p>' .
