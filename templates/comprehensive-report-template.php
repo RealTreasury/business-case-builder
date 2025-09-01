@@ -575,5 +575,8 @@ function rtbcbExportPDF() {
 	if ( function_exists( 'wp_localize_script' ) ) {
 		wp_localize_script( 'rtbcb-report', 'rtbcbReportData', $data );
 	} else {
-		echo '<script>var rtbcbReportData = ' . ( function_exists( 'wp_json_encode' ) ? wp_json_encode( $data ) : json_encode( $data ) ) . '</script>';
+		printf(
+			'<script>var rtbcbReportData = %s</script>',
+			function_exists( 'wp_json_encode' ) ? wp_json_encode( $data, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_HEX_APOS ) : json_encode( $data )
+		);
 }

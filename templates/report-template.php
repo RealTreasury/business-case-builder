@@ -45,9 +45,13 @@ $rag_context   = $business_case_data['rag_context'] ?? [];
 				<li>
 					<?php
 					if ( is_array( $citation ) && ! empty( $citation['url'] ) ) {
-						$url  = esc_url( $citation['url'] );
-						$text = ! empty( $citation['text'] ) ? esc_html( $citation['text'] ) : $url;
-						echo '<a href="' . $url . '">' . $text . '</a>';
+						$url  = $citation['url'];
+						$text = ! empty( $citation['text'] ) ? $citation['text'] : $url;
+						printf(
+							'<a href="%s">%s</a>',
+							esc_url( $url ),
+							esc_html( $text )
+						);
 					} else {
 						echo esc_html( is_array( $citation ) ? wp_json_encode( $citation ) : $citation );
 					}
