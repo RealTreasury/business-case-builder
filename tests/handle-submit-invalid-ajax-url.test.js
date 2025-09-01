@@ -4,7 +4,7 @@ const assert = require('assert');
 
 require('./jsdom-setup');
 
-global.rtbcbAjax = { ajax_url: 'https://example.com', nonce: 'test-nonce' };
+global.rtbcbAjax = { ajax_url: 'ftp://example.com', nonce: 'test-nonce' };
 
 class SimpleFormData {
     constructor(form) {
@@ -28,17 +28,10 @@ class SimpleFormData {
 
 global.FormData = SimpleFormData;
 
+let fetchCalled = false;
 global.fetch = function() {
-    const payload = { success: false, data: 'Please enter your company name.' };
-    const response = {
-        ok: false,
-        status: 400,
-        json: async () => payload,
-        text: async () => JSON.stringify(payload),
-        headers: { get: () => null },
-        clone() { return this; }
-    };
-    return Promise.resolve(response);
+    fetchCalled = true;
+    return Promise.resolve();
 };
 
 const form = {
@@ -79,7 +72,6 @@ const code = fs.readFileSync('public/js/rtbcb-wizard.js', 'utf8');
 vm.runInThisContext(code);
 
 const builder = new BusinessCaseBuilder();
-builder.form = form;
 let errorMessage = null;
 builder.showProgress = () => {};
 builder.showResults = () => {};
@@ -87,8 +79,9 @@ builder.showEnhancedError = (msg) => { errorMessage = msg; };
 
 (async () => {
     await builder.handleSubmit();
-    assert.strictEqual(errorMessage, 'An error occurred while processing your request. Please try again.');
-    console.log('String error response test passed.');
+    assert.strictEqual(fetchCalled, false);
+    assert.strictEqual(errorMessage, 'Service unavailable. Please reload the page.');
+    console.log('Invalid ajaxUrl test passed.');
 })().catch(err => {
     console.error(err);
     process.exit(1);

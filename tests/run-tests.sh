@@ -101,6 +101,9 @@ node tests/handle-submit-success.test.js
 node tests/handle-server-error-display.test.js
 node tests/handle-invalid-server-response.test.js
 node tests/handle-string-error-response.test.js
+node tests/handle-submit-invalid-ajax-url.test.js
+node tests/rtbcb-handle-submit-invalid-ajax-url.test.js
+node tests/is-valid-url.test.js
 node tests/temperature-model.test.js
 node tests/min-output-tokens.test.js
 node tests/gpt5-config-defaults.test.js
