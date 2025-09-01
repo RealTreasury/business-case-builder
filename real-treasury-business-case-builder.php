@@ -12,16 +12,6 @@
 */
 defined( 'ABSPATH' ) || exit;
 
-// Prevent memory crashes.
-if ( ! defined( 'WP_MEMORY_LIMIT' ) ) {
-	define( 'WP_MEMORY_LIMIT', '256M' );
-}
-
-// Prevent execution timeout crashes.
-if ( ! ini_get( 'safe_mode' ) ) {
-	set_time_limit( 60 );
-}
-
 // Add error handler to catch fatal errors.
 register_shutdown_function(
 	function() {
