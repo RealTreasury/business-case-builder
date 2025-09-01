@@ -16,7 +16,7 @@ class RTBCB_Background_Job {
 	* @param array  $payload Additional fields such as step, percent, or partial results.
 	* @return void
 	*/
-public static function update_status( $job_id, $state, $payload = [] ) {
+	public static function update_status( $job_id, $state, $payload = [] ) {
 $current = get_transient( $job_id );
 if ( ! is_array( $current ) ) {
 $current = [
@@ -65,10 +65,6 @@ $job_id = uniqid( 'rtbcb_job_', true );
 	* @return void
 	*/
 	public static function process_job( $job_id, $user_inputs ) {
-	if ( rtbcb_heavy_features_disabled() ) {
-		return;
-	}
-
 		self::update_status( $job_id, 'processing' );
 
 		$basic_roi = RTBCB_Ajax::process_basic_roi_step( $user_inputs );
