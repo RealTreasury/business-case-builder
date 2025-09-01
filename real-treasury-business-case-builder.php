@@ -2980,13 +2980,14 @@ add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_recommended_category_scripts
 function rtbcb_enqueue_company_overview_scripts( $hook ) {
 	$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
 	if ( strpos( $hook, 'rtbcb' ) !== false && ( strpos( $hook, 'company-overview' ) !== false || 'rtbcb-test-dashboard' === $page ) ) {
-		wp_enqueue_script(
-		'rtbcb-test-utils',
-		plugin_dir_url( __FILE__ ) . 'admin/js/rtbcb-test-utils.js',
-		[ 'jquery' ],
-		'1.0.0',
-		true
-		);
+                wp_enqueue_script(
+                'rtbcb-test-utils',
+                plugin_dir_url( __FILE__ ) . 'admin/js/rtbcb-test-utils.js',
+                [ 'jquery', 'wp-i18n' ],
+                '1.0.0',
+                true
+                );
+                wp_set_script_translations( 'rtbcb-test-utils', 'rtbcb' );
 		wp_enqueue_script(
 		'rtbcb-company-overview',
 		plugin_dir_url( __FILE__ ) . 'admin/js/company-overview.js',
@@ -3016,13 +3017,14 @@ function rtbcb_enqueue_company_overview_scripts( $hook ) {
 function rtbcb_enqueue_real_treasury_overview_scripts( $hook ) {
 	$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
 	if ( strpos( $hook, 'rtbcb' ) !== false && ( strpos( $hook, 'real-treasury-overview' ) !== false || 'rtbcb-test-dashboard' === $page ) ) {
-		wp_enqueue_script(
-		'rtbcb-test-utils',
-		plugin_dir_url( __FILE__ ) . 'admin/js/rtbcb-test-utils.js',
-		[ 'jquery' ],
-		'1.0.0',
-		true
-		);
+                wp_enqueue_script(
+                'rtbcb-test-utils',
+                plugin_dir_url( __FILE__ ) . 'admin/js/rtbcb-test-utils.js',
+                [ 'jquery', 'wp-i18n' ],
+                '1.0.0',
+                true
+                );
+                wp_set_script_translations( 'rtbcb-test-utils', 'rtbcb' );
 		wp_enqueue_script(
 		'rtbcb-real-treasury-overview',
 		plugin_dir_url( __FILE__ ) . 'admin/js/real-treasury-overview.js',
@@ -3052,13 +3054,14 @@ function rtbcb_enqueue_recommended_category_scripts( $hook ) {
 	$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
 
 	if ( false !== strpos( $page, 'recommended-category' ) || 'rtbcb-test-dashboard' === $page ) {
-		wp_enqueue_script(
-		'rtbcb-test-utils',
-		plugin_dir_url( __FILE__ ) . 'admin/js/rtbcb-test-utils.js',
-		[ 'jquery' ],
-		'1.0.0',
-		true
-		);
+                wp_enqueue_script(
+                'rtbcb-test-utils',
+                plugin_dir_url( __FILE__ ) . 'admin/js/rtbcb-test-utils.js',
+                [ 'jquery', 'wp-i18n' ],
+                '1.0.0',
+                true
+                );
+                wp_set_script_translations( 'rtbcb-test-utils', 'rtbcb' );
 		wp_enqueue_script(
 		'rtbcb-recommended-category',
 		plugin_dir_url( __FILE__ ) . 'admin/js/recommended-category.js',
