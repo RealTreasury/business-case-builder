@@ -1,7 +1,7 @@
 <?php
 defined( 'ABSPATH' ) || exit;
 
-/**
+	/**
 	* AJAX handlers for Business Case Builder.
 	*
 	* @package RealTreasuryBusinessCaseBuilder
@@ -352,17 +352,21 @@ $method = new ReflectionMethod( RTBCB_Main::class, 'generate_business_analysis' 
 
 		wp_send_json_success( $response );
 	}
-
-	private static function collect_and_validate_user_inputs() {
+	/**
+	 * Collect and validate user input from the POST request.
+ *
+ * @return array|WP_Error Sanitized input array or validation error.
+ */
+	public static function collect_and_validate_user_inputs() {
 		$validator = new RTBCB_Validator();
 		$validated = $validator->validate( $_POST );
 
 		if ( isset( $validated['error'] ) ) {
 			return new WP_Error( 'validation_error', $validated['error'] );
-		}
+}
 
 		return $validated;
-	}
+}
 
 	private static function create_fallback_profile( $user_inputs ) {
 		return [
