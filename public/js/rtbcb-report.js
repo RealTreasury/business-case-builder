@@ -30,6 +30,10 @@ function supportsTemperature(model) {
 }
 
 async function buildEnhancedPrompt(businessContext) {
+    if (!/^https?:\/\//i.test(rtbcbReport.template_url)) {
+        console.error('Invalid template URL:', rtbcbReport.template_url);
+        throw new Error('Invalid template URL');
+    }
     const response = await fetch(rtbcbReport.template_url);
     const template = await response.text();
     const companyName = businessContext && businessContext.companyName ? businessContext.companyName : 'Company';

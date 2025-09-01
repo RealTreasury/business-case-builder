@@ -17,7 +17,7 @@ async function runTests() {
         report_model: 'gpt-5-mini',
         model_capabilities: {},
         ajax_url: 'https://example.com',
-        template_url: 'template.html',
+        template_url: 'https://example.com/template.html',
         min_output_tokens: 4000,
         max_output_tokens: 8000
     };
@@ -40,7 +40,7 @@ async function runTests() {
         report_model: 'gpt-5-mini',
         model_capabilities: {},
         ajax_url: 'https://example.com',
-        template_url: 'template.html',
+        template_url: 'https://example.com/template.html',
         min_output_tokens: 5000,
         max_output_tokens: 2500
     };
@@ -52,7 +52,7 @@ async function runTests() {
         report_model: 'gpt-5-mini',
         model_capabilities: {},
         ajax_url: 'https://example.com',
-        template_url: 'template.html',
+        template_url: 'https://example.com/template.html',
         min_output_tokens: 1,
         max_output_tokens: 8000
     };
