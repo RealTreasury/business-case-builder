@@ -29,8 +29,26 @@ function supportsTemperature(model) {
     return !unsupported.includes(model);
 }
 
+/**
+ * Validate a URL string.
+ *
+ * @param {string} url URL to validate.
+ * @return {boolean} True if the URL uses http or https.
+ */
+function isValidUrl(url) {
+    if (!url) {
+        return false;
+    }
+    try {
+        const parsed = new URL(url);
+        return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+    } catch (e) {
+        return false;
+    }
+}
+
 async function buildEnhancedPrompt(businessContext) {
-    if (!/^https?:\/\//i.test(rtbcbReport.template_url)) {
+    if (!isValidUrl(rtbcbReport.template_url)) {
         throw new Error('Template URL must use HTTP or HTTPS protocol');
     }
     const response = await fetch(rtbcbReport.template_url);
@@ -109,6 +127,9 @@ async function generateProfessionalReport(businessContext, onChunk) {
         formData.append('nonce', rtbcbReport.nonce);
     }
 
+    if (!isValidUrl(rtbcbReport.ajax_url)) {
+        throw new Error('Invalid AJAX URL');
+    }
     const response = await fetch(rtbcbReport.ajax_url, {
         method: 'POST',
         body: formData
