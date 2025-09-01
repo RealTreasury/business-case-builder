@@ -2772,15 +2772,35 @@ if ( ! class_exists( 'Real_Treasury_BCB' ) ) {
 	class_alias( RTBCB_Main::class, 'Real_Treasury_BCB' );
 }
 
-// Initialize the plugin with crash protection.
-	if ( ! defined( 'RTBCB_NO_BOOTSTRAP' ) ) {
-		try {
-		RTBCB_Main::instance();
-		} catch ( Throwable $e ) {
-		rt_bcb_log( 'Bootstrap error: ' . $e->getMessage() . "\n" . $e->getTraceAsString() );
-		return;
-		}
-	}
+// Initialize the plugin once WordPress is ready.
+if ( ! defined( 'RTBCB_NO_BOOTSTRAP' ) ) {
+	add_action(
+		'plugins_loaded',
+		function() {
+			try {
+				RTBCB_Main::instance();
+			} catch ( Throwable $e ) {
+				rt_bcb_log( 'Bootstrap error: ' . $e->getMessage() . "\n" . $e->getTraceAsString() );
+
+				// Deactivate plugin if it causes fatal errors
+				if ( function_exists( 'deactivate_plugins' ) ) {
+					deactivate_plugins( plugin_basename( __FILE__ ) );
+				}
+
+				// Show admin notice
+				add_action(
+					'admin_notices',
+					function() use ( $e ) {
+						echo '<div class="notice notice-error"><p>';
+						echo esc_html( 'Real Treasury plugin disabled due to error: ' . $e->getMessage() );
+						echo '</p></div>';
+					}
+				);
+			}
+		},
+		1
+	); // Early priority
+}
 
 
 // Helper functions for use in templates and other plugins
