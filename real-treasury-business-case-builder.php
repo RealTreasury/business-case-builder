@@ -108,6 +108,10 @@ class RTBCB_Main {
 				return;
 			}
 
+			if ( ! $this->verify_dependencies() ) {
+				return;
+			}
+
 			$this->init_hooks();
 		} catch ( Throwable $e ) {
 				error_log( 'RTBCB: Plugin initialization failed: ' . $e->getMessage() );
@@ -307,6 +311,36 @@ return true;
 		       return false;
 	       }
        }
+
+	/**
+	 * Verify that required classes are loaded.
+	 *
+	 * @return bool True if all dependencies are present, false otherwise.
+	 */
+	private function verify_dependencies() {
+		$required_classes = [
+			'RTBCB_Calculator',
+			'RTBCB_Category_Recommender',
+			'RTBCB_LLM',
+			'RTBCB_Leads',
+			'RTBCB_RAG',
+			'RTBCB_Ajax',
+		];
+
+		$missing_classes = [];
+		foreach ( $required_classes as $class ) {
+			if ( ! class_exists( $class ) ) {
+				$missing_classes[] = $class;
+			}
+		}
+
+		if ( ! empty( $missing_classes ) ) {
+			error_log( 'RTBCB: Missing required classes: ' . implode( ', ', $missing_classes ) );
+			return false;
+		}
+
+		return true;
+	}
 
 	/**
 	* Plugin initialization.
@@ -2543,6 +2577,14 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 		return;
 		}
 		
+		if ( ! $this->verify_dependencies() ) {
+		rt_bcb_log( 'Activation aborted: Missing required classes' );
+		if ( function_exists( 'deactivate_plugins' ) ) {
+		deactivate_plugins( plugin_basename( RTBCB_FILE ) );
+		}
+		return;
+		}
+
 		$this->activate();
 		} catch ( Throwable $e ) {
 		rt_bcb_log( 'Activation error: ' . $e->getMessage() );
