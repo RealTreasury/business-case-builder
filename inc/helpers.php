@@ -1442,6 +1442,9 @@ function rtbcb_proxy_openai_responses() {
 	if ( JSON_ERROR_NONE !== json_last_error() ) {
 		wp_send_json_error( [ 'message' => __( 'Invalid JSON body.', 'rtbcb' ) ], 400 );
 	}
+	if ( ! is_array( $body_array ) ) {
+		wp_send_json_error( [ 'message' => __( 'JSON body must be an array.', 'rtbcb' ) ], 400 );
+	}
 
 		$company      = rtbcb_get_current_company();
 		$user_email   = isset( $company['email'] ) ? sanitize_email( $company['email'] ) : '';
