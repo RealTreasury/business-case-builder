@@ -29,7 +29,7 @@ if ( ! function_exists( 'rt_bcb_log' ) ) {
  * @return void
  */
 function rt_bcb_log( $msg ) {
-error_log( '[RT-BCB] ' . ( is_string( $msg ) ? $msg : wp_json_encode( $msg ) ) );
+	error_log( '[RT-BCB] ' . ( is_string( $msg ) ? $msg : wp_json_encode( $msg ) ) );
 }
 }
 
@@ -2131,6 +2131,8 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 	* @return array
 	*/
 	private function transform_data_for_template( $business_case_data ) {
+	error_log( 'RTBCB: Input data structure: ' . print_r( array_keys( (array) $business_case_data ), true ) );
+
 	$defaults = [
 		'company_name'		 => '',
 		'base_roi'		 => 0,
@@ -2290,6 +2292,8 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 		'valid'	       => empty( $missing_sections ),
 		'missing_keys' => $missing_sections,
 	];
+
+	error_log( 'RTBCB: Output data structure: ' . print_r( array_keys( $report_data ), true ) );
 
 	if ( ! empty( $missing_sections ) ) {
 		return new WP_Error(
