@@ -90,7 +90,10 @@ class RTBCB_Main {
 		if ( function_exists( 'wp_doing_cron' ) && wp_doing_cron() ) {
 		return false;
 		}
-		$for = isset( $_GET['for'] ) ? sanitize_key( wp_unslash( $_GET['for'] ) ) : '';
+		$for = '';
+		if ( isset( $_GET['for'] ) ) {
+			$for = function_exists( 'sanitize_key' ) ? sanitize_key( wp_unslash( $_GET['for'] ) ) : wp_unslash( $_GET['for'] );
+		}
 		if ( 'jetpack' === $for ) {
 			return true;
 		}
