@@ -10,6 +10,7 @@
 	*
 	* @package RealTreasuryBusinessCaseBuilder
 */
+defined( 'ABSPATH' ) || exit;
 
 // Prevent memory crashes.
 if ( ! defined( 'WP_MEMORY_LIMIT' ) ) {
@@ -30,8 +31,6 @@ register_shutdown_function(
 		}
 	}
 );
-
-defined( 'ABSPATH' ) || exit;
 
 define( 'RTBCB_VERSION', '2.1.9' );
 define( 'RTBCB_FILE', __FILE__ );
