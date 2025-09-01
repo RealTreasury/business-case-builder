@@ -60,16 +60,28 @@ function rtbcb_get_analysis_type() {
 }
 
 /**
-	* Retrieve the OpenAI API key from plugin settings.
+	* Retrieve the OpenAI API key from environment or plugin settings.
 	*
-	* Reads the value stored in the WordPress options table.
+	* Checks the `RTBCB_OPENAI_API_KEY` environment variable first and falls back
+	* to the value stored in the WordPress options table.
 	*
 	* @return string Sanitized API key.
 	*/
 function rtbcb_get_openai_api_key() {
-       $api_key = function_exists( 'get_option' ) ? get_option( 'rtbcb_openai_api_key', '' ) : '';
-
-       return function_exists( 'sanitize_text_field' ) ? sanitize_text_field( $api_key ) : $api_key;
+	$api_key = '';
+	
+	if ( function_exists( 'getenv' ) ) {
+		$env_key = getenv( 'RTBCB_OPENAI_API_KEY' );
+		if ( false !== $env_key && '' !== $env_key ) {
+			$api_key = $env_key;
+		}
+	}
+	
+	if ( '' === $api_key && function_exists( 'get_option' ) ) {
+		$api_key = get_option( 'rtbcb_openai_api_key', '' );
+	}
+	
+	return function_exists( 'sanitize_text_field' ) ? sanitize_text_field( $api_key ) : $api_key;
 }
 
 /**

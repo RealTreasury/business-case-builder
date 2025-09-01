@@ -207,9 +207,9 @@ class RTBCB_RAG {
 	* @return array Embedding vector.
 	*/
 	private function get_embedding( $text ) {
-$api_key = function_exists( 'get_option' ) ? get_option( 'rtbcb_openai_api_key' ) : '';
-$model   = function_exists( 'get_option' ) ? get_option( 'rtbcb_embedding_model', 'text-embedding-3-small' ) : 'text-embedding-3-small';
-
+		$api_key = rtbcb_get_openai_api_key();
+		$model   = function_exists( 'get_option' ) ? get_option( 'rtbcb_embedding_model', 'text-embedding-3-small' ) : 'text-embedding-3-small';
+	
 		if ( empty( $api_key ) ) {
 			return [];
 		}
