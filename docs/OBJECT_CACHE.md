@@ -5,8 +5,8 @@ To keep responses available across requests, configure a persistent cache
 backend such as Redis or Memcached.
 
 - Install and configure a persistent cache plugin. Examples:
-    - [Redis Object Cache](https://wordpress.org/plugins/redis-cache/)
-    - [Memcached](https://wordpress.org/plugins/memcached/)
+    - [Redis Object Cache](https://github.com/rhubarbgroup/redis-cache)
+    - [Memcached](https://github.com/php-memcached-dev/php-memcached)
 - Verify the setup with:
 
     ```bash

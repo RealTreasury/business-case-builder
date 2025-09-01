@@ -63,5 +63,4 @@ sequenceDiagram
     WP->>HTML: get_comprehensive_report_html()
     WP-->>JS: JSON report
     JS-->>U: Display results
-```
-
+    ```

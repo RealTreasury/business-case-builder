@@ -38,6 +38,7 @@ graph TD
 ## Phase Details
 
 ### Phase 1: 📥 Data Collection & Advanced Enrichment
+
 Objective: Create a deep and accurate profile of the target company.
 
 - **Component:** Dynamic User Input Wizard  
@@ -54,6 +55,7 @@ Objective: Create a deep and accurate profile of the target company.
   **Function:** Stores the complete, validated company profile in a structured database table. Implements a caching layer to prevent redundant API calls.
 
 ### Phase 2: 🧠 In-Depth Analysis & Content Generation
+
 Objective: Perform a sophisticated analysis of the company's treasury function and generate tailored, insightful content.
 
 - **Component:** Treasury Maturity Model Assessment  
@@ -69,6 +71,7 @@ Objective: Perform a sophisticated analysis of the company's treasury function a
   **Function:** Uses AI to generate a personalized opening paragraph that connects Real Treasury's value directly to the company's maturity level and challenges.
 
 ### Phase 3: 📈 Granular ROI & Strategic Recommendation
+
 Objective: Deliver a detailed financial business case and a clear, actionable technology roadmap.
 
 - **Component:** Granular ROI & Benefits Calculator  
@@ -80,6 +83,7 @@ Objective: Deliver a detailed financial business case and a clear, actionable te
   **Function:** Creates a strategic, multi-phase implementation plan (e.g., Phase 1: Foundational, Phase 2: Automation, Phase 3: Optimization) instead of a single recommendation.
 
 ### Phase 4: 📄 Report Assembly & Interactive Delivery
+
 Objective: Create a professional, engaging, and high-impact final report.
 
 - **Component:** Automated Executive Summary  
@@ -91,6 +95,7 @@ Objective: Create a professional, engaging, and high-impact final report.
   **Function:** Assembles all generated sections into a final HTML report. Enhances the page with interactive elements like hoverable charts, expandable sections, and a dynamic Call-to-Action.
 
 ### Phase 5: 🚀 Post-Delivery Engagement & Lead Nurturing
+
 Objective: Convert the report into an ongoing conversation and nurture the lead.
 
 - **Component:** User Engagement Tracking  
