@@ -17,28 +17,44 @@ class RTBCB_DB {
 	const DB_VERSION = '2.0.3';
 
 	/**
-	* Initialize database and handle upgrades.
-	*
-	* @return void
-	*/
+	/**
+	 * Initialize database and handle upgrades.
+	 *
+	 * @return bool True on success, false on failure.
+	 */
 	public static function init() {
-$current = function_exists( 'get_option' ) ? get_option( 'rtbcb_db_version', '1.0.0' ) : '1.0.0';
+		global $wpdb;
 
-if ( version_compare( $current, self::DB_VERSION, '<' ) ) {
-self::upgrade( $current );
-if ( function_exists( 'update_option' ) ) {
-update_option( 'rtbcb_db_version', self::DB_VERSION );
-}
-}
-
-		// Ensure required tables exist.
-		RTBCB_Leads::init();
-		if ( class_exists( 'RTBCB_API_Log' ) ) {
-			RTBCB_API_Log::init();
+		if ( ! $wpdb ) {
+			error_log( 'RTBCB: WordPress database not available' );
+			return false;
 		}
-		self::create_rag_table();
-		self::seed_rag_sample_data();
+
+		try {
+			$current = function_exists( 'get_option' ) ? get_option( 'rtbcb_db_version', '1.0.0' ) : '1.0.0';
+
+			if ( version_compare( $current, self::DB_VERSION, '<' ) ) {
+				self::upgrade( $current );
+				if ( function_exists( 'update_option' ) ) {
+					update_option( 'rtbcb_db_version', self::DB_VERSION );
+				}
+			}
+
+			// Ensure required tables exist.
+			RTBCB_Leads::init();
+			if ( class_exists( 'RTBCB_API_Log' ) ) {
+				RTBCB_API_Log::init();
+			}
+			self::create_rag_table();
+			self::seed_rag_sample_data();
+
+			return true;
+		} catch ( Throwable $e ) {
+			error_log( 'RTBCB: Database initialization failed: ' . $e->getMessage() );
+			return false;
+		}
 	}
+
 
 	/**
 	* Perform database upgrades.
