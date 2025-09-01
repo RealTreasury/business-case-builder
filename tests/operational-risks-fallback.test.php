@@ -84,10 +84,8 @@ return [];
 }
 }
 
-$plugin_code = file_get_contents( __DIR__ . '/../real-treasury-business-case-builder.php' );
-$plugin_code = preg_replace( '/
-?\/\/ Initialize the plugin\s*RTBCB_Main::instance\(\);/', '', $plugin_code );
-eval( '?>' . $plugin_code );
+define( 'RTBCB_NO_BOOTSTRAP', true );
+require_once __DIR__ . '/../real-treasury-business-case-builder.php';
 
 $ref  = new ReflectionClass( 'RTBCB_Main' );
 $plugin = $ref->newInstanceWithoutConstructor();
