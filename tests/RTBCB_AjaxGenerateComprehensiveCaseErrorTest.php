@@ -75,7 +75,7 @@ if ( ! function_exists( 'rtbcb_increase_memory_limit' ) ) {
 }
 
 if ( ! function_exists( 'rtbcb_log_memory_usage' ) ) {
-	function rtbcb_log_memory_usage( $stage ) {}
+	function rtbcb_log_memory_usage( $checkpoint ) {}
 }
 
 if ( ! class_exists( 'RTBCB_LLM' ) ) {

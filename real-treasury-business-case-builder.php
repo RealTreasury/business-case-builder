@@ -2830,16 +2830,25 @@ if ( ! defined( 'RTBCB_NO_BOOTSTRAP' ) ) {
 if ( ! function_exists( 'rtbcb_ajax_generate_case' ) ) {
 	/**
 	 * Handle AJAX requests for comprehensive case generation.
-	 *
-	 * @return void
-	 */
-	function rtbcb_ajax_generate_case() {
-		if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) {
-			wp_die( __( 'Invalid request', 'rtbcb' ) );
-		}
+        *
+        * @return void
+        */
+       function rtbcb_ajax_generate_case() {
+               if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) {
+                       wp_die( __( 'Invalid request', 'rtbcb' ) );
+               }
 
-		RTBCB_Ajax::generate_comprehensive_case();
-	}
+               rtbcb_increase_memory_limit();
+
+               $timeout = absint( rtbcb_get_api_timeout() );
+               if ( ! ini_get( 'safe_mode' ) && $timeout > 0 ) {
+                       set_time_limit( $timeout );
+               }
+
+               rtbcb_log_memory_usage( 'ajax_start' );
+
+               RTBCB_Ajax::generate_comprehensive_case();
+       }
 }
 
 // Helper functions for use in templates and other plugins
