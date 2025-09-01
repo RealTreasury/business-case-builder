@@ -157,7 +157,11 @@ The analytics dashboard uses Chart.js for its visualizations. The library is bun
 
 == Changelog ==
 = 2.1.9 =
-* Bump version for release.
+* Hardened security with ABSPATH guards across admin and template files.
+* Wrapped user-visible strings with translation functions for better localization.
+* Documented Composer install step and added PHPUnit checks to test scripts.
+* Streamlined developer tooling with improved linting and code quality fixes.
+
 
 = 2.1.8 =
 * Fixed bulk lead deletion actions within the lead management dashboard.
