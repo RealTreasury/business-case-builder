@@ -118,7 +118,7 @@ $enable_charts = class_exists( 'RTBCB_Settings' ) ? RTBCB_Settings::get_setting(
 				<?php foreach ( $size_stats as $stat ) : ?>
 					<div class="rtbcb-stat-item">
 						<div class="rtbcb-stat-label"><?php echo esc_html( $stat['company_size'] ); ?></div>
-						<div class="rtbcb-stat-value"><?php echo esc_html( $stat['count'] ); ?> leads</div>
+								<div class="rtbcb-stat-value"><?php printf( esc_html__( '%d leads', 'rtbcb' ), intval( $stat['count'] ) ); ?></div>
 						<div class="rtbcb-stat-percentage">
 							<?php echo $total_leads > 0 ? esc_html( number_format( ( $stat['count'] / $total_leads ) * 100, 1 ) ) : '0'; ?>%
 						</div>
@@ -191,7 +191,7 @@ $enable_charts = class_exists( 'RTBCB_Settings' ) ? RTBCB_Settings::get_setting(
 							<?php
 							printf(
 								esc_html__( '%1$s is recommended for %2$d%% of leads (%3$d out of %4$d).', 'rtbcb' ),
-								esc_html( $top_cat_name ?? 'Unknown' ),
+									esc_html( $top_cat_name ?? __( 'Unknown', 'rtbcb' ) ),
 								esc_html( number_format( $top_percentage ?? 0, 1 ) ),
 								esc_html( $top_category['count'] ?? 0 ),
 								esc_html( $total_leads )

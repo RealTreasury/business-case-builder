@@ -112,7 +112,7 @@ jQuery(function($){
 			if (resp.success) {
 				location.reload();
 			} else {
-				alert(resp.data && resp.data.message ? resp.data.message : 'Error');
+								alert(resp.data && resp.data.message ? resp.data.message : '<?php echo esc_js( __( 'Error', 'rtbcb' ) ); ?>');
 			}
 		});
 	});
@@ -131,7 +131,7 @@ jQuery(function($){
 			if (resp.success) {
 				$('tr[data-id="' + id + '"]').remove();
 			} else {
-				alert(resp.data && resp.data.message ? resp.data.message : 'Error');
+								alert(resp.data && resp.data.message ? resp.data.message : '<?php echo esc_js( __( 'Error', 'rtbcb' ) ); ?>');
 			}
 		});
 	});
@@ -142,7 +142,7 @@ jQuery(function($){
 		var res = $row.attr('data-response');
 		try { req = JSON.stringify(JSON.parse(req), null, 2); } catch (err) {}
 		try { res = JSON.stringify(JSON.parse(res), null, 2); } catch (err) {}
-		var content = 'Request:\n' + req + '\n\nResponse:\n' + res;
+								var content = '<?php echo esc_js( __( 'Request:', 'rtbcb' ) ); ?>\n' + req + '\n\n<?php echo esc_js( __( 'Response:', 'rtbcb' ) ); ?>\n' + res;
 		$('#rtbcb-log-detail').text(content);
 		$('#rtbcb-log-modal').show();
 	});

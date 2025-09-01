@@ -63,7 +63,7 @@ $processing_time = $metadata['processing_time'] ?? 0;
 					<div class="rtbcb-meta-item">
 						<span class="rtbcb-meta-icon">⚡</span>
 						<span class="rtbcb-meta-label"><?php echo esc_html__( 'Processing Time', 'rtbcb' ); ?></span>
-						<span class="rtbcb-meta-value"><?php echo esc_html( round( $processing_time, 1 ) ); ?>s</span>
+									<span class="rtbcb-meta-value"><?php printf( esc_html__( '%ss', 'rtbcb' ), esc_html( round( $processing_time, 1 ) ) ); ?></span>
 					</div>
 										<div class="rtbcb-meta-item">
 												<span class="rtbcb-meta-icon">📊</span>
@@ -73,7 +73,7 @@ $processing_time = $metadata['processing_time'] ?? 0;
 										<div class="rtbcb-meta-item">
 												<span class="rtbcb-meta-icon">🏷️</span>
 												<span class="rtbcb-meta-label"><?php echo esc_html__( 'Version', 'rtbcb' ); ?></span>
-												<span class="rtbcb-meta-value"><?php echo esc_html( defined( 'RTBCB_VERSION' ) ? RTBCB_VERSION : 'dev' ); ?></span>
+									<span class="rtbcb-meta-value"><?php echo esc_html( defined( 'RTBCB_VERSION' ) ? RTBCB_VERSION : __( 'dev', 'rtbcb' ) ); ?></span>
 										</div>
 								</div>
 			</div>
@@ -98,7 +98,7 @@ $processing_time = $metadata['processing_time'] ?? 0;
 						<div class="rtbcb-metric-icon">⏱️</div>
 						<div class="rtbcb-metric-content">
 							<div class="rtbcb-metric-value">
-								<?php echo esc_html( $financial_analysis['payback_analysis']['payback_months'] ?? 'N/A' ); ?>
+										<?php echo esc_html( $financial_analysis['payback_analysis']['payback_months'] ?? __( 'N/A', 'rtbcb' ) ); ?>
 							</div>
 							<div class="rtbcb-metric-label"><?php echo esc_html__( 'Months to Payback', 'rtbcb' ); ?></div>
 						</div>
