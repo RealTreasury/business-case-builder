@@ -5,6 +5,10 @@ defined( 'ABSPATH' ) || exit;
  * Settings admin page for Real Treasury Business Case Builder plugin.
  */
 
+if ( ! current_user_can( 'manage_options' ) ) {
+	return;
+}
+
 $api_key         = function_exists( 'get_option' ) ? get_option( 'rtbcb_openai_api_key', '' ) : '';
 $mini_model      = function_exists( 'get_option' ) ? get_option( 'rtbcb_mini_model', rtbcb_get_default_model( 'mini' ) ) : rtbcb_get_default_model( 'mini' );
 $premium_model   = function_exists( 'get_option' ) ? get_option( 'rtbcb_premium_model', rtbcb_get_default_model( 'premium' ) ) : rtbcb_get_default_model( 'premium' );

@@ -331,11 +331,19 @@ $enable_charts = class_exists( 'RTBCB_Settings' ) ? RTBCB_Settings::get_setting(
 	* @return void
 	*/
 	public function render_leads() {
-		$page = isset( $_GET['paged'] ) ? intval( wp_unslash( $_GET['paged'] ) ) : 1;
-		$search = isset( $_GET['search'] ) ? sanitize_text_field( wp_unslash( $_GET['search'] ) ) : '';
-		$category = isset( $_GET['category'] ) ? sanitize_text_field( wp_unslash( $_GET['category'] ) ) : '';
-		$date_from = isset( $_GET['date_from'] ) ? sanitize_text_field( wp_unslash( $_GET['date_from'] ) ) : '';
-		$date_to = isset( $_GET['date_to'] ) ? sanitize_text_field( wp_unslash( $_GET['date_to'] ) ) : '';
+	       if ( ! current_user_can( 'manage_options' ) ) {
+	               return;
+	       }
+
+	       if ( isset( $_GET['rtbcb_leads_filter_nonce'] ) && ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['rtbcb_leads_filter_nonce'] ) ), 'rtbcb_leads_filter' ) ) {
+	               wp_die( esc_html__( 'Invalid filter request.', 'rtbcb' ) );
+	       }
+
+	       $page = isset( $_GET['paged'] ) ? intval( wp_unslash( $_GET['paged'] ) ) : 1;
+	       $search = isset( $_GET['search'] ) ? sanitize_text_field( wp_unslash( $_GET['search'] ) ) : '';
+	       $category = isset( $_GET['category'] ) ? sanitize_text_field( wp_unslash( $_GET['category'] ) ) : '';
+	       $date_from = isset( $_GET['date_from'] ) ? sanitize_text_field( wp_unslash( $_GET['date_from'] ) ) : '';
+	       $date_to = isset( $_GET['date_to'] ) ? sanitize_text_field( wp_unslash( $_GET['date_to'] ) ) : '';
 
 		$orderby = isset( $_GET['orderby'] ) ? sanitize_key( wp_unslash( $_GET['orderby'] ) ) : 'created_at';
 		$allowed_orderby = [ 'email', 'created_at' ];

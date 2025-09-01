@@ -7,6 +7,10 @@ defined( 'ABSPATH' ) || exit;
  * @package RealTreasuryBusinessCaseBuilder
  */
 
+if ( ! current_user_can( 'manage_options' ) ) {
+	return;
+}
+
 ?>
 <div class="wrap rtbcb-workflow-visualizer">
 <h1><?php echo esc_html__( 'Treasury Report Workflow Visualizer', 'rtbcb' ); ?></h1>
