@@ -208,8 +208,9 @@ $enable_ai        = ! $bypass_heavy && ( class_exists( 'RTBCB_Settings' ) ? RTBC
 										}
 								}
 								if ( is_wp_error( $enriched_profile ) ) {
+										$error_message    = $enriched_profile->get_error_message();
 										$enriched_profile = self::create_fallback_profile( $user_inputs );
-										$workflow_tracker->add_warning( 'ai_enrichment_failed', $enriched_profile->get_error_message() );
+										$workflow_tracker->add_warning( 'ai_enrichment_failed', sanitize_text_field( $error_message ) );
 								}
 						} else {
 								$enriched_profile = self::create_fallback_profile( $user_inputs );
@@ -254,8 +255,9 @@ $enable_ai        = ! $bypass_heavy && ( class_exists( 'RTBCB_Settings' ) ? RTBC
 										$final_analysis = $llm->generate_strategic_analysis( $enriched_profile, $roi_scenarios, $recommendation, $rag_baseline );
 								}
 								if ( is_wp_error( $final_analysis ) ) {
-										$final_analysis = self::create_fallback_analysis( $enriched_profile, $roi_scenarios );
-										$workflow_tracker->add_warning( 'final_analysis_failed', $final_analysis->get_error_message() );
+										$error_message   = $final_analysis->get_error_message();
+										$final_analysis  = self::create_fallback_analysis( $enriched_profile, $roi_scenarios );
+										$workflow_tracker->add_warning( 'final_analysis_failed', sanitize_text_field( $error_message ) );
 								}
 						} else {
 								$rag_baseline  = [];
