@@ -78,6 +78,11 @@ class BusinessCaseBuilder {
             return;
         }
 
+        // Bind event handlers to maintain context when used as callbacks.
+        this.handleNext = this.handleNext.bind( this );
+        this.handlePrev = this.handlePrev.bind( this );
+        this.handleSubmit = this.handleSubmit.bind( this );
+
         this.init();
     }
 
@@ -111,32 +116,16 @@ class BusinessCaseBuilder {
 
     bindEvents() {
         // Navigation buttons
-        if (this.nextBtn) {
-            this.nextBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.handleNext();
-            });
+        if ( this.nextBtn ) {
+            this.nextBtn.addEventListener( 'click', this.handleNext );
         }
 
-        if (this.prevBtn) {
-            this.prevBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.handlePrev();
-            });
+        if ( this.prevBtn ) {
+            this.prevBtn.addEventListener( 'click', this.handlePrev );
         }
 
         // Form submission
-        this.form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            if (this.validateStep(this.totalSteps)) {
-                try {
-                    this.handleSubmit(e);
-                } catch (error) {
-                    console.error('RTBCB: handleSubmit error:', error);
-                    this.showEnhancedError('An unexpected error occurred. Please try again.');
-                }
-            }
-        });
+        this.form.addEventListener( 'submit', this.handleSubmit );
 
         // Pain point cards
         const painPointCards = this.form.querySelectorAll('.rtbcb-pain-point-card');
@@ -167,9 +156,13 @@ class BusinessCaseBuilder {
         });
     }
 
-    handleNext() {
-        if (this.validateStep(this.currentStep)) {
-            if (this.currentStep < this.totalSteps) {
+    handleNext( event ) {
+        if ( event && event.preventDefault ) {
+            event.preventDefault();
+        }
+
+        if ( this.validateStep( this.currentStep ) ) {
+            if ( this.currentStep < this.totalSteps ) {
                 this.currentStep++;
                 this.updateStepVisibility();
                 this.updateProgressIndicator();
@@ -178,8 +171,12 @@ class BusinessCaseBuilder {
         }
     }
 
-    handlePrev() {
-        if (this.currentStep > 1) {
+    handlePrev( event ) {
+        if ( event && event.preventDefault ) {
+            event.preventDefault();
+        }
+
+        if ( this.currentStep > 1 ) {
             this.currentStep--;
             this.updateStepVisibility();
             this.updateProgressIndicator();
@@ -388,7 +385,12 @@ class BusinessCaseBuilder {
         if (event && event.preventDefault) {
             event.preventDefault();
         }
-        
+
+        // Final step validation before submission.
+        if ( ! this.validateStep( this.totalSteps ) ) {
+            return;
+        }
+
         if (!isValidUrl(this.ajaxUrl)) {
             this.showEnhancedError('Service unavailable. Please reload the page.');
             return;
