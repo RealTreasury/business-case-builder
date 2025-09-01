@@ -52,6 +52,30 @@
 	--error-red: var(--error-color);
 	--background-light: #fafbfc;
 	--border-light: #e2e8f0;
-	--shadow-light: rgba(114,22,244,0.12);
-	--shadow-medium: rgba(114,22,244,0.2);
+       --shadow-light: rgba(114,22,244,0.12);
+       --shadow-medium: rgba(114,22,244,0.2);
+
+/* Progress loader specific variables */
+--loader-bg: rgba(0, 0, 0, 0.8);
+--loader-content-bg: #ffffff;
+--loader-border: rgba(199, 125, 255, 0.3);
+--loader-text-primary: #1f2937;
+--loader-text-secondary: #4b5563;
+--loader-success: #10b981;
+--loader-error: #ef4444;
+--loader-spinner: var(--primary-purple);
+
+/* Mobile adjustments */
+--loader-mobile-padding: 20px;
+--loader-mobile-max-width: 95vw;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+:root {
+--loader-content-bg: #1f2937;
+--loader-text-primary: #f9fafb;
+--loader-text-secondary: #d1d5db;
+--loader-border: rgba(139, 92, 246, 0.3);
+}
 }
