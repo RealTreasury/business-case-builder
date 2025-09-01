@@ -11,6 +11,21 @@ export RTBCB_TEST_MODEL="${RTBCB_TEST_MODEL:-gpt-5-mini}"
 npm install --no-save --no-package-lock jsdom >/dev/null 2>&1
 export NODE_OPTIONS="--require ./tests/jsdom-setup.js"
 
+# Determine commands for phpunit and phpcs
+PHPUNIT="phpunit"
+if [ -f vendor/bin/phpunit ]; then
+    PHPUNIT="vendor/bin/phpunit"
+elif ! command -v phpunit >/dev/null 2>&1; then
+    PHPUNIT=""
+fi
+
+PHPCS="phpcs"
+if [ -f vendor/bin/phpcs ]; then
+    PHPCS="vendor/bin/phpcs"
+elif ! command -v phpcs >/dev/null 2>&1; then
+    PHPCS=""
+fi
+
 # PHP Lint
 echo "1. Running PHP syntax check..."
 find . -name "*.php" -not -path "./vendor/*" -print0 | xargs -0 -n1 php -l
@@ -73,10 +88,14 @@ php tests/email-and-pdf.test.php
 
 # AJAX error handling test (PHPUnit)
 echo "15. Running AJAX error handling tests..."
-phpunit tests/RTBCB_AjaxGenerateComprehensiveCaseErrorTest.php
-phpunit tests/RTBCB_AjaxGenerateComprehensiveCaseFatalErrorTest.php
-phpunit tests/RTBCB_GenerateBusinessAnalysisTimeoutTest.php
-phpunit tests/report-error-handling.test.php
+if [ -n "$PHPUNIT" ]; then
+    $PHPUNIT tests/RTBCB_AjaxGenerateComprehensiveCaseErrorTest.php
+    $PHPUNIT tests/RTBCB_AjaxGenerateComprehensiveCaseFatalErrorTest.php
+    $PHPUNIT tests/RTBCB_GenerateBusinessAnalysisTimeoutTest.php
+    $PHPUNIT tests/report-error-handling.test.php
+else
+    echo "Skipping AJAX error handling tests (phpunit not installed)"
+fi
 
 # Background job test
 echo "14. Running background job tests..."
@@ -88,7 +107,11 @@ php tests/job-status.test.php
 
 # Business analysis generation test
 echo "14c. Running business analysis generation test..."
-phpunit tests/generate-business-analysis.test.php
+if [ -n "$PHPUNIT" ]; then
+    $PHPUNIT tests/generate-business-analysis.test.php
+else
+    echo "Skipping business analysis generation test (phpunit not installed)"
+fi
 
 # JavaScript tests
 echo "16. Running JavaScript tests..."
@@ -110,9 +133,10 @@ npx --yes jest tests/poll-job-progress-text.test.js --config '{"testEnvironment"
 npx --yes jest tests/poll-job-partial-fields.test.js --config '{"testEnvironment":"node"}'
 
 # WordPress coding standards (if installed)
-if command -v phpcs &> /dev/null; then
+if [ -n "$PHPCS" ]; then
     echo "17. Running WordPress coding standards check..."
-    phpcs --standard=WordPress --ignore=vendor .
+    $PHPCS --config-set installed_paths vendor/wp-coding-standards/wpcs >/dev/null 2>&1
+    $PHPCS --standard=WordPress --ignore=vendor .
 else
     echo "17. Skipping WordPress coding standards (phpcs not installed)"
 fi
@@ -124,7 +148,11 @@ echo "18b. Running company research cache test..."
 php tests/company-research-cache.test.php
 
 echo "19. Running validator tests..."
-phpunit -c phpunit.xml
+if [ -n "$PHPUNIT" ]; then
+    $PHPUNIT -c phpunit.xml
+else
+    echo "Skipping validator tests (phpunit not installed)"
+fi
 
 echo "================================================"
 echo "Tests complete!"

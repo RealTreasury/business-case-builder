@@ -202,21 +202,22 @@ class RTBCB_Leads {
 			ARRAY_A
 		);
 
-		foreach ( $leads as $lead ) {
-			if ( false !== @gzuncompress( $lead['report_html'] ) ) {
-				continue;
-			}
+               foreach ( $leads as $lead ) {
+                       $decoded = base64_decode( $lead['report_html'], true );
+                       if ( false !== $decoded && false !== @gzuncompress( $decoded ) ) {
+                               continue;
+                       }
 
-			$compressed = gzcompress( $lead['report_html'] );
-			$wpdb->update(
-				self::$table_name,
-				[ 'report_html' => $compressed ],
-				[ 'id' => $lead['id'] ],
-				[ '%s' ],
-				[ '%d' ]
-			);
-		}
-	}
+                       $compressed = base64_encode( gzcompress( $lead['report_html'] ) );
+                       $wpdb->update(
+                               self::$table_name,
+                               [ 'report_html' => $compressed ],
+                               [ 'id' => $lead['id'] ],
+                               [ '%s' ],
+                               [ '%d' ]
+                       );
+               }
+       }
 
 
 	/**
@@ -257,9 +258,9 @@ class RTBCB_Leads {
 			'utm_campaign'            => sanitize_text_field( $_GET['utm_campaign'] ?? '' ),
 		];
 
-		if ( ! empty( $sanitized_data['report_html'] ) ) {
-			$sanitized_data['report_html'] = gzcompress( $sanitized_data['report_html'] );
-		}
+               if ( ! empty( $sanitized_data['report_html'] ) ) {
+                       $sanitized_data['report_html'] = base64_encode( gzcompress( $sanitized_data['report_html'] ) );
+               }
 
 		// Prepare format array to match the sanitized data
 		$formats = [
@@ -354,19 +355,20 @@ class RTBCB_Leads {
 			ARRAY_A
 		);
 
-		if ( $result ) {
-			$result['pain_points'] = maybe_unserialize( $result['pain_points'] );
+               if ( $result ) {
+                       $result['pain_points'] = maybe_unserialize( $result['pain_points'] );
 
-			if ( ! empty( $result['report_html'] ) ) {
-				$uncompressed = @gzuncompress( $result['report_html'] );
-				if ( false !== $uncompressed ) {
-					$result['report_html'] = $uncompressed;
-				}
-			}
-		}
+                       if ( ! empty( $result['report_html'] ) ) {
+                               $decoded      = base64_decode( $result['report_html'], true );
+                               $uncompressed = ( false !== $decoded ) ? @gzuncompress( $decoded ) : false;
+                               if ( false !== $uncompressed ) {
+                                       $result['report_html'] = $uncompressed;
+                               }
+                       }
+               }
 
-		return $result;
-	}
+               return $result;
+       }
 
 	/**
 	* Get all leads with pagination and filtering.
@@ -428,17 +430,18 @@ class RTBCB_Leads {
 		$leads       = $wpdb->get_results( $wpdb->prepare( $sql, $prepare_values ), ARRAY_A );
 		$total_leads = (int) $wpdb->get_var( 'SELECT FOUND_ROWS()' );
 
-		// Unserialize pain points and decompress report HTML.
-		foreach ( $leads as &$lead ) {
-			$lead['pain_points'] = maybe_unserialize( $lead['pain_points'] );
+               // Unserialize pain points and decompress report HTML.
+               foreach ( $leads as &$lead ) {
+                       $lead['pain_points'] = maybe_unserialize( $lead['pain_points'] );
 
-			if ( ! empty( $lead['report_html'] ) ) {
-				$uncompressed = @gzuncompress( $lead['report_html'] );
-				if ( false !== $uncompressed ) {
-					$lead['report_html'] = $uncompressed;
-				}
-			}
-		}
+                       if ( ! empty( $lead['report_html'] ) ) {
+                               $decoded      = base64_decode( $lead['report_html'], true );
+                               $uncompressed = ( false !== $decoded ) ? @gzuncompress( $decoded ) : false;
+                               if ( false !== $uncompressed ) {
+                                       $lead['report_html'] = $uncompressed;
+                               }
+                       }
+               }
 
 		return [
 			'leads'       => $leads,
