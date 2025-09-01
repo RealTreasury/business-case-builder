@@ -41,7 +41,7 @@ set_transient( $job_id, $current, HOUR_IN_SECONDS );
 public static function enqueue( $user_inputs ) {
 $job_id = uniqid( 'rtbcb_job_', true );
 
-self::update_status( $job_id, 'queued' );
+	self::update_status( $job_id, 'queued' );
 
 				wp_schedule_single_event(
 						time(),
@@ -64,12 +64,16 @@ self::update_status( $job_id, 'queued' );
 	* @param array  $user_inputs User inputs.
 	* @return void
 	*/
-public static function process_job( $job_id, $user_inputs ) {
-self::update_status( $job_id, 'processing' );
+	public static function process_job( $job_id, $user_inputs ) {
+	if ( rtbcb_heavy_features_disabled() ) {
+		return;
+	}
 
-$basic_roi = RTBCB_Ajax::process_basic_roi_step( $user_inputs );
+		self::update_status( $job_id, 'processing' );
 
-self::update_status(
+		$basic_roi = RTBCB_Ajax::process_basic_roi_step( $user_inputs );
+
+		self::update_status(
 $job_id,
 'processing',
 [

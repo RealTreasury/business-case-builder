@@ -87,10 +87,28 @@ function rtbcb_has_openai_api_key() {
 	* @return bool True if heavy features should be bypassed.
 	*/
 function rtbcb_heavy_features_disabled() {
-       $disabled = function_exists( 'get_option' ) ? get_option( 'rtbcb_disable_heavy_features', 0 ) : 0;
-       $fast     = function_exists( 'get_option' ) ? get_option( 'rtbcb_fast_mode', 0 ) : 0;
+$disabled = function_exists( 'get_option' ) ? get_option( 'rtbcb_disable_heavy_features', 0 ) : 0;
+$fast     = function_exists( 'get_option' ) ? get_option( 'rtbcb_fast_mode', 0 ) : 0;
+$auto     = false;
 
-       return (bool) ( $disabled || $fast );
+if ( function_exists( 'wp_doing_cron' ) && wp_doing_cron() ) {
+if ( isset( $_SERVER['HTTP_X_JETPACK_SIGNATURE'] ) || isset( $_SERVER['HTTP_JETPACK_SIGNATURE'] ) ) {
+$auto = true;
+}
+} else {
+$for         = isset( $_GET['for'] ) ? sanitize_key( wp_unslash( $_GET['for'] ) ) : '';
+$request_uri = isset( $_SERVER['REQUEST_URI'] ) ? wp_unslash( $_SERVER['REQUEST_URI'] ) : '';
+
+if ( 'jetpack' === $for || ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) ) {
+$auto = true;
+} elseif ( isset( $_SERVER['HTTP_X_JETPACK_SIGNATURE'] ) || isset( $_SERVER['HTTP_JETPACK_SIGNATURE'] ) ) {
+$auto = true;
+} elseif ( false !== strpos( $request_uri, '/jetpack/' ) || false !== strpos( $request_uri, '/wp-admin/rest-proxy/' ) ) {
+$auto = true;
+}
+}
+
+return (bool) ( $disabled || $fast || $auto );
 }
 
 /**
