@@ -23,7 +23,7 @@ async function runTests() {
 
     for (const model of models) {
         let capturedBody;
-        global.rtbcbReport = { report_model: model, model_capabilities: capabilities, ajax_url: 'https://example.com', template_url: 'template.html' };
+        global.rtbcbReport = { report_model: model, model_capabilities: capabilities, ajax_url: 'https://example.com', template_url: 'https://example.com/template.html' };
 
     global.fetch = (url, options) => {
         if (!options) {

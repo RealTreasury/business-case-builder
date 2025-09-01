@@ -41,7 +41,7 @@ global.document = {
 
 global.window = {};
 
-global.rtbcbReport = { ajax_url: '', model_capabilities: {}, template_url: '' };
+global.rtbcbReport = { ajax_url: '', model_capabilities: {}, template_url: 'https://example.com/template.html' };
 
 const code = fs.readFileSync('public/js/rtbcb-report.js', 'utf8');
 vm.runInThisContext(code);

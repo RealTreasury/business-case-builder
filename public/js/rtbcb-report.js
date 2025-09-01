@@ -30,6 +30,8 @@ function supportsTemperature(model) {
 }
 
 async function buildEnhancedPrompt(businessContext) {
+        throw new Error('Template URL must use HTTP or HTTPS protocol');
+    }
     const response = await fetch(rtbcbReport.template_url);
     const template = await response.text();
     const companyName = businessContext && businessContext.companyName ? businessContext.companyName : 'Company';

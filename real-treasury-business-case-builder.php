@@ -602,9 +602,9 @@ add_action( 'rtbcb_cleanup_jobs', [ 'RTBCB_Background_Job', 'cleanup' ] );
 				'max_output_tokens'  => intval( $config['max_output_tokens'] ),
 				'min_output_tokens'  => intval( $config['min_output_tokens'] ),
 				'model_capabilities' => $model_capabilities,
-				'ajax_url'           => admin_url( 'admin-ajax.php' ),
-				'template_url'       => RTBCB_URL . 'public/templates/report-template.html',
-				'timeout_ms'         => rtbcb_get_api_timeout() * 1000,
+'ajax_url'           => admin_url( 'admin-ajax.php' ),
+'template_url'       => esc_url( plugins_url( 'public/templates/report-template.html', RTBCB_FILE ) ),
+'timeout_ms'         => rtbcb_get_api_timeout() * 1000,
 				'nonce'              => wp_create_nonce( 'rtbcb_generate' ),
 				'strings'            => [
 					'exportPDF'      => __( 'Export as PDF', 'rtbcb' ),
