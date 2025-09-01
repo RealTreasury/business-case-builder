@@ -12,16 +12,6 @@
 */
 defined( 'ABSPATH' ) || exit;
 
-// Add error handler to catch fatal errors.
-register_shutdown_function(
-	function() {
-		$error = error_get_last();
-		if ( $error && in_array( $error['type'], [ E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR ], true ) ) {
-			error_log( 'RTBCB Fatal Error: ' . $error['message'] . ' in ' . $error['file'] . ':' . $error['line'] );
-		}
-	}
-);
-
 define( 'RTBCB_VERSION', '2.1.9' );
 define( 'RTBCB_FILE', __FILE__ );
 define( 'RTBCB_URL', plugin_dir_url( RTBCB_FILE ) );
@@ -84,8 +74,18 @@ class RTBCB_Main {
 	/**
 	* Constructor.
 	*/
-	private function __construct() {
-		try {
+        private function __construct() {
+                // Add error handler to catch fatal errors.
+                register_shutdown_function(
+                        function() {
+                                $error = error_get_last();
+                                if ( $error && in_array( $error['type'], [ E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR ], true ) ) {
+                                        error_log( 'RTBCB Fatal Error: ' . $error['message'] . ' in ' . $error['file'] . ':' . $error['line'] );
+                                }
+                        }
+                );
+
+                try {
 			if ( ! $this->check_wp_ready() ) {
 				return;
 			}
