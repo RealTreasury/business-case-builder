@@ -50,11 +50,11 @@ $job_id = uniqid( 'rtbcb_job_', true );
 				);
 
 		// Trigger cron immediately in a non-blocking way.
-		if ( function_exists( 'spawn_cron' ) && ! wp_doing_cron() ) {
+		if ( function_exists( 'spawn_cron' ) && ( ! function_exists( 'wp_doing_cron' ) || ! wp_doing_cron() ) ) {
 			spawn_cron();
 		}
 
-				return $job_id;
+			return $job_id;
 		}
 
 	/**
