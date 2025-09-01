@@ -118,7 +118,7 @@ class RTBCB_Main {
 		} catch ( Throwable $e ) {
 				error_log( 'RTBCB: Plugin initialization failed: ' . $e->getMessage() );
 			// Don't re-throw - just disable the plugin gracefully.
-			add_action( 'admin_notices', function() use ( $e ) {
+	add_action( 'admin_notices', function() use ( $e ) {
 				echo '<div class="notice notice-error"><p>' .
 					sprintf(
 						esc_html__( 'Real Treasury Business Case Builder failed to initialize: %s', 'rtbcb' ),
@@ -173,17 +173,17 @@ return true;
 	* @return void
 	*/
 	private function init_hooks() {
-		add_action( 'init', [ $this, 'init' ] );
-		add_action( 'plugins_loaded', [ $this, 'plugins_loaded' ] );
-		add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_assets' ] );
+	add_action( 'init', [ $this, 'init' ] );
+	add_action( 'plugins_loaded', [ $this, 'plugins_loaded' ] );
+	add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_assets' ] );
 
 		// Shortcode
 		add_shortcode( 'rt_business_case_builder', [ $this, 'shortcode_handler' ] );
 
 		// Portal integration hooks
-		add_action( 'rtbcb_portal_data_changed', [ $this, 'handle_portal_data_change' ] );
+	add_action( 'rtbcb_portal_data_changed', [ $this, 'handle_portal_data_change' ] );
 		// Compatibility with legacy portal hook name.
-		add_action( 'rt_portal_data_changed', [ $this, 'handle_portal_data_change' ] );
+	add_action( 'rt_portal_data_changed', [ $this, 'handle_portal_data_change' ] );
 
 	       // Admin notices
 	       add_action( 'admin_notices', [ $this, 'admin_notices' ], 10 );
@@ -216,8 +216,8 @@ return true;
 		}
 
 		// OpenAI proxy handlers
-		add_action( 'wp_ajax_rtbcb_openai_responses', 'rtbcb_proxy_openai_responses' );
-		add_action( 'wp_ajax_nopriv_rtbcb_openai_responses', 'rtbcb_proxy_openai_responses' );
+	add_action( 'wp_ajax_rtbcb_openai_responses', 'rtbcb_proxy_openai_responses' );
+	add_action( 'wp_ajax_nopriv_rtbcb_openai_responses', 'rtbcb_proxy_openai_responses' );
 
 		// Debug handlers
 		if ( defined( 'RTBCB_DEBUG' ) && RTBCB_DEBUG && function_exists( 'current_user_can' ) && current_user_can( 'manage_options' ) ) {
@@ -231,9 +231,9 @@ return true;
 	* @return void
 	*/
 	private function init_hooks_debug() {
-		add_action( 'wp_ajax_rtbcb_debug_test', [ $this, 'debug_ajax_handler' ] );
-		add_action( 'wp_ajax_rtbcb_simple_test', [ $this, 'ajax_generate_case_simple' ] );
-		add_action( 'wp_ajax_rtbcb_debug_report', [ $this, 'debug_report_generation' ] );
+	add_action( 'wp_ajax_rtbcb_debug_test', [ $this, 'debug_ajax_handler' ] );
+	add_action( 'wp_ajax_rtbcb_simple_test', [ $this, 'ajax_generate_case_simple' ] );
+	add_action( 'wp_ajax_rtbcb_debug_report', [ $this, 'debug_report_generation' ] );
 	}
 
 	/**
@@ -342,7 +342,7 @@ return true;
 	private function check_compatibility() {
 		// Check PHP version
 		if ( version_compare( PHP_VERSION, '7.4', '<' ) ) {
-		add_action( 'admin_notices', function() {
+	add_action( 'admin_notices', function() {
 			echo '<div class="notice notice-error"><p>';
 			printf(
 				esc_html__( 'Real Treasury Business Case Builder requires PHP %1$s or higher. You are running %2$s.', 'rtbcb' ),
@@ -356,7 +356,7 @@ return true;
 
 		// Check WordPress version
 		if ( version_compare( get_bloginfo( 'version' ), '5.0', '<' ) ) {
-		add_action( 'admin_notices', function() {
+	add_action( 'admin_notices', function() {
 			echo '<div class="notice notice-error"><p>';
 			printf(
 				esc_html__( 'Real Treasury Business Case Builder requires WordPress %1$s or higher. You are running %2$s.', 'rtbcb' ),
@@ -379,7 +379,7 @@ return true;
 		}
 
 		if ( ! empty( $missing_extensions ) ) {
-		add_action( 'admin_notices', function() use ( $missing_extensions ) {
+	add_action( 'admin_notices', function() use ( $missing_extensions ) {
 			echo '<div class="notice notice-error"><p>';
 			printf(
 				esc_html(
@@ -2770,19 +2770,25 @@ if ( ! class_exists( 'Real_Treasury_BCB' ) ) {
 
 // Initialize the plugin once WordPress is ready.
 if ( ! defined( 'RTBCB_NO_BOOTSTRAP' ) ) {
-	register_activation_hook(
+	if ( function_exists( 'register_activation_hook' ) ) {
+		register_activation_hook(
 		RTBCB_FILE,
 		function() {
 			RTBCB_Main::instance()->activation_handler();
 		}
-	);
-	register_deactivation_hook(
+		);
+	}
+	if ( function_exists( 'register_deactivation_hook' ) ) {
+		register_deactivation_hook(
 		RTBCB_FILE,
 		function() {
 			RTBCB_Main::instance()->deactivation_handler();
 		}
-	);
-	register_uninstall_hook( RTBCB_FILE, [ RTBCB_Main::class, 'uninstall' ] );
+		);
+	}
+	if ( function_exists( 'register_uninstall_hook' ) ) {
+		register_uninstall_hook( RTBCB_FILE, [ RTBCB_Main::class, 'uninstall' ] );
+	}
 	add_action(
 		'plugins_loaded',
 		function() {
