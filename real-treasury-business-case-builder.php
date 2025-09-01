@@ -38,7 +38,19 @@ define( 'RTBCB_URL', plugin_dir_url( RTBCB_FILE ) );
 define( 'RTBCB_DIR', plugin_dir_path( RTBCB_FILE ) );
 
 if ( ! defined( 'RTBCB_DEBUG' ) ) {
-	define( 'RTBCB_DEBUG', false );
+define( 'RTBCB_DEBUG', false );
+}
+
+if ( ! function_exists( 'rt_bcb_log' ) ) {
+/**
+ * Simple logger for debugging.
+ *
+ * @param mixed $msg Message to log.
+ * @return void
+ */
+function rt_bcb_log( $msg ) {
+error_log( '[RT-BCB] ' . ( is_string( $msg ) ? $msg : wp_json_encode( $msg ) ) );
+}
 }
 
 /**
@@ -161,9 +173,9 @@ return true;
 	* @return void
 	*/
 	private function init_hooks() {
-		register_activation_hook( RTBCB_FILE, [ $this, 'activate' ] );
-		register_deactivation_hook( RTBCB_FILE, [ $this, 'deactivate' ] );
-		register_uninstall_hook( RTBCB_FILE, [ __CLASS__, 'uninstall' ] );
+               register_activation_hook( RTBCB_FILE, [ $this, 'activation_handler' ] );
+               register_deactivation_hook( RTBCB_FILE, [ $this, 'deactivation_handler' ] );
+               register_uninstall_hook( RTBCB_FILE, [ __CLASS__, 'uninstall' ] );
 
 		add_action( 'init', [ $this, 'init' ] );
 		add_action( 'plugins_loaded', [ $this, 'plugins_loaded' ] );
@@ -2482,52 +2494,95 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 		),
 		];
 
-		return array_merge( $custom_links, $links );
+	return array_merge( $custom_links, $links );
 	}
-
+	
 	/**
-	* Plugin activation.
-	*
-	* @return void
-	*/
+	 * Safe activation handler.
+	 *
+	 * @return void
+	 */
+	public function activation_handler() {
+		try {
+		if ( version_compare( PHP_VERSION, '8.2', '<' ) ) {
+		rt_bcb_log( 'Activation aborted: PHP version too low' );
+		if ( function_exists( 'deactivate_plugins' ) ) {
+		deactivate_plugins( plugin_basename( RTBCB_FILE ) );
+		}
+		wp_die( esc_html__( 'Real Treasury Business Case Builder requires PHP 8.2 or higher.', 'rtbcb' ) );
+		}
+		
+		global $wpdb;
+		if ( ! isset( $wpdb ) || ! class_exists( 'WP_Error' ) ) {
+		rt_bcb_log( 'Activation aborted: WordPress not fully loaded' );
+		return;
+		}
+		
+		$this->activate();
+		} catch ( Throwable $e ) {
+		rt_bcb_log( 'Activation error: ' . $e->getMessage() );
+		if ( function_exists( 'deactivate_plugins' ) ) {
+		deactivate_plugins( plugin_basename( RTBCB_FILE ) );
+		}
+		}
+	}
+	
+	/**
+	 * Safe deactivation handler.
+	 *
+	 * @return void
+	 */
+	public function deactivation_handler() {
+		try {
+		$this->deactivate();
+		} catch ( Throwable $e ) {
+		rt_bcb_log( 'Deactivation error: ' . $e->getMessage() );
+		}
+		}
+	
+	/**
+	 * Plugin activation.
+	 *
+	 * @return void
+	 */
 	public function activate() {
 		// Create database tables
 		$this->init_database();
-
+		
 		// Set default options
 		$this->set_default_options();
-
+		
 		// Setup capabilities
 		$this->setup_capabilities();
-
+		
 		// Schedule cron jobs
 		$this->setup_cron_jobs();
-
+		
 		// Set activation flag
 		set_transient( 'rtbcb_show_upgrade_notice', true, 30 );
-
+		
 		// Flush rewrite rules
 		flush_rewrite_rules();
-
-		error_log( 'RTBCB: Plugin activated successfully' );
+		
+		rt_bcb_log( 'Plugin activated successfully' );
 	}
-
+	
 	/**
-	* Plugin deactivation.
-	*
-	* @return void
-	*/
+	 * Plugin deactivation.
+	 *
+	 * @return void
+	 */
 	public function deactivate() {
 		// Clear scheduled events
 		wp_clear_scheduled_hook( 'rtbcb_rebuild_rag_index' );
 		wp_clear_scheduled_hook( 'rtbcb_cleanup_data' );
 		wp_clear_scheduled_hook( 'rtbcb_refresh_lead_metrics' );
-
+		
 		// Flush rewrite rules
 		flush_rewrite_rules();
-
-		error_log( 'RTBCB: Plugin deactivated' );
-	}
+		
+		rt_bcb_log( 'Plugin deactivated' );
+}
 
 	/**
 	* Plugin uninstall.
@@ -2717,24 +2772,15 @@ if ( ! class_exists( 'Real_Treasury_BCB' ) ) {
 	class_alias( RTBCB_Main::class, 'Real_Treasury_BCB' );
 }
 
-// Initialize the plugin with crash protection
-if ( ! defined( 'RTBCB_NO_BOOTSTRAP' ) ) {
-	try {
+// Initialize the plugin with crash protection.
+	if ( ! defined( 'RTBCB_NO_BOOTSTRAP' ) ) {
+		try {
 		RTBCB_Main::instance();
-	} catch ( Throwable $e ) {
-		error_log( 'RTBCB: Plugin failed to start: ' . $e->getMessage() );
-
-		// Show admin notice instead of crashing
-		add_action( 'admin_notices', function() use ( $e ) {
-			if ( current_user_can( 'manage_options' ) ) {
-				echo '<div class="notice notice-error is-dismissible">';
-				echo '<p><strong>' . esc_html__( 'Real Treasury Business Case Builder Error:', 'rtbcb' ) . '</strong> ';
-				echo esc_html( $e->getMessage() );
-				echo '</p></div>';
-			}
-		} );
+		} catch ( Throwable $e ) {
+		rt_bcb_log( 'Bootstrap error: ' . $e->getMessage() . "\n" . $e->getTraceAsString() );
+		return;
+		}
 	}
-}
 
 
 // Helper functions for use in templates and other plugins
@@ -3044,10 +3090,12 @@ function rtbcb_ajax_generate_category_recommendation() {
 	}
 }
 
-// Enqueue admin scripts for company overview page.
-			add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_company_overview_scripts', 20 );
-			add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_real_treasury_overview_scripts', 20 );
-			add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_recommended_category_scripts', 20 );
+// Enqueue admin scripts for specific pages.
+if ( is_admin() ) {
+	add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_company_overview_scripts', 20 );
+	add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_real_treasury_overview_scripts', 20 );
+	add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_recommended_category_scripts', 20 );
+}
 
 /**
 	* Enqueue admin scripts for company overview page.
@@ -3056,34 +3104,34 @@ function rtbcb_ajax_generate_category_recommendation() {
 	* @return void
 	*/
 function rtbcb_enqueue_company_overview_scripts( $hook ) {
-	$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
-	if ( strpos( $hook, 'rtbcb' ) !== false && ( strpos( $hook, 'company-overview' ) !== false || 'rtbcb-test-dashboard' === $page ) ) {
+		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
+		if ( strpos( $hook, 'rtbcb' ) !== false && ( strpos( $hook, 'company-overview' ) !== false || 'rtbcb-test-dashboard' === $page ) ) {
 		wp_enqueue_script(
 		'rtbcb-test-utils',
-		plugin_dir_url( __FILE__ ) . 'admin/js/rtbcb-test-utils.js',
-		[ 'jquery', 'wp-i18n' ],
-		'1.0.0',
-		true
+			plugins_url( 'admin/js/rtbcb-test-utils.js', __FILE__ ),
+			[ 'jquery', 'wp-i18n' ],
+			'1.0.0',
+			true
 		);
-		wp_set_script_translations( 'rtbcb-test-utils', 'rtbcb' );
+				wp_set_script_translations( 'rtbcb-test-utils', 'rtbcb' );
 		wp_enqueue_script(
 		'rtbcb-company-overview',
-		plugin_dir_url( __FILE__ ) . 'admin/js/company-overview.js',
+		plugins_url( 'admin/js/company-overview.js', __FILE__ ),
 		[ 'jquery', 'rtbcb-test-utils' ],
 		'1.0.0',
 		true
 		);
-
-		wp_localize_script(
-		'rtbcb-company-overview',
-		'rtbcb_ajax',
-		[
-			'ajax_url' => admin_url( 'admin-ajax.php' ),
-			'nonce'	   => wp_create_nonce( 'rtbcb_test_company_overview' ),
-			'timeout'  => rtbcb_get_api_timeout() * 1000,
-		]
-		);
-	}
+	
+			wp_localize_script(
+			'rtbcb-company-overview',
+			'rtbcb_ajax',
+			[
+				'ajax_url' => admin_url( 'admin-ajax.php' ),
+				'nonce'	   => wp_create_nonce( 'rtbcb_test_company_overview' ),
+				'timeout'  => rtbcb_get_api_timeout() * 1000,
+			]
+			);
+		}
 }
 
 /**
@@ -3095,21 +3143,21 @@ function rtbcb_enqueue_company_overview_scripts( $hook ) {
 function rtbcb_enqueue_real_treasury_overview_scripts( $hook ) {
 	$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
 	if ( strpos( $hook, 'rtbcb' ) !== false && ( strpos( $hook, 'real-treasury-overview' ) !== false || 'rtbcb-test-dashboard' === $page ) ) {
-		wp_enqueue_script(
-		'rtbcb-test-utils',
-		plugin_dir_url( __FILE__ ) . 'admin/js/rtbcb-test-utils.js',
-		[ 'jquery', 'wp-i18n' ],
-		'1.0.0',
-		true
-		);
+wp_enqueue_script(
+'rtbcb-test-utils',
+plugins_url( 'admin/js/rtbcb-test-utils.js', __FILE__ ),
+[ 'jquery', 'wp-i18n' ],
+'1.0.0',
+true
+);
 		wp_set_script_translations( 'rtbcb-test-utils', 'rtbcb' );
-		wp_enqueue_script(
-		'rtbcb-real-treasury-overview',
-		plugin_dir_url( __FILE__ ) . 'admin/js/real-treasury-overview.js',
-		[ 'jquery', 'rtbcb-test-utils' ],
-		'1.0.0',
-		true
-		);
+wp_enqueue_script(
+'rtbcb-real-treasury-overview',
+plugins_url( 'admin/js/real-treasury-overview.js', __FILE__ ),
+[ 'jquery', 'rtbcb-test-utils' ],
+'1.0.0',
+true
+);
 
 		wp_localize_script(
 		'rtbcb-real-treasury-overview',
@@ -3132,21 +3180,21 @@ function rtbcb_enqueue_recommended_category_scripts( $hook ) {
 	$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
 
 	if ( false !== strpos( $page, 'recommended-category' ) || 'rtbcb-test-dashboard' === $page ) {
-		wp_enqueue_script(
-		'rtbcb-test-utils',
-		plugin_dir_url( __FILE__ ) . 'admin/js/rtbcb-test-utils.js',
-		[ 'jquery', 'wp-i18n' ],
-		'1.0.0',
-		true
-		);
+wp_enqueue_script(
+'rtbcb-test-utils',
+plugins_url( 'admin/js/rtbcb-test-utils.js', __FILE__ ),
+[ 'jquery', 'wp-i18n' ],
+'1.0.0',
+true
+);
 		wp_set_script_translations( 'rtbcb-test-utils', 'rtbcb' );
-		wp_enqueue_script(
-		'rtbcb-recommended-category',
-		plugin_dir_url( __FILE__ ) . 'admin/js/recommended-category.js',
-		[ 'jquery', 'rtbcb-test-utils' ],
-		'1.0.0',
-		true
-		);
+wp_enqueue_script(
+'rtbcb-recommended-category',
+plugins_url( 'admin/js/recommended-category.js', __FILE__ ),
+[ 'jquery', 'rtbcb-test-utils' ],
+'1.0.0',
+true
+);
 
 		wp_localize_script(
 		'rtbcb-recommended-category',
