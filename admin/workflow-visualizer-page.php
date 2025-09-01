@@ -33,7 +33,7 @@ defined( 'ABSPATH' ) || exit;
 <div class="rtbcb-step-description"><?php echo esc_html__( 'Validate and sanitize user inputs', 'rtbcb' ); ?></div>
 <div class="rtbcb-step-metrics">
 <span class="rtbcb-step-duration">-</span>
-<span class="rtbcb-step-status">pending</span>
+<span class="rtbcb-step-status"><?php esc_html_e( 'pending', 'rtbcb' ); ?></span>
 </div>
 </div>
 
@@ -45,7 +45,7 @@ defined( 'ABSPATH' ) || exit;
 <div class="rtbcb-step-description"><?php echo esc_html__( 'Single consolidated AI analysis', 'rtbcb' ); ?></div>
 <div class="rtbcb-step-metrics">
 <span class="rtbcb-step-duration">-</span>
-<span class="rtbcb-step-status">pending</span>
+<span class="rtbcb-step-status"><?php esc_html_e( 'pending', 'rtbcb' ); ?></span>
 </div>
 <div class="rtbcb-step-details">
 <div class="rtbcb-detail-item">
@@ -62,7 +62,7 @@ defined( 'ABSPATH' ) || exit;
 <div class="rtbcb-step-description"><?php echo esc_html__( 'AI-enhanced financial modeling', 'rtbcb' ); ?></div>
 <div class="rtbcb-step-metrics">
 <span class="rtbcb-step-duration">-</span>
-<span class="rtbcb-step-status">pending</span>
+<span class="rtbcb-step-status"><?php esc_html_e( 'pending', 'rtbcb' ); ?></span>
 </div>
 </div>
 
@@ -74,7 +74,7 @@ defined( 'ABSPATH' ) || exit;
 <div class="rtbcb-step-description"><?php echo esc_html__( 'AI-enhanced category selection', 'rtbcb' ); ?></div>
 <div class="rtbcb-step-metrics">
 <span class="rtbcb-step-duration">-</span>
-<span class="rtbcb-step-status">pending</span>
+<span class="rtbcb-step-status"><?php esc_html_e( 'pending', 'rtbcb' ); ?></span>
 </div>
 </div>
 
@@ -86,7 +86,7 @@ defined( 'ABSPATH' ) || exit;
 <div class="rtbcb-step-description"><?php echo esc_html__( 'RAG + AI strategic analysis', 'rtbcb' ); ?></div>
 <div class="rtbcb-step-metrics">
 <span class="rtbcb-step-duration">-</span>
-<span class="rtbcb-step-status">pending</span>
+<span class="rtbcb-step-status"><?php esc_html_e( 'pending', 'rtbcb' ); ?></span>
 </div>
 <div class="rtbcb-step-details">
 <div class="rtbcb-detail-item">
@@ -103,7 +103,7 @@ defined( 'ABSPATH' ) || exit;
 <div class="rtbcb-step-description"><?php echo esc_html__( 'Prepare structured report data', 'rtbcb' ); ?></div>
 <div class="rtbcb-step-metrics">
 <span class="rtbcb-step-duration">-</span>
-<span class="rtbcb-step-status">pending</span>
+<span class="rtbcb-step-status"><?php esc_html_e( 'pending', 'rtbcb' ); ?></span>
 </div>
 </div>
 </div>

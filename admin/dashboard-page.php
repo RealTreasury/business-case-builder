@@ -164,7 +164,8 @@ $avg_roi = intval( $roi_stats['avg_base'] ?? 0 );
 
 						$categories = RTBCB_Category_Recommender::get_all_categories();
 						$top_cat_info = $categories[ $top_category['recommended_category'] ] ?? [];
-						echo esc_html( $top_cat_info['name'] ?? 'TMS' );
+			$top_cat_name = $top_cat_info['name'] ?? __( 'TMS', 'rtbcb' );
+			echo esc_html( $top_cat_name );
 					} else {
 						esc_html_e( 'N/A', 'rtbcb' );
 					}
@@ -201,7 +202,7 @@ $avg_roi = intval( $roi_stats['avg_base'] ?? 0 );
 									<span class="rtbcb-company-size"><?php echo esc_html( $lead['company_size'] ); ?></span>
 									<?php if ( $lead['roi_base'] > 0 ) : ?>
 										<span class="rtbcb-lead-separator">•</span>
-										<span class="rtbcb-roi">$<?php echo esc_html( number_format( $lead['roi_base'] ) ); ?> ROI</span>
+								<span class="rtbcb-roi"><?php printf( esc_html__( '%s ROI', 'rtbcb' ), esc_html( '$' . number_format( $lead['roi_base'] ) ) ); ?></span>
 									<?php endif; ?>
 								</div>
 							</div>
@@ -290,7 +291,7 @@ $avg_roi = intval( $roi_stats['avg_base'] ?? 0 );
 					<div class="rtbcb-category-item">
 						<div class="rtbcb-category-header">
 							<span class="rtbcb-category-name"><?php echo esc_html( $cat_name ); ?></span>
-							<span class="rtbcb-category-count"><?php echo esc_html( $stat['count'] ); ?> leads</span>
+								<span class="rtbcb-category-count"><?php printf( esc_html__( '%d leads', 'rtbcb' ), intval( $stat['count'] ) ); ?></span>
 						</div>
 						<div class="rtbcb-category-bar">
 							<div class="rtbcb-category-fill rtbcb-cat-<?php echo esc_attr( $stat['recommended_category'] ); ?>"
