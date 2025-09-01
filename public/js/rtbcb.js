@@ -102,10 +102,18 @@ async function handleSubmit(e) {
     }
     rtbcbIsSubmitting = true;
 
+    if (typeof rtbcbAjax === 'undefined') {
+        handleSubmissionError('Service unavailable. Please reload the page.', '');
+        rtbcbIsSubmitting = false;
+        return;
+    }
+
     var form = e.target;
     var formData = new FormData(form);
     formData.append('action', 'rtbcb_generate_case');
-    formData.append('rtbcb_nonce', rtbcbAjax.nonce);
+    if (rtbcbAjax.nonce) {
+        formData.append('rtbcb_nonce', rtbcbAjax.nonce);
+    }
     var progressContainer = document.getElementById('rtbcb-progress-container');
     var formContainer = document.querySelector('.rtbcb-form-container');
 
@@ -124,7 +132,7 @@ async function handleSubmit(e) {
         }
         progressContainer.style.display = 'block';
     }
-    if (typeof rtbcbAjax === 'undefined' || !isValidUrl(rtbcbAjax.ajax_url)) {
+    if (!isValidUrl(rtbcbAjax.ajax_url)) {
         handleSubmissionError('Service unavailable. Please reload the page.', '');
         rtbcbIsSubmitting = false;
         return;
@@ -190,12 +198,13 @@ async function handleSubmit(e) {
 
 async function pollJobStatus(jobId, progressContainer, formContainer) {
     try {
-        if (!isValidUrl(rtbcbAjax.ajax_url)) {
+        if (!rtbcbAjax || !isValidUrl(rtbcbAjax.ajax_url)) {
             handleSubmissionError('Service unavailable. Please reload the page.', '');
             rtbcbIsSubmitting = false;
             return;
         }
-        const response = await fetch(`${rtbcbAjax.ajax_url}?action=rtbcb_job_status&job_id=${encodeURIComponent(jobId)}&rtbcb_nonce=${rtbcbAjax.nonce}`);
+        const nonce = rtbcbAjax.nonce ? rtbcbAjax.nonce : '';
+        const response = await fetch(`${rtbcbAjax.ajax_url}?action=rtbcb_job_status&job_id=${encodeURIComponent(jobId)}&rtbcb_nonce=${nonce}`);
         const data = await response.json();
 
         if (!data.success) {
@@ -258,7 +267,9 @@ export async function rtbcbStreamAnalysis(formData, onChunk) {
         return;
     }
     formData.append('action', 'rtbcb_stream_analysis');
-    formData.append('rtbcb_nonce', rtbcbAjax.nonce);
+    if (rtbcbAjax.nonce) {
+        formData.append('rtbcb_nonce', rtbcbAjax.nonce);
+    }
     const response = await fetch(rtbcbAjax.ajax_url, {
         method: 'POST',
         body: formData
