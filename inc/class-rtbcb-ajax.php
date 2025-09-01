@@ -13,10 +13,6 @@ class RTBCB_Ajax {
 	* @return void
 	*/
                public static function generate_comprehensive_case() {
-                               if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) {
-                                               wp_die( 'Invalid request' );
-                               }
-
                                if ( ! function_exists( 'check_ajax_referer' ) ) {
                                                wp_die( 'WordPress not ready' );
                                }
