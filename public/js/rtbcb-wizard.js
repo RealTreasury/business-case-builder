@@ -569,47 +569,87 @@ class BusinessCaseBuilder {
         }
     }
 
-showLoading() {
-// Hide form
-const formContainer = ( this.form && typeof this.form.closest === 'function' ) ? this.form.closest('.rtbcb-form-container') : null;
-if (formContainer) {
-formContainer.style.display = 'none';
-}
+    showLoading() {
+        // Hide form
+        const formContainer = ( this.form && typeof this.form.closest === 'function' ) ?
+            this.form.closest('.rtbcb-form-container') : null;
+        if (formContainer) {
+            formContainer.style.display = 'none';
+        }
 
-const progressContainer = document.getElementById('rtbcb-progress-container');
-if (progressContainer) {
-const companyName = this.form.querySelector('[name="company_name"]')?.value || 'your company';
-const initialText = window.rtbcb_ajax?.settings?.enable_ai_analysis
-? `Analyzing ${this.escapeHTML(companyName)}'s treasury operations...`
-: 'Calculating ROI...';
-progressContainer.innerHTML = `
-<div class="rtbcb-progress-content">
-<div class="rtbcb-progress-spinner"></div>
-<div class="rtbcb-progress-text">Generating Your Business Case</div>
-<div class="rtbcb-progress-step">
-<span class="rtbcb-progress-step-text" id="rtbcb-progress-status">${initialText}</span>
-</div>
-<div class="rtbcb-progress-partial">
-<div id="rtbcb-partial-basic-roi" style="display:none"></div>
-<div id="rtbcb-partial-category" style="display:none"></div>
-</div>
-</div>
-`;
-progressContainer.style.display = 'flex';
-}
-}
+        const progressContainer = document.getElementById('rtbcb-progress-container');
+        if (progressContainer) {
+            // Get company name for personalization
+            const companyName = this.form.querySelector('[name="company_name"]')?.value || 'your company';
+            const escapedCompanyName = this.escapeHTML(companyName);
+
+            // Determine initial text based on AI settings
+            const enableAI = window.rtbcb_ajax?.settings?.enable_ai_analysis !== false;
+            const initialText = enableAI
+                ? `Analyzing ${escapedCompanyName}'s treasury operations...`
+                : 'Calculating ROI scenarios...';
+
+            // Create properly structured loader content
+            progressContainer.innerHTML = `
+                <div class="rtbcb-progress-content">
+                    <div class="rtbcb-progress-spinner"></div>
+                    
+                    <div class="rtbcb-progress-text">
+                        Generating Your Business Case
+                    </div>
+                    
+                    <div class="rtbcb-progress-step">
+                        <span class="rtbcb-progress-step-text" id="rtbcb-progress-status">
+                            ${initialText}
+                        </span>
+                    </div>
+                    
+                    <div class="rtbcb-progress-partial">
+                        <div id="rtbcb-partial-basic-roi" style="display: none;"></div>
+                        <div id="rtbcb-partial-category" style="display: none;"></div>
+                        <div id="rtbcb-partial-analysis" style="display: none;"></div>
+                    </div>
+                </div>
+            `;
+
+            // Show the progress overlay
+            progressContainer.style.display = 'flex';
+            progressContainer.classList.add('active');
+
+            // Prevent body scrolling
+            document.body.style.overflow = 'hidden';
+
+            // Add accessibility attributes
+            progressContainer.setAttribute('role', 'dialog');
+            progressContainer.setAttribute('aria-label', 'Generating business case report');
+            progressContainer.setAttribute('aria-live', 'polite');
+
+            console.log('RTBCB: Progress overlay shown');
+        }
+    }
 
     hideLoading() {
         const progressContainer = document.getElementById('rtbcb-progress-container');
         if (progressContainer) {
             progressContainer.style.display = 'none';
+            progressContainer.classList.remove('active');
             progressContainer.innerHTML = '';
+            progressContainer.removeAttribute('role');
+            progressContainer.removeAttribute('aria-label');
+            progressContainer.removeAttribute('aria-live');
         }
 
-        const formContainer = ( this.form && typeof this.form.closest === 'function' ) ? this.form.closest('.rtbcb-form-container') : null;
+        // Restore body scrolling
+        document.body.style.overflow = '';
+
+        // Show form container
+        const formContainer = ( this.form && typeof this.form.closest === 'function' ) ?
+            this.form.closest('.rtbcb-form-container') : null;
         if (formContainer) {
             formContainer.style.display = 'block';
         }
+        
+        console.log('RTBCB: Progress overlay hidden');
     }
 
     cancelPolling() {
@@ -638,7 +678,10 @@ progressContainer.style.display = 'flex';
         }
 
         if (!isValidUrl(this.ajaxUrl)) {
-            this.handleError({ message: 'Service unavailable. Please reload the page.', type: 'polling_error' });
+            this.handleError({ 
+                message: 'Service unavailable. Please reload the page.', 
+                type: 'polling_error' 
+            });
             this.cancelPolling();
             return;
         }
@@ -653,40 +696,24 @@ progressContainer.style.display = 'flex';
             const data = await response.json();
 
             if (!data.success) {
-                this.handleError({ message: 'Unable to retrieve job status', type: 'polling_error' });
+                this.handleError({ 
+                    message: 'Unable to retrieve job status', 
+                    type: 'polling_error' 
+                });
                 this.cancelPolling();
                 return;
             }
 
-const statusData = data.data;
-const { status, step, message, percent } = statusData;
-console.log(`RTBCB: Job status: ${status} (attempt ${attempt})`);
+            const statusData = data.data;
+            const { status, step, message, percent } = statusData;
+            
+            console.log(`RTBCB: Job status: ${status} (attempt ${attempt})`);
 
-const progressStatus = document.getElementById('rtbcb-progress-status');
-if (progressStatus) {
-let text = step || message || '';
-if (typeof percent === 'number') {
-text = text ? `${text} (${Math.round(percent)}%)` : `${Math.round(percent)}%`;
-}
-if (text) {
-progressStatus.textContent = text;
-}
-}
+            // Update progress status with better formatting
+            this.updateProgressStatus(statusData, attempt);
 
-const roiContainer = document.getElementById('rtbcb-partial-basic-roi');
-if (statusData.basic_roi && roiContainer) {
-const base = statusData.basic_roi?.financial_analysis?.roi_scenarios?.base?.total_annual_benefit;
-if (typeof base === 'number') {
-roiContainer.textContent = `Projected Annual Benefit: $${this.formatNumber(base)}`;
-roiContainer.style.display = 'block';
-}
-}
-
-const categoryContainer = document.getElementById('rtbcb-partial-category');
-if (statusData.category && categoryContainer) {
-categoryContainer.textContent = `Recommended Category: ${this.escapeHTML(statusData.category)}`;
-categoryContainer.style.display = 'block';
-}
+            // Show partial results as they become available
+            this.updatePartialResults(statusData);
 
             if (status === 'completed') {
                 this.cancelPolling();
@@ -696,12 +723,18 @@ categoryContainer.style.display = 'block';
                 } else if (statusData.report_data) {
                     this.handleSuccess(statusData.report_data);
                 } else {
-                    this.handleError({ message: 'Report data missing from completed job', type: 'job_error' });
+                    this.handleError({ 
+                        message: 'Report data missing from completed job', 
+                        type: 'job_error' 
+                    });
                 }
             } else if (status === 'error') {
                 this.cancelPolling();
                 this.hideLoading();
-                this.handleError({ message: statusData.message || 'Job failed', type: 'job_error' });
+                this.handleError({ 
+                    message: statusData.message || 'Job failed', 
+                    type: 'job_error' 
+                });
             } else if (typeof percent === 'number' && percent >= 100) {
                 this.cancelPolling();
                 this.hideLoading();
@@ -710,7 +743,10 @@ categoryContainer.style.display = 'block';
                 } else if (statusData.report_data) {
                     this.handleSuccess(statusData.report_data);
                 } else {
-                    this.handleError({ message: 'Report data missing from completed job', type: 'job_error' });
+                    this.handleError({ 
+                        message: 'Report data missing from completed job', 
+                        type: 'job_error' 
+                    });
                 }
             } else if (!this.pollingCancelled) {
                 // Continue polling
@@ -722,8 +758,106 @@ categoryContainer.style.display = 'block';
         } catch (error) {
             console.error('RTBCB: Job polling error:', error);
             this.cancelPolling();
-            this.handleError({ message: error.message || 'An unexpected error occurred', type: 'polling_error' });
+            this.handleError({ 
+                message: error.message || 'An unexpected error occurred', 
+                type: 'polling_error' 
+            });
         }
+    }
+
+    // New method to update progress status with better UX
+    updateProgressStatus(statusData, attempt) {
+        const progressStatus = document.getElementById('rtbcb-progress-status');
+        if (!progressStatus) {
+            return;
+        }
+
+        const { status, step, message, percent } = statusData;
+        let displayText = '';
+
+        // Create user-friendly status messages
+        if (step) {
+            displayText = this.formatProgressStep(step);
+        } else if (message) {
+            displayText = this.formatProgressMessage(message);
+        } else if (status === 'processing') {
+            displayText = `Processing your request... (${attempt + 1}/600)`;
+        } else {
+            displayText = 'Generating your business case...';
+        }
+
+        // Add percentage if available
+        if (typeof percent === 'number' && percent > 0) {
+            displayText += ` (${Math.round(percent)}%)`;
+        }
+
+        // Update with animation
+        progressStatus.style.opacity = '0.6';
+        setTimeout(() => {
+            progressStatus.textContent = displayText;
+            progressStatus.style.opacity = '1';
+        }, 150);
+    }
+
+    // New method to show partial results
+    updatePartialResults(statusData) {
+        // Show basic ROI if available
+        const roiContainer = document.getElementById('rtbcb-partial-basic-roi');
+        if (statusData.basic_roi && roiContainer) {
+            const baseROI = statusData.basic_roi?.financial_analysis?.roi_scenarios?.base?.total_annual_benefit;
+            if (typeof baseROI === 'number' && baseROI > 0) {
+                roiContainer.innerHTML = `
+                    <strong>✓ ROI Analysis Complete</strong><br>
+                    Projected Annual Benefit: $${this.formatNumber(baseROI)}
+                `;
+                roiContainer.style.display = 'block';
+            }
+        }
+
+        // Show category recommendation if available
+        const categoryContainer = document.getElementById('rtbcb-partial-category');
+        if (statusData.category && categoryContainer) {
+            categoryContainer.innerHTML = `
+                <strong>✓ Solution Identified</strong><br>
+                Recommended: ${this.escapeHTML(statusData.category)}
+            `;
+            categoryContainer.style.display = 'block';
+        }
+
+        // Show analysis progress if available
+        const analysisContainer = document.getElementById('rtbcb-partial-analysis');
+        if (statusData.analysis_step && analysisContainer) {
+            analysisContainer.innerHTML = `
+                <strong>✓ AI Analysis</strong><br>
+                ${this.escapeHTML(statusData.analysis_step)}
+            `;
+            analysisContainer.style.display = 'block';
+        }
+    }
+
+    // Format progress steps for better readability
+    formatProgressStep(step) {
+        const stepMap = {
+            'roi_calculation': 'Calculating ROI scenarios...',
+            'category_recommendation': 'Identifying optimal solution category...',
+            'rag_search': 'Researching market insights...',
+            'ai_analysis': 'Generating AI-powered analysis...',
+            'report_generation': 'Assembling your business case report...',
+            'finalizing': 'Finalizing recommendations...'
+        };
+
+        return stepMap[step] || step.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) + '...';
+    }
+
+    // Format progress messages for consistency
+    formatProgressMessage(message) {
+        if (!message) {
+            return '';
+        }
+        
+        // Ensure message ends with ellipsis for processing indication
+        const cleanMessage = message.replace(/\.+$/, '');
+        return cleanMessage + '...';
     }
 
     handleSuccess(data) {
@@ -1039,45 +1173,49 @@ categoryContainer.style.display = 'block';
         const progressContainer = document.getElementById('rtbcb-progress-container');
         if (progressContainer) {
             progressContainer.innerHTML = `
-                <div class="rtbcb-enhanced-error" style="padding: 40px; text-align: center; max-width: 600px;">
+                <div class="rtbcb-progress-content">
                     <div class="rtbcb-error-icon" style="font-size: 48px; color: #ef4444; margin-bottom: 20px;">
                         ⚠️
                     </div>
-                    <h3 style="color: #ef4444; margin-bottom: 16px; font-size: 24px;">
-                        Unable to Generate Dashboard Report
-                    </h3>
-                    <p style="color: #4b5563; margin-bottom: 24px; font-size: 16px; line-height: 1.5;">
-                        ${window.DOMPurify ? DOMPurify.sanitize(message) : this.escapeHTML(message)}
-                    </p>
+                    
+                    <div class="rtbcb-progress-text" style="color: #ef4444; margin-bottom: 16px;">
+                        Unable to Generate Report
+                    </div>
+                    
+                    <div class="rtbcb-progress-step">
+                        <span class="rtbcb-progress-step-text" style="color: #4b5563;">
+                            ${window.DOMPurify ? DOMPurify.sanitize(message) : this.escapeHTML(message)}
+                        </span>
+                    </div>
+                    
                     ${details ? `
-                    <details style="margin-bottom: 24px; text-align: left;">
-                        <summary style="cursor: pointer; color: #7c3aed; font-weight: 600;">
+                    <details style="margin-top: 16px; text-align: left; width: 100%; max-width: 400px;">
+                        <summary style="cursor: pointer; color: #7c3aed; font-weight: 600; margin-bottom: 8px;">
                             Technical Details
                         </summary>
-                        <pre style="background: #f3f4f6; padding: 16px; border-radius: 8px; font-size: 14px; margin-top: 8px; overflow-x: auto;">
+                        <pre style="background: #f3f4f6; padding: 12px; border-radius: 6px; font-size: 12px; overflow-x: auto; white-space: pre-wrap;">
                             ${this.escapeHTML(JSON.stringify(details, null, 2))}
                         </pre>
                     </details>
                     ` : ''}
-                    <div class="rtbcb-error-actions" style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                    
+                    <div class="rtbcb-progress-partial" style="margin-top: 20px;">
                         <button type="button" onclick="location.reload()"
-                                style="background: #7216f4; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                                style="background: #7216f4; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; margin: 0 8px 8px 0;">
                             Try Again
                         </button>
                         <a href="/request-processing/" target="_blank"
-                           style="background: #f3f4f6; color: #4b5563; border: none; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">
+                           style="background: #f3f4f6; color: #4b5563; border: none; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block; margin: 0 8px 8px 0;">
                             Request Processing
-                        </a>
-                        <a href="#" onclick="window.location.href='mailto:contact@realtreasury.com'"
-                           style="background: #f3f4f6; color: #4b5563; border: none; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">
-                            Email Results
                         </a>
                     </div>
                 </div>
             `;
+            
             progressContainer.style.display = 'flex';
-            progressContainer.style.alignItems = 'center';
-            progressContainer.style.justifyContent = 'center';
+            progressContainer.classList.add('active');
+            progressContainer.setAttribute('role', 'alert');
+            progressContainer.setAttribute('aria-label', 'Error occurred');
         }
     }
 
@@ -1361,7 +1499,11 @@ categoryContainer.style.display = 'block';
     }
 
     formatNumber(num) {
-        return new Intl.NumberFormat('en-US').format(Math.round(num));
+        if (typeof num !== 'number' || isNaN(num)) return '0';
+        return new Intl.NumberFormat('en-US', {
+            maximumFractionDigits: 0,
+            minimumFractionDigits: 0
+        }).format(num);
     }
 
     reinitialize() {
