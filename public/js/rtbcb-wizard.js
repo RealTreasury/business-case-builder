@@ -635,7 +635,8 @@ progressContainer.style.display = 'flex';
         }
 
         try {
-            const response = await fetch(`${this.ajaxUrl}?action=rtbcb_job_status&job_id=${encodeURIComponent(jobId)}&rtbcb_nonce=${rtbcbAjax.nonce}`, {
+            const nonce = ( typeof rtbcbAjax !== 'undefined' && rtbcbAjax.nonce ) ? rtbcbAjax.nonce : '';
+            const response = await fetch(`${this.ajaxUrl}?action=rtbcb_job_status&job_id=${encodeURIComponent(jobId)}&rtbcb_nonce=${nonce}`, {
                 credentials: 'same-origin',
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             });
