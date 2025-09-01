@@ -32,11 +32,19 @@ global.document = {
 
 let printCalled = false;
 global.window = {
-    open: () => ({
-        document: { documentElement: { innerHTML: '' } },
-        focus: () => {},
-        print: () => { printCalled = true; }
-    })
+    open: () => {
+        const win = {
+            document: { documentElement: { innerHTML: '' } },
+            focus: () => {},
+            print: () => {
+                printCalled = true;
+            },
+            set onload(fn) {
+                fn();
+            }
+        };
+        return win;
+    }
 };
 
 const code = fs.readFileSync('public/js/rtbcb-report.js', 'utf8');
