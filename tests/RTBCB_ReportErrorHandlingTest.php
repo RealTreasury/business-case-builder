@@ -109,7 +109,7 @@ require_once __DIR__ . '/../inc/class-rtbcb-validator.php';
 require_once __DIR__ . '/../inc/class-rtbcb-ajax.php';
 require_once __DIR__ . '/../inc/class-rtbcb-router.php';
 
-final class Report_Error_Handling_Test extends TestCase {
+final class RTBCB_ReportErrorHandlingTest extends TestCase {
 protected function setUp(): void {
 $_POST = [];
 }

@@ -33,14 +33,16 @@ if ( ! function_exists( 'current_time' ) ) {
 }
 
 $business_case_data = [
-	'company_name'      => 'Demo Corp',
-	'executive_summary' => [
-		'strategic_positioning'   => 'Positioned well.',
-		'business_case_strength'  => 'Strong',
-		'key_value_drivers'       => [ 'Efficiency', 'Compliance' ],
-		'executive_recommendation'=> 'Proceed',
-	],
+        'company_name'      => 'Demo Corp',
+        'executive_summary' => [
+                'strategic_positioning'   => 'Positioned well.',
+                'business_case_strength'  => 'Strong',
+                'key_value_drivers'       => [ 'Efficiency', 'Compliance' ],
+                'executive_recommendation'=> 'Proceed',
+        ],
 ];
+
+$report_data = $business_case_data;
 
 ob_start();
 include __DIR__ . '/../templates/comprehensive-report-template.php';

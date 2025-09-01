@@ -186,6 +186,9 @@ class RTBCB_Router {
 				]
 			);
 		} catch ( Exception $e ) {
+			if ( class_exists( 'RTBCB_JSON_Error' ) && $e instanceof RTBCB_JSON_Error ) {
+				throw $e;
+			}
 			// Log the detailed error to debug.log.
 			error_log( 'RTBCB Form Submission Error: ' . $e->getMessage() );
 
@@ -195,7 +198,7 @@ class RTBCB_Router {
 					'message' => sprintf(
 						__( 'An unexpected error occurred while generating your report. Please check the server logs for more details. Error: %s', 'rtbcb' ),
 						$e->getMessage()
-					),
+						),
 				],
 				500
 			);

@@ -153,7 +153,7 @@ return [ 'fallback' => true ];
 }
 }
 
-final class Generate_Business_Analysis_Test extends TestCase {
+final class RTBCB_GenerateBusinessAnalysisTest extends TestCase {
 	private $plugin;
 
 	protected function setUp(): void {
