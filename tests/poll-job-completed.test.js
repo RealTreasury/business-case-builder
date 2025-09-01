@@ -27,7 +27,7 @@ describe('pollJob', () => {
         });
         nodeGlobal.fetch = fetchMock;
 
-        nodeGlobal.rtbcbAjax = { nonce: 'test-nonce' };
+        nodeGlobal.rtbcb_ajax = { nonce: 'test-nonce' };
 
         const builder = Object.create(BusinessCaseBuilder.prototype);
         builder.ajaxUrl = 'https://example.com';

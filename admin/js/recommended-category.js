@@ -5,7 +5,7 @@
         const $generateBtn = $('#rtbcb-generate-category-recommendation');
         const $resultsDiv = $('#rtbcb-category-recommendation-results');
         const $card = $('#rtbcb-category-recommendation-card');
-        const api = window.rtbcbAdmin || window.rtbcbAjax;
+        const api = window.rtbcbAdmin || window.rtbcb_ajax;
 
         function sendRequest() {
             const data = {

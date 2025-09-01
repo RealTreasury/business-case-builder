@@ -69,7 +69,7 @@ global.navigator = dom.window.navigator;
 global.DOMPurify = { sanitize: (html) => html };
 
 // Mock AJAX globals
-global.rtbcbAjax = { ajax_url: 'http://example.com/ajax', nonce: 'test' };
+global.rtbcb_ajax = { ajax_url: 'http://example.com/ajax', nonce: 'test' };
 
 // Mock fetch for rtbcb_generate_case
 global.fetch = async () => ({

@@ -13,11 +13,11 @@
             $.ajax({
                 url: ajaxurl,
                 method: 'POST',
-                timeout: rtbcbAjax.timeout,
+                timeout: rtbcb_ajax.timeout,
                 data: {
                     action: 'rtbcb_company_overview_simple',
                     company_name: companyName,
-                    nonce: rtbcbAjax.nonce
+                    nonce: rtbcb_ajax.nonce
                 },
                 beforeSend: function() {
                     generateBtn.prop('disabled', true).text('Testing Connection...');

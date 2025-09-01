@@ -4,7 +4,7 @@ const assert = require('assert');
 
 require('./jsdom-setup');
 
-global.rtbcbAjax = {
+global.rtbcb_ajax = {
     ajax_url: 'ftp://example.com',
     nonce: 'test-nonce',
     strings: { generating: 'Generating...' }

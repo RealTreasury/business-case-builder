@@ -4,7 +4,7 @@ const assert = require('assert');
 
 require('./jsdom-setup');
 
-global.rtbcbAjax = { ajax_url: 'https://example.com', nonce: 'test-nonce' };
+global.rtbcb_ajax = { ajax_url: 'https://example.com', nonce: 'test-nonce' };
 
 class SimpleFormData {
     constructor(form) {

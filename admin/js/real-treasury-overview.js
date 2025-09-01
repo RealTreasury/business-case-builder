@@ -11,7 +11,7 @@
         const overrideCategories = $('#rtbcb-override-categories');
         const summaryDiv = $('#rtbcb-company-summary');
         const challengesList = $('#rtbcb-company-challenges');
-        const api = window.rtbcbAdmin || window.rtbcbAjax;
+        const api = window.rtbcbAdmin || window.rtbcb_ajax;
 
         // Fetch stored company data
         $.ajax({
