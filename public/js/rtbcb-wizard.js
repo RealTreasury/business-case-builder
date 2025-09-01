@@ -1048,7 +1048,7 @@ categoryContainer.style.display = 'block';
                            style="background: #f3f4f6; color: #4b5563; border: none; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">
                             Request Processing
                         </a>
-                        <a href="mailto:contact@realtreasury.com"
+                        <a href="#" onclick="window.location.href='mailto:contact@realtreasury.com'"
                            style="background: #f3f4f6; color: #4b5563; border: none; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">
                             Email Results
                         </a>
@@ -1319,7 +1319,7 @@ categoryContainer.style.display = 'block';
             'API connection failed': 'Unable to connect to analysis service. Please try again.',
             'Missing required field': 'Please fill in all required fields.',
             'Invalid email address': 'Please enter a valid email address.',
-            'request took longer than our 5-minute limit': 'Your request exceeded the 5-minute limit. Visit the <a href="/request-processing/" target="_blank">Request Processing page</a> or <a href="mailto:contact@realtreasury.com?subject=Business%20Case%20Request">request email delivery</a>.',
+            'request took longer than our 5-minute limit': 'Your request exceeded the 5-minute limit. Visit the <a href="/request-processing/" target="_blank">Request Processing page</a> or <a href="#" onclick="window.location.href=&apos;mailto:contact@realtreasury.com?subject=Business%20Case%20Request&apos;">request email delivery</a>.',
             'PHP error occurred': 'Server error encountered. Please try again.',
             'Server returned invalid JSON response': 'Server communication error. Please try again.',
             'Unexpected server response': 'Server communication error. Please try again.'
