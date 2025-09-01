@@ -9,7 +9,27 @@
 	* License: GPL v2 or later
 	*
 	* @package RealTreasuryBusinessCaseBuilder
-	*/
+*/
+
+// Prevent memory crashes.
+if ( ! defined( 'WP_MEMORY_LIMIT' ) ) {
+	define( 'WP_MEMORY_LIMIT', '256M' );
+}
+
+// Prevent execution timeout crashes.
+if ( ! ini_get( 'safe_mode' ) ) {
+	set_time_limit( 60 );
+}
+
+// Add error handler to catch fatal errors.
+register_shutdown_function(
+	function() {
+		$error = error_get_last();
+		if ( $error && in_array( $error['type'], [ E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR ], true ) ) {
+			error_log( 'RTBCB Fatal Error: ' . $error['message'] . ' in ' . $error['file'] . ':' . $error['line'] );
+		}
+	}
+);
 
 defined( 'ABSPATH' ) || exit;
 
