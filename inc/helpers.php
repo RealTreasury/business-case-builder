@@ -1452,10 +1452,13 @@ $api_key = function_exists( 'get_option' ) ? get_option( 'rtbcb_openai_api_key' 
 if ( empty( $api_key ) ) {
 wp_send_json_error( [ 'message' => __( 'OpenAI API key not configured.', 'rtbcb' ) ], 500 );
 }
+if ( ! function_exists( 'curl_init' ) ) {
+wp_send_json_error( [ 'message' => __( 'The cURL PHP extension is required.', 'rtbcb' ) ], 500 );
+}
 
-	if ( isset( $_POST['nonce'] ) ) {
-		check_ajax_referer( 'rtbcb_openai_responses', 'nonce' );
-	}
+        if ( isset( $_POST['nonce'] ) ) {
+                check_ajax_referer( 'rtbcb_openai_responses', 'nonce' );
+        }
 
 	$body = isset( $_POST['body'] ) ? wp_unslash( $_POST['body'] ) : '';
 	if ( '' === $body ) {
