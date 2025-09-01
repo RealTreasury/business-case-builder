@@ -126,11 +126,11 @@ class RTBCB_Main {
 		// Shortcode
 		add_shortcode( 'rt_business_case_builder', [ $this, 'shortcode_handler' ] );
 
-		// Portal integration hooks
-		add_action( 'rt_portal_data_changed', [ $this, 'handle_portal_data_change' ] );
+               // Portal integration hooks
+               add_action( 'rtbcb_portal_data_changed', [ $this, 'handle_portal_data_change' ] );
 
-		// Admin notices
-		add_action( 'admin_notices', [ $this, 'admin_notices' ] );
+               // Admin notices
+               add_action( 'admin_notices', [ $this, 'admin_notices' ], 10 );
 
 		// Plugin action links
 		add_filter( 'plugin_action_links_' . plugin_basename( RTBCB_FILE ), [ $this, 'plugin_action_links' ] );
@@ -382,9 +382,6 @@ class RTBCB_Main {
                        wp_schedule_event( time(), 'hourly', 'rtbcb_cleanup_jobs' );
                }
 
-               if ( class_exists( 'RTBCB_Background_Job' ) ) {
-                       add_action( 'rtbcb_cleanup_jobs', [ 'RTBCB_Background_Job', 'cleanup' ] );
-               }
 
                // Schedule lead metrics refresh
                if ( ! wp_next_scheduled( 'rtbcb_refresh_lead_metrics' ) ) {
@@ -2968,9 +2965,9 @@ function rtbcb_ajax_generate_category_recommendation() {
 }
 
 // Enqueue admin scripts for company overview page.
-add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_company_overview_scripts' );
-add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_real_treasury_overview_scripts' );
-add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_recommended_category_scripts' );
+add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_company_overview_scripts', 20 );
+add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_real_treasury_overview_scripts', 20 );
+add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_recommended_category_scripts', 20 );
 
 /**
 	* Enqueue admin scripts for company overview page.
