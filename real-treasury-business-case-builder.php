@@ -1095,7 +1095,7 @@ return $use_comprehensive;
 		*     @type array          $rag_context Context chunks used for RAG.
 		* }
 		*/
-	private function generate_business_analysis( $user_inputs, $scenarios, $recommendation, $chunk_callback = null ) {
+public function generate_business_analysis( $user_inputs, $scenarios, $recommendation, $chunk_callback = null ) {
 		$start_time = microtime( true );
 		$timeout    = absint( rtbcb_get_api_timeout() );
 
