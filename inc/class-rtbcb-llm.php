@@ -2785,9 +2785,8 @@ $max_output_tokens = min( 128000, max( $min_tokens, $max_output_tokens ) );
 			error_log( 'RTBCB: Malformed LLM response: ' . $response_body );
 
 			if ( class_exists( 'RTBCB_API_Log' ) ) {
-				$company      = rtbcb_get_current_company();
-				$user_email   = $this->current_inputs['email'] ?? ( $company['email'] ?? '' );
-				$company_name = $this->current_inputs['company_name'] ?? ( $company['name'] ?? '' );
+				$user_email   = $this->current_inputs['email'] ?? '';
+				$company_name = $this->current_inputs['company_name'] ?? '';
 				RTBCB_API_Log::save_log( $body, [ 'raw_body' => $response_body ], get_current_user_id(), $user_email, $company_name );
 			}
 
@@ -2805,9 +2804,8 @@ $max_output_tokens = min( 128000, max( $min_tokens, $max_output_tokens ) );
 		$this->last_response = $response;
 
 		if ( class_exists( 'RTBCB_API_Log' ) ) {
-			$company      = rtbcb_get_current_company();
-			$user_email   = $this->current_inputs['email'] ?? ( $company['email'] ?? '' );
-			$company_name = $this->current_inputs['company_name'] ?? ( $company['name'] ?? '' );
+			$user_email   = $this->current_inputs['email'] ?? '';
+			$company_name = $this->current_inputs['company_name'] ?? '';
 			RTBCB_API_Log::save_log( $body, $decoded, get_current_user_id(), $user_email, $company_name );
 		}
 

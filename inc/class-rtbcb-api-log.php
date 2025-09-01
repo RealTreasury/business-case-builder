@@ -124,7 +124,15 @@ class RTBCB_API_Log {
 		global $wpdb;
 
 		if ( empty( self::$table_name ) ) {
-			self::init();
+		self::init();
+		}
+		
+		if ( empty( $user_email ) && ! empty( $request['email'] ) ) {
+		$user_email = $request['email'];
+		}
+		
+		if ( empty( $company_name ) && ! empty( $request['company_name'] ) ) {
+		$company_name = $request['company_name'];
 		}
 
 		$request_json  = wp_json_encode( $request );

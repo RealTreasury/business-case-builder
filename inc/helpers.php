@@ -1562,19 +1562,18 @@ $api_key = function_exists( 'get_option' ) ? get_option( 'rtbcb_openai_api_key' 
 	}
 	delete_transient( 'rtbcb_openai_job_' . $job_id . '_body' );
 
-		$body_array = json_decode( $body, true );
-		if ( ! is_array( $body_array ) ) {
-				$body_array = [];
-		}
-
-		$company      = rtbcb_get_current_company();
-		$user_email   = isset( $company['email'] ) ? sanitize_email( $company['email'] ) : '';
-		$company_name = isset( $company['name'] ) ? sanitize_text_field( $company['name'] ) : '';
-
-$timeout = intval( function_exists( 'get_option' ) ? get_option( 'rtbcb_responses_timeout', 120 ) : 120 );
-if ( $timeout <= 0 ) {
-$timeout = 120;
-}
+	$body_array = json_decode( $body, true );
+	if ( ! is_array( $body_array ) ) {
+		$body_array = [];
+	}
+	
+	$user_email   = isset( $body_array['email'] ) ? sanitize_email( $body_array['email'] ) : '';
+	$company_name = isset( $body_array['company_name'] ) ? sanitize_text_field( $body_array['company_name'] ) : '';
+	
+	$timeout = intval( function_exists( 'get_option' ) ? get_option( 'rtbcb_responses_timeout', 120 ) : 120 );
+	if ( $timeout <= 0 ) {
+		$timeout = 120;
+	}
 
 		$response = rtbcb_wp_remote_post_with_retry(
 				'https://api.openai.com/v1/responses',
