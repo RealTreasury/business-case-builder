@@ -124,27 +124,30 @@ if ( ! defined( 'DAY_IN_SECONDS' ) ) {
 
 if ( ! class_exists( 'RTBCB_Ajax' ) ) {
 	class RTBCB_Ajax {
-		public static $mode = 'success';
-		public static function process_basic_roi_step( $user_inputs ) {
-			return [ 'financial_analysis' => [] ];
-		}
-		public static function process_comprehensive_case( $user_inputs, $job_id ) {
-			do_action( 'rtbcb_workflow_step_completed', 'ai_enrichment' );
-			RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'enriched_profile' => [] ] );
-			do_action( 'rtbcb_workflow_step_completed', 'enhanced_roi_calculation' );
-			RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'enhanced_roi' => [] ] );
-			do_action( 'rtbcb_workflow_step_completed', 'intelligent_recommendations' );
-			RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'category' => 'cat' ] );
-			do_action( 'rtbcb_workflow_step_completed', 'hybrid_rag_analysis' );
-			RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'analysis' => [] ] );
-			do_action( 'rtbcb_workflow_step_completed', 'data_structuring' );
-			RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'report_data' => [] ] );
-			if ( 'error' === self::$mode ) {
-				return new WP_Error( 'failed', 'Processing failed.' );
-			}
-			return [ 'result' => 'ok' ];
-		}
-	}
+                public static $mode = 'success';
+                public static function process_basic_roi_step( $user_inputs ) {
+                        return [ 'financial_analysis' => [] ];
+                }
+                public static function process_comprehensive_case( $user_inputs, $job_id ) {
+                        do_action( 'rtbcb_workflow_step_completed', 'ai_enrichment' );
+                        RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'enriched_profile' => [] ] );
+                        do_action( 'rtbcb_workflow_step_completed', 'enhanced_roi_calculation' );
+                        RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'enhanced_roi' => [] ] );
+                        do_action( 'rtbcb_workflow_step_completed', 'intelligent_recommendations' );
+                        RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'category' => 'cat' ] );
+                        do_action( 'rtbcb_workflow_step_completed', 'hybrid_rag_analysis' );
+                        RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'analysis' => [] ] );
+                        do_action( 'rtbcb_workflow_step_completed', 'data_structuring' );
+                        RTBCB_Background_Job::update_status( $job_id, 'processing', [ 'report_data' => [] ] );
+                        if ( 'throw' === self::$mode ) {
+                                throw new Exception( 'Explosion' );
+                        }
+                        if ( 'error' === self::$mode ) {
+                                return new WP_Error( 'failed', 'Processing failed.' );
+                        }
+                        return [ 'result' => 'ok' ];
+                }
+        }
 }
 
 require_once __DIR__ . '/../inc/class-rtbcb-background-job.php';
@@ -184,6 +187,14 @@ $statuses = array_column( $transient_log[ $job_id2 ], 'state' );
 assert_true( $statuses[0] === 'queued' && end( $statuses ) === 'error', 'Error status flow incorrect: ' . json_encode( $statuses ) );
 assert_true( 'error' === $status['state'], 'Job did not error' );
 assert_true( 'Processing failed.' === $status['message'], 'Error message missing' );
+
+// Exception job flow.
+RTBCB_Ajax::$mode = 'throw';
+$job_id6          = RTBCB_Background_Job::enqueue( $user_inputs );
+RTBCB_Background_Job::process_job( $job_id6, $user_inputs );
+$status = RTBCB_Background_Job::get_status( $job_id6 );
+assert_true( 'error' === $status['state'], 'Exception not handled' );
+assert_true( 'Explosion' === $status['message'], 'Exception message missing' );
 
 // Cleanup test.
 $job_id3 = RTBCB_Background_Job::enqueue( $user_inputs );

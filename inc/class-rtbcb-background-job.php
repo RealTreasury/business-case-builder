@@ -104,8 +104,23 @@ $job_id,
 10,
 1
 );
-
+$result = null;
+try {
 $result = RTBCB_Ajax::process_comprehensive_case( $user_inputs, $job_id );
+} catch ( \Throwable $e ) {
+if ( function_exists( 'rtbcb_log_error' ) ) {
+rtbcb_log_error( 'Background job error', $e->getMessage() );
+}
+self::update_status(
+$job_id,
+'error',
+[
+'message' => $e->getMessage(),
+'percent' => 100,
+]
+);
+return;
+}
 
 if ( is_wp_error( $result ) ) {
 	self::update_status(
