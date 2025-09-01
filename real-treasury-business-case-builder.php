@@ -3010,7 +3010,7 @@ function rtbcb_enqueue_company_overview_scripts( $hook ) {
 
 		wp_localize_script(
 		'rtbcb-company-overview',
-		'rtbcb_ajax',
+                'rtbcbAjax',
 		[
 			'ajax_url' => admin_url( 'admin-ajax.php' ),
 			'nonce'    => wp_create_nonce( 'rtbcb_test_company_overview' ),
@@ -3047,7 +3047,7 @@ function rtbcb_enqueue_real_treasury_overview_scripts( $hook ) {
 
 		wp_localize_script(
 		'rtbcb-real-treasury-overview',
-		'rtbcb_ajax',
+                'rtbcbAjax',
 		[
 			'ajax_url' => admin_url( 'admin-ajax.php' ),
 			'nonce'    => wp_create_nonce( 'rtbcb_test_real_treasury_overview' ),
@@ -3084,7 +3084,7 @@ function rtbcb_enqueue_recommended_category_scripts( $hook ) {
 
 		wp_localize_script(
 		'rtbcb-recommended-category',
-		'rtbcb_ajax',
+                'rtbcbAjax',
 		[
 			'ajax_url' => admin_url( 'admin-ajax.php' ),
 			'nonce'    => wp_create_nonce( 'rtbcb_test_category_recommendation' ),
