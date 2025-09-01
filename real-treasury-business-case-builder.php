@@ -96,6 +96,10 @@ class RTBCB_Main {
 	*/
 	private function __construct() {
 		try {
+			if ( ! $this->check_wp_ready() ) {
+				return;
+			}
+
 			if ( $this->is_jetpack_request() ) {
 				return;
 			}
@@ -127,6 +131,21 @@ class RTBCB_Main {
 				'</p></div>';
 			} );
 		}
+	}
+
+	/**
+	* Check if WordPress environment is ready.
+	*
+	* @return bool
+	*/
+	private function check_wp_ready() {
+		return (
+			function_exists( 'add_action' ) &&
+			function_exists( 'wp_die' ) &&
+			function_exists( 'get_option' ) &&
+			defined( 'ABSPATH' ) &&
+			did_action( 'init' ) !== false
+		);
 	}
 
 	/**

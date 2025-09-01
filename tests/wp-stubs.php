@@ -14,6 +14,19 @@ if ( ! function_exists( 'add_action' ) ) {
 if ( ! function_exists( 'do_action' ) ) {
 	function do_action( $tag, ...$args ) {}
 }
+if ( ! function_exists( 'wp_die' ) ) {
+	function wp_die( $message = '' ) {}
+}
+if ( ! function_exists( 'did_action' ) ) {
+	function did_action( $tag ) {
+		return 1;
+	}
+}
+if ( ! function_exists( 'is_admin' ) ) {
+	function is_admin() {
+		return false;
+	}
+}
 if ( ! function_exists( 'get_option' ) ) {
 	function get_option( $option, $default = false ) {
 		return $default;
