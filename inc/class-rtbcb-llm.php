@@ -2656,6 +2656,9 @@ return new WP_Error( 'heavy_features_disabled', __( 'AI features temporarily dis
 if ( empty( $this->api_key ) ) {
 return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
 }
+if ( ! function_exists( 'curl_init' ) ) {
+return new WP_Error( 'missing_curl', __( 'The cURL PHP extension is required.', 'rtbcb' ) );
+}
 
 $endpoint         = 'https://api.openai.com/v1/responses'; // Correct endpoint.
 $model_name       = sanitize_text_field( $model ?: 'gpt-5-mini' );
