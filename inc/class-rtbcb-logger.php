@@ -6,18 +6,15 @@ defined( 'ABSPATH' ) || exit;
 	*
 	* @package RealTreasuryBusinessCaseBuilder
 	*/
+class RTBCB_Logger {
 
-/**
-		* Structured logging for API interactions.
-		*/
-		class RTBCB_Logger {
-			/**
-			* Send a structured log record.
-			*
-			* @param string $event   Event name.
-			* @param array  $context Context data.
-			* @return void
-			*/
+	/**
+	 * Send a structured log record.
+	 *
+	 * @param string $event   Event name.
+	 * @param array  $context Context data.
+	 * @return void
+	 */
 	public static function log( $event, $context = [] ) {
 		$record = [
 			'timestamp' => gmdate( 'c' ),
@@ -27,27 +24,28 @@ defined( 'ABSPATH' ) || exit;
 
 		error_log( 'RTBCB_LOG: ' . wp_json_encode( $record ) );
 
-$endpoint = function_exists( 'get_option' ) ? get_option( 'rtbcb_log_endpoint', '' ) : '';
-$endpoint = function_exists( 'sanitize_text_field' ) ? sanitize_text_field( $endpoint ) : $endpoint;
-if ( $endpoint ) {
-rtbcb_wp_remote_post_with_retry(
-$endpoint,
-[
-'headers' => [ 'Content-Type' => 'application/json' ],
-'body'    => wp_json_encode( $record ),
-'timeout' => 2,
-]
-);
-}
+		$endpoint = function_exists( 'get_option' ) ? get_option( 'rtbcb_log_endpoint', '' ) : '';
+		$endpoint = function_exists( 'sanitize_text_field' ) ? sanitize_text_field( $endpoint ) : $endpoint;
+
+		if ( $endpoint ) {
+			rtbcb_wp_remote_post_with_retry(
+				$endpoint,
+				[
+					'headers' => [ 'Content-Type' => 'application/json' ],
+					'body'    => wp_json_encode( $record ),
+					'timeout' => 2,
+				]
+			);
+		}
 	}
 
 	/**
-	* Log request details on shutdown.
-	*
-	* @param float $start_time Request start time.
-	* @param array $payload    Sanitized request payload.
-	* @return void
-	*/
+	 * Log request details on shutdown.
+	 *
+	 * @param float $start_time Request start time.
+	 * @param array $payload    Sanitized request payload.
+	 * @return void
+	 */
 	public static function log_shutdown( $start_time, $payload ) {
 		$duration = ( microtime( true ) - $start_time ) * 1000;
 		$code     = http_response_code();
@@ -71,10 +69,10 @@ $endpoint,
 	}
 
 	/**
-	* Increment timeout counter and trigger alert if threshold exceeded.
-	*
-	* @return void
-	*/
+	 * Increment timeout counter and trigger alert if threshold exceeded.
+	 *
+	 * @return void
+	 */
 	public static function record_timeout() {
 		$count = (int) get_transient( 'rtbcb_timeout_count' );
 		$count++;
@@ -87,13 +85,13 @@ $endpoint,
 	}
 
 	/**
-	* Send timeout alert email.
-	*
-	* @param int $count Timeout count.
-	* @return void
-	*/
-private static function send_timeout_alert( $count ) {
-$admin_email = function_exists( 'get_option' ) ? get_option( 'admin_email' ) : '';
+	 * Send timeout alert email.
+	 *
+	 * @param int $count Timeout count.
+	 * @return void
+	 */
+	private static function send_timeout_alert( $count ) {
+		$admin_email = function_exists( 'get_option' ) ? get_option( 'admin_email' ) : '';
 		$subject     = __( 'Business Case Builder timeout alert', 'rtbcb' );
 		$message     = sprintf(
 			__( 'The Business Case Builder API timed out %d times in the last five minutes.', 'rtbcb' ),
@@ -102,4 +100,3 @@ $admin_email = function_exists( 'get_option' ) ? get_option( 'admin_email' ) : '
 		wp_mail( $admin_email, $subject, $message );
 	}
 }
-

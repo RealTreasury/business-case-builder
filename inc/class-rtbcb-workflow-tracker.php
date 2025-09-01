@@ -117,16 +117,17 @@ error_log( 'RTBCB Workflow: Completed step ' . $step_name . ' in ' . round( $thi
 	* @return void
 	*/
 public function add_warning( $code, $message ) {
-$step_name = $this->current_step ? $this->current_step['name'] : ( $this->steps ? end( $this->steps )['name'] : 'unknown' );
-$warning   = [
-'code'      => $code,
-'message'   => $message,
-'timestamp' => microtime( true ),
-'step'      => $step_name,
-];
+	$step_name = $this->current_step ? $this->current_step['name'] : ( $this->steps ? end( $this->steps )['name'] : 'unknown' );
+	$warning   = [
+		'code'      => $code,
+		'message'   => $message,
+		'timestamp' => microtime( true ),
+		'step'      => $step_name,
+	];
 
-$this->warnings[] = $warning;
-error_log( "RTBCB Workflow Warning [{$code}]: {$message}" );
+	$this->warnings[] = $warning;
+	error_log( "RTBCB Workflow Warning [{$code}]: {$message}" );
+	do_action( 'rtbcb_workflow_warning', $warning );
 }
 
 /**
@@ -137,16 +138,17 @@ error_log( "RTBCB Workflow Warning [{$code}]: {$message}" );
 	* @return void
 	*/
 public function add_error( $code, $message ) {
-$step_name = $this->current_step ? $this->current_step['name'] : ( $this->steps ? end( $this->steps )['name'] : 'unknown' );
-$error     = [
-'code'      => $code,
-'message'   => $message,
-'timestamp' => microtime( true ),
-'step'      => $step_name,
-];
+	$step_name = $this->current_step ? $this->current_step['name'] : ( $this->steps ? end( $this->steps )['name'] : 'unknown' );
+	$error     = [
+		'code'      => $code,
+		'message'   => $message,
+		'timestamp' => microtime( true ),
+		'step'      => $step_name,
+	];
 
-$this->errors[] = $error;
-error_log( "RTBCB Workflow Error [{$code}]: {$message}" );
+	$this->errors[] = $error;
+	error_log( "RTBCB Workflow Error [{$code}]: {$message}" );
+	do_action( 'rtbcb_workflow_error', $error );
 }
 
 /**
