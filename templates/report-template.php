@@ -53,7 +53,8 @@ $rag_context   = $business_case_data['rag_context'] ?? [];
 							esc_html( $text )
 						);
 					} else {
-						echo esc_html( is_array( $citation ) ? wp_json_encode( $citation ) : $citation );
+						$encoded_citation = is_array( $citation ) ? ( function_exists( 'wp_json_encode' ) ? wp_json_encode( $citation ) : json_encode( $citation ) ) : $citation;
+						echo esc_html( $encoded_citation );
 					}
 					?>
 				</li>

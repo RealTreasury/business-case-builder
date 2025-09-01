@@ -162,6 +162,7 @@ The analytics dashboard uses Chart.js for its visualizations. The library is bun
 * Documented Composer install step and added PHPUnit checks to test scripts.
 * Streamlined developer tooling with improved linting and code quality fixes.
 
+
 = 2.1.8 =
 * Fixed bulk lead deletion actions within the lead management dashboard.
 * Added test coverage to ensure asynchronous jobs are marked complete correctly.

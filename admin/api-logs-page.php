@@ -7,6 +7,10 @@ defined( 'ABSPATH' ) || exit;
  * @package RealTreasuryBusinessCaseBuilder
  */
 
+if ( ! current_user_can( 'manage_options' ) ) {
+	return;
+}
+
 ?>
 <div class="wrap">
 	<h1><?php echo esc_html__( 'API Logs', 'rtbcb' ); ?></h1>

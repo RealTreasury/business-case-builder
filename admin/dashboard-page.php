@@ -5,6 +5,10 @@ defined( 'ABSPATH' ) || exit;
  * Enhanced Dashboard admin page for Real Treasury Business Case Builder plugin.
  */
 
+if ( ! current_user_can( 'manage_options' ) ) {
+	return;
+}
+
 $total_leads = $stats['total_leads'] ?? 0;
 $recent_leads = $stats['recent_leads'] ?? 0;
 $category_stats = $stats['by_category'] ?? [];

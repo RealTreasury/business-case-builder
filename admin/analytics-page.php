@@ -5,6 +5,10 @@ defined( 'ABSPATH' ) || exit;
  * Analytics admin page for Real Treasury Business Case Builder plugin.
  */
 
+if ( ! current_user_can( 'manage_options' ) ) {
+	return;
+}
+
 $categories = RTBCB_Category_Recommender::get_all_categories();
 $total_leads = $stats['total_leads'] ?? 0;
 $recent_leads = $stats['recent_leads'] ?? 0;
