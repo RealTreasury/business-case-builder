@@ -5,10 +5,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 defined( 'ABSPATH' ) || exit;
 require_once __DIR__ . '/wp-stubs.php';
 
+if ( ! function_exists( 'is_admin' ) ) {
+        function is_admin() {
+                return false;
+        }
+}
+
 if ( ! function_exists( 'plugin_dir_url' ) ) {
-	function plugin_dir_url( $file ) {
-		return '';
-	}
+        function plugin_dir_url( $file ) {
+                return '';
+        }
 }
 if ( ! function_exists( 'plugin_dir_path' ) ) {
 	function plugin_dir_path( $file ) {
