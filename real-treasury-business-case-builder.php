@@ -85,15 +85,15 @@ class RTBCB_Main {
 
 			$this->init_hooks();
 		} catch ( Throwable $e ) {
-			error_log( 'RTBCB: Plugin initialization failed: ' . $e->getMessage() );
+				error_log( 'RTBCB: Plugin initialization failed: ' . $e->getMessage() );
+			// Don't re-throw - just disable the plugin gracefully.
 			add_action( 'admin_notices', function() use ( $e ) {
-				printf(
-					'<div class="notice notice-error"><p>%s</p></div>',
+				echo '<div class="notice notice-error"><p>' .
 					sprintf(
 						esc_html__( 'Real Treasury Business Case Builder failed to initialize: %s', 'rtbcb' ),
 						esc_html( $e->getMessage() )
-					)
-				);
+					) .
+				'</p></div>';
 			} );
 		}
 	}
@@ -690,9 +690,9 @@ return true;
 			'max_output_tokens'  => intval( $config['max_output_tokens'] ),
 			'min_output_tokens'  => intval( $config['min_output_tokens'] ),
 			'model_capabilities' => $model_capabilities,
-'ajax_url'	     => admin_url( 'admin-ajax.php' ),
-'template_url'	     => esc_url( plugins_url( 'public/templates/report-template.html', RTBCB_FILE ) ),
-'timeout_ms'	     => rtbcb_get_api_timeout() * 1000,
+				'ajax_url'	     => admin_url( 'admin-ajax.php' ),
+				'template_url'	     => esc_url( plugins_url( 'public/templates/report-template.html', RTBCB_FILE ) ),
+				'timeout_ms'	     => rtbcb_get_api_timeout() * 1000,
 			'nonce'		     => wp_create_nonce( 'rtbcb_generate' ),
 			'strings'	     => [
 				'exportPDF'	 => __( 'Export as PDF', 'rtbcb' ),
@@ -754,14 +754,14 @@ $css_exists = file_exists( $css_path );
 
 $use_comprehensive = $comprehensive_enabled && $template_exists && $css_exists;
 rtbcb_log_api_debug(
-'Comprehensive template check',
+				'Comprehensive template check',
 [
-'enabled'	   => $comprehensive_enabled,
-'template_exists'  => $template_exists,
-'css_exists'	   => $css_exists,
-'template_path'	   => $template_path,
-'css_path'	   => $css_path,
-'use_comprehensive' => $use_comprehensive,
+				'enabled'	   => $comprehensive_enabled,
+				'template_exists'  => $template_exists,
+				'css_exists'	   => $css_exists,
+				'template_path'	   => $template_path,
+				'css_path'	   => $css_path,
+				'use_comprehensive' => $use_comprehensive,
 ]
 );
 
@@ -889,7 +889,7 @@ return $use_comprehensive;
 		);
 
 		if ( $deleted > 0 ) {
-			error_log( "RTBCB: Cleaned up {$deleted} old lead records" );
+				error_log( "RTBCB: Cleaned up {$deleted} old lead records" );
 		}
 		}
 	}
@@ -2748,11 +2748,11 @@ if ( ! function_exists( 'rtbcb_is_configured' ) ) {
 
 
 // Add AJAX handlers for overview generation.
-add_action( 'wp_ajax_rtbcb_generate_company_overview', 'rtbcb_ajax_generate_company_overview' );
-add_action( 'wp_ajax_rtbcb_generate_real_treasury_overview', 'rtbcb_ajax_generate_real_treasury_overview' );
-add_action( 'wp_ajax_rtbcb_generate_category_recommendation', 'rtbcb_ajax_generate_category_recommendation' );
-add_action( 'wp_ajax_rtbcb_clear_current_company', 'rtbcb_ajax_clear_current_company' );
-add_action( 'wp_ajax_rtbcb_company_overview_simple', 'rtbcb_handle_company_overview_simple' );
+			add_action( 'wp_ajax_rtbcb_generate_company_overview', 'rtbcb_ajax_generate_company_overview' );
+			add_action( 'wp_ajax_rtbcb_generate_real_treasury_overview', 'rtbcb_ajax_generate_real_treasury_overview' );
+			add_action( 'wp_ajax_rtbcb_generate_category_recommendation', 'rtbcb_ajax_generate_category_recommendation' );
+			add_action( 'wp_ajax_rtbcb_clear_current_company', 'rtbcb_ajax_clear_current_company' );
+			add_action( 'wp_ajax_rtbcb_company_overview_simple', 'rtbcb_handle_company_overview_simple' );
 
 /**
 	* Simple AJAX handler to test company overview generation.
@@ -3012,9 +3012,9 @@ function rtbcb_ajax_generate_category_recommendation() {
 }
 
 // Enqueue admin scripts for company overview page.
-add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_company_overview_scripts', 20 );
-add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_real_treasury_overview_scripts', 20 );
-add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_recommended_category_scripts', 20 );
+			add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_company_overview_scripts', 20 );
+			add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_real_treasury_overview_scripts', 20 );
+			add_action( 'admin_enqueue_scripts', 'rtbcb_enqueue_recommended_category_scripts', 20 );
 
 /**
 	* Enqueue admin scripts for company overview page.
