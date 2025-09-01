@@ -175,16 +175,64 @@ function displayReport(htmlContent) {
     iframe.style.width = '100%';
     iframe.style.height = '800px';
     iframe.style.border = '1px solid #ddd';
-    iframe.srcdoc = sanitizeReportHTML(htmlContent);
-    document.getElementById('report-container').appendChild(iframe);
+
+    const safeHtml = sanitizeReportHTML(htmlContent);
+    let blobUrl;
+    let revoke = function() {};
+
+    if (typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function' && typeof Blob !== 'undefined') {
+        const blob = new Blob([safeHtml], { type: 'text/html' });
+        blobUrl = URL.createObjectURL(blob);
+        revoke = function() { URL.revokeObjectURL(blobUrl); };
+    } else {
+        blobUrl = 'data:text/html;charset=utf-8,' + encodeURIComponent(safeHtml);
+    }
+
+    iframe.src = blobUrl;
+    iframe.srcdoc = safeHtml;
+    iframe.onload = function() {
+        revoke();
+    };
+
+    const container = document.getElementById('report-container');
+    if (container) {
+        container.appendChild(iframe);
+    }
 }
 
 function exportToPDF(htmlContent) {
-    const printWindow = window.open('', '_blank');
-    const doc = printWindow.document;
-    doc.documentElement.innerHTML = sanitizeReportHTML(htmlContent);
-    printWindow.focus();
-    printWindow.print();
+    const safeHtml = sanitizeReportHTML(htmlContent);
+    let blobUrl;
+    let revoke = function() {};
+
+    if (typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function' && typeof Blob !== 'undefined') {
+        const blob = new Blob([safeHtml], { type: 'text/html' });
+        blobUrl = URL.createObjectURL(blob);
+        revoke = function() { URL.revokeObjectURL(blobUrl); };
+    } else {
+        blobUrl = 'data:text/html;charset=utf-8,' + encodeURIComponent(safeHtml);
+    }
+
+    const printWindow = window.open(blobUrl, '_blank');
+    if (!printWindow) {
+        revoke();
+        console.error('RTBCB: Unable to open print window');
+        return;
+    }
+
+    const finalize = function() {
+        printWindow.focus();
+        if (typeof printWindow.print === 'function') {
+            printWindow.print();
+        }
+        revoke();
+    };
+
+    if (printWindow.addEventListener) {
+        printWindow.addEventListener('load', finalize);
+    } else {
+        finalize();
+    }
 }
 
 async function generateAndDisplayReport(businessContext) {
