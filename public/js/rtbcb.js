@@ -83,6 +83,13 @@ function isValidUrl(url) {
     }
 }
 
+// Normalize AJAX URL to prevent empty fetch requests.
+if ( typeof rtbcb_ajax !== 'undefined' && ! isValidUrl( rtbcb_ajax.ajax_url ) ) {
+    if ( typeof ajaxurl !== 'undefined' && isValidUrl( ajaxurl ) ) {
+        rtbcb_ajax.ajax_url = ajaxurl;
+    }
+}
+
 /**
  * Handles the form submission by sending data to the backend.
  * @param {Event} e - The form submission event.
