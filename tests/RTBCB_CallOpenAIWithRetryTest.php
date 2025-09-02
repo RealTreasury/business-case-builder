@@ -4,17 +4,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 defined( 'ABSPATH' ) || exit;
 
+if ( ! defined( 'HOUR_IN_SECONDS' ) ) {
+	define( 'HOUR_IN_SECONDS', 3600 );
+}
+
+require_once __DIR__ . '/wp-stubs.php';
+require_once __DIR__ . '/../inc/class-rtbcb-llm.php';
+
 use PHPUnit\Framework\TestCase;
 
-if ( ! class_exists( 'RTBCB_LLM' ) ) {
-	class RTBCB_LLM {
-		public function call_openai_with_retry( $model, $prompt, $max_output_tokens = null, $max_retries = null, $chunk_handler = null ) {
-			return $this->call_openai( $model, $prompt, $max_output_tokens, $chunk_handler );
-		}
-
-		protected function call_openai( $model, $prompt, $max_output_tokens = null, $chunk_handler = null ) {
-			return [];
-		}
+class RTBCB_Test_LLM extends RTBCB_LLM {
+	public function call_openai_with_retry_public( $model, $prompt, $max_output_tokens = null, $max_retries = null, $chunk_handler = null ) {
+		return $this->call_openai_with_retry( $model, $prompt, $max_output_tokens, $max_retries, $chunk_handler );
 	}
 }
 
@@ -29,7 +30,7 @@ class RTBCB_CallOpenAIWithRetryTest extends TestCase {
 			'headers'  => [],
 		];
 
-		$llm = $this->getMockBuilder( RTBCB_LLM::class )
+		$llm = $this->getMockBuilder( RTBCB_Test_LLM::class )
 			->onlyMethods( [ 'call_openai' ] )
 			->getMock();
 
@@ -37,8 +38,9 @@ class RTBCB_CallOpenAIWithRetryTest extends TestCase {
 			->method( 'call_openai' )
 			->willReturn( $expected );
 
-		$result = $llm->call_openai_with_retry( 'model', 'prompt' );
+		$result = $llm->call_openai_with_retry_public( 'model', 'prompt' );
 
 		$this->assertSame( $expected, $result );
 	}
 }
+

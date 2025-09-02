@@ -2423,7 +2423,7 @@ return $analysis;
 	* @param callable|null $chunk_handler     Optional streaming handler.
 	* @return array|WP_Error Response array or error.
 	*/
-	private function call_openai_with_retry( $model, $prompt, $max_output_tokens = null, $max_retries = null, $chunk_handler = null ) {
+	protected function call_openai_with_retry( $model, $prompt, $max_output_tokens = null, $max_retries = null, $chunk_handler = null ) {
 		$raw_key   = $model . '|' . wp_json_encode( $prompt );
 		$cache_key = 'rtbcb_llm_' . md5( $raw_key );
 		$ttl       = (int) apply_filters( 'rtbcb_llm_cache_ttl', HOUR_IN_SECONDS, $cache_key, $model, $prompt );
@@ -2563,7 +2563,7 @@ break;
 	* @param callable|null $chunk_handler    Optional streaming handler.
 	* @return array|WP_Error HTTP response array or WP_Error on failure.
 	*/
-private function call_openai( $model, $prompt, $max_output_tokens = null, $chunk_handler = null ) {
+	protected function call_openai( $model, $prompt, $max_output_tokens = null, $chunk_handler = null ) {
 if ( rtbcb_heavy_features_disabled() ) {
 return new WP_Error( 'heavy_features_disabled', __( 'AI features temporarily disabled.', 'rtbcb' ) );
 }
