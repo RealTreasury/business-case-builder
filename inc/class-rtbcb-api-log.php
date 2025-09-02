@@ -26,16 +26,17 @@ class RTBCB_API_Log {
 	public static function init() {
 		global $wpdb;
 
-		self::$table_name = $wpdb->prefix . 'rtbcb_api_logs';
-		self::create_table();
-	}
+               self::$table_name = $wpdb->prefix . 'rtbcb_api_logs';
+               self::create_table();
+               self::migrate_table();
+       }
 
 	/**
 	* Create the API logs table.
 	*
 	* @return bool True on success, false on failure.
 	*/
-        private static function create_table() {
+       private static function create_table() {
                 global $wpdb;
 
 		$charset_collate = $wpdb->get_charset_collate();
@@ -45,18 +46,20 @@ class RTBCB_API_Log {
                        user_email varchar(255) DEFAULT '',
                        lead_id bigint(20) unsigned DEFAULT 0,
                        company_name varchar(255) DEFAULT '',
-                       request_json longtext DEFAULT '',
-                       response_json longtext DEFAULT '',
-                       response_truncated tinyint(1) DEFAULT 0,
+                       request_json longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+                       response_json longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+                       is_truncated tinyint(1) DEFAULT 0,
+                       original_size bigint(20) unsigned DEFAULT 0,
+                       corruption_detected tinyint(1) DEFAULT 0,
                        prompt_tokens int(11) DEFAULT 0,
                        completion_tokens int(11) DEFAULT 0,
                        total_tokens int(11) DEFAULT 0,
                        created_at datetime DEFAULT CURRENT_TIMESTAMP,
-                       PRIMARY KEY  (id),
-                       KEY user_id (user_id),
-                       KEY lead_id (lead_id),
-                       KEY created_at (created_at)
-               ) $charset_collate;";
+               PRIMARY KEY  (id),
+               KEY user_id (user_id),
+               KEY lead_id (lead_id),
+               KEY created_at (created_at)
+       ) $charset_collate;";
 
 		try {
 			require_once ABSPATH . 'wp-admin/includes/upgrade.php';
@@ -79,9 +82,11 @@ class RTBCB_API_Log {
                                        user_email varchar(255) DEFAULT '',
                                        lead_id bigint(20) unsigned DEFAULT 0,
                                        company_name varchar(255) DEFAULT '',
-                                       request_json longtext DEFAULT '',
-                                       response_json longtext DEFAULT '',
-                                       response_truncated tinyint(1) DEFAULT 0,
+                                       request_json longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+                                       response_json longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+                                       is_truncated tinyint(1) DEFAULT 0,
+                                       original_size bigint(20) unsigned DEFAULT 0,
+                                       corruption_detected tinyint(1) DEFAULT 0,
                                        prompt_tokens int(11) DEFAULT 0,
                                        completion_tokens int(11) DEFAULT 0,
                                        total_tokens int(11) DEFAULT 0,
@@ -116,6 +121,31 @@ class RTBCB_API_Log {
        }
 
        /**
+        * Migrate table structure for existing installations.
+        *
+        * @return void
+        */
+       public static function migrate_table() {
+               global $wpdb;
+
+               $columns = $wpdb->get_col( 'SHOW COLUMNS FROM ' . self::$table_name, 0 );
+
+               if ( in_array( 'response_truncated', $columns, true ) && ! in_array( 'is_truncated', $columns, true ) ) {
+                       $wpdb->query( 'ALTER TABLE ' . self::$table_name . ' CHANGE response_truncated is_truncated tinyint(1) DEFAULT 0' );
+               }
+
+               if ( ! in_array( 'original_size', $columns, true ) ) {
+                       $wpdb->query( 'ALTER TABLE ' . self::$table_name . ' ADD original_size bigint(20) unsigned DEFAULT 0' );
+               }
+
+               if ( ! in_array( 'corruption_detected', $columns, true ) ) {
+                       $wpdb->query( 'ALTER TABLE ' . self::$table_name . ' ADD corruption_detected tinyint(1) DEFAULT 0' );
+               }
+
+               $wpdb->query( 'ALTER TABLE ' . self::$table_name . ' CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci' );
+       }
+
+       /**
         * Encode data as JSON with size limit while preserving validity.
         *
         * @param mixed $data       Data to encode.
@@ -123,9 +153,17 @@ class RTBCB_API_Log {
         * @param bool  $truncated  Whether truncation occurred (passed by reference).
         * @return string Encoded JSON string.
         */
-       private static function encode_json_limited( $data, $max_bytes, &$truncated ) {
-               $json      = wp_json_encode( $data );
-               $truncated = false;
+       private static function encode_json_limited( $data, $max_bytes, &$truncated, &$original_size = 0, &$corruption_detected = false ) {
+               $json                = wp_json_encode( $data );
+               $corruption_detected = false;
+               $truncated           = false;
+
+               if ( false === $json ) {
+                       $corruption_detected = true;
+                       $json                = '{}';
+               }
+
+               $original_size = strlen( $json );
 
                if ( strlen( $json ) <= $max_bytes ) {
                        return $json;
@@ -176,10 +214,13 @@ class RTBCB_API_Log {
                        }
                }
 
-               $request_truncated  = false;
-               $response_truncated = false;
-               $request_json       = self::encode_json_limited( $request, 20000, $request_truncated );
-               $response_json      = self::encode_json_limited( $response, 1024 * 1024, $response_truncated );
+               $request_truncated   = false;
+               $response_truncated  = false;
+               $request_size        = 0;
+               $response_size       = 0;
+               $response_corruption = false;
+               $request_json        = self::encode_json_limited( $request, 20000, $request_truncated, $request_size );
+               $response_json       = self::encode_json_limited( $response, 1024 * 1024, $response_truncated, $response_size, $response_corruption );
                 $usage             = $response['usage'] ?? [];
 		$prompt_tokens     = intval( $usage['prompt_tokens'] ?? $usage['input_tokens'] ?? 0 );
 		$completion_tokens = intval( $usage['completion_tokens'] ?? $usage['output_tokens'] ?? 0 );
@@ -197,16 +238,18 @@ class RTBCB_API_Log {
                                'user_id'           => intval( $user_id ),
                                'user_email'        => $user_email,
                                'lead_id'           => intval( $lead_id ),
-                               'company_name'      => $company_name,
-                               'request_json'      => $request_json,
-                               'response_json'     => $response_json,
-                               'response_truncated'=> $response_truncated ? 1 : 0,
-                               'prompt_tokens'     => $prompt_tokens,
-                               'completion_tokens' => $completion_tokens,
-                               'total_tokens'      => $total_tokens,
-                               'created_at'        => current_time( 'mysql' ),
-                       ],
-                       [ '%d', '%s', '%d', '%s', '%s', '%s', '%d', '%d', '%d', '%d', '%s' ]
+                               'company_name'        => $company_name,
+                               'request_json'        => $request_json,
+                               'response_json'       => $response_json,
+                               'is_truncated'        => $response_truncated ? 1 : 0,
+                               'original_size'       => $response_size,
+                               'corruption_detected' => $response_corruption ? 1 : 0,
+                               'prompt_tokens'       => $prompt_tokens,
+                               'completion_tokens'   => $completion_tokens,
+                               'total_tokens'        => $total_tokens,
+                               'created_at'          => current_time( 'mysql' ),
+                      ],
+                       [ '%d', '%s', '%d', '%s', '%s', '%s', '%d', '%d', '%d', '%d', '%d', '%d', '%s' ]
                );
        }
 
@@ -256,7 +299,7 @@ class RTBCB_API_Log {
 		$limit = max( 1, intval( $limit ) );
 
                $query = $wpdb->prepare(
-                       'SELECT id, user_id, user_email, lead_id, company_name, request_json, response_json, response_truncated, prompt_tokens, completion_tokens, total_tokens, created_at FROM ' . self::$table_name . ' ORDER BY created_at DESC LIMIT %d',
+                       'SELECT id, user_id, user_email, lead_id, company_name, request_json, response_json, is_truncated, original_size, corruption_detected, prompt_tokens, completion_tokens, total_tokens, created_at FROM ' . self::$table_name . ' ORDER BY created_at DESC LIMIT %d',
                        $limit
                );
 
@@ -397,7 +440,7 @@ class RTBCB_API_Log {
 
                $logs = $wpdb->get_results(
                        $wpdb->prepare(
-                               'SELECT id, user_id, user_email, lead_id, company_name, request_json, response_json, response_truncated, prompt_tokens, completion_tokens, total_tokens, created_at FROM ' . self::$table_name . ' ORDER BY created_at DESC LIMIT %d OFFSET %d',
+                               'SELECT id, user_id, user_email, lead_id, company_name, request_json, response_json, is_truncated, original_size, corruption_detected, prompt_tokens, completion_tokens, total_tokens, created_at FROM ' . self::$table_name . ' ORDER BY created_at DESC LIMIT %d OFFSET %d',
                                $per_page,
                                $offset
                        ),
@@ -424,9 +467,9 @@ class RTBCB_API_Log {
 			self::init();
 		}
 
-		return $wpdb->get_results(
-                       'SELECT id, user_id, user_email, lead_id, company_name, request_json, response_json, response_truncated, prompt_tokens, completion_tokens, total_tokens, created_at FROM ' . self::$table_name . ' ORDER BY created_at DESC',
+               return $wpdb->get_results(
+                       'SELECT id, user_id, user_email, lead_id, company_name, request_json, response_json, is_truncated, original_size, corruption_detected, prompt_tokens, completion_tokens, total_tokens, created_at FROM ' . self::$table_name . ' ORDER BY created_at DESC',
                ARRAY_A
                );
-	}
+       }
 	}

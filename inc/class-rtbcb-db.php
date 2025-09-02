@@ -14,7 +14,7 @@ class RTBCB_DB {
 	/**
 	* Current database version.
 	*/
-        const DB_VERSION = '2.0.4';
+       const DB_VERSION = '2.0.5';
 
 	/**
 	/**
@@ -84,11 +84,17 @@ class RTBCB_DB {
 			RTBCB_Leads::compress_existing_report_html();
 		}
 
-		if ( version_compare( $from_version, '2.0.4', '<' ) ) {
-			RTBCB_Leads::add_api_response_column();
-		}
+               if ( version_compare( $from_version, '2.0.4', '<' ) ) {
+                       RTBCB_Leads::add_api_response_column();
+               }
 
-	// Future migrations can be handled here.
+               if ( version_compare( $from_version, '2.0.5', '<' ) ) {
+                       if ( class_exists( 'RTBCB_API_Log' ) ) {
+                               RTBCB_API_Log::migrate_table();
+                       }
+               }
+
+       // Future migrations can be handled here.
 
 		// Log the upgrade.
 		error_log( 'RTBCB: Database upgraded from version ' . $from_version . ' to ' . self::DB_VERSION );

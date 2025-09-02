@@ -46,7 +46,9 @@ if ( ! current_user_can( 'manage_options' ) ) {
 							$summary = wp_trim_words( $log['request_json'], 10, '...' );
 						}
                                                $status = isset( $response['error'] ) ? __( 'Error', 'rtbcb' ) : __( 'OK', 'rtbcb' );
-                                               if ( ! empty( $log['response_truncated'] ) ) {
+                                               if ( ! empty( $log['corruption_detected'] ) ) {
+                                                       $status .= ' (' . __( 'Corrupt', 'rtbcb' ) . ')';
+                                               } elseif ( ! empty( $log['is_truncated'] ) ) {
                                                        $status .= ' (' . __( 'Truncated', 'rtbcb' ) . ')';
                                                }
 					?>
