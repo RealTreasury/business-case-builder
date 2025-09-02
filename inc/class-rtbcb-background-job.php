@@ -39,23 +39,31 @@ set_transient( $job_id, $current, HOUR_IN_SECONDS );
 	* @return string Job ID.
 	*/
 public static function enqueue( $user_inputs ) {
-$job_id = uniqid( 'rtbcb_job_', true );
-
+	$job_id = uniqid( 'rtbcb_job_', true );
+	
 	self::update_status( $job_id, 'queued' );
-
-				wp_schedule_single_event(
-						time(),
-						'rtbcb_process_job',
-						[ $job_id, $user_inputs ]
-				);
-
-		// Trigger cron immediately in a non-blocking way.
-		if ( function_exists( 'spawn_cron' ) && ( ! function_exists( 'wp_doing_cron' ) || ! wp_doing_cron() ) ) {
-			spawn_cron();
-		}
-
-			return $job_id;
-		}
+	
+	$cron_disabled = defined( 'DISABLE_WP_CRON' ) && DISABLE_WP_CRON;
+	
+	$scheduled = false;
+	if ( ! $cron_disabled ) {
+		$scheduled = wp_schedule_single_event(
+		time(),
+		'rtbcb_process_job',
+		[ $job_id, $user_inputs ]
+		);
+	}
+	
+	if ( function_exists( 'spawn_cron' ) && ( ! function_exists( 'wp_doing_cron' ) || ! wp_doing_cron() ) && ! $cron_disabled ) {
+	spawn_cron();
+	}
+	
+	if ( ! $scheduled || $cron_disabled ) {
+	self::process_job( $job_id, $user_inputs );
+	}
+	
+	return $job_id;
+}
 
 	/**
 	* Process a queued job.
