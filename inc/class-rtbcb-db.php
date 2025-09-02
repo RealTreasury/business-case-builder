@@ -14,7 +14,7 @@ class RTBCB_DB {
 	/**
 	* Current database version.
 	*/
-	const DB_VERSION = '2.0.3';
+        const DB_VERSION = '2.0.4';
 
 	/**
 	/**
@@ -80,9 +80,13 @@ class RTBCB_DB {
 						RTBCB_Leads::add_missing_indexes();
 				}
 
-				if ( version_compare( $from_version, '2.0.3', '<' ) ) {
-						RTBCB_Leads::compress_existing_report_html();
-				}
+		if ( version_compare( $from_version, '2.0.3', '<' ) ) {
+			RTBCB_Leads::compress_existing_report_html();
+		}
+
+		if ( version_compare( $from_version, '2.0.4', '<' ) ) {
+			RTBCB_Leads::add_api_response_column();
+		}
 
 	// Future migrations can be handled here.
 
