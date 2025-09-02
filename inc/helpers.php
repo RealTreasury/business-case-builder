@@ -877,10 +877,6 @@ function rtbcb_clean_json_response( $response ) {
 	* @return array|false Decoded JSON array on success, false on failure.
 	*/
 function rtbcb_extract_json_from_openai_response( $raw_body ) {
-	if ( function_exists( 'wp_unslash' ) ) {
-		$raw_body = wp_unslash( $raw_body );
-	}
-
 	$outer = json_decode( $raw_body, true );
 	if ( JSON_ERROR_NONE !== json_last_error() || ! is_array( $outer ) ) {
 		return false;
