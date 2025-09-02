@@ -388,7 +388,7 @@ $html = rtbcb_sanitize_report_html( $html );
 		'roi_base'               => 0,
 		'recommended_category'   => '',
 		'category_info'          => [],
-		'executive_summary'      => '',
+'executive_summary'      => [],
 		'narrative'              => '',
 		'executive_recommendation' => '',
 		'recommendation'         => '',
@@ -442,10 +442,10 @@ $html = rtbcb_sanitize_report_html( $html );
 			'processing_time'  => intval( $business_case_data['processing_time'] ),
 		],
 		'executive_summary'  => [
-			'strategic_positioning'    => wp_kses_post( $business_case_data['executive_summary'] ?: $business_case_data['narrative'] ),
-			'key_value_drivers'       => $this->extract_value_drivers( $business_case_data ),
-			'executive_recommendation' => wp_kses_post( $business_case_data['executive_recommendation'] ?: $business_case_data['recommendation'] ),
-			'business_case_strength'  => $this->determine_business_case_strength( $business_case_data ),
+			'strategic_positioning'   => wp_kses_post( $business_case_data['executive_summary']['strategic_positioning'] ?? ( is_string( $business_case_data['executive_summary'] ?? null ) ? $business_case_data['executive_summary'] : $business_case_data['narrative'] ) ),
+			'key_value_drivers'       => array_map( 'sanitize_text_field', (array) ( $business_case_data['executive_summary']['key_value_drivers'] ?? $this->extract_value_drivers( $business_case_data ) ) ),
+			'executive_recommendation' => wp_kses_post( $business_case_data['executive_summary']['executive_recommendation'] ?? $business_case_data['executive_recommendation'] ?? $business_case_data['recommendation'] ),
+			'business_case_strength'  => $business_case_data['executive_summary']['business_case_strength'] ?? $this->determine_business_case_strength( $business_case_data ),
 		],
 			'financial_analysis' => [
 			'roi_scenarios'      => $roi_scenarios,
