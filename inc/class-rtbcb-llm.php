@@ -129,19 +129,45 @@ class RTBCB_LLM {
                        }
                }
 
-               $decoded = json_decode( $response_body, true );
+		$decoded = json_decode( $response_body, true );
 
-               if ( JSON_ERROR_UTF8 === json_last_error() && function_exists( 'mb_convert_encoding' ) ) {
-                       $response_body = mb_convert_encoding( $response_body, 'UTF-8', 'auto' );
-                       $decoded       = json_decode( $response_body, true );
-               }
+		if ( JSON_ERROR_UTF8 === json_last_error() && function_exists( 'mb_convert_encoding' ) ) {
+			$response_body = mb_convert_encoding( $response_body, 'UTF-8', 'auto' );
+			$decoded       = json_decode( $response_body, true );
+		}
 
-               if ( JSON_ERROR_NONE !== json_last_error() ) {
-                       error_log( 'JSON decode error: ' . json_last_error_msg() );
-                       return false;
-               }
+		if ( JSON_ERROR_NONE !== json_last_error() ) {
+			error_log( 'JSON decode error: ' . json_last_error_msg() );
+			return false;
+		}
 
-               return $decoded;
+		if ( isset( $decoded['output_text'] ) && is_string( $decoded['output_text'] ) ) {
+			$inner = json_decode( $decoded['output_text'], true );
+			if ( JSON_ERROR_NONE === json_last_error() ) {
+				return $inner;
+			}
+			error_log( 'JSON decode error: ' . json_last_error_msg() );
+			return false;
+		}
+
+		if ( isset( $decoded['output'] ) && is_array( $decoded['output'] ) ) {
+			foreach ( $decoded['output'] as $chunk ) {
+				if ( 'message' === ( $chunk['type'] ?? '' ) && isset( $chunk['content'] ) && is_array( $chunk['content'] ) ) {
+					foreach ( $chunk['content'] as $piece ) {
+						if ( isset( $piece['text'] ) && is_string( $piece['text'] ) ) {
+							$inner = json_decode( $piece['text'], true );
+							if ( JSON_ERROR_NONE === json_last_error() ) {
+								return $inner;
+							}
+							error_log( 'JSON decode error: ' . json_last_error_msg() );
+							return false;
+						}
+					}
+				}
+			}
+		}
+
+		return $decoded;
        }
 
 	/**
