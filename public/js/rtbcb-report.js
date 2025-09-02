@@ -681,8 +681,15 @@ async function generateAndDisplayReport(businessContext) {
             reportContainer.textContent = partial;
         });
 
-        if (!htmlReport.includes('<!DOCTYPE html>')) {
-            throw new Error('Invalid HTML response from API');
+        if (!htmlReport || !htmlReport.trim() || !htmlReport.includes('<')) {
+            console.error('RTBCB: Malformed or empty HTML report', htmlReport);
+            errorElement.textContent = 'Error: Received malformed report content.';
+            errorElement.style.display = 'block';
+            return;
+        }
+
+        if (!htmlReport.includes('<html')) {
+            console.warn('RTBCB: HTML fragment received; rendering without full document wrapper.');
         }
 
         const safeReport = sanitizeReportHTML(htmlReport);
