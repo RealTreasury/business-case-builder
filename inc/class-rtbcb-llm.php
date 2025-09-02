@@ -176,6 +176,131 @@ class RTBCB_LLM {
                return $decoded;
        }
 
+       /**
+        * Process streaming response chunks from the OpenAI API.
+        *
+        * Splits the raw stream into events and assembles the final response
+        * structure, handling both modern and legacy formats.
+        *
+        * @param string $stream Raw streaming data from cURL.
+        * @return array|null Structured response array or null on failure.
+        */
+       private function process_streaming_response( $stream ) {
+               error_log( 'RTBCB: Processing streaming response, length: ' . strlen( $stream ) );
+
+               if ( empty( $stream ) ) {
+                       error_log( 'RTBCB: Empty stream received' );
+                       return null;
+               }
+
+               // Split stream into events.
+               $events        = [];
+               $lines         = preg_split( "/\r?\n/", $stream );
+               $current_event = [];
+
+               foreach ( $lines as $line ) {
+                       $line = trim( $line );
+
+                       if ( empty( $line ) ) {
+                               // Empty line indicates end of event.
+                               if ( ! empty( $current_event ) ) {
+                                       $events[]      = $current_event;
+                                       $current_event = [];
+                               }
+                               continue;
+                       }
+
+                       if ( strpos( $line, ':' ) !== false ) {
+                               list( $field, $value ) = explode( ':', $line, 2 );
+                               $field = trim( $field );
+                               $value = trim( $value );
+
+                               if ( 'data' === $field && '[DONE]' !== $value ) {
+                                       $current_event['data'] = $value;
+                               } elseif ( 'event' === $field ) {
+                                       $current_event['event'] = $value;
+                               }
+                       }
+               }
+
+               // Add final event if exists.
+               if ( ! empty( $current_event ) ) {
+                       $events[] = $current_event;
+               }
+
+               error_log( 'RTBCB: Found ' . count( $events ) . ' events in stream' );
+
+               // Process events to find the final response.
+               $final_response      = null;
+               $accumulated_content = '';
+
+               foreach ( $events as $event ) {
+                       if ( ! isset( $event['data'] ) ) {
+                               continue;
+                       }
+
+                       $event_data = json_decode( $event['data'], true );
+                       if ( JSON_ERROR_NONE !== json_last_error() ) {
+                               error_log( 'RTBCB: Failed to parse event data: ' . json_last_error_msg() );
+                               continue;
+                       }
+
+                       // Handle different event types.
+                       if ( isset( $event_data['type'] ) ) {
+                               switch ( $event_data['type'] ) {
+                                       case 'response.done':
+                                       case 'response.content_part.done':
+                                               if ( isset( $event_data['response'] ) ) {
+                                                       $final_response = $event_data['response'];
+                                               }
+                                               break;
+                                       case 'response.content_part.delta':
+                                               if ( isset( $event_data['delta']['text'] ) ) {
+                                                       $accumulated_content .= $event_data['delta']['text'];
+                                               }
+                                               break;
+                               }
+                       } else {
+                               // Handle legacy format.
+                               if ( isset( $event_data['choices'][0]['delta']['content'] ) ) {
+                                       $accumulated_content .= $event_data['choices'][0]['delta']['content'];
+                               } elseif ( isset( $event_data['choices'][0]['message'] ) ) {
+                                       $final_response = $event_data;
+                               }
+                       }
+               }
+
+               // If we have a final response, use it.
+               if ( $final_response ) {
+                       error_log( 'RTBCB: Using final response from stream' );
+                       return $final_response;
+               }
+
+               // If we have accumulated content, create a response structure.
+               if ( ! empty( $accumulated_content ) ) {
+                       error_log( 'RTBCB: Using accumulated content from stream' );
+                       return [
+                               'choices' => [
+                                       [
+                                               'message' => [
+                                                       'content' => $accumulated_content,
+                                               ],
+                                       ],
+                               ],
+                       ];
+               }
+
+               // Try to parse the entire stream as a single JSON response.
+               $decoded = json_decode( $stream, true );
+               if ( JSON_ERROR_NONE === json_last_error() ) {
+                       error_log( 'RTBCB: Stream parsed as single JSON response' );
+                       return $decoded;
+               }
+
+               error_log( 'RTBCB: No valid response found in stream' );
+               return null;
+       }
+
 	/**
 	* Estimate token usage from a desired word count.
 	*
@@ -2784,88 +2909,66 @@ $max_output_tokens = min( 128000, max( $min_tokens, $max_output_tokens ) );
 		curl_setopt( $ch, CURLOPT_POST, true );
 		curl_setopt( $ch, CURLOPT_POSTFIELDS, $payload );
 		curl_setopt( $ch, CURLOPT_TIMEOUT, $timeout );
-		curl_setopt( $ch, CURLOPT_WRITEFUNCTION, function ( $curl, $data ) use ( &$stream, $chunk_handler ) {
-			if ( is_callable( $chunk_handler ) ) {
-			call_user_func( $chunk_handler, $data );
-			}
-			
-			$stream .= $data;
-			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			error_log( 'RTBCB: Stream chunk: ' . trim( $data ) );
-			}
-			
-			return strlen( $data );
-		} );
-		
-		$this->last_request = $body;
-		$ok                = curl_exec( $ch );
-		$error             = curl_error( $ch );
-		$http_code         = curl_getinfo( $ch, CURLINFO_HTTP_CODE );
-		curl_close( $ch );
-		
-		if ( false === $ok ) {
-			if ( false !== strpos( strtolower( $error ), 'timed out' ) ) {
-			return new WP_Error(
-			'llm_timeout',
-			__( 'The request took longer than our 5-minute limit. Try Fast Mode or request email delivery.', 'rtbcb' )
-			);
-			}
-			
-			return new WP_Error(
-			'llm_http_error',
-			sprintf( __( 'Language model request failed: %s', 'rtbcb' ), $error )
-			);
-		}
-		
-		$events = [];
-		if ( '' !== $stream ) {
-			$parts = preg_split( "/\r?\n\r?\n/", $stream );
-			foreach ( $parts as $part ) {
-				$lines = preg_split( "/\r?\n/", trim( $part ) );
-				foreach ( $lines as $line ) {
-				$line = trim( $line );
-				if ( '' === $line || false === strpos( $line, ':' ) ) {
-				continue;
-				}
-				list( $field, $value ) = array_map( 'trim', explode( ':', $line, 2 ) );
-				if ( 'data' === $field && '[DONE]' !== $value ) {
-				$events[] = $value;
-				if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-				error_log( 'RTBCB: SSE event data: ' . $value );
-				}
-				}
-				}
-			}
-			}
-		
-		$final_response = null;
-		foreach ( $events as $event_json ) {
-			$decoded_event = json_decode( $event_json, true );
-			if ( JSON_ERROR_NONE !== json_last_error() ) {
-			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			error_log( 'RTBCB: Malformed SSE chunk: ' . $event_json );
-			}
-			continue;
-			}
-			if ( isset( $decoded_event['response'] ) ) {
-			$final_response = $decoded_event['response'];
-			} else {
-			$final_response = $decoded_event;
-			}
-		}
-		
-		if ( null === $final_response ) {
-			error_log( 'RTBCB: No valid SSE data in stream.' );
-			$response_body = trim( $stream );
-		} else {
-			$response_body = wp_json_encode( $final_response );
-		}
-		
-		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			error_log( 'RTBCB: Final assembled response: ' . $response_body );
-		}
-		
-		$decoded = $this->process_openai_response( $response_body );
+               curl_setopt( $ch, CURLOPT_WRITEFUNCTION, function ( $curl, $data ) use ( &$stream, $chunk_handler ) {
+                       // Call custom chunk handler if provided.
+                       if ( is_callable( $chunk_handler ) ) {
+                               try {
+                                       call_user_func( $chunk_handler, $data );
+                               } catch ( Exception $e ) {
+                                       error_log( 'RTBCB: Chunk handler error: ' . $e->getMessage() );
+                               }
+                       }
+
+                       // Accumulate stream data.
+                       $stream .= $data;
+
+                       // Log chunk for debugging (first 100 chars only).
+                       if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+                               error_log( 'RTBCB: Stream chunk (' . strlen( $data ) . ' bytes): ' . substr( trim( $data ), 0, 100 ) );
+                       }
+
+                       return strlen( $data );
+               } );
+
+               $this->last_request = $body;
+               $ok                = curl_exec( $ch );
+               $error             = curl_error( $ch );
+               $http_code         = curl_getinfo( $ch, CURLINFO_HTTP_CODE );
+               curl_close( $ch );
+
+               if ( false === $ok ) {
+                       if ( false !== strpos( strtolower( $error ), 'timed out' ) ) {
+                               return new WP_Error(
+                                       'llm_timeout',
+                                       __( 'The request took longer than our 5-minute limit. Try Fast Mode or request email delivery.', 'rtbcb' )
+                               );
+                       }
+
+                       return new WP_Error(
+                               'llm_http_error',
+                               sprintf( __( 'Language model request failed: %s', 'rtbcb' ), $error )
+                       );
+               }
+
+               // Process the accumulated stream.
+               $final_response = $this->process_streaming_response( $stream );
+
+               if ( null === $final_response ) {
+                       error_log( 'RTBCB: Failed to process streaming response' );
+                       return new WP_Error(
+                               'llm_response_format',
+                               __( 'Invalid response format received from language model.', 'rtbcb' )
+                       );
+               }
+
+               // Convert to expected response format.
+               $response_body = wp_json_encode( $final_response );
+
+               if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+                       error_log( 'RTBCB: Final assembled response: ' . substr( $response_body, 0, 500 ) . '...' );
+               }
+
+               $decoded = $this->process_openai_response( $response_body );
 
                 if ( false === $decoded || ! is_array( $decoded ) ) {
                         error_log( 'RTBCB: Malformed LLM response: ' . $response_body );
