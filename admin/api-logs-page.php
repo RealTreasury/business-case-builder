@@ -69,10 +69,6 @@ if ( ! current_user_can( 'manage_options' ) ) {
 						</td>
 					</tr>
 					<?php endforeach; ?>
-				<?php else : ?>
-	                               <tr>
-	                                       <td colspan="9"><?php esc_html_e( 'No logs found.', 'rtbcb' ); ?></td>
-	                               </tr>
 				<?php endif; ?>
 			</tbody>
 		</table>
@@ -88,7 +84,10 @@ if ( ! current_user_can( 'manage_options' ) ) {
 	jQuery(function($){
 var table = $('#rtbcb-api-logs-table').DataTable({
 pageLength: 20,
-order: [[0, 'desc']]
+order: [[0, 'desc']],
+language: {
+emptyTable: '<?php echo esc_js( __( 'No logs found.', 'rtbcb' ) ); ?>'
+}
 });
 var initialSearch = new URLSearchParams(window.location.search).get('search');
 if (initialSearch) {
