@@ -14,7 +14,7 @@ class RTBCB_DB {
 	/**
 	* Current database version.
 	*/
-        const DB_VERSION = '2.0.4';
+        const DB_VERSION = '2.0.5';
 
 	/**
 	/**
@@ -87,6 +87,10 @@ class RTBCB_DB {
 		if ( version_compare( $from_version, '2.0.4', '<' ) ) {
 			RTBCB_Leads::add_api_response_column();
 		}
+		if ( version_compare( $from_version, '2.0.5', '<' ) && class_exists( 'RTBCB_API_Log' ) ) {
+			RTBCB_API_Log::upgrade_table();
+		}
+
 
 	// Future migrations can be handled here.
 
