@@ -896,76 +896,155 @@ $batch_prompts['tech'] = [
 	*
 	* @param array $response Raw response from wp_remote_post.
 	*
-       * @return array|WP_Error Structured analysis array (executive_summary, financial_analysis, implementation_roadmap) or error object.
-       */
-       private function parse_comprehensive_response( $response ) {
-               $parsed_response = rtbcb_parse_gpt5_response( $response, true );
-               $content         = $parsed_response['output_text'];
-               $decoded         = $parsed_response['raw'];
+      * @return array|WP_Error Structured analysis array or error object.
+      */
+      private function parse_comprehensive_response( $response ) {
+              $parsed_response = rtbcb_parse_gpt5_response( $response, true );
+              $content         = $parsed_response['output_text'];
+              $decoded         = $parsed_response['raw'];
 
-               if ( empty( $decoded ) ) {
-                       return new WP_Error( 'llm_response_decode_error', __( 'Failed to decode response body.', 'rtbcb' ) );
-               }
+              if ( empty( $decoded ) ) {
+                      return new WP_Error( 'llm_response_decode_error', __( 'Failed to decode response body.', 'rtbcb' ) );
+              }
 
-               if ( is_string( $content ) ) {
-                       $json = json_decode( $content, true );
-               } else {
-                       $json = is_array( $content ) ? $content : [];
-               }
+              if ( is_string( $content ) ) {
+                      $json = json_decode( $content, true );
+              } else {
+                      $json = is_array( $content ) ? $content : [];
+              }
 
-               if ( ! is_array( $json ) ) {
-                       return new WP_Error( 'llm_response_parse_error', __( 'Invalid JSON from language model.', 'rtbcb' ) );
-               }
+              if ( ! is_array( $json ) ) {
+                      return new WP_Error( 'llm_response_parse_error', __( 'Invalid JSON from language model.', 'rtbcb' ) );
+              }
 
-               $required = [
-                       'executive_summary',
-                       'financial_analysis',
-                       'implementation_roadmap',
-               ];
+              $sanitize = function ( $value ) use ( &$sanitize ) {
+                      if ( is_array( $value ) ) {
+                              return array_map( $sanitize, $value );
+                      }
 
-               $missing = array_diff( $required, array_keys( $json ) );
+                      if ( is_numeric( $value ) ) {
+                              return 0 + $value;
+                      }
 
-               if ( ! empty( $missing ) ) {
-                       return new WP_Error(
-                               'llm_missing_fields',
-                               __( 'Missing required fields: ', 'rtbcb' ) . implode( ', ', $missing )
-                       );
-               }
+                      return sanitize_text_field( (string) $value );
+              };
 
-               return [
-                       'executive_summary' => [
-                               'strategic_positioning'  => sanitize_text_field( $json['executive_summary']['strategic_positioning'] ?? '' ),
-                               'key_value_drivers'      => array_map( 'sanitize_text_field', $json['executive_summary']['key_value_drivers'] ?? [] ),
-                               'business_case_strength' => sanitize_text_field( $json['executive_summary']['business_case_strength'] ?? '' ),
-                       ],
-                       'financial_analysis' => [
-                               'roi_scenarios'   => array_map(
-                                       function ( $item ) {
-                                               return [
-                                                       'scenario' => sanitize_text_field( $item['scenario'] ?? '' ),
-                                                       'roi'      => floatval( $item['roi'] ?? 0 ),
-                                               ];
-                                       },
-                                       $json['financial_analysis']['roi_scenarios'] ?? []
-                               ),
-                               'payback_analysis' => [
-                                       'payback_months' => floatval( $json['financial_analysis']['payback_analysis']['payback_months'] ?? 0 ),
-                                       'roi_3_year'     => floatval( $json['financial_analysis']['payback_analysis']['roi_3_year'] ?? 0 ),
-                                       'npv_analysis'   => sanitize_text_field( $json['financial_analysis']['payback_analysis']['npv_analysis'] ?? '' ),
-                               ],
-                       ],
-                       'implementation_roadmap' => array_map(
-                               function ( $item ) {
-                                       return [
-                                               'phase'      => sanitize_text_field( $item['phase'] ?? '' ),
-                                               'timeline'   => sanitize_text_field( $item['timeline'] ?? '' ),
-                                               'activities' => array_map( 'sanitize_text_field', $item['activities'] ?? [] ),
-                                       ];
-                               },
-                               $json['implementation_roadmap'] ?? []
-                       ),
-               ];
-       }
+              $executive_summary = [
+                      'strategic_positioning'  => sanitize_text_field( $json['executive_summary']['strategic_positioning'] ?? '' ),
+                      'key_value_drivers'      => array_map( 'sanitize_text_field', $json['executive_summary']['key_value_drivers'] ?? [] ),
+                      'business_case_strength' => sanitize_text_field( $json['executive_summary']['business_case_strength'] ?? '' ),
+                      'executive_recommendation' => sanitize_text_field( $json['executive_summary']['executive_recommendation'] ?? '' ),
+                      'confidence_level'       => floatval( $json['executive_summary']['confidence_level'] ?? 0 ),
+              ];
+
+              $company_intelligence = [
+                      'enriched_profile' => [
+                              'name'               => sanitize_text_field( $json['company_intelligence']['enriched_profile']['name'] ?? '' ),
+                              'industry'           => sanitize_text_field( $json['company_intelligence']['enriched_profile']['industry'] ?? '' ),
+                              'size'               => sanitize_text_field( $json['company_intelligence']['enriched_profile']['size'] ?? '' ),
+                              'maturity_level'     => sanitize_text_field( $json['company_intelligence']['enriched_profile']['maturity_level'] ?? '' ),
+                              'key_challenges'     => array_map( 'sanitize_text_field', $json['company_intelligence']['enriched_profile']['key_challenges'] ?? [] ),
+                              'strategic_priorities' => array_map( 'sanitize_text_field', $json['company_intelligence']['enriched_profile']['strategic_priorities'] ?? [] ),
+                      ],
+                      'industry_context' => [
+                              'competitive_pressure'   => sanitize_text_field( $json['company_intelligence']['industry_context']['competitive_pressure'] ?? '' ),
+                              'regulatory_environment' => sanitize_text_field( $json['company_intelligence']['industry_context']['regulatory_environment'] ?? '' ),
+                              'sector_trends'          => sanitize_text_field( $json['company_intelligence']['industry_context']['sector_trends'] ?? '' ),
+                      ],
+                      'maturity_assessment' => $sanitize( $json['company_intelligence']['maturity_assessment'] ?? [] ),
+                      'competitive_position' => $sanitize( $json['company_intelligence']['competitive_position'] ?? [] ),
+              ];
+
+              $operational_insights = [
+                      'current_state_assessment' => array_map( 'sanitize_text_field', $json['operational_insights']['current_state_assessment'] ?? [] ),
+                      'process_improvements'     => array_map( 'sanitize_text_field', $json['operational_insights']['process_improvements'] ?? [] ),
+                      'automation_opportunities' => array_map( 'sanitize_text_field', $json['operational_insights']['automation_opportunities'] ?? [] ),
+              ];
+
+              $risk_analysis = [
+                      'implementation_risks' => array_map( 'sanitize_text_field', $json['risk_analysis']['implementation_risks'] ?? [] ),
+                      'mitigation_strategies' => array_map( 'sanitize_text_field', $json['risk_analysis']['mitigation_strategies'] ?? [] ),
+                      'success_factors'       => array_map( 'sanitize_text_field', $json['risk_analysis']['success_factors'] ?? [] ),
+              ];
+
+              $action_plan = [
+                      'immediate_steps'      => array_map( 'sanitize_text_field', $json['action_plan']['immediate_steps'] ?? [] ),
+                      'short_term_milestones' => array_map( 'sanitize_text_field', $json['action_plan']['short_term_milestones'] ?? [] ),
+                      'long_term_objectives'  => array_map( 'sanitize_text_field', $json['action_plan']['long_term_objectives'] ?? [] ),
+              ];
+
+              $industry_insights = [
+                      'sector_trends'          => array_map( 'sanitize_text_field', $json['industry_insights']['sector_trends'] ?? [] ),
+                      'competitive_benchmarks' => array_map( 'sanitize_text_field', $json['industry_insights']['competitive_benchmarks'] ?? [] ),
+                      'regulatory_considerations' => array_map( 'sanitize_text_field', $json['industry_insights']['regulatory_considerations'] ?? [] ),
+              ];
+
+              $technology_strategy = [
+                      'recommended_category' => sanitize_text_field( $json['technology_strategy']['recommended_category'] ?? '' ),
+                      'category_details'     => array_map( $sanitize, $json['technology_strategy']['category_details'] ?? [] ),
+                      'implementation_roadmap' => array_map(
+                              function ( $item ) {
+                                      return [
+                                              'phase'      => sanitize_text_field( $item['phase'] ?? '' ),
+                                              'timeline'   => sanitize_text_field( $item['timeline'] ?? '' ),
+                                              'activities' => array_map( 'sanitize_text_field', $item['activities'] ?? [] ),
+                                      ];
+                              },
+                              $json['technology_strategy']['implementation_roadmap'] ?? []
+                      ),
+                      'vendor_considerations' => array_map( 'sanitize_text_field', $json['technology_strategy']['vendor_considerations'] ?? [] ),
+              ];
+
+              $financial_analysis = [
+                      'roi_scenarios' => array_map(
+                              function ( $item ) {
+                                      return [
+                                              'scenario'             => sanitize_text_field( $item['scenario'] ?? '' ),
+                                              'roi'                  => floatval( $item['roi'] ?? 0 ),
+                                              'total_annual_benefit' => floatval( $item['total_annual_benefit'] ?? 0 ),
+                                              'payback_months'       => floatval( $item['payback_months'] ?? 0 ),
+                                      ];
+                              },
+                              $json['financial_analysis']['roi_scenarios'] ?? []
+                      ),
+                      'investment_breakdown' => array_map(
+                              function ( $item ) {
+                                      return [
+                                              'category' => sanitize_text_field( $item['category'] ?? '' ),
+                                              'amount'   => floatval( $item['amount'] ?? 0 ),
+                                      ];
+                              },
+                              $json['financial_analysis']['investment_breakdown'] ?? []
+                      ),
+                      'payback_analysis' => [
+                              'payback_months' => floatval( $json['financial_analysis']['payback_analysis']['payback_months'] ?? 0 ),
+                              'roi_3_year'     => floatval( $json['financial_analysis']['payback_analysis']['roi_3_year'] ?? 0 ),
+                              'npv_analysis'   => sanitize_text_field( $json['financial_analysis']['payback_analysis']['npv_analysis'] ?? '' ),
+                      ],
+                      'sensitivity_analysis' => array_map(
+                              function ( $item ) {
+                                      return [
+                                              'factor' => sanitize_text_field( $item['factor'] ?? '' ),
+                                              'impact' => sanitize_text_field( $item['impact'] ?? '' ),
+                                      ];
+                              },
+                              $json['financial_analysis']['sensitivity_analysis'] ?? []
+                      ),
+                      'chart_data' => $sanitize( $json['financial_analysis']['chart_data'] ?? [] ),
+              ];
+
+              return [
+                      'executive_summary'     => $executive_summary,
+                      'company_intelligence'  => $company_intelligence,
+                      'operational_insights'  => $operational_insights,
+                      'risk_analysis'         => $risk_analysis,
+                      'action_plan'           => $action_plan,
+                      'industry_insights'     => $industry_insights,
+                      'technology_strategy'   => $technology_strategy,
+                      'financial_analysis'    => $financial_analysis,
+                      'implementation_roadmap' => $technology_strategy['implementation_roadmap'],
+              ];
+      }
 
 	/**
 	* Conduct company-specific research.

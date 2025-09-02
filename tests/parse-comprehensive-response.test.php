@@ -60,31 +60,71 @@ $method->setAccessible( true );
 
 $valid_json = [
         'executive_summary' => [
-                'strategic_positioning'   => 'pos',
-                'business_case_strength'  => 'Strong',
-                'key_value_drivers'       => [ 'driver' ],
-                'executive_recommendation'=> 'rec',
-                'confidence_level'        => 0.9,
+                'strategic_positioning'    => 'pos',
+                'business_case_strength'   => 'Strong',
+                'key_value_drivers'        => [ 'driver' ],
+                'executive_recommendation' => 'rec',
+                'confidence_level'         => 0.9,
+        ],
+        'company_intelligence' => [
+                'enriched_profile' => [
+                        'name'                => 'Corp',
+                        'industry'            => 'Finance',
+                        'size'                => 'Mid',
+                        'maturity_level'      => 'intermediate',
+                        'key_challenges'      => [ 'challenge' ],
+                        'strategic_priorities'=> [ 'priority' ],
+                ],
+                'industry_context' => [
+                        'competitive_pressure'   => 'high',
+                        'regulatory_environment' => 'strict',
+                        'sector_trends'          => 'growth',
+                ],
+                'maturity_assessment' => [ 'stage' => 'intermediate' ],
+                'competitive_position' => [ 'rank' => '2nd' ],
+        ],
+        'operational_insights' => [
+                'current_state_assessment' => [ 'state' ],
+                'process_improvements'     => [ 'improve' ],
+                'automation_opportunities' => [ 'auto' ],
+        ],
+        'risk_analysis' => [
+                'implementation_risks' => [ 'risk' ],
+                'mitigation_strategies' => [ 'mitigate' ],
+                'success_factors'       => [ 'factor' ],
+        ],
+        'action_plan' => [
+                'immediate_steps'      => [ 'step1' ],
+                'short_term_milestones'=> [ 'mile1' ],
+                'long_term_objectives' => [ 'obj1' ],
+        ],
+        'industry_insights' => [
+                'sector_trends'            => [ 'trend1' ],
+                'competitive_benchmarks'   => [ 'bench1' ],
+                'regulatory_considerations'=> [ 'reg1' ],
+        ],
+        'technology_strategy' => [
+                'recommended_category' => 'cat',
+                'category_details'     => [ 'detail' ],
+                'implementation_roadmap' => [
+                        [
+                                'phase'      => 'p1',
+                                'timeline'   => 'Q1',
+                                'activities' => [ 'step1' ],
+                        ],
+                ],
+                'vendor_considerations' => [ 'vendor1' ],
         ],
         'financial_analysis' => [
-                'roi_scenarios' => [ [ 'scenario' => 'base', 'roi' => 10 ] ],
+                'roi_scenarios' => [ [ 'scenario' => 'base', 'roi' => 10, 'total_annual_benefit' => 1000 ] ],
+                'investment_breakdown' => [ [ 'category' => 'capex', 'amount' => 500 ] ],
                 'payback_analysis' => [
                         'payback_months' => 12,
                         'roi_3_year'     => 50,
                         'npv_analysis'   => 'npv',
                 ],
-        ],
-       'industry_insights' => [
-               'sector_trends'          => [ 'trend1' ],
-               'competitive_benchmarks' => [ 'bench1' ],
-               'regulatory_considerations' => [ 'reg1' ],
-       ],
-        'implementation_roadmap' => [
-                [
-                        'phase'      => 'p1',
-                        'timeline'   => 'Q1',
-                        'activities' => [ 'step1' ],
-                ],
+                'sensitivity_analysis' => [ [ 'factor' => 'growth', 'impact' => 'high' ] ],
+                'chart_data' => [ 1, 2, 3 ],
         ],
 ];
 
@@ -101,7 +141,17 @@ if ( is_wp_error( $result ) ) {
 	exit( 1 );
 }
 
-$required = [ 'executive_summary', 'financial_analysis', 'industry_insights', 'implementation_roadmap' ];
+$required = [
+        'executive_summary',
+        'company_intelligence',
+        'operational_insights',
+        'risk_analysis',
+        'action_plan',
+        'industry_insights',
+        'technology_strategy',
+        'financial_analysis',
+        'implementation_roadmap',
+];
 
 foreach ( $required as $key ) {
 	if ( ! isset( $result[ $key ] ) ) {
