@@ -594,38 +594,42 @@ $html = rtbcb_sanitize_report_html( $html );
 	*
 	* @return array
 	*/
-	private function format_roi_scenarios( $data ) {
-	// Try to get ROI data from various possible locations.
-	if ( ! empty( $data['scenarios'] ) ) {
-		return $data['scenarios'];
-	}
+       private function format_roi_scenarios( $data ) {
+       $allowed = array( 'conservative', 'base', 'optimistic' );
 
-	if ( ! empty( $data['roi_scenarios'] ) ) {
-		return $data['roi_scenarios'];
-	}
+       // Try to get ROI data from various possible locations.
+       if ( ! empty( $data['scenarios'] ) && is_array( $data['scenarios'] ) ) {
+               return array_intersect_key( $data['scenarios'], array_flip( $allowed ) );
+       }
 
-	// Fallback to default structure.
-	return [
-		'conservative' => [
-			'total_annual_benefit' => $data['roi_low'] ?? 0,
-			'labor_savings'        => ( $data['roi_low'] ?? 0 ) * 0.6,
-			'fee_savings'          => ( $data['roi_low'] ?? 0 ) * 0.3,
-			'error_reduction'      => ( $data['roi_low'] ?? 0 ) * 0.1,
-		],
-		'base' => [
-			'total_annual_benefit' => $data['roi_base'] ?? 0,
-			'labor_savings'        => ( $data['roi_base'] ?? 0 ) * 0.6,
-			'fee_savings'          => ( $data['roi_base'] ?? 0 ) * 0.3,
-			'error_reduction'      => ( $data['roi_base'] ?? 0 ) * 0.1,
-		],
-		'optimistic' => [
-			'total_annual_benefit' => $data['roi_high'] ?? 0,
-			'labor_savings'        => ( $data['roi_high'] ?? 0 ) * 0.6,
-			'fee_savings'          => ( $data['roi_high'] ?? 0 ) * 0.3,
-			'error_reduction'      => ( $data['roi_high'] ?? 0 ) * 0.1,
-		],
-	];
-	}
+       if ( ! empty( $data['roi_scenarios'] ) && is_array( $data['roi_scenarios'] ) ) {
+               return array_intersect_key( $data['roi_scenarios'], array_flip( $allowed ) );
+       }
+
+       // Fallback to default structure.
+       $scenarios = [
+               'conservative' => [
+                       'total_annual_benefit' => $data['roi_low'] ?? 0,
+                       'labor_savings'        => ( $data['roi_low'] ?? 0 ) * 0.6,
+                       'fee_savings'          => ( $data['roi_low'] ?? 0 ) * 0.3,
+                       'error_reduction'      => ( $data['roi_low'] ?? 0 ) * 0.1,
+               ],
+               'base' => [
+                       'total_annual_benefit' => $data['roi_base'] ?? 0,
+                       'labor_savings'        => ( $data['roi_base'] ?? 0 ) * 0.6,
+                       'fee_savings'          => ( $data['roi_base'] ?? 0 ) * 0.3,
+                       'error_reduction'      => ( $data['roi_base'] ?? 0 ) * 0.1,
+               ],
+               'optimistic' => [
+                       'total_annual_benefit' => $data['roi_high'] ?? 0,
+                       'labor_savings'        => ( $data['roi_high'] ?? 0 ) * 0.6,
+                       'fee_savings'          => ( $data['roi_high'] ?? 0 ) * 0.3,
+                       'error_reduction'      => ( $data['roi_high'] ?? 0 ) * 0.1,
+               ],
+       ];
+
+       return $scenarios;
+       }
 
        /**
        * Determine business case strength based on ROI.

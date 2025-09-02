@@ -2436,51 +2436,52 @@ $html = rtbcb_sanitize_report_html( $html );
 		*
 		* @return array
 		*/
-	   private function format_roi_scenarios_enhanced( $data ) {
-			   // Try multiple data sources for ROI scenarios.
-			   if ( ! empty( $data['scenarios'] ) ) {
-					   return $data['scenarios'];
-			   }
+           private function format_roi_scenarios_enhanced( $data ) {
+                           $allowed = array( 'conservative', 'base', 'optimistic' );
 
-			   if ( ! empty( $data['roi_scenarios'] ) ) {
-					   return $data['roi_scenarios'];
-			   }
+                           // Try multiple data sources for ROI scenarios.
+                           if ( ! empty( $data['scenarios'] ) && is_array( $data['scenarios'] ) ) {
+                                           return array_intersect_key( $data['scenarios'], array_flip( $allowed ) );
+                           }
 
-			   // Extract from financial_analysis if nested.
-			   if ( ! empty( $data['financial_analysis']['roi_scenarios'] ) ) {
-					   return $data['financial_analysis']['roi_scenarios'];
-			   }
+                           if ( ! empty( $data['roi_scenarios'] ) && is_array( $data['roi_scenarios'] ) ) {
+                                           return array_intersect_key( $data['roi_scenarios'], array_flip( $allowed ) );
+                           }
 
-			   // Generate from basic ROI values with enhanced structure.
-			   $conservative_roi = floatval( $data['roi_low'] ?? 0 );
-			   $base_roi         = floatval( $data['roi_base'] ?? 0 );
-			   $optimistic_roi   = floatval( $data['roi_high'] ?? 0 );
+                           // Extract from financial_analysis if nested.
+                           if ( ! empty( $data['financial_analysis']['roi_scenarios'] ) && is_array( $data['financial_analysis']['roi_scenarios'] ) ) {
+                                           return array_intersect_key( $data['financial_analysis']['roi_scenarios'], array_flip( $allowed ) );
+                           }
 
-			   return [
-					   'conservative' => [
-							   'total_annual_benefit' => $conservative_roi,
-							   'labor_savings'        => round( $conservative_roi * 0.6 ),
-							   'fee_savings'          => round( $conservative_roi * 0.25 ),
-							   'error_reduction'      => round( $conservative_roi * 0.15 ),
-							   'roi_percentage'       => $conservative_roi > 0 ? round( ( $conservative_roi / 50000 ) * 100 ) : 0,
-					   ],
-					   'base' => [
-							   'total_annual_benefit' => $base_roi,
-							   'labor_savings'        => round( $base_roi * 0.6 ),
-							   'fee_savings'          => round( $base_roi * 0.25 ),
-							   'error_reduction'      => round( $base_roi * 0.15 ),
-							   'roi_percentage'       => $base_roi > 0 ? round( ( $base_roi / 50000 ) * 100 ) : 0,
-					   ],
-					   'optimistic' => [
-							   'total_annual_benefit' => $optimistic_roi,
-							   'labor_savings'        => round( $optimistic_roi * 0.6 ),
-							   'fee_savings'          => round( $optimistic_roi * 0.25 ),
-							   'error_reduction'      => round( $optimistic_roi * 0.15 ),
-							   'roi_percentage'       => $optimistic_roi > 0 ? round( ( $optimistic_roi / 50000 ) * 100 ) : 0,
-					   ],
-					   'sensitivity_analysis' => $data['sensitivity_analysis'] ?? [],
-			   ];
-	   }
+                           // Generate from basic ROI values with enhanced structure.
+                           $conservative_roi = floatval( $data['roi_low'] ?? 0 );
+                           $base_roi         = floatval( $data['roi_base'] ?? 0 );
+                           $optimistic_roi   = floatval( $data['roi_high'] ?? 0 );
+
+                           return [
+                                           'conservative' => [
+                                                           'total_annual_benefit' => $conservative_roi,
+                                                           'labor_savings'        => round( $conservative_roi * 0.6 ),
+                                                           'fee_savings'          => round( $conservative_roi * 0.25 ),
+                                                           'error_reduction'      => round( $conservative_roi * 0.15 ),
+                                                           'roi_percentage'       => $conservative_roi > 0 ? round( ( $conservative_roi / 50000 ) * 100 ) : 0,
+                                           ],
+                                           'base' => [
+                                                           'total_annual_benefit' => $base_roi,
+                                                           'labor_savings'        => round( $base_roi * 0.6 ),
+                                                           'fee_savings'          => round( $base_roi * 0.25 ),
+                                                           'error_reduction'      => round( $base_roi * 0.15 ),
+                                                           'roi_percentage'       => $base_roi > 0 ? round( ( $base_roi / 50000 ) * 100 ) : 0,
+                                           ],
+                                           'optimistic' => [
+                                                           'total_annual_benefit' => $optimistic_roi,
+                                                           'labor_savings'        => round( $optimistic_roi * 0.6 ),
+                                                           'fee_savings'          => round( $optimistic_roi * 0.25 ),
+                                                           'error_reduction'      => round( $optimistic_roi * 0.15 ),
+                                                           'roi_percentage'       => $optimistic_roi > 0 ? round( ( $optimistic_roi / 50000 ) * 100 ) : 0,
+                                           ],
+                           ];
+           }
 
 	   /**
 		* Generate Chart.js compatible data structure.
