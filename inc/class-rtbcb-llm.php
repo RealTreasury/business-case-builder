@@ -110,8 +110,11 @@ class RTBCB_LLM {
                        $response_body = stripslashes( $response_body );
                }
 
-               $response_body = wp_unslash( $response_body );
-               $decoded       = json_decode( $response_body, true );
+               $decoded = json_decode( $response_body, true );
+
+               if ( JSON_ERROR_NONE !== json_last_error() ) {
+                       $decoded = json_decode( wp_unslash( $response_body ), true );
+               }
 
                if ( JSON_ERROR_NONE !== json_last_error() ) {
                        error_log( 'JSON decode error: ' . json_last_error_msg() );
