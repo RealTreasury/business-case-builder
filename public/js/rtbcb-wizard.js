@@ -585,14 +585,39 @@ class BusinessCaseBuilder {
             try {
                 data = JSON.parse(responseText);
                 console.log('RTBCB: Parsed JSON response:', data);
+
+                if (typeof data === 'string') {
+                    try {
+                        console.log('RTBCB: Response is a string, attempting second parse');
+                        data = JSON.parse(data);
+                        console.log('RTBCB: Parsed stringified JSON response:', data);
+                    } catch (stringError) {
+                        console.log('RTBCB: Failed to parse stringified JSON, attempting to clean');
+                        const cleanedString = data
+                            .replaceAll('\\/', '/')
+                            .replaceAll('\\"', '"')
+                            .replace(/(^"|"$)/g, '');
+                        data = JSON.parse(cleanedString);
+                        console.log('RTBCB: Parsed cleaned stringified JSON response:', data);
+                    }
+                }
             } catch (parseError) {
-                console.log('RTBCB: Response is not JSON, treating as HTML');
-                if (responseText.includes('<div class="rtbcb-enhanced-report"') ||
-                    responseText.includes('<div class="rtbcb-report"')) {
-                    this.cancelProgressiveLoading();
-                    this.showEnhancedHTMLReport(responseText);
-                    return;
-                } else {
+                console.log('RTBCB: JSON parse failed, attempting to clean response');
+                try {
+                    const cleaned = responseText
+                        .replaceAll('\\/', '/')
+                        .replaceAll('\\"', '"')
+                        .replace(/(^"|"$)/g, '');
+                    data = JSON.parse(cleaned);
+                    console.log('RTBCB: Parsed cleaned JSON response:', data);
+                } catch (cleanError) {
+                    console.log('RTBCB: Response is not JSON, treating as HTML');
+                    if (responseText.includes('<div class="rtbcb-enhanced-report"') ||
+                        responseText.includes('<div class="rtbcb-report"')) {
+                        this.cancelProgressiveLoading();
+                        this.showEnhancedHTMLReport(responseText);
+                        return;
+                    }
                     throw new Error( __( 'Invalid response format', 'rtbcb' ) );
                 }
             }
