@@ -681,17 +681,26 @@ return true;
 			   error_log( 'RTBCB: Settings class not found; using default chart setting.' );
 		   }
 
-		   $report_deps = [];
-		   if ( $enable_charts ) {
-			   // Chart.js for report visualizations
-			   wp_enqueue_script(
-				   'chartjs',
-				   RTBCB_URL . 'public/js/chart.min.js',
-				   [],
-				   '3.9.1',
-				   true
-			   );
-			   $report_deps[] = 'chartjs';
+                   $report_deps = [];
+                   if ( $enable_charts ) {
+                           // Chart.js for report visualizations
+                           wp_enqueue_script(
+                                   'chartjs',
+                                   RTBCB_URL . 'public/js/chart.min.js',
+                                   [],
+                                   '3.9.1',
+                                   true
+                           );
+                           // Date adapter for time scale support
+                           wp_enqueue_script(
+                                   'chartjs-adapter-datefns',
+                                   RTBCB_URL . 'public/js/chartjs-adapter-date-fns.bundle.min.js',
+                                   [ 'chartjs' ],
+                                   '2.0.0',
+                                   true
+                           );
+                           $report_deps[] = 'chartjs-adapter-datefns';
+                           $report_deps[] = 'chartjs';
 		} else {
 			error_log( 'RTBCB: Chart.js not enqueued; charts feature disabled.' );
 		}
