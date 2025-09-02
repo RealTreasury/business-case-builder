@@ -16,44 +16,82 @@ $rag_context   = $business_case_data['rag_context'] ?? [];
 <div class="rtbcb-report">
 	<h2><?php echo esc_html__( 'Business Case Report', 'rtbcb' ); ?></h2>
 	<p class="rtbcb-version-tag"><?php printf( esc_html__( 'Version %s', 'rtbcb' ), esc_html( defined( 'RTBCB_VERSION' ) ? RTBCB_VERSION : 'dev' ) ); ?></p>
-	<?php if ( ! empty( $business_case_data['narrative'] ) ) : ?>
-		<p><?php echo esc_html( $business_case_data['narrative'] ); ?></p>
+	<?php
+	$executive_summary       = $business_case_data['executive_summary'] ?? [];
+	$strategic_positioning   = sanitize_text_field( $executive_summary['strategic_positioning'] ?? '' );
+	$business_case_strength  = sanitize_text_field( $executive_summary['business_case_strength'] ?? '' );
+	$key_value_drivers       = array_map( 'sanitize_text_field', (array) ( $executive_summary['key_value_drivers'] ?? [] ) );
+	$executive_recommendation = sanitize_text_field( $executive_summary['executive_recommendation'] ?? '' );
+
+	if ( $strategic_positioning || $business_case_strength || ! empty( $key_value_drivers ) || $executive_recommendation ) :
+	?>
+	<h3><?php echo esc_html__( 'Executive Summary', 'rtbcb' ); ?></h3>
+	<?php if ( $strategic_positioning ) : ?>
+	<p><?php echo esc_html( $strategic_positioning ); ?></p>
+	<?php endif; ?>
+	<?php if ( $business_case_strength ) : ?>
+	<p><?php echo esc_html( $business_case_strength ); ?></p>
+	<?php endif; ?>
+	<?php if ( ! empty( $key_value_drivers ) ) : ?>
+	<ul>
+	<?php foreach ( $key_value_drivers as $driver ) : ?>
+	<li><?php echo esc_html( $driver ); ?></li>
+	<?php endforeach; ?>
+	</ul>
+	<?php endif; ?>
+	<?php if ( $executive_recommendation ) : ?>
+	<p><?php echo esc_html( $executive_recommendation ); ?></p>
+	<?php endif; ?>
 	<?php endif; ?>
 
-        <?php if ( ! empty( $business_case_data['risks'] ) ) : ?>
-                <h3><?php echo esc_html__( 'Risks', 'rtbcb' ); ?></h3>
-		<ul>
-			<?php foreach ( (array) $business_case_data['risks'] as $risk ) : ?>
-				<li><?php echo esc_html( $risk ); ?></li>
-			<?php endforeach; ?>
-		</ul>
-        <?php endif; ?>
-
-	<?php if ( ! empty( $business_case_data['industry_insights'] ) ) : ?>
-		<?php
-		$flattened_insights = array();
-
-		foreach ( (array) $business_case_data['industry_insights'] as $group ) {
-			$flattened_insights = array_merge( $flattened_insights, array_map( 'sanitize_text_field', (array) $group ) );
-		}
-		?>
-		<?php if ( ! empty( $flattened_insights ) ) : ?>
-			<h3><?php echo esc_html__( 'Industry Insights', 'rtbcb' ); ?></h3>
-			<ul>
-				<?php foreach ( $flattened_insights as $insight ) : ?>
-					<li><?php echo esc_html( $insight ); ?></li>
-				<?php endforeach; ?>
-			</ul>
-		<?php endif; ?>
+	<?php
+	$operational_analysis = array_map(
+	'sanitize_text_field',
+	(array) ( $business_case_data['operational_analysis']['current_state_assessment'] ?? [] )
+	);
+	if ( ! empty( $operational_analysis ) ) :
+	?>
+	<h3><?php echo esc_html__( 'Operational Analysis', 'rtbcb' ); ?></h3>
+	<ul>
+	<?php foreach ( $operational_analysis as $assessment ) : ?>
+	<li><?php echo esc_html( $assessment ); ?></li>
+	<?php endforeach; ?>
+	</ul>
 	<?php endif; ?>
 
-	<?php if ( ! empty( $business_case_data['assumptions_explained'] ) ) : ?>
-		<h3><?php echo esc_html__( 'Assumptions', 'rtbcb' ); ?></h3>
-		<ul>
-			<?php foreach ( (array) $business_case_data['assumptions_explained'] as $assumption ) : ?>
-				<li><?php echo esc_html( $assumption ); ?></li>
-			<?php endforeach; ?>
-		</ul>
+	<?php
+	$industry_insights         = $business_case_data['industry_insights'] ?? [];
+	$sector_trends             = array_map( 'sanitize_text_field', (array) ( $industry_insights['sector_trends'] ?? [] ) );
+	$competitive_benchmarks    = array_map( 'sanitize_text_field', (array) ( $industry_insights['competitive_benchmarks'] ?? [] ) );
+	$regulatory_considerations = array_map( 'sanitize_text_field', (array) ( $industry_insights['regulatory_considerations'] ?? [] ) );
+
+	if ( $sector_trends || $competitive_benchmarks || $regulatory_considerations ) :
+	?>
+	<h3><?php echo esc_html__( 'Industry Insights', 'rtbcb' ); ?></h3>
+	<?php if ( $sector_trends ) : ?>
+	<h4><?php echo esc_html__( 'Sector Trends', 'rtbcb' ); ?></h4>
+	<ul>
+	<?php foreach ( $sector_trends as $trend ) : ?>
+	<li><?php echo esc_html( $trend ); ?></li>
+	<?php endforeach; ?>
+	</ul>
+	<?php endif; ?>
+	<?php if ( $competitive_benchmarks ) : ?>
+	<h4><?php echo esc_html__( 'Competitive Benchmarks', 'rtbcb' ); ?></h4>
+	<ul>
+	<?php foreach ( $competitive_benchmarks as $benchmark ) : ?>
+	<li><?php echo esc_html( $benchmark ); ?></li>
+	<?php endforeach; ?>
+	</ul>
+	<?php endif; ?>
+	<?php if ( $regulatory_considerations ) : ?>
+	<h4><?php echo esc_html__( 'Regulatory Considerations', 'rtbcb' ); ?></h4>
+	<ul>
+	<?php foreach ( $regulatory_considerations as $reg ) : ?>
+	<li><?php echo esc_html( $reg ); ?></li>
+	<?php endforeach; ?>
+	</ul>
+	<?php endif; ?>
 	<?php endif; ?>
 
 	<?php if ( ! empty( $business_case_data['citations'] ) ) : ?>
