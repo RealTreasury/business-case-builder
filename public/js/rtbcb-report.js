@@ -164,13 +164,70 @@ function initializeROIChart() {
 function initializeComparisonCharts() {
     const comparisonContainer = document.querySelector('.rtbcb-scenario-comparison');
     if (!comparisonContainer) return;
-    
+
     // Create mini charts for each scenario
     const scenarios = ['conservative', 'base', 'optimistic'];
     scenarios.forEach(scenario => {
         const canvas = document.querySelector(`#rtbcb-${scenario}-chart`);
         if (canvas) {
             createScenarioMiniChart(canvas, scenario);
+        }
+    });
+}
+
+/**
+ * Render mini comparison chart for a scenario card
+ */
+function createScenarioMiniChart(canvas, scenario) {
+    const card = document.querySelector(`.rtbcb-scenario-card.${scenario}`);
+    if (!card) {
+        return;
+    }
+
+    const extract = metric => {
+        const el = card.querySelector(`[data-metric="${metric}"]`);
+        return el ? parseFloat(el.textContent.replace(/[$,]/g, '')) || 0 : 0;
+    };
+
+    const colors = {
+        conservative: 'rgba(239, 68, 68, 0.8)',
+        base: 'rgba(59, 130, 246, 0.8)',
+        optimistic: 'rgba(16, 185, 129, 0.8)'
+    };
+
+    const data = {
+        labels: ['Labor Savings', 'Fee Reduction', 'Error Prevention', 'Total Benefit'],
+        datasets: [{
+            data: [
+                extract('labor_savings'),
+                extract('fee_savings'),
+                extract('error_reduction'),
+                extract('total_benefit')
+            ],
+            backgroundColor: colors[scenario] || 'rgba(59, 130, 246, 0.8)'
+        }]
+    };
+
+    new Chart(canvas, {
+        type: 'bar',
+        data: data,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return '$' + new Intl.NumberFormat().format(context.raw);
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: { display: false },
+                y: { display: false }
+            }
         }
     });
 }
@@ -186,9 +243,10 @@ function initializeSensitivityChart() {
     
     try {
         new Chart(ctx, {
-            type: 'horizontalBar',
+            type: 'bar',
             data: sensitivityData,
             options: {
+                indexAxis: 'y',
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
