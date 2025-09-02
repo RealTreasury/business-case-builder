@@ -131,7 +131,7 @@ public static function enqueue( $user_inputs ) {
 	ob_start();
 	include RTBCB_DIR . 'templates/comprehensive-report-template.php';
 	$report_html = ob_get_clean();
-	$report_html = wp_kses( $report_html, rtbcb_get_report_allowed_html() );
+$report_html = rtbcb_sanitize_report_html( $report_html );
 	} else {
 	$report_html = '<html></html>';
 	}

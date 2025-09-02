@@ -2202,7 +2202,7 @@ $missing_sections  = array_diff( $required_sections, array_keys( $comprehensive_
 	);
 		}
 
-		$html = wp_kses( $html, rtbcb_get_report_allowed_html() );
+$html = rtbcb_sanitize_report_html( $html );
 		wp_cache_set( $cache_key, $html, 'rtbcb_reports', HOUR_IN_SECONDS );
 
 		return $html;
