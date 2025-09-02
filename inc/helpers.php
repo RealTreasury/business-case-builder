@@ -1497,7 +1497,7 @@ function rtbcb_proxy_openai_responses() {
 		}
 
         if ( isset( $_POST['nonce'] ) ) {
-                check_ajax_referer( 'rtbcb_openai_responses', 'nonce' );
+		 check_ajax_referer( 'rtbcb_openai_responses', 'nonce' );
         }
 
 	$body = isset( $_POST['body'] ) ? wp_unslash( $_POST['body'] ) : '';
@@ -1941,12 +1941,20 @@ function rtbcb_get_report_allowed_html() {
 		'data-*' => true,
 	];
 
+	$allowed['script'] = [
+		'type'   => true,
+		'id'     => true,
+		'src'    => true,
+		'data-*' => true,
+	];
+
 	foreach ( $allowed as $tag => $attrs ) {
 		$allowed[ $tag ]['data-*'] = true;
 	}
 
-		return $allowed;
+	return $allowed;
 }
+
 
 /**
 	* Increment the RAG search cache version to invalidate cached results.

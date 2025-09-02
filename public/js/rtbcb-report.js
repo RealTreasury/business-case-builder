@@ -567,11 +567,16 @@ function sanitizeReportHTML(htmlContent) {
     const allowedTags = [
         'a', 'p', 'br', 'strong', 'em', 'ul', 'ol', 'li',
         'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span',
-        'table', 'thead', 'tbody', 'tr', 'th', 'td'
+        'table', 'thead', 'tbody', 'tr', 'th', 'td', 'script'
     ];
-    const allowedAttr = [ 'href', 'title', 'target', 'rel', 'style' ];
+    const allowedAttr = [ 'href', 'title', 'target', 'rel', 'style', 'src', 'type' ];
     return typeof DOMPurify !== 'undefined'
-        ? DOMPurify.sanitize(htmlContent, { ALLOWED_TAGS: allowedTags, ALLOWED_ATTR: allowedAttr })
+        ? DOMPurify.sanitize(htmlContent, {
+            ALLOWED_TAGS: allowedTags,
+            ALLOWED_ATTR: allowedAttr,
+            ADD_TAGS: ['script'],
+            ADD_ATTR: ['src', 'type']
+        })
         : htmlContent;
 }
 
