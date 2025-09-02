@@ -255,12 +255,21 @@ class RTBCB_API_Log {
 
 		$threshold = gmdate( 'Y-m-d H:i:s', strtotime( "-{$days} days" ) );
 
-		return $wpdb->query(
-			$wpdb->prepare(
-				'DELETE FROM ' . self::$table_name . ' WHERE created_at < %s',
-				$threshold
-			)
-		);
+                return $wpdb->query(
+                        $wpdb->prepare(
+                                'DELETE FROM ' . self::$table_name . ' WHERE created_at < %s',
+                                $threshold
+                        )
+                );
+        }
+
+	/**
+	 * Purge logs older than 72 hours.
+	 *
+	 * @return int Rows deleted.
+	 */
+	public static function purge_old_logs() {
+		return self::purge_logs( 3 );
 	}
 
 	/**

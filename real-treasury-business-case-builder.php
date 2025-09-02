@@ -536,16 +536,23 @@ return true;
 
 		   add_action( 'rtbcb_cleanup_data', [ $this, 'scheduled_data_cleanup' ] );
 
-		   // Schedule background job cleanup
-		   if ( ! wp_next_scheduled( 'rtbcb_cleanup_jobs' ) ) {
-			   wp_schedule_event( time(), 'hourly', 'rtbcb_cleanup_jobs' );
-		   }
+		// Schedule background job cleanup
+		if ( ! wp_next_scheduled( 'rtbcb_cleanup_jobs' ) ) {
+		wp_schedule_event( time(), 'hourly', 'rtbcb_cleanup_jobs' );
+		}
+		// Schedule API log cleanup
+		if ( ! wp_next_scheduled( 'rtbcb_purge_api_logs' ) ) {
+			wp_schedule_event( time(), 'hourly', 'rtbcb_purge_api_logs' );
+		}
 
+		if ( class_exists( 'RTBCB_API_Log' ) ) {
+			add_action( 'rtbcb_purge_api_logs', [ 'RTBCB_API_Log', 'purge_old_logs' ] );
+		}
 
-		   // Schedule lead metrics refresh
-		   if ( ! wp_next_scheduled( 'rtbcb_refresh_lead_metrics' ) ) {
-			   wp_schedule_event( time(), 'hourly', 'rtbcb_refresh_lead_metrics' );
-		   }
+		// Schedule lead metrics refresh
+		if ( ! wp_next_scheduled( 'rtbcb_refresh_lead_metrics' ) ) {
+			wp_schedule_event( time(), 'hourly', 'rtbcb_refresh_lead_metrics' );
+		}
 
 		   if ( class_exists( 'RTBCB_Leads' ) ) {
 			   add_action( 'rtbcb_refresh_lead_metrics', [ 'RTBCB_Leads', 'update_cached_statistics' ] );
@@ -3130,9 +3137,10 @@ $html = rtbcb_sanitize_report_html( $html );
 	 */
 	public function deactivate() {
 		// Clear scheduled events
-		wp_clear_scheduled_hook( 'rtbcb_rebuild_rag_index' );
-		wp_clear_scheduled_hook( 'rtbcb_cleanup_data' );
-		wp_clear_scheduled_hook( 'rtbcb_refresh_lead_metrics' );
+               wp_clear_scheduled_hook( 'rtbcb_rebuild_rag_index' );
+               wp_clear_scheduled_hook( 'rtbcb_cleanup_data' );
+               wp_clear_scheduled_hook( 'rtbcb_refresh_lead_metrics' );
+		wp_clear_scheduled_hook( 'rtbcb_purge_api_logs' );
 		
 		// Flush rewrite rules
 		flush_rewrite_rules();
