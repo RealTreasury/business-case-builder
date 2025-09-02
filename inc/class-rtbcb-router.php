@@ -410,10 +410,17 @@ $premium_model = function_exists( 'get_option' ) ? get_option( 'rtbcb_premium_mo
 	// Get current company data.
 	$company      = rtbcb_get_current_company();
 	$company_name = sanitize_text_field( $business_case_data['company_name'] ?: ( $company['name'] ?? __( 'Your Company', 'rtbcb' ) ) );
+	$base_roi     = floatval( $business_case_data['base_roi'] ?: $business_case_data['roi_base'] );
+	$business_case_data['roi_base'] = $base_roi;
 
 	// Derive recommended category and details from recommendation if not provided.
 	$recommended_category = sanitize_text_field( $business_case_data['recommended_category'] ?: ( $business_case_data['recommendation']['recommended'] ?? 'treasury_management_system' ) );
 	$category_details     = $business_case_data['category_info'] ?: ( $business_case_data['recommendation']['category_info'] ?? [] );
+
+	$roi_scenarios    = $this->format_roi_scenarios( $business_case_data );
+	$conservative_roi = floatval( $roi_scenarios['conservative']['total_annual_benefit'] ?? 0 );
+	$base_roi         = floatval( $roi_scenarios['base']['total_annual_benefit'] ?? $base_roi );
+	$optimistic_roi   = floatval( $roi_scenarios['optimistic']['total_annual_benefit'] ?? 0 );
 
 	// Prepare operational and risk data with fallbacks.
 	$operational_analysis = array_map( 'sanitize_text_field', (array) $business_case_data['operational_analysis'] );
@@ -441,12 +448,25 @@ $premium_model = function_exists( 'get_option' ) ? get_option( 'rtbcb_premium_mo
 			'executive_recommendation' => wp_kses_post( $business_case_data['executive_recommendation'] ?: $business_case_data['recommendation'] ),
 			'business_case_strength'  => $this->determine_business_case_strength( $business_case_data ),
 		],
-		'financial_analysis' => [
-			'roi_scenarios'      => $this->format_roi_scenarios( $business_case_data ),
+			'financial_analysis' => [
+			'roi_scenarios'      => $roi_scenarios,
 			'payback_analysis'   => [
 				'payback_months' => sanitize_text_field( $business_case_data['payback_months'] ),
 			],
 			'sensitivity_analysis' => $business_case_data['sensitivity_analysis'],
+			'chart_data'          => [
+				'labels'   => [
+					__( 'Conservative', 'rtbcb' ),
+					__( 'Base', 'rtbcb' ),
+					__( 'Optimistic', 'rtbcb' ),
+				],
+				'datasets' => [
+					[
+						'data'            => [ $conservative_roi, $base_roi, $optimistic_roi ],
+						'backgroundColor' => [ '#ff6384', '#36a2eb', '#4bc0c0' ],
+					],
+				],
+			],
 		],
 		'company_intelligence' => [
 			'enriched_profile' => [
