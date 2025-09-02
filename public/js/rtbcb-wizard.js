@@ -1598,7 +1598,8 @@ class BusinessCaseBuilder {
             'request took longer than our 5-minute limit': 'Your request exceeded the 5-minute limit. Visit the <a href="/request-processing/" target="_blank">Request Processing page</a> or <a href="#" onclick="window.location.href=&apos;mailto:contact@realtreasury.com?subject=Business%20Case%20Request&apos;">request email delivery</a>.',
             'PHP error occurred': 'Server error encountered. Please try again.',
             'Server returned invalid JSON response': 'Server communication error. Please try again.',
-            'Unexpected server response': 'Server communication error. Please try again.'
+            'Unexpected server response': 'Server communication error. Please try again.',
+            'Job not found': 'Unable to locate your report request. Please resubmit the form.'
         };
 
         for (const [key, message] of Object.entries(errorMappings)) {

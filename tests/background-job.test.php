@@ -69,12 +69,13 @@ if ( ! function_exists( 'rtbcb_send_report_email' ) ) {
 
 if ( ! function_exists( 'wp_schedule_single_event' ) ) {
 	function wp_schedule_single_event( $timestamp, $hook, $args ) {
-		global $scheduled_events;
-		$scheduled_events[] = [
-			'timestamp' => $timestamp,
-			'hook'      => $hook,
-			'args'      => $args,
-		];
+	global $scheduled_events;
+	$scheduled_events[] = [
+	'timestamp' => $timestamp,
+	'hook'      => $hook,
+	'args'      => $args,
+	];
+	return true;
 	}
 }
 
