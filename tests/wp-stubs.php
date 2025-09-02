@@ -84,6 +84,7 @@ if ( ! function_exists( 'wp_json_encode' ) ) {
         }
 }
 
+
 if ( ! function_exists( 'is_wp_error' ) ) {
        function is_wp_error( $thing ) {
                return $thing instanceof WP_Error;

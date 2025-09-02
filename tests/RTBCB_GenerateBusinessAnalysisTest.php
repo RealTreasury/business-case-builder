@@ -75,6 +75,10 @@ return [ 'executive_summary' => 'summary', 'context_used' => $rag_context ];
 }
 }
 
+if ( ! class_exists( 'RTBCB_LLM_Optimized' ) ) {
+	class RTBCB_LLM_Optimized extends RTBCB_LLM {}
+}
+
 class RTBCB_Main {
 public $fallback_called = false;
 
