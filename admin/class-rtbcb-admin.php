@@ -147,6 +147,8 @@ wp_localize_script(
 'unknown_start'   => __( 'Unknown Start', 'rtbcb' ),
 'template'        => __( 'Template', 'rtbcb' ),
 'unknown_template'=> __( 'Unknown Template', 'rtbcb' ),
+'logs'           => __( 'Logs', 'rtbcb' ),
+'no_logs'       => __( 'No logs', 'rtbcb' ),
 'seconds'         => __( 's', 'rtbcb' ),
 'elapsed_suffix' => __( 's elapsed', 'rtbcb' ),
 'view_logs'      => __( 'View Logs', 'rtbcb' ),

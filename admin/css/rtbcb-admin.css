@@ -484,9 +484,23 @@ html {
 
 .rtbcb-history-table th,
 .rtbcb-history-table td {
-	padding: 8px;
-	border: 1px solid #e5e7eb;
-	white-space: nowrap;
+        padding: 8px;
+        border: 1px solid #e5e7eb;
+        white-space: nowrap;
+}
+
+.rtbcb-history-table th {
+       cursor: pointer;
+}
+
+.rtbcb-history-table th.rtbcb-sorted-asc::after {
+       content: "\25B2";
+       margin-left: 4px;
+}
+
+.rtbcb-history-table th.rtbcb-sorted-desc::after {
+       content: "\25BC";
+       margin-left: 4px;
 }
 
 .rtbcb-step-time {
