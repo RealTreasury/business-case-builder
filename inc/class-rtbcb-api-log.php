@@ -151,7 +151,7 @@ class RTBCB_API_Log {
                $request_json  = wp_json_encode( $request );
                $response_json = wp_json_encode( $response );
 
-		$request_json  = substr( $request_json, 0, 10000 );
+		$request_json  = substr( $request_json, 0, 20000 );
 		$response_json = substr( $response_json, 0, 10000 );
 		$usage             = $response['usage'] ?? [];
 		$prompt_tokens     = intval( $usage['prompt_tokens'] ?? $usage['input_tokens'] ?? 0 );
@@ -336,4 +336,22 @@ class RTBCB_API_Log {
 			'total' => $total,
 		];
 	}
-}
+
+/**
+ * Retrieve all logs.
+ *
+ * @return array
+ */
+	public static function get_all_logs() {
+		global $wpdb;
+
+		if ( empty( self::$table_name ) ) {
+			self::init();
+		}
+
+		return $wpdb->get_results(
+			'SELECT id, user_id, user_email, lead_id, company_name, request_json, response_json, prompt_tokens, completion_tokens, total_tokens, created_at FROM ' . self::$table_name . ' ORDER BY created_at DESC',
+		ARRAY_A
+		);
+	}
+	}

@@ -96,14 +96,30 @@ class RTBCB_Admin {
 			RTBCB_VERSION,
 			true
 		);
-		wp_enqueue_style(
-			'rtbcb-admin',
-			RTBCB_URL . 'admin/css/rtbcb-admin.css',
-			[],
-			RTBCB_VERSION
-		);
+	wp_enqueue_style(
+		'rtbcb-admin',
+		RTBCB_URL . 'admin/css/rtbcb-admin.css',
+		[],
+		RTBCB_VERSION
+	);
 
-		if ( 'rtbcb-workflow-visualizer' === $page ) {
+	if ( 'rtbcb-api-logs' === $page ) {
+		wp_enqueue_style(
+			'datatables',
+			'https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css',
+			[],
+			'1.13.6'
+		);
+		wp_enqueue_script(
+			'datatables',
+			'https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js',
+			[ 'jquery' ],
+			'1.13.6',
+			true
+		);
+	}
+
+if ( 'rtbcb-workflow-visualizer' === $page ) {
 			wp_enqueue_script(
 				'rtbcb-workflow-visualizer',
 				RTBCB_URL . 'admin/js/workflow-visualizer.js',
@@ -450,10 +466,8 @@ wp_localize_script(
 			return;
 		}
 
-		$paged     = isset( $_GET['paged'] ) ? intval( wp_unslash( $_GET['paged'] ) ) : 1;
-		$per_page  = 20;
-		$logs_data = RTBCB_API_Log::get_logs_paginated( $paged, $per_page );
-		$nonce     = wp_create_nonce( 'rtbcb_api_logs' );
+		$logs  = RTBCB_API_Log::get_all_logs();
+		$nonce = wp_create_nonce( 'rtbcb_api_logs' );
 
 		include RTBCB_DIR . 'admin/api-logs-page.php';
 	}
