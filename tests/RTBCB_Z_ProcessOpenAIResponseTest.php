@@ -48,11 +48,26 @@ final class RTBCB_Z_ProcessOpenAIResponseTest extends TestCase {
 		ini_set( 'error_log', $orig );
 	}
 
-	public function test_handles_large_response() {
-		$large   = str_repeat( 'a', 10000 );
-		$json    = '{"text":"' . $large . '"}';
-		$decoded = $this->llm->process_openai_response( $json );
-		$this->assertSame( $large, $decoded['text'] );
-	}
+       public function test_handles_large_response() {
+               $large   = str_repeat( 'a', 10000 );
+               $json    = '{"text":"' . $large . '"}';
+               $decoded = $this->llm->process_openai_response( $json );
+               $this->assertSame( $large, $decoded['text'] );
+       }
+
+       public function test_preserves_usage_data() {
+               $payload = [
+                       'output_text' => json_encode( [ 'result' => 'ok' ] ),
+                       'usage'       => [
+                               'input_tokens'  => 5,
+                               'output_tokens' => 7,
+                               'total_tokens'  => 12,
+                       ],
+               ];
+               $json    = json_encode( $payload );
+               $decoded = $this->llm->process_openai_response( $json );
+               $this->assertSame( 5, $decoded['usage']['input_tokens'] );
+               $this->assertSame( 'ok', $decoded['result'] );
+       }
 }
 
