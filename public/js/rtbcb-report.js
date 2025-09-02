@@ -260,21 +260,34 @@ async function generateAndDisplayReport(businessContext) {
 }
 
 function initializeROIChart() {
-    const ctx = document.getElementById('rtbcb-roi-chart');
-    const roiData = rtbcbReportData.roiScenarios;
+    if (typeof Chart === 'undefined') {
+        return;
+    }
 
-    new Chart(ctx, {
+    const canvas = document.getElementById('rtbcb-roi-chart');
+    const roiData =
+        typeof rtbcbReportData !== 'undefined'
+            ? rtbcbReportData.roiScenarios
+            : null;
+
+    if (!canvas || !roiData) {
+        return;
+    }
+
+    new Chart(canvas, {
         type: 'bar',
         data: {
             labels: ['Conservative', 'Base Case', 'Optimistic'],
-            datasets: [{
-                label: 'Annual Benefit ($)',
-                data: [
-                    roiData.conservative?.total_annual_benefit || 0,
-                    roiData.base?.total_annual_benefit || 0,
-                    roiData.optimistic?.total_annual_benefit || 0
-                ]
-            }]
+            datasets: [
+                {
+                    label: 'Annual Benefit ($)',
+                    data: [
+                        roiData.conservative?.total_annual_benefit || 0,
+                        roiData.base?.total_annual_benefit || 0,
+                        roiData.optimistic?.total_annual_benefit || 0
+                    ]
+                }
+            ]
         }
     });
 }
