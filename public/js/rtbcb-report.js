@@ -3,6 +3,9 @@
  * Handles interactive dashboard features, charts, and collapsible sections
  */
 
+// Default minimum output tokens for GPT-5 responses.
+const RTBCB_GPT5_MIN_TOKENS = 256;
+
 if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
     document.addEventListener('DOMContentLoaded', function() {
         console.log('RTBCB Report: Initializing enhanced dashboard');
