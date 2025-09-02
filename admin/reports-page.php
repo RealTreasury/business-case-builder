@@ -10,6 +10,13 @@ defined( 'ABSPATH' ) || exit;
 ?>
 <div class="wrap">
 	<h1><?php esc_html_e( 'Generated Reports', 'rtbcb' ); ?></h1>
+	<form method="post" class="rtbcb-delete-old-reports">
+		<?php wp_nonce_field( 'rtbcb_delete_old_reports' ); ?>
+		<label for="rtbcb-delete-days"><?php esc_html_e( 'Delete reports older than (days):', 'rtbcb' ); ?></label>
+		<input type="number" name="rtbcb_delete_days" id="rtbcb-delete-days" value="30" min="1" />
+		<?php submit_button( __( 'Delete Old Reports', 'rtbcb' ), 'secondary', 'rtbcb_delete_old_reports', false ); ?>
+	</form>
+
 
 	<?php if ( empty( $report_files ) ) : ?>
 		<p><?php esc_html_e( 'No reports found.', 'rtbcb' ); ?></p>
