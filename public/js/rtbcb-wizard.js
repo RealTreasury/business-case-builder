@@ -586,13 +586,22 @@ class BusinessCaseBuilder {
                 data = JSON.parse(responseText);
                 console.log('RTBCB: Parsed JSON response:', data);
             } catch (parseError) {
-                console.log('RTBCB: Response is not JSON, treating as HTML');
-                if (responseText.includes('<div class="rtbcb-enhanced-report"') ||
-                    responseText.includes('<div class="rtbcb-report"')) {
-                    this.cancelProgressiveLoading();
-                    this.showEnhancedHTMLReport(responseText);
-                    return;
-                } else {
+                console.log('RTBCB: JSON parse failed, attempting to clean response');
+                try {
+                    const cleaned = responseText
+                        .replaceAll('\\/', '/')
+                        .replaceAll('\\"', '"')
+                        .replace(/(^"|"$)/g, '');
+                    data = JSON.parse(cleaned);
+                    console.log('RTBCB: Parsed cleaned JSON response:', data);
+                } catch (cleanError) {
+                    console.log('RTBCB: Response is not JSON, treating as HTML');
+                    if (responseText.includes('<div class="rtbcb-enhanced-report"') ||
+                        responseText.includes('<div class="rtbcb-report"')) {
+                        this.cancelProgressiveLoading();
+                        this.showEnhancedHTMLReport(responseText);
+                        return;
+                    }
                     throw new Error( __( 'Invalid response format', 'rtbcb' ) );
                 }
             }
