@@ -421,6 +421,12 @@ $html = rtbcb_sanitize_report_html( $html );
 	$base_roi         = floatval( $roi_scenarios['base']['total_annual_benefit'] ?? $base_roi );
 	$optimistic_roi   = floatval( $roi_scenarios['optimistic']['total_annual_benefit'] ?? 0 );
 
+	if ( is_array( $business_case_data['executive_summary'] ?? null ) ) {
+		$business_case_data['executive_recommendation'] = $business_case_data['executive_summary']['executive_recommendation'] ?? '';
+		$business_case_data['value_drivers']           = $business_case_data['executive_summary']['key_value_drivers'] ?? [];
+		$business_case_data['executive_summary']       = $business_case_data['executive_summary']['strategic_positioning'] ?? '';
+	}
+
 	// Prepare operational and risk data with fallbacks.
 	$operational_analysis = array_map( 'sanitize_text_field', (array) $business_case_data['operational_analysis'] );
 	if ( empty( $operational_analysis ) ) {
