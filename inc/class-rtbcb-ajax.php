@@ -472,23 +472,37 @@ class RTBCB_Ajax {
 	}
 
 private static function structure_report_data( $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, $chart_data, $request_start ) {
-	$operational_analysis = (array) ( $final_analysis['operational_analysis'] ?? [] );
-	$current_state_assessment = (array) ( $operational_analysis['current_state_assessment'] ?? [] );
-	if ( empty( $current_state_assessment ) ) {
-	$current_state_assessment = [ __( 'No data provided', 'rtbcb' ) ];
-	}
-	$process_improvements = (array) ( $operational_analysis['process_improvements'] ?? [] );
-	if ( empty( $process_improvements ) ) {
-	$process_improvements = [ __( 'No data provided', 'rtbcb' ) ];
-	}
-	$automation_opportunities = (array) ( $operational_analysis['automation_opportunities'] ?? [] );
-	if ( empty( $automation_opportunities ) ) {
-	$automation_opportunities = [ __( 'No data provided', 'rtbcb' ) ];
-	}
-	$implementation_risks = (array) ( $final_analysis['risk_mitigation']['implementation_risks'] ?? [] );
-	if ( empty( $implementation_risks ) ) {
-	$implementation_risks = [ __( 'No data provided', 'rtbcb' ) ];
-	}
+        $operational_insights = (array) ( $final_analysis['operational_insights'] ?? $final_analysis['operational_analysis'] ?? [] );
+        $current_state_assessment = (array) ( $operational_insights['current_state_assessment'] ?? [] );
+        if ( empty( $current_state_assessment ) ) {
+        $current_state_assessment = [ __( 'No data provided', 'rtbcb' ) ];
+        }
+        $process_improvements = (array) ( $operational_insights['process_improvements'] ?? [] );
+        if ( empty( $process_improvements ) ) {
+        $process_improvements = [ __( 'No data provided', 'rtbcb' ) ];
+        }
+        $automation_opportunities = (array) ( $operational_insights['automation_opportunities'] ?? [] );
+        if ( empty( $automation_opportunities ) ) {
+        $automation_opportunities = [ __( 'No data provided', 'rtbcb' ) ];
+        }
+        $risk_analysis = (array) ( $final_analysis['risk_analysis'] ?? $final_analysis['risk_mitigation'] ?? [] );
+        $implementation_risks = (array) ( $risk_analysis['implementation_risks'] ?? [] );
+        if ( empty( $implementation_risks ) ) {
+        $implementation_risks = [ __( 'No data provided', 'rtbcb' ) ];
+        }
+        $action_plan = (array) ( $final_analysis['action_plan'] ?? [] );
+        $immediate_steps = (array) ( $action_plan['immediate_steps'] ?? ( $final_analysis['next_steps']['immediate'] ?? [] ) );
+        if ( empty( $immediate_steps ) ) {
+        $immediate_steps = [ __( 'No data provided', 'rtbcb' ) ];
+        }
+        $short_term_milestones = (array) ( $action_plan['short_term_milestones'] ?? ( $final_analysis['next_steps']['short_term'] ?? [] ) );
+        if ( empty( $short_term_milestones ) ) {
+        $short_term_milestones = [ __( 'No data provided', 'rtbcb' ) ];
+        }
+        $long_term_objectives = (array) ( $action_plan['long_term_objectives'] ?? ( $final_analysis['next_steps']['long_term'] ?? [] ) );
+        if ( empty( $long_term_objectives ) ) {
+        $long_term_objectives = [ __( 'No data provided', 'rtbcb' ) ];
+        }
 
 	$company_profile      = $enriched_profile['company_profile'] ?? [];
 	$industry_context_raw = $enriched_profile['industry_context'] ?? [];
@@ -549,21 +563,21 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 				'implementation_roadmap' => $final_analysis['implementation_roadmap'] ?? [],
 				'vendor_considerations'=> $final_analysis['vendor_considerations'] ?? [],
 			],
-			'operational_insights' => [
-							'current_state_assessment' => $current_state_assessment,
-							'process_improvements'     => $process_improvements,
-							'automation_opportunities' => $automation_opportunities,
-			],
-			'risk_analysis' => [
-							'implementation_risks' => $implementation_risks,
-							'mitigation_strategies' => $final_analysis['risk_mitigation']['mitigation_strategies'] ?? [],
-							'success_factors'      => $final_analysis['risk_mitigation']['success_factors'] ?? [],
-			],
-			'action_plan' => [
-				'immediate_steps'    => $final_analysis['next_steps']['immediate'] ?? [],
-				'short_term_milestones' => $final_analysis['next_steps']['short_term'] ?? [],
-				'long_term_objectives'  => $final_analysis['next_steps']['long_term'] ?? [],
-			],
+                        'operational_insights' => [
+                                                        'current_state_assessment' => $current_state_assessment,
+                                                        'process_improvements'     => $process_improvements,
+                                                        'automation_opportunities' => $automation_opportunities,
+                        ],
+                        'risk_analysis' => [
+                                                        'implementation_risks' => $implementation_risks,
+                                                        'mitigation_strategies' => $risk_analysis['mitigation_strategies'] ?? [],
+                                                        'success_factors'      => $risk_analysis['success_factors'] ?? [],
+                        ],
+                        'action_plan' => [
+                                'immediate_steps'       => $immediate_steps,
+                                'short_term_milestones' => $short_term_milestones,
+                                'long_term_objectives'  => $long_term_objectives,
+                        ],
 		];
 	}
 
