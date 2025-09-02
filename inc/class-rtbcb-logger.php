@@ -37,8 +37,8 @@ class RTBCB_Logger {
 
 		error_log( 'RTBCB_LOG: ' . wp_json_encode( $record ) );
 
-		$endpoint = function_exists( 'get_option' ) ? get_option( 'rtbcb_log_endpoint', '' ) : '';
-		$endpoint = function_exists( 'sanitize_text_field' ) ? sanitize_text_field( $endpoint ) : $endpoint;
+$endpoint = function_exists( 'get_option' ) ? get_option( 'rtbcb_log_endpoint', '' ) : '';
+$endpoint = function_exists( 'esc_url_raw' ) ? esc_url_raw( $endpoint ) : $endpoint;
 
 		if ( $endpoint ) {
 			rtbcb_wp_remote_post_with_retry(
