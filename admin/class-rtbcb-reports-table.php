@@ -42,6 +42,7 @@ class RTBCB_Reports_Table extends WP_List_Table {
      */
     public function get_columns() {
         return [
+            // The 'cb' column activates WordPress' select-all checkbox.
             'cb'       => '<input type="checkbox" />',
             'file'     => __( 'File', 'rtbcb' ),
             'size'     => __( 'Size', 'rtbcb' ),
@@ -69,7 +70,7 @@ class RTBCB_Reports_Table extends WP_List_Table {
      * @return string
      */
     protected function column_cb( $item ) {
-        return '<input type="checkbox" name="files[]" value="' . esc_attr( $item['file'] ) . '" />';
+        return '<input type="checkbox" name="reports[]" value="' . esc_attr( $item['file'] ) . '" />';
     }
 
     /**
@@ -192,11 +193,11 @@ class RTBCB_Reports_Table extends WP_List_Table {
 
         check_admin_referer( 'rtbcb_reports_action' );
 
-        $files = isset( $_POST['files'] ) ? (array) wp_unslash( $_POST['files'] ) : [];
-        $files = array_map( 'sanitize_file_name', $files );
+        $reports = isset( $_POST['reports'] ) ? (array) wp_unslash( $_POST['reports'] ) : [];
+        $reports = array_map( 'sanitize_file_name', $reports );
 
-        foreach ( $files as $file ) {
-            $file_path = trailingslashit( $this->reports_dir ) . $file;
+        foreach ( $reports as $report ) {
+            $file_path = trailingslashit( $this->reports_dir ) . $report;
             if ( file_exists( $file_path ) ) {
                 unlink( $file_path );
             }

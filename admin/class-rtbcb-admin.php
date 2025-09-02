@@ -96,17 +96,21 @@ class RTBCB_Admin {
 			RTBCB_VERSION,
 			true
 		);
-		wp_enqueue_style(
-			'rtbcb-admin',
-			RTBCB_URL . 'admin/css/rtbcb-admin.css',
-			[],
-			RTBCB_VERSION
-		);
+                wp_enqueue_style(
+                        'rtbcb-admin',
+                        RTBCB_URL . 'admin/css/rtbcb-admin.css',
+                        [],
+                        RTBCB_VERSION
+                );
 
-		if ( 'rtbcb-workflow-visualizer' === $page ) {
-			wp_enqueue_script(
-				'rtbcb-workflow-visualizer',
-				RTBCB_URL . 'admin/js/workflow-visualizer.js',
+                if ( 'rtbcb-reports' === $page ) {
+                        wp_enqueue_script( 'list-table' );
+                }
+
+                if ( 'rtbcb-workflow-visualizer' === $page ) {
+                        wp_enqueue_script(
+                                'rtbcb-workflow-visualizer',
+                                RTBCB_URL . 'admin/js/workflow-visualizer.js',
 				[ 'jquery' ],
 				RTBCB_VERSION,
 				true
