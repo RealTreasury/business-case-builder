@@ -917,6 +917,27 @@ $batch_prompts['tech'] = [
                       return new WP_Error( 'llm_response_parse_error', __( 'Invalid JSON from language model.', 'rtbcb' ) );
               }
 
+              $required_sections = [
+                      'executive_summary',
+                      'company_intelligence',
+                      'operational_insights',
+                      'risk_analysis',
+                      'action_plan',
+                      'industry_insights',
+                      'technology_strategy',
+                      'financial_analysis',
+              ];
+
+              foreach ( $required_sections as $section ) {
+                      if ( empty( $json[ $section ] ) || ! is_array( $json[ $section ] ) ) {
+                              /* translators: %s: missing section name */
+                              return new WP_Error(
+                                      'llm_missing_section',
+                                      sprintf( __( 'Missing required section: %s', 'rtbcb' ), $section )
+                              );
+                      }
+              }
+
               $sanitize = function ( $value ) use ( &$sanitize ) {
                       if ( is_array( $value ) ) {
                               return array_map( $sanitize, $value );
