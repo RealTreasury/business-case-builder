@@ -2423,7 +2423,7 @@ return $analysis;
 	* @param callable|null $chunk_handler     Optional streaming handler.
 	* @return array|WP_Error Response array or error.
 	*/
-	private function call_openai_with_retry( $model, $prompt, $max_output_tokens = null, $max_retries = null, $chunk_handler = null ) {
+       protected function call_openai_with_retry( $model, $prompt, $max_output_tokens = null, $max_retries = null, $chunk_handler = null ) {
 		$raw_key   = $model . '|' . wp_json_encode( $prompt );
 		$cache_key = 'rtbcb_llm_' . md5( $raw_key );
 		$ttl       = (int) apply_filters( 'rtbcb_llm_cache_ttl', HOUR_IN_SECONDS, $cache_key, $model, $prompt );
@@ -2464,18 +2464,18 @@ return $analysis;
 				try {
 					$response = $this->call_openai( $model, $prompt, $current_tokens, $chunk_handler );
 
-					if ( ! is_wp_error( $response ) ) {
-	$this->gpt5_config['timeout'] = $base_timeout;
+                                       if ( ! is_wp_error( $response ) ) {
+$this->gpt5_config['timeout'] = $base_timeout;
 if ( isset( $response['body'] ) ) {
-							$max_size = (int) apply_filters( 'rtbcb_llm_cache_max_size', 100000, $cache_key, $model, $prompt );
+$max_size = (int) apply_filters( 'rtbcb_llm_cache_max_size', 100000, $cache_key, $model, $prompt );
 $body     = (string) $response['body'];
 if ( strlen( $body ) <= $max_size ) {
 wp_cache_set( $cache_key, $body, 'rtbcb_llm', $ttl );
 set_transient( $cache_key, $body, $ttl );
 }
 }
-	return ;
-}
+return $response;
+                                       }
 
 $error_code = $response->get_error_code();
 if ( 'llm_http_status' === $error_code ) {
@@ -2563,7 +2563,7 @@ break;
 	* @param callable|null $chunk_handler    Optional streaming handler.
 	* @return array|WP_Error HTTP response array or WP_Error on failure.
 	*/
-private function call_openai( $model, $prompt, $max_output_tokens = null, $chunk_handler = null ) {
+protected function call_openai( $model, $prompt, $max_output_tokens = null, $chunk_handler = null ) {
 if ( rtbcb_heavy_features_disabled() ) {
 return new WP_Error( 'heavy_features_disabled', __( 'AI features temporarily disabled.', 'rtbcb' ) );
 }
