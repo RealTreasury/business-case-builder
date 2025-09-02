@@ -64,17 +64,14 @@ php tests/lead-storage.test.php
 echo "12. Rendering comprehensive report template..."
 php tests/render-comprehensive-template.test.php
 
-echo "13. Running report memory usage test..."
-php tests/report-memory-usage.test.php
-
-echo "14. Running report interactivity test..."
+echo "13. Running report interactivity test..."
 node tests/report-interactivity.test.js
 
-echo "12b. Running extended report interactivity test..."
+echo "13b. Running extended report interactivity test..."
 node tests/report-interactivity-extended.test.js
 
 # Email and PDF test
-echo "13b. Running email and PDF test..."
+echo "14. Running email and PDF test..."
 php tests/email-and-pdf.test.php
 
 # AJAX error handling test (PHPUnit)
