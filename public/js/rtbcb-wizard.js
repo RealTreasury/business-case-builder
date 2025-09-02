@@ -547,10 +547,14 @@ class BusinessCaseBuilder {
 
                 responseText = await response.text();
 
-                if ((response.status === 403 || responseText.includes('Security check failed')) && attempt === 0) {
+                if (response.status === 403 && attempt === 0) {
                     const refreshed = await rtbcbRefreshNonce();
                     if (refreshed) {
-                        formData.set('rtbcb_nonce', rtbcb_ajax.nonce);
+                        if ( typeof formData.set === 'function' ) {
+                            formData.set('rtbcb_nonce', rtbcb_ajax.nonce);
+                        } else {
+                            formData.append('rtbcb_nonce', rtbcb_ajax.nonce);
+                        }
                         attempt++;
                         continue;
                     }
