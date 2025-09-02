@@ -983,6 +983,8 @@ return true;
 		return;
 		}
 
+		$business_case_data = $report_data;
+
 		try {
 		$rag = new RTBCB_RAG();
 		$rag->rebuild_index();
@@ -2204,6 +2206,7 @@ $missing_sections  = array_diff( $required_sections, array_keys( $comprehensive_
 		}
 		}
 
+		$business_case_data = $report_data;
 		try {
 	set_error_handler(
 	static function ( $severity, $message, $file, $line ) {
