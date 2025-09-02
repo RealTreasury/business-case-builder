@@ -211,10 +211,10 @@ class RTBCB_LLM {
                        'num_banks'              => intval( $user_inputs['num_banks'] ?? 0 ),
                        'ftes'                   => floatval( $user_inputs['ftes'] ?? 0 ),
                        'pain_points'            => array_map( 'sanitize_text_field', (array) ( $user_inputs['pain_points'] ?? [] ) ),
+                       'email'                  => sanitize_email( $user_inputs['email'] ?? '' ),
                ];
 
                $this->current_inputs            = $inputs;
-               $this->current_inputs['email']   = sanitize_email( $user_inputs['email'] ?? '' );
 
 		if ( empty( $this->api_key ) ) {
 			return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
