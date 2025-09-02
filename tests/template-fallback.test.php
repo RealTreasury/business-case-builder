@@ -93,17 +93,16 @@ $method = $ref->getMethod( 'transform_data_for_template' );
 $method->setAccessible( true );
 
 $result = $method->invoke( $plugin, [] );
-if ( ! is_wp_error( $result ) ) {
-echo "Validation did not produce WP_Error\n";
+if ( is_wp_error( $result ) ) {
+echo "Unexpected WP_Error\n";
 exit( 1 );
 }
-$data = $result->get_error_data();
-if ( ! isset( $data['executive_summary'] ) ) {
+if ( ! isset( $result['executive_summary'] ) ) {
 echo "Missing executive_summary fallback\n";
 exit( 1 );
 }
-if ( isset( $data['risk_analysis'] ) ) {
-echo "Unexpected risk_analysis section\n";
+if ( ! isset( $result['action_plan'] ) ) {
+echo "Missing action_plan section\n";
 exit( 1 );
 }
 
