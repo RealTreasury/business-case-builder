@@ -298,7 +298,7 @@ $premium_model = function_exists( 'get_option' ) ? get_option( 'rtbcb_premium_mo
 		ob_start();
 		include $template_path;
 		$html = ob_get_clean();
-		$html = wp_kses( $html, rtbcb_get_report_allowed_html() );
+$html = rtbcb_sanitize_report_html( $html );
 
 		wp_cache_set( $cache_key, $html, 'rtbcb_reports', HOUR_IN_SECONDS );
 
@@ -327,7 +327,7 @@ $premium_model = function_exists( 'get_option' ) ? get_option( 'rtbcb_premium_mo
 		include $template_path;
 		$html = ob_get_clean();
 
-		return wp_kses( $html, rtbcb_get_report_allowed_html() );
+return rtbcb_sanitize_report_html( $html );
 	}
 
 	/**
@@ -368,7 +368,7 @@ $premium_model = function_exists( 'get_option' ) ? get_option( 'rtbcb_premium_mo
 	ob_start();
 	include $template_path;
 	$html = ob_get_clean();
-	$html = wp_kses( $html, rtbcb_get_report_allowed_html() );
+$html = rtbcb_sanitize_report_html( $html );
 
 	wp_cache_set( $cache_key, $html, 'rtbcb_reports', HOUR_IN_SECONDS );
 

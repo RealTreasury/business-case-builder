@@ -49,17 +49,27 @@ if ( ! function_exists( 'wp_kses' ) ) {
 require_once __DIR__ . '/../inc/helpers.php';
 
 final class RTBCB_GetReportAllowedHtmlTest extends TestCase {
-	public function test_allows_minimal_script_attributes() {
-	    $allowed = rtbcb_get_report_allowed_html();
-	    $this->assertArrayHasKey( 'script', $allowed );
-	    $this->assertSame( [ 'id' => true, 'type' => true ], $allowed['script'] );
-	    $sanitized = wp_kses( '<script type="application/json" id="init">{}</script>', $allowed );
-	    $this->assertSame( '<script type="application/json" id="init">{}</script>', $sanitized );
-	}
+        public function test_allows_only_safe_script_types() {
+            $allowed = rtbcb_get_report_allowed_html();
+            $this->assertArrayHasKey( 'script', $allowed );
+            $this->assertSame(
+                [
+                    'id'   => true,
+                    'type' => [
+                        'application/json'   => true,
+                        'application/ld+json' => true,
+                    ],
+                ],
+                $allowed['script']
+            );
 
-	public function test_disallows_untrusted_script_attributes() {
-	    $allowed   = rtbcb_get_report_allowed_html();
-	    $sanitized = wp_kses( '<script src="//evil.test/evil.js"></script>', $allowed );
-	    $this->assertSame( '<script></script>', $sanitized );
-	}
+            $sanitized = rtbcb_sanitize_report_html( '<script type="application/json" id="init">{}</script>' );
+            $this->assertSame( '<script type="application/json" id="init">{}</script>', $sanitized );
+        }
+
+        public function test_removes_disallowed_script_types_and_attributes() {
+            $this->assertSame( '', rtbcb_sanitize_report_html( '<script type="text/javascript">alert(1)</script>' ) );
+            $this->assertSame( '', rtbcb_sanitize_report_html( '<script src="//evil.test/evil.js"></script>' ) );
+            $this->assertSame( '', rtbcb_sanitize_report_html( '<script id="no-type">alert(1)</script>' ) );
+        }
 }
