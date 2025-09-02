@@ -35,22 +35,35 @@ jQuery(function ($) {
 							});
 						}
 					});
-					var html =
-						'<div class="rtbcb-history-table-wrapper"><table class="widefat rtbcb-history-table"><thead><tr><th>' +
-						rtbcbWorkflow.strings.lead +
-						"</th>";
-					stepNames.forEach(function (name) {
-						html += "<th>" + $("<div>").text(name).html() + "</th>";
-					});
-					html += "</tr></thead><tbody>";
-					history.forEach(function (item) {
-						var lead =
-							item.email ||
-							(item.lead_id
-								? "ID " + item.lead_id
-								: rtbcbWorkflow.strings.unknown_lead);
-						html += "<tr><td>" + $("<div>").text(lead).html() + "</td>";
-						stepNames.forEach(function (name) {
+                                       var html =
+                                               '<div class="rtbcb-history-table-wrapper"><table class="widefat rtbcb-history-table"><thead><tr><th>' +
+                                               rtbcbWorkflow.strings.lead +
+                                               "</th><th>" +
+                                               rtbcbWorkflow.strings.company +
+                                               "</th><th>" +
+                                               rtbcbWorkflow.strings.started +
+                                               "</th>";
+                                       stepNames.forEach(function (name) {
+                                               html += "<th>" + $("<div>").text(name).html() + "</th>";
+                                       });
+                                       html += "</tr></thead><tbody>";
+                                       history.forEach(function (item) {
+                                               var lead =
+                                                       item.email ||
+                                                       (item.lead_id
+                                                               ? "ID " + item.lead_id
+                                                               : rtbcbWorkflow.strings.unknown_lead);
+                                               var company = item.company || rtbcbWorkflow.strings.unknown_company;
+                                               var started = item.started_at || rtbcbWorkflow.strings.unknown_start;
+                                               html +=
+                                                       "<tr><td>" +
+                                                       $("<div>").text(lead).html() +
+                                                       "</td><td>" +
+                                                       $("<div>").text(company).html() +
+                                                       "</td><td>" +
+                                                       $("<div>").text(started).html() +
+                                                       "</td>";
+                                               stepNames.forEach(function (name) {
                                                         var status = rtbcbWorkflow.strings.not_run;
                                                         var time = "";
                                                         if (item.steps) {

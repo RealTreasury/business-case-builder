@@ -117,8 +117,12 @@ wp_localize_script(
 'lead'            => __( 'Lead', 'rtbcb' ),
 'unknown_lead'    => __( 'Unknown Lead', 'rtbcb' ),
 'not_run'         => __( 'Not run', 'rtbcb' ),
-                               'seconds'         => __( 's', 'rtbcb' ),
-                               'elapsed_suffix' => __( 's elapsed', 'rtbcb' ),
+                                'company'         => __( 'Company', 'rtbcb' ),
+                                'unknown_company' => __( 'Unknown Company', 'rtbcb' ),
+                                'started'         => __( 'Started', 'rtbcb' ),
+                                'unknown_start'   => __( 'Unknown Start', 'rtbcb' ),
+                                'seconds'         => __( 's', 'rtbcb' ),
+                                'elapsed_suffix' => __( 's elapsed', 'rtbcb' ),
 ],
 ]
 );
@@ -1882,12 +1886,14 @@ wp_localize_script(
 		if ( ! current_user_can( 'manage_options' ) ) {
 		wp_send_json_error( __( 'Insufficient permissions', 'rtbcb' ) );
 		}
-		$raw_history = $this->get_workflow_history_from_logs();
+               $raw_history = $this->get_workflow_history_from_logs();
 $history     = array_map(
 function ( $entry ) {
-$lead_id = isset( $entry['lead_id'] ) ? intval( $entry['lead_id'] ) : 0;
-$email   = isset( $entry['lead_email'] ) ? sanitize_email( $entry['lead_email'] ) : '';
-$steps   = [];
+$lead_id  = isset( $entry['lead_id'] ) ? intval( $entry['lead_id'] ) : 0;
+$email    = isset( $entry['lead_email'] ) ? sanitize_email( $entry['lead_email'] ) : '';
+$company  = isset( $entry['company_name'] ) ? sanitize_text_field( $entry['company_name'] ) : '';
+$started  = isset( $entry['started_at'] ) ? sanitize_text_field( $entry['started_at'] ) : '';
+$steps    = [];
 if ( isset( $entry['steps'] ) && is_array( $entry['steps'] ) ) {
 foreach ( $entry['steps'] as $step ) {
 $steps[] = [
@@ -1899,9 +1905,11 @@ $steps[] = [
 }
 }
 return [
-'lead_id' => $lead_id,
-'email'   => $email,
-'steps'   => $steps,
+'lead_id'    => $lead_id,
+'email'      => $email,
+'company'    => $company,
+'started_at' => $started,
+'steps'      => $steps,
 ];
 },
 $raw_history
@@ -1942,13 +1950,15 @@ $raw_history
 			return [];
 			}
 			return array_map(
-				function ( $entry ) {
-				$entry['lead_id']    = isset( $entry['lead_id'] ) ? intval( $entry['lead_id'] ) : 0;
-				$entry['lead_email'] = isset( $entry['lead_email'] ) ? sanitize_email( $entry['lead_email'] ) : '';
-				return $entry;
-			},
-			$history
-			);
+function ( $entry ) {
+$entry['lead_id']      = isset( $entry['lead_id'] ) ? intval( $entry['lead_id'] ) : 0;
+$entry['lead_email']   = isset( $entry['lead_email'] ) ? sanitize_email( $entry['lead_email'] ) : '';
+$entry['company_name'] = isset( $entry['company_name'] ) ? sanitize_text_field( $entry['company_name'] ) : '';
+$entry['started_at']   = isset( $entry['started_at'] ) ? sanitize_text_field( $entry['started_at'] ) : '';
+return $entry;
+},
+$history
+);
 		}
 
 	private function calculate_average_duration( $history ) {

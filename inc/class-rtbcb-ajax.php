@@ -217,7 +217,7 @@ $enable_ai        = ! $bypass_heavy && ( class_exists( 'RTBCB_Settings' ) ? RTBC
 								if ( $lead_email ) {
 										$debug_info['lead_email'] = $lead_email;
 								}
-								self::store_workflow_history( $debug_info, $lead_id, $lead_email );
+                                                       self::store_workflow_history( $debug_info, $lead_id, $lead_email, $user_inputs['company_name'] ?? '' );
 
 								return [
 										'report_data'   => $structured_report_data,
@@ -322,7 +322,7 @@ $enable_ai        = ! $bypass_heavy && ( class_exists( 'RTBCB_Settings' ) ? RTBC
 			if ( $lead_email ) {
 			$debug_info['lead_email'] = $lead_email;
 			}
-			self::store_workflow_history( $debug_info, $lead_id, $lead_email );
+                       self::store_workflow_history( $debug_info, $lead_id, $lead_email, $user_inputs['company_name'] ?? '' );
 
 			return [
 				'report_data'   => $structured_report_data,
@@ -339,7 +339,7 @@ $enable_ai        = ! $bypass_heavy && ( class_exists( 'RTBCB_Settings' ) ? RTBC
 			if ( $lead_email ) {
 			$debug_info['lead_email'] = $lead_email;
 			}
-			self::store_workflow_history( $debug_info, isset( $lead_id ) ? $lead_id : null, $lead_email );
+                       self::store_workflow_history( $debug_info, isset( $lead_id ) ? $lead_id : null, $lead_email, $user_inputs['company_name'] ?? '' );
 			return new WP_Error( 'generation_failed', __( 'An error occurred while generating your business case. Please try again.', 'rtbcb' ) );
 		}
 	}
@@ -630,7 +630,7 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 			return $base > 0 ? 'strong' : 'weak';
 	}
 
-       private static function format_roi_scenarios( $roi_scenarios ) {
+	private static function format_roi_scenarios( $roi_scenarios ) {
                return $roi_scenarios;
        }
 
@@ -639,7 +639,7 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
         *
         * @return array
         */
-       private static function get_sanitized_params() {
+	private static function get_sanitized_params() {
                $params = [];
                foreach ( $_REQUEST as $key => $value ) {
                        if ( is_scalar( $value ) ) {
@@ -658,7 +658,7 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
         * @param array  $extra  Additional context.
         * @return void
         */
-       private static function log_request( $action, $params, $status, $extra = [] ) {
+	private static function log_request( $action, $params, $status, $extra = [] ) {
                if ( class_exists( 'RTBCB_Logger' ) ) {
                        $context = array_merge(
                                [
@@ -681,7 +681,7 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
         * @param array  $data   Data to store.
         * @return void
         */
-       private static function safe_update_status( $job_id, $state, $data ) {
+	private static function safe_update_status( $job_id, $state, $data ) {
                if ( ! $job_id ) {
                        return;
                }
@@ -702,7 +702,7 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
         * @param string    $lead_email  Lead email address.
         * @return void
         */
-       private static function store_workflow_history( $debug_info, $lead_id = null, $lead_email = '' ) {
+	private static function store_workflow_history( $debug_info, $lead_id = null, $lead_email = '', $company_name = '' ) {
                $history = function_exists( 'get_option' ) ? get_option( 'rtbcb_workflow_history', [] ) : [];
                if ( ! is_array( $history ) ) {
                        $history = [];
@@ -710,6 +710,9 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
                $debug_info['lead_id'] = $lead_id ? intval( $lead_id ) : null;
                if ( ! empty( $lead_email ) ) {
                        $debug_info['lead_email'] = sanitize_email( $lead_email );
+               }
+               if ( ! empty( $company_name ) ) {
+                       $debug_info['company_name'] = sanitize_text_field( $company_name );
                }
                $history[] = $debug_info;
                if ( count( $history ) > 20 ) {

@@ -29,6 +29,13 @@ private $current_step = null;
 private $start_time;
 
 /**
+	* Workflow start timestamp.
+	*
+	* @var string
+	*/
+private $start_timestamp;
+
+/**
 	* Recorded warnings.
 	*
 	* @var array
@@ -60,7 +67,8 @@ private $prompts = [];
 	* Constructor.
 	*/
 public function __construct() {
-$this->start_time = microtime( true );
+$this->start_time      = microtime( true );
+$this->start_timestamp = function_exists( 'current_time' ) ? current_time( 'mysql' ) : gmdate( 'Y-m-d H:i:s' );
 }
 
 /**
@@ -221,15 +229,16 @@ return $this->warnings;
 	*/
 public function get_debug_info() {
 return [
-'total_steps'    => count( $this->steps ),
-'total_duration' => microtime( true ) - $this->start_time,
-'ai_calls'       => $this->ai_calls,
-'warnings_count' => count( $this->warnings ),
-'errors_count'   => count( $this->errors ),
-'steps'          => $this->get_completed_steps(),
-'prompts'        => $this->prompts,
-'warnings'       => $this->warnings,
-'errors'         => $this->errors,
+'started_at'    => $this->start_timestamp,
+'total_steps'   => count( $this->steps ),
+'total_duration'=> microtime( true ) - $this->start_time,
+'ai_calls'      => $this->ai_calls,
+'warnings_count'=> count( $this->warnings ),
+'errors_count'  => count( $this->errors ),
+'steps'         => $this->get_completed_steps(),
+'prompts'       => $this->prompts,
+'warnings'      => $this->warnings,
+'errors'        => $this->errors,
 ];
 }
 
