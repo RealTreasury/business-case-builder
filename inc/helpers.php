@@ -213,6 +213,7 @@ function rtbcb_is_openai_configuration_error( $e ) {
 	* @return array Current company data.
 	*/
 function rtbcb_get_current_company() {
+	return get_option( 'rtbcb_current_company', [] );
 }
 
 /**
