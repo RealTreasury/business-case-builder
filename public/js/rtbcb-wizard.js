@@ -859,6 +859,15 @@ class BusinessCaseBuilder {
                 break;
             }
 
+            if (!response.ok) {
+                this.cancelPolling();
+                this.handleError({
+                    message: response.statusText,
+                    type: 'polling_error'
+                });
+                return;
+            }
+
             const data = JSON.parse(responseText);
 
             if (!data.success) {
