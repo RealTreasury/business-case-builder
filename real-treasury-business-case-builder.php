@@ -3782,3 +3782,49 @@ true
 	}
 }
 
+/**
+ * Render debug panel in admin footer.
+ *
+ * @return void
+ */
+function rtbcb_render_debug_panel() {
+	if ( ! current_user_can( 'manage_options' ) ) {
+		return;
+	}
+
+	$test = isset( $_GET['rtbcb_test'] ) ? sanitize_text_field( wp_unslash( $_GET['rtbcb_test'] ) ) : '';
+	if ( empty( $test ) ) {
+		return;
+	}
+
+	wp_enqueue_script(
+		'rtbcb-debug',
+		plugins_url( 'admin/js/rtbcb-debug.js', __FILE__ ),
+		[ 'jquery', 'wp-i18n' ],
+		'1.0.0',
+		true
+	);
+	wp_set_script_translations( 'rtbcb-debug', 'rtbcb' );
+	?>
+	<div id="rtbcb-debug-panel" class="rtbcb-debug-panel" style="position:fixed;bottom:20px;right:20px;z-index:9999;">
+		<button type="button" class="button" id="rtbcb-debug-toggle"><?php echo esc_html__( 'Debug Tools', 'rtbcb' ); ?></button>
+		<div id="rtbcb-debug-content" style="display:none;margin-top:10px;background:#fff;padding:10px;border:1px solid #ccd0d4;max-width:400px;">
+			<p><?php echo esc_html__( 'Run diagnostic tests:', 'rtbcb' ); ?></p>
+			<p>
+				<button type="button" class="button button-secondary rtbcb-debug-button" data-action="rtbcb_emergency_debug"><?php echo esc_html__( 'Emergency debug test', 'rtbcb' ); ?></button>
+			</p>
+			<pre id="rtbcb_emergency_debug_result" class="rtbcb-debug-result" style="background:#f1f1f1;padding:10px;border:1px solid #ccd0d4;overflow:auto;"></pre>
+			<p>
+				<button type="button" class="button button-secondary rtbcb-debug-button" data-action="rtbcb_simple_test"><?php echo esc_html__( 'Simple API test', 'rtbcb' ); ?></button>
+			</p>
+			<pre id="rtbcb_simple_test_result" class="rtbcb-debug-result" style="background:#f1f1f1;padding:10px;border:1px solid #ccd0d4;overflow:auto;"></pre>
+			<p>
+				<button type="button" class="button button-secondary rtbcb-debug-button" data-action="rtbcb_full_workflow_test"><?php echo esc_html__( 'Full workflow test', 'rtbcb' ); ?></button>
+			</p>
+			<pre id="rtbcb_full_workflow_test_result" class="rtbcb-debug-result" style="background:#f1f1f1;padding:10px;border:1px solid #ccd0d4;overflow:auto;"></pre>
+		</div>
+	</div>
+	<?php
+}
+
+add_action( 'admin_footer', 'rtbcb_render_debug_panel' );
