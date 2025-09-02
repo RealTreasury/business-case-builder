@@ -287,6 +287,28 @@ html {
     }
 }
 
+/* Extra small screen adjustments */
+@media (max-width: 480px) {
+    .rtbcb-wizard-progress {
+        overflow-x: auto;
+    }
+
+    .rtbcb-progress-steps {
+        flex-wrap: nowrap;
+        width: max-content;
+    }
+
+    .rtbcb-progress-step {
+        flex: 0 0 auto;
+    }
+
+    .rtbcb-form input,
+    .rtbcb-form select,
+    .rtbcb-form textarea {
+        font-size: 16px;
+    }
+}
+
 /* Loading states and animations */
 @keyframes rtbcb-fadeIn {
     from { opacity: 0; transform: scale(0.95); }
