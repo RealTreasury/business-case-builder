@@ -1,6 +1,6 @@
 # Repository Structure
 
-Documentation reflects repository layout for version 2.1.10.
+Documentation reflects repository layout for version 2.1.11.
 
 ## Directory Tree
 
