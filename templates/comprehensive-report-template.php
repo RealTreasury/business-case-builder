@@ -6,49 +6,50 @@ $report_data           = $report_data ?? [];
 $metadata              = $report_data['metadata'] ?? [];
 $executive_summary     = $report_data['executive_summary'] ?? [];
 $company_intelligence  = $report_data['company_intelligence'] ?? [];
-$financial_analysis    = $report_data['financial_analysis'] ?? [];
-$technology_strategy   = $report_data['technology_strategy'] ?? [];
-$operational_insights  = $report_data['operational_insights'] ?? [];
-$risk_analysis         = $report_data['risk_analysis'] ?? [];
-$action_plan           = $report_data['action_plan'] ?? [];
-$rag_context           = $report_data['rag_context'] ?? [];
-
-// Ensure classes exist.
-$enable_charts         = class_exists( 'RTBCB_Settings' ) ? RTBCB_Settings::get_setting( 'enable_charts', true ) : true;
-
-/**
- * Enhanced Comprehensive Report Template
- *
- * This template now handles structured data from the refactored workflow
- * and generates a modern dashboard-style interface with:
- * - Interactive charts and metrics
- * - Collapsible sections
- * - Enhanced visual design
- * - Mobile-responsive layout
- *
- * @package RealTreasuryBusinessCaseBuilder
- * @var array $report_data Structured report data from the new workflow
- */
-
-$company_name    = $metadata['company_name'] ?? __( 'Your Company', 'rtbcb' );
-$analysis_date   = $metadata['analysis_date'] ?? current_time( 'Y-m-d' );
-$analysis_type   = $metadata['analysis_type'] ?? 'basic';
-$confidence_level = round( ( $metadata['confidence_level'] ?? 0.85 ) * 100 );
-$processing_time = $metadata['processing_time'] ?? 0;
-?>
-
-<div class="rtbcb-enhanced-report" data-company="<?php echo esc_attr( $company_name ); ?>">
-
-	<!-- Enhanced Report Header with Metrics Dashboard -->
-	<div class="rtbcb-report-header-enhanced">
-		<div class="rtbcb-header-content">
-			<div class="rtbcb-header-main">
-				<div class="rtbcb-report-badge-enhanced">
-					<span class="rtbcb-badge-icon">🏆</span>
-					<span class="rtbcb-badge-text"><?php echo esc_html__( 'AI-ENHANCED ANALYSIS', 'rtbcb' ); ?></span>
-					<div class="rtbcb-confidence-meter">
-						<div class="rtbcb-confidence-bar" style="width: <?php echo esc_attr( $confidence_level ); ?>%"></div>
-						<span class="rtbcb-confidence-text"><?php echo esc_html( $confidence_level ); ?>% <?php echo esc_html__( 'Confidence', 'rtbcb' ); ?></span>
+	$financial_analysis    = $report_data['financial_analysis'] ?? [];
+	$technology_strategy   = $report_data['technology_strategy'] ?? [];
+	$industry_insights     = $report_data['industry_insights'] ?? [];
+	$operational_insights  = $report_data['operational_insights'] ?? [];
+	$risk_analysis         = $report_data['risk_analysis'] ?? [];
+	$action_plan           = $report_data['action_plan'] ?? [];
+	$rag_context           = $report_data['rag_context'] ?? [];
+	
+	// Ensure classes exist.
+	$enable_charts         = class_exists( 'RTBCB_Settings' ) ? RTBCB_Settings::get_setting( 'enable_charts', true ) : true;
+	
+	/**
+	 * Enhanced Comprehensive Report Template
+	 *
+	 * This template now handles structured data from the refactored workflow
+	 * and generates a modern dashboard-style interface with:
+	 * - Interactive charts and metrics
+	 * - Collapsible sections
+	 * - Enhanced visual design
+	 * - Mobile-responsive layout
+	 *
+	 * @package RealTreasuryBusinessCaseBuilder
+	 * @var array $report_data Structured report data from the new workflow
+	 */
+	
+	$company_name    = $metadata['company_name'] ?? __( 'Your Company', 'rtbcb' );
+	$analysis_date   = $metadata['analysis_date'] ?? current_time( 'Y-m-d' );
+	$analysis_type   = $metadata['analysis_type'] ?? 'basic';
+	$confidence_level = round( ( $metadata['confidence_level'] ?? 0.85 ) * 100 );
+	$processing_time = $metadata['processing_time'] ?? 0;
+	?>
+	
+	<div class="rtbcb-enhanced-report" data-company="<?php echo esc_attr( $company_name ); ?>">
+	
+		<!-- Enhanced Report Header with Metrics Dashboard -->
+		<div class="rtbcb-report-header-enhanced">
+			<div class="rtbcb-header-content">
+				<div class="rtbcb-header-main">
+					<div class="rtbcb-report-badge-enhanced">
+						<span class="rtbcb-badge-icon">🏆</span>
+						<span class="rtbcb-badge-text"><?php echo esc_html__( 'AI-ENHANCED ANALYSIS', 'rtbcb' ); ?></span>
+						<div class="rtbcb-confidence-meter">
+							<div class="rtbcb-confidence-bar" style="width: <?php echo esc_attr( $confidence_level ); ?>%"></div>
+							<span class="rtbcb-confidence-text"><?php echo esc_html( $confidence_level ); ?>% <?php echo esc_html__( 'Confidence', 'rtbcb' ); ?></span>
 					</div>
 				</div>
 
@@ -381,11 +382,56 @@ $processing_time = $metadata['processing_time'] ?? 0;
 				<?php endif; ?>
 			</div>
 		</div>
+</div>
+<?php endif; ?>
+
+	<?php if ( ! empty( $industry_insights ) ) : ?>
+	<div class="rtbcb-section-enhanced rtbcb-industry-insights">
+	<div class="rtbcb-section-header-enhanced">
+	<h2 class="rtbcb-section-title">
+	<span class="rtbcb-section-icon">🌐</span>
+	<?php echo esc_html__( 'Industry Insights', 'rtbcb' ); ?>
+	</h2>
+	</div>
+	<div class="rtbcb-section-content">
+	<?php if ( ! empty( $industry_insights['sector_trends'] ) ) : ?>
+	<div class="rtbcb-industry-block">
+	<h3><?php echo esc_html__( 'Sector Trends', 'rtbcb' ); ?></h3>
+	<ul>
+	<?php foreach ( $industry_insights['sector_trends'] as $trend ) : ?>
+	<li><?php echo esc_html( $trend ); ?></li>
+	<?php endforeach; ?>
+	</ul>
+	</div>
+	<?php endif; ?>
+	
+	<?php if ( ! empty( $industry_insights['competitive_benchmarks'] ) ) : ?>
+	<div class="rtbcb-industry-block">
+	<h3><?php echo esc_html__( 'Competitive Benchmarks', 'rtbcb' ); ?></h3>
+	<ul>
+	<?php foreach ( $industry_insights['competitive_benchmarks'] as $benchmark ) : ?>
+	<li><?php echo esc_html( $benchmark ); ?></li>
+	<?php endforeach; ?>
+	</ul>
+	</div>
+	<?php endif; ?>
+	
+	<?php if ( ! empty( $industry_insights['regulatory_considerations'] ) ) : ?>
+	<div class="rtbcb-industry-block">
+	<h3><?php echo esc_html__( 'Regulatory Considerations', 'rtbcb' ); ?></h3>
+	<ul>
+	<?php foreach ( $industry_insights['regulatory_considerations'] as $reg ) : ?>
+	<li><?php echo esc_html( $reg ); ?></li>
+	<?php endforeach; ?>
+	</ul>
+	</div>
+	<?php endif; ?>
+	</div>
 	</div>
 	<?php endif; ?>
 
-	<!-- Action Plan Section with Timeline -->
-	<?php if ( ! empty( $action_plan ) ) : ?>
+<!-- Action Plan Section with Timeline -->
+<?php if ( ! empty( $action_plan ) ) : ?>
 	<div class="rtbcb-section-enhanced rtbcb-action-plan">
 		<div class="rtbcb-section-header-enhanced">
 			<h2 class="rtbcb-section-title">

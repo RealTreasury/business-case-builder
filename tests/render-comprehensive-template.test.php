@@ -40,6 +40,11 @@ $business_case_data = [
                 'key_value_drivers'       => [ 'Efficiency', 'Compliance' ],
                 'executive_recommendation'=> 'Proceed',
         ],
+       'industry_insights' => [
+               'sector_trends'          => [ 'Growth' ],
+               'competitive_benchmarks' => [ 'Benchmark' ],
+               'regulatory_considerations' => [ 'Regulation' ],
+       ],
 ];
 
 $report_data = $business_case_data;
@@ -48,9 +53,9 @@ ob_start();
 include __DIR__ . '/../templates/comprehensive-report-template.php';
 $output = ob_get_clean();
 
-if ( strpos( $output, 'rtbcb-executive-summary' ) === false ) {
-	echo "Executive summary not found\n";
-	exit( 1 );
+if ( strpos( $output, 'rtbcb-executive-summary' ) === false || strpos( $output, 'Industry Insights' ) === false ) {
+        echo "Executive summary not found\n";
+        exit( 1 );
 }
 
 echo "Comprehensive template render test passed.\n";

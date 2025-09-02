@@ -1449,7 +1449,12 @@ class BusinessCaseBuilder {
                     ...(data.action_plan?.long_term_objectives || [])
                 ]
             },
-            risks: data.risks || data.risk_analysis?.implementation_risks || []
+            risks: data.risks || data.risk_analysis?.implementation_risks || [],
+            industryInsights: {
+                sector_trends: data.industry_insights?.sector_trends || [],
+                competitive_benchmarks: data.industry_insights?.competitive_benchmarks || [],
+                regulatory_considerations: data.industry_insights?.regulatory_considerations || []
+            }
         };
 
         // Close modal
@@ -1469,7 +1474,7 @@ class BusinessCaseBuilder {
     }
 
     renderResults(data) {
-        const { scenarios, recommendation, companyName, narrative } = data;
+        const { scenarios, recommendation, companyName, narrative, industryInsights } = data;
         const displayName = companyName || 'Your Company';
 
         return `
@@ -1486,6 +1491,7 @@ class BusinessCaseBuilder {
                 ${this.renderRecommendation(recommendation, displayName)}
                 ${this.renderROISummary(scenarios, displayName)}
                 ${this.renderNarrative(narrative)}
+                ${this.renderIndustryInsights(industryInsights)}
                 ${this.renderRiskAssessmentSection()}
                 ${this.renderNextSteps(narrative?.next_actions || [], displayName)}
                 ${this.renderActions()}
@@ -1580,6 +1586,22 @@ class BusinessCaseBuilder {
                 <div class="rtbcb-narrative-content">
                     ${narrative?.narrative || 'Treasury technology investment presents a compelling opportunity for operational efficiency.'}
                 </div>
+            </div>
+        `;
+    }
+
+    renderIndustryInsights(insights = {}) {
+        const { sector_trends = [], competitive_benchmarks = [], regulatory_considerations = [] } = insights || {};
+        if (!sector_trends.length && !competitive_benchmarks.length && !regulatory_considerations.length) {
+            return '';
+        }
+        const renderList = items => items.map(item => `<li>${this.escapeHTML(item)}</li>`).join('');
+        return `
+            <div class="rtbcb-industry-insights">
+                <h3>Industry Insights</h3>
+                ${sector_trends.length ? `<div class="rtbcb-industry-group"><h4>Sector Trends</h4><ul>${renderList(sector_trends)}</ul></div>` : ''}
+                ${competitive_benchmarks.length ? `<div class="rtbcb-industry-group"><h4>Competitive Benchmarks</h4><ul>${renderList(competitive_benchmarks)}</ul></div>` : ''}
+                ${regulatory_considerations.length ? `<div class="rtbcb-industry-group"><h4>Regulatory Considerations</h4><ul>${renderList(regulatory_considerations)}</ul></div>` : ''}
             </div>
         `;
     }

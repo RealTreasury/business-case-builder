@@ -20,13 +20,31 @@ $rag_context   = $business_case_data['rag_context'] ?? [];
 		<p><?php echo esc_html( $business_case_data['narrative'] ); ?></p>
 	<?php endif; ?>
 
-	<?php if ( ! empty( $business_case_data['risks'] ) ) : ?>
-		<h3><?php echo esc_html__( 'Risks', 'rtbcb' ); ?></h3>
+        <?php if ( ! empty( $business_case_data['risks'] ) ) : ?>
+                <h3><?php echo esc_html__( 'Risks', 'rtbcb' ); ?></h3>
 		<ul>
 			<?php foreach ( (array) $business_case_data['risks'] as $risk ) : ?>
 				<li><?php echo esc_html( $risk ); ?></li>
 			<?php endforeach; ?>
 		</ul>
+        <?php endif; ?>
+
+	<?php if ( ! empty( $business_case_data['industry_insights'] ) ) : ?>
+		<?php
+		$flattened_insights = array();
+
+		foreach ( (array) $business_case_data['industry_insights'] as $group ) {
+			$flattened_insights = array_merge( $flattened_insights, array_map( 'sanitize_text_field', (array) $group ) );
+		}
+		?>
+		<?php if ( ! empty( $flattened_insights ) ) : ?>
+			<h3><?php echo esc_html__( 'Industry Insights', 'rtbcb' ); ?></h3>
+			<ul>
+				<?php foreach ( $flattened_insights as $insight ) : ?>
+					<li><?php echo esc_html( $insight ); ?></li>
+				<?php endforeach; ?>
+			</ul>
+		<?php endif; ?>
 	<?php endif; ?>
 
 	<?php if ( ! empty( $business_case_data['assumptions_explained'] ) ) : ?>
