@@ -1573,10 +1573,14 @@ $msg = sanitize_text_field( $error );
 	* @return void
 	*/
 function rtbcb_generate_report() {
-	if ( isset( $_POST['rtbcb_nonce'] ) && ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['rtbcb_nonce'] ) ), 'rtbcb_generate' ) ) {
-	wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ] );
-}
-
+	if ( empty( $_POST['rtbcb_nonce'] ) ) {
+		wp_send_json_error( [ 'message' => __( 'Missing security token.', 'rtbcb' ) ], 400 );
+	}
+	
+	if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['rtbcb_nonce'] ) ), 'rtbcb_generate' ) ) {
+		wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
+	}
+	
 	nocache_headers();
 	header( 'Content-Type: text/html; charset=utf-8' );
 	echo wp_kses_post( '<p>' . __( 'Report generation endpoint not yet implemented.', 'rtbcb' ) . '</p>' );
