@@ -93,16 +93,15 @@ $method = $ref->getMethod( 'transform_data_for_template' );
 $method->setAccessible( true );
 
 $result = $method->invoke( $plugin, [] );
-if ( ! is_wp_error( $result ) ) {
-echo "Validation did not produce WP_Error\n";
+if ( ! is_array( $result ) ) {
+echo "Result not array\n";
 exit( 1 );
 }
-$data = $result->get_error_data();
-if ( $data['operational_insights'][0] !== 'No data provided' ) {
+if ( $result['operational_insights'][0] !== 'No data provided' ) {
 echo "Operational fallback failed\n";
 exit( 1 );
 }
-if ( $data['risk_analysis']['implementation_risks'][0] !== 'No data provided' ) {
+if ( $result['risk_analysis']['implementation_risks'][0] !== 'No data provided' ) {
 echo "Risk fallback failed\n";
 exit( 1 );
 }
