@@ -280,20 +280,28 @@ return true;
 				   'inc/class-rtbcb-ajax.php'		 => 'RTBCB_Ajax',
 			   ];
 
-			   foreach ( $includes as $relative => $class ) {
-				   $path = RTBCB_DIR . $relative;
+                          foreach ( $includes as $relative => $class ) {
+                                   $path = RTBCB_DIR . $relative;
 
-				   if ( file_exists( $path ) ) {
-					   require_once $path;
-					   if ( $class && ! class_exists( $class, false ) ) {
-						   error_log( sprintf( 'RTBCB: Class %1$s not found after including %2$s', $class, $relative ) );
-						   return false;
-					   }
-				   } else {
-					   error_log( sprintf( 'RTBCB: Missing required file %s', $relative ) );
-					   return false;
-				   }
-			   }
+                                   if ( file_exists( $path ) ) {
+                                           require_once $path;
+                                           if ( $class && ! class_exists( $class, false ) ) {
+                                                   $message = sprintf( __( 'Required class %1$s not found in %2$s.', 'rtbcb' ), $class, $relative );
+                                                   error_log( 'RTBCB: ' . $message );
+                                                   add_action( 'admin_notices', function() use ( $message ) {
+                                                           echo '<div class="notice notice-error"><p>' . esc_html( $message ) . '</p></div>';
+                                                   } );
+                                                   return false;
+                                           }
+                                   } else {
+                                           $message = sprintf( __( 'Missing required file %s.', 'rtbcb' ), $relative );
+                                           error_log( 'RTBCB: ' . $message );
+                                           add_action( 'admin_notices', function() use ( $message ) {
+                                                   echo '<div class="notice notice-error"><p>' . esc_html( $message ) . '</p></div>';
+                                           } );
+                                           return false;
+                                   }
+                           }
 
 			   if ( is_admin() ) {
 				   $admin_file = RTBCB_DIR . 'admin/class-rtbcb-admin.php';
@@ -307,11 +315,15 @@ return true;
 				   }
 			   }
 			   return true;
-		   } catch ( Throwable $e ) {
-			   error_log( 'RTBCB: Fatal error during class loading: ' . $e->getMessage() );
-			   return false;
-		   }
-	}
+                   } catch ( Throwable $e ) {
+                           $message = __( 'Fatal error during class loading:', 'rtbcb' ) . ' ' . $e->getMessage();
+                           error_log( 'RTBCB: ' . $message );
+                           add_action( 'admin_notices', function() use ( $message ) {
+                                   echo '<div class="notice notice-error"><p>' . esc_html( $message ) . '</p></div>';
+                           } );
+                           return false;
+                   }
+        }
 
 
 	/**
@@ -336,38 +348,55 @@ return true;
 			}
 		}
 
-		if ( ! empty( $missing_classes ) ) {
-			error_log( 'RTBCB: Missing required classes: ' . implode( ', ', $missing_classes ) );
-			return false;
-		}
+               if ( ! empty( $missing_classes ) ) {
+                       $message = sprintf( __( 'Missing required classes: %s', 'rtbcb' ), implode( ', ', $missing_classes ) );
+                       error_log( 'RTBCB: ' . $message );
+                       add_action( 'admin_notices', function() use ( $message ) {
+                               echo '<div class="notice notice-error"><p>' . esc_html( $message ) . '</p></div>';
+                       } );
+                       return false;
+               }
 
-		return true;
-	}
+               return true;
+       }
 
 	/**
 	* Plugin initialization.
 	*
 	* @return void
 	*/
-	public function init() {
-		// Load text domain
-		load_plugin_textdomain( 'rtbcb', false, dirname( plugin_basename( RTBCB_FILE ) ) . '/languages' );
+       public function init() {
+               // Load text domain
+               load_plugin_textdomain( 'rtbcb', false, dirname( plugin_basename( RTBCB_FILE ) ) . '/languages' );
 
-		// Initialize components that need early loading
-		$this->maybe_upgrade();
-		$this->setup_capabilities();
-	}
+               if ( ! rtbcb_has_openai_api_key() ) {
+               $message = __( 'OpenAI API key is not configured.', 'rtbcb' );
+               if ( class_exists( 'RTBCB_Logger' ) ) {
+               RTBCB_Logger::log( 'openai_key_missing', [ 'message' => $message ] );
+               } else {
+               error_log( 'RTBCB: ' . $message );
+               }
+               }
+
+               // Initialize components that need early loading
+               $this->maybe_upgrade();
+               $this->setup_capabilities();
+       }
 
 	/**
 	* Initialize components after plugins are loaded.
 	*
 	* @return void
 	*/
-	public function plugins_loaded() {
-		// Check compatibility
-		if ( ! $this->check_compatibility() ) {
-		return;
-		}
+       public function plugins_loaded() {
+               if ( ! $this->verify_dependencies() ) {
+               return;
+               }
+
+               // Check compatibility
+               if ( ! $this->check_compatibility() ) {
+               return;
+               }
 
 		// Initialize database tables and data
 		$this->init_database();
