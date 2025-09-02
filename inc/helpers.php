@@ -120,7 +120,7 @@ $auto = true;
 }
 }
 
-return (bool) ( $disabled || $fast || $auto );
+	return (bool) ( $disabled || $fast || $auto );
 }
 
 /**
@@ -1804,7 +1804,7 @@ $results = [
 'summary'   => $analysis['executive_summary'],
 'stored_in' => 'rtbcb_executive_summary',
 ],
-];
+	];
 
 	$usage_map = [
 		[ 'component' => __( 'Market Analysis & Vendors', 'rtbcb' ), 'used_in' => __( 'RAG Market Analysis Test', 'rtbcb' ), 'option' => 'rtbcb_rag_market_analysis' ],
@@ -1837,7 +1837,7 @@ if ( function_exists( 'add_action' ) ) {
 	*/
 function rtbcb_get_analysis_job_result( $job_id ) {
 $job_id = sanitize_key( $job_id );
-return function_exists( 'get_option' ) ? get_option( 'rtbcb_analysis_job_' . $job_id, null ) : null;
+	return function_exists( 'get_option' ) ? get_option( 'rtbcb_analysis_job_' . $job_id, null ) : null;
 }
 
 /**
@@ -1942,10 +1942,15 @@ function rtbcb_get_report_allowed_html() {
 	];
 
 	foreach ( $allowed as $tag => $attrs ) {
-		$allowed[ $tag ]['data-*'] = true;
-	}
+	$allowed[ $tag ]['data-*'] = true;
+}
 
-		return $allowed;
+	$allowed['script'] = [
+		'id'   => true,
+		'type' => true,
+	];
+
+	return $allowed;
 }
 
 /**
