@@ -453,6 +453,50 @@ function initializeROIChart() {
 }
 
 /**
+ * Create a mini chart for a single scenario.
+ *
+ * @param {HTMLCanvasElement} canvas Target canvas element.
+ * @param {string} scenario Scenario key (e.g., 'conservative').
+ * @return {Chart|null} Chart instance or null on failure.
+ */
+function createScenarioMiniChart(canvas, scenario) {
+    const ctx = canvas.getContext('2d');
+    const chartData = window.rtbcbChartData || generateFallbackChartData();
+    const dataset = chartData.datasets.find(ds => ds.label && ds.label.toLowerCase().includes(scenario));
+
+    if (!ctx || !dataset) {
+        console.warn('RTBCB: No data available for scenario:', scenario);
+        return null;
+    }
+
+    try {
+        return new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: chartData.labels,
+                datasets: [JSON.parse(JSON.stringify(dataset))]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { enabled: false }
+                },
+                scales: {
+                    x: { display: false },
+                    y: { display: false }
+                }
+            }
+        });
+    } catch (error) {
+        console.error(`RTBCB: Error initializing ${scenario} chart:`, error);
+        showChartError(ctx, 'Error loading chart');
+        return null;
+    }
+}
+
+/**
  * Initialize comparison charts for multiple scenarios
  */
 function initializeComparisonCharts() {
@@ -477,12 +521,13 @@ function initializeSensitivityChart() {
     if (!ctx) return;
     
     const sensitivityData = window.rtbcbSensitivityData || generateFallbackSensitivityData();
-    
+
     try {
         new Chart(ctx, {
-            type: 'horizontalBar',
+            type: 'bar',
             data: sensitivityData,
             options: {
+                indexAxis: 'y',
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
