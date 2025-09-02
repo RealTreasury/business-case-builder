@@ -2041,26 +2041,31 @@ $missing_sections  = array_diff( $required_sections, array_keys( $comprehensive_
 				rtbcb_log_error( 'Failed to save lead', $e->getMessage() );
 			}
 		}
+		// Clean API response if it's JSON encoded
+		if ( is_string( $comprehensive_analysis ) ) {
+			$comprehensive_analysis = json_decode( wp_unslash( $comprehensive_analysis ), true );
+		}
 
-		// Prepare final response
-		$response_data = [
-			'scenarios'		 => $formatted_scenarios,
-			'recommendation'	 => $recommendation,
-			'comprehensive_analysis' => $comprehensive_analysis,
-			'narrative'		 => $comprehensive_analysis,
-			'rag_context'		 => $rag_context,
-			'report_html'		 => $report_html,
-			'lead_id'		 => $lead_id,
-			'company_name'		 => $user_inputs['company_name'],
-			'analysis_type'		 => rtbcb_get_analysis_type(),
-			'api_used'               => rtbcb_has_openai_api_key(),
-			'fallback_used'		 => isset( $comprehensive_analysis['enhanced_fallback'] ),
-			'memory_info'		 => rtbcb_get_memory_status(),
+		// Prepare clean response for frontend
+		$clean_response = [
+			'success'       => true,
+			'report_html'   => $report_html,
+			'api_data'      => $comprehensive_analysis,
+			'scenarios'     => $formatted_scenarios,
+			'recommendation'=> $recommendation,
+			'rag_context'   => $rag_context,
+			'lead_id'       => $lead_id,
+			'company_name'  => $user_inputs['company_name'],
+			'analysis_type' => rtbcb_get_analysis_type(),
+			'api_used'      => rtbcb_has_openai_api_key(),
+			'fallback_used' => isset( $comprehensive_analysis['enhanced_fallback'] ),
+			'memory_info'   => rtbcb_get_memory_status(),
 		];
 
 		rtbcb_log_memory_usage( 'before_response' );
 
-		wp_send_json_success( $response_data );
+		// Send response without additional escaping
+		wp_send_json( $clean_response, 200 );
 		return;
 
 		} catch ( Exception $e ) {

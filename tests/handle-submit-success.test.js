@@ -37,7 +37,7 @@ global.FormData = SimpleFormData;
       receivedHeaders = options.headers;
       const payload = {
           success: true,
-          data: { job_id: 'job-123' }
+          job_id: 'job-123'
       };
       const response = {
           ok: true,

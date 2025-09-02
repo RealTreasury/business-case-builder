@@ -105,8 +105,8 @@ async function rtbcbRefreshNonce() {
             return false;
         }
         const data = await response.json();
-        if ( data && data.success && data.data ) {
-            rtbcb_ajax.nonce = data.data;
+        if ( data && data.success ) {
+            rtbcb_ajax.nonce = data.data || data.nonce || data;
             return true;
         }
     } catch ( err ) {
@@ -279,7 +279,7 @@ async function pollJobStatus(jobId, progressContainer, formContainer) {
             return;
         }
 
-        const statusData = data.data;
+        const statusData = data.data || data;
         const status = statusData.status;
         if (status === 'completed') {
             if (progressContainer) {

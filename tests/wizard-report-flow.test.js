@@ -75,7 +75,7 @@ global.rtbcb_ajax = { ajax_url: 'http://example.com/ajax', nonce: 'test' };
 global.fetch = async () => ({
   ok: true,
   status: 200,
-  text: async () => JSON.stringify({ success: true, data: { report_html: sampleReport } })
+  text: async () => JSON.stringify({ success: true, report_html: sampleReport })
 });
 
 // Load report and wizard scripts
