@@ -1728,7 +1728,7 @@ SYSTEM;
 	* @param callable|array|Traversable $context_chunks Optional context strings.
 	* @return string Model identifier.
 	*/
-	private function select_optimal_model( $user_inputs, $context_chunks ) {
+       protected function select_optimal_model( $user_inputs, $context_chunks ) {
 		$model         = $this->get_model( 'advanced' );
 		$context_count = 0;
 
@@ -1756,7 +1756,7 @@ SYSTEM;
 	 *
 	 * @return string Prompt instructing the LLM to return a populated JSON structure.
 	 */
-	private function build_comprehensive_prompt( $user_inputs, $roi_data, $company_research, $industry_analysis, $tech_landscape ) {
+       protected function build_comprehensive_prompt( $user_inputs, $roi_data, $company_research, $industry_analysis, $tech_landscape ) {
 	$company_name    = $user_inputs['company_name'] ?? 'the company';
 	$company_profile = $company_research['company_profile'];
 	
@@ -2028,7 +2028,7 @@ return $analysis;
 	*
 	* @return string System prompt.
 	*/
-	private function build_enrichment_system_prompt() {
+       protected function build_enrichment_system_prompt() {
 		return <<<'SYSTEM'
 You are a senior treasury technology consultant with 15+ years of experience conducting company and industry research for Fortune 500 clients.
 
@@ -2048,7 +2048,7 @@ SYSTEM;
  * @param array $user_inputs User inputs.
  * @return string User prompt.
  */
-	private function build_enrichment_user_prompt( $user_inputs ) {
+       protected function build_enrichment_user_prompt( $user_inputs ) {
 		$pain_points_formatted = implode( ', ', array_map( function( $point ) {
 			return str_replace( '_', ' ', ucwords( $point, '_' ) );
 		}, $user_inputs['pain_points'] ?? [] ) );

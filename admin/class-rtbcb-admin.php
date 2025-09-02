@@ -1306,7 +1306,7 @@ wp_localize_script(
 			],
 		];
 
-		$llm      = new RTBCB_LLM();
+		$llm      = new RTBCB_LLM_Optimized();
 		$analysis = $llm->generate_business_case( $inputs, $roi_data );
 
 		if ( is_wp_error( $analysis ) ) {

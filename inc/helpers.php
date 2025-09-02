@@ -1211,7 +1211,7 @@ function rtbcb_test_generate_industry_commentary( $industry ) {
 	$industry = sanitize_text_field( $industry );
 
 	try {
-		$llm		= new RTBCB_LLM();
+		$llm		= new RTBCB_LLM_Optimized();
 		$commentary = $llm->generate_industry_commentary( $industry );
 	} catch ( \Throwable $e ) {
 		return new WP_Error( 'llm_exception', __( 'Unable to generate commentary at this time.', 'rtbcb' ) );
@@ -1234,7 +1234,7 @@ function rtbcb_test_generate_company_overview( $company_name ) {
 	$company_name = sanitize_text_field( $company_name );
 
 	try {
-		$llm	  = new RTBCB_LLM();
+		$llm	  = new RTBCB_LLM_Optimized();
 		$overview = $llm->generate_company_overview( $company_name );
 	} catch ( \Throwable $e ) {
 		return new WP_Error( 'llm_exception', $e->getMessage() );
@@ -1350,7 +1350,7 @@ function rtbcb_test_generate_industry_overview( $company_data ) {
 		return new WP_Error( 'missing_data', __( 'Industry and company size required', 'rtbcb' ) );
 	}
 
-	$llm = new RTBCB_LLM();
+	$llm = new RTBCB_LLM_Optimized();
 	return $llm->generate_industry_overview( $industry, $size );
 }
 
@@ -1386,7 +1386,7 @@ function rtbcb_test_generate_real_treasury_overview( $include_portal = false, $c
 		'categories'	 => array_map( 'sanitize_text_field', (array) $categories ),
 	];
 
-	$llm = new RTBCB_LLM();
+	$llm = new RTBCB_LLM_Optimized();
 	return $llm->generate_real_treasury_overview( $company_data );
 }
 
@@ -1405,7 +1405,7 @@ function rtbcb_test_generate_benefits_estimate( $company_data, $recommended_cate
 	$recommended_category = sanitize_text_field( $recommended_category );
 
 	try {
-		$llm	  = new RTBCB_LLM();
+		$llm	  = new RTBCB_LLM_Optimized();
 		$estimate = $llm->generate_benefits_estimate( $revenue, $staff_count, $efficiency, $recommended_category );
 	} catch ( \Throwable $e ) {
 		return new WP_Error( 'llm_exception', __( 'Unable to estimate benefits at this time.', 'rtbcb' ) );
@@ -1427,7 +1427,7 @@ function rtbcb_test_generate_executive_summary() {
 	$company = rtbcb_get_current_company();
 $roi	 = function_exists( 'get_option' ) ? get_option( 'rtbcb_roi_results', [] ) : [];
 
-	$llm	= new RTBCB_LLM();
+	$llm	= new RTBCB_LLM_Optimized();
 	$result = $llm->generate_comprehensive_business_case( $company, $roi, [], null );
 
 	if ( is_wp_error( $result ) ) {
@@ -1814,7 +1814,7 @@ function rtbcb_handle_comprehensive_analysis( $company_name, $job_id ) {
 		$rag_context = array_map( 'sanitize_text_field', $vendor_list );
 	}
 
-	$llm	  = new RTBCB_LLM();
+	$llm	  = new RTBCB_LLM_Optimized();
 	$analysis = $llm->generate_comprehensive_business_case( [ 'company_name' => $company_name ], [], $rag_context, null );
 
 	if ( is_wp_error( $analysis ) ) {

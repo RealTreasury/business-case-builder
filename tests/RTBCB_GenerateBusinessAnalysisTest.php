@@ -114,7 +114,7 @@ return [
 }
 
 try {
-$llm    = new RTBCB_LLM();
+$llm    = new RTBCB_LLM_Optimized();
 $result = $llm->generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_loader, $chunk_callback );
 
 if ( is_wp_error( $result ) ) {

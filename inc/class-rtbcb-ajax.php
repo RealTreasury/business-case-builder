@@ -233,7 +233,7 @@ class RTBCB_Ajax {
 								$enriched_profile = new WP_Error( 'llm_missing', 'LLM service unavailable.' );
 								if ( class_exists( 'RTBCB_LLM' ) ) {
 										try {
-												$llm = new RTBCB_LLM();
+												$llm = new RTBCB_LLM_Optimized();
 												if ( method_exists( $llm, 'enrich_company_profile' ) ) {
 														$enriched_profile = $llm->enrich_company_profile( $user_inputs );
 												}

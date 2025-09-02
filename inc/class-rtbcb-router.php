@@ -100,7 +100,7 @@ class RTBCB_Router {
 			}
 
 			// Instantiate necessary classes.
-			$llm = new RTBCB_LLM();
+			$llm = new RTBCB_LLM_Optimized();
 			$rag = new RTBCB_RAG();
 
 			// Generate context from RAG.

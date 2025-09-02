@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/wp-stubs.php';
 require_once __DIR__ . '/../inc/class-rtbcb-llm.php';
+require_once __DIR__ . '/../inc/class-rtbcb-llm-optimized.php';
 
 if ( ! class_exists( 'WP_Error' ) ) {
 	class WP_Error {}
