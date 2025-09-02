@@ -558,20 +558,27 @@ class BusinessCaseBuilder {
             const response = result.response;
             console.log('RTBCB: Response status:', response.status);
 
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-
             const responseText = await response.text();
             console.log('RTBCB: Response received, length:', responseText.length);
 
-            // Try to parse as JSON first
+            // Attempt to parse as JSON but don't return early yet
             let data;
             try {
                 data = JSON.parse(responseText);
                 console.log('RTBCB: Parsed JSON response:', data);
             } catch (parseError) {
                 console.log('RTBCB: Response is not JSON, treating as HTML');
+            }
+
+            // Validate HTTP status before handling HTML responses
+            if (!response.ok) {
+                const message = (data && data.data && data.data.message) ||
+                    (data && data.message) ||
+                    `HTTP ${response.status}: ${response.statusText}`;
+                throw new Error(message);
+            }
+
+            if (!data) {
                 if (responseText.includes('<div class="rtbcb-enhanced-report"') ||
                     responseText.includes('<div class="rtbcb-report"')) {
                     this.cancelProgressiveLoading();
@@ -1661,7 +1668,9 @@ class BusinessCaseBuilder {
             }
         }
 
-        return 'An error occurred while processing your request. Please try again.';
+        return serverMessage.startsWith('HTTP ')
+            ? 'An error occurred while processing your request. Please try again.'
+            : serverMessage;
     }
 
     escapeHTML(str) {
