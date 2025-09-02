@@ -20,9 +20,15 @@ if ( ! function_exists( '__' ) ) {
 }
 
 final class RTBCB_ParseGpt5ResponseTest extends TestCase {
-	public function test_returns_wp_error_when_response_not_array() {
+	public function test_returns_empty_array_when_response_not_array() {
 		$result = rtbcb_parse_gpt5_response( null );
-		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertIsArray( $result );
+		$this->assertSame( '', $result['output_text'] );
+	}
+
+	public function test_propagates_wp_error_response() {
+		$error  = new WP_Error( 'test', 'test' );
+		$result = rtbcb_parse_gpt5_response( $error );
+		$this->assertSame( $error, $result );
 	}
 }
-
