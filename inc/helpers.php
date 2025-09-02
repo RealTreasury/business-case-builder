@@ -855,17 +855,62 @@ function rtbcb_get_current_lead() {
 	* @return mixed Decoded array or original response.
 */
 function rtbcb_clean_json_response( $response ) {
-	if ( is_string( $response ) ) {
-		$decoded = json_decode( $response, true );
+        if ( is_string( $response ) ) {
+                $decoded = json_decode( $response, true );
 
-		if ( json_last_error() === JSON_ERROR_NONE ) {
-			return $decoded;
+                if ( json_last_error() === JSON_ERROR_NONE ) {
+                        return $decoded;
+                }
+        }
+
+        return $response;
+}
+
+/**
+	* Extract final JSON payload from an OpenAI response body.
+	*
+	* Decodes the outer response structure and, when present, parses any nested
+	* JSON found in message content. If no nested JSON is detected, the decoded
+	* outer array is returned.
+	*
+	* @param string $raw_body Raw response body from the OpenAI Responses API.
+	* @return array|false Decoded JSON array on success, false on failure.
+	*/
+function rtbcb_extract_json_from_openai_response( $raw_body ) {
+	if ( function_exists( 'wp_unslash' ) ) {
+		$raw_body = wp_unslash( $raw_body );
+	}
+
+	$outer = json_decode( $raw_body, true );
+	if ( JSON_ERROR_NONE !== json_last_error() || ! is_array( $outer ) ) {
+		return false;
+	}
+
+	$text = '';
+	if ( isset( $outer['output_text'] ) && is_string( $outer['output_text'] ) ) {
+		$text = trim( $outer['output_text'] );
+	} elseif ( isset( $outer['output'] ) && is_array( $outer['output'] ) ) {
+		foreach ( $outer['output'] as $chunk ) {
+			if ( 'message' === ( $chunk['type'] ?? '' ) && isset( $chunk['content'] ) && is_array( $chunk['content'] ) ) {
+				foreach ( $chunk['content'] as $piece ) {
+					if ( isset( $piece['text'] ) && '' !== trim( $piece['text'] ) ) {
+						$text .= $piece['text'];
+					}
+				}
+			}
 		}
 	}
 
-	return $response;
-}
+	if ( '' === $text ) {
+		return $outer;
+	}
+	$inner = json_decode( $text, true );
+	if ( JSON_ERROR_NONE === json_last_error() ) {
+		return $inner;
+	}
 
+	return $outer;
+}
 /**
 	* Safe JSON encode without escaping issues.
 	*
@@ -1755,8 +1800,8 @@ function rtbcb_handle_openai_responses_job( $job_id, $user_id ) {
 
 	$code	   = wp_remote_retrieve_response_code( $response );
 	$resp_body = wp_remote_retrieve_body( $response );
-	$decoded   = json_decode( $resp_body, true );
-	if ( ! is_array( $decoded ) ) {
+	$decoded   = rtbcb_extract_json_from_openai_response( $resp_body );
+	if ( false === $decoded ) {
 		$decoded = [];
 	}
 
