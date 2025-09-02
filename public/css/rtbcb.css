@@ -354,19 +354,13 @@ html {
 }
 
 .rtbcb-progress-overlay {
-    position: fixed;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    overflow-y: auto;
-    background: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(4px);
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
+    background: rgba(0, 0, 0, 0.8);
     z-index: 999999;
     animation: rtbcb-fade-in 0.3s ease;
-    padding: 20px;
     box-sizing: border-box;
 }
 
@@ -456,7 +450,7 @@ html {
 /* Mobile Responsive Improvements */
 @media (max-width: 480px) {
     .rtbcb-progress-overlay {
-        padding: 15px;
+        padding: 0;
     }
 
     .rtbcb-progress-content {
