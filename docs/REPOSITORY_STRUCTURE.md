@@ -1,5 +1,7 @@
 # Repository Structure
 
+Documentation reflects repository layout for version 2.1.10.
+
 ## Directory Tree
 
 Output of `find . -maxdepth 2 -type d -not -path './.git*'`:
