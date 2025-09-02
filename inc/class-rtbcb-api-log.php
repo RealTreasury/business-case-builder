@@ -39,21 +39,23 @@ class RTBCB_API_Log {
 		global $wpdb;
 
 		$charset_collate = $wpdb->get_charset_collate();
-		$sql             = 'CREATE TABLE ' . self::$table_name . " (
-			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-			user_id bigint(20) unsigned DEFAULT 0,
-			user_email varchar(255) DEFAULT '',
-			company_name varchar(255) DEFAULT '',
-			request_json longtext DEFAULT '',
-			response_json longtext DEFAULT '',
-			prompt_tokens int(11) DEFAULT 0,
-			completion_tokens int(11) DEFAULT 0,
-			total_tokens int(11) DEFAULT 0,
-			created_at datetime DEFAULT CURRENT_TIMESTAMP,
-			PRIMARY KEY  (id),
-			KEY user_id (user_id),
-			KEY created_at (created_at)
-		) $charset_collate;";
+               $sql             = 'CREATE TABLE ' . self::$table_name . " (
+                       id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+                       user_id bigint(20) unsigned DEFAULT 0,
+                       user_email varchar(255) DEFAULT '',
+                       lead_id bigint(20) unsigned DEFAULT 0,
+                       company_name varchar(255) DEFAULT '',
+                       request_json longtext DEFAULT '',
+                       response_json longtext DEFAULT '',
+                       prompt_tokens int(11) DEFAULT 0,
+                       completion_tokens int(11) DEFAULT 0,
+                       total_tokens int(11) DEFAULT 0,
+                       created_at datetime DEFAULT CURRENT_TIMESTAMP,
+                       PRIMARY KEY  (id),
+                       KEY user_id (user_id),
+                       KEY lead_id (lead_id),
+                       KEY created_at (created_at)
+               ) $charset_collate;";
 
 		try {
 			require_once ABSPATH . 'wp-admin/includes/upgrade.php';
@@ -70,19 +72,20 @@ class RTBCB_API_Log {
 			if ( ! $table_exists ) {
 				error_log( 'RTBCB: Failed to create table ' . self::$table_name );
 
-				$simple_sql = 'CREATE TABLE IF NOT EXISTS ' . self::$table_name . " (
-					id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-					user_id bigint(20) unsigned DEFAULT 0,
-					user_email varchar(255) DEFAULT '',
-					company_name varchar(255) DEFAULT '',
-					request_json longtext DEFAULT '',
-					response_json longtext DEFAULT '',
-					prompt_tokens int(11) DEFAULT 0,
-					completion_tokens int(11) DEFAULT 0,
-					total_tokens int(11) DEFAULT 0,
-					created_at datetime DEFAULT CURRENT_TIMESTAMP,
-					PRIMARY KEY (id)
-				) $charset_collate;";
+                               $simple_sql = 'CREATE TABLE IF NOT EXISTS ' . self::$table_name . " (
+                                       id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+                                       user_id bigint(20) unsigned DEFAULT 0,
+                                       user_email varchar(255) DEFAULT '',
+                                       lead_id bigint(20) unsigned DEFAULT 0,
+                                       company_name varchar(255) DEFAULT '',
+                                       request_json longtext DEFAULT '',
+                                       response_json longtext DEFAULT '',
+                                       prompt_tokens int(11) DEFAULT 0,
+                                       completion_tokens int(11) DEFAULT 0,
+                                       total_tokens int(11) DEFAULT 0,
+                                       created_at datetime DEFAULT CURRENT_TIMESTAMP,
+                                       PRIMARY KEY (id)
+                               ) $charset_collate;";
 
 				$wpdb->query( $simple_sql );
 
@@ -120,50 +123,91 @@ class RTBCB_API_Log {
 	* @param string $company_name Company name.
 	* @return void
 	*/
-	public static function save_log( $request, $response, $user_id, $user_email = '', $company_name = '' ) {
-		global $wpdb;
+       public static function save_log( $request, $response, $user_id, $user_email = '', $company_name = '', $lead_id = 0 ) {
+               global $wpdb;
 
-		if ( empty( self::$table_name ) ) {
-		self::init();
-		}
-		
-		if ( empty( $user_email ) && ! empty( $request['email'] ) ) {
-		$user_email = $request['email'];
-		}
-		
-		if ( empty( $company_name ) && ! empty( $request['company_name'] ) ) {
-		$company_name = $request['company_name'];
-		}
+               if ( empty( self::$table_name ) ) {
+                       self::init();
+               }
 
-		$request_json  = wp_json_encode( $request );
-		$response_json = wp_json_encode( $response );
+               if ( empty( $user_email ) && ! empty( $request['email'] ) ) {
+                       $user_email = $request['email'];
+               }
 
-		$request_json  = substr( $request_json, 0, 10000 );
-		$response_json = substr( $response_json, 0, 10000 );
+               if ( empty( $company_name ) && ! empty( $request['company_name'] ) ) {
+                       $company_name = $request['company_name'];
+               }
 
-		$prompt_tokens     = intval( $response['usage']['prompt_tokens'] ?? 0 );
-		$completion_tokens = intval( $response['usage']['completion_tokens'] ?? 0 );
-		$total_tokens      = intval( $response['usage']['total_tokens'] ?? 0 );
+               if ( ! $lead_id && function_exists( 'rtbcb_get_current_lead' ) ) {
+                       $lead = rtbcb_get_current_lead();
+                       if ( $lead ) {
+                               $lead_id    = intval( $lead['id'] );
+                               if ( empty( $user_email ) && ! empty( $lead['email'] ) ) {
+                                       $user_email = $lead['email'];
+                               }
+                       }
+               }
 
-		$user_email   = sanitize_email( $user_email );
-		$company_name = sanitize_text_field( $company_name );
+               $request_json  = wp_json_encode( $request );
+               $response_json = wp_json_encode( $response );
 
-		$wpdb->insert(
-			self::$table_name,
-			[
-				'user_id'           => intval( $user_id ),
-				'user_email'        => $user_email,
-				'company_name'      => $company_name,
-				'request_json'      => $request_json,
-				'response_json'     => $response_json,
-				'prompt_tokens'     => $prompt_tokens,
-				'completion_tokens' => $completion_tokens,
-				'total_tokens'      => $total_tokens,
-				'created_at'        => current_time( 'mysql' ),
-			],
-			[ '%d', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%s' ]
-		);
-	}
+               $request_json  = substr( $request_json, 0, 10000 );
+               $response_json = substr( $response_json, 0, 10000 );
+
+               $prompt_tokens     = intval( $response['usage']['prompt_tokens'] ?? 0 );
+               $completion_tokens = intval( $response['usage']['completion_tokens'] ?? 0 );
+               $total_tokens      = intval( $response['usage']['total_tokens'] ?? 0 );
+
+               $user_email   = sanitize_email( $user_email );
+               $company_name = sanitize_text_field( $company_name );
+
+               $wpdb->insert(
+                       self::$table_name,
+                       [
+                               'user_id'           => intval( $user_id ),
+                               'user_email'        => $user_email,
+                               'lead_id'           => intval( $lead_id ),
+                               'company_name'      => $company_name,
+                               'request_json'      => $request_json,
+                               'response_json'     => $response_json,
+                               'prompt_tokens'     => $prompt_tokens,
+                               'completion_tokens' => $completion_tokens,
+                               'total_tokens'      => $total_tokens,
+                               'created_at'        => current_time( 'mysql' ),
+                       ],
+                       [ '%d', '%s', '%d', '%s', '%s', '%s', '%d', '%d', '%d', '%s' ]
+               );
+       }
+
+       /**
+        * Associate existing logs with a lead ID.
+        *
+        * @param int    $lead_id    Lead ID.
+        * @param string $user_email Lead email address.
+        * @return void
+        */
+       public static function associate_lead( $lead_id, $user_email ) {
+               global $wpdb;
+
+               if ( empty( self::$table_name ) ) {
+                       self::init();
+               }
+
+               $lead_id    = intval( $lead_id );
+               $user_email = sanitize_email( $user_email );
+
+               if ( $lead_id <= 0 || empty( $user_email ) ) {
+                       return;
+               }
+
+               $wpdb->update(
+                       self::$table_name,
+                       [ 'lead_id' => $lead_id ],
+                       [ 'user_email' => $user_email ],
+                       [ '%d' ],
+                       [ '%s' ]
+               );
+       }
 
 	/**
 	* Retrieve recent logs.
@@ -180,10 +224,10 @@ class RTBCB_API_Log {
 
 		$limit = max( 1, intval( $limit ) );
 
-		$query = $wpdb->prepare(
-			'SELECT id, user_id, user_email, company_name, request_json, response_json, prompt_tokens, completion_tokens, total_tokens, created_at FROM ' . self::$table_name . ' ORDER BY created_at DESC LIMIT %d',
-			$limit
-		);
+               $query = $wpdb->prepare(
+                       'SELECT id, user_id, user_email, lead_id, company_name, request_json, response_json, prompt_tokens, completion_tokens, total_tokens, created_at FROM ' . self::$table_name . ' ORDER BY created_at DESC LIMIT %d',
+                       $limit
+               );
 
 		return $wpdb->get_results( $query, ARRAY_A );
 	}
@@ -273,14 +317,14 @@ class RTBCB_API_Log {
 		$per_page = max( 1, intval( $per_page ) );
 		$offset   = ( $paged - 1 ) * $per_page;
 
-		$logs = $wpdb->get_results(
-			$wpdb->prepare(
-				'SELECT id, user_id, user_email, company_name, request_json, response_json, prompt_tokens, completion_tokens, total_tokens, created_at FROM ' . self::$table_name . ' ORDER BY created_at DESC LIMIT %d OFFSET %d',
-				$per_page,
-				$offset
-			),
-			ARRAY_A
-		);
+               $logs = $wpdb->get_results(
+                       $wpdb->prepare(
+                               'SELECT id, user_id, user_email, lead_id, company_name, request_json, response_json, prompt_tokens, completion_tokens, total_tokens, created_at FROM ' . self::$table_name . ' ORDER BY created_at DESC LIMIT %d OFFSET %d',
+                               $per_page,
+                               $offset
+                       ),
+                       ARRAY_A
+               );
 
 		$total = (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . self::$table_name );
 

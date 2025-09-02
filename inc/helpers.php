@@ -824,26 +824,57 @@ function rtbcb_recursive_sanitize_text_field( $data ) {
 }
 
 /**
-	* Log API debug messages.
-	*
-	* @param string $message Log message.
-	* @param mixed  $data    Optional data.
-	* @return void
-	*/
+* Set the current lead context for logging.
+*
+* @param int    $lead_id    Lead ID.
+* @param string $lead_email Lead email address.
+* @return void
+*/
+function rtbcb_set_current_lead( $lead_id, $lead_email = '' ) {
+		$GLOBALS['rtbcb_current_lead'] = [
+	'id'    => intval( $lead_id ),
+	'email' => sanitize_email( $lead_email ),
+	];
+}
+
+/**
+* Retrieve the current lead context.
+*
+* @return array|null Array with 'id' and 'email' or null if not set.
+*/
+function rtbcb_get_current_lead() {
+		return isset( $GLOBALS['rtbcb_current_lead'] ) ? $GLOBALS['rtbcb_current_lead'] : null;
+}
+
+/**
+* Log API debug messages.
+*
+* @param string $message Log message.
+* @param mixed  $data    Optional data.
+* @return void
+*/
 function rtbcb_log_api_debug( $message, $data = null ) {
-	$log_message = 'RTBCB API Debug: ' . $message;
-	if ( $data ) {
-		$log_message .= ' - ' . wp_json_encode( $data );
-	}
-	error_log( $log_message );
+		$lead = rtbcb_get_current_lead();
+	if ( $lead ) {
+	$message .= ' [Lead ID: ' . $lead['id'] . ' Email: ' . $lead['email'] . ']';
+}
+$log_message = 'RTBCB API Debug: ' . $message;
+if ( $data ) {
+$log_message .= ' - ' . wp_json_encode( $data );
+}
+error_log( $log_message );
 }
 
 function rtbcb_log_error( $message, $context = null ) {
-	$log_message = 'RTBCB Error: ' . $message;
-	if ( $context ) {
-		$log_message .= ' - Context: ' . wp_json_encode( $context );
-	}
-	error_log( $log_message );
+		$lead = rtbcb_get_current_lead();
+	if ( $lead ) {
+	$message .= ' [Lead ID: ' . $lead['id'] . ' Email: ' . $lead['email'] . ']';
+}
+$log_message = 'RTBCB Error: ' . $message;
+if ( $context ) {
+$log_message .= ' - Context: ' . wp_json_encode( $context );
+}
+error_log( $log_message );
 }
 
 function rtbcb_setup_ajax_logging() {

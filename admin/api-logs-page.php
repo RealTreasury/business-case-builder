@@ -23,8 +23,9 @@ if ( ! current_user_can( 'manage_options' ) ) {
 		<table class="widefat fixed striped">
 			<thead>
 				<tr>
-					<th><?php esc_html_e( 'ID', 'rtbcb' ); ?></th>
-					<th><?php esc_html_e( 'Email', 'rtbcb' ); ?></th>
+                                       <th><?php esc_html_e( 'ID', 'rtbcb' ); ?></th>
+                                       <th><?php esc_html_e( 'Lead ID', 'rtbcb' ); ?></th>
+                                       <th><?php esc_html_e( 'Email', 'rtbcb' ); ?></th>
 					<th><?php esc_html_e( 'Company Name', 'rtbcb' ); ?></th>
 					<th><?php esc_html_e( 'Request', 'rtbcb' ); ?></th>
 					<th><?php esc_html_e( 'Tokens', 'rtbcb' ); ?></th>
@@ -47,8 +48,9 @@ if ( ! current_user_can( 'manage_options' ) ) {
 						$status = isset( $response['error'] ) ? __( 'Error', 'rtbcb' ) : __( 'OK', 'rtbcb' );
 					?>
 					<tr data-id="<?php echo esc_attr( $log['id'] ); ?>" data-request="<?php echo esc_attr( $log['request_json'] ); ?>" data-response="<?php echo esc_attr( $log['response_json'] ); ?>">
-						<td><?php echo esc_html( $log['id'] ); ?></td>
-						<td><?php echo esc_html( $log['user_email'] ); ?></td>
+                                               <td><?php echo esc_html( $log['id'] ); ?></td>
+                                               <td><?php echo esc_html( $log['lead_id'] ); ?></td>
+                                               <td><?php echo esc_html( $log['user_email'] ); ?></td>
 						<td><?php echo esc_html( $log['company_name'] ); ?></td>
 						<td><?php echo esc_html( $summary ); ?></td>
 						<td><?php echo esc_html( $log['total_tokens'] ); ?></td>
@@ -65,9 +67,9 @@ if ( ! current_user_can( 'manage_options' ) ) {
 					</tr>
 					<?php endforeach; ?>
 				<?php else : ?>
-					<tr>
-						<td colspan="8"><?php esc_html_e( 'No logs found.', 'rtbcb' ); ?></td>
-					</tr>
+                                       <tr>
+                                               <td colspan="9"><?php esc_html_e( 'No logs found.', 'rtbcb' ); ?></td>
+                                       </tr>
 				<?php endif; ?>
 			</tbody>
 		</table>
