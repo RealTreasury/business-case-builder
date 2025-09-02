@@ -237,6 +237,10 @@ return true;
 	add_action( 'wp_ajax_rtbcb_openai_responses', 'rtbcb_proxy_openai_responses' );
 	add_action( 'wp_ajax_nopriv_rtbcb_openai_responses', 'rtbcb_proxy_openai_responses' );
 
+		// Professional report generation handler
+	add_action( 'wp_ajax_rtbcb_generate_report', 'rtbcb_generate_report' );
+	add_action( 'wp_ajax_nopriv_rtbcb_generate_report', 'rtbcb_generate_report' );
+
 		// Debug handlers
 		if ( defined( 'RTBCB_DEBUG' ) && RTBCB_DEBUG && function_exists( 'current_user_can' ) && current_user_can( 'manage_options' ) ) {
 		$this->init_hooks_debug();

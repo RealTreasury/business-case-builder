@@ -821,12 +821,12 @@ function rtbcb_recursive_sanitize_text_field( $data ) {
 }
 
 /**
-* Set the current lead context for logging.
-*
-* @param int    $lead_id    Lead ID.
-* @param string $lead_email Lead email address.
-* @return void
-*/
+	* Set the current lead context for logging.
+	*
+	* @param int    $lead_id    Lead ID.
+	* @param string $lead_email Lead email address.
+	* @return void
+	*/
 function rtbcb_set_current_lead( $lead_id, $lead_email = '' ) {
 		$GLOBALS['rtbcb_current_lead'] = [
 	'id'    => intval( $lead_id ),
@@ -835,21 +835,21 @@ function rtbcb_set_current_lead( $lead_id, $lead_email = '' ) {
 }
 
 /**
-* Retrieve the current lead context.
-*
-* @return array|null Array with 'id' and 'email' or null if not set.
-*/
+	* Retrieve the current lead context.
+	*
+	* @return array|null Array with 'id' and 'email' or null if not set.
+	*/
 function rtbcb_get_current_lead() {
 		return isset( $GLOBALS['rtbcb_current_lead'] ) ? $GLOBALS['rtbcb_current_lead'] : null;
 }
 
 /**
-* Log API debug messages.
-*
-* @param string $message Log message.
-* @param mixed  $data    Optional data.
-* @return void
-*/
+	* Log API debug messages.
+	*
+	* @param string $message Log message.
+	* @param mixed  $data    Optional data.
+	* @return void
+	*/
 function rtbcb_log_api_debug( $message, $data = null ) {
 		$lead = rtbcb_get_current_lead();
 	if ( $lead ) {
@@ -1559,11 +1559,31 @@ $timeout = intval( function_exists( 'get_option' ) ? get_option( 'rtbcb_response
 	$error = curl_error( $ch );
 	curl_close( $ch );
 
-	if ( false === $ok && '' !== $error ) {
-		$msg = sanitize_text_field( $error );
-		echo 'data: ' . wp_json_encode( [ 'error' => $msg ] ) . "\n\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-	}
+if ( false === $ok && '' !== $error ) {
+$msg = sanitize_text_field( $error );
+	echo 'data: ' . wp_json_encode( [ 'error' => $msg ] ) . "\n\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+}
 
+	wp_die();
+}
+
+/**
+	* Placeholder handler for professional report generation.
+	*
+	* @return void
+	*/
+function rtbcb_generate_report() {
+	if ( empty( $_POST['rtbcb_nonce'] ) ) {
+		wp_send_json_error( [ 'message' => __( 'Missing security token.', 'rtbcb' ) ], 400 );
+	}
+	
+	if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['rtbcb_nonce'] ) ), 'rtbcb_generate' ) ) {
+		wp_send_json_error( [ 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
+	}
+	
+	nocache_headers();
+	header( 'Content-Type: text/html; charset=utf-8' );
+	echo wp_kses_post( '<p>' . __( 'Report generation endpoint not yet implemented.', 'rtbcb' ) . '</p>' );
 	wp_die();
 }
 
