@@ -396,7 +396,7 @@ return false;
                // If we have accumulated content, create a response structure.
                if ( ! empty( $accumulated_content ) ) {
                        error_log( 'RTBCB: Using accumulated content from stream' );
-                       return [
+	return [
                                'choices' => [
                                        [
                                                'message' => [
@@ -741,7 +741,7 @@ $json = $this->process_openai_response( $content );
 			'baseline_efficiency' => floatval( $json['metrics']['baseline_efficiency'] ?? 0 ),
 		];
 
-		return [
+	return [
 			'company_name'   => $company_name,
 			'analysis'       => sanitize_textarea_field( $json['analysis'] ),
 			'recommendations' => array_map( 'sanitize_text_field', array_filter( (array) $json['recommendations'] ) ),
@@ -957,7 +957,7 @@ $parsed          = $this->process_openai_response( $parsed_response['output_text
 			return new WP_Error( 'llm_empty_response', __( 'No recommendation details returned.', 'rtbcb' ) );
 		}
 
-		return [
+	return [
 			'roadmap'        => sanitize_textarea_field( $parsed['roadmap'] ?? '' ),
 			'success_factors' => sanitize_textarea_field( $parsed['success_factors'] ?? '' ),
 		];
@@ -1202,8 +1202,9 @@ $batch_prompts['tech'] = [
 
 
 		$analysis = $this->enhance_with_research( $parsed, $company_research, $industry_analysis, $tech_landscape );
+		$analysis['implementation_roadmap'] = $analysis['technology_strategy']['implementation_roadmap'] ?? [];
 
-return [
+	return [
 'executive_summary'      => $analysis['executive_summary'] ?? [],
 'company_intelligence'   => $analysis['company_intelligence'] ?? [],
 'operational_insights'   => $analysis['operational_insights'] ?? [],
@@ -1293,7 +1294,7 @@ return [
 
 		$profile = $size_profiles[$company_size] ?? $size_profiles['$50M-$500M'];
 
-		return [
+	return [
 			'company_name' => $company_name,
 			'revenue_segment' => $company_size,
 			'business_stage' => $profile['stage'],
@@ -1424,7 +1425,7 @@ return [
 			return $default;
 		}
 
-		return [
+	return [
 			'competitors' => $competitors,
 		];
 	}
@@ -1467,7 +1468,7 @@ return [
 			'growth' => 'moderate',
 		];
 
-		return [
+	return [
 			'market_share'   => sanitize_text_field( $market_shares[ $company_size ] ?? 'unknown' ),
 			'peers'          => array_map( 'sanitize_text_field', $selected['peers'] ),
 			'growth_outlook' => sanitize_text_field( $selected['growth'] ),
@@ -1492,7 +1493,7 @@ return [
 			$model      = new RTBCB_Maturity_Model();
 			$assessment = $model->assess( $company_data );
 
-			return [
+	return [
 				'level'     => sanitize_text_field( $assessment['level'] ?? '' ),
 				'rationale' => sanitize_text_field( $assessment['assessment'] ?? '' ),
 			];
@@ -1513,7 +1514,7 @@ return [
 			$ftes
 		);
 
-		return [
+	return [
 			'level'     => sanitize_text_field( $level ),
 			'rationale' => sanitize_text_field( $rationale ),
 		];
@@ -1553,7 +1554,7 @@ return [
 		$size_data     = $size_outlooks[ $company_size ] ?? [ 'tier' => 'baseline', 'description' => __( 'stable', 'rtbcb' ) ];
 		$industry_data = $industry_outlooks[ $industry ] ?? [ 'tier' => 'neutral',  'description' => __( 'neutral', 'rtbcb' ) ];
 
-		return [
+	return [
 			'size_tier'        => sanitize_text_field( $size_data['tier'] ),
 			'size_outlook'     => sanitize_text_field( $size_data['description'] ),
 			'industry_tier'    => sanitize_text_field( $industry_data['tier'] ),
@@ -1663,7 +1664,7 @@ SYSTEM;
 
 		$this->last_company_research = wp_json_encode( $company_research );
 
-		return [
+	return [
 			'company_research' => $company_research,
 			'industry_analysis' => $industry_analysis,
 			'tech_landscape'    => $tech_landscape,
@@ -1777,7 +1778,7 @@ SYSTEM;
 
 		$industry = sanitize_text_field( $user_inputs['industry'] ?? '' );
 		if ( empty( $industry ) ) {
-			return [
+	return [
 				'analysis'        => '',
 				'recommendations' => [],
 				'references'      => [],
@@ -1831,7 +1832,7 @@ $json            = $this->process_openai_response( $parsed_response['output_text
 			return new WP_Error( 'llm_parse_error', __( 'Invalid response from language model.', 'rtbcb' ) );
 		}
 
-		return [
+	return [
 			'analysis'        => sanitize_text_field( $json['analysis'] ?? '' ),
 			'recommendations' => array_map( 'sanitize_text_field', $json['recommendations'] ?? [] ),
 			'references'      => array_map( 'sanitize_text_field', $json['references'] ?? [] ),
@@ -2596,7 +2597,7 @@ PROMPT;
 	}
 
 	foreach ( (array) ( $analysis_data['implementation_roadmap'] ?? [] ) as $phase ) {
-	$analysis['implementation_roadmap'][] = [
+		$analysis['implementation_roadmap'][] = [
 	'phase'          => sanitize_text_field( $phase['phase'] ?? '' ),
 	'duration'       => sanitize_text_field( $phase['duration'] ?? '' ),
 	'key_activities' => array_map( 'sanitize_text_field', $phase['key_activities'] ?? [] ),
@@ -2772,7 +2773,7 @@ break;
 
 		$instructions = function_exists( 'sanitize_textarea_field' ) ? sanitize_textarea_field( $system_prompt ) : $system_prompt;
 
-		return [
+	return [
 			'instructions' => $instructions,
 			'input'        => implode( "\n", $input_parts ),
 		];
@@ -3201,7 +3202,7 @@ $max_output_tokens = min( 128000, max( $min_tokens, $max_output_tokens ) );
 		$base_benefit = $roi_data['base']['total_annual_benefit'] ?? 0;
 		$estimated_cost = $base_benefit * 0.4; // Rough estimate
 
-		return [
+	return [
 			'investment_breakdown' => [
 				'software_licensing' => '$' . number_format( $estimated_cost * 0.6 ) . ' - $' . number_format( $estimated_cost * 0.8 ),
 				'implementation_services' => '$' . number_format( $estimated_cost * 0.15 ) . ' - $' . number_format( $estimated_cost * 0.25 ),
