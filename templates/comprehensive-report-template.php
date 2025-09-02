@@ -504,128 +504,296 @@ $processing_time = $metadata['processing_time'] ?? 0;
 </div>
 
 <!-- Enhanced JavaScript for Interactivity -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-	// Initialize ROI Chart if Chart.js is available
-	if (typeof Chart !== 'undefined') {
-		initializeROIChart();
-	}
+<?php
+// Pass structured data to JavaScript for charts and interactivity
+$report_js_data = [
+	'roiScenarios' => $financial_analysis['roi_scenarios'] ?? [],
+	'companyName'  => $company_name,
+	'confidence'   => $confidence_level,
+	'hasCharts'	   => $enable_charts,
+	'strings'	   => [
+		'exportPDF'		  => __( 'Export as PDF', 'rtbcb' ),
+		'printReport'	  => __( 'Print Report', 'rtbcb' ),
+		'expandSection'	  => __( 'Expand Section', 'rtbcb' ),
+		'collapseSection' => __( 'Collapse Section', 'rtbcb' ),
+		'loading'		  => __( 'Loading...', 'rtbcb' ),
+		'error'			  => __( 'Error loading chart', 'rtbcb' ),
+	],
+];
 
-	// Initialize collapsible sections
-	initializeSectionToggles();
+// Enhanced chart data structure
+$chart_data = $financial_analysis['chart_data'] ?? [];
 
-	// Initialize interactive elements
-	initializeInteractiveFeatures();
-	});
+// If chart_data is empty, generate from ROI scenarios
+if ( empty( $chart_data ) && ! empty( $financial_analysis['roi_scenarios'] ) ) {
+	$scenarios	= $financial_analysis['roi_scenarios'];
+	$chart_data = [
+		'labels'   => [
+			__( 'Labor Savings', 'rtbcb' ),
+			__( 'Fee Reduction', 'rtbcb' ),
+			__( 'Error Prevention', 'rtbcb' ),
+			__( 'Total Benefit', 'rtbcb' ),
+		],
+		'datasets' => [],
+	];
 
-function initializeROIChart() {
-	const ctx = document.getElementById('rtbcb-roi-chart');
-	if ( ! ctx || typeof Chart === 'undefined' ) {
-		return;
-	}
+	$colors = [
+		'conservative' => [ 'bg' => 'rgba(239, 68, 68, 0.8)', 'border' => 'rgba(239, 68, 68, 1)' ],
+		'base'		   => [ 'bg' => 'rgba(59, 130, 246, 0.8)', 'border' => 'rgba(59, 130, 246, 1)' ],
+		'optimistic'   => [ 'bg' => 'rgba(16, 185, 129, 0.8)', 'border' => 'rgba(16, 185, 129, 1)' ],
+	];
 
-	const chartData = window.rtbcbChartData || {};
-	if ( ! chartData.labels ) {
-		return;
-	}
-
-	new Chart( ctx, {
-		type: 'bar',
-		data: chartData,
-		options: {
-			responsive: true,
-			scales: {
-				y: {
-					beginAtZero: true,
-					ticks: {
-						callback: function( value ) {
-							return '$' + new Intl.NumberFormat().format( value );
-						}
-					}
-				}
-			},
-			plugins: {
-				tooltip: {
-					callbacks: {
-						label: function( context ) {
-							return context.dataset.label + ': $' + new Intl.NumberFormat().format( context.raw );
-						}
-					}
-				}
-			}
+	foreach ( [ 'conservative', 'base', 'optimistic' ] as $scenario_key ) {
+		if ( isset( $scenarios[ $scenario_key ] ) ) {
+			$scenario				  = $scenarios[ $scenario_key ];
+			$chart_data['datasets'][] = [
+				'label'			  => ucfirst( $scenario_key === 'base' ? 'Base Case' : $scenario_key ),
+				'data'			  => [
+					floatval( $scenario['labor_savings'] ?? 0 ),
+					floatval( $scenario['fee_savings'] ?? 0 ),
+					floatval( $scenario['error_reduction'] ?? 0 ),
+					floatval( $scenario['total_annual_benefit'] ?? 0 ),
+				],
+				'backgroundColor' => $colors[ $scenario_key ]['bg'],
+				'borderColor'	  => $colors[ $scenario_key ]['border'],
+				'borderWidth'	  => 2,
+			];
 		}
-	} );
+	}
 }
 
+// Sensitivity chart data
+$sensitivity_data = [];
+if ( ! empty( $financial_analysis['sensitivity_analysis'] ) ) {
+	$labels		 = [];
+	$data		 = [];
+	$backgrounds = [];
 
-function initializeSectionToggles() {
+	foreach ( $financial_analysis['sensitivity_analysis'] as $item ) {
+		$labels[]	   = $item['factor'] ?? '';
+		$impact		   = floatval( $item['impact_percentage'] ?? 0 );
+		$data[]		   = $impact;
+		$backgrounds[] = $impact < 0 ? 'rgba(239, 68, 68, 0.8)' : 'rgba(16, 185, 129, 0.8)';
+	}
+
+	$sensitivity_data = [
+		'labels'   => $labels,
+		'datasets' => [
+			[
+				'label'			  => __( 'Impact %', 'rtbcb' ),
+				'data'			  => $data,
+				'backgroundColor' => $backgrounds,
+				'borderWidth'	  => 1,
+			],
+		],
+	];
+}
+
+// Output JavaScript with proper escaping
+$json_flags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_HEX_APOS;
+?>
+
+<script>
+// Global data for RTBCB Enhanced Report
+window.rtbcbReportData = <?php echo wp_json_encode( $report_js_data, $json_flags ); ?>;
+window.rtbcbChartData = <?php echo wp_json_encode( $chart_data, $json_flags ); ?>;
+<?php if ( ! empty( $sensitivity_data ) ) : ?>
+window.rtbcbSensitivityData = <?php echo wp_json_encode( $sensitivity_data, $json_flags ); ?>;
+<?php endif; ?>
+
+// Enhanced initialization with error handling
+document.addEventListener('DOMContentLoaded', function() {
+	console.log('RTBCB: Initializing enhanced report with data:', window.rtbcbReportData);
+
+	try {
+		// Initialize charts if Chart.js is available
+		if (typeof Chart !== 'undefined' && window.rtbcbReportData.hasCharts) {
+			initializeEnhancedCharts();
+		} else {
+			console.warn('RTBCB: Chart.js not available or charts disabled');
+			hideChartContainers();
+		}
+
+		// Initialize all interactive features
+		initializeReportInteractivity();
+	} catch (error) {
+		console.error('RTBCB: Initialization error:', error);
+	}
+});
+
+function initializeEnhancedCharts() {
+	// Initialize main ROI chart
+	const roiCtx = document.getElementById('rtbcb-roi-chart');
+	if (roiCtx && window.rtbcbChartData) {
+		try {
+			new Chart(roiCtx, {
+				type: 'bar',
+				data: window.rtbcbChartData,
+				options: {
+					responsive: true,
+					maintainAspectRatio: false,
+					interaction: {
+						intersect: false,
+						mode: 'index',
+					},
+					plugins: {
+						title: {
+							display: true,
+							text: '<?php echo esc_js( __( 'ROI Analysis by Component', 'rtbcb' ) ); ?>',
+							font: { size: 16, weight: 'bold' },
+							padding: 20
+						},
+						legend: {
+							display: true,
+							position: 'bottom',
+							labels: { usePointStyle: true, padding: 20 }
+						},
+						tooltip: {
+							backgroundColor: 'rgba(0, 0, 0, 0.8)',
+							titleColor: '#fff',
+							bodyColor: '#fff',
+							borderColor: '#333',
+							borderWidth: 1,
+							callbacks: {
+								label: function(context) {
+									return context.dataset.label + ': $' +
+										   new Intl.NumberFormat().format(context.raw);
+								}
+							}
+						}
+					},
+					scales: {
+						x: {
+							grid: { display: false },
+							ticks: { font: { size: 12 } }
+						},
+						y: {
+							beginAtZero: true,
+							grid: {
+								borderDash: [5, 5],
+								color: 'rgba(0, 0, 0, 0.1)'
+							},
+							ticks: {
+								callback: function(value) {
+									return '$' + new Intl.NumberFormat().format(value);
+								},
+								font: { size: 11 }
+							}
+						}
+					},
+					animation: {
+						duration: 1500,
+						easing: 'easeInOutQuart'
+					}
+				}
+			});
+		} catch (error) {
+			console.error('RTBCB: ROI chart error:', error);
+			showChartError(roiCtx, '<?php echo esc_js( __( 'Error loading chart', 'rtbcb' ) ); ?>');
+		}
+	}
+
+	// Initialize sensitivity chart if data available
+	const sensitivityCtx = document.getElementById('rtbcb-sensitivity-chart');
+	if (sensitivityCtx && window.rtbcbSensitivityData) {
+		try {
+			new Chart(sensitivityCtx, {
+				type: 'horizontalBar',
+				data: window.rtbcbSensitivityData,
+				options: {
+					responsive: true,
+					maintainAspectRatio: false,
+					plugins: {
+						title: {
+							display: true,
+							text: '<?php echo esc_js( __( 'Sensitivity Analysis', 'rtbcb' ) ); ?>',
+							font: { size: 14, weight: 'bold' }
+						},
+						legend: { display: false }
+					},
+					scales: {
+						x: {
+							ticks: {
+								callback: function(value) {
+									return value + '%';
+								}
+							}
+						}
+					}
+				}
+			});
+		} catch (error) {
+			console.error('RTBCB: Sensitivity chart error:', error);
+		}
+	}
+}
+
+function initializeReportInteractivity() {
+	// Section toggles
 	document.querySelectorAll('.rtbcb-section-toggle').forEach(toggle => {
-		toggle.addEventListener('click', function() {
+		toggle.addEventListener('click', function(e) {
+			e.preventDefault();
+
 			const targetId = this.getAttribute('data-target');
 			const content = document.getElementById(targetId);
 			const arrow = this.querySelector('.rtbcb-toggle-arrow');
 			const text = this.querySelector('.rtbcb-toggle-text');
 
 			if (content) {
-				content.style.display = content.style.display === 'none' ? 'block' : 'none';
-				arrow.textContent = content.style.display === 'none' ? '▼' : '▲';
-				text.textContent = content.style.display === 'none' ? '<?php echo function_exists( 'esc_js' ) ? esc_js( __( 'Expand', 'rtbcb' ) ) : htmlspecialchars( __( 'Expand', 'rtbcb' ), ENT_QUOTES ); ?>' : '<?php echo function_exists( 'esc_js' ) ? esc_js( __( 'Collapse', 'rtbcb' ) ) : htmlspecialchars( __( 'Collapse', 'rtbcb' ), ENT_QUOTES ); ?>';
+				const isVisible = content.style.display !== 'none';
+				content.style.display = isVisible ? 'none' : 'block';
+
+				if (arrow) arrow.textContent = isVisible ? '▼' : '▲';
+				if (text) text.textContent = isVisible ?
+					'<?php echo esc_js( __( 'Expand', 'rtbcb' ) ); ?>' :
+					'<?php echo esc_js( __( 'Collapse', 'rtbcb' ) ); ?>';
 			}
 		});
 	});
-}
 
-function initializeInteractiveFeatures() {
-	// Add smooth scrolling to sections
-	document.querySelectorAll('.rtbcb-section-enhanced').forEach((section, index) => {
-		section.style.animationDelay = (index * 0.1) + 's';
-		section.classList.add('rtbcb-fade-in');
-	});
-
-	// Add click handlers for metric cards
+	// Metric card interactions
 	document.querySelectorAll('.rtbcb-metric-card').forEach(card => {
-		card.addEventListener('click', function() {
-			this.classList.toggle('expanded');
+		card.addEventListener('mouseenter', function() {
+			this.style.transform = 'translateY(-2px)';
+			this.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)';
+		});
+
+		card.addEventListener('mouseleave', function() {
+			this.style.transform = 'translateY(0)';
+			this.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.1)';
 		});
 	});
+
+	// Add fade-in animation to sections
+	document.querySelectorAll('.rtbcb-section-enhanced').forEach((section, index) => {
+		section.style.opacity = '0';
+		section.style.transform = 'translateY(20px)';
+
+		setTimeout(() => {
+			section.style.transition = 'all 0.5s ease';
+			section.style.opacity = '1';
+			section.style.transform = 'translateY(0)';
+		}, index * 100);
+	});
 }
 
-function rtbcbExportPDF() {
-	// PDF export functionality
-	window.print();
+function hideChartContainers() {
+	document.querySelectorAll('.rtbcb-roi-chart-container').forEach(container => {
+		container.style.display = 'none';
+	});
 }
-</script>
 
-<?php
-	// Pass structured data to JavaScript for charts and interactivity.
-	$data = [
-	'roiScenarios' => $financial_analysis['roi_scenarios'] ?? [],
-	'companyName'  => $company_name,
-	'confidence'   => $confidence_level,
-	'strings'      => [
-	'exportPDF'       => __( 'Export as PDF', 'rtbcb' ),
-	'printReport'     => __( 'Print Report', 'rtbcb' ),
-	'expandSection'   => __( 'Expand Section', 'rtbcb' ),
-	'collapseSection' => __( 'Collapse Section', 'rtbcb' ),
-	],
-	];
-	
-	$chart_data = $financial_analysis['chart_data'] ?? [
-	'labels'   => [
-	__( 'Conservative', 'rtbcb' ),
-	__( 'Base', 'rtbcb' ),
-	__( 'Optimistic', 'rtbcb' ),
-	],
-	'datasets' => [],
-	];
-	
-	if ( function_exists( 'wp_localize_script' ) ) {
-	wp_localize_script( 'rtbcb-report', 'rtbcbReportData', $data );
-	wp_localize_script( 'rtbcb-report', 'rtbcbChartData', $chart_data );
-	} else {
-	printf(
-	'<script>var rtbcbReportData = %1$s;var rtbcbChartData = %2$s</script>',
-	function_exists( 'wp_json_encode' ) ? wp_json_encode( $data, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_HEX_APOS ) : json_encode( $data ),
-	function_exists( 'wp_json_encode' ) ? wp_json_encode( $chart_data, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_HEX_APOS ) : json_encode( $chart_data )
-	);
+function showChartError(canvas, message) {
+	const container = canvas.parentElement;
+	if (container) {
+		container.innerHTML = '<div class="rtbcb-chart-error">' + message + '</div>';
 	}
+}
+
+// Export functions globally
+window.rtbcbExportPDF = function() {
+	window.print();
+};
+
+console.log('RTBCB: Enhanced report JavaScript loaded successfully');
+</script>
