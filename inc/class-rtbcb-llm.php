@@ -712,9 +712,9 @@ USER,
 	* @param callable|array|Traversable $context_chunks Optional context provider or strings for the prompt.
 	* @param callable|null             $chunk_callback Optional streaming callback.
 	*
-	* @return array|WP_Error Comprehensive analysis array or error object.
-	*/
-	public function generate_comprehensive_business_case( $user_inputs, $roi_data, $context_chunks = [], $chunk_callback = null ) {
+       * @return array|WP_Error Structured analysis array (executive_summary, financial_analysis, implementation_roadmap) or error object.
+       */
+       public function generate_comprehensive_business_case( $user_inputs, $roi_data, $context_chunks = [], $chunk_callback = null ) {
 
 		if ( rtbcb_heavy_features_disabled() ) {
 			return new WP_Error( 'heavy_features_disabled', __( 'AI features are disabled.', 'rtbcb' ) );
@@ -883,141 +883,89 @@ $batch_prompts['tech'] = [
 
 		$analysis = $this->enhance_with_research( $parsed, $company_research, $industry_analysis, $tech_landscape );
 
-		return [
-			'executive_summary'      => $analysis['executive_summary'] ?? [],
-			'company_overview'       => $analysis['research']['company']['company_profile'] ?? [],
-			'industry_analysis'      => $analysis['industry_insights'] ?? [],
-			'treasury_maturity'      => $analysis['research']['company']['treasury_maturity'] ?? '',
-			'technology_landscape'   => $analysis['research']['technology'] ?? '',
-			'financial_analysis'     => $analysis['financial_analysis'] ?? [],
-			'implementation_roadmap' => $analysis['technology_recommendations'] ?? [],
-			'risk_mitigation'        => $analysis['risk_mitigation'] ?? [],
-			'next_steps'             => $analysis['next_steps'] ?? [],
-			'raw'                    => $analysis,
-		];
-	}
+               return [
+                       'executive_summary'      => $analysis['executive_summary'] ?? [],
+                       'financial_analysis'     => $analysis['financial_analysis'] ?? [],
+                       'implementation_roadmap' => $analysis['implementation_roadmap'] ?? [],
+                       'raw'                    => $analysis,
+               ];
+       }
 
 	/**
 	* Parse and validate comprehensive OpenAI response.
 	*
 	* @param array $response Raw response from wp_remote_post.
 	*
-	* @return array|WP_Error Structured analysis array or error object.
-	*/
-	private function parse_comprehensive_response( $response ) {
-		$parsed_response = rtbcb_parse_gpt5_response( $response, true );
-		$content         = $parsed_response['output_text'];
-		$decoded         = $parsed_response['raw'];
+       * @return array|WP_Error Structured analysis array (executive_summary, financial_analysis, implementation_roadmap) or error object.
+       */
+       private function parse_comprehensive_response( $response ) {
+               $parsed_response = rtbcb_parse_gpt5_response( $response, true );
+               $content         = $parsed_response['output_text'];
+               $decoded         = $parsed_response['raw'];
 
-		if ( empty( $decoded ) ) {
-			return new WP_Error( 'llm_response_decode_error', __( 'Failed to decode response body.', 'rtbcb' ) );
-		}
+               if ( empty( $decoded ) ) {
+                       return new WP_Error( 'llm_response_decode_error', __( 'Failed to decode response body.', 'rtbcb' ) );
+               }
 
-		if ( is_string( $content ) ) {
-			$json = json_decode( $content, true );
-		} else {
-			$json = is_array( $content ) ? $content : [];
-		}
+               if ( is_string( $content ) ) {
+                       $json = json_decode( $content, true );
+               } else {
+                       $json = is_array( $content ) ? $content : [];
+               }
 
-		if ( ! is_array( $json ) ) {
-			return new WP_Error( 'llm_response_parse_error', __( 'Invalid JSON from language model.', 'rtbcb' ) );
-		}
+               if ( ! is_array( $json ) ) {
+                       return new WP_Error( 'llm_response_parse_error', __( 'Invalid JSON from language model.', 'rtbcb' ) );
+               }
 
-		$required = [
-			'executive_summary',
-			'operational_analysis',
-			'industry_insights',
-			'technology_recommendations',
-			'financial_analysis',
-			'risk_mitigation',
-			'next_steps',
-		];
+               $required = [
+                       'executive_summary',
+                       'financial_analysis',
+                       'implementation_roadmap',
+               ];
 
-		$missing = array_diff( $required, array_keys( $json ) );
+               $missing = array_diff( $required, array_keys( $json ) );
 
-		if ( ! empty( $missing ) ) {
-			return new WP_Error(
-				'llm_missing_fields',
-				__( 'Missing required fields: ', 'rtbcb' ) . implode( ', ', $missing )
-			);
-		}
+               if ( ! empty( $missing ) ) {
+                       return new WP_Error(
+                               'llm_missing_fields',
+                               __( 'Missing required fields: ', 'rtbcb' ) . implode( ', ', $missing )
+                       );
+               }
 
-		return [
-			'executive_summary'      => [
-				'strategic_positioning'   => sanitize_text_field( $json['executive_summary']['strategic_positioning'] ?? '' ),
-				'business_case_strength'  => sanitize_text_field( $json['executive_summary']['business_case_strength'] ?? '' ),
-				'key_value_drivers'       => array_map( 'sanitize_text_field', $json['executive_summary']['key_value_drivers'] ?? [] ),
-				'executive_recommendation'=> sanitize_text_field( $json['executive_summary']['executive_recommendation'] ?? '' ),
-				'confidence_level'        => floatval( $json['executive_summary']['confidence_level'] ?? 0 ),
-			],
-			'operational_analysis'   => [
-				'current_state_assessment' => [
-					'efficiency_rating'   => sanitize_text_field( $json['operational_analysis']['current_state_assessment']['efficiency_rating'] ?? '' ),
-					'benchmark_comparison'=> sanitize_text_field( $json['operational_analysis']['current_state_assessment']['benchmark_comparison'] ?? '' ),
-					'capacity_utilization'=> sanitize_text_field( $json['operational_analysis']['current_state_assessment']['capacity_utilization'] ?? '' ),
-				],
-				'process_inefficiencies'  => array_map(
-					function ( $item ) {
-						return [
-							'process'     => sanitize_text_field( $item['process'] ?? '' ),
-							'impact'      => sanitize_text_field( $item['impact'] ?? '' ),
-							'description' => sanitize_textarea_field( $item['description'] ?? '' ),
-						];
-					},
-					is_array( $json['operational_analysis']['process_inefficiencies'] ?? null )
-						? $json['operational_analysis']['process_inefficiencies']
-						: []
-				),
-				'automation_opportunities' => array_map(
-					function ( $item ) {
-						return [
-							'area'                 => sanitize_text_field( $item['area'] ?? '' ),
-							'complexity'           => sanitize_text_field( $item['complexity'] ?? '' ),
-							'potential_hours_saved'=> floatval( $item['potential_hours_saved'] ?? 0 ),
-						];
-					},
-					$json['operational_analysis']['automation_opportunities'] ?? []
-				),
-			],
-			'industry_insights'      => [
-				'sector_trends'          => sanitize_text_field( $json['industry_insights']['sector_trends'] ?? '' ),
-				'competitive_benchmarks' => sanitize_text_field( $json['industry_insights']['competitive_benchmarks'] ?? '' ),
-				'regulatory_considerations' => sanitize_text_field( $json['industry_insights']['regulatory_considerations'] ?? '' ),
-			],
-			'technology_recommendations' => [
-				'primary_solution' => [
-					'category'     => sanitize_text_field( $json['technology_recommendations']['primary_solution']['category'] ?? '' ),
-					'rationale'    => sanitize_text_field( $json['technology_recommendations']['primary_solution']['rationale'] ?? '' ),
-					'key_features' => array_map( 'sanitize_text_field', $json['technology_recommendations']['primary_solution']['key_features'] ?? [] ),
-				],
-				'implementation_approach' => [
-					'phase_1'        => sanitize_text_field( $json['technology_recommendations']['implementation_approach']['phase_1'] ?? '' ),
-					'phase_2'        => sanitize_text_field( $json['technology_recommendations']['implementation_approach']['phase_2'] ?? '' ),
-					'success_metrics'=> array_map( 'sanitize_text_field', $json['technology_recommendations']['implementation_approach']['success_metrics'] ?? [] ),
-				],
-			],
-			'financial_analysis'     => [
-				'investment_breakdown' => [
-					'software_licensing'      => sanitize_text_field( $json['financial_analysis']['investment_breakdown']['software_licensing'] ?? '' ),
-					'implementation_services' => sanitize_text_field( $json['financial_analysis']['investment_breakdown']['implementation_services'] ?? '' ),
-					'training_change_management' => sanitize_text_field( $json['financial_analysis']['investment_breakdown']['training_change_management'] ?? '' ),
-				],
-				'payback_analysis'    => [
-					'payback_months' => floatval( $json['financial_analysis']['payback_analysis']['payback_months'] ?? 0 ),
-					'roi_3_year'     => floatval( $json['financial_analysis']['payback_analysis']['roi_3_year'] ?? 0 ),
-					'npv_analysis'   => sanitize_text_field( $json['financial_analysis']['payback_analysis']['npv_analysis'] ?? '' ),
-				],
-			],
-			'risk_mitigation'        => [
-				'implementation_risks' => array_map( 'sanitize_text_field', $json['risk_mitigation']['implementation_risks'] ?? [] ),
-				'mitigation_strategies' => [
-					'risk_1_mitigation' => sanitize_text_field( $json['risk_mitigation']['mitigation_strategies']['risk_1_mitigation'] ?? '' ),
-					'risk_2_mitigation' => sanitize_text_field( $json['risk_mitigation']['mitigation_strategies']['risk_2_mitigation'] ?? '' ),
-				],
-			],
-			'next_steps'             => array_map( 'sanitize_text_field', $json['next_steps'] ?? [] ),
-		];
-	}
+               return [
+                       'executive_summary' => [
+                               'strategic_positioning'  => sanitize_text_field( $json['executive_summary']['strategic_positioning'] ?? '' ),
+                               'key_value_drivers'      => array_map( 'sanitize_text_field', $json['executive_summary']['key_value_drivers'] ?? [] ),
+                               'business_case_strength' => sanitize_text_field( $json['executive_summary']['business_case_strength'] ?? '' ),
+                       ],
+                       'financial_analysis' => [
+                               'roi_scenarios'   => array_map(
+                                       function ( $item ) {
+                                               return [
+                                                       'scenario' => sanitize_text_field( $item['scenario'] ?? '' ),
+                                                       'roi'      => floatval( $item['roi'] ?? 0 ),
+                                               ];
+                                       },
+                                       $json['financial_analysis']['roi_scenarios'] ?? []
+                               ),
+                               'payback_analysis' => [
+                                       'payback_months' => floatval( $json['financial_analysis']['payback_analysis']['payback_months'] ?? 0 ),
+                                       'roi_3_year'     => floatval( $json['financial_analysis']['payback_analysis']['roi_3_year'] ?? 0 ),
+                                       'npv_analysis'   => sanitize_text_field( $json['financial_analysis']['payback_analysis']['npv_analysis'] ?? '' ),
+                               ],
+                       ],
+                       'implementation_roadmap' => array_map(
+                               function ( $item ) {
+                                       return [
+                                               'phase'      => sanitize_text_field( $item['phase'] ?? '' ),
+                                               'timeline'   => sanitize_text_field( $item['timeline'] ?? '' ),
+                                               'activities' => array_map( 'sanitize_text_field', $item['activities'] ?? [] ),
+                                       ];
+                               },
+                               $json['implementation_roadmap'] ?? []
+                       ),
+               ];
+       }
 
 	/**
 	* Conduct company-specific research.
@@ -1707,12 +1655,11 @@ SYSTEM;
 		$prompt  = "As a senior treasury technology consultant with 15+ years of experience, create a comprehensive business case for {$company_name}.\n\n";
 
 		// Add detailed context sections...
-		$prompt .= "EXECUTIVE BRIEF:\n";
-		$prompt .= "Create a strategic business case that justifies treasury technology investment with:\n";
-		$prompt .= "- Clear ROI projections with risk-adjusted scenarios\n";
-		$prompt .= "- Industry-specific operational improvements\n";
-		$prompt .= "- Implementation roadmap with success metrics\n";
-		$prompt .= "- Risk mitigation strategies\n\n";
+               $prompt .= "EXECUTIVE BRIEF:\n";
+               $prompt .= "Create a strategic business case that justifies treasury technology investment with:\n";
+               $prompt .= "- Clear ROI projections with risk-adjusted scenarios\n";
+               $prompt .= "- Key strategic value drivers\n";
+               $prompt .= "- Implementation roadmap with success metrics\n\n";
 
 		// Company Context
 		$prompt .= "COMPANY PROFILE:\n";
@@ -1772,87 +1719,54 @@ SYSTEM;
 		$prompt .= "Ensure each section provides actionable insights specific to {$company_name}'s situation.\n";
 		$prompt .= "Use professional consulting language appropriate for C-level executives.\n\n";
 
-		$prompt .= "REQUIRED JSON STRUCTURE (respond with ONLY this JSON, no other text):\n";
-		$prompt .= json_encode([
-			'executive_summary' => [
-				'strategic_positioning' => "2-3 sentences about {$company_name}'s strategic position and readiness for treasury technology",
-				'business_case_strength' => 'Strong|Moderate|Compelling',
-				'key_value_drivers' => [
-					"Primary value driver specific to {$company_name}",
-					"Secondary value driver for their industry/size",
-					"Third strategic benefit for their situation"
-				],
-				'executive_recommendation' => "Clear recommendation with specific next steps for {$company_name}",
-				'confidence_level' => 'decimal between 0.7-0.95'
-			],
-			'operational_analysis' => [
-				'current_state_assessment' => [
-					'efficiency_rating' => 'Excellent|Good|Fair|Poor',
-					'benchmark_comparison' => "How {$company_name} compares to industry peers",
-					'capacity_utilization' => "Analysis of current team capacity and bottlenecks"
-				],
-				'process_inefficiencies' => [
-					[
-						'process' => 'specific process name',
-						'impact' => 'High|Medium|Low',
-						'description' => 'detailed description of inefficiency'
-					]
-				],
-				'automation_opportunities' => [
-					[
-						'area' => 'process area',
-						'complexity' => 'High|Medium|Low',
-						'potential_hours_saved' => 'number'
-					]
-				]
-			],
-			'industry_insights' => [
-				'sector_trends' => "Key trends affecting {$company_name}'s industry",
-				'competitive_benchmarks' => "How competitors are leveraging treasury technology",
-				'regulatory_considerations' => "Relevant compliance and regulatory factors"
-			],
-			'technology_recommendations' => [
-				'primary_solution' => [
-					'category' => 'recommended category',
-					'rationale' => "Why this fits {$company_name} specifically",
-					'key_features' => ['feature1', 'feature2', 'feature3']
-				],
-				'implementation_approach' => [
-					'phase_1' => 'initial implementation focus',
-					'phase_2' => 'expansion phase',
-					'success_metrics' => ['metric1', 'metric2', 'metric3']
-				]
-			],
-			'financial_analysis' => [
-				'investment_breakdown' => [
-					'software_licensing' => 'estimated cost range',
-					'implementation_services' => 'estimated cost range',
-					'training_change_management' => 'estimated cost range'
-				],
-				'payback_analysis' => [
-					'payback_months' => 'number',
-					'roi_3_year' => 'percentage',
-					'npv_analysis' => 'positive value justification'
-				]
-			],
-			'risk_mitigation' => [
-				'implementation_risks' => [
-					"Risk specific to {$company_name}'s situation",
-					"Industry-specific risk consideration",
-					"Technology adoption risk"
-				],
-				'mitigation_strategies' => [
-					'risk_1_mitigation' => 'specific mitigation approach',
-					'risk_2_mitigation' => 'specific mitigation approach'
-				]
-			],
-			'next_steps' => [
-				"Immediate action for {$company_name} leadership",
-				"Vendor evaluation and selection process",
-				"Implementation planning and timeline",
-				"Change management and training program"
-			]
-		], JSON_PRETTY_PRINT);
+               $prompt .= "REQUIRED JSON STRUCTURE (respond with ONLY this JSON, no other text):\n";
+               $prompt .= json_encode(
+                       [
+                               'executive_summary' => [
+                                       'strategic_positioning' => "2-3 sentences about {$company_name}'s strategic position and readiness for treasury technology",
+                                       'key_value_drivers'     => [
+                                               "Primary value driver specific to {$company_name}",
+                                               "Secondary value driver for their industry/size",
+                                               "Third strategic benefit for their situation"
+                                       ],
+                                       'business_case_strength' => 'Strong|Moderate|Compelling',
+                               ],
+                               'financial_analysis' => [
+                                       'roi_scenarios' => [
+                                               [
+                                                       'scenario' => 'Conservative',
+                                                       'roi'      => 'percentage'
+                                               ],
+                                               [
+                                                       'scenario' => 'Base',
+                                                       'roi'      => 'percentage'
+                                               ],
+                                               [
+                                                       'scenario' => 'Optimistic',
+                                                       'roi'      => 'percentage'
+                                               ]
+                                       ],
+                                       'payback_analysis' => [
+                                               'payback_months' => 'number',
+                                               'roi_3_year'     => 'percentage',
+                                               'npv_analysis'   => 'positive value justification'
+                                       ]
+                               ],
+                               'implementation_roadmap' => [
+                                       [
+                                               'phase'      => 'Phase 1',
+                                               'timeline'   => '0-3 months',
+                                               'activities' => ['activity1', 'activity2']
+                                       ],
+                                       [
+                                               'phase'      => 'Phase 2',
+                                               'timeline'   => '3-6 months',
+                                               'activities' => ['activity1', 'activity2']
+                                       ]
+                               ]
+                       ],
+                       JSON_PRETTY_PRINT
+               );
 
 		return $prompt;
 	}
