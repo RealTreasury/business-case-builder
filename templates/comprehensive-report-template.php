@@ -698,9 +698,10 @@ const sensitivityCtx = document.getElementById('rtbcb-sensitivity-chart');
 if (sensitivityCtx && window.rtbcbSensitivityData) {
 try {
 new Chart(sensitivityCtx, {
-type: 'horizontalBar',
+type: 'bar',
 data: window.rtbcbSensitivityData,
 options: {
+indexAxis: 'y',
 responsive: true,
 maintainAspectRatio: false,
 plugins: {
