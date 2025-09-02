@@ -303,11 +303,17 @@ class RTBCB_Leads {
 					return false;
 				}
 
-				self::update_cached_statistics();
-				if ( function_exists( 'rtbcb_clear_report_cache' ) ) {
-					rtbcb_clear_report_cache();
-				}
-				return intval( $existing_lead['id'] );
+                               self::update_cached_statistics();
+                               if ( function_exists( 'rtbcb_clear_report_cache' ) ) {
+                                       rtbcb_clear_report_cache();
+                               }
+                               if ( function_exists( 'rtbcb_set_current_lead' ) ) {
+                                       rtbcb_set_current_lead( $existing_lead['id'], $sanitized_data['email'] );
+                               }
+                               if ( class_exists( 'RTBCB_API_Log' ) ) {
+                                       RTBCB_API_Log::associate_lead( $existing_lead['id'], $sanitized_data['email'] );
+                               }
+                               return intval( $existing_lead['id'] );
 			} else {
 				// Insert new lead
 				$result = $wpdb->insert(
@@ -321,13 +327,19 @@ class RTBCB_Leads {
 					return false;
 				}
 
-				$lead_id = $wpdb->insert_id;
-				self::update_cached_statistics();
-				if ( function_exists( 'rtbcb_clear_report_cache' ) ) {
-					rtbcb_clear_report_cache();
-				}
-				return $lead_id;
-			}
+                               $lead_id = $wpdb->insert_id;
+                               self::update_cached_statistics();
+                               if ( function_exists( 'rtbcb_clear_report_cache' ) ) {
+                                       rtbcb_clear_report_cache();
+                               }
+                               if ( function_exists( 'rtbcb_set_current_lead' ) ) {
+                                       rtbcb_set_current_lead( $lead_id, $sanitized_data['email'] );
+                               }
+                               if ( class_exists( 'RTBCB_API_Log' ) ) {
+                                       RTBCB_API_Log::associate_lead( $lead_id, $sanitized_data['email'] );
+                               }
+                               return $lead_id;
+                       }
 		} catch ( Exception $e ) {
 			error_log( 'RTBCB: Exception in save_lead: ' . $e->getMessage() );
 			return false;

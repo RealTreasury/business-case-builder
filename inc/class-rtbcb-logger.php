@@ -15,12 +15,25 @@ class RTBCB_Logger {
 	 * @param array  $context Context data.
 	 * @return void
 	 */
-	public static function log( $event, $context = [] ) {
-		$record = [
-			'timestamp' => gmdate( 'c' ),
-			'event'     => $event,
-			'context'   => $context,
-		];
+       public static function log( $event, $context = [] ) {
+               if ( function_exists( 'rtbcb_get_current_lead' ) ) {
+                       $lead = rtbcb_get_current_lead();
+                       if ( $lead ) {
+                               $context = array_merge(
+                                       [
+                                               'lead_id'    => intval( $lead['id'] ),
+                                               'lead_email' => $lead['email'],
+                                       ],
+                                       $context
+                               );
+                       }
+               }
+
+               $record = [
+                       'timestamp' => gmdate( 'c' ),
+                       'event'     => $event,
+                       'context'   => $context,
+               ];
 
 		error_log( 'RTBCB_LOG: ' . wp_json_encode( $record ) );
 
