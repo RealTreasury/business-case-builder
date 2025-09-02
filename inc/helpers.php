@@ -2622,12 +2622,91 @@ function rtbcb_extract_short_term_steps( $data ) {
        * @return array
        */
 function rtbcb_extract_long_term_steps( $data ) {
-	       return [
-	               __( 'Complete system implementation and testing', 'rtbcb' ),
-	               __( 'Conduct user training and change management', 'rtbcb' ),
-	               __( 'Measure and optimize system performance', 'rtbcb' ),
-	               __( 'Expand functionality and integration capabilities', 'rtbcb' ),
-	       ];
-       }
+return [
+__( 'Complete system implementation and testing', 'rtbcb' ),
+__( 'Conduct user training and change management', 'rtbcb' ),
+__( 'Measure and optimize system performance', 'rtbcb' ),
+__( 'Expand functionality and integration capabilities', 'rtbcb' ),
+];
+}
+
+/**
+ * Parse a raw API response containing nested and escaped JSON.
+ *
+ * The remote service returns a JSON object where the `raw_body` field holds
+ * another JSON string. Inside that string the `output` array contains a
+ * `text` field with an escaped JSON payload. This helper decodes each layer
+ * and returns the final associative array.
+ *
+ * @param string $raw_response Raw response string from the API.
+ * @return array|WP_Error      Parsed data array on success or WP_Error on failure.
+ */
+function rtbcb_parse_api_response( $raw_response ) {
+	if ( '' === $raw_response || null === $raw_response ) {
+		return new WP_Error(
+			'api_empty_response',
+			__( 'Empty API response.', 'rtbcb' )
+		);
+	}
+	
+	$outer = json_decode( $raw_response, true );
+	if ( null === $outer && JSON_ERROR_NONE !== json_last_error() ) {
+		return new WP_Error(
+			'api_invalid_json',
+			sprintf( __( 'Unable to decode API response: %s', 'rtbcb' ), json_last_error_msg() )
+		);
+	}
+	
+	if ( empty( $outer['raw_body'] ) ) {
+		return new WP_Error(
+			'api_missing_body',
+			__( 'API response missing raw_body field.', 'rtbcb' )
+		);
+	}
+	
+	$inner = json_decode( $outer['raw_body'], true );
+	if ( null === $inner && JSON_ERROR_NONE !== json_last_error() ) {
+		return new WP_Error(
+			'api_invalid_inner_json',
+			sprintf( __( 'Unable to decode raw_body JSON: %s', 'rtbcb' ), json_last_error_msg() )
+		);
+	}
+	
+	if ( empty( $inner['output'] ) || ! is_array( $inner['output'] ) ) {
+		return new WP_Error(
+			'api_missing_output',
+			__( 'raw_body does not contain an output array.', 'rtbcb' )
+		);
+	}
+	
+	$escaped_json = null;
+	foreach ( $inner['output'] as $item ) {
+		if ( isset( $item['type'] ) && 'message' === $item['type'] && ! empty( $item['content'] ) ) {
+			foreach ( $item['content'] as $content ) {
+				if ( isset( $content['text'] ) ) {
+					$escaped_json = $content['text'];
+					break 2;
+			}
+			}
+}
+}
+
+	if ( null === $escaped_json ) {
+		return new WP_Error(
+			'api_missing_text',
+			__( 'Unable to locate text field in API response.', 'rtbcb' )
+		);
+	}
+	
+	$data = json_decode( $escaped_json, true );
+	if ( null === $data && JSON_ERROR_NONE !== json_last_error() ) {
+		return new WP_Error(
+				'api_invalid_text_json',
+				sprintf( __( 'Unable to decode text JSON: %s', 'rtbcb' ), json_last_error_msg() )
+		);
+	}
+
+	return $data;
+}
 
 
