@@ -14,7 +14,7 @@ class RTBCB_DB {
 	/**
 	* Current database version.
 	*/
-	const DB_VERSION = '2.0.3';
+        const DB_VERSION = '2.0.4';
 
 	/**
 	/**
@@ -80,9 +80,13 @@ class RTBCB_DB {
 						RTBCB_Leads::add_missing_indexes();
 				}
 
-				if ( version_compare( $from_version, '2.0.3', '<' ) ) {
-						RTBCB_Leads::compress_existing_report_html();
-				}
+		if ( version_compare( $from_version, '2.0.3', '<' ) ) {
+			RTBCB_Leads::compress_existing_report_html();
+		}
+
+		if ( version_compare( $from_version, '2.0.4', '<' ) ) {
+			RTBCB_Leads::add_api_response_column();
+		}
 
 	// Future migrations can be handled here.
 
@@ -169,5 +173,63 @@ class RTBCB_DB {
 			],
 			[ '%s', '%s', '%s', '%s', '%s', '%f' ]
 		);
+	}
+	/**
+	* Store API response data for a lead.
+	*
+	* @param int   $lead_id      Lead identifier.
+	* @param mixed $api_response API response data.
+	*
+	* @return bool True on success, false on failure.
+	*/
+	public static function store_api_response( $lead_id, $api_response ) {
+		global $wpdb;
+
+		$response_data = is_string( $api_response ) ? $api_response : wp_json_encode( $api_response, JSON_UNESCAPED_SLASHES );
+
+		$result = $wpdb->update(
+			$wpdb->prefix . 'rtbcb_leads',
+			[
+				'api_response' => $response_data,
+				'updated_at'   => current_time( 'mysql' ),
+			],
+			[ 'id' => $lead_id ],
+			[ '%s', '%s' ],
+			[ '%d' ]
+		);
+
+		return false !== $result;
+	}
+
+	/**
+	* Retrieve stored API response for a lead.
+	*
+	* @param int $lead_id Lead identifier.
+	*
+	* @return array|null Decoded API response or null if not found.
+	*/
+	public static function get_api_response( $lead_id ) {
+		global $wpdb;
+
+		$response = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT api_response FROM {$wpdb->prefix}rtbcb_leads WHERE id = %d",
+				$lead_id
+			)
+		);
+
+		if ( $response ) {
+			$decoded = json_decode( $response, true );
+			if ( null !== $decoded ) {
+				return $decoded;
+			}
+
+			$decoded = json_decode( stripslashes( $response ), true );
+			if ( null !== $decoded ) {
+				return $decoded;
+			}
+		}
+
+		return null;
 	}
 }
