@@ -41,6 +41,10 @@
     z-index: 2;
 }
 
+.rtbcb-header-main {
+    color: #fff;
+}
+
 .rtbcb-report-badge-enhanced {
     display: inline-flex;
     align-items: center;
