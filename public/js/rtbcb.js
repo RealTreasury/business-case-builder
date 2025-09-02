@@ -342,18 +342,15 @@ async function rtbcbStreamAnalysis(formData, onChunk) {
             method: 'POST',
             body: formData
         });
-        if (response.status === 403) {
-            const text = await response.text();
-            if (text.includes('Security check failed') && attempt === 0) {
-                const refreshed = await rtbcbRefreshNonce();
-                if (refreshed) {
-                    formData.set('rtbcb_nonce', rtbcb_ajax.nonce);
-                    attempt++;
-                    continue;
-                }
-                handleSubmissionError('Security validation failed. Please reload the page.', '');
-                return;
+        if (response.status === 403 && attempt === 0) {
+            const refreshed = await rtbcbRefreshNonce();
+            if (refreshed) {
+                formData.set('rtbcb_nonce', rtbcb_ajax.nonce);
+                attempt++;
+                continue;
             }
+            handleSubmissionError('Security validation failed. Please reload the page.', '');
+            return;
         }
         break;
     }
