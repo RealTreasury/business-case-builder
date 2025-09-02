@@ -464,61 +464,43 @@ wp_localize_script(
 	 * @return void
 	 */
 	public function render_reports() {
-		if ( ! current_user_can( 'manage_options' ) ) {
-			return;
-		}
+                if ( ! current_user_can( 'manage_options' ) ) {
+                        return;
+                }
 
-		$upload_dir  = wp_upload_dir();
-		$reports_dir = trailingslashit( $upload_dir['basedir'] ) . 'rtbcb-reports';
+                require_once RTBCB_DIR . 'admin/class-rtbcb-reports-table.php';
 
-		if ( isset( $_POST['rtbcb_delete_old_reports'] ) ) {
-			check_admin_referer( 'rtbcb_delete_old_reports' );
+                $upload_dir  = wp_upload_dir();
+                $reports_dir = trailingslashit( $upload_dir['basedir'] ) . 'rtbcb-reports';
 
-			$days      = isset( $_POST['rtbcb_delete_days'] ) ? intval( sanitize_text_field( wp_unslash( $_POST['rtbcb_delete_days'] ) ) ) : 30;
-			$days      = max( 1, $days );
-			$threshold = time() - ( $days * DAY_IN_SECONDS );
-			$files     = glob( $reports_dir . '/*.{html,pdf}', GLOB_BRACE );
-			$files     = $files ? $files : [];
+                if ( isset( $_POST['rtbcb_delete_old_reports'] ) ) {
+                        check_admin_referer( 'rtbcb_delete_old_reports' );
 
-			foreach ( $files as $filepath ) {
-				if ( filemtime( $filepath ) < $threshold ) {
-					unlink( $filepath );
-				}
-			}
+                        $days      = isset( $_POST['rtbcb_delete_days'] ) ? intval( sanitize_text_field( wp_unslash( $_POST['rtbcb_delete_days'] ) ) ) : 30;
+                        $days      = max( 1, $days );
+                        $threshold = time() - ( $days * DAY_IN_SECONDS );
+                        $files     = glob( $reports_dir . '/*.{html,pdf}', GLOB_BRACE );
+                        $files     = $files ? $files : [];
 
-			wp_safe_redirect( admin_url( 'admin.php?page=rtbcb-reports' ) );
-			exit;
-		}
+                        foreach ( $files as $filepath ) {
+                                if ( filemtime( $filepath ) < $threshold ) {
+                                        unlink( $filepath );
+                                }
+                        }
 
-		if ( isset( $_GET['delete'] ) ) {
-			$file  = sanitize_file_name( wp_unslash( $_GET['delete'] ) );
-			$nonce = isset( $_GET['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ) : '';
-			if ( wp_verify_nonce( $nonce, 'rtbcb_delete_report_' . $file ) ) {
-				$file_path = trailingslashit( $reports_dir ) . $file;
-				if ( file_exists( $file_path ) ) {
-					unlink( $file_path );
-				}
-				wp_safe_redirect( admin_url( 'admin.php?page=rtbcb-reports' ) );
-				exit;
-			}
-		}
+                        wp_safe_redirect( admin_url( 'admin.php?page=rtbcb-reports' ) );
+                        exit;
+                }
 
-		$files        = glob( $reports_dir . '/*.{html,pdf}', GLOB_BRACE );
-		$files        = $files ? $files : [];
-		$report_files = [];
+                $orderby = isset( $_GET['orderby'] ) ? sanitize_key( wp_unslash( $_GET['orderby'] ) ) : 'file';
+                $order   = isset( $_GET['order'] ) ? sanitize_key( wp_unslash( $_GET['order'] ) ) : 'asc';
+                $order   = in_array( $order, [ 'asc', 'desc' ], true ) ? $order : 'asc';
 
-		foreach ( $files as $filepath ) {
-			$filename       = basename( $filepath );
-			$report_files[] = [
-				'name'     => $filename,
-				'url'      => trailingslashit( $upload_dir['baseurl'] ) . 'rtbcb-reports/' . $filename,
-				'size'     => size_format( filesize( $filepath ), 2 ),
-				'modified' => date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), filemtime( $filepath ) ),
-			];
-		}
+                $table = new RTBCB_Reports_Table();
+                $table->prepare_items( $orderby, $order );
 
-		include RTBCB_DIR . 'admin/reports-page.php';
-	}
+                include RTBCB_DIR . 'admin/reports-page.php';
+        }
 
 	/**
 	* AJAX handler to save test results from dashboard.
