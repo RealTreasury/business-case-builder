@@ -1940,6 +1940,11 @@ function rtbcb_get_report_allowed_html() {
 		'style'  => true,
 		'data-*' => true,
 	];
+	$allowed['script'] = [
+		'type'   => true,
+		'id'     => true,
+		'class'  => true,
+	];
 
 	foreach ( $allowed as $tag => $attrs ) {
 		$allowed[ $tag ]['data-*'] = true;
