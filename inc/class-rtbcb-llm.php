@@ -2158,206 +2158,37 @@ PROMPT;
 	*/
 	public function generate_strategic_analysis( $enriched_profile, $roi_scenarios, $recommendation, $rag_baseline ) {
 
-		if ( rtbcb_heavy_features_disabled() ) {
-			return new WP_Error( 'heavy_features_disabled', __( 'AI features are disabled.', 'rtbcb' ) );
-		}
-	if ( empty( $this->api_key ) ) {
-	return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
-	}
+               if ( rtbcb_heavy_features_disabled() ) {
+                       return new WP_Error( 'heavy_features_disabled', __( 'AI features are disabled.', 'rtbcb' ) );
+               }
+       if ( empty( $this->api_key ) ) {
+       return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
+       }
 
-	$system_prompt = $this->build_strategic_analysis_system_prompt();
-	$user_prompt   = $this->build_strategic_analysis_user_prompt(
-	$enriched_profile,
-	$roi_scenarios,
-	$recommendation,
-	$rag_baseline
-	);
+       $client  = new RTBCB_OpenAI_Client( $this->api_key, $this->get_model( 'premium' ) );
+       $payload = [
+       'company_intelligence'       => $enriched_profile,
+       'financial_analysis'         => $roi_scenarios,
+       'technology_recommendations' => $recommendation,
+       'market_research_context'    => $rag_baseline,
+       'analysis_requirements'      => [
+       'Justify the Investment: Clear business case with financial backing',
+       'Address Specific Needs: Solutions tailored to identified challenges',
+       'Mitigate Risks: Comprehensive risk assessment and mitigation strategies',
+       'Enable Success: Practical implementation roadmap with success metrics',
+       'Competitive Advantage: Position technology investment within competitive context',
+       ],
+       ];
 
-	$response = $this->call_openai_with_retry(
-	$this->get_model( 'premium' ),
-	[ 'instructions' => $system_prompt, 'input' => $user_prompt ],
-	$this->estimate_tokens( 2000 )
-	);
+       $analysis_data = $client->request( $payload, $this->estimate_tokens( 2000 ) );
+       if ( is_wp_error( $analysis_data ) ) {
+       return $analysis_data;
+       }
+       return $this->validate_and_structure_analysis( $analysis_data );
+       }
 
-	if ( is_wp_error( $response ) ) {
-	return $response;
-	}
-
-	$parsed        = rtbcb_parse_gpt5_response( $response );
-	$analysis_data = json_decode( $parsed['output_text'], true );
-
-	if ( ! is_array( $analysis_data ) ) {
-	return new WP_Error( 'parse_error', __( 'Failed to parse strategic analysis response.', 'rtbcb' ) );
-	}
-
-	return $this->validate_and_structure_analysis( $analysis_data );
-	}
-
-	/**
-	* Build system prompt for strategic analysis.
-	*
-	* @return string System prompt.
-	*/
-	private function build_strategic_analysis_system_prompt() {
-	return <<<'SYSTEM'
-	You are a senior treasury technology consultant creating executive-level strategic recommendations.
-
-	You have been provided with:
-	1. Enriched company intelligence and industry context
-	2. Detailed ROI calculations and financial modeling
-	3. Technology category recommendations
-	4. Relevant market research and best practices
-
-	Your task is to synthesize this information into a comprehensive strategic analysis that executives can use to make informed treasury technology investment decisions.
-
-	## Required Output Format
-
-	Return a single JSON object with this exact structure:
-
-	```json
-	{
-	"executive_summary": {
-		"strategic_positioning": "string - 2-3 sentences on strategic position",
-		"business_case_strength": "weak|moderate|strong|compelling",
-		"key_value_drivers": ["array of 3-4 primary value drivers"],
-		"executive_recommendation": "string - clear recommendation with next steps",
-		"confidence_level": "number - 0.7 to 0.95"
-	},
-	"operational_analysis": {
-		"current_state_assessment": {
-		"efficiency_rating": "poor|fair|good|excellent",
-		"benchmark_comparison": "string - vs industry peers",
-		"capacity_utilization": "string - team capacity analysis"
-		},
-		"process_improvements": [
-		{
-			"process_area": "string - specific process",
-			"current_state": "string - current approach",
-			"improved_state": "string - post-implementation state",
-			"impact_level": "low|medium|high|transformational"
-		}
-		],
-		"automation_opportunities": [
-		{
-			"opportunity": "string - automation opportunity",
-			"complexity": "low|medium|high",
-			"time_savings": "number - hours per week",
-			"implementation_effort": "low|medium|high"
-		}
-		]
-	},
-	"financial_analysis": {
-		"investment_breakdown": {
-		"software_licensing": "string - cost range and considerations",
-		"implementation_services": "string - cost range and scope",
-		"training_change_management": "string - cost range and requirements",
-		"ongoing_support": "string - annual costs"
-		},
-		"payback_analysis": {
-		"payback_months": "number - expected payback period",
-		"roi_3_year": "number - 3 year ROI percentage",
-		"npv_analysis": "string - net present value assessment",
-		"sensitivity_factors": ["array of factors affecting ROI"]
-		}
-	},
-	"implementation_roadmap": [
-		{
-		"phase": "string - phase name",
-		"duration": "string - time estimate",
-		"key_activities": ["array of activities"],
-		"success_criteria": ["array of success metrics"],
-		"risks": ["array of phase-specific risks"]
-		}
-	],
-	"risk_mitigation": {
-		"implementation_risks": ["array of key risks"],
-		"mitigation_strategies": {
-		"change_management": "string - change management approach",
-		"technical_integration": "string - integration risk mitigation",
-		"vendor_selection": "string - vendor risk mitigation",
-		"timeline_management": "string - timeline risk mitigation"
-		},
-		"success_factors": ["array of critical success factors"]
-	},
-	"next_steps": {
-		"immediate": ["array of immediate actions (next 30 days)"],
-		"short_term": ["array of short-term milestones (3-6 months)"],
-		"long_term": ["array of long-term objectives (6+ months)"]
-	},
-	"vendor_considerations": {
-		"evaluation_criteria": ["array of key selection criteria"],
-		"due_diligence_areas": ["array of due diligence focus areas"],
-		"negotiation_priorities": ["array of contract negotiation priorities"]
-	}
-	}
-	```
-
-	## Analysis Standards
-
-	- **Executive Focus**: Write for C-level decision makers
-	- **Actionable Insights**: Provide specific, implementable recommendations
-	- **Risk Balance**: Address both opportunities and challenges honestly
-	- **Financial Rigor**: Support recommendations with solid financial analysis
-	- **Implementation Reality**: Consider practical constraints and requirements
-	- **Competitive Context**: Position recommendations within competitive landscape
-
-	Return ONLY the JSON object with no additional text.
-	SYSTEM;
-	}
-
-	/**
-	* Build user prompt for strategic analysis.
-	*
-	* @param array $enriched_profile Enriched company profile.
-	* @param array $roi_scenarios    ROI scenarios.
-	* @param array $recommendation   Technology recommendation.
-	* @param array $rag_baseline     Market research context.
-	* @return string User prompt.
-	*/
-	private function build_strategic_analysis_user_prompt( $enriched_profile, $roi_scenarios, $recommendation, $rag_baseline ) {
-	$prompt = <<<PROMPT
-	Create a comprehensive strategic analysis and executive recommendations based on the following research and analysis:
-
-	## Enriched Company Intelligence
-	```json
-	{$this->json_encode_safe( $enriched_profile )}
-	```
-
-	## Financial Analysis & ROI Scenarios
-	```json
-	{$this->json_encode_safe( $roi_scenarios )}
-	```
-
-	## Technology Recommendations
-	```json
-	{$this->json_encode_safe( $recommendation )}
-	```
-
-	## Market Research Context
-	```json
-	{$this->json_encode_safe( $rag_baseline )}
-	```
-
-	## Analysis Requirements
-
-	Synthesize all provided information to create executive-level strategic recommendations that:
-
-	1. **Justify the Investment**: Clear business case with financial backing
-	2. **Address Specific Needs**: Solutions tailored to identified challenges
-	3. **Mitigate Risks**: Comprehensive risk assessment and mitigation strategies
-	4. **Enable Success**: Practical implementation roadmap with success metrics
-	5. **Competitive Advantage**: Position technology investment within competitive context
-
-	Focus on creating actionable insights that executives can use to make informed decisions about treasury technology investments.
-
-	Consider the company's maturity level, industry dynamics, and specific operational challenges when formulating recommendations.
-	PROMPT;
-
-return $prompt;
-}
-
-        /**
-        * Validate enrichment response JSON structure.
+       /**
+       * Validate enrichment response JSON structure.
         *
         * @param string $response JSON response from LLM.
         * @return array|WP_Error Decoded array or error.

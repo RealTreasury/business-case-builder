@@ -34,10 +34,17 @@ A comprehensive WordPress plugin that helps treasury teams quantify the benefits
 
    ```php
    $client->chat()->create([
-       'model' => 'gpt-5-mini',
-       'max_output_tokens' => 256,
-   ]);
-   ```
+   'model' => 'gpt-5-mini',
+   'max_output_tokens' => 256,
+  ]);
+  ```
+
+   ### Structured JSON Prompt Contract
+   The plugin sends requests using a fixed system prompt and expects JSON-only responses.
+   Each request specifies `reasoning_effort` set to `medium` and uses
+   `response_format = {"type": "json_object"}`. The client performs a
+   self-validation pass and automatically retries once if the model returns
+   invalid JSON.
 
    The API tester uses this value to verify connectivity.
 
