@@ -1960,6 +1960,11 @@ $allowed = wp_kses_allowed_html( 'post' );
 		'style'  => true,
 		'data-*' => true,
 	];
+	$allowed['script'] = [
+		'type'   => true,
+		'id'     => true,
+		'class'  => true,
+	];
 
 foreach ( $allowed as $tag => $attrs ) {
 $allowed[ $tag ]['data-*'] = true;
