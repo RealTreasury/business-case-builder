@@ -103,23 +103,24 @@ $enable_charts = class_exists( 'RTBCB_Settings' ) ? RTBCB_Settings::get_setting(
 				RTBCB_VERSION,
 				true
 			);
-			wp_localize_script(
-				'rtbcb-workflow-visualizer',
-				'rtbcbWorkflow',
-				[
-					'ajax_url' => admin_url( 'admin-ajax.php' ),
-					'nonce'    => wp_create_nonce( 'rtbcb_workflow_visualizer' ),
-					'strings'  => [
-						'refresh_success' => __( 'Workflow history refreshed', 'rtbcb' ),
-						'clear_success'   => __( 'Workflow history cleared', 'rtbcb' ),
-						'error'           => __( 'An error occurred', 'rtbcb' ),
-						'no_history'      => __( 'No workflow history available.', 'rtbcb' ),
-						'lead'            => __( 'Lead', 'rtbcb' ),
-						'unknown_lead'    => __( 'Unknown Lead', 'rtbcb' ),
-						'not_run'         => __( 'Not run', 'rtbcb' ),
-					],
-				]
-			);
+wp_localize_script(
+'rtbcb-workflow-visualizer',
+'rtbcbWorkflow',
+[
+'ajax_url' => admin_url( 'admin-ajax.php' ),
+'nonce'    => wp_create_nonce( 'rtbcb_workflow_visualizer' ),
+'strings'  => [
+'refresh_success' => __( 'Workflow history refreshed', 'rtbcb' ),
+'clear_success'   => __( 'Workflow history cleared', 'rtbcb' ),
+'error'           => __( 'An error occurred', 'rtbcb' ),
+'no_history'      => __( 'No workflow history available.', 'rtbcb' ),
+'lead'            => __( 'Lead', 'rtbcb' ),
+'unknown_lead'    => __( 'Unknown Lead', 'rtbcb' ),
+'not_run'         => __( 'Not run', 'rtbcb' ),
+'seconds'         => __( 's', 'rtbcb' ),
+],
+]
+);
 	}
 
 		$company_data = [];
@@ -1881,27 +1882,28 @@ $enable_charts = class_exists( 'RTBCB_Settings' ) ? RTBCB_Settings::get_setting(
 		wp_send_json_error( __( 'Insufficient permissions', 'rtbcb' ) );
 		}
 		$raw_history = $this->get_workflow_history_from_logs();
-		$history     = array_map(
-		function ( $entry ) {
-		$lead_id = isset( $entry['lead_id'] ) ? intval( $entry['lead_id'] ) : 0;
-		$email   = isset( $entry['lead_email'] ) ? sanitize_email( $entry['lead_email'] ) : '';
-		$steps   = [];
-		if ( isset( $entry['steps'] ) && is_array( $entry['steps'] ) ) {
-		foreach ( $entry['steps'] as $step ) {
-		$steps[] = [
-		'name'   => sanitize_text_field( $step['name'] ?? '' ),
-		'status' => sanitize_text_field( $step['status'] ?? '' ),
-		];
-		}
-		}
-		return [
-		'lead_id' => $lead_id,
-		'email'   => $email,
-		'steps'   => $steps,
-		];
-		},
-		$raw_history
-		);
+$history     = array_map(
+function ( $entry ) {
+$lead_id = isset( $entry['lead_id'] ) ? intval( $entry['lead_id'] ) : 0;
+$email   = isset( $entry['lead_email'] ) ? sanitize_email( $entry['lead_email'] ) : '';
+$steps   = [];
+if ( isset( $entry['steps'] ) && is_array( $entry['steps'] ) ) {
+foreach ( $entry['steps'] as $step ) {
+$steps[] = [
+'name'     => sanitize_text_field( $step['name'] ?? '' ),
+'status'   => sanitize_text_field( $step['status'] ?? '' ),
+'duration' => isset( $step['duration'] ) ? floatval( $step['duration'] ) : 0,
+];
+}
+}
+return [
+'lead_id' => $lead_id,
+'email'   => $email,
+'steps'   => $steps,
+];
+},
+$raw_history
+);
 
 		wp_send_json_success(
 		[

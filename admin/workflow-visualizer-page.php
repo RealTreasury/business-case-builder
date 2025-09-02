@@ -27,6 +27,8 @@ if ( ! current_user_can( 'manage_options' ) ) {
 </button>
 </div>
 
+<div id="rtbcb-workflow-message" class="notice" style="display:none;"></div>
+
 <!-- Workflow Pipeline Visualization -->
 <div class="rtbcb-workflow-pipeline">
 <h2><?php echo esc_html__( 'Enhanced Workflow Pipeline', 'rtbcb' ); ?></h2>
