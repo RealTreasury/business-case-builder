@@ -131,14 +131,27 @@ class RTBCB_API_Log {
                        return $json;
                }
 
-               $truncated = true;
-               $json      = substr( $json, 0, $max_bytes );
+		$truncated = true;
 
-               while ( strlen( $json ) && null === json_decode( $json, true ) ) {
-                       $json = substr( $json, 0, -1 );
-               }
+		$low   = 0;
+		$high  = $max_bytes;
+		$valid = '';
 
-               return $json;
+		// Binary search to find the largest valid JSON prefix within the limit.
+
+		while ( $low <= $high ) {
+			$mid       = (int) floor( ( $low + $high ) / 2 );
+			$candidate = substr( $json, 0, $mid );
+
+			if ( null !== json_decode( $candidate, true ) ) {
+				$valid = $candidate;
+				$low   = $mid + 1;
+			} else {
+				$high = $mid - 1;
+			}
+		}
+
+		return $valid;
        }
 
 	/**
