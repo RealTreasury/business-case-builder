@@ -222,12 +222,16 @@ return true;
 		}
 
 		// Streamed analysis handler
-		if ( class_exists( 'RTBCB_Ajax' ) ) {
-			add_action( 'wp_ajax_rtbcb_stream_analysis', [ 'RTBCB_Ajax', 'stream_analysis' ] );
-		}
-		if ( class_exists( 'RTBCB_Ajax' ) ) {
-			add_action( 'wp_ajax_nopriv_rtbcb_stream_analysis', [ 'RTBCB_Ajax', 'stream_analysis' ] );
-		}
+                if ( class_exists( 'RTBCB_Ajax' ) ) {
+                        add_action( 'wp_ajax_rtbcb_stream_analysis', [ 'RTBCB_Ajax', 'stream_analysis' ] );
+                }
+                if ( class_exists( 'RTBCB_Ajax' ) ) {
+                        add_action( 'wp_ajax_nopriv_rtbcb_stream_analysis', [ 'RTBCB_Ajax', 'stream_analysis' ] );
+                }
+
+                // Nonce refresh handler
+                add_action( 'wp_ajax_rtbcb_get_nonce', 'rtbcb_get_nonce' );
+                add_action( 'wp_ajax_nopriv_rtbcb_get_nonce', 'rtbcb_get_nonce' );
 
 		// OpenAI proxy handlers
 	add_action( 'wp_ajax_rtbcb_openai_responses', 'rtbcb_proxy_openai_responses' );
@@ -3357,6 +3361,17 @@ if ( ! function_exists( 'rtbcb_ajax_generate_case' ) ) {
 		RTBCB_Ajax::generate_comprehensive_case();
 	   }
 }
+
+if ( ! function_exists( 'rtbcb_get_nonce' ) ) {
+	/**
+	 * Return a fresh nonce for AJAX requests.
+	 *
+	 * @return void
+	 */
+	function rtbcb_get_nonce() {
+		wp_send_json_success( wp_create_nonce( 'rtbcb_generate' ) );
+	}
+	}
 
 // Helper functions for use in templates and other plugins
 if ( ! function_exists( 'rtbcb_get_leads_count' ) ) {
