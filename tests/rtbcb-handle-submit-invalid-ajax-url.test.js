@@ -32,10 +32,15 @@ class SimpleFormData {
 
 global.FormData = SimpleFormData;
 
-let fetchCalled = false;
-global.fetch = function() {
-    fetchCalled = true;
-    return Promise.resolve();
+let fetchUrl = '';
+global.fetch = function(url) {
+    fetchUrl = url;
+    return Promise.resolve({
+        ok: false,
+        status: 500,
+        statusText: 'Error',
+        text: () => Promise.resolve('{"data":{"message":"Server error","error_code":"E1"}}')
+    });
 };
 
 const form = {
@@ -65,9 +70,9 @@ handleSubmissionError = (msg) => { errorMessage = msg; };
 
 (async () => {
     await handleSubmit({ preventDefault: () => {}, target: formElem });
-    assert.strictEqual(fetchCalled, false);
-    assert.strictEqual(errorMessage, 'Service unavailable. Please reload the page.');
-    console.log('rtbcb handleSubmit invalid ajaxUrl test passed.');
+    assert.strictEqual(fetchUrl, '/wp-admin/admin-ajax.php');
+    assert.strictEqual(errorMessage, 'Server error');
+    console.log('rtbcb handleSubmit invalid ajaxUrl fallback test passed.');
 })().catch(err => {
     console.error(err);
     process.exit(1);

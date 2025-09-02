@@ -75,6 +75,10 @@ function isValidUrl(url) {
     if (!url) {
         return false;
     }
+    // Allow root-relative paths like "/wp-admin/admin-ajax.php".
+    if (url.startsWith('/') && !url.startsWith('//')) {
+        return true;
+    }
     try {
         const parsed = new URL(url);
         return parsed.protocol === 'http:' || parsed.protocol === 'https:';
@@ -83,11 +87,65 @@ function isValidUrl(url) {
     }
 }
 
-// Normalize AJAX URL to prevent empty fetch requests.
+// Log if initial AJAX URL is invalid; fallbacks will be tried during requests.
 if ( typeof rtbcb_ajax !== 'undefined' && ! isValidUrl( rtbcb_ajax.ajax_url ) ) {
-    if ( typeof ajaxurl !== 'undefined' && isValidUrl( ajaxurl ) ) {
-        rtbcb_ajax.ajax_url = ajaxurl;
+    console.warn('RTBCB: Initial AJAX URL invalid, will attempt fallbacks.');
+}
+
+/**
+ * Attempt a fetch request with AJAX URL fallbacks.
+ *
+ * @param {Function} buildUrl Function that receives a base URL and returns the full URL.
+ * @param {Object} options    Fetch options.
+ * @return {Promise<{response: Response, url: string}>} Response and base URL used.
+ */
+async function rtbcbFetchWithRetry(buildUrl, options) {
+    const candidates = [];
+    if (typeof rtbcb_ajax !== 'undefined' && rtbcb_ajax.ajax_url) {
+        candidates.push(rtbcb_ajax.ajax_url);
     }
+    if (typeof ajaxurl !== 'undefined') {
+        candidates.push(ajaxurl);
+    }
+    candidates.push('/wp-admin/admin-ajax.php');
+
+    let lastResponse = null;
+    let lastUrl = '';
+    let lastError;
+
+    for (const base of candidates) {
+        if (!isValidUrl(base)) {
+            console.warn('RTBCB: Skipping invalid AJAX URL:', base);
+            continue;
+        }
+        const url = typeof buildUrl === 'function' ? buildUrl(base) : base;
+        console.log('RTBCB: Attempting request to', url);
+        try {
+            const response = await fetch(url, options);
+            if (response.ok) {
+                console.log('RTBCB: Request succeeded with', url);
+                if (typeof rtbcb_ajax !== 'undefined') {
+                    rtbcb_ajax.ajax_url = base;
+                }
+                return { response, url: base };
+            }
+            console.warn('RTBCB: Non-OK response from', url, response.status);
+            lastResponse = response;
+            lastUrl = base;
+        } catch (err) {
+            console.warn('RTBCB: Request to', url, 'failed:', err);
+            lastError = err;
+        }
+    }
+
+    if (lastResponse) {
+        if (typeof rtbcb_ajax !== 'undefined') {
+            rtbcb_ajax.ajax_url = lastUrl;
+        }
+        return { response: lastResponse, url: lastUrl };
+    }
+
+    throw lastError || new Error('RTBCB: All AJAX requests failed');
 }
 
 /**
@@ -139,11 +197,6 @@ async function handleSubmit(e) {
         }
         progressContainer.style.display = 'block';
     }
-    if (!isValidUrl(rtbcb_ajax.ajax_url)) {
-        handleSubmissionError('Service unavailable. Please reload the page.', '');
-        rtbcbIsSubmitting = false;
-        return;
-    }
 
     var loggedData = typeof formData.entries === 'function' ? Object.fromEntries(formData.entries()) : {};
     console.log('RTBCB: Submitting form data:', loggedData);
@@ -151,15 +204,11 @@ async function handleSubmit(e) {
     var response;
     var responseText;
     try {
-        if (!isValidUrl(rtbcb_ajax.ajax_url)) {
-            handleSubmissionError('Service unavailable. Please reload the page.', '');
-            rtbcbIsSubmitting = false;
-            return;
-        }
-        response = await fetch(rtbcb_ajax.ajax_url, {
+        const result = await rtbcbFetchWithRetry((base) => base, {
             method: 'POST',
             body: formData
         });
+        response = result.response;
         responseText = await response.text();
     } catch (networkError) {
         handleSubmissionError('Network error. Please try again later.', '');
@@ -205,13 +254,12 @@ async function handleSubmit(e) {
 
 async function pollJobStatus(jobId, progressContainer, formContainer) {
     try {
-        if (!rtbcb_ajax || !isValidUrl(rtbcb_ajax.ajax_url)) {
-            handleSubmissionError('Service unavailable. Please reload the page.', '');
-            rtbcbIsSubmitting = false;
-            return;
-        }
-        const nonce = rtbcb_ajax.nonce ? rtbcb_ajax.nonce : '';
-        const response = await fetch(`${rtbcb_ajax.ajax_url}?action=rtbcb_job_status&job_id=${encodeURIComponent(jobId)}&rtbcb_nonce=${nonce}`);
+        const nonce = rtbcb_ajax && rtbcb_ajax.nonce ? rtbcb_ajax.nonce : '';
+        const result = await rtbcbFetchWithRetry(
+            (base) => `${base}?action=rtbcb_job_status&job_id=${encodeURIComponent(jobId)}&rtbcb_nonce=${nonce}`,
+            {}
+        );
+        const response = result.response;
         const data = await response.json();
 
         if (!data.success) {
@@ -268,7 +316,7 @@ document.addEventListener('DOMContentLoaded', function() {
  * @return {Promise<void>} Promise that resolves when streaming completes.
  */
 async function rtbcbStreamAnalysis(formData, onChunk) {
-    if (!rtbcb_ajax || !isValidUrl(rtbcb_ajax.ajax_url)) {
+    if (!rtbcb_ajax) {
         handleSubmissionError('Service unavailable. Please reload the page.', '');
         return;
     }
@@ -276,10 +324,11 @@ async function rtbcbStreamAnalysis(formData, onChunk) {
     if (rtbcb_ajax.nonce) {
         formData.append('rtbcb_nonce', rtbcb_ajax.nonce);
     }
-    const response = await fetch(rtbcb_ajax.ajax_url, {
+    const result = await rtbcbFetchWithRetry((base) => base, {
         method: 'POST',
         body: formData
     });
+    const response = result.response;
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     while (true) {

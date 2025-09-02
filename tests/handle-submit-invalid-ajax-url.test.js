@@ -4,7 +4,7 @@ const assert = require('assert');
 
 require('./jsdom-setup');
 
-global.rtbcb_ajax = { ajax_url: 'ftp://example.com', nonce: 'test-nonce' };
+global.rtbcb_ajax = { ajax_url: 'ftp://example.com', nonce: 'test-nonce', strings: { generating: 'Generating...' } };
 
 class SimpleFormData {
     constructor(form) {
@@ -28,10 +28,15 @@ class SimpleFormData {
 
 global.FormData = SimpleFormData;
 
-let fetchCalled = false;
-global.fetch = function() {
-    fetchCalled = true;
-    return Promise.resolve();
+let fetchUrl = '';
+global.fetch = function(url) {
+    fetchUrl = url;
+    return Promise.resolve({
+        ok: false,
+        status: 500,
+        statusText: 'Error',
+        text: () => Promise.resolve('{"data":{"message":"Server error","error_code":"E1"}}')
+    });
 };
 
 const form = {
@@ -78,10 +83,11 @@ builder.showResults = () => {};
 builder.showEnhancedError = (msg) => { errorMessage = msg; };
 
 (async () => {
+    builder.startProgressiveLoading = () => {};
     await builder.handleSubmit();
-    assert.strictEqual(fetchCalled, false);
-    assert.strictEqual(errorMessage, 'Service unavailable. Please reload the page.');
-    console.log('Invalid ajaxUrl test passed.');
+    assert.strictEqual(fetchUrl, '/wp-admin/admin-ajax.php');
+    assert.strictEqual(errorMessage, 'Server error');
+    console.log('Invalid ajaxUrl fallback test passed.');
 })().catch(err => {
     console.error(err);
     process.exit(1);

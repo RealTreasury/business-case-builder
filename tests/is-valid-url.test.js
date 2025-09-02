@@ -12,5 +12,6 @@ assert.strictEqual(isValidUrl('https://example.com'), true);
 assert.strictEqual(isValidUrl('http://example.com'), true);
 assert.strictEqual(isValidUrl('ftp://example.com'), false);
 assert.strictEqual(isValidUrl(''), false);
+assert.strictEqual(isValidUrl('/wp-admin/admin-ajax.php'), true);
 
 console.log('isValidUrl tests passed.');
