@@ -681,11 +681,22 @@ async function generateAndDisplayReport(businessContext) {
             reportContainer.textContent = partial;
         });
 
-        if (!htmlReport.includes('<!DOCTYPE html>')) {
-            throw new Error('Invalid HTML response from API');
+        if (!htmlReport || !htmlReport.trim()) {
+            throw new Error('Empty response from API');
+        }
+
+        if (!htmlReport.includes('<html')) {
+            console.warn('RTBCB: HTML fragment received from API');
         }
 
         const safeReport = sanitizeReportHTML(htmlReport);
+        if (!safeReport || !safeReport.trim()) {
+            console.error('RTBCB: Sanitized report is empty or invalid');
+            errorElement.textContent = 'Error: Malformed report content.';
+            errorElement.style.display = 'block';
+            return;
+        }
+
         reportContainer.innerHTML = '';
         displayReport(safeReport);
 
