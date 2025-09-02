@@ -176,6 +176,43 @@ function initializeComparisonCharts() {
 }
 
 /**
+ * Create a mini chart for an individual scenario
+ */
+function createScenarioMiniChart(canvas, scenario) {
+    const chartData = window.rtbcbChartData || generateFallbackChartData();
+    if (!chartData || !chartData.labels || !chartData.datasets) return;
+
+    const scenarioIndex = { conservative: 0, base: 1, optimistic: 2 }[scenario];
+    const dataset = chartData.datasets[scenarioIndex];
+    if (!dataset) return;
+
+    try {
+        new Chart(canvas, {
+            type: 'bar',
+            data: {
+                labels: chartData.labels,
+                datasets: [{
+                    label: dataset.label,
+                    data: dataset.data,
+                    backgroundColor: dataset.backgroundColor
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { display: false },
+                    y: { display: false }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('RTBCB: Error initializing scenario chart:', error);
+    }
+}
+
+/**
  * Initialize sensitivity analysis chart
  */
 function initializeSensitivityChart() {
@@ -186,9 +223,10 @@ function initializeSensitivityChart() {
     
     try {
         new Chart(ctx, {
-            type: 'horizontalBar',
+            type: 'bar',
             data: sensitivityData,
             options: {
+                indexAxis: 'y',
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
