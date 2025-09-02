@@ -1284,7 +1284,7 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 			];
 		}
 
-		$required_keys = [ 'executive_summary', 'financial_analysis', 'industry_analysis', 'implementation_roadmap', 'risk_mitigation', 'next_steps' ];
+$required_keys = [ 'executive_summary', 'financial_analysis', 'implementation_roadmap' ];
 		$missing_keys  = array_diff( $required_keys, array_keys( $result ) );
 
 		if ( ! empty( $missing_keys ) ) {
@@ -1833,8 +1833,8 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 					);
 					return;
 				}
-				$required_sections = [ 'executive_summary', 'financial_analysis', 'industry_analysis', 'implementation_roadmap', 'risk_mitigation', 'next_steps' ];
-				$missing_sections  = array_diff( $required_sections, array_keys( $comprehensive_analysis ) );
+$required_sections = [ 'executive_summary', 'financial_analysis', 'implementation_roadmap' ];
+$missing_sections  = array_diff( $required_sections, array_keys( $comprehensive_analysis ) );
 
 				if ( ! empty( $missing_sections ) ) {
 					rtbcb_log_error( 'LLM missing required sections', [ 'missing' => $missing_sections ] );
@@ -2302,16 +2302,13 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 		],
 	];
 
-	$required_sections = [
-		'metadata',
-		'executive_summary',
-		'financial_analysis',
-		'company_intelligence',
-		'technology_strategy',
-		'operational_insights',
-		'risk_analysis',
-		'action_plan',
-	];
+$required_sections = [
+'metadata',
+'executive_summary',
+'financial_analysis',
+'company_intelligence',
+'technology_strategy',
+];
 
 	$section_defaults = [
 		'metadata'	     => [
