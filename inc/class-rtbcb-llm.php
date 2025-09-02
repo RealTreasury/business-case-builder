@@ -929,7 +929,7 @@ $batch_prompts['tech'] = [
               ];
 
               foreach ( $required_sections as $section ) {
-                      if ( empty( $json[ $section ] ) || ! is_array( $json[ $section ] ) ) {
+                      if ( ! isset( $json[ $section ] ) || ! is_array( $json[ $section ] ) ) {
                               /* translators: %s: missing section name */
                               return new WP_Error(
                                       'llm_missing_section',
