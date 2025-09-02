@@ -3,18 +3,20 @@
  * Handles interactive dashboard features, charts, and collapsible sections
  */
 
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('RTBCB Report: Initializing enhanced dashboard');
-    
-    // Initialize all interactive features
-    initializeCharts();
-    initializeSectionToggles();
-    initializeInteractiveMetrics();
-    initializeResponsiveFeatures();
-    
-    // Add loading animation completion
-    document.querySelector('.rtbcb-enhanced-report')?.classList.add('loaded');
-});
+if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('RTBCB Report: Initializing enhanced dashboard');
+
+        // Initialize all interactive features
+        initializeCharts();
+        initializeSectionToggles();
+        initializeInteractiveMetrics();
+        initializeResponsiveFeatures();
+
+        // Add loading animation completion
+        document.querySelector('.rtbcb-enhanced-report')?.classList.add('loaded');
+    });
+}
 
 /**
  * Initialize Chart.js visualizations
@@ -555,6 +557,82 @@ function toggleMobileMenu() {
     const menu = document.querySelector('.rtbcb-mobile-menu');
     if (menu) {
         menu.classList.toggle('open');
+    }
+}
+
+// Report generation utilities retained for backward compatibility
+function sanitizeReportHTML(htmlContent) {
+    // Sanitize OpenAI-generated HTML before embedding or exporting.
+    // Explicitly whitelist tags and attributes required for reports.
+    const allowedTags = [
+        'a', 'p', 'br', 'strong', 'em', 'ul', 'ol', 'li',
+        'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span',
+        'table', 'thead', 'tbody', 'tr', 'th', 'td'
+    ];
+    const allowedAttr = [ 'href', 'title', 'target', 'rel', 'style' ];
+    return typeof DOMPurify !== 'undefined'
+        ? DOMPurify.sanitize(htmlContent, { ALLOWED_TAGS: allowedTags, ALLOWED_ATTR: allowedAttr })
+        : htmlContent;
+}
+
+function displayReport(htmlContent) {
+    const iframe = document.createElement('iframe');
+    iframe.style.width = '100%';
+    iframe.style.height = '800px';
+    iframe.style.border = '1px solid #ddd';
+    iframe.srcdoc = sanitizeReportHTML(htmlContent);
+    document.getElementById('report-container').appendChild(iframe);
+}
+
+function exportToPDF(htmlContent) {
+    const sanitized = sanitizeReportHTML(htmlContent);
+    const blob = new Blob([sanitized], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const printWindow = window.open(url, '_blank');
+
+    if (printWindow) {
+        printWindow.focus();
+        printWindow.onload = function() {
+            printWindow.print();
+            URL.revokeObjectURL(url);
+        };
+    } else {
+        console.error('Failed to open print window');
+    }
+}
+
+async function generateAndDisplayReport(businessContext) {
+    const loadingElement = document.getElementById('loading');
+    const errorElement = document.getElementById('error');
+    const reportContainer = document.getElementById('report-container');
+
+    loadingElement.style.display = 'block';
+    errorElement.style.display = 'none';
+    reportContainer.innerHTML = '';
+
+    try {
+        const htmlReport = await generateProfessionalReport(businessContext, partial => {
+            reportContainer.textContent = partial;
+        });
+
+        if (!htmlReport.includes('<!DOCTYPE html>')) {
+            throw new Error('Invalid HTML response from API');
+        }
+
+        const safeReport = sanitizeReportHTML(htmlReport);
+        reportContainer.innerHTML = '';
+        displayReport(safeReport);
+
+        const exportBtn = document.createElement('button');
+        exportBtn.textContent = 'Export to PDF';
+        exportBtn.className = 'export-btn';
+        exportBtn.onclick = function() { exportToPDF(safeReport); };
+        reportContainer.appendChild(exportBtn);
+    } catch (error) {
+        errorElement.textContent = 'Error: ' + error.message;
+        errorElement.style.display = 'block';
+    } finally {
+        loadingElement.style.display = 'none';
     }
 }
 
