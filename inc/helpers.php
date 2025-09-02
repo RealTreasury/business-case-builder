@@ -841,13 +841,67 @@ function rtbcb_set_current_lead( $lead_id, $lead_email = '' ) {
 	* @return array|null Array with 'id' and 'email' or null if not set.
 	*/
 function rtbcb_get_current_lead() {
-		return isset( $GLOBALS['rtbcb_current_lead'] ) ? $GLOBALS['rtbcb_current_lead'] : null;
+                return isset( $GLOBALS['rtbcb_current_lead'] ) ? $GLOBALS['rtbcb_current_lead'] : null;
 }
 
 /**
-	* Log API debug messages.
+	* Clean JSON response from API calls.
+	*
+	* Attempts to decode the response as JSON and returns the decoded array on
+	* success. If decoding fails or the input is not a JSON string, the original
+	* response is returned.
+	*
+	* @param mixed $response Raw response string or data.
+	* @return mixed Decoded array or original response.
+*/
+function rtbcb_clean_json_response( $response ) {
+	if ( is_string( $response ) ) {
+		$decoded = json_decode( $response, true );
+
+		if ( json_last_error() === JSON_ERROR_NONE ) {
+			return $decoded;
+		}
+	}
+
+	return $response;
+}
+
+/**
+	* Safe JSON encode without escaping issues.
+	*
+	* Uses wp_json_encode with flags to prevent unnecessary escaping.
+	*
+	* @param mixed $data Data to encode.
+	* @return string|false JSON encoded string or false on failure.
+	*/
+function rtbcb_safe_json_encode( $data ) {
+	return wp_json_encode( $data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
+}
+
+/**
+	* Clean logging function.
+	*
+	* Logs messages only when WP_DEBUG is enabled and safely encodes any provided
+	* data to avoid escaping issues.
 	*
 	* @param string $message Log message.
+	* @param mixed  $data    Optional data to encode.
+	* @return void
+	*/
+function rtbcb_log_clean( $message, $data = null ) {
+	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+		$log_message = $message;
+		if ( null !== $data ) {
+			$log_message .= ': ' . rtbcb_safe_json_encode( $data );
+		}
+		error_log( $log_message );
+	}
+}
+
+/**
+        * Log API debug messages.
+        *
+        * @param string $message Log message.
 	* @param mixed	$data	 Optional data.
 	* @return void
 	*/
