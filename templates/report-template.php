@@ -45,10 +45,11 @@ $rag_context   = $business_case_data['rag_context'] ?? [];
 	<?php endif; ?>
 
 	<?php
-	$operational_insights = array_map(
-	'sanitize_text_field',
-	(array) ( $business_case_data['operational_insights']['current_state_assessment'] ?? [] )
-	);
+	$operational_insights_raw = $business_case_data['operational_insights'] ?? [];
+	if ( isset( $operational_insights_raw['current_state_assessment'] ) ) {
+		$operational_insights_raw = $operational_insights_raw['current_state_assessment'];
+	}
+	$operational_insights = array_map( 'sanitize_text_field', (array) $operational_insights_raw );
 	if ( ! empty( $operational_insights ) ) :
 	?>
 	<h3><?php echo esc_html__( 'Operational Analysis', 'rtbcb' ); ?></h3>
