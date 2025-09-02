@@ -868,7 +868,11 @@ class BusinessCaseBuilder {
                 this.showCompletionAnimation(() => {
                     this.hideLoading();
                     if (statusData.report_html) {
-                        this.handleSuccess(statusData);
+                        this.handleSuccess({
+                            report_html: statusData.report_html,
+                            report_data: statusData.report_data,
+                            download_url: statusData.download_url
+                        });
                     } else if (statusData.report_data) {
                         this.handleSuccess(statusData.report_data);
                     } else {
@@ -890,7 +894,11 @@ class BusinessCaseBuilder {
                 this.showCompletionAnimation(() => {
                     this.hideLoading();
                     if (statusData.report_html) {
-                        this.handleSuccess(statusData);
+                        this.handleSuccess({
+                            report_html: statusData.report_html,
+                            report_data: statusData.report_data,
+                            download_url: statusData.download_url
+                        });
                     } else if (statusData.report_data) {
                         this.handleSuccess(statusData.report_data);
                     } else {

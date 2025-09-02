@@ -161,15 +161,17 @@ public static function enqueue( $user_inputs ) {
 	
 	$download_url = rtrim( $base_url, '/\\' ) . '/rtbcb-reports/' . $job_id . '.pdf';
 	
-	self::update_status(
-	$job_id,
-	'completed',
-	[
-	'percent'      => 100,
-	'result'       => $result,
-	'download_url' => $download_url,
-	],
-	);
+        self::update_status(
+        $job_id,
+        'completed',
+        [
+        'percent'      => 100,
+        'report_html'  => $report_html,
+        'report_data'  => $result['report_data'],
+        'download_url' => $download_url,
+        'result'       => $result,
+        ],
+        );
 	}
 	} catch ( \Throwable $e ) {
 	self::update_status(
