@@ -95,6 +95,22 @@ $enable_charts = class_exists( 'RTBCB_Settings' ) ? RTBCB_Settings::get_setting(
 			RTBCB_VERSION
 		);
 
+		wp_enqueue_script(
+			'rtbcb-debug',
+			RTBCB_URL . 'admin/js/rtbcb-debug.js',
+			[],
+			RTBCB_VERSION,
+			true
+		);
+		wp_localize_script(
+			'rtbcb-debug',
+			'rtbcb_ajax',
+			[
+				'ajax_url' => admin_url( 'admin-ajax.php' ),
+				'nonce'    => wp_create_nonce( 'rtbcb_generate' ),
+			]
+		);
+
 		if ( 'rtbcb-workflow-visualizer' === $page ) {
 			wp_enqueue_script(
 				'rtbcb-workflow-visualizer',
