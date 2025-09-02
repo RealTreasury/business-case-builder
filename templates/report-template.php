@@ -20,32 +20,31 @@ $industry_insights    = $business_case_data['industry_insights'] ?? [];
         <h2><?php echo esc_html__( 'Business Case Report', 'rtbcb' ); ?></h2>
         <p class="rtbcb-version-tag"><?php printf( esc_html__( 'Version %s', 'rtbcb' ), esc_html( defined( 'RTBCB_VERSION' ) ? RTBCB_VERSION : 'dev' ) ); ?></p>
 
-       <?php if ( ! empty( $executive_summary['strategic_positioning'] ) || ! empty( $business_case_data['business_case_strength'] ) || ! empty( $business_case_data['key_value_drivers'] ) || ! empty( $business_case_data['executive_recommendation'] ) ) : ?>
-               <h3><?php echo esc_html__( 'Executive Summary', 'rtbcb' ); ?></h3>
-               <?php if ( ! empty( $executive_summary['strategic_positioning'] ) ) : ?>
-                       <p><?php echo esc_html( $executive_summary['strategic_positioning'] ); ?></p>
-               <?php endif; ?>
-               <?php if ( ! empty( $business_case_data['business_case_strength'] ) ) : ?>
-                       <p><?php echo esc_html( $business_case_data['business_case_strength'] ); ?></p>
-               <?php endif; ?>
-               <?php if ( ! empty( $business_case_data['key_value_drivers'] ) ) : ?>
-                       <h4><?php echo esc_html__( 'Key Value Drivers', 'rtbcb' ); ?></h4>
-                       <?php if ( is_array( $business_case_data['key_value_drivers'] ) ) : ?>
-                               <ul>
-                                       <?php foreach ( $business_case_data['key_value_drivers'] as $driver ) : ?>
-                                               <li><?php echo esc_html( $driver ); ?></li>
-                                       <?php endforeach; ?>
-                               </ul>
-                       <?php else : ?>
-                               <p><?php echo esc_html( $business_case_data['key_value_drivers'] ); ?></p>
-                       <?php endif; ?>
-               <?php endif; ?>
-               <?php if ( ! empty( $business_case_data['executive_recommendation'] ) ) : ?>
-                       <p><?php echo esc_html( $business_case_data['executive_recommendation'] ); ?></p>
-               <?php endif; ?>
-       <?php endif; ?>
-
-       <?php if ( ! empty( $operational_analysis['current_state_assessment'] ) ) : ?>
+	<?php if ( ! empty( $executive_summary['strategic_positioning'] ) || ! empty( $executive_summary['business_case_strength'] ) || ! empty( $executive_summary['key_value_drivers'] ) || ! empty( $executive_summary['executive_recommendation'] ) ) : ?>
+		<h3><?php echo esc_html__( 'Executive Summary', 'rtbcb' ); ?></h3>
+		<?php if ( ! empty( $executive_summary['strategic_positioning'] ) ) : ?>
+			<p><?php echo esc_html( $executive_summary['strategic_positioning'] ); ?></p>
+		<?php endif; ?>
+		<?php if ( ! empty( $executive_summary['business_case_strength'] ) ) : ?>
+			<p><?php echo esc_html( $executive_summary['business_case_strength'] ); ?></p>
+		<?php endif; ?>
+		<?php if ( ! empty( $executive_summary['key_value_drivers'] ) ) : ?>
+			<h4><?php echo esc_html__( 'Key Value Drivers', 'rtbcb' ); ?></h4>
+			<?php if ( is_array( $executive_summary['key_value_drivers'] ) ) : ?>
+				<ul>
+					<?php foreach ( $executive_summary['key_value_drivers'] as $driver ) : ?>
+						<li><?php echo esc_html( $driver ); ?></li>
+					<?php endforeach; ?>
+				</ul>
+			<?php else : ?>
+				<p><?php echo esc_html( $executive_summary['key_value_drivers'] ); ?></p>
+			<?php endif; ?>
+		<?php endif; ?>
+		<?php if ( ! empty( $executive_summary['executive_recommendation'] ) ) : ?>
+			<p><?php echo esc_html( $executive_summary['executive_recommendation'] ); ?></p>
+		<?php endif; ?>
+	<?php endif; ?>
+<?php if ( ! empty( $operational_analysis['current_state_assessment'] ) ) : ?>
                <h3><?php echo esc_html__( 'Operational Analysis', 'rtbcb' ); ?></h3>
                <p><?php echo esc_html( $operational_analysis['current_state_assessment'] ); ?></p>
        <?php endif; ?>
