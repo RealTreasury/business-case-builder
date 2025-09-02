@@ -72,7 +72,7 @@ function_exists( 'get_option' ) ? get_option( 'rtbcb_gpt5_config', [] ) : [],
 	* @param string $tier Model tier identifier.
 	* @return string Sanitized model name.
 	*/
-	private function get_model( $tier ) {
+	protected function get_model( $tier ) {
 		$tier    = sanitize_key( $tier );
 		$default = rtbcb_get_default_model( $tier );
 $model_option = function_exists( 'get_option' ) ? get_option( "rtbcb_{$tier}_model", $default ) : $default;
