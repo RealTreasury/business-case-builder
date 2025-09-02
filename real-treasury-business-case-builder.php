@@ -2,7 +2,7 @@
 /**
 	* Plugin Name: Real Treasury - Business Case Builder (Enhanced Pro)
 	* Description: Professional-grade ROI calculator and comprehensive business case generator for treasury technology with advanced analysis and consultant-style reports.
-* Version: 2.1.9
+* Version: 2.1.10
 	* Requires PHP: 7.4
 	* Author: Real Treasury
 	* Text Domain: rtbcb
@@ -12,7 +12,7 @@
 */
 defined( 'ABSPATH' ) || exit;
 
-define( 'RTBCB_VERSION', '2.1.9' );
+define( 'RTBCB_VERSION', '2.1.10' );
 define( 'RTBCB_FILE', __FILE__ );
 define( 'RTBCB_URL', plugin_dir_url( RTBCB_FILE ) );
 define( 'RTBCB_DIR', plugin_dir_path( RTBCB_FILE ) );

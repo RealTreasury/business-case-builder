@@ -3,7 +3,7 @@ Contributors: realtreasury
 Tags: business, case, builder, roi, treasury
 Requires at least: 6.0
 Tested up to: 6.0
-Stable tag: 2.1.9
+Stable tag: 2.1.10
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -156,6 +156,9 @@ Reports are rendered as HTML in the browser. Use your browser's print or save fu
 The analytics dashboard uses Chart.js for its visualizations. The library is bundled with the plugin to reduce blocking by privacy tools, but strict ad blockers may still prevent it from loading. Allow the plugin's scripts in your browser to enable the charts.
 
 == Changelog ==
+= 2.1.10 =
+* Updated documentation and bumped version number.
+
 = 2.1.9 =
 * Hardened security with ABSPATH guards across admin and template files.
 * Wrapped user-visible strings with translation functions for better localization.
