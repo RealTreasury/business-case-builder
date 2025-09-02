@@ -171,8 +171,8 @@ class RTBCB_Main {
 if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
 $request_uri = isset( $_SERVER['REQUEST_URI'] ) ? wp_unslash( $_SERVER['REQUEST_URI'] ) : '';
 if (
-false !== strpos( $request_uri, '/jetpack/' ) ||
-false !== strpos( $request_uri, '/wp-admin/rest-proxy/' )
+		false !== strpos( $request_uri, '/jetpack/' ) ||
+		false !== strpos( $request_uri, '/wp-admin/rest-proxy/' )
 ) {
 return true;
 }
@@ -728,10 +728,11 @@ return true;
 		wp_enqueue_script(
 		'rtbcb-wizard',
 		RTBCB_URL . 'public/js/' . $wizard_file,
-		[ 'jquery' ],
+		[ 'jquery', 'wp-i18n' ],
 		RTBCB_VERSION,
 		false // Load in header
 		);
+		wp_set_script_translations( 'rtbcb-wizard', 'rtbcb' );
 
 		// Main report functionality
 		$report_file = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? 'rtbcb-report.js' : 'rtbcb-report.min.js';

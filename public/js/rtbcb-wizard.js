@@ -3,6 +3,8 @@
  * Handles multi-step form navigation, validation, and submission
  */
 
+const { __ } = ( typeof wp !== 'undefined' && wp.i18n ) ? wp.i18n : { __: ( s ) => s };
+
 // Ensure Chart.js date adapter is registered in Node environments.
 if ( typeof require === 'function' ) {
     try {
@@ -621,14 +623,14 @@ class BusinessCaseBuilder {
             } else {
                 console.error('RTBCB: Error response:', data.data);
                 this.cancelProgressiveLoading();
-                this.handleError(data.data || { message: 'Unknown error occurred' });
+                this.handleError(data.data || { message: __( 'Unknown error occurred', 'rtbcb' ) });
             }
 
         } catch (error) {
             console.error('RTBCB: Submission error:', error);
             this.cancelProgressiveLoading();
-            this.handleError({
-                message: error.message || 'An unexpected error occurred',
+                this.handleError({
+                message: error.message || __( 'An unexpected error occurred', 'rtbcb' ),
                 type: 'submission_error'
             });
         }
@@ -894,7 +896,7 @@ class BusinessCaseBuilder {
                         this.handleSuccess(statusData.report_data);
                     } else {
                         this.handleError({
-                            message: 'Report data missing from completed job',
+                            message: __( 'Report data missing from completed job', 'rtbcb' ),
                             type: 'job_error'
                         });
                     }
@@ -920,7 +922,7 @@ class BusinessCaseBuilder {
                         this.handleSuccess(statusData.report_data);
                     } else {
                         this.handleError({
-                            message: 'Report data missing from completed job',
+                            message: __( 'Report data missing from completed job', 'rtbcb' ),
                             type: 'job_error'
                         });
                     }
@@ -936,7 +938,7 @@ class BusinessCaseBuilder {
             console.error('RTBCB: Job polling error:', error);
             this.cancelPolling();
             this.handleError({
-                message: error.message || 'An unexpected error occurred',
+                message: error.message || __( 'An unexpected error occurred', 'rtbcb' ),
                 type: 'polling_error'
             });
         }
@@ -948,7 +950,7 @@ class BusinessCaseBuilder {
         const spinner = document.querySelector('.rtbcb-progress-spinner');
 
         if (statusElement) {
-            statusElement.textContent = 'Report completed successfully! ✓';
+            statusElement.textContent = __( 'Report completed successfully! ✓', 'rtbcb' );
             statusElement.style.color = 'var(--success-green)';
             statusElement.style.fontWeight = '600';
         }
@@ -1670,16 +1672,16 @@ class BusinessCaseBuilder {
     renderNextSteps(steps) {
         if (!steps || steps.length === 0) {
             steps = [
-                'Present business case to stakeholders',
-                'Evaluate solution providers',
-                'Develop implementation timeline',
-                'Plan change management strategy'
+                __( 'Present business case to stakeholders', 'rtbcb' ),
+                __( 'Evaluate solution providers', 'rtbcb' ),
+                __( 'Develop implementation timeline', 'rtbcb' ),
+                __( 'Plan change management strategy', 'rtbcb' )
             ];
         }
 
         return `
             <div class="rtbcb-next-steps">
-                <h3>Recommended Next Steps</h3>
+                <h3>${ __( 'Recommended Next Steps', 'rtbcb' ) }</h3>
                 <div class="rtbcb-steps-grid">
                     ${steps.map((step, index) => `
                         <div class="rtbcb-step">
@@ -1699,15 +1701,15 @@ class BusinessCaseBuilder {
             <div class="rtbcb-actions-section">
                 <button type="button" class="rtbcb-action-btn rtbcb-btn-secondary" onclick="window.print()">
                     <span class="rtbcb-btn-icon">🖨️</span>
-                    Print Results
+                    ${ __( 'Print Results', 'rtbcb' ) }
                 </button>
                 <button type="button" class="rtbcb-action-btn rtbcb-btn-secondary" onclick="window.businessCaseBuilder.copyResultsHTML()">
                     <span class="rtbcb-btn-icon">📋</span>
-                    Copy HTML
+                    ${ __( 'Copy HTML', 'rtbcb' ) }
                 </button>
                 <button type="button" class="rtbcb-action-btn rtbcb-btn-secondary" onclick="location.reload()">
                     <span class="rtbcb-btn-icon">🔄</span>
-                    Start Over
+                    ${ __( 'Start Over', 'rtbcb' ) }
                 </button>
             </div>
         `;
@@ -1719,12 +1721,12 @@ class BusinessCaseBuilder {
             return;
         }
         navigator.clipboard.writeText(container.innerHTML)
-            .then(() => alert('Results HTML copied to clipboard'))
+            .then(() => alert( __( 'Results HTML copied to clipboard', 'rtbcb' ) ))
             .catch(err => console.error('Copy failed:', err));
     }
 
     handleError(errorData) {
-        const message = errorData.message || 'An unexpected error occurred';
+        const message = errorData.message || __( 'An unexpected error occurred', 'rtbcb' );
 
         console.group('RTBCB Error Details');
         console.error('Message:', message);
