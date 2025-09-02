@@ -13,48 +13,48 @@ class RTBCB_Ajax {
 	* @return void
 	*/
        public static function generate_comprehensive_case() {
-               if ( ! function_exists( 'check_ajax_referer' ) ) {
-                       wp_die( 'WordPress not ready' );
-               }
+	       if ( ! function_exists( 'check_ajax_referer' ) ) {
+		       wp_die( 'WordPress not ready' );
+	       }
 
-               $params = self::get_sanitized_params();
+	       $params = self::get_sanitized_params();
 
-               rtbcb_increase_memory_limit();
-               $timeout = absint( rtbcb_get_api_timeout() );
-               if ( ! ini_get( 'safe_mode' ) && $timeout > 0 ) {
-                       set_time_limit( $timeout );
-               }
-               rtbcb_log_memory_usage( 'start' );
+	       rtbcb_increase_memory_limit();
+	       $timeout = absint( rtbcb_get_api_timeout() );
+	       if ( ! ini_get( 'safe_mode' ) && $timeout > 0 ) {
+		       set_time_limit( $timeout );
+	       }
+	       rtbcb_log_memory_usage( 'start' );
 
-               if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
+	       if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
 			self::log_request( __FUNCTION__, $params, 'error', [ 'code' => 'invalid_nonce' ] );
-                       wp_send_json_error( [ 'code' => 'invalid_nonce', 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
-                       return;
-               }
+		       wp_send_json_error( [ 'code' => 'invalid_nonce', 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
+		       return;
+	       }
 
-               $user_inputs = self::collect_and_validate_user_inputs();
-               if ( is_wp_error( $user_inputs ) ) {
+	       $user_inputs = self::collect_and_validate_user_inputs();
+	       if ( is_wp_error( $user_inputs ) ) {
 			self::log_request( __FUNCTION__, $params, 'error', [ 'code' => 'validation_error', 'message' => $user_inputs->get_error_message() ] );
-                       wp_send_json_error( [ 'code' => 'validation_error', 'message' => $user_inputs->get_error_message() ], 400 );
-                       return;
-               }
+		       wp_send_json_error( [ 'code' => 'validation_error', 'message' => $user_inputs->get_error_message() ], 400 );
+		       return;
+	       }
 
-               try {
-                       $job_id = RTBCB_Background_Job::enqueue( $user_inputs );
-               } catch ( Exception $e ) {
+	       try {
+		       $job_id = RTBCB_Background_Job::enqueue( $user_inputs );
+	       } catch ( Exception $e ) {
 			self::log_request( __FUNCTION__, $params, 'error', [ 'code' => 'background_job_exception', 'message' => $e->getMessage() ] );
-                       wp_send_json_error( [ 'code' => 'background_job_exception', 'message' => __( 'An unexpected error occurred.', 'rtbcb' ) ], 500 );
-                       return;
-               }
+		       wp_send_json_error( [ 'code' => 'background_job_exception', 'message' => __( 'An unexpected error occurred.', 'rtbcb' ) ], 500 );
+		       return;
+	       }
 
-               if ( is_wp_error( $job_id ) ) {
+	       if ( is_wp_error( $job_id ) ) {
 			self::log_request( __FUNCTION__, $params, 'error', [ 'code' => 'background_job_error', 'message' => $job_id->get_error_message() ] );
-                       wp_send_json_error( [ 'code' => 'background_job_error', 'message' => $job_id->get_error_message() ], 500 );
-                       return;
-               }
+		       wp_send_json_error( [ 'code' => 'background_job_error', 'message' => $job_id->get_error_message() ], 500 );
+		       return;
+	       }
 
 			self::log_request( __FUNCTION__, $params, 'success', [ 'job_id' => $job_id ] );
-               wp_send_json_success( [ 'job_id' => $job_id ] );
+	       wp_send_json_success( [ 'job_id' => $job_id ] );
        }
 
 		/**
@@ -64,42 +64,42 @@ class RTBCB_Ajax {
 		*/
        public static function stream_analysis() {
 
-               if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) {
-                       wp_die( 'Invalid request' );
-               }
+	       if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) {
+		       wp_die( 'Invalid request' );
+	       }
 
-               if ( ! function_exists( 'check_ajax_referer' ) ) {
-                       wp_die( 'WordPress not ready' );
-               }
+	       if ( ! function_exists( 'check_ajax_referer' ) ) {
+		       wp_die( 'WordPress not ready' );
+	       }
 
-               $params = self::get_sanitized_params();
+	       $params = self::get_sanitized_params();
 
-               rtbcb_increase_memory_limit();
-               $timeout = absint( rtbcb_get_api_timeout() );
-               if ( ! ini_get( 'safe_mode' ) && $timeout > 0 ) {
-                       set_time_limit( $timeout );
-               }
-               rtbcb_log_memory_usage( 'start' );
+	       rtbcb_increase_memory_limit();
+	       $timeout = absint( rtbcb_get_api_timeout() );
+	       if ( ! ini_get( 'safe_mode' ) && $timeout > 0 ) {
+		       set_time_limit( $timeout );
+	       }
+	       rtbcb_log_memory_usage( 'start' );
 
-               if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
+	       if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
 			self::log_request( __FUNCTION__, $params, 'error', [ 'code' => 'invalid_nonce' ] );
-                       wp_send_json_error( [ 'code' => 'invalid_nonce', 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
-                       return;
-               }
+		       wp_send_json_error( [ 'code' => 'invalid_nonce', 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
+		       return;
+	       }
 
-               $user_inputs = self::collect_and_validate_user_inputs();
-               if ( is_wp_error( $user_inputs ) ) {
+	       $user_inputs = self::collect_and_validate_user_inputs();
+	       if ( is_wp_error( $user_inputs ) ) {
 			self::log_request( __FUNCTION__, $params, 'error', [ 'code' => 'validation_error', 'message' => $user_inputs->get_error_message() ] );
-                       wp_send_json_error( [ 'code' => 'validation_error', 'message' => $user_inputs->get_error_message() ], 400 );
-                       return;
-               }
+		       wp_send_json_error( [ 'code' => 'validation_error', 'message' => $user_inputs->get_error_message() ], 400 );
+		       return;
+	       }
 
-               $action = isset( $_REQUEST['action'] ) ? sanitize_key( wp_unslash( $_REQUEST['action'] ) ) : '';
-                               if ( 'rtbcb_stream_analysis' !== $action ) {
-                               // Jetpack also routes requests through admin-ajax.php; avoid sending
-                               // streaming headers for unrelated actions.
-                               return;
-                               }
+	       $action = isset( $_REQUEST['action'] ) ? sanitize_key( wp_unslash( $_REQUEST['action'] ) ) : '';
+			       if ( 'rtbcb_stream_analysis' !== $action ) {
+			       // Jetpack also routes requests through admin-ajax.php; avoid sending
+			       // streaming headers for unrelated actions.
+			       return;
+			       }
 
 				nocache_headers();
 				header( 'Content-Type: text/event-stream' );
@@ -118,21 +118,21 @@ class RTBCB_Ajax {
 				}
 				};
 
-               try {
-                       $result = $plugin->generate_business_analysis( $user_inputs, $scenarios, $recommendation, $chunk_callback );
-               } catch ( Exception $e ) {
+	       try {
+		       $result = $plugin->generate_business_analysis( $user_inputs, $scenarios, $recommendation, $chunk_callback );
+	       } catch ( Exception $e ) {
 			self::log_request( __FUNCTION__, $params, 'error', [ 'code' => 'analysis_error', 'message' => $e->getMessage() ] );
-                       wp_send_json_error( [ 'code' => 'analysis_error', 'message' => __( 'An unexpected error occurred.', 'rtbcb' ) ], 500 );
-                       return;
-               }
+		       wp_send_json_error( [ 'code' => 'analysis_error', 'message' => __( 'An unexpected error occurred.', 'rtbcb' ) ], 500 );
+		       return;
+	       }
 
-                               echo 'data: ' . wp_json_encode( [ 'type' => 'final', 'payload' => $result ] ) . "\n\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-                               if ( function_exists( 'flush' ) ) {
-                                       flush();
-                               }
+			       echo 'data: ' . wp_json_encode( [ 'type' => 'final', 'payload' => $result ] ) . "\n\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			       if ( function_exists( 'flush' ) ) {
+				       flush();
+			       }
 			self::log_request( __FUNCTION__, $params, 'success', [] );
-               wp_die();
-                       }
+	       wp_die();
+		       }
 	/**
 	* Process the basic ROI calculation step.
 	*
@@ -229,24 +229,24 @@ class RTBCB_Ajax {
 								];
 						}
 						$workflow_tracker->start_step( 'ai_enrichment' );
-                                               if ( $enable_ai ) {
-                                                                $enriched_profile = new WP_Error( 'llm_missing', 'LLM service unavailable.' );
-                                                                if ( class_exists( 'RTBCB_LLM' ) ) {
-                                                                                try {
-                                                                                                $llm = new RTBCB_LLM();
-                                                                                                if ( method_exists( $llm, 'enrich_company_profile' ) ) {
-                                                                                                                $enriched_profile = $llm->enrich_company_profile( $user_inputs );
-                                                                                                }
-                                                                                } catch ( Exception $e ) {
-                                                                                                return new WP_Error( 'llm_exception', __( 'AI enrichment failed.', 'rtbcb' ) );
-                                                                                }
-                                                                }
-                                                                if ( is_wp_error( $enriched_profile ) ) {
-                                                                                $error_message    = $enriched_profile->get_error_message();
-                                                                                $enriched_profile = self::create_fallback_profile( $user_inputs );
-                                                                                $workflow_tracker->add_warning( 'ai_enrichment_failed', sanitize_text_field( $error_message ) );
-                                                                }
-                                               } else {
+					       if ( $enable_ai ) {
+								$enriched_profile = new WP_Error( 'llm_missing', 'LLM service unavailable.' );
+								if ( class_exists( 'RTBCB_LLM' ) ) {
+										try {
+												$llm = new RTBCB_LLM();
+												if ( method_exists( $llm, 'enrich_company_profile' ) ) {
+														$enriched_profile = $llm->enrich_company_profile( $user_inputs );
+												}
+										} catch ( Exception $e ) {
+												return new WP_Error( 'llm_exception', __( 'AI enrichment failed.', 'rtbcb' ) );
+										}
+								}
+								if ( is_wp_error( $enriched_profile ) ) {
+										$error_message    = $enriched_profile->get_error_message();
+										$enriched_profile = self::create_fallback_profile( $user_inputs );
+										$workflow_tracker->add_warning( 'ai_enrichment_failed', sanitize_text_field( $error_message ) );
+								}
+					       } else {
 								$enriched_profile = self::create_fallback_profile( $user_inputs );
 								$workflow_tracker->add_warning( 'ai_enrichment_disabled', __( 'AI analysis disabled.', 'rtbcb' ) );
 						}
@@ -285,18 +285,18 @@ class RTBCB_Ajax {
 										$rag_baseline = $rag->search_similar( $search_query, 5 );
 								}
 								$final_analysis = new WP_Error( 'analysis_unavailable', 'Final analysis unavailable.' );
-                                                                if ( isset( $llm ) && method_exists( $llm, 'generate_strategic_analysis' ) ) {
-                                                                                try {
-                                                                                                $final_analysis = $llm->generate_strategic_analysis( $enriched_profile, $roi_scenarios, $recommendation, $rag_baseline );
-                                                                                } catch ( Exception $e ) {
-                                                                                                return new WP_Error( 'llm_exception', __( 'AI analysis failed.', 'rtbcb' ) );
-                                                                                }
-                                                                }
-                                                                if ( is_wp_error( $final_analysis ) ) {
-                                                                               $error_message   = $final_analysis->get_error_message();
-                                                                               $final_analysis  = self::create_fallback_analysis( $enriched_profile, $roi_scenarios );
-                                                                               $workflow_tracker->add_warning( 'final_analysis_failed', sanitize_text_field( $error_message ) );
-                                                               }
+								if ( isset( $llm ) && method_exists( $llm, 'generate_strategic_analysis' ) ) {
+										try {
+												$final_analysis = $llm->generate_strategic_analysis( $enriched_profile, $roi_scenarios, $recommendation, $rag_baseline );
+										} catch ( Exception $e ) {
+												return new WP_Error( 'llm_exception', __( 'AI analysis failed.', 'rtbcb' ) );
+										}
+								}
+								if ( is_wp_error( $final_analysis ) ) {
+									       $error_message   = $final_analysis->get_error_message();
+									       $final_analysis  = self::create_fallback_analysis( $enriched_profile, $roi_scenarios );
+									       $workflow_tracker->add_warning( 'final_analysis_failed', sanitize_text_field( $error_message ) );
+							       }
 						} else {
 								$rag_baseline  = [];
 								$final_analysis = self::create_fallback_analysis( $enriched_profile, $roi_scenarios );
@@ -354,48 +354,48 @@ class RTBCB_Ajax {
 	* @return void
 	*/
        public static function get_job_status() {
-               if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) {
-                       wp_die( 'Invalid request' );
-               }
+	       if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) {
+		       wp_die( 'Invalid request' );
+	       }
 
-               if ( ! function_exists( 'check_ajax_referer' ) ) {
-                       wp_die( 'WordPress not ready' );
-               }
+	       if ( ! function_exists( 'check_ajax_referer' ) ) {
+		       wp_die( 'WordPress not ready' );
+	       }
 
-               $params = self::get_sanitized_params();
+	       $params = self::get_sanitized_params();
 
-               if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
+	       if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
 			self::log_request( __FUNCTION__, $params, 'error', [ 'code' => 'invalid_nonce' ] );
-                       wp_send_json_error( [ 'code' => 'invalid_nonce', 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
-                       return;
-               }
+		       wp_send_json_error( [ 'code' => 'invalid_nonce', 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
+		       return;
+	       }
 
-               $job_id = sanitize_text_field( wp_unslash( $_GET['job_id'] ?? '' ) );
-               if ( empty( $job_id ) ) {
+	       $job_id = sanitize_text_field( wp_unslash( $_GET['job_id'] ?? '' ) );
+	       if ( empty( $job_id ) ) {
 			self::log_request( __FUNCTION__, $params, 'error', [ 'code' => 'missing_job_id' ] );
-                       wp_send_json_error( [ 'code' => 'missing_job_id', 'message' => __( 'Missing job ID.', 'rtbcb' ) ], 400 );
-                       return;
-               }
+		       wp_send_json_error( [ 'code' => 'missing_job_id', 'message' => __( 'Missing job ID.', 'rtbcb' ) ], 400 );
+		       return;
+	       }
 
-               try {
-                       $status = RTBCB_Background_Job::get_status( $job_id );
-               } catch ( Exception $e ) {
+	       try {
+		       $status = RTBCB_Background_Job::get_status( $job_id );
+	       } catch ( Exception $e ) {
 			self::log_request( __FUNCTION__, $params, 'error', [ 'code' => 'status_exception', 'message' => $e->getMessage() ] );
-                       wp_send_json_error( [ 'code' => 'status_exception', 'message' => __( 'Unable to retrieve job status.', 'rtbcb' ) ], 500 );
-                       return;
-               }
+		       wp_send_json_error( [ 'code' => 'status_exception', 'message' => __( 'Unable to retrieve job status.', 'rtbcb' ) ], 500 );
+		       return;
+	       }
 
-               if ( is_wp_error( $status ) ) {
+	       if ( is_wp_error( $status ) ) {
 			self::log_request( __FUNCTION__, $params, 'error', [ 'code' => 'status_error', 'message' => $status->get_error_message() ] );
-                       $status = [
-                               'state'   => 'error',
-                               'message' => sanitize_text_field( $status->get_error_message() ),
-                       ];
-               }
+		       $status = [
+			       'state'   => 'error',
+			       'message' => sanitize_text_field( $status->get_error_message() ),
+		       ];
+	       }
 
-               $response = [
-                       'status' => $status['state'] ?? '',
-               ];
+	       $response = [
+		       'status' => $status['state'] ?? '',
+	       ];
 
 				foreach ( $status as $field => $value ) {
 						if ( in_array( $field, [ 'state', 'created', 'updated', 'result' ], true ) ) {
@@ -412,28 +412,28 @@ class RTBCB_Ajax {
 			}
 				}
 
-               if ( isset( $status['result'] ) ) {
-                       if (
-                               'completed' === ( $response['status'] ?? '' ) &&
-                               ! empty( $status['result']['report_data'] )
-                       ) {
-                               $result                  = $status['result'];
-                               $response['report_data'] = $result['report_data'];
-                               if ( is_array( $result ) ) {
-                                       foreach ( $result as $key => $value ) {
-                                               if ( 'report_data' === $key ) {
-                                                       continue;
-                                               }
-                                               $response[ $key ] = $value;
-                                       }
-                               }
-                       } else {
-                               $response['result'] = $status['result'];
-                       }
-               }
+	       if ( isset( $status['result'] ) ) {
+		       if (
+			       'completed' === ( $response['status'] ?? '' ) &&
+			       ! empty( $status['result']['report_data'] )
+		       ) {
+			       $result                  = $status['result'];
+			       $response['report_data'] = $result['report_data'];
+			       if ( is_array( $result ) ) {
+				       foreach ( $result as $key => $value ) {
+					       if ( 'report_data' === $key ) {
+						       continue;
+					       }
+					       $response[ $key ] = $value;
+				       }
+			       }
+		       } else {
+			       $response['result'] = $status['result'];
+		       }
+	       }
 
 			self::log_request( __FUNCTION__, $params, 'success', [ 'job_id' => $job_id, 'status' => $response['status'] ] );
-               wp_send_json_success( $response );
+	       wp_send_json_success( $response );
        }
 	/**
 	 * Collect and validate user input from the POST request.
@@ -490,6 +490,25 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 	$implementation_risks = [ __( 'No data provided', 'rtbcb' ) ];
 	}
 
+	$company_profile      = $enriched_profile['company_profile'] ?? [];
+	$industry_context_raw = $enriched_profile['industry_context'] ?? [];
+	$enriched_profile_struct = [
+		'name'                => $company_profile['name'] ?? '',
+		'enhanced_description'=> $company_profile['enhanced_description'] ?? ( $company_profile['description'] ?? '' ),
+		'maturity_level'      => $company_profile['maturity_level'] ?? '',
+		'treasury_maturity'   => $company_profile['treasury_maturity'] ?? [],
+		'key_challenges'      => $company_profile['key_challenges'] ?? [],
+		'strategic_priorities'=> $company_profile['strategic_priorities'] ?? [],
+	];
+	$industry_context_struct = [
+		'sector_analysis' => [
+			'market_dynamics' => $industry_context_raw['sector_trends'] ?? ( $industry_context_raw['market_dynamics'] ?? '' ),
+		],
+		'benchmarking'    => [
+			'technology_penetration' => $industry_context_raw['technology_penetration'] ?? ( $industry_context_raw['technology_adoption'] ?? '' ),
+		],
+	];
+
 	return [
 			'metadata' => [
 				'company_name'   => $user_inputs['company_name'],
@@ -505,22 +524,22 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 				'executive_recommendation' => $final_analysis['executive_summary']['executive_recommendation'] ?? '',
 				'confidence_level'        => $final_analysis['executive_summary']['confidence_level'] ?? 0.85,
 			],
-                        'company_intelligence' => [
-                                'enriched_profile'    => $enriched_profile['company_profile'],
-                                'industry_context'    => $enriched_profile['industry_context'],
-                                'maturity_assessment' => $enriched_profile['maturity_assessment'] ?? [],
-                                'competitive_position'=> $enriched_profile['competitive_position'] ?? [],
-                        ],
-                       'industry_insights' => [
-                               'sector_trends'          => (array) ( $final_analysis['industry_insights']['sector_trends'] ?? [] ),
-                               'competitive_benchmarks' => (array) ( $final_analysis['industry_insights']['competitive_benchmarks'] ?? [] ),
-                               'regulatory_considerations' => (array) ( $final_analysis['industry_insights']['regulatory_considerations'] ?? [] ),
-                       ],
-                                        'financial_analysis' => [
-                                                        'roi_scenarios'        => self::format_roi_scenarios( $roi_scenarios ),
-                                                        'investment_breakdown' => $final_analysis['financial_analysis']['investment_breakdown'] ?? [],
-                                                        'payback_analysis'     => $final_analysis['financial_analysis']['payback_analysis'] ?? [],
-                                                        'sensitivity_analysis' => $roi_scenarios['sensitivity_analysis'] ?? [],
+			'company_intelligence' => [
+				'enriched_profile'    => $enriched_profile_struct,
+				'industry_context'    => $industry_context_struct,
+				'maturity_assessment' => $enriched_profile['maturity_assessment'] ?? [],
+				'competitive_position'=> $enriched_profile['competitive_position'] ?? [],
+			],
+		       'industry_insights' => [
+			       'sector_trends'          => (array) ( $final_analysis['industry_insights']['sector_trends'] ?? [] ),
+			       'competitive_benchmarks' => (array) ( $final_analysis['industry_insights']['competitive_benchmarks'] ?? [] ),
+			       'regulatory_considerations' => (array) ( $final_analysis['industry_insights']['regulatory_considerations'] ?? [] ),
+		       ],
+					'financial_analysis' => [
+							'roi_scenarios'        => self::format_roi_scenarios( $roi_scenarios ),
+							'investment_breakdown' => $final_analysis['financial_analysis']['investment_breakdown'] ?? [],
+							'payback_analysis'     => $final_analysis['financial_analysis']['payback_analysis'] ?? [],
+							'sensitivity_analysis' => $roi_scenarios['sensitivity_analysis'] ?? [],
 							'chart_data'           => $chart_data,
 					],
 			'technology_strategy' => [
@@ -640,96 +659,96 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 	}
 
 	private static function format_roi_scenarios( $roi_scenarios ) {
-               return $roi_scenarios;
+	       return $roi_scenarios;
        }
 
        /**
-        * Sanitize request parameters for logging.
-        *
-        * @return array
-        */
+	* Sanitize request parameters for logging.
+	*
+	* @return array
+	*/
 	private static function get_sanitized_params() {
-               $params = [];
-               foreach ( $_REQUEST as $key => $value ) {
-                       if ( is_scalar( $value ) ) {
-                               $params[ sanitize_key( $key ) ] = sanitize_text_field( wp_unslash( $value ) );
-                       }
-               }
-               return $params;
+	       $params = [];
+	       foreach ( $_REQUEST as $key => $value ) {
+		       if ( is_scalar( $value ) ) {
+			       $params[ sanitize_key( $key ) ] = sanitize_text_field( wp_unslash( $value ) );
+		       }
+	       }
+	       return $params;
        }
 
        /**
-        * Log AJAX request details.
-        *
-        * @param string $action Action name.
-        * @param array  $params Request parameters.
-        * @param string $status Response status.
-        * @param array  $extra  Additional context.
-        * @return void
-        */
+	* Log AJAX request details.
+	*
+	* @param string $action Action name.
+	* @param array  $params Request parameters.
+	* @param string $status Response status.
+	* @param array  $extra  Additional context.
+	* @return void
+	*/
 	private static function log_request( $action, $params, $status, $extra = [] ) {
-               if ( class_exists( 'RTBCB_Logger' ) ) {
-                       $context = array_merge(
-                               [
-                                       'action'  => $action,
-                                       'params'  => $params,
-                                       'user_id' => function_exists( 'get_current_user_id' ) ? get_current_user_id() : 0,
-                                       'status'  => $status,
-                               ],
-                               $extra
-                       );
-                       RTBCB_Logger::log( 'ajax_request', $context );
-               }
+	       if ( class_exists( 'RTBCB_Logger' ) ) {
+		       $context = array_merge(
+			       [
+				       'action'  => $action,
+				       'params'  => $params,
+				       'user_id' => function_exists( 'get_current_user_id' ) ? get_current_user_id() : 0,
+				       'status'  => $status,
+			       ],
+			       $extra
+		       );
+		       RTBCB_Logger::log( 'ajax_request', $context );
+	       }
        }
 
        /**
-        * Safely update background job status.
-        *
-        * @param string $job_id Job ID.
-        * @param string $state  Job state.
-        * @param array  $data   Data to store.
-        * @return void
-        */
+	* Safely update background job status.
+	*
+	* @param string $job_id Job ID.
+	* @param string $state  Job state.
+	* @param array  $data   Data to store.
+	* @return void
+	*/
 	private static function safe_update_status( $job_id, $state, $data ) {
-               if ( ! $job_id ) {
-                       return;
-               }
-               try {
-                       RTBCB_Background_Job::update_status( $job_id, $state, $data );
-               } catch ( Exception $e ) {
-                       if ( class_exists( 'RTBCB_Logger' ) ) {
-                               RTBCB_Logger::log( 'background_job_error', [ 'job_id' => $job_id, 'message' => $e->getMessage() ] );
-                       }
-               }
+	       if ( ! $job_id ) {
+		       return;
+	       }
+	       try {
+		       RTBCB_Background_Job::update_status( $job_id, $state, $data );
+	       } catch ( Exception $e ) {
+		       if ( class_exists( 'RTBCB_Logger' ) ) {
+			       RTBCB_Logger::log( 'background_job_error', [ 'job_id' => $job_id, 'message' => $e->getMessage() ] );
+		       }
+	       }
        }
 
        /**
-        * Store workflow history and associated lead metadata.
-        *
-        * @param array     $debug_info  Workflow debug information.
-        * @param int|null  $lead_id     Lead ID.
-        * @param string    $lead_email  Lead email address.
-        * @return void
-        */
+	* Store workflow history and associated lead metadata.
+	*
+	* @param array     $debug_info  Workflow debug information.
+	* @param int|null  $lead_id     Lead ID.
+	* @param string    $lead_email  Lead email address.
+	* @return void
+	*/
 	private static function store_workflow_history( $debug_info, $lead_id = null, $lead_email = '', $company_name = '' ) {
-               $history = function_exists( 'get_option' ) ? get_option( 'rtbcb_workflow_history', [] ) : [];
-               if ( ! is_array( $history ) ) {
-                       $history = [];
-               }
+	       $history = function_exists( 'get_option' ) ? get_option( 'rtbcb_workflow_history', [] ) : [];
+	       if ( ! is_array( $history ) ) {
+		       $history = [];
+	       }
 			$debug_info['lead_id'] = $lead_id ? intval( $lead_id ) : null;
-               if ( ! empty( $lead_email ) ) {
+	       if ( ! empty( $lead_email ) ) {
 			$debug_info['lead_email'] = sanitize_email( $lead_email );
-               }
-               if ( ! empty( $company_name ) ) {
+	       }
+	       if ( ! empty( $company_name ) ) {
 			$debug_info['company_name'] = sanitize_text_field( $company_name );
-               }
-               $history[] = $debug_info;
-               if ( count( $history ) > 20 ) {
-                       $history = array_slice( $history, -20 );
-               }
-               if ( function_exists( 'update_option' ) ) {
-                       update_option( 'rtbcb_workflow_history', $history, false );
-               }
+	       }
+	       $history[] = $debug_info;
+	       if ( count( $history ) > 20 ) {
+		       $history = array_slice( $history, -20 );
+	       }
+	       if ( function_exists( 'update_option' ) ) {
+		       update_option( 'rtbcb_workflow_history', $history, false );
+	       }
        }
 }
 
