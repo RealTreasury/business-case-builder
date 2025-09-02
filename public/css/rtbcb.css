@@ -416,6 +416,7 @@ html {
     border-radius: 12px;
     width: 100%;
     max-width: 400px;
+    min-height: 80px;
     flex-shrink: 0;
 }
 
@@ -478,6 +479,7 @@ html {
     #rtbcb-progress-container .rtbcb-progress-step {
         padding: 14px 16px;
         margin-bottom: 16px;
+        min-height: 80px;
     }
 
     #rtbcb-progress-container .rtbcb-progress-step-text {
