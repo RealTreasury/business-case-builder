@@ -151,12 +151,15 @@ class RTBCB_API_Log {
                $request_json  = wp_json_encode( $request );
                $response_json = wp_json_encode( $response );
 
-               $request_json  = substr( $request_json, 0, 10000 );
-               $response_json = substr( $response_json, 0, 10000 );
-
-               $prompt_tokens     = intval( $response['usage']['prompt_tokens'] ?? 0 );
-               $completion_tokens = intval( $response['usage']['completion_tokens'] ?? 0 );
-               $total_tokens      = intval( $response['usage']['total_tokens'] ?? 0 );
+		$request_json  = substr( $request_json, 0, 10000 );
+		$response_json = substr( $response_json, 0, 10000 );
+		$usage             = $response['usage'] ?? [];
+		$prompt_tokens     = intval( $usage['prompt_tokens'] ?? $usage['input_tokens'] ?? 0 );
+		$completion_tokens = intval( $usage['completion_tokens'] ?? $usage['output_tokens'] ?? 0 );
+		$total_tokens      = intval( $usage['total_tokens'] ?? 0 );
+		if ( 0 === $total_tokens && ( $prompt_tokens || $completion_tokens ) ) {
+			$total_tokens = $prompt_tokens + $completion_tokens;
+		}
 
                $user_email   = sanitize_email( $user_email );
                $company_name = sanitize_text_field( $company_name );
