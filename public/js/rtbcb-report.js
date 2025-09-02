@@ -569,7 +569,7 @@ function sanitizeReportHTML(htmlContent) {
         'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span',
         'table', 'thead', 'tbody', 'tr', 'th', 'td'
     ];
-    const allowedAttr = { a: [ 'href', 'title', 'target', 'rel' ], '*': [ 'style' ] };
+    const allowedAttr = [ 'href', 'title', 'target', 'rel', 'style' ];
     return typeof DOMPurify !== 'undefined'
         ? DOMPurify.sanitize(htmlContent, { ALLOWED_TAGS: allowedTags, ALLOWED_ATTR: allowedAttr })
         : htmlContent;
