@@ -1483,7 +1483,7 @@ class BusinessCaseBuilder {
                 reasoning: data.recommendation?.reasoning || data.technology_strategy?.recommended_category || ''
             },
             executiveSummary: data.executive_summary || data.narrative || {},
-            operationalAnalysis: data.operational_analysis || {},
+            operationalAnalysis: data.operational_insights || data.operational_analysis || {},
             industryInsights: {
                 sector_trends: data.industry_insights?.sector_trends || [],
                 competitive_benchmarks: data.industry_insights?.competitive_benchmarks || [],
