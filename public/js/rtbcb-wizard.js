@@ -1686,6 +1686,11 @@ class BusinessCaseBuilder {
             ];
         }
 
+        // Sanitize steps before output for security
+        const sanitize = (str) => (window.DOMPurify && typeof window.DOMPurify.sanitize === 'function')
+            ? window.DOMPurify.sanitize(str)
+            : this.escapeHTML(str);
+
         return `
             <div class="rtbcb-next-steps">
                 <h3>Recommended Next Steps</h3>
@@ -1694,7 +1699,7 @@ class BusinessCaseBuilder {
                         <div class="rtbcb-step">
                             <div class="rtbcb-step-number">${index + 1}</div>
                             <div class="rtbcb-step-content">
-                                <p>${step}</p>
+                                <p>${sanitize(step)}</p>
                             </div>
                         </div>
                     `).join('')}
