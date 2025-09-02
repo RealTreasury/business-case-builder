@@ -2997,17 +2997,21 @@ $max_output_tokens = min( 128000, max( $min_tokens, $max_output_tokens ) );
 	*
 	* @param array $response  HTTP response array from wp_remote_post().
 	* @param bool  $store_raw Optional. Include full raw payload. Default false.
-	* @return array {
-	*     @type string $output_text    Combined output text from the response.
-	*     @type array  $reasoning      Reasoning segments provided by the model.
-	*     @type array  $function_calls Function call items returned by the model.
-	*     @type array  $raw            Raw decoded response body.
-	*     @type bool   $truncated      Whether the response hit the token limit.
+	* @return array|WP_Error {
+	* @type string $output_text    Combined output text from the response.
+	* @type array  $reasoning      Reasoning segments provided by the model.
+	* @type array  $function_calls Function call items returned by the model.
+	* @type array  $raw            Raw decoded response body.
+	* @type bool   $truncated      Whether the response hit the token limit.
 	* }
-	*/
+ */
 function rtbcb_parse_gpt5_response( $response, $store_raw = false ) {
-	$body    = wp_remote_retrieve_body( $response );
-	$decoded = json_decode( $body, true );
+       if ( ! is_array( $response ) ) {
+               return new WP_Error( 'invalid_response', __( 'Invalid response.', 'rtbcb' ) );
+       }
+
+       $body    = wp_remote_retrieve_body( $response );
+       $decoded = json_decode( $body, true );
 
 	if ( ! is_array( $decoded ) ) {
 		return [
