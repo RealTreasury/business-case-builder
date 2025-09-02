@@ -1442,7 +1442,7 @@ class BusinessCaseBuilder {
                 reasoning: data.recommendation?.reasoning || data.technology_strategy?.recommended_category || ''
             },
             executive_summary: data.executive_summary?.executive_recommendation || data.narrative?.narrative || '',
-            operational_analysis: data.operational_analysis || {},
+            operational_analysis: data.operational_analysis || data.operational_insights || {},
             industry_insights: data.industry_insights || {},
             narrative: {
                 next_actions: data.narrative?.next_actions || [
