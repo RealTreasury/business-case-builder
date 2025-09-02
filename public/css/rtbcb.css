@@ -213,6 +213,8 @@ html {
 }
 
 .rtbcb-nav-btn:hover:not(:disabled) {
+    background: #7216f4;
+    color: #ffffff;
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(114, 22, 244, 0.3);
 }
@@ -1668,6 +1670,8 @@ html {
 }
 
 .rtbcb-nav-btn:hover:not(:disabled) {
+    background: #7216f4;
+    color: #ffffff;
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(114, 22, 244, 0.3);
 }
