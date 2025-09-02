@@ -25,13 +25,13 @@ if ( ! function_exists( 'apply_filters' ) ) {
 	}
 }
 if ( ! function_exists( 'add_action' ) ) {
-	function add_action( $tag, $function_to_add, $priority = 10, $accepted_args = 1 ) {}
+        function add_action( $tag, $function_to_add, $priority = 10, $accepted_args = 1 ) {}
 }
 if ( ! function_exists( 'do_action' ) ) {
-	function do_action( $tag, ...$args ) {}
+        function do_action( $tag, ...$args ) {}
 }
 if ( ! function_exists( 'wp_die' ) ) {
-	function wp_die( $message = '' ) {}
+        function wp_die( $message = '' ) {}
 }
 if ( ! function_exists( 'did_action' ) ) {
 	function did_action( $tag ) {
@@ -44,9 +44,9 @@ if ( ! function_exists( 'is_admin' ) ) {
 	}
 }
 if ( ! function_exists( 'get_option' ) ) {
-	function get_option( $option, $default = false ) {
-		return $default;
-	}
+        function get_option( $option, $default = false ) {
+                return $default;
+        }
 }
 if ( ! function_exists( 'update_option' ) ) {
 	function update_option( $option, $value ) {
@@ -79,9 +79,15 @@ if ( ! function_exists( 'wp_trim_words' ) ) {
 	}
 }
 if ( ! function_exists( 'wp_json_encode' ) ) {
-	function wp_json_encode( $data ) {
-		return json_encode( $data );
-	}
+        function wp_json_encode( $data ) {
+                return json_encode( $data );
+        }
+}
+
+if ( ! function_exists( 'is_wp_error' ) ) {
+       function is_wp_error( $thing ) {
+               return $thing instanceof WP_Error;
+       }
 }
 if ( ! class_exists( 'RTBCB_Category_Recommender' ) ) {
 	class RTBCB_Category_Recommender {
