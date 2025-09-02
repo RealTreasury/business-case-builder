@@ -98,7 +98,17 @@ return [ 'roi_base' => 1000 ];
 }
 
 public function generate_comprehensive_business_case( $form_data, $calculations, $rag_context, $chunk_callback = null ) {
-return [ 'roi_base' => 1000 ];
+return [
+'executive_summary'      => [],
+'company_intelligence'   => [],
+'operational_insights'   => [],
+'risk_analysis'          => [],
+'action_plan'            => [],
+'industry_insights'      => [],
+'technology_strategy'    => [],
+'financial_analysis'     => [],
+'implementation_roadmap' => [],
+];
 }
 }
 }

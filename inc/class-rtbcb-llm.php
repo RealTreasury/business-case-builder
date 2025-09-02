@@ -957,13 +957,19 @@ $batch_prompts['tech'] = [
 
 		$analysis = $this->enhance_with_research( $parsed, $company_research, $industry_analysis, $tech_landscape );
 
-               return [
-                       'executive_summary'      => $analysis['executive_summary'] ?? [],
-                       'financial_analysis'     => $analysis['financial_analysis'] ?? [],
-                       'implementation_roadmap' => $analysis['implementation_roadmap'] ?? [],
-                       'raw'                    => $analysis,
-               ];
-       }
+return [
+'executive_summary'      => $analysis['executive_summary'] ?? [],
+'company_intelligence'   => $analysis['company_intelligence'] ?? [],
+'operational_insights'   => $analysis['operational_insights'] ?? [],
+'risk_analysis'          => $analysis['risk_analysis'] ?? [],
+'action_plan'            => $analysis['action_plan'] ?? [],
+'industry_insights'      => $analysis['industry_insights'] ?? [],
+'technology_strategy'    => $analysis['technology_strategy'] ?? [],
+'financial_analysis'     => $analysis['financial_analysis'] ?? [],
+'implementation_roadmap' => $analysis['implementation_roadmap'] ?? [],
+'raw'                    => $analysis,
+];
+}
 
 	/**
 	* Parse and validate comprehensive OpenAI response.
