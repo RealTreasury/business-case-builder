@@ -59,59 +59,28 @@ $method = new ReflectionMethod( RTBCB_LLM::class, 'parse_comprehensive_response'
 $method->setAccessible( true );
 
 $valid_json = [
-	'executive_summary' => [
-		'strategic_positioning'   => 'pos',
-		'business_case_strength'  => 'Strong',
-		'key_value_drivers'       => [ 'driver' ],
-		'executive_recommendation'=> 'rec',
-		'confidence_level'        => 0.9,
-	],
-	'operational_analysis' => [
-		'current_state_assessment' => [
-			'efficiency_rating'    => 'Good',
-			'benchmark_comparison' => 'peer',
-			'capacity_utilization' => 'high',
-		],
-		'process_inefficiencies'  => [],
-		'automation_opportunities'=> [],
-	],
-	'industry_insights' => [
-		'sector_trends'          => 'trend',
-		'competitive_benchmarks' => 'bench',
-		'regulatory_considerations' => 'reg',
-	],
-	'technology_recommendations' => [
-		'primary_solution' => [
-			'category'     => 'cat',
-			'rationale'    => 'why',
-			'key_features' => [ 'feature' ],
-		],
-		'implementation_approach' => [
-			'phase_1'        => 'p1',
-			'phase_2'        => 'p2',
-			'success_metrics'=> [ 'metric' ],
-		],
-	],
-	'financial_analysis' => [
-		'investment_breakdown' => [
-			'software_licensing'      => 'cost',
-			'implementation_services' => 'cost',
-			'training_change_management' => 'cost',
-		],
-		'payback_analysis' => [
-			'payback_months' => 12,
-			'roi_3_year'     => 50,
-			'npv_analysis'   => 'npv',
-		],
-	],
-	'risk_mitigation' => [
-		'implementation_risks' => [ 'risk' ],
-		'mitigation_strategies' => [
-			'risk_1_mitigation' => 'mit1',
-			'risk_2_mitigation' => 'mit2',
-		],
-	],
-	'next_steps' => [ 'step' ],
+        'executive_summary' => [
+                'strategic_positioning'   => 'pos',
+                'business_case_strength'  => 'Strong',
+                'key_value_drivers'       => [ 'driver' ],
+                'executive_recommendation'=> 'rec',
+                'confidence_level'        => 0.9,
+        ],
+        'financial_analysis' => [
+                'roi_scenarios' => [ [ 'scenario' => 'base', 'roi' => 10 ] ],
+                'payback_analysis' => [
+                        'payback_months' => 12,
+                        'roi_3_year'     => 50,
+                        'npv_analysis'   => 'npv',
+                ],
+        ],
+        'implementation_roadmap' => [
+                [
+                        'phase'      => 'p1',
+                        'timeline'   => 'Q1',
+                        'activities' => [ 'step1' ],
+                ],
+        ],
 ];
 
 $response = [
@@ -127,7 +96,7 @@ if ( is_wp_error( $result ) ) {
 	exit( 1 );
 }
 
-$required = [ 'executive_summary', 'operational_analysis', 'industry_insights', 'technology_recommendations', 'financial_analysis', 'risk_mitigation', 'next_steps' ];
+$required = [ 'executive_summary', 'financial_analysis', 'implementation_roadmap' ];
 
 foreach ( $required as $key ) {
 	if ( ! isset( $result[ $key ] ) ) {
