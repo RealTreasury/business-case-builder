@@ -185,24 +185,23 @@ class RTBCB_Router {
 					'report_html' => $report_html,
 				]
 			);
-		} catch ( Exception $e ) {
-			if ( class_exists( 'RTBCB_JSON_Error' ) && $e instanceof RTBCB_JSON_Error ) {
-				throw $e;
-			}
-			// Log the detailed error to debug.log.
-			error_log( 'RTBCB Form Submission Error: ' . $e->getMessage() );
+               } catch ( RTBCB_JSON_Error $e ) {
+                       throw $e;
+               } catch ( Exception $e ) {
+                       // Log the detailed error to debug.log.
+                       error_log( 'RTBCB Form Submission Error: ' . $e->getMessage() );
 
-			// Send a generic error response to the client.
-			wp_send_json_error(
-				[
-					'message' => sprintf(
-						__( 'An unexpected error occurred while generating your report. Please check the server logs for more details. Error: %s', 'rtbcb' ),
-						$e->getMessage()
-						),
-				],
-				500
-			);
-		}
+                       // Send a generic error response to the client.
+                       wp_send_json_error(
+                               [
+                                       'message' => sprintf(
+                                               __( 'An unexpected error occurred while generating your report. Please check the server logs for more details. Error: %s', 'rtbcb' ),
+                                               $e->getMessage()
+                                               ),
+                               ],
+                               500
+                       );
+               }
 	}
 	/**
 	* Route to the appropriate LLM model.
