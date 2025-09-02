@@ -453,6 +453,43 @@ function initializeROIChart() {
 }
 
 /**
+ * Create a small bar chart for an individual scenario.
+ *
+ * @param {HTMLCanvasElement} canvas Canvas element to render into.
+ * @param {string} scenario Scenario key (conservative|base|optimistic).
+ */
+function createScenarioMiniChart(canvas, scenario) {
+    const roiScenarios = window.rtbcbReportData?.roiScenarios;
+    const data = roiScenarios?.[scenario];
+    if (!data) {
+        return;
+    }
+
+    try {
+        new Chart(canvas, {
+            type: 'bar',
+            data: {
+                labels: ['Annual Benefit'],
+                datasets: [
+                    {
+                        data: [data.total_annual_benefit || 0],
+                        backgroundColor: ['#3b82f6']
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { x: { display: false }, y: { display: false } }
+            }
+        });
+    } catch (error) {
+        console.error('RTBCB: Error creating mini chart for', scenario, error);
+    }
+}
+
+/**
  * Initialize comparison charts for multiple scenarios
  */
 function initializeComparisonCharts() {
@@ -480,9 +517,10 @@ function initializeSensitivityChart() {
     
     try {
         new Chart(ctx, {
-            type: 'horizontalBar',
+            type: 'bar',
             data: sensitivityData,
             options: {
+                indexAxis: 'y',
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
