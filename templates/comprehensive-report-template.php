@@ -629,7 +629,7 @@ function initializeEnhancedCharts() {
 			new Chart(roiCtx, {
 				type: 'bar',
 				data: window.rtbcbChartData,
-				options: {
+					indexAxis: 'y',
 					responsive: true,
 					maintainAspectRatio: false,
 					interaction: {
@@ -698,9 +698,10 @@ function initializeEnhancedCharts() {
 	if (sensitivityCtx && window.rtbcbSensitivityData) {
 		try {
 			new Chart(sensitivityCtx, {
-				type: 'horizontalBar',
+				type: 'bar',
 				data: window.rtbcbSensitivityData,
 				options: {
+					indexAxis: 'y',
 					responsive: true,
 					maintainAspectRatio: false,
 					plugins: {
