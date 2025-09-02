@@ -79,8 +79,9 @@ if ( ! defined( 'DAY_IN_SECONDS' ) ) {
 }
 
 require_once __DIR__ . '/../inc/class-rtbcb-llm.php';
+require_once __DIR__ . '/../inc/class-rtbcb-llm-optimized.php';
 
-$llm = new RTBCB_LLM();
+$llm = new RTBCB_LLM_Optimized();
 $method = new ReflectionMethod( RTBCB_LLM::class, 'conduct_company_research' );
 $method->setAccessible( true );
 

@@ -5,6 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 defined( 'ABSPATH' ) || exit;
 
 require_once __DIR__ . '/../inc/class-rtbcb-llm.php';
+require_once __DIR__ . '/../inc/class-rtbcb-llm-optimized.php';
 
 if ( ! function_exists( 'get_option' ) ) {
 	function get_option( $name, $default = '' ) {
@@ -37,7 +38,7 @@ if ( ! function_exists( '__' ) ) {
 	}
 }
 
-$llm    = new RTBCB_LLM();
+$llm    = new RTBCB_LLM_Optimized();
 $method = new ReflectionMethod( RTBCB_LLM::class, 'get_model' );
 $method->setAccessible( true );
 $model = $method->invoke( $llm, 'mini' );

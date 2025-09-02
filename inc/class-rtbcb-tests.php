@@ -87,7 +87,7 @@ class RTBCB_Tests {
 			];
 		}
 
-		$llm = new RTBCB_LLM();
+		$llm = new RTBCB_LLM_Optimized();
 
 		$user_inputs = rtbcb_get_sample_inputs();
 

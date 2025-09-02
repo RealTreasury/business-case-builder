@@ -280,7 +280,8 @@ return true;
 				   'inc/class-rtbcb-maturity-model.php'	 => 'RTBCB_Maturity_Model',
 				   'inc/class-rtbcb-leads.php'		 => 'RTBCB_Leads',
 				   'inc/class-rtbcb-rag.php'		 => 'RTBCB_RAG',
-				   'inc/class-rtbcb-llm.php'		 => 'RTBCB_LLM',
+				   'inc/class-rtbcb-llm.php'             => 'RTBCB_LLM',
+                                   'inc/class-rtbcb-llm-optimized.php'   => 'RTBCB_LLM_Optimized',
 				   'inc/class-rtbcb-intelligent-recommender.php' => 'RTBCB_Intelligent_Recommender',
                                    'inc/class-rtbcb-json-error.php'     => 'RTBCB_JSON_Error',
                                    'inc/class-rtbcb-router.php'		 => 'RTBCB_Router',
@@ -1311,7 +1312,7 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 		};
 
 		try {
-		$llm	= new RTBCB_LLM();
+		$llm	= new RTBCB_LLM_Optimized();
 		$result = $llm->generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_loader, $chunk_callback );
 
 		if ( is_wp_error( $result ) ) {
@@ -1819,7 +1820,7 @@ $required_keys = [ 'executive_summary', 'financial_analysis', 'implementation_ro
 				// Consider offloading this LLM call to a background task and polling for completion to
 				// avoid keeping the HTTP connection open.
 				rtbcb_log_api_debug( 'Calling LLM for comprehensive business case' );
-				$llm = new RTBCB_LLM();
+				$llm = new RTBCB_LLM_Optimized();
 				$comprehensive_analysis = $llm->generate_comprehensive_business_case(
 					$user_inputs,
 					$scenarios,

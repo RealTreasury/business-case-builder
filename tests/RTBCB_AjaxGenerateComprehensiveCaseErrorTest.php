@@ -120,7 +120,7 @@ if ( ! function_exists( 'wp_send_json_error' ) ) {
 if ( ! class_exists( 'RTBCB_Main' ) ) {
 	class RTBCB_Main {
 		public function ajax_generate_comprehensive_case() {
-			$llm = new RTBCB_LLM();
+			$llm = new RTBCB_LLM_Optimized();
 			$comprehensive_analysis = $llm->generate_comprehensive_business_case( [], [], [], null );
 			if ( is_wp_error( $comprehensive_analysis ) ) {
 				$error_message  = $comprehensive_analysis->get_error_message();

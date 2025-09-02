@@ -99,7 +99,7 @@ if ( ! function_exists( 'wp_send_json_error' ) ) {
 if ( ! class_exists( 'RTBCB_Main_Fatal' ) ) {
 	class RTBCB_Main_Fatal {
 		public function ajax_generate_comprehensive_case() {
-			$llm = new RTBCB_LLM();
+			$llm = new RTBCB_LLM_Optimized();
 			try {
 				$llm->generate_comprehensive_business_case( [], [], [], null );
 			} catch ( Error $e ) {

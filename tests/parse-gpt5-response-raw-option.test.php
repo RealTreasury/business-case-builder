@@ -5,6 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 defined( 'ABSPATH' ) || exit;
 
 require_once __DIR__ . '/../inc/class-rtbcb-llm.php';
+require_once __DIR__ . '/../inc/class-rtbcb-llm-optimized.php';
 
 if ( ! function_exists( 'wp_remote_retrieve_body' ) ) {
 	function wp_remote_retrieve_body( $response ) {

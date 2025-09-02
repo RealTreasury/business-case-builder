@@ -17,6 +17,7 @@ if ( ! function_exists( 'get_option' ) ) {
 }
 
 require_once __DIR__ . '/../inc/class-rtbcb-llm.php';
+require_once __DIR__ . '/../inc/class-rtbcb-llm-optimized.php';
 
 if ( ! class_exists( 'WP_Error' ) ) {
 	class WP_Error {
@@ -79,7 +80,7 @@ if ( ! function_exists( 'wp_json_encode' ) ) {
 	}
 }
 
-$llm = new RTBCB_LLM();
+$llm = new RTBCB_LLM_Optimized();
 
 $method = new ReflectionMethod( RTBCB_LLM::class, 'project_growth_path' );
 $method->setAccessible( true );

@@ -5,6 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 defined( 'ABSPATH' ) || exit;
 
 require_once __DIR__ . '/../inc/class-rtbcb-llm.php';
+require_once __DIR__ . '/../inc/class-rtbcb-llm-optimized.php';
 
 if ( ! class_exists( 'WP_Error' ) ) {
 	class WP_Error {
@@ -54,7 +55,7 @@ if ( ! function_exists( 'wp_remote_retrieve_body' ) ) {
 	}
 }
 
-$llm    = new RTBCB_LLM();
+$llm    = new RTBCB_LLM_Optimized();
 $method = new ReflectionMethod( RTBCB_LLM::class, 'parse_comprehensive_response' );
 $method->setAccessible( true );
 
