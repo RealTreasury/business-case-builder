@@ -3,6 +3,10 @@
  * Handles interactive dashboard features, charts, and collapsible sections
  */
 
+// Default GPT-5 token limits synchronized with PHP config.
+const RTBCB_GPT5_MIN_TOKENS = 256;
+const RTBCB_GPT5_MAX_TOKENS = 8000;
+
 // Ensure Chart.js date adapter is registered in Node environments.
 if ( typeof require === 'function' ) {
     try {
@@ -23,7 +27,9 @@ if (typeof document !== 'undefined' && typeof document.addEventListener === 'fun
         initializeResponsiveFeatures();
 
         // Add loading animation completion
-        document.querySelector('.rtbcb-enhanced-report')?.classList.add('loaded');
+        if ( typeof document.querySelector === 'function' ) {
+            document.querySelector('.rtbcb-enhanced-report')?.classList.add('loaded');
+        }
     });
 }
 
@@ -273,6 +279,9 @@ function initializeSensitivityChart() {
  * Initialize section toggle functionality
  */
 function initializeSectionToggles() {
+    if ( typeof document === 'undefined' || typeof document.querySelectorAll !== 'function' ) {
+        return;
+    }
     document.querySelectorAll('.rtbcb-section-toggle').forEach(toggle => {
         toggle.addEventListener('click', function(e) {
             e.preventDefault();
@@ -333,6 +342,9 @@ function initializeSectionToggles() {
  * Initialize interactive metric cards
  */
 function initializeInteractiveMetrics() {
+    if ( typeof document === 'undefined' || typeof document.querySelectorAll !== 'function' ) {
+        return;
+    }
     document.querySelectorAll('.rtbcb-metric-card').forEach(card => {
         // Add hover effects and click handlers
         card.addEventListener('mouseenter', function() {
@@ -361,6 +373,10 @@ function initializeInteractiveMetrics() {
  * Initialize responsive features
  */
 function initializeResponsiveFeatures() {
+    if ( typeof document === 'undefined' || typeof document.querySelector !== 'function' ) {
+        return;
+    }
+
     // Handle mobile navigation
     const mobileToggle = document.querySelector('.rtbcb-mobile-toggle');
     if (mobileToggle) {
