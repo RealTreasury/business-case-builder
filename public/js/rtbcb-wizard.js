@@ -585,6 +585,22 @@ class BusinessCaseBuilder {
             try {
                 data = JSON.parse(responseText);
                 console.log('RTBCB: Parsed JSON response:', data);
+
+                if (typeof data === 'string') {
+                    try {
+                        console.log('RTBCB: Response is a string, attempting second parse');
+                        data = JSON.parse(data);
+                        console.log('RTBCB: Parsed stringified JSON response:', data);
+                    } catch (stringError) {
+                        console.log('RTBCB: Failed to parse stringified JSON, attempting to clean');
+                        const cleanedString = data
+                            .replaceAll('\\/', '/')
+                            .replaceAll('\\"', '"')
+                            .replace(/(^"|"$)/g, '');
+                        data = JSON.parse(cleanedString);
+                        console.log('RTBCB: Parsed cleaned stringified JSON response:', data);
+                    }
+                }
             } catch (parseError) {
                 console.log('RTBCB: JSON parse failed, attempting to clean response');
                 try {
