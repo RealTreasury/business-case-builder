@@ -107,6 +107,7 @@ echo "16. Running JavaScript tests..."
 node tests/handle-submit-error.test.js
 node tests/handle-submit-no-ajax-url.test.js
 node tests/render-results-no-narrative.test.js
+node tests/show-results-operational-insights.test.js
 node tests/handle-submit-success.test.js
 node tests/handle-server-error-display.test.js
 node tests/handle-invalid-server-response.test.js
