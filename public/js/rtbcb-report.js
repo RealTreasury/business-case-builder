@@ -258,3 +258,23 @@ async function generateAndDisplayReport(businessContext) {
         loadingElement.style.display = 'none';
     }
 }
+
+function initializeROIChart() {
+    const ctx = document.getElementById('rtbcb-roi-chart');
+    const roiData = rtbcbReportData.roiScenarios;
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Conservative', 'Base Case', 'Optimistic'],
+            datasets: [{
+                label: 'Annual Benefit ($)',
+                data: [
+                    roiData.conservative?.total_annual_benefit || 0,
+                    roiData.base?.total_annual_benefit || 0,
+                    roiData.optimistic?.total_annual_benefit || 0
+                ]
+            }]
+        }
+    });
+}
