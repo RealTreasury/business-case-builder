@@ -228,10 +228,10 @@ return false !== $json ? $json : '{}';
  * Send request to OpenAI and parse JSON response with one retry on failure.
  *
  * @param array $user_payload User payload sections.
- * @param int   $max_output_tokens Optional token limit.
+ * @param int   $max_tokens Optional token limit.
  * @return array|WP_Error Decoded response or error.
  */
-public function request( array $user_payload, $max_output_tokens = null ) {
+public function request( array $user_payload, $max_tokens = null ) {
 $messages = $this->build_messages( $user_payload );
 $body     = [
 'model'           => $this->model,
@@ -240,8 +240,8 @@ $body     = [
 'temperature'     => 0.2,
 'response_format' => [ 'type' => 'json_object' ],
 ];
-if ( $max_output_tokens ) {
-$body['max_output_tokens'] = (int) $max_output_tokens;
+if ( $max_tokens ) {
+$body['max_tokens'] = (int) $max_tokens;
 }
 
 $response = $this->send_request( $body );

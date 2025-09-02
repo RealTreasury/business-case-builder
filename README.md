@@ -35,7 +35,7 @@ A comprehensive WordPress plugin that helps treasury teams quantify the benefits
    ```php
    $client->chat()->create([
    'model' => 'gpt-5-mini',
-   'max_output_tokens' => 256,
+   'max_tokens' => 256,
   ]);
   ```
 
