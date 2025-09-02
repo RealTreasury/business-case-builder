@@ -152,23 +152,24 @@ public function add_error( $code, $message ) {
 }
 
 /**
-	* Get completed steps summary.
-	*
-	* @return array
-	*/
-public function get_completed_steps() {
-return array_map(
-function( $step ) {
-return [
-'name'     => $step['name'],
-'duration'  => round( $step['duration'], 2 ),
-'status'    => $step['status'],
-'memory_mb' => round( $step['memory_usage'] / 1024 / 1024, 1 ),
-];
-},
-$this->steps
-);
-}
+        * Get completed steps summary.
+        *
+        * @return array
+        */
+       public function get_completed_steps() {
+               return array_map(
+                       function( $step ) {
+                               return [
+                                       'name'     => $step['name'],
+                                       'duration' => round( $step['duration'], 2 ),
+                                       'elapsed'  => round( $step['end_time'] - $this->start_time, 2 ),
+                                       'status'   => $step['status'],
+                                       'memory_mb' => round( $step['memory_usage'] / 1024 / 1024, 1 ),
+                               ];
+                       },
+                       $this->steps
+               );
+       }
 
 /**
 	* Record a prompt sent to the AI service.

@@ -14,7 +14,7 @@ jQuery(function ($) {
 			nonce: rtbcbWorkflow.nonce,
 		})
 			.done(function (response) {
-				if (response.success) {
+                                if (response.success) {
 					var history = response.data.history || [];
 					if (!history.length) {
 						$("#rtbcb-workflow-history-container").html(
@@ -51,22 +51,29 @@ jQuery(function ($) {
 								: rtbcbWorkflow.strings.unknown_lead);
 						html += "<tr><td>" + $("<div>").text(lead).html() + "</td>";
 						stepNames.forEach(function (name) {
-							var status = rtbcbWorkflow.strings.not_run;
-							var time = "";
-							if (item.steps) {
-								item.steps.forEach(function (step) {
-									if (step.name === name) {
-										status = step.status;
-										if (step.duration) {
-											time =
-												'<span class="rtbcb-step-time">' +
-												step.duration +
-												rtbcbWorkflow.strings.seconds +
-												"</span>";
-										}
-									}
-								});
-							}
+                                                        var status = rtbcbWorkflow.strings.not_run;
+                                                        var time = "";
+                                                        if (item.steps) {
+                                                                item.steps.forEach(function (step) {
+                                                                        if (step.name === name) {
+                                                                                status = step.status;
+                                                                                if (step.duration) {
+                                                                                        time =
+                                                                                                '<span class="rtbcb-step-time">' +
+                                                                                                step.duration +
+                                                                                                rtbcbWorkflow.strings.seconds;
+                                                                                        if (step.elapsed) {
+                                                                                                time +=
+                                                                                                        ' (' +
+                                                                                                        step.elapsed +
+                                                                                                        rtbcbWorkflow.strings.elapsed_suffix +
+                                                                                                        ')';
+                                                                                        }
+                                                                                        time += '</span>';
+                                                                                }
+                                                                        }
+                                                                });
+                                                        }
 							html +=
 								"<td><span>" +
 								$("<div>").text(status).html() +
@@ -81,14 +88,16 @@ jQuery(function ($) {
 					if (showNotice) {
 						showMessage(rtbcbWorkflow.strings.refresh_success, "success");
 					}
-				} else {
-					showMessage(rtbcbWorkflow.strings.error, "error");
-				}
-			})
-			.fail(function () {
-				showMessage(rtbcbWorkflow.strings.error, "error");
-			});
-	}
+                                } else if (showNotice) {
+                                        showMessage(rtbcbWorkflow.strings.error, "error");
+                                }
+                        })
+                        .fail(function () {
+                                if (showNotice) {
+                                        showMessage(rtbcbWorkflow.strings.error, "error");
+                                }
+                        });
+        }
 
 	$("#rtbcb-refresh-workflow").on("click", function () {
 		loadHistory(true);

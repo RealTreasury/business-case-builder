@@ -117,7 +117,8 @@ wp_localize_script(
 'lead'            => __( 'Lead', 'rtbcb' ),
 'unknown_lead'    => __( 'Unknown Lead', 'rtbcb' ),
 'not_run'         => __( 'Not run', 'rtbcb' ),
-'seconds'         => __( 's', 'rtbcb' ),
+                               'seconds'         => __( 's', 'rtbcb' ),
+                               'elapsed_suffix' => __( 's elapsed', 'rtbcb' ),
 ],
 ]
 );
@@ -1893,6 +1894,7 @@ $steps[] = [
 'name'     => sanitize_text_field( $step['name'] ?? '' ),
 'status'   => sanitize_text_field( $step['status'] ?? '' ),
 'duration' => isset( $step['duration'] ) ? floatval( $step['duration'] ) : 0,
+'elapsed'  => isset( $step['elapsed'] ) ? floatval( $step['elapsed'] ) : 0,
 ];
 }
 }
