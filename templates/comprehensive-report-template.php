@@ -629,6 +629,7 @@ function initializeEnhancedCharts() {
 			new Chart(roiCtx, {
 				type: 'bar',
 				data: window.rtbcbChartData,
+				options: {
 					indexAxis: 'y',
 					responsive: true,
 					maintainAspectRatio: false,
@@ -685,6 +686,7 @@ function initializeEnhancedCharts() {
 						duration: 1500,
 						easing: 'easeInOutQuart'
 					}
+				}
 				}
 			});
 		} catch (error) {
