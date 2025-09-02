@@ -131,14 +131,25 @@ class RTBCB_API_Log {
                        return $json;
                }
 
-               $truncated = true;
-               $json      = substr( $json, 0, $max_bytes );
+		$truncated = true;
+		$json      = substr( $json, 0, $max_bytes );
 
-               while ( strlen( $json ) && null === json_decode( $json, true ) ) {
-                       $json = substr( $json, 0, -1 );
-               }
+		// Find the last closing brace or bracket to preserve valid JSON without decoding each byte.
+		$last_pos = max( strrpos( $json, '}' ), strrpos( $json, ']' ) );
+		while ( false !== $last_pos ) {
+			$candidate = substr( $json, 0, $last_pos + 1 );
+			if ( null !== json_decode( $candidate, true ) ) {
+				return $candidate;
+			}
+			$last_curly  = strrpos( $json, '}', -( strlen( $json ) - $last_pos + 1 ) );
+			$last_square = strrpos( $json, ']', -( strlen( $json ) - $last_pos + 1 ) );
+			if ( false === $last_curly && false === $last_square ) {
+				break;
+			}
+			$last_pos = max( $last_curly, $last_square );
+		}
 
-               return $json;
+		return '';
        }
 
 	/**
