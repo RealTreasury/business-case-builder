@@ -94,8 +94,15 @@ $response = rtbcb_wp_remote_post_with_retry( 'https://api.openai.com/v1/response
 			];
 		}
 
-		$parsed      = rtbcb_parse_gpt5_response( $response );
-		$output_text = $parsed['output_text'];
+	        $parsed      = rtbcb_parse_gpt5_response( $response );
+	        if ( is_wp_error( $parsed ) ) {
+	                return [
+	                        'success' => false,
+	                        'message' => __( 'Invalid response from API.', 'rtbcb' ),
+	                        'details' => $parsed->get_error_message(),
+	                ];
+	        }
+	        $output_text = $parsed['output_text'];
 
 		if ( empty( $output_text ) ) {
 			return [

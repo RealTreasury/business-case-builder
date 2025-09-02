@@ -201,6 +201,9 @@ return function_exists( 'sanitize_text_field' ) ? sanitize_text_field( $model_op
 		}
 
 		$parsed = rtbcb_parse_gpt5_response( $response );
+		if ( is_wp_error( $parsed ) ) {
+			return $parsed;
+		}
 		$json   = json_decode( $parsed['output_text'], true );
 
 		if ( ! is_array( $json ) ) {
@@ -261,6 +264,9 @@ return function_exists( 'sanitize_text_field' ) ? sanitize_text_field( $model_op
 		}
 
 		$parsed     = rtbcb_parse_gpt5_response( $response );
+		if ( is_wp_error( $parsed ) ) {
+			return $parsed;
+		}
 		$commentary = sanitize_textarea_field( $parsed['output_text'] );
 
 		if ( empty( $commentary ) ) {
@@ -374,6 +380,9 @@ USER,
 		}
 
 		$parsed  = rtbcb_parse_gpt5_response( $response );
+		if ( is_wp_error( $parsed ) ) {
+			return $parsed;
+		}
 		$content = $parsed['output_text'];
 
 		if ( empty( $content ) ) {
@@ -468,6 +477,9 @@ USER,
 		}
 
 		$parsed   = rtbcb_parse_gpt5_response( $response );
+		if ( is_wp_error( $parsed ) ) {
+			return $parsed;
+		}
 		$overview = sanitize_textarea_field( $parsed['output_text'] );
 
 		if ( empty( $overview ) ) {
@@ -518,6 +530,9 @@ USER,
 		}
 
 		$parsed   = rtbcb_parse_gpt5_response( $response );
+		if ( is_wp_error( $parsed ) ) {
+			return $parsed;
+		}
 		$overview = sanitize_textarea_field( $parsed['output_text'] );
 
 		if ( empty( $overview ) ) {
@@ -584,6 +599,9 @@ USER,
 		}
 
 		$parsed   = rtbcb_parse_gpt5_response( $response );
+		if ( is_wp_error( $parsed ) ) {
+			return $parsed;
+		}
 		$overview = sanitize_textarea_field( $parsed['output_text'] );
 
 		if ( empty( $overview ) ) {
@@ -629,6 +647,9 @@ USER,
 		}
 
 		$parsed_response = rtbcb_parse_gpt5_response( $response );
+		if ( is_wp_error( $parsed_response ) ) {
+			return $parsed_response;
+		}
 		$parsed          = json_decode( $parsed_response['output_text'], true );
 
 		if ( empty( $parsed ) || ! is_array( $parsed ) ) {
@@ -682,6 +703,9 @@ USER,
 		}
 
 		$parsed_response = rtbcb_parse_gpt5_response( $response );
+		if ( is_wp_error( $parsed_response ) ) {
+			return $parsed_response;
+		}
 		$parsed          = json_decode( $parsed_response['output_text'], true );
 
 		if ( empty( $parsed ) || ! is_array( $parsed ) ) {
@@ -883,12 +907,12 @@ $batch_prompts['tech'] = [
 
 		$analysis = $this->enhance_with_research( $parsed, $company_research, $industry_analysis, $tech_landscape );
 
-               return [
-                       'executive_summary'      => $analysis['executive_summary'] ?? [],
-                       'financial_analysis'     => $analysis['financial_analysis'] ?? [],
-                       'implementation_roadmap' => $analysis['implementation_roadmap'] ?? [],
-                       'raw'                    => $analysis,
-               ];
+	       return [
+	               'executive_summary'      => $analysis['executive_summary'] ?? [],
+	               'financial_analysis'     => $analysis['financial_analysis'] ?? [],
+	               'implementation_roadmap' => $analysis['implementation_roadmap'] ?? [],
+	               'raw'                    => $analysis,
+	       ];
        }
 
 	/**
@@ -899,72 +923,75 @@ $batch_prompts['tech'] = [
        * @return array|WP_Error Structured analysis array (executive_summary, financial_analysis, implementation_roadmap) or error object.
        */
        private function parse_comprehensive_response( $response ) {
-               $parsed_response = rtbcb_parse_gpt5_response( $response, true );
-               $content         = $parsed_response['output_text'];
-               $decoded         = $parsed_response['raw'];
+	       $parsed_response = rtbcb_parse_gpt5_response( $response, true );
+		if ( is_wp_error( $parsed_response ) ) {
+			return $parsed_response;
+		}
+	       $content         = $parsed_response['output_text'];
+	       $decoded         = $parsed_response['raw'];
 
-               if ( empty( $decoded ) ) {
-                       return new WP_Error( 'llm_response_decode_error', __( 'Failed to decode response body.', 'rtbcb' ) );
-               }
+	       if ( empty( $decoded ) ) {
+	               return new WP_Error( 'llm_response_decode_error', __( 'Failed to decode response body.', 'rtbcb' ) );
+	       }
 
-               if ( is_string( $content ) ) {
-                       $json = json_decode( $content, true );
-               } else {
-                       $json = is_array( $content ) ? $content : [];
-               }
+	       if ( is_string( $content ) ) {
+	               $json = json_decode( $content, true );
+	       } else {
+	               $json = is_array( $content ) ? $content : [];
+	       }
 
-               if ( ! is_array( $json ) ) {
-                       return new WP_Error( 'llm_response_parse_error', __( 'Invalid JSON from language model.', 'rtbcb' ) );
-               }
+	       if ( ! is_array( $json ) ) {
+	               return new WP_Error( 'llm_response_parse_error', __( 'Invalid JSON from language model.', 'rtbcb' ) );
+	       }
 
-               $required = [
-                       'executive_summary',
-                       'financial_analysis',
-                       'implementation_roadmap',
-               ];
+	       $required = [
+	               'executive_summary',
+	               'financial_analysis',
+	               'implementation_roadmap',
+	       ];
 
-               $missing = array_diff( $required, array_keys( $json ) );
+	       $missing = array_diff( $required, array_keys( $json ) );
 
-               if ( ! empty( $missing ) ) {
-                       return new WP_Error(
-                               'llm_missing_fields',
-                               __( 'Missing required fields: ', 'rtbcb' ) . implode( ', ', $missing )
-                       );
-               }
+	       if ( ! empty( $missing ) ) {
+	               return new WP_Error(
+	                       'llm_missing_fields',
+	                       __( 'Missing required fields: ', 'rtbcb' ) . implode( ', ', $missing )
+	               );
+	       }
 
-               return [
-                       'executive_summary' => [
-                               'strategic_positioning'  => sanitize_text_field( $json['executive_summary']['strategic_positioning'] ?? '' ),
-                               'key_value_drivers'      => array_map( 'sanitize_text_field', $json['executive_summary']['key_value_drivers'] ?? [] ),
-                               'business_case_strength' => sanitize_text_field( $json['executive_summary']['business_case_strength'] ?? '' ),
-                       ],
-                       'financial_analysis' => [
-                               'roi_scenarios'   => array_map(
-                                       function ( $item ) {
-                                               return [
-                                                       'scenario' => sanitize_text_field( $item['scenario'] ?? '' ),
-                                                       'roi'      => floatval( $item['roi'] ?? 0 ),
-                                               ];
-                                       },
-                                       $json['financial_analysis']['roi_scenarios'] ?? []
-                               ),
-                               'payback_analysis' => [
-                                       'payback_months' => floatval( $json['financial_analysis']['payback_analysis']['payback_months'] ?? 0 ),
-                                       'roi_3_year'     => floatval( $json['financial_analysis']['payback_analysis']['roi_3_year'] ?? 0 ),
-                                       'npv_analysis'   => sanitize_text_field( $json['financial_analysis']['payback_analysis']['npv_analysis'] ?? '' ),
-                               ],
-                       ],
-                       'implementation_roadmap' => array_map(
-                               function ( $item ) {
-                                       return [
-                                               'phase'      => sanitize_text_field( $item['phase'] ?? '' ),
-                                               'timeline'   => sanitize_text_field( $item['timeline'] ?? '' ),
-                                               'activities' => array_map( 'sanitize_text_field', $item['activities'] ?? [] ),
-                                       ];
-                               },
-                               $json['implementation_roadmap'] ?? []
-                       ),
-               ];
+	       return [
+	               'executive_summary' => [
+	                       'strategic_positioning'  => sanitize_text_field( $json['executive_summary']['strategic_positioning'] ?? '' ),
+	                       'key_value_drivers'      => array_map( 'sanitize_text_field', $json['executive_summary']['key_value_drivers'] ?? [] ),
+	                       'business_case_strength' => sanitize_text_field( $json['executive_summary']['business_case_strength'] ?? '' ),
+	               ],
+	               'financial_analysis' => [
+	                       'roi_scenarios'   => array_map(
+	                               function ( $item ) {
+	                                       return [
+	                                               'scenario' => sanitize_text_field( $item['scenario'] ?? '' ),
+	                                               'roi'      => floatval( $item['roi'] ?? 0 ),
+	                                       ];
+	                               },
+	                               $json['financial_analysis']['roi_scenarios'] ?? []
+	                       ),
+	                       'payback_analysis' => [
+	                               'payback_months' => floatval( $json['financial_analysis']['payback_analysis']['payback_months'] ?? 0 ),
+	                               'roi_3_year'     => floatval( $json['financial_analysis']['payback_analysis']['roi_3_year'] ?? 0 ),
+	                               'npv_analysis'   => sanitize_text_field( $json['financial_analysis']['payback_analysis']['npv_analysis'] ?? '' ),
+	                       ],
+	               ],
+	               'implementation_roadmap' => array_map(
+	                       function ( $item ) {
+	                               return [
+	                                       'phase'      => sanitize_text_field( $item['phase'] ?? '' ),
+	                                       'timeline'   => sanitize_text_field( $item['timeline'] ?? '' ),
+	                                       'activities' => array_map( 'sanitize_text_field', $item['activities'] ?? [] ),
+	                               ];
+	                       },
+	                       $json['implementation_roadmap'] ?? []
+	               ),
+	       ];
        }
 
 	/**
@@ -1133,6 +1160,9 @@ $batch_prompts['tech'] = [
 		}
 
 		$parsed = rtbcb_parse_gpt5_response( $response );
+		if ( is_wp_error( $parsed ) ) {
+			return $default;
+		}
 		$json   = json_decode( $parsed['output_text'], true );
 
 		if ( ! is_array( $json ) || empty( $json['competitors'] ) || ! is_array( $json['competitors'] ) ) {
@@ -1366,6 +1396,9 @@ SYSTEM;
 		}
 
 		$parsed = rtbcb_parse_gpt5_response( $response );
+		if ( is_wp_error( $parsed ) ) {
+			return $parsed;
+		}
 		$json   = json_decode( $parsed['output_text'], true );
 
 		if ( ! is_array( $json ) ) {
@@ -1562,6 +1595,9 @@ SYSTEM;
 		}
 
 		$parsed_response = rtbcb_parse_gpt5_response( $response );
+		if ( is_wp_error( $parsed_response ) ) {
+			return $parsed_response;
+		}
 		$json            = json_decode( $parsed_response['output_text'], true );
 
 		if ( ! is_array( $json ) ) {
@@ -1612,6 +1648,9 @@ SYSTEM;
 		}
 
 		$parsed  = rtbcb_parse_gpt5_response( $response );
+		if ( is_wp_error( $parsed ) ) {
+			return $parsed;
+		}
 		$summary = sanitize_textarea_field( $parsed['output_text'] );
 
 		if ( empty( $summary ) ) {
@@ -1655,11 +1694,11 @@ SYSTEM;
 		$prompt  = "As a senior treasury technology consultant with 15+ years of experience, create a comprehensive business case for {$company_name}.\n\n";
 
 		// Add detailed context sections...
-               $prompt .= "EXECUTIVE BRIEF:\n";
-               $prompt .= "Create a strategic business case that justifies treasury technology investment with:\n";
-               $prompt .= "- Clear ROI projections with risk-adjusted scenarios\n";
-               $prompt .= "- Key strategic value drivers\n";
-               $prompt .= "- Implementation roadmap with success metrics\n\n";
+	       $prompt .= "EXECUTIVE BRIEF:\n";
+	       $prompt .= "Create a strategic business case that justifies treasury technology investment with:\n";
+	       $prompt .= "- Clear ROI projections with risk-adjusted scenarios\n";
+	       $prompt .= "- Key strategic value drivers\n";
+	       $prompt .= "- Implementation roadmap with success metrics\n\n";
 
 		// Company Context
 		$prompt .= "COMPANY PROFILE:\n";
@@ -1719,54 +1758,54 @@ SYSTEM;
 		$prompt .= "Ensure each section provides actionable insights specific to {$company_name}'s situation.\n";
 		$prompt .= "Use professional consulting language appropriate for C-level executives.\n\n";
 
-               $prompt .= "REQUIRED JSON STRUCTURE (respond with ONLY this JSON, no other text):\n";
-               $prompt .= json_encode(
-                       [
-                               'executive_summary' => [
-                                       'strategic_positioning' => "2-3 sentences about {$company_name}'s strategic position and readiness for treasury technology",
-                                       'key_value_drivers'     => [
-                                               "Primary value driver specific to {$company_name}",
-                                               "Secondary value driver for their industry/size",
-                                               "Third strategic benefit for their situation"
-                                       ],
-                                       'business_case_strength' => 'Strong|Moderate|Compelling',
-                               ],
-                               'financial_analysis' => [
-                                       'roi_scenarios' => [
-                                               [
-                                                       'scenario' => 'Conservative',
-                                                       'roi'      => 'percentage'
-                                               ],
-                                               [
-                                                       'scenario' => 'Base',
-                                                       'roi'      => 'percentage'
-                                               ],
-                                               [
-                                                       'scenario' => 'Optimistic',
-                                                       'roi'      => 'percentage'
-                                               ]
-                                       ],
-                                       'payback_analysis' => [
-                                               'payback_months' => 'number',
-                                               'roi_3_year'     => 'percentage',
-                                               'npv_analysis'   => 'positive value justification'
-                                       ]
-                               ],
-                               'implementation_roadmap' => [
-                                       [
-                                               'phase'      => 'Phase 1',
-                                               'timeline'   => '0-3 months',
-                                               'activities' => ['activity1', 'activity2']
-                                       ],
-                                       [
-                                               'phase'      => 'Phase 2',
-                                               'timeline'   => '3-6 months',
-                                               'activities' => ['activity1', 'activity2']
-                                       ]
-                               ]
-                       ],
-                       JSON_PRETTY_PRINT
-               );
+	       $prompt .= "REQUIRED JSON STRUCTURE (respond with ONLY this JSON, no other text):\n";
+	       $prompt .= json_encode(
+	               [
+	                       'executive_summary' => [
+	                               'strategic_positioning' => "2-3 sentences about {$company_name}'s strategic position and readiness for treasury technology",
+	                               'key_value_drivers'     => [
+	                                       "Primary value driver specific to {$company_name}",
+	                                       "Secondary value driver for their industry/size",
+	                                       "Third strategic benefit for their situation"
+	                               ],
+	                               'business_case_strength' => 'Strong|Moderate|Compelling',
+	                       ],
+	                       'financial_analysis' => [
+	                               'roi_scenarios' => [
+	                                       [
+	                                               'scenario' => 'Conservative',
+	                                               'roi'      => 'percentage'
+	                                       ],
+	                                       [
+	                                               'scenario' => 'Base',
+	                                               'roi'      => 'percentage'
+	                                       ],
+	                                       [
+	                                               'scenario' => 'Optimistic',
+	                                               'roi'      => 'percentage'
+	                                       ]
+	                               ],
+	                               'payback_analysis' => [
+	                                       'payback_months' => 'number',
+	                                       'roi_3_year'     => 'percentage',
+	                                       'npv_analysis'   => 'positive value justification'
+	                               ]
+	                       ],
+	                       'implementation_roadmap' => [
+	                               [
+	                                       'phase'      => 'Phase 1',
+	                                       'timeline'   => '0-3 months',
+	                                       'activities' => ['activity1', 'activity2']
+	                               ],
+	                               [
+	                                       'phase'      => 'Phase 2',
+	                                       'timeline'   => '3-6 months',
+	                                       'activities' => ['activity1', 'activity2']
+	                               ]
+	                       ]
+	               ],
+	               JSON_PRETTY_PRINT
+	       );
 
 		return $prompt;
 	}
@@ -1819,10 +1858,13 @@ return $analysis;
 	}
 
 	$parsed        = rtbcb_parse_gpt5_response( $response );
+	if ( is_wp_error( $parsed ) ) {
+		return $parsed;
+	}
 	$enriched_data = json_decode( $parsed['output_text'], true );
 
 	if ( ! is_array( $enriched_data ) ) {
-	return new WP_Error( 'parse_error', __( 'Failed to parse AI enrichment response.', 'rtbcb' ) );
+		return new WP_Error( 'parse_error', __( 'Failed to parse AI enrichment response.', 'rtbcb' ) );
 	}
 
 	return $this->validate_and_structure_enrichment( $enriched_data, $user_inputs );
@@ -2006,10 +2048,13 @@ return $analysis;
 	}
 
 	$parsed        = rtbcb_parse_gpt5_response( $response );
+	if ( is_wp_error( $parsed ) ) {
+		return $parsed;
+	}
 	$analysis_data = json_decode( $parsed['output_text'], true );
 
 	if ( ! is_array( $analysis_data ) ) {
-	return new WP_Error( 'parse_error', __( 'Failed to parse strategic analysis response.', 'rtbcb' ) );
+		return new WP_Error( 'parse_error', __( 'Failed to parse strategic analysis response.', 'rtbcb' ) );
 	}
 
 	return $this->validate_and_structure_analysis( $analysis_data );
@@ -2813,9 +2858,14 @@ $max_output_tokens = min( 128000, max( $min_tokens, $max_output_tokens ) );
 			? $response
 			: [ 'body' => wp_json_encode( is_array( $response ) ? $response : [] ) ];
 
-		$parsed = rtbcb_parse_gpt5_response( $response_for_parser, true );
-		$content = $parsed['output_text'];
-		$usage   = $parsed['raw']['usage'] ?? [];
+	        $parsed = rtbcb_parse_gpt5_response( $response_for_parser, true );
+	        if ( is_wp_error( $parsed ) ) {
+	                $content = '';
+	                $usage   = [];
+	        } else {
+	                $content = $parsed['output_text'];
+	                $usage   = $parsed['raw']['usage'] ?? [];
+	        }
 
 		$completion_tokens = intval( $usage['completion_tokens'] ?? 0 );
 		$reasoning_tokens  = intval( $usage['reasoning_tokens'] ?? 0 );
@@ -3008,7 +3058,7 @@ $max_output_tokens = min( 128000, max( $min_tokens, $max_output_tokens ) );
 */
 function rtbcb_parse_gpt5_response( $response, $store_raw = false ) {
        if ( ! is_array( $response ) ) {
-               return new WP_Error( 'invalid_response', __( 'Invalid GPT5 response.', 'rtbcb' ) );
+	       return new WP_Error( 'invalid_response', __( 'Invalid GPT5 response.', 'rtbcb' ) );
        }
 
        $body    = wp_remote_retrieve_body( $response );
