@@ -285,6 +285,7 @@ return true;
                                    'inc/class-rtbcb-llm-optimized.php'   => 'RTBCB_LLM_Optimized',
 				   'inc/class-rtbcb-intelligent-recommender.php' => 'RTBCB_Intelligent_Recommender',
                                    'inc/class-rtbcb-json-error.php'     => 'RTBCB_JSON_Error',
+                                   'inc/class-rtbcb-response-integrity.php' => 'RTBCB_Response_Integrity',
                                    'inc/class-rtbcb-router.php'		 => 'RTBCB_Router',
 				   'inc/class-rtbcb-tests.php'		 => 'RTBCB_Tests',
 				   'inc/class-rtbcb-api-tester.php'		 => 'RTBCB_API_Tester',
