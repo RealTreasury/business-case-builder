@@ -74,6 +74,11 @@ $valid_json = [
                         'npv_analysis'   => 'npv',
                 ],
         ],
+       'industry_insights' => [
+               'sector_trends'          => [ 'trend1' ],
+               'competitive_benchmarks' => [ 'bench1' ],
+               'regulatory_considerations' => [ 'reg1' ],
+       ],
         'implementation_roadmap' => [
                 [
                         'phase'      => 'p1',
@@ -96,7 +101,7 @@ if ( is_wp_error( $result ) ) {
 	exit( 1 );
 }
 
-$required = [ 'executive_summary', 'financial_analysis', 'implementation_roadmap' ];
+$required = [ 'executive_summary', 'financial_analysis', 'industry_insights', 'implementation_roadmap' ];
 
 foreach ( $required as $key ) {
 	if ( ! isset( $result[ $key ] ) ) {

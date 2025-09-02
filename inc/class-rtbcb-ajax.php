@@ -501,17 +501,22 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 				'executive_recommendation' => $final_analysis['executive_summary']['executive_recommendation'] ?? '',
 				'confidence_level'        => $final_analysis['executive_summary']['confidence_level'] ?? 0.85,
 			],
-			'company_intelligence' => [
-				'enriched_profile'    => $enriched_profile['company_profile'],
-				'industry_context'    => $enriched_profile['industry_context'],
-				'maturity_assessment' => $enriched_profile['maturity_assessment'] ?? [],
-				'competitive_position'=> $enriched_profile['competitive_position'] ?? [],
-			],
-					'financial_analysis' => [
-							'roi_scenarios'        => self::format_roi_scenarios( $roi_scenarios ),
-							'investment_breakdown' => $final_analysis['financial_analysis']['investment_breakdown'] ?? [],
-							'payback_analysis'     => $final_analysis['financial_analysis']['payback_analysis'] ?? [],
-							'sensitivity_analysis' => $roi_scenarios['sensitivity_analysis'] ?? [],
+                        'company_intelligence' => [
+                                'enriched_profile'    => $enriched_profile['company_profile'],
+                                'industry_context'    => $enriched_profile['industry_context'],
+                                'maturity_assessment' => $enriched_profile['maturity_assessment'] ?? [],
+                                'competitive_position'=> $enriched_profile['competitive_position'] ?? [],
+                        ],
+                       'industry_insights' => [
+                               'sector_trends'          => (array) ( $final_analysis['industry_insights']['sector_trends'] ?? [] ),
+                               'competitive_benchmarks' => (array) ( $final_analysis['industry_insights']['competitive_benchmarks'] ?? [] ),
+                               'regulatory_considerations' => (array) ( $final_analysis['industry_insights']['regulatory_considerations'] ?? [] ),
+                       ],
+                                        'financial_analysis' => [
+                                                        'roi_scenarios'        => self::format_roi_scenarios( $roi_scenarios ),
+                                                        'investment_breakdown' => $final_analysis['financial_analysis']['investment_breakdown'] ?? [],
+                                                        'payback_analysis'     => $final_analysis['financial_analysis']['payback_analysis'] ?? [],
+                                                        'sensitivity_analysis' => $roi_scenarios['sensitivity_analysis'] ?? [],
 							'chart_data'           => $chart_data,
 					],
 			'technology_strategy' => [

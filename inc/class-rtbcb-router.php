@@ -467,27 +467,32 @@ $html = rtbcb_sanitize_report_html( $html );
 				],
 			],
 		],
-		'company_intelligence' => [
-			'enriched_profile' => [
-				'enhanced_description' => wp_kses_post( $business_case_data['company_analysis'] ),
-				'maturity_level'       => sanitize_text_field( $business_case_data['maturity_level'] ),
-				'treasury_maturity'    => [
-					'current_state' => wp_kses_post( $business_case_data['current_state_analysis'] ),
-				],
-			],
-			'industry_context' => [
-				'sector_analysis' => [
-					'market_dynamics' => wp_kses_post( $business_case_data['market_analysis'] ),
-				],
-				'benchmarking'   => [
-					'technology_penetration' => sanitize_text_field( $business_case_data['tech_adoption_level'] ),
-				],
-			],
-		],
-		'technology_strategy' => [
-			'recommended_category' => $recommended_category,
-			'category_details'     => $category_details,
-		],
+                'company_intelligence' => [
+                        'enriched_profile' => [
+                                'enhanced_description' => wp_kses_post( $business_case_data['company_analysis'] ),
+                                'maturity_level'       => sanitize_text_field( $business_case_data['maturity_level'] ),
+                                'treasury_maturity'    => [
+                                        'current_state' => wp_kses_post( $business_case_data['current_state_analysis'] ),
+                                ],
+                        ],
+                        'industry_context' => [
+                                'sector_analysis' => [
+                                        'market_dynamics' => wp_kses_post( $business_case_data['market_analysis'] ),
+                                ],
+                                'benchmarking'   => [
+                                        'technology_penetration' => sanitize_text_field( $business_case_data['tech_adoption_level'] ),
+                                ],
+                        ],
+                ],
+               'industry_insights' => [
+                       'sector_trends'          => array_map( 'sanitize_text_field', (array) ( $business_case_data['industry_insights']['sector_trends'] ?? [] ) ),
+                       'competitive_benchmarks' => array_map( 'sanitize_text_field', (array) ( $business_case_data['industry_insights']['competitive_benchmarks'] ?? [] ) ),
+                       'regulatory_considerations' => array_map( 'sanitize_text_field', (array) ( $business_case_data['industry_insights']['regulatory_considerations'] ?? [] ) ),
+               ],
+                'technology_strategy' => [
+                        'recommended_category' => $recommended_category,
+                        'category_details'     => $category_details,
+                ],
 		'operational_insights' => $operational_analysis,
 		'risk_analysis'        => [
 			'implementation_risks' => $implementation_risks,
