@@ -3006,12 +3006,21 @@ $max_output_tokens = min( 128000, max( $min_tokens, $max_output_tokens ) );
 	* }
  */
 function rtbcb_parse_gpt5_response( $response, $store_raw = false ) {
-       if ( ! is_array( $response ) ) {
-               return new WP_Error( 'invalid_response', __( 'Invalid response.', 'rtbcb' ) );
-       }
+	if ( is_wp_error( $response ) ) {
+		return $response;
+	}
 
-       $body    = wp_remote_retrieve_body( $response );
-       $decoded = json_decode( $body, true );
+	if ( ! is_array( $response ) ) {
+		return [
+			'output_text'    => '',
+			'reasoning'      => [],
+			'function_calls' => [],
+			'raw'            => [],
+		];
+	}
+
+	$body    = wp_remote_retrieve_body( $response );
+	$decoded = json_decode( $body, true );
 
 	if ( ! is_array( $decoded ) ) {
 		return [
