@@ -2261,26 +2261,34 @@ $html = rtbcb_sanitize_report_html( $html );
 	 *
 	 * @return array
 	 */
-	private function generate_company_intelligence( $data, $company ) {
-		return [
-			'enriched_profile' => [
-				'name'                => $company['name'] ?? '',
-				'enhanced_description' => $this->generate_company_description( $data, $company ),
-				'maturity_level'       => $this->assess_maturity_level( $data ),
-				'treasury_maturity'    => [
-					'current_state' => $this->generate_current_state_analysis( $data ),
-				],
-			],
-			'industry_context' => [
-				'sector_analysis' => [
-					'market_dynamics' => $this->generate_market_dynamics( $data ),
-				],
-				'benchmarking' => [
-					'technology_penetration' => $this->assess_tech_penetration( $data ),
-				],
-			],
-		];
-	}
+       private function generate_company_intelligence( $data, $company ) {
+               $provided = [];
+
+               if ( ! empty( $data['company_intelligence'] ) && is_array( $data['company_intelligence'] ) ) {
+                       $provided = rtbcb_sanitize_recursive( $data['company_intelligence'] );
+               }
+
+               $fallback = [
+                       'enriched_profile' => [
+                               'name'                => $company['name'] ?? '',
+                               'enhanced_description' => $this->generate_company_description( $data, $company ),
+                               'maturity_level'       => $this->assess_maturity_level( $data ),
+                               'treasury_maturity'    => [
+                                       'current_state' => $this->generate_current_state_analysis( $data ),
+                               ],
+                       ],
+                       'industry_context' => [
+                               'sector_analysis' => [
+                                       'market_dynamics' => $this->generate_market_dynamics( $data ),
+                               ],
+                               'benchmarking' => [
+                                       'technology_penetration' => $this->assess_tech_penetration( $data ),
+                               ],
+                       ],
+               ];
+
+               return array_replace_recursive( $fallback, $provided );
+       }
 
 	/**
 	 * Generate company description based on available data
@@ -2436,10 +2444,14 @@ $html = rtbcb_sanitize_report_html( $html );
 	 *
 	 * @return array
 	 */
-	private function generate_operational_insights( $data ) {
-		if ( ! empty( $data['operational_analysis'] ) && is_array( $data['operational_analysis'] ) ) {
-			return array_map( 'wp_kses_post', $data['operational_analysis'] );
-		}
+       private function generate_operational_insights( $data ) {
+               if ( ! empty( $data['operational_insights'] ) && is_array( $data['operational_insights'] ) ) {
+                       return array_map( 'wp_kses_post', $data['operational_insights'] );
+               }
+
+               if ( ! empty( $data['operational_analysis'] ) && is_array( $data['operational_analysis'] ) ) {
+                       return array_map( 'wp_kses_post', $data['operational_analysis'] );
+               }
 
 		$insights    = [];
 		$pain_points = (array) ( $data['pain_points'] ?? [] );
@@ -2474,12 +2486,18 @@ $html = rtbcb_sanitize_report_html( $html );
 	 *
 	 * @return array
 	 */
-	private function generate_risk_analysis( $data ) {
-		if ( ! empty( $data['risks'] ) ) {
-			return [
-				'implementation_risks' => array_map( 'sanitize_text_field', (array) $data['risks'] ),
-			];
-		}
+       private function generate_risk_analysis( $data ) {
+               if ( ! empty( $data['risk_analysis']['implementation_risks'] ) ) {
+                       return [
+                               'implementation_risks' => array_map( 'sanitize_text_field', (array) $data['risk_analysis']['implementation_risks'] ),
+                       ];
+               }
+
+               if ( ! empty( $data['risks'] ) ) {
+                       return [
+                               'implementation_risks' => array_map( 'sanitize_text_field', (array) $data['risks'] ),
+                       ];
+               }
 
 		$company_size = $data['company_size'] ?? '';
 		$risks        = [];
@@ -2497,13 +2515,32 @@ $html = rtbcb_sanitize_report_html( $html );
 		$risks[] = __( 'User adoption and training requirements during transition period', 'rtbcb' );
 		$risks[] = __( 'Potential temporary process disruption during system implementation', 'rtbcb' );
 
-		return [
-			'implementation_risks' => $risks,
-		];
-	}
+               return [
+                       'implementation_risks' => $risks,
+               ];
+       }
 
-	/**
-	 * Generate short-term implementation steps
+       /**
+        * Generate comprehensive action plan.
+        *
+        * @param array $data Business case data.
+        *
+        * @return array
+        */
+       private function generate_comprehensive_action_plan( $data ) {
+               if ( ! empty( $data['action_plan'] ) && is_array( $data['action_plan'] ) ) {
+                       return rtbcb_sanitize_recursive( $data['action_plan'] );
+               }
+
+               if ( function_exists( 'rtbcb_generate_action_plan_fallbacks' ) ) {
+                       return rtbcb_generate_action_plan_fallbacks( $data );
+               }
+
+               return [];
+       }
+
+       /**
+        * Generate short-term implementation steps
 	 *
 	 * @param string $company_name Company name.
 	 * @param string $budget_range Budget range.

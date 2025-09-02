@@ -57,7 +57,7 @@ After generating the JSON, perform a brief self-validation to ensure the output 
   "executive_recommendation": "string - clear recommendation with next steps",
   "confidence_level": "number - 0.7 to 0.95"
 },
-"operational_analysis": {
+"operational_insights": {
   "current_state_assessment": {
     "efficiency_rating": "poor|fair|good|excellent",
     "benchmark_comparison": "string - vs industry peers",
@@ -103,20 +103,15 @@ After generating the JSON, perform a brief self-validation to ensure the output 
     "risks": ["array of phase-specific risks"]
   }
 ],
-"risk_mitigation": {
+"risk_analysis": {
   "implementation_risks": ["array of key risks"],
-  "mitigation_strategies": {
-    "change_management": "string - change management approach",
-    "technical_integration": "string - integration risk mitigation",
-    "vendor_selection": "string - vendor risk mitigation",
-    "timeline_management": "string - timeline risk mitigation"
-  },
+  "mitigation_strategies": ["array of mitigation strategies"],
   "success_factors": ["array of critical success factors"]
 },
-"next_steps": {
-  "immediate": ["array of immediate actions (next 30 days)"],
-  "short_term": ["array of short-term milestones (3-6 months)"],
-  "long_term": ["array of long-term objectives (6+ months)"]
+"action_plan": {
+  "immediate_steps": ["array of immediate actions (next 30 days)"],
+  "short_term_milestones": ["array of short-term milestones (3-6 months)"],
+  "long_term_objectives": ["array of long-term objectives (6+ months)"]
 },
 "vendor_considerations": {
   "evaluation_criteria": ["array of key selection criteria"],
@@ -324,11 +319,11 @@ return false;
 }
 $required = [
 'executive_summary',
-'operational_analysis',
+'operational_insights',
 'financial_analysis',
 'implementation_roadmap',
-'risk_mitigation',
-'next_steps',
+'risk_analysis',
+'action_plan',
 'vendor_considerations',
 ];
 foreach ( $required as $key ) {
