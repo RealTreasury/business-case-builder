@@ -48,15 +48,16 @@ class RTBCB_Leads {
 			ftes decimal(4,1) DEFAULT 0,
 			pain_points longtext DEFAULT '',
 			recommended_category varchar(50) DEFAULT '',
-			roi_low decimal(12,2) DEFAULT 0,
-			roi_base decimal(12,2) DEFAULT 0,
-			roi_high decimal(12,2) DEFAULT 0,
-			report_html longtext DEFAULT '',
-			ip_address varchar(45) DEFAULT '',
-			user_agent text DEFAULT '',
-			utm_source varchar(100) DEFAULT '',
-			utm_medium varchar(100) DEFAULT '',
-			utm_campaign varchar(100) DEFAULT '',
+                        roi_low decimal(12,2) DEFAULT 0,
+                        roi_base decimal(12,2) DEFAULT 0,
+                        roi_high decimal(12,2) DEFAULT 0,
+                        report_html longtext DEFAULT '',
+                        api_response longtext DEFAULT '',
+                        ip_address varchar(45) DEFAULT '',
+                        user_agent text DEFAULT '',
+                        utm_source varchar(100) DEFAULT '',
+                        utm_medium varchar(100) DEFAULT '',
+                        utm_campaign varchar(100) DEFAULT '',
 			created_at datetime DEFAULT CURRENT_TIMESTAMP,
 			updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 			PRIMARY KEY (id),
@@ -96,15 +97,16 @@ class RTBCB_Leads {
 					ftes decimal(4,1) DEFAULT 0,
 					pain_points text DEFAULT '',
 					recommended_category varchar(50) DEFAULT '',
-					roi_low decimal(12,2) DEFAULT 0,
-					roi_base decimal(12,2) DEFAULT 0,
-					roi_high decimal(12,2) DEFAULT 0,
-					report_html text DEFAULT '',
-					ip_address varchar(45) DEFAULT '',
-					user_agent text DEFAULT '',
-					utm_source varchar(100) DEFAULT '',
-					utm_medium varchar(100) DEFAULT '',
-					utm_campaign varchar(100) DEFAULT '',
+                                        roi_low decimal(12,2) DEFAULT 0,
+                                        roi_base decimal(12,2) DEFAULT 0,
+                                        roi_high decimal(12,2) DEFAULT 0,
+                                        report_html text DEFAULT '',
+                                        api_response longtext DEFAULT '',
+                                        ip_address varchar(45) DEFAULT '',
+                                        user_agent text DEFAULT '',
+                                        utm_source varchar(100) DEFAULT '',
+                                        utm_medium varchar(100) DEFAULT '',
+                                        utm_campaign varchar(100) DEFAULT '',
 					created_at datetime DEFAULT CURRENT_TIMESTAMP,
 					updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 					PRIMARY KEY (id),
@@ -178,20 +180,42 @@ class RTBCB_Leads {
 			$wpdb->query( 'ALTER TABLE ' . self::$table_name . ' ADD UNIQUE KEY email_unique (email)' );
 		}
 
-		if ( ! in_array( 'created_at_index', $index_names, true ) ) {
-			$wpdb->query( 'ALTER TABLE ' . self::$table_name . ' ADD KEY created_at_index (created_at)' );
-		}
+               if ( ! in_array( 'created_at_index', $index_names, true ) ) {
+                       $wpdb->query( 'ALTER TABLE ' . self::$table_name . ' ADD KEY created_at_index (created_at)' );
+               }
 
-				if ( ! in_array( 'recommended_category_index', $index_names, true ) ) {
-						$wpdb->query( 'ALTER TABLE ' . self::$table_name . ' ADD KEY recommended_category_index (recommended_category)' );
-				}
-		}
+                               if ( ! in_array( 'recommended_category_index', $index_names, true ) ) {
+                                               $wpdb->query( 'ALTER TABLE ' . self::$table_name . ' ADD KEY recommended_category_index (recommended_category)' );
+                               }
+               }
 
 	/**
-	* Compress existing report_html entries.
-	*
-	* @return void
-	*/
+	 * Add api_response column to the leads table if missing.
+	 *
+	 * @return void
+	 */
+	public static function add_api_response_column() {
+		global $wpdb;
+		
+		self::$table_name = $wpdb->prefix . 'rtbcb_leads';
+		
+		$column_exists = $wpdb->get_var(
+		$wpdb->prepare(
+		'SHOW COLUMNS FROM ' . self::$table_name . ' LIKE %s',
+		'api_response'
+		)
+		);
+		
+		if ( null === $column_exists ) {
+		$wpdb->query( 'ALTER TABLE ' . self::$table_name . " ADD api_response longtext DEFAULT ''" );
+		}
+	}
+
+       /**
+       * Compress existing report_html entries.
+       *
+       * @return void
+       */
 	public static function compress_existing_report_html() {
 		global $wpdb;
 
