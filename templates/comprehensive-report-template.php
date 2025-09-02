@@ -524,7 +524,7 @@ function initializeROIChart() {
 		return;
 	}
 
-	const chartData = <?php echo function_exists( 'wp_json_encode' ) ? wp_json_encode( $financial_analysis['chart_data'] ?? [] ) : json_encode( $financial_analysis['chart_data'] ?? [] ); ?>;
+	const chartData = window.rtbcbChartData || {};
 	if ( ! chartData.labels ) {
 		return;
 	}
@@ -599,21 +599,33 @@ function rtbcbExportPDF() {
 <?php
 	// Pass structured data to JavaScript for charts and interactivity.
 	$data = [
-		'roiScenarios' => $financial_analysis['roi_scenarios'] ?? [],
-		'companyName'  => $company_name,
-		'confidence'   => $confidence_level,
-		'strings'      => [
-			'exportPDF'       => __( 'Export as PDF', 'rtbcb' ),
-			'printReport'     => __( 'Print Report', 'rtbcb' ),
-			'expandSection'   => __( 'Expand Section', 'rtbcb' ),
-			'collapseSection' => __( 'Collapse Section', 'rtbcb' ),
-		],
+	'roiScenarios' => $financial_analysis['roi_scenarios'] ?? [],
+	'companyName'  => $company_name,
+	'confidence'   => $confidence_level,
+	'strings'      => [
+	'exportPDF'       => __( 'Export as PDF', 'rtbcb' ),
+	'printReport'     => __( 'Print Report', 'rtbcb' ),
+	'expandSection'   => __( 'Expand Section', 'rtbcb' ),
+	'collapseSection' => __( 'Collapse Section', 'rtbcb' ),
+	],
 	];
+	
+	$chart_data = $financial_analysis['chart_data'] ?? [
+	'labels'   => [
+	__( 'Conservative', 'rtbcb' ),
+	__( 'Base', 'rtbcb' ),
+	__( 'Optimistic', 'rtbcb' ),
+	],
+	'datasets' => [],
+	];
+	
 	if ( function_exists( 'wp_localize_script' ) ) {
-		wp_localize_script( 'rtbcb-report', 'rtbcbReportData', $data );
+	wp_localize_script( 'rtbcb-report', 'rtbcbReportData', $data );
+	wp_localize_script( 'rtbcb-report', 'rtbcbChartData', $chart_data );
 	} else {
-		printf(
-			'<script>var rtbcbReportData = %s</script>',
-			function_exists( 'wp_json_encode' ) ? wp_json_encode( $data, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_HEX_APOS ) : json_encode( $data )
-		);
-}
+	printf(
+	'<script>var rtbcbReportData = %1$s;var rtbcbChartData = %2$s</script>',
+	function_exists( 'wp_json_encode' ) ? wp_json_encode( $data, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_HEX_APOS ) : json_encode( $data ),
+	function_exists( 'wp_json_encode' ) ? wp_json_encode( $chart_data, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_HEX_APOS ) : json_encode( $chart_data )
+	);
+	}
