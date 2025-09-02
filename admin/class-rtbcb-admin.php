@@ -466,6 +466,7 @@ wp_localize_script(
 			return;
 		}
 
+		RTBCB_API_Log::purge_old_logs();
 		$logs  = RTBCB_API_Log::get_all_logs();
 		$nonce = wp_create_nonce( 'rtbcb_api_logs' );
 
