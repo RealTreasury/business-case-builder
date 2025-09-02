@@ -2306,6 +2306,9 @@ function rtbcb_transform_data_for_template( $business_case_data ) {
 	        ];
 	}
 
+	// Prepare RAG context.
+	$rag_context = array_map( 'sanitize_text_field', (array) ( $business_case_data['rag_context'] ?? [] ) );
+
 	// Create structured data format expected by template.
 	$report_data = [
 	        'metadata'           => [
@@ -2352,6 +2355,7 @@ function rtbcb_transform_data_for_template( $business_case_data ) {
 	                'implementation_risks' => $implementation_risks,
 	        ],
 	        'action_plan'          => $action_plan,
+		'rag_context'         => $rag_context,
 	];
 
 	return $report_data;
