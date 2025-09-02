@@ -8,11 +8,11 @@ jQuery(function ($) {
 			.show();
 	}
 
-	function loadHistory(showNotice) {
-		$.post(rtbcbWorkflow.ajax_url, {
-			action: "rtbcb_get_workflow_history",
-			nonce: rtbcbWorkflow.nonce,
-		})
+        function loadHistory(showNotice) {
+                $.post(rtbcbWorkflow.ajax_url, {
+                        action: "rtbcb_get_workflow_history",
+                        nonce: rtbcbWorkflow.nonce,
+                })
 			.done(function (response) {
                                 if (response.success) {
 					var history = response.data.history || [];
@@ -44,6 +44,8 @@ jQuery(function ($) {
                                                rtbcbWorkflow.strings.started +
                                                "</th><th>" +
                                                rtbcbWorkflow.strings.template +
+                                               "</th><th>" +
+                                               rtbcbWorkflow.strings.logs +
                                                "</th>";
                                        stepNames.forEach(function (name) {
                                                html += "<th>" + $("<div>").text(name).html() + "</th>";
@@ -69,6 +71,13 @@ jQuery(function ($) {
                                                var company = item.company || rtbcbWorkflow.strings.unknown_company;
                                                var started = item.started_at || rtbcbWorkflow.strings.unknown_start;
                                                var template = item.report_template || rtbcbWorkflow.strings.unknown_template;
+                                               var logsLink = item.logs_url
+                                                       ? '<a href="' +
+                                                               item.logs_url +
+                                                               '" target="_blank">' +
+                                                               rtbcbWorkflow.strings.view_logs +
+                                                               '</a>'
+                                                       : $( '<div>' ).text( rtbcbWorkflow.strings.no_logs ).html();
                                                html +=
                                                        "<tr><td>" +
                                                        leadHtml +
@@ -78,6 +87,8 @@ jQuery(function ($) {
                                                        $("<div>").text(started).html() +
                                                        "</td><td>" +
                                                        $("<div>").text(template).html() +
+                                                       "</td><td>" +
+                                                       logsLink +
                                                        "</td>";
                                                stepNames.forEach(function (name) {
                                                         var status = rtbcbWorkflow.strings.not_run;
@@ -112,11 +123,12 @@ jQuery(function ($) {
 						});
 						html += "</tr>";
 					});
-					html += "</tbody></table></div>";
-					$("#rtbcb-workflow-history-container").html(html);
-					if (showNotice) {
-						showMessage(rtbcbWorkflow.strings.refresh_success, "success");
-					}
+                                       html += "</tbody></table></div>";
+                                       $("#rtbcb-workflow-history-container").html(html);
+                                       makeSortable($(".rtbcb-history-table"));
+                                       if (showNotice) {
+                                                showMessage(rtbcbWorkflow.strings.refresh_success, "success");
+                                        }
                                 } else if (showNotice) {
                                         showMessage(rtbcbWorkflow.strings.error, "error");
                                 }
@@ -127,6 +139,32 @@ jQuery(function ($) {
                                 }
                         });
         }
+
+       function makeSortable($table) {
+               $table.find('th').each(function (index) {
+                       var asc = true;
+                       $(this).on('click', function () {
+                               var rows = $table.find('tbody tr').get();
+                               rows.sort(function (a, b) {
+                                       var A = $(a).children('td').eq(index).text().toUpperCase();
+                                       var B = $(b).children('td').eq(index).text().toUpperCase();
+                                       if (A < B) {
+                                               return asc ? -1 : 1;
+                                       }
+                                       if (A > B) {
+                                               return asc ? 1 : -1;
+                                       }
+                                       return 0;
+                               });
+                               $.each(rows, function (i, row) {
+                                       $table.children('tbody').append(row);
+                               });
+                               $table.find('th').removeClass('rtbcb-sorted-asc rtbcb-sorted-desc');
+                               $(this).addClass(asc ? 'rtbcb-sorted-asc' : 'rtbcb-sorted-desc');
+                               asc = !asc;
+                       });
+               });
+       }
 
 	$("#rtbcb-refresh-workflow").on("click", function () {
 		loadHistory(true);
