@@ -70,7 +70,18 @@ $rag_context = $rag_context();
 if ( self::$sleep > 0 ) {
 usleep( self::$sleep );
 }
-return [ 'executive_summary' => 'summary', 'context_used' => $rag_context ];
+return [
+'executive_summary'      => 'summary',
+'company_intelligence'   => [],
+'operational_insights'   => [],
+'risk_analysis'          => [],
+'action_plan'            => [],
+'industry_insights'      => [],
+'technology_strategy'    => [],
+'financial_analysis'     => [],
+'implementation_roadmap' => [],
+'context_used'           => $rag_context,
+];
 }
 }
 }

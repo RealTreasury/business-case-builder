@@ -1343,7 +1343,17 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 			];
 		}
 
-$required_keys = [ 'executive_summary', 'financial_analysis', 'implementation_roadmap' ];
+$required_keys = [
+'executive_summary',
+'financial_analysis',
+'implementation_roadmap',
+'company_intelligence',
+'operational_insights',
+'risk_analysis',
+'action_plan',
+'industry_insights',
+'technology_strategy',
+];
 		$missing_keys  = array_diff( $required_keys, array_keys( $result ) );
 
 		if ( ! empty( $missing_keys ) ) {
