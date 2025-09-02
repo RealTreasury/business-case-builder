@@ -2551,7 +2551,7 @@ $missing_sections  = array_diff( $required_sections, array_keys( $comprehensive_
 
 			   return [
 					   'payback_months' => $estimated_investment > 0 ? round( 12 * $estimated_investment / $base_roi ) : 'N/A',
-					   'roi_3_year'     => round( ( $base_roi * 3 - $estimated_investment ) / $estimated_investment * 100 ),
+					   'roi_3_year'     => $estimated_investment > 0 ? round( ( $base_roi * 3 - $estimated_investment ) / $estimated_investment * 100 ) : 0,
 					   'npv_analysis'   => sprintf(
 							   __( 'Positive NPV of $%s over 3 years at 10%% discount rate', 'rtbcb' ),
 							   number_format( $base_roi * 2.5 - $estimated_investment )
