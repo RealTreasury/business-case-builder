@@ -3,6 +3,7 @@
   <testsuites>
     <testsuite name="rtbcb">
       <file>tests/RTBCB_ValidatorTest.php</file>
+      <file>tests/RTBCB_ParseGpt5ResponseTest.php</file>
     </testsuite>
   </testsuites>
 </phpunit>
