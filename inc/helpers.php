@@ -847,31 +847,22 @@ function rtbcb_get_current_lead() {
 /**
 	* Clean JSON response from API calls.
 	*
-	* Removes WordPress slashing and magic quotes before decoding JSON.
-	* Returns the decoded array on success or the original response when decoding
-	* fails or the input is not a JSON string.
+	* Attempts to decode the response as JSON and returns the decoded array on
+	* success. If decoding fails or the input is not a JSON string, the original
+	* response is returned.
 	*
 	* @param mixed $response Raw response string or data.
 	* @return mixed Decoded array or original response.
-	*/
+*/
 function rtbcb_clean_json_response( $response ) {
 	if ( is_string( $response ) ) {
-		// Remove WordPress slashing.
-		$response = wp_unslash( $response );
-		
-		// Remove magic quotes if present.
-		if ( function_exists( 'get_magic_quotes_gpc' ) && get_magic_quotes_gpc() ) {
-			$response = stripslashes( $response );
-		}
-		
-		// Decode JSON.
 		$decoded = json_decode( $response, true );
-		
+
 		if ( json_last_error() === JSON_ERROR_NONE ) {
 			return $decoded;
 		}
 	}
-	
+
 	return $response;
 }
 
