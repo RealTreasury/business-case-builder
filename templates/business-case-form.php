@@ -445,34 +445,22 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 			</button>
 
 		</div>
-				</form>
-			<div id="rtbcbSuccessMessage" class="rtbcb-success-message" style="display:none"></div>
-			</div>
-<?php
-// FIXED: Progress container with proper structure and classes
-// Replace the existing progress container section in business-case-form.php with this:
-?>
-
-<!-- FIXED: Progress Container with proper structure -->
-<div id="rtbcb-progress-container" class="rtbcb-progress-overlay" style="display: none;" role="dialog" aria-hidden="true">
-<!-- Content will be dynamically inserted by JavaScript -->
-<div class="rtbcb-progress-content">
-<div class="rtbcb-progress-spinner"></div>
-
-<div class="rtbcb-progress-text">
-<?php esc_html_e( 'Generating Your Business Case', 'rtbcb' ); ?>
-</div>
-
-<div class="rtbcb-progress-step">
-<span class="rtbcb-progress-step-text">
-<?php esc_html_e( 'Preparing your analysis...', 'rtbcb' ); ?>
-</span>
-</div>
-
-<div class="rtbcb-progress-partial">
-<!-- Partial results will be shown here -->
+</form>
+<div id="rtbcbSuccessMessage" class="rtbcb-success-message" style="display:none"></div>
 </div>
 </div>
+</div>
+
+    <div id="rtbcb-progress-container" class="rtbcb-progress-overlay" style="display: none;" role="dialog" aria-hidden="true">
+        <div class="rtbcb-progress-content">
+            <div class="rtbcb-progress-spinner"></div>
+            <div class="rtbcb-progress-text"><?php esc_html_e( 'Generating Your Business Case', 'rtbcb' ); ?></div>
+            <div class="rtbcb-progress-step">
+                <span class="rtbcb-progress-step-text"><?php esc_html_e( 'Preparing your analysis...', 'rtbcb' ); ?></span>
+            </div>
+            <div class="rtbcb-progress-partial"><!-- Partial results will be shown here --></div>
+        </div>
+    </div>
 </div>
 
 <?php
@@ -512,11 +500,9 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 ?>
 <script>
 document.addEventListener( 'DOMContentLoaded', function() {
-// FIXED: Enhanced progress container initialization
 const progressContainer = document.getElementById( 'rtbcb-progress-container' );
 
 if ( progressContainer ) {
-// Add keyboard support for closing on Escape
 document.addEventListener( 'keydown', function( e ) {
 if ( e.key === 'Escape' && progressContainer.style.display === 'flex' ) {
 if ( window.businessCaseBuilder && typeof window.businessCaseBuilder.cancelPolling === 'function' ) {
@@ -535,10 +521,8 @@ document.body.style.overflow = '';
 }
 } );
 
-// Add click outside to close (optional, can be removed if not desired)
 progressContainer.addEventListener( 'click', function( e ) {
 if ( e.target === progressContainer ) {
-// Only allow closing if not in critical processing phase
 const content = progressContainer.querySelector( '.rtbcb-progress-content' );
 if ( content && ! content.querySelector( '.rtbcb-progress-spinner' ) ) {
 progressContainer.style.display = 'none';
@@ -547,14 +531,12 @@ document.body.style.overflow = '';
 }
 } );
 
-// FIXED: Observe visibility changes for better UX
 const observer = new MutationObserver( function( mutations ) {
 mutations.forEach( function( mutation ) {
 if ( mutation.type === 'attributes' && mutation.attributeName === 'style' ) {
 const isVisible = progressContainer.style.display === 'flex';
 progressContainer.setAttribute( 'aria-hidden', isVisible ? 'false' : 'true' );
 
-// Announce to screen readers when visible
 if ( isVisible ) {
 const announcement = document.createElement( 'div' );
 announcement.setAttribute( 'aria-live', 'polite' );
@@ -579,9 +561,6 @@ attributeFilter: [ 'style' ],
 }
 } );
 </script>
-		</div>
-	</div>
-</div>
 
 <!-- Results Section (separate from modal) -->
 <div id="rtbcbResults" class="rtbcb-results" style="display: none;">
