@@ -1195,6 +1195,11 @@ html {
     position: relative;
 }
 
+/* Ensure modal uses ample vertical space */
+.rtbcb-modal-container {
+    min-height: 80vh;
+}
+
 .rtbcb-modal-overlay.active .rtbcb-modal {
     transform: scale(1) translateY(0);
 }

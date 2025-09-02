@@ -717,11 +717,10 @@ class BusinessCaseBuilder {
     }
 
     showLoading() {
-        // Hide form
-        const formContainer = ( this.form && typeof this.form.closest === 'function' ) ?
-            this.form.closest('.rtbcb-form-container') : null;
-        if (formContainer) {
-            formContainer.style.display = 'none';
+        // Hide entire modal while loading
+        const modalContainer = document.querySelector('.rtbcb-modal-container');
+        if (modalContainer) {
+            modalContainer.style.display = 'none';
         }
 
         const progressContainer = document.getElementById('rtbcb-progress-container');
@@ -789,7 +788,12 @@ class BusinessCaseBuilder {
         // Restore body scrolling
         document.body.style.overflow = '';
 
-        // Show form container
+        // Show modal and form containers
+        const modalContainer = document.querySelector('.rtbcb-modal-container');
+        if (modalContainer) {
+            modalContainer.style.display = 'block';
+        }
+
         const formContainer = ( this.form && typeof this.form.closest === 'function' ) ?
             this.form.closest('.rtbcb-form-container') : null;
         if (formContainer) {
