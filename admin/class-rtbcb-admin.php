@@ -471,6 +471,26 @@ wp_localize_script(
 		$upload_dir  = wp_upload_dir();
 		$reports_dir = trailingslashit( $upload_dir['basedir'] ) . 'rtbcb-reports';
 
+		if ( isset( $_GET['rtbcb_reports_deleted'] ) ) {
+			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'All reports deleted.', 'rtbcb' ) . '</p></div>';
+		}
+
+		if ( isset( $_POST['rtbcb_delete_all_reports'] ) ) {
+			check_admin_referer( 'rtbcb_delete_all_reports' );
+
+			if ( current_user_can( 'manage_options' ) ) {
+				$files = glob( $reports_dir . '/*.{html,pdf}', GLOB_BRACE );
+				$files = $files ? $files : [];
+
+				foreach ( $files as $filepath ) {
+					unlink( $filepath );
+				}
+			}
+
+			wp_safe_redirect( add_query_arg( 'rtbcb_reports_deleted', 1, admin_url( 'admin.php?page=rtbcb-reports' ) ) );
+			exit;
+		}
+
 		if ( isset( $_POST['rtbcb_delete_old_reports'] ) ) {
 			check_admin_referer( 'rtbcb_delete_old_reports' );
 
