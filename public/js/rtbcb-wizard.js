@@ -558,10 +558,6 @@ class BusinessCaseBuilder {
             const response = result.response;
             console.log('RTBCB: Response status:', response.status);
 
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-
             const responseText = await response.text();
             console.log('RTBCB: Response received, length:', responseText.length);
 
@@ -580,6 +576,13 @@ class BusinessCaseBuilder {
                 } else {
                     throw new Error('Invalid response format');
                 }
+            }
+
+            if (!response.ok) {
+                const message = (data && data.data && data.data.message) ||
+                    (data && data.message) ||
+                    `HTTP ${response.status}: ${response.statusText}`;
+                throw new Error(message);
             }
 
             // Handle JSON response
@@ -1661,7 +1664,9 @@ class BusinessCaseBuilder {
             }
         }
 
-        return 'An error occurred while processing your request. Please try again.';
+        return serverMessage.startsWith('HTTP ')
+            ? 'An error occurred while processing your request. Please try again.'
+            : serverMessage;
     }
 
     escapeHTML(str) {
