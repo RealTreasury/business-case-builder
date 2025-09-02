@@ -55,12 +55,21 @@ jQuery(function ($) {
                                                        (item.lead_id
                                                                ? "ID " + item.lead_id
                                                                : rtbcbWorkflow.strings.unknown_lead);
+                                               var leadHtml = $("<div>").text(lead).html();
+                                               if (item.logs_url) {
+                                                       leadHtml =
+                                                               '<a href="' +
+                                                               item.logs_url +
+                                                               '" target="_blank">' +
+                                                               leadHtml +
+                                                               "</a>";
+                                               }
                                                var company = item.company || rtbcbWorkflow.strings.unknown_company;
                                                var started = item.started_at || rtbcbWorkflow.strings.unknown_start;
                                                var template = item.report_template || rtbcbWorkflow.strings.unknown_template;
                                                html +=
                                                        "<tr><td>" +
-                                                       $("<div>").text(lead).html() +
+                                                       leadHtml +
                                                        "</td><td>" +
                                                        $("<div>").text(company).html() +
                                                        "</td><td>" +

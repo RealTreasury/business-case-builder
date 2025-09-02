@@ -83,10 +83,14 @@ if ( ! current_user_can( 'manage_options' ) ) {
 </div>
 <script type="text/javascript">
 	jQuery(function($){
-	var table = $('#rtbcb-api-logs-table').DataTable({
-	pageLength: 20,
-	order: [[0, 'desc']]
-	});
+var table = $('#rtbcb-api-logs-table').DataTable({
+pageLength: 20,
+order: [[0, 'desc']]
+});
+var initialSearch = new URLSearchParams(window.location.search).get('search');
+if (initialSearch) {
+table.search(initialSearch).draw();
+}
 	$('#rtbcb-clear-logs').on('click', function(e){
 			e.preventDefault();
 			if (!confirm('<?php echo esc_js( __( 'Are you sure you want to clear all logs?', 'rtbcb' ) ); ?>')) {

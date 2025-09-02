@@ -1961,49 +1961,64 @@ wp_localize_script(
 
 	public function ajax_get_workflow_history() {
 		check_ajax_referer( 'rtbcb_workflow_visualizer', 'nonce' );
+
 		if ( ! current_user_can( 'manage_options' ) ) {
-		wp_send_json_error( __( 'Insufficient permissions', 'rtbcb' ) );
+			wp_send_json_error( __( 'Insufficient permissions', 'rtbcb' ) );
 		}
-	       $raw_history = $this->get_workflow_history_from_logs();
-$history     = array_map(
-function ( $entry ) {
-$lead_id  = isset( $entry['lead_id'] ) ? intval( $entry['lead_id'] ) : 0;
-$email    = isset( $entry['lead_email'] ) ? sanitize_email( $entry['lead_email'] ) : '';
-$company  = isset( $entry['company_name'] ) ? sanitize_text_field( $entry['company_name'] ) : '';
-$started  = isset( $entry['started_at'] ) ? sanitize_text_field( $entry['started_at'] ) : '';
-$steps    = [];
-if ( isset( $entry['steps'] ) && is_array( $entry['steps'] ) ) {
-foreach ( $entry['steps'] as $step ) {
-$steps[] = [
-'name'     => sanitize_text_field( $step['name'] ?? '' ),
-'status'   => sanitize_text_field( $step['status'] ?? '' ),
-'duration' => isset( $step['duration'] ) ? floatval( $step['duration'] ) : 0,
-'elapsed'  => isset( $step['elapsed'] ) ? floatval( $step['elapsed'] ) : 0,
-];
-}
-}
-return [
-'lead_id'    => $lead_id,
-'email'      => $email,
-'company'    => $company,
-'started_at' => $started,
-'steps'      => $steps,
-];
-},
-$raw_history
-);
+
+		$raw_history = $this->get_workflow_history_from_logs();
+
+		$history = array_map(
+			function ( $entry ) {
+				$lead_id = isset( $entry['lead_id'] ) ? intval( $entry['lead_id'] ) : 0;
+				$email   = isset( $entry['lead_email'] ) ? sanitize_email( $entry['lead_email'] ) : '';
+				$company = isset( $entry['company_name'] ) ? sanitize_text_field( $entry['company_name'] ) : '';
+				$started = isset( $entry['started_at'] ) ? sanitize_text_field( $entry['started_at'] ) : '';
+				$steps   = [];
+
+				if ( isset( $entry['steps'] ) && is_array( $entry['steps'] ) ) {
+					foreach ( $entry['steps'] as $step ) {
+						$steps[] = [
+							'name'     => sanitize_text_field( $step['name'] ?? '' ),
+							'status'   => sanitize_text_field( $step['status'] ?? '' ),
+							'duration' => isset( $step['duration'] ) ? floatval( $step['duration'] ) : 0,
+							'elapsed'  => isset( $step['elapsed'] ) ? floatval( $step['elapsed'] ) : 0,
+						];
+					}
+				}
+
+				$log_ids = RTBCB_API_Log::get_log_ids_by_lead( $lead_id, $email );
+
+				$item = [
+					'lead_id'    => $lead_id,
+					'email'      => $email,
+					'company'    => $company,
+					'started_at' => $started,
+					'steps'      => $steps,
+				];
+
+				if ( ! empty( $log_ids ) ) {
+					$search            = $email ? $email : $lead_id;
+					$item['logs_url'] = admin_url( 'admin.php?page=rtbcb-api-logs&search=' . urlencode( $search ) );
+				}
+
+				return $item;
+			},
+			$raw_history
+		);
 
 		wp_send_json_success(
-		[
-		'history' => $history,
-		'summary' => [
-		'total_executions' => count( $raw_history ),
-		'avg_duration'     => $this->calculate_average_duration( $raw_history ),
-		'success_rate'     => $this->calculate_success_rate( $raw_history ),
-		],
-		]
+			[
+				'history' => $history,
+				'summary' => [
+					'total_executions' => count( $raw_history ),
+					'avg_duration'     => $this->calculate_average_duration( $raw_history ),
+					'success_rate'     => $this->calculate_success_rate( $raw_history ),
+				],
+			]
 		);
-}
+	}
+
 
 		public function ajax_clear_workflow_history() {
 			check_ajax_referer( 'rtbcb_workflow_visualizer', 'nonce' );
