@@ -43,13 +43,16 @@ public static function enqueue( $user_inputs ) {
 	
 	self::update_status( $job_id, 'queued' );
 	
-	$scheduled = wp_schedule_single_event(
-	time(),
-	'rtbcb_process_job',
-	[ $job_id, $user_inputs ]
-	);
-	
 	$cron_disabled = defined( 'DISABLE_WP_CRON' ) && DISABLE_WP_CRON;
+	
+	$scheduled = false;
+	if ( ! $cron_disabled ) {
+		$scheduled = wp_schedule_single_event(
+		time(),
+		'rtbcb_process_job',
+		[ $job_id, $user_inputs ]
+		);
+	}
 	
 	if ( function_exists( 'spawn_cron' ) && ( ! function_exists( 'wp_doing_cron' ) || ! wp_doing_cron() ) && ! $cron_disabled ) {
 	spawn_cron();
