@@ -416,12 +416,17 @@ class BusinessCaseBuilder {
             const progress = (this.currentStep / this.totalSteps) * 100;
             this.progressLine.style.width = `${progress}%`;
         }
+
+        const activeStep = this.progressSteps[this.currentStep - 1];
+        if (activeStep && typeof activeStep.scrollIntoView === 'function') {
+            activeStep.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        }
     }
 
     scrollToTop() {
         const modalBody = this.form.closest('.rtbcb-modal-body');
         if (modalBody) {
-            modalBody.scrollTop = 0;
+            modalBody.scrollTo({ top: 0, behavior: 'smooth' });
         }
     }
 

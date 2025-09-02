@@ -2061,6 +2061,23 @@ html {
         font-size: 16px;           /* Prevent zoom on iOS */
         padding: 14px 16px;        /* Larger touch targets */
     }
+
+    /* Allow horizontal scrolling for progress steps on very small screens */
+    .rtbcb-progress-steps {
+        overflow-x: auto;
+        justify-content: flex-start;
+        gap: 12px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+
+    .rtbcb-progress-steps::-webkit-scrollbar {
+        display: none;
+    }
+
+    .rtbcb-progress-step {
+        flex: 0 0 auto;
+    }
 }
 
 /* Mobile modal layout overrides moved from template */
