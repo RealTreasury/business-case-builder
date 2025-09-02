@@ -77,13 +77,14 @@ if ( ! current_user_can( 'manage_options' ) ) {
 	</div>
 </div>
 <div id="rtbcb-log-modal" style="display:none;">
-	<div class="rtbcb-modal-content">
-		<pre id="rtbcb-log-detail"></pre>
-		<button class="button" id="rtbcb-close-log"><?php esc_html_e( 'Close', 'rtbcb' ); ?></button>
-	</div>
+        <div class="rtbcb-modal-content">
+                <pre id="rtbcb-log-detail"></pre>
+                <button class="button" id="rtbcb-copy-log"><?php esc_html_e( 'Copy', 'rtbcb' ); ?></button>
+                <button class="button" id="rtbcb-close-log"><?php esc_html_e( 'Close', 'rtbcb' ); ?></button>
+        </div>
 </div>
 <script type="text/javascript">
-	jQuery(function($){
+        jQuery(function($){
 var table = $('#rtbcb-api-logs-table').DataTable({
 pageLength: 20,
 order: [[0, 'desc']],
@@ -131,19 +132,27 @@ table.search(search).draw();
 			});
 		});
 	$('#rtbcb-api-logs-table').on('click', '.rtbcb-view-log', function(e){
-			e.preventDefault();
-			var $row = $(this).closest('tr');
-			var req = $row.attr('data-request');
-			var res = $row.attr('data-response');
-			try { req = JSON.stringify(JSON.parse(req), null, 2); } catch (err) {}
-			try { res = JSON.stringify(JSON.parse(res), null, 2); } catch (err) {}
-									var content = '<?php echo esc_js( __( 'Request:', 'rtbcb' ) ); ?>\n' + req + '\n\n<?php echo esc_js( __( 'Response:', 'rtbcb' ) ); ?>\n' + res;
-			$('#rtbcb-log-detail').text(content);
-			$('#rtbcb-log-modal').show();
-		});
-		$('#rtbcb-close-log').on('click', function(){
-			$('#rtbcb-log-modal').hide();
-		});
+	e.preventDefault();
+	var $row = $(this).closest('tr');
+	var req = $row.attr('data-request');
+	var res = $row.attr('data-response');
+	try { req = JSON.stringify(JSON.parse(req), null, 2); } catch (err) {}
+	try { res = JSON.stringify(JSON.parse(res), null, 2); } catch (err) {}
+	var content = '<?php echo esc_js( __( 'Request:', 'rtbcb' ) ); ?>\n' + req + '\n\n<?php echo esc_js( __( 'Response:', 'rtbcb' ) ); ?>\n' + res;
+	$('#rtbcb-log-detail').text(content);
+	$('#rtbcb-log-modal').show();
+	});
+	$('#rtbcb-copy-log').on('click', function(){
+	var text = $('#rtbcb-log-detail').text();
+	navigator.clipboard.writeText(text).then(function(){
+	alert('<?php echo esc_js( __( 'Copied to clipboard.', 'rtbcb' ) ); ?>');
+	}).catch(function(){
+	alert('<?php echo esc_js( __( 'Copy failed.', 'rtbcb' ) ); ?>');
+	});
+	});
+	$('#rtbcb-close-log').on('click', function(){
+	$('#rtbcb-log-modal').hide();
+	});
 	});
 </script>
 
