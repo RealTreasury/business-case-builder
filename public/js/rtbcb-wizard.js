@@ -1441,20 +1441,19 @@ class BusinessCaseBuilder {
                 confidence: data.recommendation?.confidence || data.metadata?.confidence_level || 0.75,
                 reasoning: data.recommendation?.reasoning || data.technology_strategy?.recommended_category || ''
             },
-            narrative: {
-                narrative: data.narrative?.narrative || data.executive_summary?.executive_recommendation || '',
-                next_actions: data.narrative?.next_actions || [
-                    ...(data.action_plan?.immediate_steps || []),
-                    ...(data.action_plan?.short_term_milestones || []),
-                    ...(data.action_plan?.long_term_objectives || [])
-                ]
-            },
-            risks: data.risks || data.risk_analysis?.implementation_risks || [],
+            executiveSummary: data.executive_summary || data.narrative || {},
+            operationalAnalysis: data.operational_analysis || {},
             industryInsights: {
                 sector_trends: data.industry_insights?.sector_trends || [],
                 competitive_benchmarks: data.industry_insights?.competitive_benchmarks || [],
                 regulatory_considerations: data.industry_insights?.regulatory_considerations || []
-            }
+            },
+            nextActions: data.narrative?.next_actions || [
+                ...(data.action_plan?.immediate_steps || []),
+                ...(data.action_plan?.short_term_milestones || []),
+                ...(data.action_plan?.long_term_objectives || [])
+            ],
+            risks: data.risks || data.risk_analysis?.implementation_risks || []
         };
 
         // Close modal
@@ -1474,7 +1473,15 @@ class BusinessCaseBuilder {
     }
 
     renderResults(data) {
-        const { scenarios, recommendation, companyName, narrative, industryInsights } = data;
+        const {
+            scenarios,
+            recommendation,
+            companyName,
+            executiveSummary,
+            operationalAnalysis,
+            industryInsights,
+            nextActions
+        } = data;
         const displayName = companyName || 'Your Company';
 
         return `
@@ -1490,10 +1497,11 @@ class BusinessCaseBuilder {
 
                 ${this.renderRecommendation(recommendation, displayName)}
                 ${this.renderROISummary(scenarios, displayName)}
-                ${this.renderNarrative(narrative)}
+                ${this.renderExecutiveSummary(executiveSummary)}
+                ${this.renderOperationalAnalysis(operationalAnalysis)}
                 ${this.renderIndustryInsights(industryInsights)}
                 ${this.renderRiskAssessmentSection()}
-                ${this.renderNextSteps(narrative?.next_actions || [], displayName)}
+                ${this.renderNextSteps(nextActions || [], displayName)}
                 ${this.renderActions()}
             </div>
         `;
@@ -1579,13 +1587,36 @@ class BusinessCaseBuilder {
         `;
     }
 
-    renderNarrative(narrative = {}) {
+    renderExecutiveSummary(summary = {}) {
+        const text = summary?.narrative || summary?.executive_recommendation ||
+            'Treasury technology investment presents a compelling opportunity for operational efficiency.';
+        const keyDrivers = Array.isArray(summary?.key_value_drivers) ? summary.key_value_drivers : [];
+        const renderList = items => items.map(item => `<li>${this.escapeHTML(item)}</li>`).join('');
         return `
             <div class="rtbcb-narrative-section">
                 <h3>Executive Summary</h3>
-                <div class="rtbcb-narrative-content">
-                    ${narrative?.narrative || 'Treasury technology investment presents a compelling opportunity for operational efficiency.'}
-                </div>
+                <div class="rtbcb-narrative-content">${this.escapeHTML(text)}</div>
+                ${keyDrivers.length ? `<div class="rtbcb-industry-group"><h4>Key Value Drivers</h4><ul>${renderList(keyDrivers)}</ul></div>` : ''}
+            </div>
+        `;
+    }
+
+    renderOperationalAnalysis(analysis = {}) {
+        const {
+            current_state_assessment = '',
+            process_improvements = [],
+            automation_opportunities = []
+        } = analysis || {};
+        if (!current_state_assessment && !process_improvements.length && !automation_opportunities.length) {
+            return '';
+        }
+        const renderList = items => items.map(item => `<li>${this.escapeHTML(item)}</li>`).join('');
+        return `
+            <div class="rtbcb-operational-analysis">
+                <h3>Operational Analysis</h3>
+                ${current_state_assessment ? `<p>${this.escapeHTML(current_state_assessment)}</p>` : ''}
+                ${process_improvements.length ? `<div class="rtbcb-industry-group"><h4>Process Improvements</h4><ul>${renderList(process_improvements)}</ul></div>` : ''}
+                ${automation_opportunities.length ? `<div class="rtbcb-industry-group"><h4>Automation Opportunities</h4><ul>${renderList(automation_opportunities)}</ul></div>` : ''}
             </div>
         `;
     }
