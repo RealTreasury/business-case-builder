@@ -152,6 +152,8 @@ The plugin selects a report template based on configuration and available assets
 * `templates/report-template.php` – basic fallback if the comprehensive template or its CSS is missing.
 * `templates/fast-report-template.php` – used for fast-mode reports with minimal output.
 
+The workflow visualizer log records which template was used for each submission.
+
 == Frequently Asked Questions ==
 = How do I display the calculator? =
 Add the `[rt_business_case_builder]` shortcode to a post or page to show a button that opens the form in a modal window.

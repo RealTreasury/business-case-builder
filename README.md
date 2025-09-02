@@ -256,6 +256,7 @@ their own `AGENTS.md` with additional rules.
 - Fast-mode reports use `templates/fast-report-template.php` for minimal output.
 - After form submission, `RTBCB_Router` returns the selected template HTML via AJAX as `report_html`.
 - `public/js/rtbcb.js` injects this HTML into `#rtbcb-report-container` for immediate viewing.
+- The workflow visualizer log records the template used for each submission.
 - Reports are not saved as files; only lead metadata is stored in the database.
 - Users can save or print the report directly from their browser, including printing to PDF.
 

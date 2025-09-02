@@ -42,6 +42,8 @@ jQuery(function ($) {
                                                rtbcbWorkflow.strings.company +
                                                "</th><th>" +
                                                rtbcbWorkflow.strings.started +
+                                               "</th><th>" +
+                                               rtbcbWorkflow.strings.template +
                                                "</th>";
                                        stepNames.forEach(function (name) {
                                                html += "<th>" + $("<div>").text(name).html() + "</th>";
@@ -55,6 +57,7 @@ jQuery(function ($) {
                                                                : rtbcbWorkflow.strings.unknown_lead);
                                                var company = item.company || rtbcbWorkflow.strings.unknown_company;
                                                var started = item.started_at || rtbcbWorkflow.strings.unknown_start;
+                                               var template = item.report_template || rtbcbWorkflow.strings.unknown_template;
                                                html +=
                                                        "<tr><td>" +
                                                        $("<div>").text(lead).html() +
@@ -62,6 +65,8 @@ jQuery(function ($) {
                                                        $("<div>").text(company).html() +
                                                        "</td><td>" +
                                                        $("<div>").text(started).html() +
+                                                       "</td><td>" +
+                                                       $("<div>").text(template).html() +
                                                        "</td>";
                                                stepNames.forEach(function (name) {
                                                         var status = rtbcbWorkflow.strings.not_run;
