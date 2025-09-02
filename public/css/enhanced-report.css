@@ -663,4 +663,47 @@
 .rtbcb-fade-in {
     animation: fadeInUp 0.6s ease forwards;
 }
+/* Header readability improvements */
+.rtbcb-report-header-enhanced::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 1;
+    pointer-events: none;
+}
 
+.rtbcb-report-meta-enhanced {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    color: #fff;
+    margin-top: 1rem;
+}
+
+.rtbcb-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+.rtbcb-meta-icon {
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.rtbcb-meta-label {
+    opacity: 0.85;
+    text-transform: uppercase;
+}
+
+.rtbcb-meta-value {
+    font-weight: 600;
+}
