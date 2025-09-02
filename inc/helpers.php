@@ -1974,7 +1974,7 @@ return preg_replace_callback(
 '#<script\\b([^>]*)>(.*?)</script>#is',
 function ( $matches ) {
 $attrs = $matches[1];
-if ( preg_match( '/\btype=(["\'])(.*?)\1/i', $attrs, $type_match ) ) {
+if ( preg_match( '/(?:^|\s)type\s*=\s*(["\'])(.*?)\1/i', $attrs, $type_match ) ) {
 $type          = strtolower( $type_match[2] );
 $allowed_types = [ 'application/json', 'application/ld+json' ];
 if ( in_array( $type, $allowed_types, true ) ) {
