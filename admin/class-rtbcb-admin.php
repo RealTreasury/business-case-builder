@@ -601,6 +601,7 @@ wp_localize_script(
 		register_setting( 'rtbcb_settings', 'rtbcb_gpt5_min_output_tokens', [ 'sanitize_callback' => 'rtbcb_sanitize_min_output_tokens' ] );
 		register_setting( 'rtbcb_settings', 'rtbcb_fast_mode', [ 'sanitize_callback' => 'absint' ] );
 		register_setting( 'rtbcb_settings', 'rtbcb_disable_heavy_features', [ 'sanitize_callback' => 'absint' ] );
+		RTBCB_Settings::register_settings();
 	}
 
 	/**

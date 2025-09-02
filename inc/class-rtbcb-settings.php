@@ -50,4 +50,21 @@ class RTBCB_Settings {
        public static function get_all() {
                return function_exists( 'get_option' ) ? get_option( 'rtbcb_settings', self::DEFAULTS ) : self::DEFAULTS;
        }
+
+       /**
+       * Register plugin settings.
+       *
+       * @return void
+       */
+       public static function register_settings() {
+               register_setting(
+                       'rtbcb_settings',
+                       'rtbcb_clean_json_responses',
+                       [
+                               'type'              => 'boolean',
+                               'default'           => true,
+                               'sanitize_callback' => 'rest_sanitize_boolean',
+                       ]
+               );
+       }
 }
