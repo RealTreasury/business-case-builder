@@ -2029,97 +2029,16 @@ return $analysis;
 	* @return string System prompt.
 	*/
 	private function build_enrichment_system_prompt() {
-	return <<<'SYSTEM'
-	You are a senior treasury technology consultant conducting comprehensive company and industry research.
+		return <<<'SYSTEM'
+	You are a senior treasury technology consultant with 15+ years of experience conducting company and industry research for Fortune 500 clients.
 
-	Your task is to enrich the provided company information with strategic insights, industry context, and actionable intelligence that will inform treasury technology recommendations.
+	Your expertise includes:
+	- Treasury operations optimization and digital transformation
+	- Industry benchmarking and competitive analysis  
+	- Technology vendor evaluation and selection
+	- Financial modeling and ROI analysis
 
-	## Required Output Format
-
-	Return a single JSON object with this exact structure:
-
-	```json
-	{
-	"company_profile": {
-		"enhanced_description": "string - comprehensive company description",
-		"business_model": "string - primary business model and revenue streams",
-		"market_position": "string - competitive position and market standing",
-		"maturity_level": "basic|developing|strategic|optimized",
-		"financial_indicators": {
-		"estimated_revenue": "number - best estimate in USD",
-		"growth_stage": "startup|growth|mature|decline",
-		"financial_health": "strong|stable|concerning|unknown"
-		},
-		"treasury_maturity": {
-		"current_state": "string - assessment of current treasury operations",
-		"sophistication_level": "manual|semi_automated|automated|strategic",
-		"key_gaps": ["array of identified gaps"],
-		"automation_readiness": "low|medium|high"
-		},
-		"strategic_context": {
-		"primary_challenges": ["array of business challenges"],
-		"growth_objectives": ["array of growth objectives"],
-		"competitive_pressures": ["array of competitive factors"],
-		"regulatory_environment": "string - regulatory considerations"
-		}
-	},
-	"industry_context": {
-		"sector_analysis": {
-		"market_dynamics": "string - current market conditions",
-		"growth_trends": "string - industry growth patterns",
-		"disruption_factors": ["array of disruptive forces"],
-		"technology_adoption": "laggard|follower|mainstream|leader"
-		},
-		"benchmarking": {
-		"typical_treasury_setup": "string - industry norm for treasury operations",
-		"common_pain_points": ["array of industry-wide challenges"],
-		"technology_penetration": "low|medium|high",
-		"investment_patterns": "string - typical technology investment patterns"
-		},
-		"regulatory_landscape": {
-		"key_regulations": ["array of relevant regulations"],
-		"compliance_complexity": "low|medium|high|very_high",
-		"upcoming_changes": ["array of anticipated regulatory changes"]
-		}
-	},
-	"strategic_insights": {
-		"technology_readiness": "not_ready|ready|urgent_need",
-		"investment_justification": "weak|moderate|strong|compelling",
-		"implementation_complexity": "low|medium|high|very_high",
-		"expected_benefits": {
-		"efficiency_gains": "string - expected efficiency improvements",
-		"risk_reduction": "string - risk mitigation benefits",
-		"strategic_value": "string - strategic business value",
-		"competitive_advantage": "string - competitive positioning benefits"
-		},
-		"critical_success_factors": ["array of key success factors"],
-		"potential_obstacles": ["array of implementation challenges"]
-	},
-	"enrichment_metadata": {
-		"confidence_level": "number - 0.0 to 1.0",
-		"data_sources": ["array of information sources considered"],
-		"analysis_depth": "surface|moderate|comprehensive",
-		"recommendations_priority": "low|medium|high|urgent"
-	}
-	}
-	```
-
-	## Analysis Guidelines
-
-	1. **Be Specific**: Provide company-specific insights, not generic advice
-	2. **Use Context**: Leverage all provided company data for comprehensive analysis
-	3. **Industry Focus**: Consider industry-specific factors that impact treasury operations
-	4. **Practical Insights**: Focus on actionable intelligence for decision-making
-	5. **Risk Assessment**: Identify both opportunities and potential challenges
-	6. **Confidence Scoring**: Honestly assess confidence based on available information
-
-	## Important Notes
-
-	- Return ONLY the JSON object, no additional text
-	- Use realistic estimates based on company size and industry
-	- Consider both current state and future trajectory
-	- Focus on treasury-relevant insights and recommendations
-	- Maintain professional consulting tone in all descriptions
+	CRITICAL: Respond ONLY with valid JSON matching the exact schema provided.
 	SYSTEM;
 	}
 
@@ -2130,37 +2049,37 @@ return $analysis;
 	* @return string User prompt.
 	*/
 	private function build_enrichment_user_prompt( $user_inputs ) {
-	$pain_points_formatted = implode( ', ', $user_inputs['pain_points'] );
+		$pain_points_formatted = implode( ', ', array_map( function( $point ) {
+			return str_replace( '_', ' ', ucwords( $point, '_' ) );
+		}, $user_inputs['pain_points'] ?? [] ) );
 
-	return <<<PROMPT
-	Please conduct comprehensive company and industry enrichment analysis for the following organization:
+		return <<<PROMPT
+	## Treasury Technology Analysis Request
 
-	## Company Information
+	### Company Profile  
 	- **Company Name**: {$user_inputs['company_name']}
 	- **Industry**: {$user_inputs['industry']}
-	- **Company Size**: {$user_inputs['company_size']}
+	- **Revenue Size**: {$user_inputs['company_size']}
 	- **Business Objective**: {$user_inputs['business_objective']}
-	- **Implementation Timeline**: {$user_inputs['implementation_timeline']}
-	- **Budget Range**: {$user_inputs['budget_range']}
 
-	## Current Treasury Operations
+	### Current Treasury Operations
+	- **Team Size**: {$user_inputs['ftes']} FTEs
 	- **Weekly Reconciliation Hours**: {$user_inputs['hours_reconciliation']}
 	- **Weekly Cash Positioning Hours**: {$user_inputs['hours_cash_positioning']}
 	- **Banking Relationships**: {$user_inputs['num_banks']}
-	- **Treasury Team Size**: {$user_inputs['ftes']} FTEs
 	- **Key Pain Points**: {$pain_points_formatted}
 
-	## Analysis Requirements
-
-	Provide deep, actionable insights that will inform:
-	1. ROI calculations and financial modeling
-	2. Technology category recommendations
-	3. Implementation planning and risk assessment
-	4. Strategic positioning and competitive analysis
+	### Analysis Requirements
+	Provide actionable insights for:
+	1. Technology readiness assessment
+	2. ROI projection foundations
+	3. Implementation complexity evaluation
+	4. Strategic positioning analysis
 
 	Focus on treasury-specific challenges and opportunities within the {$user_inputs['industry']} industry for a {$user_inputs['company_size']} organization.
 
-	Consider how the stated business objective of "{$user_inputs['business_objective']}" and timeline of "{$user_inputs['implementation_timeline']}" impact the technology strategy.
+	### Required JSON Schema
+	[Insert the exact schema from the enrichment prompt above]
 	PROMPT;
 	}
 
