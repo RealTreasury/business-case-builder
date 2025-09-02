@@ -1920,7 +1920,7 @@ delete_transient( $key );
 	* @return array Allowed HTML tags and attributes.
 	*/
 function rtbcb_get_report_allowed_html() {
-	$allowed = wp_kses_allowed_html( 'post' );
+$allowed = wp_kses_allowed_html( 'post' );
 
 	$allowed['canvas'] = [
 		'class'  => true,
@@ -1941,16 +1941,50 @@ function rtbcb_get_report_allowed_html() {
 		'data-*' => true,
 	];
 
-	foreach ( $allowed as $tag => $attrs ) {
-	$allowed[ $tag ]['data-*'] = true;
+foreach ( $allowed as $tag => $attrs ) {
+$allowed[ $tag ]['data-*'] = true;
 }
 
-	$allowed['script'] = [
-		'id'   => true,
-		'type' => true,
-	];
+$allowed['script'] = [
+'id'   => true,
+'type' => [
+'application/json'   => true,
+'application/ld+json' => true,
+],
+];
 
-	return $allowed;
+return $allowed;
+}
+
+/**
+ * Sanitize report HTML and remove disallowed script tags.
+ *
+ * Allows only non-executable script types like application/json and
+ * application/ld+json. Any script tag missing these types is stripped.
+ *
+ * @param string $html HTML to sanitize.
+ * @return string Sanitized HTML.
+ */
+function rtbcb_sanitize_report_html( $html ) {
+$allowed = rtbcb_get_report_allowed_html();
+
+$html = wp_kses( $html, $allowed );
+
+return preg_replace_callback(
+'#<script\\b([^>]*)>(.*?)</script>#is',
+function ( $matches ) {
+$attrs = $matches[1];
+if ( preg_match( "#/\\btype=('|\")(.*?)\\1#i", $attrs, $type_match ) ) {
+$type          = strtolower( $type_match[2] );
+$allowed_types = [ 'application/json', 'application/ld+json' ];
+if ( in_array( $type, $allowed_types, true ) ) {
+return $matches[0];
+}
+}
+return '';
+},
+$html
+);
 }
 
 /**
