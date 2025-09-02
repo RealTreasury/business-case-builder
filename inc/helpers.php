@@ -2300,9 +2300,12 @@ function rtbcb_transform_data_for_template( $business_case_data ) {
 	}
 	// Prepare industry insights.
 	if ( ! empty( $business_case_data['industry_insights'] ) ) {
-	        $industry_insights = rtbcb_sanitize_recursive( $business_case_data['industry_insights'] );
+		$industry_insights = rtbcb_sanitize_recursive( $business_case_data['industry_insights'] );
+		if ( empty( $industry_insights ) ) {
+			$industry_insights = rtbcb_generate_industry_insights_fallbacks( $business_case_data );
+		}
 	} else {
-	        $industry_insights = rtbcb_generate_industry_insights_fallbacks( $business_case_data );
+		$industry_insights = rtbcb_generate_industry_insights_fallbacks( $business_case_data );
 	}
 
 	// Prepare action plan.
