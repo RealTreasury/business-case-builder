@@ -91,6 +91,31 @@ if ( typeof rtbcb_ajax !== 'undefined' && ! isValidUrl( rtbcb_ajax.ajax_url ) ) 
 }
 
 /**
+ * Refresh the AJAX nonce.
+ *
+ * @return {Promise<boolean>} True on success.
+ */
+async function rtbcbRefreshNonce() {
+    if ( typeof rtbcb_ajax === 'undefined' || ! isValidUrl( rtbcb_ajax.ajax_url ) ) {
+        return false;
+    }
+    try {
+        const response = await fetch( `${ rtbcb_ajax.ajax_url }?action=rtbcb_get_nonce` );
+        if ( ! response.ok ) {
+            return false;
+        }
+        const data = await response.json();
+        if ( data && data.success && data.data ) {
+            rtbcb_ajax.nonce = data.data;
+            return true;
+        }
+    } catch ( err ) {
+        console.error( 'RTBCB: Nonce refresh failed', err );
+    }
+    return false;
+}
+
+/**
  * Handles the form submission by sending data to the backend.
  * @param {Event} e - The form submission event.
  */
@@ -150,21 +175,37 @@ async function handleSubmit(e) {
 
     var response;
     var responseText;
-    try {
-        if (!isValidUrl(rtbcb_ajax.ajax_url)) {
-            handleSubmissionError('Service unavailable. Please reload the page.', '');
+    var attempt = 0;
+    while (attempt < 2) {
+        try {
+            if (!isValidUrl(rtbcb_ajax.ajax_url)) {
+                handleSubmissionError('Service unavailable. Please reload the page.', '');
+                rtbcbIsSubmitting = false;
+                return;
+            }
+            response = await fetch(rtbcb_ajax.ajax_url, {
+                method: 'POST',
+                body: formData
+            });
+            responseText = await response.text();
+        } catch (networkError) {
+            handleSubmissionError('Network error. Please try again later.', '');
             rtbcbIsSubmitting = false;
             return;
         }
-        response = await fetch(rtbcb_ajax.ajax_url, {
-            method: 'POST',
-            body: formData
-        });
-        responseText = await response.text();
-    } catch (networkError) {
-        handleSubmissionError('Network error. Please try again later.', '');
-        rtbcbIsSubmitting = false;
-        return;
+
+        if ((response.status === 403 || responseText.includes('Security check failed')) && attempt === 0) {
+            const refreshed = await rtbcbRefreshNonce();
+            if (refreshed) {
+                formData.set('rtbcb_nonce', rtbcb_ajax.nonce);
+                attempt++;
+                continue;
+            }
+            handleSubmissionError('Security validation failed. Please reload the page.', '');
+            rtbcbIsSubmitting = false;
+            return;
+        }
+        break;
     }
 
     if (!response.ok) {
@@ -210,9 +251,27 @@ async function pollJobStatus(jobId, progressContainer, formContainer) {
             rtbcbIsSubmitting = false;
             return;
         }
-        const nonce = rtbcb_ajax.nonce ? rtbcb_ajax.nonce : '';
-        const response = await fetch(`${rtbcb_ajax.ajax_url}?action=rtbcb_job_status&job_id=${encodeURIComponent(jobId)}&rtbcb_nonce=${nonce}`);
-        const data = await response.json();
+        let nonce = rtbcb_ajax.nonce ? rtbcb_ajax.nonce : '';
+        let attempt = 0;
+        let response;
+        let responseText;
+        while (attempt < 2) {
+            response = await fetch(`${rtbcb_ajax.ajax_url}?action=rtbcb_job_status&job_id=${encodeURIComponent(jobId)}&rtbcb_nonce=${nonce}`);
+            responseText = await response.text();
+            if ((response.status === 403 || responseText.includes('Security check failed')) && attempt === 0) {
+                const refreshed = await rtbcbRefreshNonce();
+                if (refreshed) {
+                    nonce = rtbcb_ajax.nonce;
+                    attempt++;
+                    continue;
+                }
+                handleSubmissionError('Security validation failed. Please reload the page.', '');
+                rtbcbIsSubmitting = false;
+                return;
+            }
+            break;
+        }
+        const data = JSON.parse(responseText);
 
         if (!data.success) {
             handleSubmissionError('Unable to retrieve job status.', '');
@@ -276,10 +335,25 @@ async function rtbcbStreamAnalysis(formData, onChunk) {
     if (rtbcb_ajax.nonce) {
         formData.append('rtbcb_nonce', rtbcb_ajax.nonce);
     }
-    const response = await fetch(rtbcb_ajax.ajax_url, {
-        method: 'POST',
-        body: formData
-    });
+    let response;
+    let attempt = 0;
+    while (attempt < 2) {
+        response = await fetch(rtbcb_ajax.ajax_url, {
+            method: 'POST',
+            body: formData
+        });
+        if (response.status === 403 && attempt === 0) {
+            const refreshed = await rtbcbRefreshNonce();
+            if (refreshed) {
+                formData.set('rtbcb_nonce', rtbcb_ajax.nonce);
+                attempt++;
+                continue;
+            }
+            handleSubmissionError('Security validation failed. Please reload the page.', '');
+            return;
+        }
+        break;
+    }
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     while (true) {

@@ -28,6 +28,31 @@ if ( typeof rtbcb_ajax !== 'undefined' && ! isValidUrl( rtbcb_ajax.ajax_url ) ) 
     }
 }
 
+/**
+ * Refresh the AJAX nonce.
+ *
+ * @return {Promise<boolean>} True on success.
+ */
+async function rtbcbRefreshNonce() {
+    if ( typeof rtbcb_ajax === 'undefined' || ! isValidUrl( rtbcb_ajax.ajax_url ) ) {
+        return false;
+    }
+    try {
+        const response = await fetch( `${ rtbcb_ajax.ajax_url }?action=rtbcb_get_nonce` );
+        if ( ! response.ok ) {
+            return false;
+        }
+        const data = await response.json();
+        if ( data && data.success && data.data ) {
+            rtbcb_ajax.nonce = data.data;
+            return true;
+        }
+    } catch ( err ) {
+        console.error( 'RTBCB: Nonce refresh failed', err );
+    }
+    return false;
+}
+
 // Ensure modal functions are available immediately
 window.openBusinessCaseModal = function() {
     const overlay = document.getElementById('rtbcbModalOverlay');
@@ -497,15 +522,38 @@ class BusinessCaseBuilder {
                 return;
             }
 
-            const response = await fetch(this.ajaxUrl, {
-                method: 'POST',
-                body: formData,
-                credentials: 'same-origin',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json, text/html'
+            let attempt = 0;
+            let response;
+            let responseText;
+            while (attempt < 2) {
+                response = await fetch(this.ajaxUrl, {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'same-origin',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json, text/html'
+                    }
+                });
+
+                responseText = await response.text();
+
+                if ((response.status === 403 || responseText.includes('Security check failed')) && attempt === 0) {
+                    const refreshed = await rtbcbRefreshNonce();
+                    if (refreshed) {
+                        formData.set('rtbcb_nonce', rtbcb_ajax.nonce);
+                        attempt++;
+                        continue;
+                    }
+                    this.cancelProgressiveLoading();
+                    this.handleError({
+                        message: 'Security validation failed. Please reload the page.',
+                        type: 'nonce_error'
+                    });
+                    return;
                 }
-            });
+                break;
+            }
 
             console.log('RTBCB: Response status:', response.status);
 
@@ -513,7 +561,7 @@ class BusinessCaseBuilder {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
 
-            const responseText = await response.text();
+            console.log('RTBCB: Response received, length:', responseText.length);
             console.log('RTBCB: Response received, length:', responseText.length);
 
             // Try to parse as JSON first
@@ -766,13 +814,35 @@ class BusinessCaseBuilder {
         }
 
         try {
-            const nonce = (typeof rtbcb_ajax !== 'undefined' && rtbcb_ajax.nonce) ? rtbcb_ajax.nonce : '';
-            const response = await fetch(`${this.ajaxUrl}?action=rtbcb_job_status&job_id=${encodeURIComponent(jobId)}&rtbcb_nonce=${nonce}`, {
-                credentials: 'same-origin',
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            });
+            let nonce = (typeof rtbcb_ajax !== 'undefined' && rtbcb_ajax.nonce) ? rtbcb_ajax.nonce : '';
+            let attemptNonce = 0;
+            let response;
+            let responseText;
+            while (attemptNonce < 2) {
+                response = await fetch(`${this.ajaxUrl}?action=rtbcb_job_status&job_id=${encodeURIComponent(jobId)}&rtbcb_nonce=${nonce}`, {
+                    credentials: 'same-origin',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                responseText = await response.text();
+                if ((response.status === 403 || responseText.includes('Security check failed')) && attemptNonce === 0) {
+                    const refreshed = await rtbcbRefreshNonce();
+                    if (refreshed) {
+                        nonce = rtbcb_ajax.nonce;
+                        attemptNonce++;
+                        continue;
+                    }
+                    this.cancelPolling();
+                    this.hideLoading();
+                    this.handleError({
+                        message: 'Security validation failed. Please reload the page.',
+                        type: 'nonce_error'
+                    });
+                    return;
+                }
+                break;
+            }
 
-            const data = await response.json();
+            const data = JSON.parse(responseText);
 
             if (!data.success) {
                 this.handleError({
