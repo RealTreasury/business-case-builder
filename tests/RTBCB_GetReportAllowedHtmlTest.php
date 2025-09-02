@@ -71,5 +71,6 @@ final class RTBCB_GetReportAllowedHtmlTest extends TestCase {
             $this->assertSame( '', rtbcb_sanitize_report_html( '<script type="text/javascript">alert(1)</script>' ) );
             $this->assertSame( '', rtbcb_sanitize_report_html( '<script src="//evil.test/evil.js"></script>' ) );
             $this->assertSame( '', rtbcb_sanitize_report_html( '<script id="no-type">alert(1)</script>' ) );
+            $this->assertSame( '', rtbcb_sanitize_report_html( '<script data-type="application/json">alert(1)</script>' ) );
         }
-}
+    }
