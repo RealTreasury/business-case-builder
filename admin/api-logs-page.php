@@ -92,9 +92,9 @@ var table = $('#rtbcb-api-logs-table').DataTable({
 pageLength: 20,
 order: [[0, 'desc']]
 });
-var initialSearch = new URLSearchParams(window.location.search).get('search');
-if (initialSearch) {
-table.search(initialSearch).draw();
+var search = new URLSearchParams(window.location.search).get('search');
+if (search) {
+table.search(search).draw();
 }
 	$('#rtbcb-clear-logs').on('click', function(e){
 			e.preventDefault();

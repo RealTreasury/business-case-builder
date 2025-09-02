@@ -60,7 +60,9 @@ jQuery(function ($) {
                                                        leadHtml =
                                                                '<a href="' +
                                                                item.logs_url +
-                                                               '" target="_blank">' +
+                                                               '" target="_blank" title="' +
+                                                               rtbcbWorkflow.strings.view_logs +
+                                                               '">' +
                                                                leadHtml +
                                                                "</a>";
                                                }

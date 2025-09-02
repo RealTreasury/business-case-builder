@@ -149,6 +149,7 @@ wp_localize_script(
 'unknown_template'=> __( 'Unknown Template', 'rtbcb' ),
 'seconds'         => __( 's', 'rtbcb' ),
 'elapsed_suffix' => __( 's elapsed', 'rtbcb' ),
+'view_logs'      => __( 'View Logs', 'rtbcb' ),
 ],
 ]
 );
@@ -1967,46 +1968,45 @@ wp_localize_script(
 			wp_send_json_error( __( 'Insufficient permissions', 'rtbcb' ) );
 		}
 
-		$raw_history = $this->get_workflow_history_from_logs();
+               $raw_history = $this->get_workflow_history_from_logs();
 
-		$history = array_map(
-			function ( $entry ) {
-				$lead_id = isset( $entry['lead_id'] ) ? intval( $entry['lead_id'] ) : 0;
-				$email   = isset( $entry['lead_email'] ) ? sanitize_email( $entry['lead_email'] ) : '';
-				$company = isset( $entry['company_name'] ) ? sanitize_text_field( $entry['company_name'] ) : '';
-				$started = isset( $entry['started_at'] ) ? sanitize_text_field( $entry['started_at'] ) : '';
-				$steps   = [];
+               $history = array_map(
+                       function ( $entry ) {
+                               $lead_id = isset( $entry['lead_id'] ) ? intval( $entry['lead_id'] ) : 0;
+                               $email   = isset( $entry['lead_email'] ) ? sanitize_email( $entry['lead_email'] ) : '';
+                               $company = isset( $entry['company_name'] ) ? sanitize_text_field( $entry['company_name'] ) : '';
+                               $started = isset( $entry['started_at'] ) ? sanitize_text_field( $entry['started_at'] ) : '';
+                               $template = isset( $entry['report_template'] ) ? sanitize_text_field( $entry['report_template'] ) : '';
+                               $steps   = [];
 
-				if ( isset( $entry['steps'] ) && is_array( $entry['steps'] ) ) {
-					foreach ( $entry['steps'] as $step ) {
-						$steps[] = [
-							'name'     => sanitize_text_field( $step['name'] ?? '' ),
-							'status'   => sanitize_text_field( $step['status'] ?? '' ),
-							'duration' => isset( $step['duration'] ) ? floatval( $step['duration'] ) : 0,
-							'elapsed'  => isset( $step['elapsed'] ) ? floatval( $step['elapsed'] ) : 0,
-						];
-					}
-				}
+                               if ( isset( $entry['steps'] ) && is_array( $entry['steps'] ) ) {
+                                       foreach ( $entry['steps'] as $step ) {
+                                               $steps[] = [
+                                                       'name'     => sanitize_text_field( $step['name'] ?? '' ),
+                                                       'status'   => sanitize_text_field( $step['status'] ?? '' ),
+                                                       'duration' => isset( $step['duration'] ) ? floatval( $step['duration'] ) : 0,
+                                                       'elapsed'  => isset( $step['elapsed'] ) ? floatval( $step['elapsed'] ) : 0,
+                                               ];
+                                       }
+                               }
 
-				$log_ids = RTBCB_API_Log::get_log_ids_by_lead( $lead_id, $email );
+                               $item = [
+                                       'lead_id'        => $lead_id,
+                                       'email'          => $email,
+                                       'company'        => $company,
+                                       'started_at'     => $started,
+                                       'report_template'=> $template,
+                                       'steps'          => $steps,
+                               ];
 
-				$item = [
-					'lead_id'    => $lead_id,
-					'email'      => $email,
-					'company'    => $company,
-					'started_at' => $started,
-					'steps'      => $steps,
-				];
+                               if ( ! empty( $entry['logs_url'] ) ) {
+                                       $item['logs_url'] = esc_url_raw( $entry['logs_url'] );
+                               }
 
-				if ( ! empty( $log_ids ) ) {
-					$search            = $email ? $email : $lead_id;
-					$item['logs_url'] = admin_url( 'admin.php?page=rtbcb-api-logs&search=' . urlencode( $search ) );
-				}
-
-				return $item;
-			},
-			$raw_history
-		);
+                               return $item;
+                       },
+                       $raw_history
+               );
 
 		wp_send_json_success(
 			[
@@ -2034,26 +2034,34 @@ wp_localize_script(
 		}
 
 		/**
-		* Retrieve workflow history with lead metadata.
-		*
-		* @return array Workflow history entries.
-		*/
+		 * Retrieve workflow history with lead metadata and log links.
+		 *
+		 * @return array Workflow history entries.
+		 */
 		private function get_workflow_history_from_logs() {
 			$history = get_option( 'rtbcb_workflow_history', [] );
 			if ( ! is_array( $history ) ) {
-			return [];
+				return [];
 			}
+
 			return array_map(
- function ( $entry ) {
-$entry['lead_id']        = isset( $entry['lead_id'] ) ? intval( $entry['lead_id'] ) : 0;
-$entry['lead_email']     = isset( $entry['lead_email'] ) ? sanitize_email( $entry['lead_email'] ) : '';
-$entry['company_name']   = isset( $entry['company_name'] ) ? sanitize_text_field( $entry['company_name'] ) : '';
-$entry['started_at']     = isset( $entry['started_at'] ) ? sanitize_text_field( $entry['started_at'] ) : '';
-$entry['report_template'] = isset( $entry['report_template'] ) ? sanitize_text_field( $entry['report_template'] ) : '';
-return $entry;
- },
- $history
- );
+				function ( $entry ) {
+					$entry['lead_id']        = isset( $entry['lead_id'] ) ? intval( $entry['lead_id'] ) : 0;
+					$entry['lead_email']     = isset( $entry['lead_email'] ) ? sanitize_email( $entry['lead_email'] ) : '';
+					$entry['company_name']   = isset( $entry['company_name'] ) ? sanitize_text_field( $entry['company_name'] ) : '';
+					$entry['started_at']     = isset( $entry['started_at'] ) ? sanitize_text_field( $entry['started_at'] ) : '';
+					$entry['report_template'] = isset( $entry['report_template'] ) ? sanitize_text_field( $entry['report_template'] ) : '';
+
+					$log_ids = RTBCB_API_Log::get_log_ids_for_contact( $entry['lead_id'], $entry['lead_email'] );
+					if ( ! empty( $log_ids ) ) {
+						$search            = $entry['lead_email'] ? $entry['lead_email'] : $entry['lead_id'];
+						$entry['logs_url'] = admin_url( 'admin.php?page=rtbcb-api-logs&search=' . rawurlencode( $search ) );
+					}
+
+					return $entry;
+				},
+				$history
+			);
 		}
 
 	private function calculate_average_duration( $history ) {

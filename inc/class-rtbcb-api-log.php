@@ -306,44 +306,55 @@ class RTBCB_API_Log {
 		return $wpdb->get_results( $query, ARRAY_A );
 	}
 
-	/**
-	 * Get log IDs matching a lead ID or email.
-	 *
-	 * @param int    $lead_id Lead ID.
-	 * @param string $email   Lead email address.
-	 * @return array List of matching log IDs.
-	 */
-	public static function get_log_ids_by_lead( $lead_id = 0, $email = '' ) {
-		global $wpdb;
+       /**
+        * Get log IDs matching a lead ID or email.
+        *
+        * @param int    $lead_id Lead ID.
+        * @param string $email   Lead email address.
+        * @return array List of matching log IDs.
+        */
+       public static function get_log_ids_for_contact( $lead_id = 0, $email = '' ) {
+               global $wpdb;
 
-		if ( empty( self::$table_name ) ) {
-			self::init();
-		}
+               if ( empty( self::$table_name ) ) {
+                       self::init();
+               }
 
-		$lead_id = intval( $lead_id );
-		$email   = sanitize_email( $email );
+               $lead_id = intval( $lead_id );
+               $email   = sanitize_email( $email );
 
-		$where  = [];
-		$params = [];
+               $where  = [];
+               $params = [];
 
-		if ( $lead_id > 0 ) {
-			$where[]  = 'lead_id = %d';
-			$params[] = $lead_id;
-		}
+               if ( $lead_id > 0 ) {
+                       $where[]  = 'lead_id = %d';
+                       $params[] = $lead_id;
+               }
 
-		if ( ! empty( $email ) ) {
-			$where[]  = 'user_email = %s';
-			$params[] = $email;
-		}
+               if ( ! empty( $email ) ) {
+                       $where[]  = 'user_email = %s';
+                       $params[] = $email;
+               }
 
-		if ( empty( $where ) ) {
-			return [];
-		}
+               if ( empty( $where ) ) {
+                       return [];
+               }
 
-		$query = 'SELECT id FROM ' . self::$table_name . ' WHERE ' . implode( ' OR ', $where );
+               $query = 'SELECT id FROM ' . self::$table_name . ' WHERE ' . implode( ' OR ', $where );
 
-		return $wpdb->get_col( $wpdb->prepare( $query, $params ) );
-	}
+               return $wpdb->get_col( $wpdb->prepare( $query, $params ) );
+       }
+
+       /**
+        * Backward compatibility wrapper for get_log_ids_for_contact().
+        *
+        * @param int    $lead_id Lead ID.
+        * @param string $email   Lead email address.
+        * @return array List of matching log IDs.
+        */
+       public static function get_log_ids_by_lead( $lead_id = 0, $email = '' ) {
+               return self::get_log_ids_for_contact( $lead_id, $email );
+       }
 	/**
 	* Purge old logs.
 	*
