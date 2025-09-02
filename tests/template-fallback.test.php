@@ -87,12 +87,7 @@ return [];
 define( 'RTBCB_NO_BOOTSTRAP', true );
 require_once __DIR__ . '/../real-treasury-business-case-builder.php';
 
-$ref  = new ReflectionClass( 'RTBCB_Main' );
-$plugin = $ref->newInstanceWithoutConstructor();
-$method = $ref->getMethod( 'transform_data_for_template' );
-$method->setAccessible( true );
-
-$result = $method->invoke( $plugin, [] );
+$result = rtbcb_transform_data_for_template( [] );
 if ( is_wp_error( $result ) ) {
 echo "Unexpected WP_Error\n";
 exit( 1 );
