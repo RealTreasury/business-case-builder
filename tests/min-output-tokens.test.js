@@ -9,7 +9,7 @@ async function runTests() {
     vm.runInThisContext(code);
 
     global.FormData = class { constructor() { this.store = {}; } append(k, v) { this.store[k] = v; } };
-    global.document = { getElementById: () => null };
+    global.document = { getElementById: () => null, querySelectorAll: () => [], addEventListener: () => {} };
     global.DOMPurify = { sanitize: (html) => html };
 
     let capturedBody;

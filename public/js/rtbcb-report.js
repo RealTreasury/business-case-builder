@@ -3,6 +3,8 @@
  * Handles interactive dashboard features, charts, and collapsible sections
  */
 
+const RTBCB_GPT5_MIN_TOKENS = 256;
+
 if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
     document.addEventListener('DOMContentLoaded', function() {
         console.log('RTBCB Report: Initializing enhanced dashboard');
@@ -19,11 +21,35 @@ if (typeof document !== 'undefined' && typeof document.addEventListener === 'fun
 }
 
 /**
+ * Ensure the Chart.js date adapter is registered.
+ * @return {boolean} True if adapter is available.
+ */
+function ensureChartDateAdapter() {
+    if (typeof Chart === 'undefined') {
+        return false;
+    }
+
+    const adapter = Chart._adapters && Chart._adapters._date;
+    if (!adapter || typeof adapter.parse !== 'function' || typeof adapter.format !== 'function') {
+        console.warn('RTBCB: Chart.js date adapter not loaded; charts may not format dates correctly');
+        return false;
+    }
+
+    // Touch formats to verify adapter initialization.
+    adapter.formats();
+    return true;
+}
+
+/**
  * Initialize Chart.js visualizations
  */
 function initializeCharts() {
     if (typeof Chart === 'undefined') {
         console.warn('RTBCB: Chart.js not loaded, skipping chart initialization');
+        return;
+    }
+
+    if (!ensureChartDateAdapter()) {
         return;
     }
     

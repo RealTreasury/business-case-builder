@@ -38,7 +38,7 @@ async function runTests() {
         });
     };
 
-        global.document = { getElementById: () => null };
+        global.document = { getElementById: () => null, querySelectorAll: () => [], addEventListener: () => {} };
         global.DOMPurify = { sanitize: (html) => html };
 
         await generateProfessionalReport('context');

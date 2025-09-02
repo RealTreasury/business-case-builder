@@ -5,6 +5,7 @@ const { execSync } = require('child_process');
 
 async function runTests() {
     const code = fs.readFileSync('public/js/rtbcb-report.js', 'utf8');
+    global.document = { getElementById: () => null, querySelectorAll: () => [], addEventListener: () => {} };
     vm.runInThisContext(code);
 
     const phpMin = parseInt(execSync("php -r \"function get_option(\\$n, \\$d=false){return \\$d;} define('ABSPATH', __DIR__); include 'inc/config.php'; echo rtbcb_get_gpt5_config()['min_output_tokens'];\"").toString(), 10);

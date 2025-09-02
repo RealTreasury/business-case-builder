@@ -153,6 +153,13 @@ require('./jsdom-setup');
     global.Chart = function(ctx, config) {
         global.__chartConfig = config;
     };
+    global.Chart._adapters = {
+        _date: {
+            parse: () => Date.now(),
+            format: () => '',
+            formats: () => ({})
+        }
+    };
 
     builder.initializeReportCharts(container);
     const chartConfig = global.__chartConfig;

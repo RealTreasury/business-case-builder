@@ -676,20 +676,28 @@ return true;
 			   error_log( 'RTBCB: Settings class not found; using default chart setting.' );
 		   }
 
-		   $report_deps = [];
-		   if ( $enable_charts ) {
-			   // Chart.js for report visualizations
-			   wp_enqueue_script(
-				   'chartjs',
-				   RTBCB_URL . 'public/js/chart.min.js',
-				   [],
-				   '3.9.1',
-				   true
-			   );
-			   $report_deps[] = 'chartjs';
-		} else {
-			error_log( 'RTBCB: Chart.js not enqueued; charts feature disabled.' );
-		}
+                   $report_deps = [];
+                   if ( $enable_charts ) {
+                           // Chart.js for report visualizations
+                           wp_enqueue_script(
+                                   'chartjs',
+                                   RTBCB_URL . 'public/js/chart.min.js',
+                                   [],
+                                   '3.9.1',
+                                   true
+                           );
+                           wp_enqueue_script(
+                                   'chartjs-adapter-date-fns',
+                                   RTBCB_URL . 'public/js/chartjs-adapter-date-fns.min.js',
+                                   [ 'chartjs' ],
+                                   '3.0.0',
+                                   true
+                           );
+                           $report_deps[] = 'chartjs-adapter-date-fns';
+                           $report_deps[] = 'chartjs';
+                } else {
+                        error_log( 'RTBCB: Chart.js not enqueued; charts feature disabled.' );
+                }
 
 		// DOMPurify for sanitization with CDN fallback
 		$dompurify_cdn	 = 'https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.2/purify.min.js';

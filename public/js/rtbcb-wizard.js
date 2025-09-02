@@ -53,6 +53,25 @@ async function rtbcbRefreshNonce() {
     return false;
 }
 
+/**
+ * Ensure the Chart.js date adapter is registered.
+ * @return {boolean} True if adapter is available.
+ */
+function ensureChartDateAdapter() {
+    if (typeof Chart === 'undefined') {
+        return false;
+    }
+
+    const adapter = Chart._adapters && Chart._adapters._date;
+    if (!adapter || typeof adapter.parse !== 'function' || typeof adapter.format !== 'function') {
+        console.warn('RTBCB: Chart.js date adapter not loaded; charts may not format dates correctly');
+        return false;
+    }
+
+    adapter.formats();
+    return true;
+}
+
 // Ensure modal functions are available immediately
 window.openBusinessCaseModal = function() {
     const overlay = document.getElementById('rtbcbModalOverlay');
@@ -1142,6 +1161,10 @@ class BusinessCaseBuilder {
 
         if (typeof Chart === 'undefined') {
             console.warn('RTBCB: Chart.js library is not available');
+            return;
+        }
+
+        if (!ensureChartDateAdapter()) {
             return;
         }
 
