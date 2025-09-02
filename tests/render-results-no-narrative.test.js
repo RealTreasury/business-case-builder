@@ -21,6 +21,8 @@ const data = {
     scenarios: {},
     recommendation: {},
     companyName: 'Test Co',
+    executiveSummary: {},
+    operationalAnalysis: {},
     industryInsights: { sector_trends: ['Growth trend'] }
 };
 
