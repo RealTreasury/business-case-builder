@@ -35,8 +35,8 @@ class RTBCB_API_Log {
 	*
 	* @return bool True on success, false on failure.
 	*/
-	private static function create_table() {
-		global $wpdb;
+        private static function create_table() {
+                global $wpdb;
 
 		$charset_collate = $wpdb->get_charset_collate();
                $sql             = 'CREATE TABLE ' . self::$table_name . " (
@@ -47,6 +47,7 @@ class RTBCB_API_Log {
                        company_name varchar(255) DEFAULT '',
                        request_json longtext DEFAULT '',
                        response_json longtext DEFAULT '',
+                       response_truncated tinyint(1) DEFAULT 0,
                        prompt_tokens int(11) DEFAULT 0,
                        completion_tokens int(11) DEFAULT 0,
                        total_tokens int(11) DEFAULT 0,
@@ -80,6 +81,7 @@ class RTBCB_API_Log {
                                        company_name varchar(255) DEFAULT '',
                                        request_json longtext DEFAULT '',
                                        response_json longtext DEFAULT '',
+                                       response_truncated tinyint(1) DEFAULT 0,
                                        prompt_tokens int(11) DEFAULT 0,
                                        completion_tokens int(11) DEFAULT 0,
                                        total_tokens int(11) DEFAULT 0,
@@ -100,18 +102,44 @@ class RTBCB_API_Log {
 				if ( ! $table_exists ) {
 					error_log( 'RTBCB: Failed to create API log table even with simple structure' );
 					return false;
-				}
-			}
+                }
+        }
 
-			return true;
-		} catch ( Exception $e ) {
-			error_log( 'RTBCB: Exception creating API log table: ' . $e->getMessage() );
-			return false;
-		} catch ( Error $e ) {
-			error_log( 'RTBCB: Fatal error creating API log table: ' . $e->getMessage() );
-			return false;
-		}
-	}
+                       return true;
+               } catch ( Exception $e ) {
+                       error_log( 'RTBCB: Exception creating API log table: ' . $e->getMessage() );
+                       return false;
+               } catch ( Error $e ) {
+                       error_log( 'RTBCB: Fatal error creating API log table: ' . $e->getMessage() );
+                       return false;
+               }
+       }
+
+       /**
+        * Encode data as JSON with size limit while preserving validity.
+        *
+        * @param mixed $data       Data to encode.
+        * @param int   $max_bytes  Maximum allowed bytes.
+        * @param bool  $truncated  Whether truncation occurred (passed by reference).
+        * @return string Encoded JSON string.
+        */
+       private static function encode_json_limited( $data, $max_bytes, &$truncated ) {
+               $json      = wp_json_encode( $data );
+               $truncated = false;
+
+               if ( strlen( $json ) <= $max_bytes ) {
+                       return $json;
+               }
+
+               $truncated = true;
+               $json      = substr( $json, 0, $max_bytes );
+
+               while ( strlen( $json ) && null === json_decode( $json, true ) ) {
+                       $json = substr( $json, 0, -1 );
+               }
+
+               return $json;
+       }
 
 	/**
 	* Save a log entry.
@@ -148,12 +176,11 @@ class RTBCB_API_Log {
                        }
                }
 
-               $request_json  = wp_json_encode( $request );
-               $response_json = wp_json_encode( $response );
-
-		$request_json  = substr( $request_json, 0, 20000 );
-		$response_json = substr( $response_json, 0, 10000 );
-		$usage             = $response['usage'] ?? [];
+               $request_truncated  = false;
+               $response_truncated = false;
+               $request_json       = self::encode_json_limited( $request, 20000, $request_truncated );
+               $response_json      = self::encode_json_limited( $response, 1024 * 1024, $response_truncated );
+                $usage             = $response['usage'] ?? [];
 		$prompt_tokens     = intval( $usage['prompt_tokens'] ?? $usage['input_tokens'] ?? 0 );
 		$completion_tokens = intval( $usage['completion_tokens'] ?? $usage['output_tokens'] ?? 0 );
 		$total_tokens      = intval( $usage['total_tokens'] ?? 0 );
@@ -173,12 +200,13 @@ class RTBCB_API_Log {
                                'company_name'      => $company_name,
                                'request_json'      => $request_json,
                                'response_json'     => $response_json,
+                               'response_truncated'=> $response_truncated ? 1 : 0,
                                'prompt_tokens'     => $prompt_tokens,
                                'completion_tokens' => $completion_tokens,
                                'total_tokens'      => $total_tokens,
                                'created_at'        => current_time( 'mysql' ),
                        ],
-                       [ '%d', '%s', '%d', '%s', '%s', '%s', '%d', '%d', '%d', '%s' ]
+                       [ '%d', '%s', '%d', '%s', '%s', '%s', '%d', '%d', '%d', '%d', '%s' ]
                );
        }
 
@@ -228,7 +256,7 @@ class RTBCB_API_Log {
 		$limit = max( 1, intval( $limit ) );
 
                $query = $wpdb->prepare(
-                       'SELECT id, user_id, user_email, lead_id, company_name, request_json, response_json, prompt_tokens, completion_tokens, total_tokens, created_at FROM ' . self::$table_name . ' ORDER BY created_at DESC LIMIT %d',
+                       'SELECT id, user_id, user_email, lead_id, company_name, request_json, response_json, response_truncated, prompt_tokens, completion_tokens, total_tokens, created_at FROM ' . self::$table_name . ' ORDER BY created_at DESC LIMIT %d',
                        $limit
                );
 
@@ -322,7 +350,7 @@ class RTBCB_API_Log {
 
                $logs = $wpdb->get_results(
                        $wpdb->prepare(
-                               'SELECT id, user_id, user_email, lead_id, company_name, request_json, response_json, prompt_tokens, completion_tokens, total_tokens, created_at FROM ' . self::$table_name . ' ORDER BY created_at DESC LIMIT %d OFFSET %d',
+                               'SELECT id, user_id, user_email, lead_id, company_name, request_json, response_json, response_truncated, prompt_tokens, completion_tokens, total_tokens, created_at FROM ' . self::$table_name . ' ORDER BY created_at DESC LIMIT %d OFFSET %d',
                                $per_page,
                                $offset
                        ),
@@ -350,8 +378,8 @@ class RTBCB_API_Log {
 		}
 
 		return $wpdb->get_results(
-			'SELECT id, user_id, user_email, lead_id, company_name, request_json, response_json, prompt_tokens, completion_tokens, total_tokens, created_at FROM ' . self::$table_name . ' ORDER BY created_at DESC',
-		ARRAY_A
-		);
+                       'SELECT id, user_id, user_email, lead_id, company_name, request_json, response_json, response_truncated, prompt_tokens, completion_tokens, total_tokens, created_at FROM ' . self::$table_name . ' ORDER BY created_at DESC',
+               ARRAY_A
+               );
 	}
 	}

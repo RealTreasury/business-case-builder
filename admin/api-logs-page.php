@@ -45,7 +45,10 @@ if ( ! current_user_can( 'manage_options' ) ) {
 						} else {
 							$summary = wp_trim_words( $log['request_json'], 10, '...' );
 						}
-						$status = isset( $response['error'] ) ? __( 'Error', 'rtbcb' ) : __( 'OK', 'rtbcb' );
+                                               $status = isset( $response['error'] ) ? __( 'Error', 'rtbcb' ) : __( 'OK', 'rtbcb' );
+                                               if ( ! empty( $log['response_truncated'] ) ) {
+                                                       $status .= ' (' . __( 'Truncated', 'rtbcb' ) . ')';
+                                               }
 					?>
 					<tr data-id="<?php echo esc_attr( $log['id'] ); ?>" data-request="<?php echo esc_attr( $log['request_json'] ); ?>" data-response="<?php echo esc_attr( $log['response_json'] ); ?>">
 	                                       <td><?php echo esc_html( $log['id'] ); ?></td>
