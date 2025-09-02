@@ -1441,8 +1441,10 @@ class BusinessCaseBuilder {
                 confidence: data.recommendation?.confidence || data.metadata?.confidence_level || 0.75,
                 reasoning: data.recommendation?.reasoning || data.technology_strategy?.recommended_category || ''
             },
+            executive_summary: data.executive_summary?.executive_recommendation || data.narrative?.narrative || '',
+            operational_analysis: data.operational_analysis || {},
+            industry_insights: data.industry_insights || {},
             narrative: {
-                narrative: data.narrative?.narrative || data.executive_summary?.executive_recommendation || '',
                 next_actions: data.narrative?.next_actions || [
                     ...(data.action_plan?.immediate_steps || []),
                     ...(data.action_plan?.short_term_milestones || []),
@@ -1469,7 +1471,7 @@ class BusinessCaseBuilder {
     }
 
     renderResults(data) {
-        const { scenarios, recommendation, companyName, narrative } = data;
+        const { scenarios, recommendation, companyName, executive_summary, operational_analysis, industry_insights, narrative } = data;
         const displayName = companyName || 'Your Company';
 
         return `
@@ -1485,7 +1487,9 @@ class BusinessCaseBuilder {
 
                 ${this.renderRecommendation(recommendation, displayName)}
                 ${this.renderROISummary(scenarios, displayName)}
-                ${this.renderNarrative(narrative)}
+                ${this.renderExecutiveSummary(executive_summary)}
+                ${this.renderOperationalAnalysis(operational_analysis)}
+                ${this.renderIndustryInsights(industry_insights)}
                 ${this.renderRiskAssessmentSection()}
                 ${this.renderNextSteps(narrative?.next_actions || [], displayName)}
                 ${this.renderActions()}
@@ -1573,13 +1577,55 @@ class BusinessCaseBuilder {
         `;
     }
 
-    renderNarrative(narrative = {}) {
+    renderExecutiveSummary(summary = '') {
         return `
             <div class="rtbcb-narrative-section">
                 <h3>Executive Summary</h3>
                 <div class="rtbcb-narrative-content">
-                    ${narrative?.narrative || 'Treasury technology investment presents a compelling opportunity for operational efficiency.'}
+                    ${summary || 'Treasury technology investment presents a compelling opportunity for operational efficiency.'}
                 </div>
+            </div>
+        `;
+    }
+
+    renderOperationalAnalysis(analysis = {}) {
+        const items = [
+            ...(analysis.current_state_assessment || []),
+            ...(analysis.process_improvements || []),
+            ...(analysis.automation_opportunities || [])
+        ].filter(Boolean);
+
+        if (items.length === 0) {
+            items.push('No operational analysis available.');
+        }
+
+        return `
+            <div class="rtbcb-operational-analysis">
+                <h3>Operational Analysis</h3>
+                <ul>
+                    ${items.map(item => `<li>${this.escapeHTML(item)}</li>`).join('')}
+                </ul>
+            </div>
+        `;
+    }
+
+    renderIndustryInsights(insights = {}) {
+        const items = [
+            insights.sector_trends,
+            insights.competitive_benchmarks,
+            insights.regulatory_considerations
+        ].filter(Boolean);
+
+        if (items.length === 0) {
+            items.push('No industry insights available.');
+        }
+
+        return `
+            <div class="rtbcb-industry-insights">
+                <h3>Industry Insights</h3>
+                <ul>
+                    ${items.map(item => `<li>${this.escapeHTML(item)}</li>`).join('')}
+                </ul>
             </div>
         `;
     }
