@@ -1423,6 +1423,15 @@ $roi     = function_exists( 'get_option' ) ? get_option( 'rtbcb_roi_results', []
 	*/
 function rtbcb_parse_gpt5_business_case_response( $response ) {
 	$parsed = rtbcb_parse_gpt5_response( $response );
+	if ( is_wp_error( $parsed ) ) {
+	        return [
+	                'text'           => '',
+	                'reasoning_notes' => [],
+	                'function_calls' => [],
+	                'quality_score'  => 0,
+	                'alerts'         => [],
+	        ];
+	}
 
 	$result = [
 		'text'           => $parsed['output_text'],
@@ -1496,9 +1505,9 @@ function rtbcb_proxy_openai_responses() {
 			wp_send_json_error( [ 'message' => __( 'The cURL PHP extension is required.', 'rtbcb' ) ], 500 );
 		}
 
-        if ( isset( $_POST['nonce'] ) ) {
-                check_ajax_referer( 'rtbcb_openai_responses', 'nonce' );
-        }
+	if ( isset( $_POST['nonce'] ) ) {
+	        check_ajax_referer( 'rtbcb_openai_responses', 'nonce' );
+	}
 
 	$body = isset( $_POST['body'] ) ? wp_unslash( $_POST['body'] ) : '';
 	if ( '' === $body ) {
