@@ -1724,131 +1724,226 @@ SYSTEM;
 		return sanitize_text_field( $model );
 	}
 
-	/**
-	* Build comprehensive prompt with research context
-	*/
+/**
+	 * Build a comprehensive analysis prompt with full context and JSON schema.
+	 *
+	 * @param array  $user_inputs      Sanitized user inputs.
+	 * @param array  $roi_data         ROI calculation data.
+	 * @param array  $company_research Research data about the company.
+	 * @param array  $industry_analysis Industry analysis strings.
+	 * @param string $tech_landscape   Treasury technology landscape description.
+	 *
+	 * @return string Prompt instructing the LLM to return a populated JSON structure.
+	 */
 	private function build_comprehensive_prompt( $user_inputs, $roi_data, $company_research, $industry_analysis, $tech_landscape ) {
-		$company_name    = $user_inputs['company_name'] ?? 'the company';
-		$company_profile = $company_research['company_profile'];
-
-		$prompt  = "As a senior treasury technology consultant with 15+ years of experience, create a comprehensive business case for {$company_name}.\n\n";
-
-		// Add detailed context sections...
-               $prompt .= "EXECUTIVE BRIEF:\n";
-               $prompt .= "Create a strategic business case that justifies treasury technology investment with:\n";
-               $prompt .= "- Clear ROI projections with risk-adjusted scenarios\n";
-               $prompt .= "- Key strategic value drivers\n";
-               $prompt .= "- Implementation roadmap with success metrics\n\n";
-
-		// Company Context
-		$prompt .= "COMPANY PROFILE:\n";
-		$prompt .= "Company: {$company_name}\n";
-		$prompt .= "Industry: " . ($user_inputs['industry'] ?? 'Not specified') . "\n";
-		$prompt .= "Revenue Size: " . ($user_inputs['company_size'] ?? 'Not specified') . "\n";
-		$prompt .= "Business Stage: {$company_profile['business_stage']}\n";
-		$prompt .= "Key Characteristics: {$company_profile['key_characteristics']}\n";
-		$prompt .= "Treasury Priorities: {$company_profile['treasury_priorities']}\n";
-		$prompt .= "Common Challenges: {$company_profile['common_challenges']}\n\n";
-
-		// Current State Analysis
-		$prompt .= "CURRENT TREASURY OPERATIONS:\n";
-		$prompt .= "Weekly Reconciliation Hours: " . ($user_inputs['hours_reconciliation'] ?? 0) . "\n";
-		$prompt .= "Weekly Cash Positioning Hours: " . ($user_inputs['hours_cash_positioning'] ?? 0) . "\n";
-		$prompt .= "Banking Relationships: " . ($user_inputs['num_banks'] ?? 0) . "\n";
-		$prompt .= "Treasury Team Size: " . ($user_inputs['ftes'] ?? 0) . " FTEs\n";
-		$prompt .= "Key Pain Points: " . implode(', ', $user_inputs['pain_points'] ?? []) . "\n\n";
-
-		// Industry Context
-		if ( ! empty( $industry_analysis ) ) {
-			if ( ! empty( $industry_analysis['analysis'] ) ) {
-				$prompt .= "INDUSTRY CONTEXT:\n" . $industry_analysis['analysis'] . "\n\n";
-			}
-			if ( ! empty( $industry_analysis['recommendations'] ) ) {
-				$prompt .= "INDUSTRY RECOMMENDATIONS:\n- " . implode( "\n- ", $industry_analysis['recommendations'] ) . "\n\n";
-			}
-			if ( ! empty( $industry_analysis['references'] ) ) {
-				$prompt .= "INDUSTRY REFERENCES:\n- " . implode( "\n- ", $industry_analysis['references'] ) . "\n\n";
-			}
-		}
-
-		// Treasury technology landscape
-		if ( ! empty( $tech_landscape ) ) {
-			$prompt .= "TECHNOLOGY LANDSCAPE:\n{$tech_landscape}\n\n";
-		}
-
-		// ROI Analysis
-		$prompt .= "PROJECTED ROI ANALYSIS:\n";
-		$prompt .= "Conservative Scenario: $" . number_format($roi_data['conservative']['total_annual_benefit'] ?? 0) . "\n";
-		$prompt .= "Base Case Scenario: $" . number_format($roi_data['base']['total_annual_benefit'] ?? 0) . "\n";
-		$prompt .= "Optimistic Scenario: $" . number_format($roi_data['optimistic']['total_annual_benefit'] ?? 0) . "\n\n";
-
-		// Strategic Context
-		if ( ! empty( $user_inputs['business_objective'] ) ) {
-			$prompt .= "Primary Business Objective: " . $user_inputs['business_objective'] . "\n";
-		}
-		if ( ! empty( $user_inputs['implementation_timeline'] ) ) {
-			$prompt .= "Implementation Timeline: " . $user_inputs['implementation_timeline'] . "\n";
-		}
-		if ( ! empty( $user_inputs['budget_range'] ) ) {
-			$prompt .= "Budget Range: " . $user_inputs['budget_range'] . "\n";
-		}
-
-		$prompt .= "\nDELIVER A PROFESSIONAL BUSINESS CASE:\n";
-		$prompt .= "Respond with a comprehensive JSON structure containing all required sections.\n";
-		$prompt .= "Ensure each section provides actionable insights specific to {$company_name}'s situation.\n";
-		$prompt .= "Use professional consulting language appropriate for C-level executives.\n\n";
-
-               $prompt .= "REQUIRED JSON STRUCTURE (respond with ONLY this JSON, no other text):\n";
-               $prompt .= json_encode(
-                       [
-                               'executive_summary' => [
-                                       'strategic_positioning' => "2-3 sentences about {$company_name}'s strategic position and readiness for treasury technology",
-                                       'key_value_drivers'     => [
-                                               "Primary value driver specific to {$company_name}",
-                                               "Secondary value driver for their industry/size",
-                                               "Third strategic benefit for their situation"
-                                       ],
-                                       'business_case_strength' => 'Strong|Moderate|Compelling',
-                               ],
-                               'financial_analysis' => [
-                                       'roi_scenarios' => [
-                                               [
-                                                       'scenario' => 'Conservative',
-                                                       'roi'      => 'percentage'
-                                               ],
-                                               [
-                                                       'scenario' => 'Base',
-                                                       'roi'      => 'percentage'
-                                               ],
-                                               [
-                                                       'scenario' => 'Optimistic',
-                                                       'roi'      => 'percentage'
-                                               ]
-                                       ],
-                                       'payback_analysis' => [
-                                               'payback_months' => 'number',
-                                               'roi_3_year'     => 'percentage',
-                                               'npv_analysis'   => 'positive value justification'
-                                       ]
-                               ],
-                               'implementation_roadmap' => [
-                                       [
-                                               'phase'      => 'Phase 1',
-                                               'timeline'   => '0-3 months',
-                                               'activities' => ['activity1', 'activity2']
-                                       ],
-                                       [
-                                               'phase'      => 'Phase 2',
-                                               'timeline'   => '3-6 months',
-                                               'activities' => ['activity1', 'activity2']
-                                       ]
-                               ]
-                       ],
-                       JSON_PRETTY_PRINT
-               );
-
-		return $prompt;
+	$company_name    = $user_inputs['company_name'] ?? 'the company';
+	$company_profile = $company_research['company_profile'];
+	
+	$prompt  = "As a senior treasury technology consultant with 15+ years of experience, create a comprehensive business case for {$company_name}.\n\n";
+	
+	// Executive summary guidance.
+	$prompt .= "EXECUTIVE BRIEF:\n";
+	$prompt .= "Create a strategic business case that justifies treasury technology investment with:\n";
+	$prompt .= "- Clear ROI projections with risk-adjusted scenarios\n";
+	$prompt .= "- Key strategic value drivers\n";
+	$prompt .= "- Implementation roadmap with success metrics\n\n";
+	
+	// Company context.
+	$prompt .= "COMPANY PROFILE:\n";
+	$prompt .= "Company: {$company_name}\n";
+	$prompt .= "Industry: " . ( $user_inputs['industry'] ?? 'Not specified' ) . "\n";
+	$prompt .= "Revenue Size: " . ( $user_inputs['company_size'] ?? 'Not specified' ) . "\n";
+	$prompt .= "Business Stage: {$company_profile['business_stage']}\n";
+	$prompt .= "Key Characteristics: {$company_profile['key_characteristics']}\n";
+	$prompt .= "Treasury Priorities: {$company_profile['treasury_priorities']}\n";
+	$prompt .= "Common Challenges: {$company_profile['common_challenges']}\n\n";
+	
+	// Current state analysis.
+	$prompt .= "CURRENT TREASURY OPERATIONS:\n";
+	$prompt .= "Weekly Reconciliation Hours: " . ( $user_inputs['hours_reconciliation'] ?? 0 ) . "\n";
+	$prompt .= "Weekly Cash Positioning Hours: " . ( $user_inputs['hours_cash_positioning'] ?? 0 ) . "\n";
+	$prompt .= "Banking Relationships: " . ( $user_inputs['num_banks'] ?? 0 ) . "\n";
+	$prompt .= "Treasury Team Size: " . ( $user_inputs['ftes'] ?? 0 ) . " FTEs\n";
+	$prompt .= "Key Pain Points: " . implode( ', ', $user_inputs['pain_points'] ?? [] ) . "\n\n";
+	
+	// Industry context.
+	if ( ! empty( $industry_analysis ) ) {
+	if ( ! empty( $industry_analysis['analysis'] ) ) {
+	$prompt .= "INDUSTRY CONTEXT:\n" . $industry_analysis['analysis'] . "\n\n";
 	}
+	if ( ! empty( $industry_analysis['recommendations'] ) ) {
+	$prompt .= "INDUSTRY RECOMMENDATIONS:\n- " . implode( "\n- ", $industry_analysis['recommendations'] ) . "\n\n";
+	}
+	if ( ! empty( $industry_analysis['references'] ) ) {
+	$prompt .= "INDUSTRY REFERENCES:\n- " . implode( "\n- ", $industry_analysis['references'] ) . "\n\n";
+	}
+	}
+	
+	// Treasury technology landscape.
+	if ( ! empty( $tech_landscape ) ) {
+	$prompt .= "TECHNOLOGY LANDSCAPE:\n{$tech_landscape}\n\n";
+	}
+	
+	// ROI analysis.
+	$prompt .= "PROJECTED ROI ANALYSIS:\n";
+	$prompt .= "Conservative Scenario: $" . number_format( $roi_data['conservative']['total_annual_benefit'] ?? 0 ) . "\n";
+	$prompt .= "Base Case Scenario: $" . number_format( $roi_data['base']['total_annual_benefit'] ?? 0 ) . "\n";
+	$prompt .= "Optimistic Scenario: $" . number_format( $roi_data['optimistic']['total_annual_benefit'] ?? 0 ) . "\n\n";
+	
+	// Strategic context.
+	if ( ! empty( $user_inputs['business_objective'] ) ) {
+	$prompt .= "Primary Business Objective: " . $user_inputs['business_objective'] . "\n";
+	}
+	if ( ! empty( $user_inputs['implementation_timeline'] ) ) {
+	$prompt .= "Implementation Timeline: " . $user_inputs['implementation_timeline'] . "\n";
+	}
+	if ( ! empty( $user_inputs['budget_range'] ) ) {
+	$prompt .= "Budget Range: " . $user_inputs['budget_range'] . "\n";
+	}
+	
+	$prompt .= "\nDELIVER A PROFESSIONAL BUSINESS CASE:\n";
+	$prompt .= "Return only valid JSON using the structure below. Replace all example values with specific, meaningful content for {$company_name}. Every field must be filled; no empty arrays or generic placeholders.\n";
+	$prompt .= "Do not include any explanatory text outside the JSON.\n\n";
+	
+	$structure = [
+	'executive_summary' => [
+	'strategic_positioning' => '2-3 sentence strategic assessment',
+	'key_value_drivers'     => [ 'driver1', 'driver2', 'driver3', 'driver4' ],
+	'business_case_strength' => 'strong|moderate|compelling|weak',
+	'executive_recommendation' => 'clear next steps recommendation',
+	'confidence_level'       => 0.85,
+	],
+	'company_intelligence' => [
+	'enriched_profile' => [
+	'name'               => 'company name',
+	'industry'           => 'industry',
+	'size'               => 'company size',
+	'maturity_level'     => 'basic|developing|strategic|optimized',
+	'key_challenges'     => [ 'challenge1', 'challenge2', 'challenge3' ],
+	'strategic_priorities'=> [ 'priority1', 'priority2' ],
+	],
+	'industry_context' => [
+	'competitive_pressure'   => 'low|moderate|high',
+	'regulatory_environment' => 'description of regulatory environment',
+	'sector_trends'          => 'key industry trends affecting treasury',
+	],
+	'maturity_assessment' => [
+	[
+	'dimension'     => 'process automation',
+	'current_level' => 'manual|semi-automated|automated',
+	'target_level'  => 'target state',
+	'gap_analysis'  => 'description of gaps',
+	],
+	],
+	'competitive_position' => [
+	[
+	'competitor'        => 'competitor name',
+	'relative_position' => 'ahead|behind|similar',
+	'key_differentiator' => 'main difference',
+	],
+	],
+	],
+	'operational_insights' => [
+	'current_state_assessment' => [ 'assessment point 1', 'assessment point 2', 'assessment point 3' ],
+	'process_improvements' => [
+	[
+	'process'        => 'process name',
+	'current_state'  => 'current approach',
+	'improved_state' => 'future approach',
+	'impact'         => 'expected impact',
+	],
+	],
+	'automation_opportunities' => [
+	[
+'opportunity'           => 'automation area',
+'complexity'            => 'low|medium|high',
+'potential_savings'     => 'time/cost savings',
+'implementation_effort' => 'effort required',
+],
+],
+],
+'financial_analysis' => [
+'roi_scenarios' => [
+'conservative' => [
+'total_annual_benefit' => 150000,
+'labor_savings'        => 90000,
+'fee_savings'          => 45000,
+'error_reduction'      => 15000,
+],
+'base' => [
+'total_annual_benefit' => 250000,
+'labor_savings'        => 150000,
+'fee_savings'          => 75000,
+'error_reduction'      => 25000,
+],
+'optimistic' => [
+'total_annual_benefit' => 350000,
+'labor_savings'        => 210000,
+'fee_savings'          => 105000,
+'error_reduction'      => 35000,
+],
+],
+'investment_breakdown' => [
+[
+'category'    => 'software licensing',
+'amount'      => 50000,
+'description' => 'annual licensing costs',
+],
+],
+'payback_analysis' => [
+[
+'scenario'       => 'base case',
+'payback_months' => 18,
+'roi_3_year'     => 245,
+'npv'            => 425000,
+],
+],
+'sensitivity_analysis' => [
+[
+'factor'            => 'labor cost assumptions',
+'impact_percentage' => 15,
+'probability'       => 0.7,
+],
+],
+],
+'technology_strategy' => [
+'recommended_category' => 'tms_lite',
+'category_details' => [
+'name'      => 'Treasury Management System (Lite)',
+'features'  => [ 'feature1', 'feature2' ],
+'ideal_for' => 'company profile match',
+],
+'implementation_roadmap' => [
+[
+'phase'           => 'Phase 1',
+'timeline'        => '0-3 months',
+'activities'      => [ 'activity1', 'activity2' ],
+'success_criteria' => [ 'criteria1', 'criteria2' ],
+],
+],
+'vendor_considerations' => [ 'vendor selection criteria', 'implementation considerations' ],
+],
+'industry_insights' => [
+'sector_trends' => [ 'trend 1 affecting treasury operations', 'trend 2 driving technology adoption' ],
+'competitive_benchmarks' => [ 'benchmark 1 for treasury efficiency', 'benchmark 2 for technology adoption' ],
+'regulatory_considerations' => [ 'regulatory requirement 1', 'regulatory requirement 2' ],
+],
+'risk_analysis' => [
+'implementation_risks' => [ 'risk 1: description and likelihood', 'risk 2: description and impact' ],
+'mitigation_strategies' => [ 'mitigation approach 1', 'mitigation approach 2' ],
+'success_factors'       => [ 'critical success factor 1', 'critical success factor 2' ],
+],
+'action_plan' => [
+'immediate_steps'      => [ 'immediate action 1 (next 30 days)', 'immediate action 2 (next 30 days)' ],
+'short_term_milestones' => [ 'milestone 1 (3-6 months)', 'milestone 2 (3-6 months)' ],
+'long_term_objectives'  => [ 'objective 1 (6+ months)', 'objective 2 (6+ months)' ],
+],
+];
+
+$prompt .= json_encode( $structure, JSON_PRETTY_PRINT );
+
+return $prompt;
+}
 
 	/**
 	* Enhance parsed analysis with research context.
@@ -3208,4 +3303,3 @@ function rtbcb_parse_gpt5_response( $response, $store_raw = false ) {
 		'truncated'      => $truncated,
 	];
 }
-
