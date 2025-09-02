@@ -311,6 +311,15 @@ wp_localize_script(
 
 		add_submenu_page(
 			'rtbcb-dashboard',
+			__( 'Reports', 'rtbcb' ),
+			__( 'Reports', 'rtbcb' ),
+			'manage_options',
+			'rtbcb-reports',
+			[ $this, 'render_reports' ]
+		);
+
+		add_submenu_page(
+			'rtbcb-dashboard',
 			__( 'Workflow Visualizer', 'rtbcb' ),
 			__( 'Workflow Visualizer', 'rtbcb' ),
 			'manage_options',
@@ -419,9 +428,9 @@ wp_localize_script(
 	* @return void
 	*/
 	public function render_test_dashboard() {
-               $test_results   = get_option( 'rtbcb_test_results', [] );
-               $openai_key     = rtbcb_get_openai_api_key();
-               $openai_status  = rtbcb_has_openai_api_key();
+	       $test_results   = get_option( 'rtbcb_test_results', [] );
+	       $openai_key     = rtbcb_get_openai_api_key();
+	       $openai_status  = rtbcb_has_openai_api_key();
 		$portal_active   = $this->check_portal_integration();
 		$rag_health_info = $this->check_rag_health();
 		$rag_health      = ( 'healthy' === ( $rag_health_info['status'] ?? '' ) );
@@ -447,6 +456,49 @@ wp_localize_script(
 		$nonce     = wp_create_nonce( 'rtbcb_api_logs' );
 
 		include RTBCB_DIR . 'admin/api-logs-page.php';
+	}
+
+	/**
+	 * Render reports page for managing generated reports.
+	 *
+	 * @return void
+	 */
+	public function render_reports() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		$upload_dir  = wp_upload_dir();
+		$reports_dir = trailingslashit( $upload_dir['basedir'] ) . 'rtbcb-reports';
+
+		if ( isset( $_GET['delete'] ) ) {
+			$file  = sanitize_file_name( wp_unslash( $_GET['delete'] ) );
+			$nonce = isset( $_GET['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ) : '';
+			if ( wp_verify_nonce( $nonce, 'rtbcb_delete_report_' . $file ) ) {
+				$file_path = trailingslashit( $reports_dir ) . $file;
+				if ( file_exists( $file_path ) ) {
+					unlink( $file_path );
+				}
+				wp_safe_redirect( admin_url( 'admin.php?page=rtbcb-reports' ) );
+				exit;
+			}
+		}
+
+		$files        = glob( $reports_dir . '/*.{html,pdf}', GLOB_BRACE );
+		$files        = $files ? $files : [];
+		$report_files = [];
+
+		foreach ( $files as $filepath ) {
+			$filename       = basename( $filepath );
+			$report_files[] = [
+				'name'     => $filename,
+				'url'      => trailingslashit( $upload_dir['baseurl'] ) . 'rtbcb-reports/' . $filename,
+				'size'     => size_format( filesize( $filepath ), 2 ),
+				'modified' => date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), filemtime( $filepath ) ),
+			];
+		}
+
+		include RTBCB_DIR . 'admin/reports-page.php';
 	}
 
 	/**
@@ -665,10 +717,10 @@ wp_localize_script(
 			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'rtbcb' ) ], 403 );
 		}
 
-               $api_key = rtbcb_get_openai_api_key();
-               if ( ! rtbcb_has_openai_api_key() ) {
-                       wp_send_json_error( [ 'message' => __( 'Missing API key.', 'rtbcb' ) ] );
-               }
+	       $api_key = rtbcb_get_openai_api_key();
+	       if ( ! rtbcb_has_openai_api_key() ) {
+		       wp_send_json_error( [ 'message' => __( 'Missing API key.', 'rtbcb' ) ] );
+	       }
 
 		$cache_key = 'rtbcb_openai_models';
 		$response  = wp_cache_get( $cache_key );
@@ -1896,7 +1948,7 @@ wp_localize_script(
 		if ( ! current_user_can( 'manage_options' ) ) {
 		wp_send_json_error( __( 'Insufficient permissions', 'rtbcb' ) );
 		}
-               $raw_history = $this->get_workflow_history_from_logs();
+	       $raw_history = $this->get_workflow_history_from_logs();
 $history     = array_map(
 function ( $entry ) {
 $lead_id  = isset( $entry['lead_id'] ) ? intval( $entry['lead_id'] ) : 0;
