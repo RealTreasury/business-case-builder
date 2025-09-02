@@ -1884,6 +1884,11 @@ SYSTEM;
 		);
 
 		if ( is_wp_error( $response ) ) {
+			if ( class_exists( 'RTBCB_API_Log' ) ) {
+				$user_email   = $this->current_inputs['email'] ?? '';
+				$company_name = $this->current_inputs['company_name'] ?? '';
+				RTBCB_API_Log::save_log( $body, [ 'error' => $response->get_error_message() ], get_current_user_id(), $user_email, $company_name );
+			}
 			return $response;
 		}
 
