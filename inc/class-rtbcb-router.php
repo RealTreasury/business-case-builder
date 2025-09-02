@@ -406,8 +406,25 @@ $html = rtbcb_sanitize_report_html( $html );
 	];
 	$business_case_data = wp_parse_args( (array) $business_case_data, $defaults );
 
-	// Get current company data.
-	$company      = rtbcb_get_current_company();
+	// Normalize legacy executive summary structure without overwriting existing fields.
+	if ( is_array( $business_case_data['executive_summary'] ) ) {
+		$exec_summary = $business_case_data['executive_summary'];
+
+		if ( isset( $exec_summary['strategic_positioning'] ) ) {
+			$business_case_data['executive_summary'] = $exec_summary['strategic_positioning'];
+		}
+
+		if ( isset( $exec_summary['executive_recommendation'] ) ) {
+			$business_case_data['executive_recommendation'] = $exec_summary['executive_recommendation'];
+		}
+
+		if ( isset( $exec_summary['key_value_drivers'] ) ) {
+			$business_case_data['value_drivers'] = $exec_summary['key_value_drivers'];
+		}
+	}
+
+        // Get current company data.
+        $company      = rtbcb_get_current_company();
 	$company_name = sanitize_text_field( $business_case_data['company_name'] ?: ( $company['name'] ?? __( 'Your Company', 'rtbcb' ) ) );
 	$base_roi     = floatval( $business_case_data['base_roi'] ?: $business_case_data['roi_base'] );
 	$business_case_data['roi_base'] = $base_roi;
