@@ -2009,19 +2009,19 @@ return $analysis;
 	$this->estimate_tokens( 1500 )
 	);
 
-	if ( is_wp_error( $response ) ) {
-	return $response;
-	}
+        if ( is_wp_error( $response ) ) {
+                return $response;
+        }
 
-	$parsed        = rtbcb_parse_gpt5_response( $response );
-	$enriched_data = json_decode( $parsed['output_text'], true );
+        $parsed        = rtbcb_parse_gpt5_response( $response );
+        $enriched_data = $this->validate_enrichment_response( $parsed['output_text'] );
 
-	if ( ! is_array( $enriched_data ) ) {
-	return new WP_Error( 'parse_error', __( 'Failed to parse AI enrichment response.', 'rtbcb' ) );
-	}
+        if ( is_wp_error( $enriched_data ) ) {
+                return $enriched_data;
+        }
 
-	return $this->validate_and_structure_enrichment( $enriched_data, $user_inputs );
-	}
+        return $this->validate_and_structure_enrichment( $enriched_data, $user_inputs );
+        }
 
 	/**
 	* Build system prompt for consolidated enrichment.
@@ -2370,14 +2370,46 @@ return $analysis;
 	Consider the company's maturity level, industry dynamics, and specific operational challenges when formulating recommendations.
 	PROMPT;
 
-	return $prompt;
-	}
+return $prompt;
+}
 
-	/**
-	* Validate and structure enrichment data.
-	*
-	* @param array $enriched_data Enriched data from LLM.
-	* @param array $user_inputs   User inputs.
+        /**
+        * Validate enrichment response JSON structure.
+        *
+        * @param string $response JSON response from LLM.
+        * @return array|WP_Error Decoded array or error.
+        */
+        private function validate_enrichment_response( $response ) {
+                $decoded = json_decode( $response, true );
+
+                if ( ! $decoded ) {
+                        return new WP_Error( 'invalid_json', __( 'Response is not valid JSON', 'rtbcb' ) );
+                }
+
+                $required_fields = [
+                        'company_profile',
+                        'industry_context',
+                        'strategic_insights',
+                        'enrichment_metadata',
+                ];
+
+                foreach ( $required_fields as $field ) {
+                        if ( ! isset( $decoded[ $field ] ) ) {
+                                return new WP_Error(
+                                        'missing_field',
+                                        sprintf( __( 'Missing required field: %s', 'rtbcb' ), $field )
+                                );
+                        }
+                }
+
+                return $decoded;
+        }
+
+        /**
+ * Validate and structure enrichment data.
+ *
+ * @param array $enriched_data Enriched data from LLM.
+ * @param array $user_inputs   User inputs.
 	* @return array Structured enrichment data.
 	*/
 	private function validate_and_structure_enrichment( $enriched_data, $user_inputs ) {
