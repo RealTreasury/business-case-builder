@@ -432,6 +432,13 @@ $html = rtbcb_sanitize_report_html( $html );
 		$implementation_risks = [ __( 'No data provided', 'rtbcb' ) ];
 	}
 
+	$executive_summary      = $business_case_data['executive_summary'] ?? [];
+	$executive_summary_text = '';
+	if ( ! is_array( $executive_summary ) ) {
+		$executive_summary_text = $executive_summary;
+		$executive_summary      = [];
+	}
+
 	// Create structured data format expected by template.
 	$report_data = [
 		'metadata'           => [
@@ -442,12 +449,12 @@ $html = rtbcb_sanitize_report_html( $html );
 			'processing_time'  => intval( $business_case_data['processing_time'] ),
 		],
 		'executive_summary'  => [
-			'strategic_positioning'   => wp_kses_post( $business_case_data['executive_summary']['strategic_positioning'] ?? ( is_string( $business_case_data['executive_summary'] ?? null ) ? $business_case_data['executive_summary'] : $business_case_data['narrative'] ) ),
-			'key_value_drivers'       => array_map( 'sanitize_text_field', (array) ( $business_case_data['executive_summary']['key_value_drivers'] ?? $this->extract_value_drivers( $business_case_data ) ) ),
-			'executive_recommendation' => wp_kses_post( $business_case_data['executive_summary']['executive_recommendation'] ?? $business_case_data['executive_recommendation'] ?? $business_case_data['recommendation'] ),
-			'business_case_strength'  => $business_case_data['executive_summary']['business_case_strength'] ?? $this->determine_business_case_strength( $business_case_data ),
+			'strategic_positioning'   => wp_kses_post( $executive_summary['strategic_positioning'] ?? ( $executive_summary_text ?: $business_case_data['narrative'] ) ),
+			'key_value_drivers'       => array_map( 'sanitize_text_field', (array) ( $executive_summary['key_value_drivers'] ?? $this->extract_value_drivers( $business_case_data ) ) ),
+			'executive_recommendation' => wp_kses_post( $executive_summary['executive_recommendation'] ?? $business_case_data['executive_recommendation'] ?? $business_case_data['recommendation'] ),
+			'business_case_strength'  => $executive_summary['business_case_strength'] ?? $this->determine_business_case_strength( $business_case_data ),
 		],
-			'financial_analysis' => [
+		'financial_analysis' => [
 			'roi_scenarios'      => $roi_scenarios,
 			'payback_analysis'   => [
 				'payback_months' => sanitize_text_field( $business_case_data['payback_months'] ),
