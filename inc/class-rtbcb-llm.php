@@ -182,18 +182,19 @@ class RTBCB_LLM {
 	* @return array|WP_Error Simplified analysis array or error object.
 	*/
 	public function generate_business_case( $user_inputs, $roi_data, $context_chunks = [], $model = null ) {
-		$inputs = [
-			'company_name'           => sanitize_text_field( $user_inputs['company_name'] ?? '' ),
-			'company_size'           => sanitize_text_field( $user_inputs['company_size'] ?? '' ),
-			'industry'               => sanitize_text_field( $user_inputs['industry'] ?? '' ),
-			'hours_reconciliation'   => floatval( $user_inputs['hours_reconciliation'] ?? 0 ),
-			'hours_cash_positioning' => floatval( $user_inputs['hours_cash_positioning'] ?? 0 ),
-			'num_banks'              => intval( $user_inputs['num_banks'] ?? 0 ),
-			'ftes'                   => floatval( $user_inputs['ftes'] ?? 0 ),
-			'pain_points'            => array_map( 'sanitize_text_field', (array) ( $user_inputs['pain_points'] ?? [] ) ),
-		];
+               $inputs = [
+                       'company_name'           => sanitize_text_field( $user_inputs['company_name'] ?? '' ),
+                       'company_size'           => sanitize_text_field( $user_inputs['company_size'] ?? '' ),
+                       'industry'               => sanitize_text_field( $user_inputs['industry'] ?? '' ),
+                       'hours_reconciliation'   => floatval( $user_inputs['hours_reconciliation'] ?? 0 ),
+                       'hours_cash_positioning' => floatval( $user_inputs['hours_cash_positioning'] ?? 0 ),
+                       'num_banks'              => intval( $user_inputs['num_banks'] ?? 0 ),
+                       'ftes'                   => floatval( $user_inputs['ftes'] ?? 0 ),
+                       'pain_points'            => array_map( 'sanitize_text_field', (array) ( $user_inputs['pain_points'] ?? [] ) ),
+               ];
 
-		$this->current_inputs = $inputs;
+               $this->current_inputs            = $inputs;
+               $this->current_inputs['email']   = sanitize_email( $user_inputs['email'] ?? '' );
 
 		if ( empty( $this->api_key ) ) {
 			return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
