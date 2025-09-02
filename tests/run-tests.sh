@@ -83,6 +83,10 @@ vendor/bin/phpunit tests/RTBCB_AjaxGenerateComprehensiveCaseErrorTest.php
 vendor/bin/phpunit tests/RTBCB_AjaxGenerateComprehensiveCaseFatalErrorTest.php
 vendor/bin/phpunit tests/RTBCB_GenerateBusinessAnalysisTimeoutTest.php
 vendor/bin/phpunit tests/RTBCB_ReportErrorHandlingTest.php
+echo "15b. Running debug and nonce handler tests..."
+vendor/bin/phpunit tests/RTBCB_EmergencyDebugHandlerTest.php
+vendor/bin/phpunit tests/RTBCB_SimpleTestHandlerTest.php
+vendor/bin/phpunit tests/RTBCB_NonceRegenerationEndpointTest.php
 
 # Background job test
 echo "14. Running background job tests..."
@@ -109,6 +113,7 @@ node tests/handle-invalid-server-response.test.js
 node tests/handle-string-error-response.test.js
 node tests/handle-submit-invalid-ajax-url.test.js
 node tests/rtbcb-handle-submit-invalid-ajax-url.test.js
+node tests/handle-submit-nonce-retry.test.js
 node tests/is-valid-url.test.js
 node tests/temperature-model.test.js
 node tests/min-output-tokens.test.js
