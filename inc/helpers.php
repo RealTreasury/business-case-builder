@@ -1,5 +1,6 @@
 <?php
 defined( 'ABSPATH' ) || exit;
+require_once __DIR__ . '/class-rtbcb-response-parser.php';
 
 /**
 	* Helper functions for the Real Treasury Business Case Builder plugin.
@@ -1544,68 +1545,30 @@ $roi	 = function_exists( 'get_option' ) ? get_option( 'rtbcb_roi_results', [] ) 
 }
 
 /**
-	* Parse GPT-5 Responses API output with quality validation.
-	*
-	* @param array $response Response data from GPT-5 API.
-	*
-	* @return array Parsed response with quality information.
-	*/
+ * Parse GPT-5 Responses API output with quality validation.
+ *
+ * @deprecated Use RTBCB_Response_Parser::parse_business_case() directly.
+ *
+ * @param array $response Response data from GPT-5 API.
+ * @return array|WP_Error Parsed response.
+ */
 function rtbcb_parse_gpt5_business_case_response( $response ) {
-	$parsed = rtbcb_parse_gpt5_response( $response );
+	$parser = new RTBCB_Response_Parser();
+	return $parser->parse_business_case( $response );
+}
 
-	$result = [
-		'text'			 => $parsed['output_text'],
-		'reasoning_notes' => $parsed['reasoning'],
-		'function_calls' => $parsed['function_calls'],
-		'quality_score'	 => 0,
-		'alerts'		 => [],
-	];
-
-	// Quality validation for business case content.
-	$text		 = $result['text'];
-	$text_length = strlen( $text );
-	$word_count	 = str_word_count( $text );
-
-	// Score based on content quality indicators.
-	if ( $text_length > 500 ) {
-		$result['quality_score'] += 2;
-	}
-	if ( $word_count > 100 ) {
-		$result['quality_score'] += 2;
-	}
-	if ( stripos( $text, 'business case' ) !== false ) {
-		$result['quality_score'] += 1;
-	}
-	if ( stripos( $text, 'ROI' ) !== false ) {
-		$result['quality_score'] += 1;
-	}
-	if ( stripos( $text, 'implementation' ) !== false ) {
-		$result['quality_score'] += 1;
-	}
-	if ( null !== json_decode( $text, true ) ) {
-		$result['quality_score'] += 2;
-	}
-
-	// Alert conditions.
-	if ( $text_length < 100 ) {
-		$result['alerts'][] = 'SUSPICIOUSLY_SHORT_CONTENT';
-	}
-
-	if ( stripos( $text, 'pong' ) !== false ||
-		stripos( $text, 'how can I help' ) !== false ) {
-		$result['alerts'][] = 'HEALTH_CHECK_RESPONSE';
-	}
-
-	if ( $result['quality_score'] < 3 ) {
-		$result['alerts'][] = 'LOW_QUALITY_BUSINESS_CASE';
-	}
-
-	// Log results.
-	if ( ! empty( $result['alerts'] ) ) {
-		error_log( 'RTBCB: Business case quality issues - ' . implode( ', ', $result['alerts'] ) );
-	}
-
-	return $result;
+/**
+ * Parse a generic GPT-5 response.
+ *
+ * @deprecated Use RTBCB_Response_Parser::parse() directly.
+ *
+ * @param array $response Response data from GPT-5 API.
+ * @param bool  $store_raw Optional. Include decoded response body.
+ * @return array|WP_Error Parsed response.
+ */
+function rtbcb_parse_gpt5_response( $response, $store_raw = false ) {
+	$parser = new RTBCB_Response_Parser();
+	return $parser->parse( $response, $store_raw );
 }
 
 /**

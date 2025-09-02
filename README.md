@@ -6,6 +6,7 @@ A comprehensive WordPress plugin that helps treasury teams quantify the benefits
 
 ### ✨ Enhancements
 - Regenerated minified assets.
+- Introduced RTBCB_Response_Parser for unified OpenAI response parsing and validation.
 
 
 ## 📋 Installation & Setup
@@ -72,6 +73,9 @@ Values outside the `256`–`128000` range are ignored.
 | `text-embedding-3-small` | No (embeddings) |
 
 Update the list in `inc/helpers.php` if OpenAI changes temperature capabilities.
+### Parser Architecture
+The `RTBCB_Response_Parser` class centralizes extraction of message text, reasoning traces, function calls, and business-case validation. Legacy helpers now proxy to this class for consistent handling across the plugin.
+
 
 ### Step 3: Configure Persistent Database Connections
 

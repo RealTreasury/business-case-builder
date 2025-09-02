@@ -14,6 +14,7 @@ if ( ! defined( 'RTBCB_DIR' ) ) {
 }
 
 require_once __DIR__ . '/../inc/config.php';
+require_once __DIR__ . '/../inc/class-rtbcb-response-parser.php';
 require_once __DIR__ . '/../inc/class-rtbcb-api-tester.php';
 require_once __DIR__ . '/../inc/class-rtbcb-llm.php';
 require_once __DIR__ . '/../inc/class-rtbcb-llm-optimized.php';
@@ -158,7 +159,7 @@ if ( false !== strpos( $combined, 'max_output_tokens' ) ) {
 	exit( 1 );
 }
 
-$parsed = rtbcb_parse_gpt5_response( $mock_response );
+$parsed = ( new RTBCB_Response_Parser() )->parse( $mock_response );
 if ( 'This is a meaningful response message.' !== ( $parsed['output_text'] ?? '' ) ) {
 	echo "Failed to extract message text\n";
 	exit( 1 );
