@@ -71,6 +71,10 @@ return new WP_Error( 'llm_timeout', 'Request timed out' );
 }
 }
 
+if ( ! class_exists( 'RTBCB_LLM_Optimized' ) ) {
+	class RTBCB_LLM_Optimized extends RTBCB_LLM {}
+}
+
 class RTBCB_Main {
 private function generate_business_analysis( $user_inputs, $scenarios, $recommendation, $chunk_callback = null ) {
 $start_time      = microtime( true );

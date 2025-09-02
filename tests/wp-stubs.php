@@ -84,6 +84,24 @@ if ( ! function_exists( 'wp_json_encode' ) ) {
         }
 }
 
+if ( ! class_exists( 'RTBCB_LLM_Optimized' ) ) {
+	class RTBCB_LLM_Optimized {
+		public function generate_comprehensive_business_case( $user_inputs, $scenarios, $rag_context, $chunk_callback = null ) {
+			$mode = class_exists( 'RTBCB_LLM' ) && property_exists( 'RTBCB_LLM', 'mode' ) ? RTBCB_LLM::$mode : 'generic';
+			
+			if ( 'no_api_key' === $mode ) {
+				return new WP_Error( 'no_api_key', 'OpenAI API key not configured.' );
+			}
+			
+			if ( 'http_status' === $mode ) {
+				return new WP_Error( 'llm_http_status', 'Teapot', [ 'status' => 418 ] );
+			}
+			
+			return new WP_Error( 'llm_error', 'LLM failed' );
+		}
+	}
+}
+
 if ( ! function_exists( 'is_wp_error' ) ) {
        function is_wp_error( $thing ) {
                return $thing instanceof WP_Error;

@@ -100,20 +100,40 @@ class RTBCB_LLM {
        /**
         * Decode and clean JSON responses from OpenAI.
         *
-        * Removes unwanted slashes and handles magic quotes before decoding.
+        * Normalizes slashes, ensures UTF-8 encoding and decodes the JSON body.
+        * Falls back to a secondary decode attempt if the initial decode fails
+        * due to encoding issues.
         *
         * @param string $response_body Raw response body.
         * @return array|false Decoded array on success, false on failure.
         */
        public function process_openai_response( $response_body ) {
-               if ( function_exists( 'get_magic_quotes_gpc' ) && get_magic_quotes_gpc() ) {
-                       $response_body = stripslashes( $response_body );
+               if ( function_exists( 'wp_unslash' ) ) {
+                       $response_body = wp_unslash( $response_body );
+               }
+
+               if ( function_exists( 'mb_detect_encoding' ) ) {
+                       $encoding = mb_detect_encoding( $response_body, [ 'UTF-8', 'ISO-8859-1', 'ASCII' ], true );
+                       if ( $encoding && 'UTF-8' !== $encoding ) {
+                               if ( function_exists( 'mb_convert_encoding' ) ) {
+                                       $converted = mb_convert_encoding( $response_body, 'UTF-8', $encoding );
+                                       if ( false === $converted ) {
+                                               error_log( 'Failed to convert response to UTF-8.' );
+                                               return false;
+                                       }
+                                       $response_body = $converted;
+                               } else {
+                                       error_log( 'mbstring extension missing for UTF-8 conversion.' );
+                                       return false;
+                               }
+                       }
                }
 
                $decoded = json_decode( $response_body, true );
 
-               if ( JSON_ERROR_NONE !== json_last_error() ) {
-                       $decoded = json_decode( wp_unslash( $response_body ), true );
+               if ( JSON_ERROR_UTF8 === json_last_error() && function_exists( 'mb_convert_encoding' ) ) {
+                       $response_body = mb_convert_encoding( $response_body, 'UTF-8', 'auto' );
+                       $decoded       = json_decode( $response_body, true );
                }
 
                if ( JSON_ERROR_NONE !== json_last_error() ) {

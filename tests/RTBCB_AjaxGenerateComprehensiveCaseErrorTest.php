@@ -93,6 +93,10 @@ return new WP_Error( 'llm_error', 'LLM failed' );
 }
 }
 
+if ( ! class_exists( 'RTBCB_LLM_Optimized' ) ) {
+	class RTBCB_LLM_Optimized extends RTBCB_LLM {}
+}
+
 if ( ! class_exists( 'RTBCB_JSON_Error' ) ) {
 	class RTBCB_JSON_Error extends Exception {
 		public $data;
