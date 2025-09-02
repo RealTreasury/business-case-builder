@@ -235,8 +235,12 @@ $company_intelligence  = $report_data['company_intelligence'] ?? [];
 			<div class="rtbcb-roi-breakdown-enhanced">
 				<h3><?php echo esc_html__( 'ROI Component Breakdown', 'rtbcb' ); ?></h3>
 				<div class="rtbcb-roi-components">
-					<?php foreach ( $financial_analysis['roi_scenarios'] as $scenario_name => $scenario ) : ?>
-						<div class="rtbcb-scenario-card <?php echo esc_attr( $scenario_name ); ?>">
+					<?php foreach ( $financial_analysis['roi_scenarios'] as $scenario_name => $scenario ) :
+						if ( in_array( $scenario_name, array( 'sensitivity_analysis', 'confidence_metrics' ), true ) ) {
+						continue;
+						}
+					?>
+					<div class="rtbcb-scenario-card <?php echo esc_attr( $scenario_name ); ?>">
 							<h4><?php echo esc_html( ucfirst( $scenario_name ) ); ?> <?php echo esc_html__( 'Case', 'rtbcb' ); ?></h4>
 							<div class="rtbcb-scenario-metrics">
 								<div class="rtbcb-scenario-metric">
@@ -636,7 +640,7 @@ $sensitivity_data = [
 
 // Output JavaScript with proper escaping
 $json_flags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_HEX_APOS;
-?>
+					?>
 
 <script>
 // Global data for RTBCB Enhanced Report

@@ -535,13 +535,14 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 			       'competitive_benchmarks' => (array) ( $final_analysis['industry_insights']['competitive_benchmarks'] ?? [] ),
 			       'regulatory_considerations' => (array) ( $final_analysis['industry_insights']['regulatory_considerations'] ?? [] ),
 		       ],
-					'financial_analysis' => [
-							'roi_scenarios'        => self::format_roi_scenarios( $roi_scenarios ),
-							'investment_breakdown' => $final_analysis['financial_analysis']['investment_breakdown'] ?? [],
-							'payback_analysis'     => $final_analysis['financial_analysis']['payback_analysis'] ?? [],
-							'sensitivity_analysis' => $roi_scenarios['sensitivity_analysis'] ?? [],
-							'chart_data'           => $chart_data,
-					],
+                                       'financial_analysis' => [
+                                                       'roi_scenarios'        => self::format_roi_scenarios( $roi_scenarios ),
+                                                       'investment_breakdown' => $final_analysis['financial_analysis']['investment_breakdown'] ?? [],
+                                                       'payback_analysis'     => $final_analysis['financial_analysis']['payback_analysis'] ?? [],
+                                                       'sensitivity_analysis' => $roi_scenarios['sensitivity_analysis'] ?? [],
+                                                       'confidence_metrics'   => $roi_scenarios['confidence_metrics'] ?? [],
+                                                       'chart_data'           => $chart_data,
+                                       ],
 			'technology_strategy' => [
 				'recommended_category' => $recommendation['recommended'],
 				'category_details'     => $recommendation['category_info'],
@@ -658,8 +659,17 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 			return $base > 0 ? 'strong' : 'weak';
 	}
 
-	private static function format_roi_scenarios( $roi_scenarios ) {
-	       return $roi_scenarios;
+       private static function format_roi_scenarios( $roi_scenarios ) {
+               $allowed   = array( 'conservative', 'base', 'optimistic' );
+               $formatted = array();
+
+               foreach ( $allowed as $key ) {
+                       if ( isset( $roi_scenarios[ $key ] ) && is_array( $roi_scenarios[ $key ] ) ) {
+                               $formatted[ $key ] = $roi_scenarios[ $key ];
+                       }
+               }
+
+               return $formatted;
        }
 
        /**
