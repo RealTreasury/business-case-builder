@@ -2719,12 +2719,10 @@ $max_output_tokens = min( 128000, max( $min_tokens, $max_output_tokens ) );
 
 		do_action( 'rtbcb_llm_prompt_sent', $body );
 
-	$timeout   = intval( $this->gpt5_config['timeout'] ?? 300 );
-		$payload   = wp_json_encode( $body );
-		$buffer    = '';
-		$last_event = '';
-		$last_chunk = '';
-		$ch        = curl_init( $endpoint );
+		$timeout  = intval( $this->gpt5_config['timeout'] ?? 300 );
+		$payload  = wp_json_encode( $body );
+		$stream   = '';
+		$ch       = curl_init( $endpoint );
 		curl_setopt( $ch, CURLOPT_HTTPHEADER, [
 			'Authorization: Bearer ' . $this->api_key,
 			'Content-Type: application/json',
@@ -2732,64 +2730,88 @@ $max_output_tokens = min( 128000, max( $min_tokens, $max_output_tokens ) );
 		curl_setopt( $ch, CURLOPT_POST, true );
 		curl_setopt( $ch, CURLOPT_POSTFIELDS, $payload );
 		curl_setopt( $ch, CURLOPT_TIMEOUT, $timeout );
-		curl_setopt( $ch, CURLOPT_WRITEFUNCTION, function ( $curl, $data ) use ( &$buffer, &$last_event, &$last_chunk, $chunk_handler ) {
-			$last_chunk = $data;
+		curl_setopt( $ch, CURLOPT_WRITEFUNCTION, function ( $curl, $data ) use ( &$stream, $chunk_handler ) {
 			if ( is_callable( $chunk_handler ) ) {
-				call_user_func( $chunk_handler, $data );
+			call_user_func( $chunk_handler, $data );
 			}
-
-			$buffer .= $data;
-			while ( false !== ( $pos = strpos( $buffer, "\n" ) ) ) {
-				$line   = trim( substr( $buffer, 0, $pos ) );
-				$buffer = substr( $buffer, $pos + 1 );
-				if ( '' === $line ) {
-					continue;
-				}
-				if ( 0 === strpos( $line, 'data:' ) ) {
-					$payload_line = trim( substr( $line, strpos( $line, ':' ) + 1 ) );
-					if ( '[DONE]' === $payload_line ) {
-						continue;
-					}
-					$last_event = $payload_line;
-				}
+			
+			$stream .= $data;
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( 'RTBCB: Stream chunk: ' . trim( $data ) );
 			}
-
+			
 			return strlen( $data );
 		} );
-
+		
 		$this->last_request = $body;
-		$ok                 = curl_exec( $ch );
-		$error              = curl_error( $ch );
-		$http_code          = curl_getinfo( $ch, CURLINFO_HTTP_CODE );
+		$ok                = curl_exec( $ch );
+		$error             = curl_error( $ch );
+		$http_code         = curl_getinfo( $ch, CURLINFO_HTTP_CODE );
 		curl_close( $ch );
-
+		
 		if ( false === $ok ) {
 			if ( false !== strpos( strtolower( $error ), 'timed out' ) ) {
-				return new WP_Error(
-					'llm_timeout',
-					__( 'The request took longer than our 5-minute limit. Try Fast Mode or request email delivery.', 'rtbcb' )
-				);
-			}
-
 			return new WP_Error(
-				'llm_http_error',
-				sprintf( __( 'Language model request failed: %s', 'rtbcb' ), $error )
+			'llm_timeout',
+			__( 'The request took longer than our 5-minute limit. Try Fast Mode or request email delivery.', 'rtbcb' )
+			);
+			}
+			
+			return new WP_Error(
+			'llm_http_error',
+			sprintf( __( 'Language model request failed: %s', 'rtbcb' ), $error )
 			);
 		}
-
-                if ( '' !== trim( $buffer ) ) {
-                        $line = trim( $buffer );
-                        if ( 0 === strpos( $line, 'data:' ) ) {
-                                $payload_line = trim( substr( $line, strpos( $line, ':' ) + 1 ) );
-                                if ( '[DONE]' !== $payload_line ) {
-                                        $last_event = $payload_line;
-                                }
-                        }
-                }
-
-                $response_body = $last_event ? $last_event : $last_chunk;
-
-                $decoded = $this->process_openai_response( $response_body );
+		
+		$events = [];
+		if ( '' !== $stream ) {
+			$parts = preg_split( "/\r?\n\r?\n/", $stream );
+			foreach ( $parts as $part ) {
+				$lines = preg_split( "/\r?\n/", trim( $part ) );
+				foreach ( $lines as $line ) {
+				$line = trim( $line );
+				if ( '' === $line || false === strpos( $line, ':' ) ) {
+				continue;
+				}
+				list( $field, $value ) = array_map( 'trim', explode( ':', $line, 2 ) );
+				if ( 'data' === $field && '[DONE]' !== $value ) {
+				$events[] = $value;
+				if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				error_log( 'RTBCB: SSE event data: ' . $value );
+				}
+				}
+				}
+			}
+			}
+		
+		$final_response = null;
+		foreach ( $events as $event_json ) {
+			$decoded_event = json_decode( $event_json, true );
+			if ( JSON_ERROR_NONE !== json_last_error() ) {
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( 'RTBCB: Malformed SSE chunk: ' . $event_json );
+			}
+			continue;
+			}
+			if ( isset( $decoded_event['response'] ) ) {
+			$final_response = $decoded_event['response'];
+			} else {
+			$final_response = $decoded_event;
+			}
+		}
+		
+		if ( null === $final_response ) {
+			error_log( 'RTBCB: No valid SSE data in stream.' );
+			$response_body = trim( $stream );
+		} else {
+			$response_body = wp_json_encode( $final_response );
+		}
+		
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( 'RTBCB: Final assembled response: ' . $response_body );
+		}
+		
+		$decoded = $this->process_openai_response( $response_body );
 
                 if ( false === $decoded || ! is_array( $decoded ) ) {
                         error_log( 'RTBCB: Malformed LLM response: ' . $response_body );
