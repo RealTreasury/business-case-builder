@@ -80,6 +80,9 @@ class BusinessCaseBuilder {
         this.pollTimeout = null;
         this.pollingCancelled = false;
         this.activeJobId = null;
+        this.progressStates = [];
+        this.currentProgressIndex = 0;
+        this.progressTimer = null;
 
         if ( ! this.form ) {
             return;
@@ -388,13 +391,88 @@ class BusinessCaseBuilder {
         }
     }
 
+    // Progressive loading states
+    initializeProgressStates() {
+        this.progressStates = [
+            { step: 'initializing', message: 'Initializing analysis...', duration: 2000 },
+            { step: 'collecting_data', message: 'Collecting your data...', duration: 3000 },
+            { step: 'calculating_roi', message: 'Calculating ROI scenarios...', duration: 8000 },
+            { step: 'analyzing_company', message: 'Analyzing company profile...', duration: 6000 },
+            { step: 'market_research', message: 'Researching market insights...', duration: 5000 },
+            { step: 'generating_recommendations', message: 'Generating recommendations...', duration: 10000 },
+            { step: 'finalizing', message: 'Finalizing your report...', duration: 5000 }
+        ];
+        this.currentProgressIndex = 0;
+        this.progressTimer = null;
+    }
+
+    startProgressiveLoading() {
+        this.initializeProgressStates();
+        this.currentProgressIndex = 0;
+        this.showProgressState(this.progressStates[0]);
+        this.scheduleNextProgressState();
+    }
+
+    showProgressState(state) {
+        const statusElement = document.getElementById('rtbcb-progress-status');
+        if (!statusElement) {
+            return;
+        }
+
+        statusElement.style.transition = 'opacity 0.3s ease';
+        statusElement.style.opacity = '0.5';
+
+        setTimeout(() => {
+            statusElement.textContent = state.message;
+            statusElement.style.opacity = '1';
+
+            statusElement.style.transform = 'scale(1.02)';
+            setTimeout(() => {
+                statusElement.style.transform = 'scale(1)';
+            }, 200);
+        }, 300);
+
+        console.log(`RTBCB: Progress state: ${state.step} - ${state.message}`);
+    }
+
+    scheduleNextProgressState() {
+        if (this.pollingCancelled) {
+            return;
+        }
+
+        const currentState = this.progressStates[this.currentProgressIndex];
+        if (!currentState) {
+            return;
+        }
+
+        this.progressTimer = setTimeout(() => {
+            this.currentProgressIndex++;
+            if (this.currentProgressIndex < this.progressStates.length && !this.pollingCancelled) {
+                const nextState = this.progressStates[this.currentProgressIndex];
+                this.showProgressState(nextState);
+                this.scheduleNextProgressState();
+            } else if (!this.pollingCancelled) {
+                this.currentProgressIndex = Math.max(0, this.progressStates.length - 3);
+                this.scheduleNextProgressState();
+            }
+        }, currentState.duration);
+    }
+
+    cancelProgressiveLoading() {
+        if (this.progressTimer) {
+            clearTimeout(this.progressTimer);
+            this.progressTimer = null;
+        }
+        this.currentProgressIndex = 0;
+    }
+
     async handleSubmit(event) {
         if (event && event.preventDefault) {
             event.preventDefault();
         }
 
-        // Final step validation before submission.
-        if ( ! this.validateStep( this.totalSteps ) ) {
+        // Final step validation before submission
+        if (!this.validateStep(this.totalSteps)) {
             return;
         }
 
@@ -407,14 +485,18 @@ class BusinessCaseBuilder {
             console.log('RTBCB: Starting form submission');
             this.showLoading();
 
+            // Start progressive loading animation
+            this.startProgressiveLoading();
+
             const formData = this.collectFormData();
             this.validateFormData(formData);
 
-            // SIMPLIFIED APPROACH: Direct submission instead of background jobs
+            // Submit form
             if (!isValidUrl(this.ajaxUrl)) {
                 this.showEnhancedError('Service unavailable. Please reload the page.');
                 return;
             }
+
             const response = await fetch(this.ajaxUrl, {
                 method: 'POST',
                 body: formData,
@@ -426,7 +508,7 @@ class BusinessCaseBuilder {
             });
 
             console.log('RTBCB: Response status:', response.status);
-            
+
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
@@ -441,9 +523,9 @@ class BusinessCaseBuilder {
                 console.log('RTBCB: Parsed JSON response:', data);
             } catch (parseError) {
                 console.log('RTBCB: Response is not JSON, treating as HTML');
-                // If it's not JSON, it might be the direct HTML report
                 if (responseText.includes('<div class="rtbcb-enhanced-report"') ||
                     responseText.includes('<div class="rtbcb-report"')) {
+                    this.cancelProgressiveLoading();
                     this.showEnhancedHTMLReport(responseText);
                     return;
                 } else {
@@ -458,9 +540,13 @@ class BusinessCaseBuilder {
                     this.cancelPolling();
                     this.pollingCancelled = false;
                     this.activeJobId = data.data.job_id;
+
+                    // Replace progressive loading with polling updates
+                    this.cancelProgressiveLoading();
                     this.pollJob(this.activeJobId, Date.now(), 0);
                 } else if (data.data) {
-                    // Direct HTML or structured data response
+                    // Direct response
+                    this.cancelProgressiveLoading();
                     if (data.data.report_html) {
                         this.handleSuccess(data.data);
                     } else if (data.data.report_data) {
@@ -473,17 +559,17 @@ class BusinessCaseBuilder {
                 }
             } else {
                 console.error('RTBCB: Error response:', data.data);
+                this.cancelProgressiveLoading();
                 this.handleError(data.data || { message: 'Unknown error occurred' });
             }
 
         } catch (error) {
             console.error('RTBCB: Submission error:', error);
+            this.cancelProgressiveLoading();
             this.handleError({
                 message: error.message || 'An unexpected error occurred',
                 type: 'submission_error'
             });
-        } finally {
-            // Don't hide loading here - let success/error handlers do it
         }
     }
 
@@ -654,15 +740,17 @@ class BusinessCaseBuilder {
 
     cancelPolling() {
         this.pollingCancelled = true;
+        this.cancelProgressiveLoading();
         if (this.pollTimeout) {
             clearTimeout(this.pollTimeout);
             this.pollTimeout = null;
         }
+        console.log('RTBCB: All polling and progress timers cancelled');
     }
 
     async pollJob(jobId, startTime = Date.now(), attempt = 0) {
         const MAX_DURATION = 20 * 60 * 1000; // 20 minutes
-        const MAX_ATTEMPTS = 600; // 600 attempts * 2s = 20 minutes max
+        const MAX_ATTEMPTS = 600;
 
         if (this.pollingCancelled) {
             return;
@@ -677,17 +765,8 @@ class BusinessCaseBuilder {
             return;
         }
 
-        if (!isValidUrl(this.ajaxUrl)) {
-            this.handleError({ 
-                message: 'Service unavailable. Please reload the page.', 
-                type: 'polling_error' 
-            });
-            this.cancelPolling();
-            return;
-        }
-
         try {
-            const nonce = ( typeof rtbcb_ajax !== 'undefined' && rtbcb_ajax.nonce ) ? rtbcb_ajax.nonce : '';
+            const nonce = (typeof rtbcb_ajax !== 'undefined' && rtbcb_ajax.nonce) ? rtbcb_ajax.nonce : '';
             const response = await fetch(`${this.ajaxUrl}?action=rtbcb_job_status&job_id=${encodeURIComponent(jobId)}&rtbcb_nonce=${nonce}`, {
                 credentials: 'same-origin',
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
@@ -696,9 +775,9 @@ class BusinessCaseBuilder {
             const data = await response.json();
 
             if (!data.success) {
-                this.handleError({ 
-                    message: 'Unable to retrieve job status', 
-                    type: 'polling_error' 
+                this.handleError({
+                    message: 'Unable to retrieve job status',
+                    type: 'polling_error'
                 });
                 this.cancelPolling();
                 return;
@@ -706,48 +785,51 @@ class BusinessCaseBuilder {
 
             const statusData = data.data;
             const { status, step, message, percent } = statusData;
-            
+
             console.log(`RTBCB: Job status: ${status} (attempt ${attempt})`);
 
-            // Update progress status with better formatting
-            this.updateProgressStatus(statusData, attempt);
-
-            // Show partial results as they become available
+            // Update status with server data, but maintain smooth UX
+            this.updateJobProgressStatus(statusData, attempt);
             this.updatePartialResults(statusData);
 
             if (status === 'completed') {
                 this.cancelPolling();
-                this.hideLoading();
-                if (statusData.report_html) {
-                    this.handleSuccess(statusData);
-                } else if (statusData.report_data) {
-                    this.handleSuccess(statusData.report_data);
-                } else {
-                    this.handleError({ 
-                        message: 'Report data missing from completed job', 
-                        type: 'job_error' 
-                    });
-                }
+                // Show completion animation before hiding
+                this.showCompletionAnimation(() => {
+                    this.hideLoading();
+                    if (statusData.report_html) {
+                        this.handleSuccess(statusData);
+                    } else if (statusData.report_data) {
+                        this.handleSuccess(statusData.report_data);
+                    } else {
+                        this.handleError({
+                            message: 'Report data missing from completed job',
+                            type: 'job_error'
+                        });
+                    }
+                });
             } else if (status === 'error') {
                 this.cancelPolling();
                 this.hideLoading();
-                this.handleError({ 
-                    message: statusData.message || 'Job failed', 
-                    type: 'job_error' 
+                this.handleError({
+                    message: statusData.message || 'Job failed',
+                    type: 'job_error'
                 });
             } else if (typeof percent === 'number' && percent >= 100) {
                 this.cancelPolling();
-                this.hideLoading();
-                if (statusData.report_html) {
-                    this.handleSuccess(statusData);
-                } else if (statusData.report_data) {
-                    this.handleSuccess(statusData.report_data);
-                } else {
-                    this.handleError({ 
-                        message: 'Report data missing from completed job', 
-                        type: 'job_error' 
-                    });
-                }
+                this.showCompletionAnimation(() => {
+                    this.hideLoading();
+                    if (statusData.report_html) {
+                        this.handleSuccess(statusData);
+                    } else if (statusData.report_data) {
+                        this.handleSuccess(statusData.report_data);
+                    } else {
+                        this.handleError({
+                            message: 'Report data missing from completed job',
+                            type: 'job_error'
+                        });
+                    }
+                });
             } else if (!this.pollingCancelled) {
                 // Continue polling
                 this.pollTimeout = setTimeout(
@@ -758,15 +840,52 @@ class BusinessCaseBuilder {
         } catch (error) {
             console.error('RTBCB: Job polling error:', error);
             this.cancelPolling();
-            this.handleError({ 
-                message: error.message || 'An unexpected error occurred', 
-                type: 'polling_error' 
+            this.handleError({
+                message: error.message || 'An unexpected error occurred',
+                type: 'polling_error'
             });
         }
     }
 
-    // New method to update progress status with better UX
-    updateProgressStatus(statusData, attempt) {
+    // Show completion animation
+    showCompletionAnimation(callback) {
+        const statusElement = document.getElementById('rtbcb-progress-status');
+        const spinner = document.querySelector('.rtbcb-progress-spinner');
+
+        if (statusElement) {
+            statusElement.textContent = 'Report completed successfully! ✓';
+            statusElement.style.color = 'var(--success-green)';
+            statusElement.style.fontWeight = '600';
+        }
+
+        if (spinner) {
+            spinner.style.borderTopColor = 'var(--success-green)';
+            spinner.style.animation = 'rtbcb-spin 0.5s ease-out';
+
+            setTimeout(() => {
+                spinner.style.display = 'none';
+                const checkmark = document.createElement('div');
+                checkmark.innerHTML = '✓';
+                checkmark.style.cssText = `
+                    font-size: 60px;
+                    color: var(--success-green);
+                    animation: rtbcb-bounce 0.6s ease-out;
+                    margin: 0 auto 24px;
+                    width: 60px;
+                    height: 60px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                `;
+                spinner.parentNode.insertBefore(checkmark, spinner);
+            }, 500);
+        }
+
+        setTimeout(callback, 1500);
+    }
+
+    // Update job progress status with server data
+    updateJobProgressStatus(statusData, attempt) {
         const progressStatus = document.getElementById('rtbcb-progress-status');
         if (!progressStatus) {
             return;
@@ -775,28 +894,27 @@ class BusinessCaseBuilder {
         const { status, step, message, percent } = statusData;
         let displayText = '';
 
-        // Create user-friendly status messages
-        if (step) {
+        if (step && step !== 'processing') {
             displayText = this.formatProgressStep(step);
-        } else if (message) {
+        } else if (message && message.trim()) {
             displayText = this.formatProgressMessage(message);
-        } else if (status === 'processing') {
-            displayText = `Processing your request... (${attempt + 1}/600)`;
         } else {
-            displayText = 'Generating your business case...';
+            const currentText = progressStatus.textContent || 'Processing...';
+            displayText = currentText;
         }
 
-        // Add percentage if available
-        if (typeof percent === 'number' && percent > 0) {
+        if (typeof percent === 'number' && percent > 0 && percent < 100) {
             displayText += ` (${Math.round(percent)}%)`;
         }
 
-        // Update with animation
-        progressStatus.style.opacity = '0.6';
-        setTimeout(() => {
-            progressStatus.textContent = displayText;
-            progressStatus.style.opacity = '1';
-        }, 150);
+        if (displayText !== progressStatus.textContent) {
+            progressStatus.style.transition = 'opacity 0.2s ease';
+            progressStatus.style.opacity = '0.7';
+            setTimeout(() => {
+                progressStatus.textContent = displayText;
+                progressStatus.style.opacity = '1';
+            }, 200);
+        }
     }
 
     // New method to show partial results

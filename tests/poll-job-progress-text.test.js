@@ -27,7 +27,7 @@ describe('pollJob progress updates', () => {
                 success: true,
                 data: {
                     status: 'processing',
-                    step: 'Gathering data'
+                    step: 'gathering_data'
                 }
             })
         });
@@ -38,8 +38,9 @@ describe('pollJob progress updates', () => {
         builder.handleError = jest.fn();
 
         await builder.pollJob('123');
+        jest.runAllTimers();
 
-        expect(progressStatus.textContent).toBe('Gathering data');
+        expect(progressStatus.textContent).toBe('Gathering Data...');
 
         jest.clearAllTimers();
     });
