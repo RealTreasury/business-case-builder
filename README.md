@@ -211,6 +211,7 @@ their own `AGENTS.md` with additional rules.
 │  ├── AGENTS.md
 │  ├── business-case-form.php
 │  ├── comprehensive-report-template.php
+│  ├── fast-report-template.php
 │  └── report-template.php
 ├── tests
 │  ├── RTBCB_AdminAjaxReportTest.php
@@ -250,9 +251,12 @@ their own `AGENTS.md` with additional rules.
 
 ## 📄 HTML Reports
 
-- Reports are rendered server-side using `templates/report-template.php`.
-- After form submission, `RTBCB_Router` returns the report HTML via AJAX as `report_html`.
+- By default the plugin renders reports with `templates/comprehensive-report-template.php` when comprehensive analysis is enabled and assets exist.
+- If the comprehensive template or its CSS is missing, rendering falls back to `templates/report-template.php`.
+- Fast-mode reports use `templates/fast-report-template.php` for minimal output.
+- After form submission, `RTBCB_Router` returns the selected template HTML via AJAX as `report_html`.
 - `public/js/rtbcb.js` injects this HTML into `#rtbcb-report-container` for immediate viewing.
+- The workflow visualizer log records the template used for each submission.
 - Reports are not saved as files; only lead metadata is stored in the database.
 - Users can save or print the report directly from their browser, including printing to PDF.
 
@@ -291,9 +295,9 @@ their own `AGENTS.md` with additional rules.
 - Confidence scoring and alternative suggestions
 
 **HTML Report Rendering (`RTBCB_Router`)**
-- Uses `templates/report-template.php` for dynamic reports
-- Returns sanitized HTML for inline display
-- No external rendering dependencies
+ - Uses `templates/comprehensive-report-template.php` by default and falls back to `templates/report-template.php`
+ - Returns sanitized HTML for inline display
+ - No external rendering dependencies
 
 **Lead Tracking System (`RTBCB_Leads`)**
 - Complete audit trail of user interactions

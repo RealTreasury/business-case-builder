@@ -125,12 +125,14 @@ wp_localize_script(
 'lead'            => __( 'Lead', 'rtbcb' ),
 'unknown_lead'    => __( 'Unknown Lead', 'rtbcb' ),
 'not_run'         => __( 'Not run', 'rtbcb' ),
-                                'company'         => __( 'Company', 'rtbcb' ),
-                                'unknown_company' => __( 'Unknown Company', 'rtbcb' ),
-                                'started'         => __( 'Started', 'rtbcb' ),
-                                'unknown_start'   => __( 'Unknown Start', 'rtbcb' ),
-                                'seconds'         => __( 's', 'rtbcb' ),
-                                'elapsed_suffix' => __( 's elapsed', 'rtbcb' ),
+'company'         => __( 'Company', 'rtbcb' ),
+'unknown_company' => __( 'Unknown Company', 'rtbcb' ),
+'started'         => __( 'Started', 'rtbcb' ),
+'unknown_start'   => __( 'Unknown Start', 'rtbcb' ),
+'template'        => __( 'Template', 'rtbcb' ),
+'unknown_template'=> __( 'Unknown Template', 'rtbcb' ),
+'seconds'         => __( 's', 'rtbcb' ),
+'elapsed_suffix' => __( 's elapsed', 'rtbcb' ),
 ],
 ]
 );
@@ -1958,15 +1960,16 @@ $raw_history
 			return [];
 			}
 			return array_map(
-function ( $entry ) {
-$entry['lead_id']      = isset( $entry['lead_id'] ) ? intval( $entry['lead_id'] ) : 0;
-$entry['lead_email']   = isset( $entry['lead_email'] ) ? sanitize_email( $entry['lead_email'] ) : '';
-$entry['company_name'] = isset( $entry['company_name'] ) ? sanitize_text_field( $entry['company_name'] ) : '';
-$entry['started_at']   = isset( $entry['started_at'] ) ? sanitize_text_field( $entry['started_at'] ) : '';
+ function ( $entry ) {
+$entry['lead_id']        = isset( $entry['lead_id'] ) ? intval( $entry['lead_id'] ) : 0;
+$entry['lead_email']     = isset( $entry['lead_email'] ) ? sanitize_email( $entry['lead_email'] ) : '';
+$entry['company_name']   = isset( $entry['company_name'] ) ? sanitize_text_field( $entry['company_name'] ) : '';
+$entry['started_at']     = isset( $entry['started_at'] ) ? sanitize_text_field( $entry['started_at'] ) : '';
+$entry['report_template'] = isset( $entry['report_template'] ) ? sanitize_text_field( $entry['report_template'] ) : '';
 return $entry;
-},
-$history
-);
+ },
+ $history
+ );
 		}
 
 	private function calculate_average_duration( $history ) {

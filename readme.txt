@@ -119,6 +119,7 @@ requests.
 │  ├── AGENTS.md
 │  ├── business-case-form.php
 │  ├── comprehensive-report-template.php
+│  ├── fast-report-template.php
 │  └── report-template.php
 ├── tests
 │  ├── RTBCB_AdminAjaxReportTest.php
@@ -144,6 +145,14 @@ requests.
 └── vendor
    └── AGENTS.md
 ```
+
+== Report Templates ==
+The plugin selects a report template based on configuration and available assets:
+* `templates/comprehensive-report-template.php` – default template when comprehensive analysis is enabled.
+* `templates/report-template.php` – basic fallback if the comprehensive template or its CSS is missing.
+* `templates/fast-report-template.php` – used for fast-mode reports with minimal output.
+
+The workflow visualizer log records which template was used for each submission.
 
 == Frequently Asked Questions ==
 = How do I display the calculator? =
