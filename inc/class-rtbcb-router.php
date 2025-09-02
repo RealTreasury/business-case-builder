@@ -422,9 +422,15 @@ $html = rtbcb_sanitize_report_html( $html );
 	$optimistic_roi   = floatval( $roi_scenarios['optimistic']['total_annual_benefit'] ?? 0 );
 
 	if ( is_array( $business_case_data['executive_summary'] ?? null ) ) {
-		$business_case_data['executive_recommendation'] = $business_case_data['executive_summary']['executive_recommendation'] ?? '';
-		$business_case_data['value_drivers']           = $business_case_data['executive_summary']['key_value_drivers'] ?? [];
-		$business_case_data['executive_summary']       = $business_case_data['executive_summary']['strategic_positioning'] ?? '';
+		if ( array_key_exists( 'executive_recommendation', $business_case_data['executive_summary'] ) ) {
+			$business_case_data['executive_recommendation'] = $business_case_data['executive_summary']['executive_recommendation'];
+		}
+		if ( array_key_exists( 'key_value_drivers', $business_case_data['executive_summary'] ) ) {
+			$business_case_data['value_drivers'] = $business_case_data['executive_summary']['key_value_drivers'];
+		}
+		if ( array_key_exists( 'strategic_positioning', $business_case_data['executive_summary'] ) ) {
+			$business_case_data['executive_summary'] = $business_case_data['executive_summary']['strategic_positioning'];
+		}
 	}
 
 	// Prepare operational and risk data with fallbacks.
