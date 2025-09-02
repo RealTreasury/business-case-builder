@@ -31,7 +31,8 @@ global.FormData = SimpleFormData;
 global.fetch = function() {
     const payload = {
         success: false,
-        data: { message: 'Bad narrative', error_code: 'BAD_NARRATIVE' }
+        message: 'Bad narrative',
+        error_code: 'BAD_NARRATIVE'
     };
     const response = {
         ok: true,

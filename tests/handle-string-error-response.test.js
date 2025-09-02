@@ -29,7 +29,7 @@ class SimpleFormData {
 global.FormData = SimpleFormData;
 
 global.fetch = function() {
-    const payload = { success: false, data: 'Please enter your company name.' };
+    const payload = { success: false, message: 'Please enter your company name.' };
     const response = {
         ok: false,
         status: 400,

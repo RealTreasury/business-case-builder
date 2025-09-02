@@ -55,8 +55,8 @@ async function rtbcbRefreshNonce() {
             return false;
         }
         const data = await response.json();
-        if ( data && data.success && data.data ) {
-            rtbcb_ajax.nonce = data.data;
+        if ( data && data.success ) {
+            rtbcb_ajax.nonce = data.data || data.nonce || data;
             return true;
         }
     } catch ( err ) {
@@ -599,32 +599,32 @@ class BusinessCaseBuilder {
 
             // Handle JSON response
             if (data.success) {
-                if (data.data && data.data.job_id) {
+                const payload = data.data || data;
+                if (payload.job_id) {
                     // Background job approach
                     this.cancelPolling();
                     this.pollingCancelled = false;
-                    this.activeJobId = data.data.job_id;
+                    this.activeJobId = payload.job_id;
 
                     // Replace progressive loading with polling updates
                     this.cancelProgressiveLoading();
                     this.pollJob(this.activeJobId, Date.now(), 0);
-                } else if (data.data) {
+                } else {
                     // Direct response
                     this.cancelProgressiveLoading();
-                    if (data.data.report_html) {
-                        this.handleSuccess(data.data);
-                    } else if (data.data.report_data) {
-                        this.handleSuccess(data.data.report_data);
+                    if (payload.report_html) {
+                        this.handleSuccess(payload);
+                    } else if (payload.report_data) {
+                        this.handleSuccess(payload.report_data);
                     } else {
-                        this.handleSuccess(data.data);
+                        this.handleSuccess(payload);
                     }
-                } else {
-                    throw new Error( __( 'No report data received', 'rtbcb' ) );
                 }
             } else {
-                console.error('RTBCB: Error response:', data.data);
+                const payload = data.data || data;
+                console.error('RTBCB: Error response:', payload);
                 this.cancelProgressiveLoading();
-                this.handleError(data.data || { message: __( 'Unknown error occurred', 'rtbcb' ) });
+                this.handleError(payload || { message: __( 'Unknown error occurred', 'rtbcb' ) });
             }
 
         } catch (error) {
@@ -882,7 +882,7 @@ class BusinessCaseBuilder {
                 return;
             }
 
-            const statusData = data.data;
+            const statusData = data.data || data;
             const { status, step, message, percent } = statusData;
 
             console.log(`RTBCB: Job status: ${status} (attempt ${attempt})`);

@@ -33,7 +33,7 @@ const fetchCalls = [];
 global.fetch = function(url, options) {
 fetchCalls.push({ url, options });
 if (fetchCalls.length === 1) {
-const payload = { success: false, data: { message: 'Security check failed.' } };
+const payload = { success: false, message: 'Security check failed.' };
 const response = {
 ok: true,
 status: 200,
@@ -44,7 +44,7 @@ clone() { return this; }
 };
 return Promise.resolve(response);
 }
-const payload = { success: true, data: { job_id: 'job-123' } };
+const payload = { success: true, job_id: 'job-123' };
 const response = {
 ok: true,
 status: 200,
