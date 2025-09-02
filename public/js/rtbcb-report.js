@@ -3,6 +3,15 @@
  * Handles interactive dashboard features, charts, and collapsible sections
  */
 
+// Ensure Chart.js date adapter is registered in Node environments.
+if ( typeof require === 'function' ) {
+    try {
+        require( './public/js/chartjs-adapter-date-fns.bundle.min.js' );
+    } catch ( e ) {
+        // Adapter not loaded in tests; ignore.
+    }
+}
+
 if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
     document.addEventListener('DOMContentLoaded', function() {
         console.log('RTBCB Report: Initializing enhanced dashboard');
