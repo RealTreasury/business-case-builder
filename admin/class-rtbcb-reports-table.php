@@ -109,7 +109,8 @@ class RTBCB_Reports_Table extends WP_List_Table {
      */
     protected function get_bulk_actions() {
         return [
-            'delete' => __( 'Delete', 'rtbcb' ),
+            'delete'     => __( 'Delete', 'rtbcb' ),
+            'delete_all' => __( 'Delete All', 'rtbcb' ),
         ];
     }
 
@@ -186,11 +187,26 @@ class RTBCB_Reports_Table extends WP_List_Table {
      * @return void
      */
     public function process_bulk_action() {
-        if ( 'delete' !== $this->current_action() ) {
+        $action = $this->current_action();
+
+        if ( 'delete' !== $action && 'delete_all' !== $action ) {
             return;
         }
 
         check_admin_referer( 'rtbcb_reports_action' );
+
+        if ( 'delete_all' === $action ) {
+            $files = glob( trailingslashit( $this->reports_dir ) . '*.{html,pdf}', GLOB_BRACE );
+            $files = $files ? $files : [];
+
+            foreach ( $files as $file_path ) {
+                if ( file_exists( $file_path ) ) {
+                    unlink( $file_path );
+                }
+            }
+
+            return;
+        }
 
         $files = isset( $_POST['files'] ) ? (array) wp_unslash( $_POST['files'] ) : [];
         $files = array_map( 'sanitize_file_name', $files );
