@@ -98,13 +98,13 @@ echo "Validation did not produce WP_Error\n";
 exit( 1 );
 }
 $data = $result->get_error_data();
-if ( $data['operational_insights'][0] !== 'No data provided' ) {
-echo "Operational fallback failed\n";
+if ( ! isset( $data['executive_summary'] ) ) {
+echo "Missing executive_summary fallback\n";
 exit( 1 );
 }
-if ( $data['risk_analysis']['implementation_risks'][0] !== 'No data provided' ) {
-echo "Risk fallback failed\n";
+if ( isset( $data['risk_analysis'] ) ) {
+echo "Unexpected risk_analysis section\n";
 exit( 1 );
 }
 
-echo "operational-risks-fallback.test.php passed\n";
+echo "template-fallback.test.php passed\n";

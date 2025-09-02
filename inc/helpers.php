@@ -213,7 +213,6 @@ function rtbcb_is_openai_configuration_error( $e ) {
 	* @return array Current company data.
 	*/
 function rtbcb_get_current_company() {
-return function_exists( 'get_option' ) ? get_option( 'rtbcb_current_company', [] ) : [];
 }
 
 /**
@@ -342,7 +341,6 @@ $test_results = function_exists( 'get_option' ) ? get_option( 'rtbcb_test_result
 		$sections = [
 		'rtbcb-test-company-overview'      => [
 			'label'    => __( 'Company Overview', 'rtbcb' ),
-			'option'   => 'rtbcb_current_company',
 			'requires' => [],
 			'phase'    => 1,
 			'action'   => 'rtbcb_test_company_overview',
@@ -363,7 +361,6 @@ $test_results = function_exists( 'get_option' ) ? get_option( 'rtbcb_test_result
 		],
 		'rtbcb-test-maturity-model'        => [
 			'label'    => __( 'Maturity Model', 'rtbcb' ),
-			'option'   => 'rtbcb_maturity_model',
 			'requires' => [ 'rtbcb-test-data-storage' ],
 			'phase'    => 2,
 			'action'   => 'rtbcb_test_maturity_model',
@@ -384,7 +381,6 @@ $test_results = function_exists( 'get_option' ) ? get_option( 'rtbcb_test_result
 		],
 		'rtbcb-test-industry-overview'      => [
 			'label'    => __( 'Industry Overview', 'rtbcb' ),
-			'option'   => 'rtbcb_industry_insights',
 			'requires' => [ 'rtbcb-test-value-proposition' ],
 			'phase'    => 2,
 			'action'   => 'rtbcb_test_industry_overview',
@@ -1780,54 +1776,36 @@ function rtbcb_handle_comprehensive_analysis( $company_name, $job_id ) {
 
 	$timestamp = current_time( 'mysql' );
 
-	update_option( 'rtbcb_current_company', $analysis['company_overview'] );
-	update_option( 'rtbcb_industry_insights', $analysis['industry_analysis'] );
-	update_option( 'rtbcb_maturity_model', $analysis['treasury_maturity'] );
 	update_option( 'rtbcb_rag_market_analysis', $vendor_list );
 	update_option( 'rtbcb_roadmap_plan', $analysis['implementation_roadmap'] );
 	update_option( 'rtbcb_value_proposition', $analysis['executive_summary']['executive_recommendation'] ?? '' );
 	update_option( 'rtbcb_estimated_benefits', $analysis['financial_analysis'] );
 	update_option( 'rtbcb_executive_summary', $analysis['executive_summary'] );
 
-	$results = [
-		'company_overview' => [
-			'summary'   => $analysis['company_overview'],
-			'stored_in' => 'rtbcb_current_company',
-		],
-		'industry_analysis' => [
-			'summary'   => $analysis['industry_analysis'],
-			'stored_in' => 'rtbcb_industry_insights',
-		],
-		'treasury_maturity' => [
-			'summary'   => $analysis['treasury_maturity'],
-			'stored_in' => 'rtbcb_maturity_model',
-		],
-		'market_analysis' => [
-			'summary'   => $vendor_list,
-			'stored_in' => 'rtbcb_rag_market_analysis',
-		],
-		'implementation_roadmap' => [
-			'summary'   => $analysis['implementation_roadmap'],
-			'stored_in' => 'rtbcb_roadmap_plan',
-		],
-		'value_proposition' => [
-			'summary'   => $analysis['executive_summary'],
-			'stored_in' => 'rtbcb_value_proposition',
-		],
-		'financial_analysis' => [
-			'summary'   => $analysis['financial_analysis'],
-			'stored_in' => 'rtbcb_estimated_benefits',
-		],
-		'executive_summary' => [
-			'summary'   => $analysis['executive_summary'],
-			'stored_in' => 'rtbcb_executive_summary',
-		],
-	];
+$results = [
+'market_analysis' => [
+'summary'   => $vendor_list,
+'stored_in' => 'rtbcb_rag_market_analysis',
+],
+'implementation_roadmap' => [
+'summary'   => $analysis['implementation_roadmap'],
+'stored_in' => 'rtbcb_roadmap_plan',
+],
+'value_proposition' => [
+'summary'   => $analysis['executive_summary'],
+'stored_in' => 'rtbcb_value_proposition',
+],
+'financial_analysis' => [
+'summary'   => $analysis['financial_analysis'],
+'stored_in' => 'rtbcb_estimated_benefits',
+],
+'executive_summary' => [
+'summary'   => $analysis['executive_summary'],
+'stored_in' => 'rtbcb_executive_summary',
+],
+];
 
 	$usage_map = [
-		[ 'component' => __( 'Company Overview & Metrics', 'rtbcb' ), 'used_in' => __( 'Company Overview Test', 'rtbcb' ), 'option' => 'rtbcb_current_company' ],
-		[ 'component' => __( 'Industry Analysis', 'rtbcb' ), 'used_in' => __( 'Industry Overview Test', 'rtbcb' ), 'option' => 'rtbcb_industry_insights' ],
-		[ 'component' => __( 'Treasury Maturity Assessment', 'rtbcb' ), 'used_in' => __( 'Maturity Model Test', 'rtbcb' ), 'option' => 'rtbcb_maturity_model' ],
 		[ 'component' => __( 'Market Analysis & Vendors', 'rtbcb' ), 'used_in' => __( 'RAG Market Analysis Test', 'rtbcb' ), 'option' => 'rtbcb_rag_market_analysis' ],
 		[ 'component' => __( 'Value Proposition Paragraph', 'rtbcb' ), 'used_in' => __( 'Value Proposition Test', 'rtbcb' ), 'option' => 'rtbcb_value_proposition' ],
 		[ 'component' => __( 'Financial Benefits Breakdown', 'rtbcb' ), 'used_in' => __( 'Estimated Benefits Test', 'rtbcb' ), 'option' => 'rtbcb_estimated_benefits' ],
@@ -1842,7 +1820,7 @@ function rtbcb_handle_comprehensive_analysis( $company_name, $job_id ) {
 			'timestamp'            => $timestamp,
 			'results'              => $results,
 			'usage_map'            => $usage_map,
-			'components_generated' => 7,
+'components_generated' => 5,
 		]
 	);
 }
