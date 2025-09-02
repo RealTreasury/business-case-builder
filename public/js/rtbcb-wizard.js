@@ -12,6 +12,9 @@ if ( typeof require === 'function' ) {
     }
 }
 
+/* global wp */
+const __ = ( typeof wp !== 'undefined' && wp.i18n && wp.i18n.__ ) ? wp.i18n.__ : ( s ) => s;
+
 /**
  * Check if a URL uses http or https scheme.
  *
@@ -236,7 +239,7 @@ class BusinessCaseBuilder {
             // Special validation for pain points
             const checkedBoxes = this.form.querySelectorAll('input[name="pain_points[]"]:checked');
             if (checkedBoxes.length === 0) {
-                this.showStepError(3, 'Please select at least one challenge');
+                this.showStepError(3, __( 'Please select at least one challenge', 'rtbcb' ) );
                 return false;
             }
             this.clearStepError(3);
@@ -260,20 +263,20 @@ class BusinessCaseBuilder {
 
         // Required field check
         if (field.hasAttribute('required') && !value) {
-            errorMessage = 'This field is required';
+            errorMessage = __( 'This field is required', 'rtbcb' );
             isValid = false;
         }
 
         // Company name validation
         if (field.name === 'company_name' && value) {
             if (value.length < 2) {
-                errorMessage = 'Company name must be at least 2 characters';
+                errorMessage = __( 'Company name must be at least 2 characters', 'rtbcb' );
                 isValid = false;
             } else if (value.length > 100) {
-                errorMessage = 'Company name must be less than 100 characters';
+                errorMessage = __( 'Company name must be less than 100 characters', 'rtbcb' );
                 isValid = false;
             } else if (/^[^a-zA-Z]*$/.test(value)) {
-                errorMessage = 'Please enter a valid company name';
+                errorMessage = __( 'Please enter a valid company name', 'rtbcb' );
                 isValid = false;
             }
         }
@@ -282,7 +285,7 @@ class BusinessCaseBuilder {
         if (field.type === 'email' && value) {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(value)) {
-                errorMessage = 'Please enter a valid email address';
+                errorMessage = __( 'Please enter a valid email address', 'rtbcb' );
                 isValid = false;
             }
         }
@@ -290,7 +293,7 @@ class BusinessCaseBuilder {
         // Number validation
         if (field.type === 'number' && value) {
             if (!Number.isFinite(Number(value))) {
-                errorMessage = 'Please enter a valid number';
+                errorMessage = __( 'Please enter a valid number', 'rtbcb' );
                 isValid = false;
             }
         }
@@ -428,13 +431,13 @@ class BusinessCaseBuilder {
     // Progressive loading states
     initializeProgressStates() {
         this.progressStates = [
-            { step: 'initializing', message: 'Initializing analysis...', duration: 2000 },
-            { step: 'collecting_data', message: 'Collecting your data...', duration: 3000 },
-            { step: 'calculating_roi', message: 'Calculating ROI scenarios...', duration: 8000 },
-            { step: 'analyzing_company', message: 'Analyzing company profile...', duration: 6000 },
-            { step: 'market_research', message: 'Researching market insights...', duration: 5000 },
-            { step: 'generating_recommendations', message: 'Generating recommendations...', duration: 10000 },
-            { step: 'finalizing', message: 'Finalizing your report...', duration: 5000 }
+            { step: 'initializing', message: __( 'Initializing analysis...', 'rtbcb' ), duration: 2000 },
+            { step: 'collecting_data', message: __( 'Collecting your data...', 'rtbcb' ), duration: 3000 },
+            { step: 'calculating_roi', message: __( 'Calculating ROI scenarios...', 'rtbcb' ), duration: 8000 },
+            { step: 'analyzing_company', message: __( 'Analyzing company profile...', 'rtbcb' ), duration: 6000 },
+            { step: 'market_research', message: __( 'Researching market insights...', 'rtbcb' ), duration: 5000 },
+            { step: 'generating_recommendations', message: __( 'Generating recommendations...', 'rtbcb' ), duration: 10000 },
+            { step: 'finalizing', message: __( 'Finalizing your report...', 'rtbcb' ), duration: 5000 }
         ];
         this.currentProgressIndex = 0;
         this.progressTimer = null;
@@ -511,7 +514,7 @@ class BusinessCaseBuilder {
         }
 
         if (!isValidUrl(this.ajaxUrl)) {
-            this.showEnhancedError('Service unavailable. Please reload the page.');
+            this.showEnhancedError( __( 'Service unavailable. Please reload the page.', 'rtbcb' ) );
             return;
         }
 
@@ -527,7 +530,7 @@ class BusinessCaseBuilder {
 
             // Submit form
             if (!isValidUrl(this.ajaxUrl)) {
-                this.showEnhancedError('Service unavailable. Please reload the page.');
+                this.showEnhancedError( __( 'Service unavailable. Please reload the page.', 'rtbcb' ) );
                 return;
             }
 
@@ -560,7 +563,7 @@ class BusinessCaseBuilder {
                     }
                     this.cancelProgressiveLoading();
                     this.handleError({
-                        message: 'Security validation failed. Please reload the page.',
+                        message: __( 'Security validation failed. Please reload the page.', 'rtbcb' ),
                         type: 'nonce_error'
                     });
                     return;
@@ -590,7 +593,7 @@ class BusinessCaseBuilder {
                     this.showEnhancedHTMLReport(responseText);
                     return;
                 } else {
-                    throw new Error('Invalid response format');
+                    throw new Error( __( 'Invalid response format', 'rtbcb' ) );
                 }
             }
 
@@ -616,19 +619,19 @@ class BusinessCaseBuilder {
                         this.handleSuccess(data.data);
                     }
                 } else {
-                    throw new Error('No report data received');
+                    throw new Error( __( 'No report data received', 'rtbcb' ) );
                 }
             } else {
                 console.error('RTBCB: Error response:', data.data);
                 this.cancelProgressiveLoading();
-                this.handleError(data.data || { message: 'Unknown error occurred' });
+                this.handleError(data.data || { message: __( 'Unknown error occurred', 'rtbcb' ) });
             }
 
         } catch (error) {
             console.error('RTBCB: Submission error:', error);
             this.cancelProgressiveLoading();
             this.handleError({
-                message: error.message || 'An unexpected error occurred',
+                message: error.message || __( 'An unexpected error occurred', 'rtbcb' ),
                 type: 'submission_error'
             });
         }
@@ -692,27 +695,27 @@ class BusinessCaseBuilder {
 
         for (const field of requiredFields) {
             if (!getValue(field)) {
-                throw new Error(`Missing required field: ${field.replace('_', ' ')}`);
+                throw new Error( `${ __( 'Missing required field:', 'rtbcb' )} ${field.replace('_', ' ')}` );
             }
         }
 
         const email = getValue('email');
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            throw new Error('Please enter a valid email address');
+            throw new Error( __( 'Please enter a valid email address', 'rtbcb' ) );
         }
 
         const numericFields = ['hours_reconciliation', 'hours_cash_positioning', 'num_banks', 'ftes'];
         for (const field of numericFields) {
             const value = parseFloat(getValue(field));
             if (isNaN(value) || value <= 0) {
-                throw new Error(`${field.replace('_', ' ')} must be a positive number`);
+                throw new Error(`${field.replace('_', ' ')} ${ __( 'must be a positive number', 'rtbcb' ) }`);
             }
         }
 
         const painPoints = getAllValues('pain_points[]');
         if (painPoints.length === 0) {
-            throw new Error('Please select at least one pain point');
+            throw new Error( __( 'Please select at least one pain point', 'rtbcb' ) );
         }
     }
 
@@ -823,7 +826,7 @@ class BusinessCaseBuilder {
 
         if (Date.now() - startTime > MAX_DURATION || attempt > MAX_ATTEMPTS) {
             this.handleError({
-                message: 'The request timed out after 20 minutes. Please try again later.',
+                message: __( 'The request timed out after 20 minutes. Please try again later.', 'rtbcb' ),
                 type: 'timeout'
             });
             this.cancelPolling();
@@ -851,7 +854,7 @@ class BusinessCaseBuilder {
                     this.cancelPolling();
                     this.hideLoading();
                     this.handleError({
-                        message: 'Security validation failed. Please reload the page.',
+                        message: __( 'Security validation failed. Please reload the page.', 'rtbcb' ),
                         type: 'nonce_error'
                     });
                     return;
@@ -872,7 +875,7 @@ class BusinessCaseBuilder {
 
             if (!data.success) {
                 this.handleError({
-                    message: 'Unable to retrieve job status',
+                    message: __( 'Unable to retrieve job status', 'rtbcb' ),
                     type: 'polling_error'
                 });
                 this.cancelPolling();
@@ -903,7 +906,7 @@ class BusinessCaseBuilder {
                         this.handleSuccess(statusData.report_data);
                     } else {
                         this.handleError({
-                            message: 'Report data missing from completed job',
+                            message: __( 'Report data missing from completed job', 'rtbcb' ),
                             type: 'job_error'
                         });
                     }
@@ -912,7 +915,7 @@ class BusinessCaseBuilder {
                 this.cancelPolling();
                 this.hideLoading();
                 this.handleError({
-                    message: statusData.message || 'Job failed',
+                    message: statusData.message || __( 'Job failed', 'rtbcb' ),
                     type: 'job_error'
                 });
             } else if (typeof percent === 'number' && percent >= 100) {
@@ -957,7 +960,7 @@ class BusinessCaseBuilder {
         const spinner = document.querySelector('.rtbcb-progress-spinner');
 
         if (statusElement) {
-            statusElement.textContent = 'Report completed successfully! ✓';
+            statusElement.textContent = __( 'Report completed successfully! ✓', 'rtbcb' );
             statusElement.style.color = 'var(--success-green)';
             statusElement.style.fontWeight = '600';
         }
@@ -1003,7 +1006,7 @@ class BusinessCaseBuilder {
         } else if (message && message.trim()) {
             displayText = this.formatProgressMessage(message);
         } else {
-            const currentText = progressStatus.textContent || 'Processing...';
+            const currentText = progressStatus.textContent || __( 'Processing...', 'rtbcb' );
             displayText = currentText;
         }
 
@@ -1060,12 +1063,12 @@ class BusinessCaseBuilder {
     // Format progress steps for better readability
     formatProgressStep(step) {
         const stepMap = {
-            'roi_calculation': 'Calculating ROI scenarios...',
-            'category_recommendation': 'Identifying optimal solution category...',
-            'rag_search': 'Researching market insights...',
-            'ai_analysis': 'Generating AI-powered analysis...',
-            'report_generation': 'Assembling your business case report...',
-            'finalizing': 'Finalizing recommendations...'
+            'roi_calculation': __( 'Calculating ROI scenarios...', 'rtbcb' ),
+            'category_recommendation': __( 'Identifying optimal solution category...', 'rtbcb' ),
+            'rag_search': __( 'Researching market insights...', 'rtbcb' ),
+            'ai_analysis': __( 'Generating AI-powered analysis...', 'rtbcb' ),
+            'report_generation': __( 'Assembling your business case report...', 'rtbcb' ),
+            'finalizing': __( 'Finalizing recommendations...', 'rtbcb' )
         };
 
         return stepMap[step] || step.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) + '...';
@@ -1481,7 +1484,7 @@ class BusinessCaseBuilder {
             resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
         } else {
             console.error('RTBCB: Results container not found');
-            this.showEnhancedError('Unable to display results. Please refresh the page.');
+            this.showEnhancedError( __( 'Unable to display results. Please refresh the page.', 'rtbcb' ) );
         }
     }
 
@@ -1679,10 +1682,10 @@ class BusinessCaseBuilder {
     renderNextSteps(steps) {
         if (!steps || steps.length === 0) {
             steps = [
-                'Present business case to stakeholders',
-                'Evaluate solution providers',
-                'Develop implementation timeline',
-                'Plan change management strategy'
+                __( 'Present business case to stakeholders', 'rtbcb' ),
+                __( 'Evaluate solution providers', 'rtbcb' ),
+                __( 'Develop implementation timeline', 'rtbcb' ),
+                __( 'Plan change management strategy', 'rtbcb' )
             ];
         }
 
@@ -1693,7 +1696,7 @@ class BusinessCaseBuilder {
 
         return `
             <div class="rtbcb-next-steps">
-                <h3>Recommended Next Steps</h3>
+                <h3>${ __( 'Recommended Next Steps', 'rtbcb' ) }</h3>
                 <div class="rtbcb-steps-grid">
                     ${steps.map((step, index) => `
                         <div class="rtbcb-step">
@@ -1713,15 +1716,15 @@ class BusinessCaseBuilder {
             <div class="rtbcb-actions-section">
                 <button type="button" class="rtbcb-action-btn rtbcb-btn-secondary" onclick="window.print()">
                     <span class="rtbcb-btn-icon">🖨️</span>
-                    Print Results
+                    ${ __( 'Print Results', 'rtbcb' ) }
                 </button>
                 <button type="button" class="rtbcb-action-btn rtbcb-btn-secondary" onclick="window.businessCaseBuilder.copyResultsHTML()">
                     <span class="rtbcb-btn-icon">📋</span>
-                    Copy HTML
+                    ${ __( 'Copy HTML', 'rtbcb' ) }
                 </button>
                 <button type="button" class="rtbcb-action-btn rtbcb-btn-secondary" onclick="location.reload()">
                     <span class="rtbcb-btn-icon">🔄</span>
-                    Start Over
+                    ${ __( 'Start Over', 'rtbcb' ) }
                 </button>
             </div>
         `;
@@ -1733,12 +1736,12 @@ class BusinessCaseBuilder {
             return;
         }
         navigator.clipboard.writeText(container.innerHTML)
-            .then(() => alert('Results HTML copied to clipboard'))
+            .then(() => alert( __( 'Results HTML copied to clipboard', 'rtbcb' ) ))
             .catch(err => console.error('Copy failed:', err));
     }
 
     handleError(errorData) {
-        const message = errorData.message || 'An unexpected error occurred';
+        const message = errorData.message || __( 'An unexpected error occurred', 'rtbcb' );
 
         console.group('RTBCB Error Details');
         console.error('Message:', message);
@@ -1752,16 +1755,16 @@ class BusinessCaseBuilder {
 
     getUserFriendlyMessage(serverMessage) {
         const errorMappings = {
-            'Security check failed': 'Session expired. Please refresh the page and try again.',
-            'OpenAI API key not configured': 'Service temporarily unavailable. Please try again later.',
-            'API connection failed': 'Unable to connect to analysis service. Please try again.',
-            'Missing required field': 'Please fill in all required fields.',
-            'Invalid email address': 'Please enter a valid email address.',
-            'request took longer than our 5-minute limit': 'Your request exceeded the 5-minute limit. Visit the <a href="/request-processing/" target="_blank">Request Processing page</a> or <a href="#" onclick="window.location.href=&apos;mailto:contact@realtreasury.com?subject=Business%20Case%20Request&apos;">request email delivery</a>.',
-            'PHP error occurred': 'Server error encountered. Please try again.',
-            'Server returned invalid JSON response': 'Server communication error. Please try again.',
-            'Unexpected server response': 'Server communication error. Please try again.',
-            'Job not found': 'Unable to locate your report request. Please resubmit the form.'
+            'Security check failed': __( 'Session expired. Please refresh the page and try again.', 'rtbcb' ),
+            'OpenAI API key not configured': __( 'Service temporarily unavailable. Please try again later.', 'rtbcb' ),
+            'API connection failed': __( 'Unable to connect to analysis service. Please try again.', 'rtbcb' ),
+            'Missing required field': __( 'Please fill in all required fields.', 'rtbcb' ),
+            'Invalid email address': __( 'Please enter a valid email address.', 'rtbcb' ),
+            'request took longer than our 5-minute limit': __( 'Your request exceeded the 5-minute limit. Visit the <a href="/request-processing/" target="_blank">Request Processing page</a> or <a href="#" onclick="window.location.href=&apos;mailto:contact@realtreasury.com?subject=Business%20Case%20Request&apos;">request email delivery</a>.', 'rtbcb' ),
+            'PHP error occurred': __( 'Server error encountered. Please try again.', 'rtbcb' ),
+            'Server returned invalid JSON response': __( 'Server communication error. Please try again.', 'rtbcb' ),
+            'Unexpected server response': __( 'Server communication error. Please try again.', 'rtbcb' ),
+            'Job not found': __( 'Unable to locate your report request. Please resubmit the form.', 'rtbcb' )
         };
 
         for (const [key, message] of Object.entries(errorMappings)) {
@@ -1770,7 +1773,7 @@ class BusinessCaseBuilder {
             }
         }
 
-        return 'An error occurred while processing your request. Please try again.';
+        return __( 'An error occurred while processing your request. Please try again.', 'rtbcb' );
     }
 
     escapeHTML(str) {
