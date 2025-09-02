@@ -52,9 +52,20 @@ if (!function_exists('wp_convert_hr_to_bytes')) {
 	}
 }
 $business_case_data = [
-	'narrative' => 'Sample report narrative.',
-	'risks' => ['Risk1'],
-	'assumptions_explained' => ['Assumption1'],
+       'executive_summary'    => [
+               'strategic_positioning' => 'Sample strategic positioning.',
+       ],
+       'business_case_strength'    => 'Sample case strength.',
+       'key_value_drivers'         => [ 'Driver1' ],
+       'executive_recommendation'  => 'Sample recommendation.',
+       'operational_analysis'      => [
+               'current_state_assessment' => 'Sample current state assessment.',
+       ],
+       'industry_insights'         => [
+               'sector_trends'           => [ 'Trend1' ],
+               'competitive_benchmarks'  => [ 'Benchmark1' ],
+               'regulatory_considerations' => [ 'Reg1' ],
+       ],
 ];
 ob_start();
 include __DIR__ . '/../templates/report-template.php';
