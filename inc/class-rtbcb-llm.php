@@ -106,19 +106,30 @@ class RTBCB_LLM {
         * @return array|false Decoded array on success, false on failure.
         */
        public function process_openai_response( $response_body ) {
-               if ( function_exists( 'get_magic_quotes_gpc' ) && get_magic_quotes_gpc() ) {
+               $raw_body = $response_body;
+
+               if ( function_exists( 'wp_unslash' ) ) {
+                       $response_body = wp_unslash( $response_body );
+               } elseif ( function_exists( 'stripslashes' ) ) {
                        $response_body = stripslashes( $response_body );
                }
 
                $decoded = json_decode( $response_body, true );
 
                if ( JSON_ERROR_NONE !== json_last_error() ) {
-                       $decoded = json_decode( wp_unslash( $response_body ), true );
-               }
-
-               if ( JSON_ERROR_NONE !== json_last_error() ) {
                        error_log( 'JSON decode error: ' . json_last_error_msg() );
                        return false;
+               }
+
+               $reencoded = wp_json_encode( $decoded );
+               if ( false === $reencoded || JSON_ERROR_NONE !== json_last_error() ) {
+                       error_log( 'JSON re-encode validation failed: ' . json_last_error_msg() );
+                       return false;
+               }
+
+               if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+                       error_log( 'OpenAI Response (raw): ' . $raw_body );
+                       error_log( 'OpenAI Response (decoded): ' . wp_json_encode( $decoded, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT ) );
                }
 
                return $decoded;
@@ -2534,11 +2545,22 @@ PROMPT;
 			}
 			}
 
-			if ( false !== $cached && '' !== $cached ) {
-			$response            = [ 'body' => $cached, 'response' => [ 'code' => 200, 'message' => '' ], 'headers' => [] ];
-			$this->last_response = $response;
-			return $response;
-			}
+                       if ( false !== $cached && '' !== $cached ) {
+                        $decoded = $this->process_openai_response( $cached );
+                        if ( false === $decoded ) {
+                                wp_cache_delete( $cache_key, 'rtbcb_llm' );
+                                delete_transient( $cache_key );
+                        } else {
+                                $response            = [
+                                        'body'     => $cached,
+                                        'json'     => $decoded,
+                                        'response' => [ 'code' => 200, 'message' => '' ],
+                                        'headers'  => [],
+                                ];
+                                $this->last_response = $response;
+                                return $response;
+                        }
+                        }
 		}
 		$max_retries     = min( 3, $max_retries ?? intval( $this->gpt5_config['max_retries'] ) );
 		$base_timeout    = intval( $this->gpt5_config['timeout'] ?? 300 );
@@ -2720,10 +2742,10 @@ $max_output_tokens = min( 128000, max( $min_tokens, $max_output_tokens ) );
 		do_action( 'rtbcb_llm_prompt_sent', $body );
 
 	$timeout   = intval( $this->gpt5_config['timeout'] ?? 300 );
-		$payload   = wp_json_encode( $body );
-		$buffer    = '';
-		$last_event = '';
-		$last_chunk = '';
+               $payload   = wp_json_encode( $body );
+               $buffer    = '';
+               $events    = [];
+               $last_chunk = '';
 		$ch        = curl_init( $endpoint );
 		curl_setopt( $ch, CURLOPT_HTTPHEADER, [
 			'Authorization: Bearer ' . $this->api_key,
@@ -2732,30 +2754,30 @@ $max_output_tokens = min( 128000, max( $min_tokens, $max_output_tokens ) );
 		curl_setopt( $ch, CURLOPT_POST, true );
 		curl_setopt( $ch, CURLOPT_POSTFIELDS, $payload );
 		curl_setopt( $ch, CURLOPT_TIMEOUT, $timeout );
-		curl_setopt( $ch, CURLOPT_WRITEFUNCTION, function ( $curl, $data ) use ( &$buffer, &$last_event, &$last_chunk, $chunk_handler ) {
-			$last_chunk = $data;
-			if ( is_callable( $chunk_handler ) ) {
-				call_user_func( $chunk_handler, $data );
-			}
+               curl_setopt( $ch, CURLOPT_WRITEFUNCTION, function ( $curl, $data ) use ( &$buffer, &$events, &$last_chunk, $chunk_handler ) {
+                       $last_chunk = $data;
+                       if ( is_callable( $chunk_handler ) ) {
+                               call_user_func( $chunk_handler, $data );
+                       }
 
-			$buffer .= $data;
-			while ( false !== ( $pos = strpos( $buffer, "\n" ) ) ) {
-				$line   = trim( substr( $buffer, 0, $pos ) );
-				$buffer = substr( $buffer, $pos + 1 );
-				if ( '' === $line ) {
-					continue;
-				}
-				if ( 0 === strpos( $line, 'data:' ) ) {
-					$payload_line = trim( substr( $line, strpos( $line, ':' ) + 1 ) );
-					if ( '[DONE]' === $payload_line ) {
-						continue;
-					}
-					$last_event = $payload_line;
-				}
-			}
+                       $buffer .= $data;
+                       while ( false !== ( $pos = strpos( $buffer, "\n" ) ) ) {
+                               $line   = trim( substr( $buffer, 0, $pos ) );
+                               $buffer = substr( $buffer, $pos + 1 );
+                               if ( '' === $line ) {
+                                       continue;
+                               }
+                               if ( 0 === strpos( $line, 'data:' ) ) {
+                                       $payload_line = trim( substr( $line, strpos( $line, ':' ) + 1 ) );
+                                       if ( '[DONE]' === $payload_line ) {
+                                               continue;
+                                       }
+                                       $events[] = $payload_line;
+                               }
+                       }
 
-			return strlen( $data );
-		} );
+                       return strlen( $data );
+               } );
 
 		$this->last_request = $body;
 		$ok                 = curl_exec( $ch );
@@ -2777,19 +2799,22 @@ $max_output_tokens = min( 128000, max( $min_tokens, $max_output_tokens ) );
 			);
 		}
 
-                if ( '' !== trim( $buffer ) ) {
-                        $line = trim( $buffer );
-                        if ( 0 === strpos( $line, 'data:' ) ) {
-                                $payload_line = trim( substr( $line, strpos( $line, ':' ) + 1 ) );
-                                if ( '[DONE]' !== $payload_line ) {
-                                        $last_event = $payload_line;
-                                }
-                        }
-                }
+               if ( '' !== trim( $buffer ) ) {
+                       $line = trim( $buffer );
+                       if ( 0 === strpos( $line, 'data:' ) ) {
+                               $payload_line = trim( substr( $line, strpos( $line, ':' ) + 1 ) );
+                               if ( '[DONE]' !== $payload_line ) {
+                                       $events[] = $payload_line;
+                               }
+                       }
+               }
 
-                $response_body = $last_event ? $last_event : $last_chunk;
+               $response_body = end( $events );
+               if ( false === $response_body ) {
+                       $response_body = $last_chunk;
+               }
 
-                $decoded = $this->process_openai_response( $response_body );
+               $decoded = $this->process_openai_response( $response_body );
 
                 if ( false === $decoded || ! is_array( $decoded ) ) {
                         error_log( 'RTBCB: Malformed LLM response: ' . $response_body );
@@ -2805,17 +2830,14 @@ $max_output_tokens = min( 128000, max( $min_tokens, $max_output_tokens ) );
                         return $error;
                 }
 
-                if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-                        error_log( 'OpenAI Response (clean): ' . wp_json_encode( $decoded, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT ) );
-                }
+               $response = [
+                       'body'     => $response_body,
+                       'json'     => $decoded,
+                       'response' => [ 'code' => $http_code, 'message' => '' ],
+                       'headers'  => [],
+               ];
 
-                $response = [
-                        'body'     => $response_body,
-                        'response' => [ 'code' => $http_code, 'message' => '' ],
-                        'headers'  => [],
-                ];
-
-		$this->last_response = $response;
+               $this->last_response = $response;
 
 		if ( class_exists( 'RTBCB_API_Log' ) ) {
 			$user_email   = $this->current_inputs['email'] ?? '';
