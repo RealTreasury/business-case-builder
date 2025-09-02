@@ -2474,7 +2474,7 @@ wp_cache_set( $cache_key, $body, 'rtbcb_llm', $ttl );
 set_transient( $cache_key, $body, $ttl );
 }
 }
-	return ;
+	return $response;
 }
 
 $error_code = $response->get_error_code();
