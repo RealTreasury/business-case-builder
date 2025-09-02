@@ -560,6 +560,72 @@ function toggleMobileMenu() {
     }
 }
 
+async function generateProfessionalReport(businessContext, onProgress = () => {}) {
+    const templateResponse = await fetch(rtbcbReport.template_url);
+    if (!templateResponse.ok) {
+        throw new Error('Failed to load template');
+    }
+    const templateHtml = await templateResponse.text();
+
+    const minTokens = parseInt(rtbcbReport.min_output_tokens, 10) || 0;
+    const maxTokens = parseInt(rtbcbReport.max_output_tokens, 10) || 0;
+    let tokenEstimate = Math.max(minTokens, 3000);
+    if (maxTokens > 0) {
+        tokenEstimate = Math.min(tokenEstimate, maxTokens);
+    }
+
+    const requestBody = {
+        model: rtbcbReport.report_model,
+        context: businessContext,
+        max_output_tokens: tokenEstimate
+    };
+
+    const unsupportedTemps = rtbcbReport.model_capabilities?.temperature?.unsupported || [];
+    if (!unsupportedTemps.includes(rtbcbReport.report_model)) {
+        requestBody.temperature = 0.7;
+    }
+
+    const formData = new FormData();
+    formData.append('action', 'rtbcb_generate_report');
+    if (rtbcbReport.nonce) {
+        formData.append('rtbcb_nonce', rtbcbReport.nonce);
+    }
+    formData.append('body', JSON.stringify(requestBody));
+
+    const response = await fetch(rtbcbReport.ajax_url, {
+        method: 'POST',
+        body: formData
+    });
+
+    if (!response.ok) {
+        throw new Error(response.statusText || 'Report generation failed');
+    }
+
+    let reportContent = '';
+    if (response.body) {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            const chunk = decoder.decode(value, { stream: true });
+            reportContent += chunk;
+            onProgress(reportContent);
+        }
+    } else {
+        reportContent = await response.text();
+        onProgress(reportContent);
+    }
+
+    const safeContext = typeof DOMPurify !== 'undefined'
+        ? DOMPurify.sanitize(businessContext)
+        : businessContext;
+
+    return templateHtml
+        .replace('{{BUSINESS_CONTEXT}}', safeContext)
+        .replace('<!-- GENERATE THE REPORT CONTENT HERE FOLLOWING THIS STRUCTURE: -->', reportContent);
+}
+
 // Report generation utilities retained for backward compatibility
 function sanitizeReportHTML(htmlContent) {
     // Sanitize OpenAI-generated HTML before embedding or exporting.
