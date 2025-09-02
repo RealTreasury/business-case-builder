@@ -10,6 +10,7 @@ defined( 'ABSPATH' ) || exit;
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/helpers.php';
 
+require_once __DIR__ . '/class-rtbcb-response-parser.php';
 class RTBCB_LLM {
 	private $api_key;
 	private $current_inputs = [];
@@ -521,7 +522,7 @@ return false;
 			return new WP_Error( 'llm_failure', __( 'Unable to generate analysis at this time.', 'rtbcb' ) );
 		}
 
-		$parsed = rtbcb_parse_gpt5_response( $response );
+		$parsed = ( new RTBCB_Response_Parser() )->parse( $response );
 		$json   = $this->process_openai_response( $parsed['output_text'] );
 
 		if ( ! is_array( $json ) ) {
@@ -581,7 +582,7 @@ return false;
 			return new WP_Error( 'llm_failure', __( 'Unable to generate commentary at this time.', 'rtbcb' ) );
 		}
 
-		$parsed     = rtbcb_parse_gpt5_response( $response );
+		$parsed     = ( new RTBCB_Response_Parser() )->parse( $response );
 		$commentary = sanitize_textarea_field( $parsed['output_text'] );
 
 		if ( empty( $commentary ) ) {
@@ -694,7 +695,7 @@ USER,
 			return new WP_Error( 'llm_failure', $response->get_error_message() );
 		}
 
-		$parsed  = rtbcb_parse_gpt5_response( $response );
+		$parsed  = ( new RTBCB_Response_Parser() )->parse( $response );
 		$content = $parsed['output_text'];
 
 		if ( empty( $content ) ) {
@@ -788,7 +789,7 @@ $json = $this->process_openai_response( $content );
 			return new WP_Error( 'llm_failure', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
 		}
 
-		$parsed   = rtbcb_parse_gpt5_response( $response );
+		$parsed   = ( new RTBCB_Response_Parser() )->parse( $response );
 		$overview = sanitize_textarea_field( $parsed['output_text'] );
 
 		if ( empty( $overview ) ) {
@@ -838,7 +839,7 @@ $json = $this->process_openai_response( $content );
 			return new WP_Error( 'llm_failure', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
 		}
 
-		$parsed   = rtbcb_parse_gpt5_response( $response );
+		$parsed   = ( new RTBCB_Response_Parser() )->parse( $response );
 		$overview = sanitize_textarea_field( $parsed['output_text'] );
 
 		if ( empty( $overview ) ) {
@@ -904,7 +905,7 @@ $json = $this->process_openai_response( $content );
 			return new WP_Error( 'llm_failure', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
 		}
 
-		$parsed   = rtbcb_parse_gpt5_response( $response );
+		$parsed   = ( new RTBCB_Response_Parser() )->parse( $response );
 		$overview = sanitize_textarea_field( $parsed['output_text'] );
 
 		if ( empty( $overview ) ) {
@@ -949,7 +950,7 @@ $json = $this->process_openai_response( $content );
 			return new WP_Error( 'llm_failure', __( 'Unable to generate recommendation details at this time.', 'rtbcb' ) );
 		}
 
-$parsed_response = rtbcb_parse_gpt5_response( $response );
+$parsed_response = ( new RTBCB_Response_Parser() )->parse( $response );
 $parsed          = $this->process_openai_response( $parsed_response['output_text'] );
 
 		if ( empty( $parsed ) || ! is_array( $parsed ) ) {
@@ -1002,7 +1003,7 @@ $parsed          = $this->process_openai_response( $parsed_response['output_text
 			return new WP_Error( 'llm_failure', __( 'Unable to generate benefits estimate at this time.', 'rtbcb' ) );
 		}
 
-$parsed_response = rtbcb_parse_gpt5_response( $response );
+$parsed_response = ( new RTBCB_Response_Parser() )->parse( $response );
 $parsed          = $this->process_openai_response( $parsed_response['output_text'] );
 
 		if ( empty( $parsed ) || ! is_array( $parsed ) ) {
@@ -1192,15 +1193,13 @@ $batch_prompts['tech'] = [
 			return $response;
 		}
 
-		$parsed = $this->parse_comprehensive_response( $response );
+		$parser = new RTBCB_Response_Parser();
+                $parsed = $parser->parse_business_case( $response );
 
 		if ( is_wp_error( $parsed ) ) {
 			return $parsed;
 		}
 
-		if ( isset( $parsed['error'] ) ) {
-			return new WP_Error( 'llm_parse_error', $parsed['error'] );
-		}
 
 		$analysis = $this->enhance_with_research( $parsed, $company_research, $industry_analysis, $tech_landscape );
 
@@ -1226,173 +1225,10 @@ return [
       * @return array|WP_Error Structured analysis array or error object.
       */
       private function parse_comprehensive_response( $response ) {
-              $parsed_response = rtbcb_parse_gpt5_response( $response, true );
-              $content         = $parsed_response['output_text'];
-              $decoded         = $parsed_response['raw'];
+        $parser = new RTBCB_Response_Parser();
+        return $parser->parse_business_case( $response );
+    }
 
-              if ( empty( $decoded ) ) {
-                      return new WP_Error( 'llm_response_decode_error', __( 'Failed to decode response body.', 'rtbcb' ) );
-              }
-
-              if ( is_string( $content ) ) {
-                      $json = $this->process_openai_response( $content );
-              } else {
-                      $json = is_array( $content ) ? $content : [];
-              }
-
-              if ( ! is_array( $json ) ) {
-                      return new WP_Error( 'llm_response_parse_error', __( 'Invalid JSON from language model.', 'rtbcb' ) );
-              }
-
-              $required_sections = [
-                      'executive_summary',
-                      'company_intelligence',
-                      'operational_insights',
-                      'risk_analysis',
-                      'action_plan',
-                      'industry_insights',
-                      'technology_strategy',
-                      'financial_analysis',
-              ];
-
-              foreach ( $required_sections as $section ) {
-                      if ( ! isset( $json[ $section ] ) || ! is_array( $json[ $section ] ) ) {
-                              /* translators: %s: missing section name */
-                              return new WP_Error(
-                                      'llm_missing_section',
-                                      sprintf( __( 'Missing required section: %s', 'rtbcb' ), $section )
-                              );
-                      }
-              }
-
-              $sanitize = function ( $value ) use ( &$sanitize ) {
-                      if ( is_array( $value ) ) {
-                              return array_map( $sanitize, $value );
-                      }
-
-                      if ( is_numeric( $value ) ) {
-                              return 0 + $value;
-                      }
-
-                      return sanitize_text_field( (string) $value );
-              };
-
-              $executive_summary = [
-                      'strategic_positioning'  => sanitize_text_field( $json['executive_summary']['strategic_positioning'] ?? '' ),
-                      'key_value_drivers'      => array_map( 'sanitize_text_field', $json['executive_summary']['key_value_drivers'] ?? [] ),
-                      'business_case_strength' => sanitize_text_field( $json['executive_summary']['business_case_strength'] ?? '' ),
-                      'executive_recommendation' => sanitize_text_field( $json['executive_summary']['executive_recommendation'] ?? '' ),
-                      'confidence_level'       => floatval( $json['executive_summary']['confidence_level'] ?? 0 ),
-              ];
-
-              $company_intelligence = [
-                      'enriched_profile' => [
-                              'name'               => sanitize_text_field( $json['company_intelligence']['enriched_profile']['name'] ?? '' ),
-                              'industry'           => sanitize_text_field( $json['company_intelligence']['enriched_profile']['industry'] ?? '' ),
-                              'size'               => sanitize_text_field( $json['company_intelligence']['enriched_profile']['size'] ?? '' ),
-                              'maturity_level'     => sanitize_text_field( $json['company_intelligence']['enriched_profile']['maturity_level'] ?? '' ),
-                              'key_challenges'     => array_map( 'sanitize_text_field', $json['company_intelligence']['enriched_profile']['key_challenges'] ?? [] ),
-                              'strategic_priorities' => array_map( 'sanitize_text_field', $json['company_intelligence']['enriched_profile']['strategic_priorities'] ?? [] ),
-                      ],
-                      'industry_context' => [
-                              'competitive_pressure'   => sanitize_text_field( $json['company_intelligence']['industry_context']['competitive_pressure'] ?? '' ),
-                              'regulatory_environment' => sanitize_text_field( $json['company_intelligence']['industry_context']['regulatory_environment'] ?? '' ),
-                              'sector_trends'          => sanitize_text_field( $json['company_intelligence']['industry_context']['sector_trends'] ?? '' ),
-                      ],
-                      'maturity_assessment' => $sanitize( $json['company_intelligence']['maturity_assessment'] ?? [] ),
-                      'competitive_position' => $sanitize( $json['company_intelligence']['competitive_position'] ?? [] ),
-              ];
-
-              $operational_insights = [
-                      'current_state_assessment' => array_map( 'sanitize_text_field', $json['operational_insights']['current_state_assessment'] ?? [] ),
-                      'process_improvements'     => array_map( 'sanitize_text_field', $json['operational_insights']['process_improvements'] ?? [] ),
-                      'automation_opportunities' => array_map( 'sanitize_text_field', $json['operational_insights']['automation_opportunities'] ?? [] ),
-              ];
-
-              $risk_analysis = [
-                      'implementation_risks' => array_map( 'sanitize_text_field', $json['risk_analysis']['implementation_risks'] ?? [] ),
-                      'mitigation_strategies' => array_map( 'sanitize_text_field', $json['risk_analysis']['mitigation_strategies'] ?? [] ),
-                      'success_factors'       => array_map( 'sanitize_text_field', $json['risk_analysis']['success_factors'] ?? [] ),
-              ];
-
-              $action_plan = [
-                      'immediate_steps'      => array_map( 'sanitize_text_field', $json['action_plan']['immediate_steps'] ?? [] ),
-                      'short_term_milestones' => array_map( 'sanitize_text_field', $json['action_plan']['short_term_milestones'] ?? [] ),
-                      'long_term_objectives'  => array_map( 'sanitize_text_field', $json['action_plan']['long_term_objectives'] ?? [] ),
-              ];
-
-              $industry_insights = [
-                      'sector_trends'          => array_map( 'sanitize_text_field', $json['industry_insights']['sector_trends'] ?? [] ),
-                      'competitive_benchmarks' => array_map( 'sanitize_text_field', $json['industry_insights']['competitive_benchmarks'] ?? [] ),
-                      'regulatory_considerations' => array_map( 'sanitize_text_field', $json['industry_insights']['regulatory_considerations'] ?? [] ),
-              ];
-
-              $technology_strategy = [
-                      'recommended_category' => sanitize_text_field( $json['technology_strategy']['recommended_category'] ?? '' ),
-                      'category_details'     => array_map( $sanitize, $json['technology_strategy']['category_details'] ?? [] ),
-                      'implementation_roadmap' => array_map(
-                              function ( $item ) {
-                                      return [
-                                              'phase'      => sanitize_text_field( $item['phase'] ?? '' ),
-                                              'timeline'   => sanitize_text_field( $item['timeline'] ?? '' ),
-                                              'activities' => array_map( 'sanitize_text_field', $item['activities'] ?? [] ),
-                                      ];
-                              },
-                              $json['technology_strategy']['implementation_roadmap'] ?? []
-                      ),
-                      'vendor_considerations' => array_map( 'sanitize_text_field', $json['technology_strategy']['vendor_considerations'] ?? [] ),
-              ];
-
-              $financial_analysis = [
-                      'roi_scenarios' => array_map(
-                              function ( $item ) {
-                                      return [
-                                              'scenario'             => sanitize_text_field( $item['scenario'] ?? '' ),
-                                              'roi'                  => floatval( $item['roi'] ?? 0 ),
-                                              'total_annual_benefit' => floatval( $item['total_annual_benefit'] ?? 0 ),
-                                              'payback_months'       => floatval( $item['payback_months'] ?? 0 ),
-                                      ];
-                              },
-                              $json['financial_analysis']['roi_scenarios'] ?? []
-                      ),
-                      'investment_breakdown' => array_map(
-                              function ( $item ) {
-                                      return [
-                                              'category' => sanitize_text_field( $item['category'] ?? '' ),
-                                              'amount'   => floatval( $item['amount'] ?? 0 ),
-                                      ];
-                              },
-                              $json['financial_analysis']['investment_breakdown'] ?? []
-                      ),
-                      'payback_analysis' => [
-                              'payback_months' => floatval( $json['financial_analysis']['payback_analysis']['payback_months'] ?? 0 ),
-                              'roi_3_year'     => floatval( $json['financial_analysis']['payback_analysis']['roi_3_year'] ?? 0 ),
-                              'npv_analysis'   => sanitize_text_field( $json['financial_analysis']['payback_analysis']['npv_analysis'] ?? '' ),
-                      ],
-                      'sensitivity_analysis' => array_map(
-                              function ( $item ) {
-                                      return [
-                                              'factor' => sanitize_text_field( $item['factor'] ?? '' ),
-                                              'impact' => sanitize_text_field( $item['impact'] ?? '' ),
-                                      ];
-                              },
-                              $json['financial_analysis']['sensitivity_analysis'] ?? []
-                      ),
-                      'chart_data' => $sanitize( $json['financial_analysis']['chart_data'] ?? [] ),
-              ];
-
-              return [
-                      'executive_summary'     => $executive_summary,
-                      'company_intelligence'  => $company_intelligence,
-                      'operational_insights'  => $operational_insights,
-                      'risk_analysis'         => $risk_analysis,
-                      'action_plan'           => $action_plan,
-                      'industry_insights'     => $industry_insights,
-                      'technology_strategy'   => $technology_strategy,
-                      'financial_analysis'    => $financial_analysis,
-                      'implementation_roadmap' => $technology_strategy['implementation_roadmap'],
-              ];
-      }
 
 	/**
 	* Conduct company-specific research.
@@ -1559,7 +1395,7 @@ return [
                         return $default;
                 }
 
-                $parsed = rtbcb_parse_gpt5_response( $response );
+                $parsed = ( new RTBCB_Response_Parser() )->parse( $response );
                 $json   = $this->process_openai_response( $parsed['output_text'] );
 
 		if ( ! is_array( $json ) || empty( $json['competitors'] ) || ! is_array( $json['competitors'] ) ) {
@@ -1792,7 +1628,7 @@ SYSTEM;
                        return $response;
                }
 
-               $parsed = rtbcb_parse_gpt5_response( $response );
+               $parsed = ( new RTBCB_Response_Parser() )->parse( $response );
                $json   = $this->process_openai_response( $parsed['output_text'] );
 
 		if ( ! is_array( $json ) ) {
@@ -1988,7 +1824,7 @@ SYSTEM;
 			return $response;
 		}
 
-$parsed_response = rtbcb_parse_gpt5_response( $response );
+$parsed_response = ( new RTBCB_Response_Parser() )->parse( $response );
 $json            = $this->process_openai_response( $parsed_response['output_text'] );
 
 		if ( ! is_array( $json ) ) {
@@ -2038,7 +1874,7 @@ $json            = $this->process_openai_response( $parsed_response['output_text
 			return $response;
 		}
 
-		$parsed  = rtbcb_parse_gpt5_response( $response );
+		$parsed  = ( new RTBCB_Response_Parser() )->parse( $response );
 		$summary = sanitize_textarea_field( $parsed['output_text'] );
 
 		if ( empty( $summary ) ) {
@@ -2340,7 +2176,7 @@ return $analysis;
                 return $response;
         }
 
-        $parsed        = rtbcb_parse_gpt5_response( $response );
+        $parsed        = ( new RTBCB_Response_Parser() )->parse( $response );
         $enriched_data = $this->validate_enrichment_response( $parsed['output_text'] );
 
         if ( is_wp_error( $enriched_data ) ) {
@@ -3205,7 +3041,7 @@ $max_output_tokens = min( 128000, max( $min_tokens, $max_output_tokens ) );
 			? $response
 			: [ 'body' => wp_json_encode( is_array( $response ) ? $response : [] ) ];
 
-		$parsed = rtbcb_parse_gpt5_response( $response_for_parser, true );
+		$parsed = ( new RTBCB_Response_Parser() )->parse( $response_for_parser, true );
 		$content = $parsed['output_text'];
 		$usage   = $parsed['raw']['usage'] ?? [];
 
@@ -3397,127 +3233,4 @@ $max_output_tokens = min( 128000, max( $min_tokens, $max_output_tokens ) );
 	* @type bool   $truncated      Whether the response hit the token limit.
 	* }
  */
-function rtbcb_parse_gpt5_response( $response, $store_raw = false ) {
-	if ( is_wp_error( $response ) ) {
-		return $response;
-	}
 
-	if ( ! is_array( $response ) ) {
-		return [
-			'output_text'    => '',
-			'reasoning'      => [],
-			'function_calls' => [],
-			'raw'            => [],
-		];
-	}
-
-	$body    = wp_remote_retrieve_body( $response );
-	$decoded = json_decode( $body, true );
-
-	if ( ! is_array( $decoded ) ) {
-		return [
-			'output_text'    => '',
-			'reasoning'      => [],
-			'function_calls' => [],
-			'raw'            => [],
-		];
-	}
-
-	$output_text    = '';
-	$reasoning      = [];
-	$function_calls = [];
-	$truncated      = false;
-
-	// PRIORITY 1: Convenience field.
-	if ( isset( $decoded['output_text'] ) && ! empty( trim( $decoded['output_text'] ) ) ) {
-		$output_text = trim( $decoded['output_text'] );
-
-		// Reject trivial responses.
-		if ( strlen( $output_text ) < 20 ||
-			false !== stripos( $output_text, 'pong' ) ||
-			false !== stripos( $output_text, 'how can I help' ) ) {
-			error_log( 'RTBCB: Detected trivial response: ' . $output_text );
-			$output_text = '';
-		}
-	}
-
-	// PRIORITY 2: Manual parsing when no good output text was found.
-	if ( empty( $output_text ) && isset( $decoded['output'] ) && is_array( $decoded['output'] ) ) {
-
-		// First pass: Look for message content only.
-		foreach ( $decoded['output'] as $chunk ) {
-			if ( ! is_array( $chunk ) || 'message' !== ( $chunk['type'] ?? '' ) ) {
-				continue;
-			}
-
-			if ( isset( $chunk['content'] ) && is_array( $chunk['content'] ) ) {
-				foreach ( $chunk['content'] as $content_piece ) {
-					if ( isset( $content_piece['text'] ) && ! empty( trim( $content_piece['text'] ) ) ) {
-						$candidate = trim( $content_piece['text'] );
-
-						if ( strlen( $candidate ) >= 20 &&
-							false === stripos( $candidate, 'pong' ) ) {
-							$output_text = $candidate;
-							break 2;
-						}
-					}
-				}
-			}
-		}
-
-		// Second pass: Collect reasoning and function calls.
-		foreach ( $decoded['output'] as $chunk ) {
-			$chunk_type = $chunk['type'] ?? '';
-
-			if ( 'reasoning' === $chunk_type ) {
-				if ( isset( $chunk['content'] ) && is_array( $chunk['content'] ) ) {
-					foreach ( $chunk['content'] as $piece ) {
-						if ( isset( $piece['text'] ) && ! empty( $piece['text'] ) ) {
-							$reasoning[] = $piece['text'];
-						}
-					}
-				}
-			}
-
-			if ( 'function_call' === $chunk_type ) {
-				$function_calls[] = $chunk;
-			}
-		}
-	}
-
-	// Log quality metrics.
-	$text_length   = strlen( $output_text );
-	$usage         = $decoded['usage'] ?? [];
-	$output_tokens = $usage['output_tokens'] ?? 0;
-	$config        = rtbcb_get_gpt5_config();
-	if ( 'incomplete' === ( $decoded['status'] ?? '' ) ) {
-		$truncated = true;
-	}
-	if ( ! $truncated && $output_tokens >= $config['max_output_tokens'] ) {
-		$truncated = true;
-	}
-	if ( $truncated ) {
-		error_log( 'RTBCB: OpenAI response truncated at ' . $output_tokens . ' tokens' );
-	}
-
-	error_log(
-		sprintf(
-			'RTBCB: Parsed response - text_length=%d, output_tokens=%d, reasoning_chunks=%d',
-			$text_length,
-			$output_tokens,
-			count( $reasoning )
-		)
-	);
-
-	if ( $output_tokens > 50 && $text_length < 100 ) {
-		error_log( 'RTBCB: WARNING - High token count but short text output' );
-	}
-
-	return [
-		'output_text'    => $output_text,
-		'reasoning'      => $reasoning,
-		'function_calls' => $function_calls,
-		'raw'            => $store_raw ? $decoded : [],
-		'truncated'      => $truncated,
-	];
-}
