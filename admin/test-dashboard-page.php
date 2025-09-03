@@ -50,9 +50,6 @@ $total_sections = count( $sections );
 			<button type="button" id="rtbcb-regenerate-analysis" class="button">
 				<?php esc_html_e( 'Regenerate Full Analysis', 'rtbcb' ); ?>
 			</button>
-			<button type="button" id="rtbcb-export-analysis" class="button">
-				<?php esc_html_e( 'Export Results', 'rtbcb' ); ?>
-			</button>
 			<button type="button" id="rtbcb-show-usage-map" class="button">
 				<?php esc_html_e( 'Show Usage Map', 'rtbcb' ); ?>
 			</button>

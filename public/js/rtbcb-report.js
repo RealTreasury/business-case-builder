@@ -653,7 +653,7 @@ async function generateProfessionalReport(businessContext, onProgress = () => {}
 
 // Report generation utilities retained for backward compatibility
 function sanitizeReportHTML(htmlContent) {
-    // Sanitize OpenAI-generated HTML before embedding or exporting.
+    // Sanitize OpenAI-generated HTML before embedding.
     // Explicitly whitelist tags and attributes required for reports.
     const allowedTags = [
         'a', 'p', 'br', 'strong', 'em', 'ul', 'ol', 'li',
@@ -675,22 +675,6 @@ function displayReport(htmlContent) {
     document.getElementById('report-container').appendChild(iframe);
 }
 
-function exportToPDF(htmlContent) {
-    const sanitized = sanitizeReportHTML(htmlContent);
-    const blob = new Blob([sanitized], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const printWindow = window.open(url, '_blank');
-
-    if (printWindow) {
-        printWindow.focus();
-        printWindow.onload = function() {
-            printWindow.print();
-            URL.revokeObjectURL(url);
-        };
-    } else {
-        console.error('Failed to open print window');
-    }
-}
 
 async function generateAndDisplayReport(businessContext) {
     const loadingElement = document.getElementById('loading');
@@ -738,14 +722,6 @@ async function generateAndDisplayReport(businessContext) {
             reportContainer.innerHTML = '';
         }
         displayReport(safeReport);
-
-        const exportBtn = document.createElement('button');
-        exportBtn.textContent = 'Export to PDF';
-        exportBtn.className = 'export-btn';
-        exportBtn.onclick = function() { exportToPDF(safeReport); };
-        if (reportContainer) {
-            reportContainer.appendChild(exportBtn);
-        }
     } catch (error) {
         if (errorElement) {
             errorElement.textContent = 'Error: ' + error.message;
@@ -760,11 +736,4 @@ async function generateAndDisplayReport(businessContext) {
     }
 }
 
-// Export PDF functionality
-function rtbcbExportPDF() {
-    // Trigger browser print dialog
-    window.print();
-}
-
-// Make functions available globally
-window.rtbcbExportPDF = rtbcbExportPDF;
+// No export functions are available; users should access the report online.

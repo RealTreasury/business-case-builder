@@ -51,8 +51,6 @@ jQuery(document).ready(function($) {
             // Test API Connection
             $('#rtbcb-test-api').on('click', this.testApi);
             
-            // Export Leads
-            $('#rtbcb-export-leads, #rtbcb-export-data').on('click', this.exportLeads);
             
             // Rebuild Index
             $('#rtbcb-rebuild-index').on('click', this.rebuildIndex);
@@ -95,13 +93,6 @@ jQuery(document).ready(function($) {
             });
             $('#rtbcb-show-usage-map').on('click', function(){
                 $('#rtbcb-usage-map-wrapper').toggle();
-            });
-            $('#rtbcb-export-analysis').on('click', function(){
-                if (window.rtbcbAdmin.comprehensive) {
-                    var txt = JSON.stringify(window.rtbcbAdmin.comprehensive, null, 2);
-                    navigator.clipboard.writeText(txt);
-                    alert('Results copied to clipboard');
-                }
             });
             $('#rtbcb-clear-analysis').on('click', this.clearAnalysis);
             $('#rtbcb-start-new-analysis').on('click', this.startNewAnalysis);
@@ -164,50 +155,6 @@ jQuery(document).ready(function($) {
             }
         },
         
-        exportLeads: async function(e) {
-            e.preventDefault();
-            var $btn = $(this);
-            var $label = $btn.find('h4');
-            var original = $label.length ? $label.text() : $btn.text();
-
-            ($label.length ? $label : $btn).text(window.rtbcbAdmin.strings.processing || 'Processing...');
-            $btn.prop('disabled', true);
-
-            var params = new URLSearchParams(window.location.search);
-
-            try {
-                var response = await $.ajax({
-                    url: window.rtbcbAdmin.ajax_url,
-                    method: 'POST',
-                    data: {
-                        action: 'rtbcb_export_leads',
-                        nonce: window.rtbcbAdmin.nonce,
-                        search: params.get('search') || '',
-                        category: params.get('category') || '',
-                        date_from: params.get('date_from') || '',
-                        date_to: params.get('date_to') || ''
-                    }
-                });
-                if (response.success && response.data && response.data.content) {
-                    var blob = new Blob([response.data.content], { type: 'text/csv' });
-                    var url = URL.createObjectURL(blob);
-                    var a = document.createElement('a');
-                    a.href = url;
-                    a.download = response.data.filename || 'leads.csv';
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                } else {
-                    alert(response.data && response.data.message ? response.data.message : 'Export failed');
-                }
-            } catch (error) {
-                alert('Export request failed');
-            } finally {
-                ($label.length ? $label : $btn).text(original);
-                $btn.prop('disabled', false);
-            }
-        },
         
         rebuildIndex: async function(e) {
             e.preventDefault();

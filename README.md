@@ -268,7 +268,7 @@ their own `AGENTS.md` with additional rules.
 - `public/js/rtbcb.js` injects this HTML into `#rtbcb-report-container` for immediate viewing.
 - The workflow visualizer log records the template used for each submission.
 - Reports are not saved as files; only lead metadata is stored in the database.
-- Users can save or print the report directly from their browser, including printing to PDF.
+-- Reports are viewable on the website; export and print options have been removed.
 
 ## 🎛️ Admin Dashboard Features
 
@@ -276,13 +276,12 @@ their own `AGENTS.md` with additional rules.
 - **System Status**: OpenAI API (configuration and key format), Portal Integration, RAG Index health
 - **Key Metrics**: Total leads, recent activity, average ROI
 - **Recent Leads**: Latest form submissions with quick actions
-- **Quick Actions**: Test API, export data, rebuild index
+- **Quick Actions**: Test API, rebuild index
 
 ### Leads Management
 - **Advanced Filtering**: Search by email, category, date range, company size
-- **Bulk Actions**: Delete multiple leads, export filtered data
+- **Bulk Actions**: Delete multiple leads
 - **Individual Views**: Detailed lead information with submission history
-- **Export Options**: CSV download with customizable date ranges
 
 ### Analytics & Reporting
 - **Lead Generation Trends**: Monthly charts with volume and ROI data

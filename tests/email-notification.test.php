@@ -25,40 +25,42 @@ if ( ! function_exists( 'add_filter' ) ) {
 $sent_mail = [];
 
 function rtbcb_mock_mail( $to, $subject, $message, $headers = [], $attachments = [] ) {
-	global $sent_mail;
-	$sent_mail = [
-		'to'          => $to,
-		'subject'     => $subject,
-		'attachments' => $attachments,
-	];
-	return true;
+        global $sent_mail;
+        $sent_mail = [
+                'to'          => $to,
+                'subject'     => $subject,
+                'message'     => $message,
+                'attachments' => $attachments,
+        ];
+        return true;
 }
 
 require_once __DIR__ . '/../inc/helpers.php';
 
-$report_path = tempnam( sys_get_temp_dir(), 'rtbcb' ) . '.pdf';
-file_put_contents( $report_path, 'PDF' );
+$form_data  = [ 'email' => 'user@example.com' ];
+$report_url = 'http://example.com/report.html';
 
-$form_data = [ 'email' => 'user@example.com' ];
-
-rtbcb_send_report_email( $form_data, $report_path, 'rtbcb_mock_mail' );
+rtbcb_send_report_email( $form_data, $report_url, 'rtbcb_mock_mail' );
 
 if ( $sent_mail['to'] !== 'user@example.com' ) {
-	echo "Recipient mismatch\n";
-	exit( 1 );
+        echo "Recipient mismatch\n";
+        exit( 1 );
 }
 
 if ( $sent_mail['subject'] !== 'Your Business Case Report' ) {
-	echo "Subject mismatch\n";
-	exit( 1 );
+        echo "Subject mismatch\n";
+        exit( 1 );
 }
 
-if ( $sent_mail['attachments'][0] !== $report_path ) {
-	echo "Attachment mismatch\n";
-	exit( 1 );
+if ( strpos( $sent_mail['message'], $report_url ) === false ) {
+        echo "URL missing from message\n";
+        exit( 1 );
 }
 
-unlink( $report_path );
+if ( ! empty( $sent_mail['attachments'] ) ) {
+        echo "Unexpected attachments\n";
+        exit( 1 );
+}
 
 echo "email-and-pdf.test.php passed\n";
 

@@ -514,7 +514,6 @@ return true;
 		if ( $admin ) {
 		$admin->add_cap( 'manage_rtbcb' );
 		$admin->add_cap( 'view_rtbcb_leads' );
-		$admin->add_cap( 'export_rtbcb_data' );
 		}
 	}
 
@@ -806,7 +805,6 @@ return true;
 					   'email_confirmation'	 => __( 'Your report will arrive by email shortly.', 'rtbcb' ),
 				   ],
 				   'settings'    => [
-					   'pdf_enabled'		=> get_option( 'rtbcb_pdf_enabled', true ),
 					   'comprehensive_analysis' => get_option( 'rtbcb_comprehensive_analysis', true ),
 					   'professional_reports'	=> get_option( 'rtbcb_professional_reports', true ),
 					   'enable_ai_analysis'	=> $enable_ai_analysis,
@@ -831,15 +829,13 @@ return true;
 				'template_url'	     => esc_url( plugins_url( 'public/templates/report-template.html', RTBCB_FILE ) ),
 				'timeout_ms'	     => rtbcb_get_api_timeout() * 1000,
 			'nonce'		     => wp_create_nonce( 'rtbcb_generate' ),
-			'strings'	     => [
-				'exportPDF'	 => __( 'Export as PDF', 'rtbcb' ),
-				'printReport'	 => __( 'Print Report', 'rtbcb' ),
-				'expandSection'	 => __( 'Expand Section', 'rtbcb' ),
-				'collapseSection' => __( 'Collapse Section', 'rtbcb' ),
-			],
-		]
-		);
-	}
+                        'strings'            => [
+                                'expandSection'  => __( 'Expand Section', 'rtbcb' ),
+                                'collapseSection' => __( 'Collapse Section', 'rtbcb' ),
+                        ]
+                ]
+                );
+        }
 
 	/**
 	* Check if assets should be loaded on current page.
@@ -2834,7 +2830,6 @@ $html = rtbcb_sanitize_report_html( $html );
 		'rtbcb_embedding_model',
 		'rtbcb_labor_cost_per_hour',
 		'rtbcb_bank_fee_baseline',
-		'rtbcb_pdf_enabled',
 		'rtbcb_last_indexed',
 		'rtbcb_settings',
 		'rtbcb_contact_form_id',
@@ -2851,7 +2846,6 @@ $html = rtbcb_sanitize_report_html( $html );
 		if ( $role ) {
 			$role->remove_cap( 'manage_rtbcb' );
 			$role->remove_cap( 'view_rtbcb_leads' );
-			$role->remove_cap( 'export_rtbcb_data' );
 		}
 		}
 

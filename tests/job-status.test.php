@@ -123,15 +123,15 @@ assert_same( 5, $data['data']['lead_id'], 'Lead ID mismatch' );
 
 $_GET['job_id'] = 'job3';
 RTBCB_Background_Job::$data['job3'] = [
-	'state'        => 'completed',
-	'download_url' => 'http://example.com/report.pdf',
+        'state'       => 'completed',
+        'report_url'  => 'http://example.com/report.html',
 ];
 try {
 	RTBCB_Ajax::get_job_status();
 } catch ( RTBCB_JSON_Response $e ) {
 	$data = $e->data;
 }
-assert_same( 'http://example.com/report.pdf', $data['data']['download_url'], 'Download URL mismatch' );
+assert_same( 'http://example.com/report.html', $data['data']['report_url'], 'Report URL mismatch' );
 
 $_GET['job_id'] = 'missing';
 try {

@@ -24,7 +24,6 @@ class RTBCB_Admin {
 		// AJAX handlers
 		add_action( 'wp_ajax_rtbcb_test_connection', [ $this, 'test_api_connection' ] );
 		add_action( 'wp_ajax_rtbcb_rebuild_index', [ $this, 'rebuild_rag_index' ] );
-		add_action( 'wp_ajax_rtbcb_export_leads', [ $this, 'export_leads_csv' ] );
 		add_action( 'wp_ajax_rtbcb_delete_lead', [ $this, 'delete_lead' ] );
 		add_action( 'wp_ajax_rtbcb_bulk_action_leads', [ $this, 'bulk_action_leads' ] );
 		add_action( 'wp_ajax_rtbcb_run_tests', [ $this, 'run_integration_tests' ] );
@@ -370,7 +369,7 @@ wp_localize_script(
 	}
 
 	/**
-	* Render enhanced leads page with filtering and export.
+    * Render enhanced leads page with filtering.
 	*
 	* @return void
 	*/
@@ -615,34 +614,6 @@ wp_localize_script(
 		$settings['enable_ai_analysis'] = isset( $settings['enable_ai_analysis'] ) ? (bool) $settings['enable_ai_analysis'] : false;
 		$settings['enable_charts']      = isset( $settings['enable_charts'] ) ? (bool) $settings['enable_charts'] : false;
 		return $settings;
-	}
-
-	/**
-	* Export leads to CSV.
-	*
-	* @return void
-	*/
-	public function export_leads_csv() {
-		check_ajax_referer( 'rtbcb_nonce', 'nonce' );
-
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'rtbcb' ) ], 403 );
-		}
-
-		$filters = [
-			'search'    => sanitize_text_field( wp_unslash( $_POST['search'] ?? '' ) ),
-			'category'  => sanitize_text_field( wp_unslash( $_POST['category'] ?? '' ) ),
-			'date_from' => sanitize_text_field( wp_unslash( $_POST['date_from'] ?? '' ) ),
-			'date_to'   => sanitize_text_field( wp_unslash( $_POST['date_to'] ?? '' ) ),
-		];
-
-		$csv_content = RTBCB_Leads::export_to_csv( $filters );
-		$filename = 'rtbcb-leads-' . date( 'Y-m-d' ) . '.csv';
-
-		wp_send_json_success( [
-			'content'  => $csv_content,
-			'filename' => $filename,
-		] );
 	}
 
 	/**
