@@ -253,6 +253,43 @@ $processing_time = $metadata['processing_time'] ?? ( $report_data['processing_ti
 </div>
 <?php endif; ?>
 
+<?php if ( ! empty( $operational_insights ) ) : ?>
+<div class="rtbcb-section-enhanced rtbcb-operational-insights">
+<div class="rtbcb-section-header-enhanced">
+<h2 class="rtbcb-section-title">
+<span class="rtbcb-section-icon">⚙️</span>
+<?php echo esc_html__( 'Operational Insights', 'rtbcb' ); ?>
+</h2>
+</div>
+<div class="rtbcb-section-content">
+<?php if ( ! empty( $operational_insights['current_state_assessment'] ) ) : ?>
+<h3><?php echo esc_html__( 'Current State Assessment', 'rtbcb' ); ?></h3>
+<ul>
+<?php foreach ( $operational_insights['current_state_assessment'] as $item ) : ?>
+<li><?php echo esc_html( $item ); ?></li>
+<?php endforeach; ?>
+</ul>
+<?php endif; ?>
+<?php if ( ! empty( $operational_insights['process_improvements'] ) ) : ?>
+<h3><?php echo esc_html__( 'Process Improvements', 'rtbcb' ); ?></h3>
+<ul>
+<?php foreach ( $operational_insights['process_improvements'] as $item ) : ?>
+<li><?php echo esc_html( $item ); ?></li>
+<?php endforeach; ?>
+</ul>
+<?php endif; ?>
+<?php if ( ! empty( $operational_insights['automation_opportunities'] ) ) : ?>
+<h3><?php echo esc_html__( 'Automation Opportunities', 'rtbcb' ); ?></h3>
+<ul>
+<?php foreach ( $operational_insights['automation_opportunities'] as $item ) : ?>
+<li><?php echo esc_html( $item ); ?></li>
+<?php endforeach; ?>
+</ul>
+<?php endif; ?>
+</div>
+</div>
+<?php endif; ?>
+
 <?php if ( ! empty( $company_intelligence['industry_context'] ) ) :
 $industry_context   = $company_intelligence['industry_context'];
 $sector_analysis    = $industry_context['sector_analysis'] ?? [];
