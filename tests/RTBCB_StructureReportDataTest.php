@@ -6,17 +6,13 @@ defined( 'ABSPATH' ) || exit;
 
 use PHPUnit\Framework\TestCase;
 
+require_once __DIR__ . '/wp-stubs.php';
 require_once __DIR__ . '/../inc/class-rtbcb-ajax.php';
 require_once __DIR__ . '/../inc/class-rtbcb-llm.php';
 
 if ( ! function_exists( '__' ) ) {
 function __( $text, $domain = null ) {
 return $text;
-}
-}
-if ( ! function_exists( 'sanitize_text_field' ) ) {
-function sanitize_text_field( $text ) {
-return is_string( $text ) ? trim( $text ) : '';
 }
 }
 if ( ! function_exists( 'current_time' ) ) {
