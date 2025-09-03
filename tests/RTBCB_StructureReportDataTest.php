@@ -74,7 +74,7 @@ $final_analysis = [
 ],
 ];
 
-$result = $method->invoke( null, $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, [], microtime( true ) );
+$result = $method->invoke( null, $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, [], microtime( true ), [] );
 
 $profile   = $result['company_intelligence']['enriched_profile'];
 $company   = $result['company_intelligence'];
@@ -114,9 +114,28 @@ $final_analysis   = [
 ],
 ];
 
-$result = $method->invoke( null, $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, [], microtime( true ) );
+$result = $method->invoke( null, $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, [], microtime( true ), [] );
 
 self::assertSame( $final_analysis['industry_insights'], $result['industry_insights'] );
+}
+
+public function test_financial_benchmarks_pass_through() {
+$method = new ReflectionMethod( RTBCB_Ajax::class, 'structure_report_data' );
+$method->setAccessible( true );
+
+$user_inputs     = [ 'company_name' => 'Test', 'industry' => 'finance' ];
+$enriched_profile = [];
+$roi_scenarios    = [ 'conservative' => [], 'base' => [], 'optimistic' => [] ];
+$recommendation   = [ 'recommended' => '', 'category_info' => [] ];
+$financial_benchmarks = [
+'industry_benchmarks' => [ [ 'metric' => 'EBITDA Margin', 'value' => '20%', 'source' => 'Report' ] ],
+'valuation_multiples' => [ [ 'metric' => 'P/E', 'range' => '10x-12x' ] ],
+];
+$final_analysis   = [ 'financial_benchmarks' => $financial_benchmarks ];
+
+$result = $method->invoke( null, $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, [], microtime( true ), $financial_benchmarks );
+
+self::assertSame( $financial_benchmarks, $result['financial_benchmarks'] );
 }
 }
 

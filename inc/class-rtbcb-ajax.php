@@ -204,7 +204,16 @@ class RTBCB_Ajax {
 								$chart_data = self::prepare_chart_data( $roi_scenarios );
 
 								$workflow_tracker->start_step( 'data_structuring' );
-								$structured_report_data = self::structure_report_data( $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, $chart_data, $request_start );
+$structured_report_data = self::structure_report_data(
+$user_inputs,
+$enriched_profile,
+$roi_scenarios,
+$recommendation,
+$final_analysis,
+$chart_data,
+$request_start,
+$final_analysis['financial_benchmarks'] ?? ( $final_analysis['research']['financial'] ?? [] )
+);
 								$workflow_tracker->complete_step( 'data_structuring', $structured_report_data );
 								if ( $job_id ) {
 			self::safe_update_status( $job_id, 'processing', [ 'report_data' => $structured_report_data ] );
@@ -310,7 +319,16 @@ class RTBCB_Ajax {
 					$chart_data = self::prepare_chart_data( $roi_scenarios );
 
 					$workflow_tracker->start_step( 'data_structuring' );
-					$structured_report_data = self::structure_report_data( $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, $chart_data, $request_start );
+$structured_report_data = self::structure_report_data(
+$user_inputs,
+$enriched_profile,
+$roi_scenarios,
+$recommendation,
+$final_analysis,
+$chart_data,
+$request_start,
+$final_analysis['financial_benchmarks'] ?? ( $final_analysis['research']['financial'] ?? [] )
+);
 						$workflow_tracker->complete_step( 'data_structuring', $structured_report_data );
 						if ( $job_id ) {
 			self::safe_update_status( $job_id, 'processing', [ 'report_data' => $structured_report_data ] );
@@ -476,7 +494,7 @@ class RTBCB_Ajax {
 		];
 	}
 
-private static function structure_report_data( $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, $chart_data, $request_start ) {
+private static function structure_report_data( $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, $chart_data, $request_start, $financial_benchmarks = array() ) {
         $operational_insights = (array) ( $final_analysis['operational_insights'] ?? $final_analysis['operational_analysis'] ?? [] );
         $current_state_assessment = (array) ( $operational_insights['current_state_assessment'] ?? [] );
         if ( empty( $current_state_assessment ) ) {
@@ -566,8 +584,9 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
                                'maturity_assessment' => (array) ( is_array( $enriched_profile['maturity_assessment'] ?? null ) ? $enriched_profile['maturity_assessment'] : [] ),
                                'competitive_position'=> (array) ( is_array( $enriched_profile['competitive_position'] ?? null ) ? $enriched_profile['competitive_position'] : [] ),
 			],
-'industry_insights' => $final_analysis['industry_insights'] ?? [],
-                                       'financial_analysis' => [
+'industry_insights'    => $final_analysis['industry_insights'] ?? [],
+'financial_benchmarks' => (array) ( is_array( $financial_benchmarks ) ? $financial_benchmarks : [] ),
+'financial_analysis'   => [
                                                        'roi_scenarios'        => self::format_roi_scenarios( $roi_scenarios ),
                                                        'investment_breakdown' => (array) ( is_array( $final_analysis['financial_analysis']['investment_breakdown'] ?? null ) ? $final_analysis['financial_analysis']['investment_breakdown'] : [] ),
                                                        'payback_analysis'     => (array) ( is_array( $final_analysis['financial_analysis']['payback_analysis'] ?? null ) ? $final_analysis['financial_analysis']['payback_analysis'] : [] ),

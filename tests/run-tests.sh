@@ -64,6 +64,9 @@ php tests/lead-storage.test.php
 echo "12. Rendering comprehensive report template..."
 php tests/render-comprehensive-template.test.php
 
+echo "12b. Rendering financial benchmarks in template..."
+php tests/financial-benchmarks-template.test.php
+
 echo "13. Running report interactivity test..."
 node tests/report-interactivity.test.js
 
