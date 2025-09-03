@@ -55,7 +55,7 @@ $final_analysis   = [ 'financial_benchmarks' => $financial_benchmarks ];
 
 $method = new ReflectionMethod( RTBCB_Ajax::class, 'structure_report_data' );
 $method->setAccessible( true );
-$report_data = $method->invoke( null, $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, [], microtime( true ), $financial_benchmarks );
+$report_data = $method->invoke( null, $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, [], [], microtime( true ), $financial_benchmarks );
 
 ob_start();
 include __DIR__ . '/../templates/comprehensive-report-template.php';

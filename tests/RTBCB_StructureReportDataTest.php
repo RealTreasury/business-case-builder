@@ -74,7 +74,7 @@ $final_analysis = [
 ],
 ];
 
-$result = $method->invoke( null, $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, [], microtime( true ), [] );
+$result = $method->invoke( null, $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, [], [], microtime( true ), [] );
 
 $profile   = $result['company_intelligence']['enriched_profile'];
 $company   = $result['company_intelligence'];
@@ -114,7 +114,7 @@ $final_analysis   = [
 ],
 ];
 
-$result = $method->invoke( null, $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, [], microtime( true ), [] );
+$result = $method->invoke( null, $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, [], [], microtime( true ), [] );
 
 self::assertSame( $final_analysis['industry_insights'], $result['industry_insights'] );
 }
@@ -133,9 +133,25 @@ $financial_benchmarks = [
 ];
 $final_analysis   = [ 'financial_benchmarks' => $financial_benchmarks ];
 
-$result = $method->invoke( null, $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, [], microtime( true ), $financial_benchmarks );
+$result = $method->invoke( null, $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, [], [], microtime( true ), $financial_benchmarks );
 
 self::assertSame( $financial_benchmarks, $result['financial_benchmarks'] );
+}
+
+public function test_rag_context_included() {
+$method = new ReflectionMethod( RTBCB_Ajax::class, 'structure_report_data' );
+$method->setAccessible( true );
+
+$user_inputs     = [ 'company_name' => 'Test', 'industry' => 'finance' ];
+$enriched_profile = [];
+$roi_scenarios    = [ 'conservative' => [], 'base' => [], 'optimistic' => [] ];
+$recommendation   = [ 'recommended' => '', 'category_info' => [] ];
+$final_analysis   = [];
+$rag_context      = [ 'ctx' ];
+
+$result = $method->invoke( null, $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, $rag_context, [], microtime( true ), [] );
+
+self::assertSame( $rag_context, $result['rag_context'] );
 }
 }
 
