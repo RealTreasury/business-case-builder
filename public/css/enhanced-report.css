@@ -757,13 +757,6 @@ height: 20px;
 cursor: pointer;
 }
 
-.rtbcb-toggle-switch .rtbcb-sr-only {
-position: absolute;
-opacity: 0;
-width: 0;
-height: 0;
-}
-
 .rtbcb-toggle-track {
 background: #cbd5e1;
 border-radius: 9999px;
@@ -784,11 +777,11 @@ border-radius: 50%;
 transition: transform 0.3s ease;
 }
 
-.rtbcb-toggle-switch .rtbcb-sr-only:checked + .rtbcb-toggle-track {
+.rtbcb-sr-only:checked + .rtbcb-toggle-switch .rtbcb-toggle-track {
 background: #0ea5e9;
 }
 
-.rtbcb-toggle-switch .rtbcb-sr-only:checked + .rtbcb-toggle-track::after {
+.rtbcb-sr-only:checked + .rtbcb-toggle-switch .rtbcb-toggle-track::after {
 transform: translateX(20px);
 }
 
