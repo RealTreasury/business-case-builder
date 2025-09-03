@@ -514,14 +514,25 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 		'key_challenges'      => $company_profile['key_challenges'] ?? [],
 		'strategic_priorities'=> $company_profile['strategic_priorities'] ?? [],
 	];
-	$industry_context_struct = [
-		'sector_analysis' => [
-			'market_dynamics' => $industry_context_raw['sector_trends'] ?? ( $industry_context_raw['market_dynamics'] ?? '' ),
-		],
-		'benchmarking'    => [
-			'technology_penetration' => $industry_context_raw['technology_penetration'] ?? ( $industry_context_raw['technology_adoption'] ?? '' ),
-		],
-	];
+$industry_context_struct = [
+'sector_analysis' => [
+'market_dynamics'    => $industry_context_raw['sector_analysis']['market_dynamics'] ?? ( $industry_context_raw['sector_trends'] ?? ( $industry_context_raw['market_dynamics'] ?? '' ) ),
+'growth_trends'      => $industry_context_raw['sector_analysis']['growth_trends'] ?? '',
+'disruption_factors' => (array) ( $industry_context_raw['sector_analysis']['disruption_factors'] ?? [] ),
+'technology_adoption'=> $industry_context_raw['sector_analysis']['technology_adoption'] ?? ( $industry_context_raw['technology_adoption'] ?? '' ),
+],
+'benchmarking'    => [
+'typical_treasury_setup' => $industry_context_raw['benchmarking']['typical_treasury_setup'] ?? '',
+'common_pain_points'     => (array) ( $industry_context_raw['benchmarking']['common_pain_points'] ?? [] ),
+'technology_penetration' => $industry_context_raw['benchmarking']['technology_penetration'] ?? ( $industry_context_raw['technology_penetration'] ?? '' ),
+'investment_patterns'    => $industry_context_raw['benchmarking']['investment_patterns'] ?? '',
+],
+'regulatory_landscape' => [
+'key_regulations'      => (array) ( $industry_context_raw['regulatory_landscape']['key_regulations'] ?? [] ),
+'compliance_complexity'=> $industry_context_raw['regulatory_landscape']['compliance_complexity'] ?? '',
+'upcoming_changes'     => (array) ( $industry_context_raw['regulatory_landscape']['upcoming_changes'] ?? [] ),
+],
+];
 
 	$company_name_meta = sanitize_text_field( $enriched_profile_struct['name'] ?: $user_inputs['company_name'] );
 
