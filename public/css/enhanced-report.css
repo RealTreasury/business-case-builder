@@ -792,6 +792,10 @@ background: #0ea5e9;
 transform: translateX(20px);
 }
 
+.rtbcb-toggle-label {
+color: #fff;
+}
+
 .rtbcb-sr-only {
 position: absolute;
 width: 1px;
