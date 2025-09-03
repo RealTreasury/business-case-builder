@@ -61,11 +61,6 @@ $business_case_data = [
                        ],
                ],
        ],
-       'industry_insights' => [
-               'sector_trends'          => [ 'Growth' ],
-               'competitive_benchmarks' => [ 'Benchmark' ],
-               'regulatory_considerations' => [ 'Regulation' ],
-       ],
 ];
 
 $report_data = $business_case_data;

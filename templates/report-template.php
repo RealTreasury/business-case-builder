@@ -61,39 +61,82 @@ $rag_context   = $business_case_data['rag_context'] ?? [];
 	<?php endif; ?>
 
 	<?php
-	$industry_insights         = $business_case_data['industry_insights'] ?? [];
-	$sector_trends             = array_map( 'sanitize_text_field', (array) ( $industry_insights['sector_trends'] ?? [] ) );
-	$competitive_benchmarks    = array_map( 'sanitize_text_field', (array) ( $industry_insights['competitive_benchmarks'] ?? [] ) );
-	$regulatory_considerations = array_map( 'sanitize_text_field', (array) ( $industry_insights['regulatory_considerations'] ?? [] ) );
+$industry_context   = $business_case_data['company_intelligence']['industry_context'] ?? [];
+$sector_analysis    = $industry_context['sector_analysis'] ?? [];
+$benchmarking       = $industry_context['benchmarking'] ?? [];
+$regulatory_land    = $industry_context['regulatory_landscape'] ?? [];
 
-	if ( $sector_trends || $competitive_benchmarks || $regulatory_considerations ) :
-	?>
-	<h3><?php echo esc_html__( 'Industry Insights', 'rtbcb' ); ?></h3>
-	<?php if ( $sector_trends ) : ?>
-	<h4><?php echo esc_html__( 'Sector Trends', 'rtbcb' ); ?></h4>
-	<ul>
-	<?php foreach ( $sector_trends as $trend ) : ?>
-	<li><?php echo esc_html( $trend ); ?></li>
-	<?php endforeach; ?>
-	</ul>
-	<?php endif; ?>
-	<?php if ( $competitive_benchmarks ) : ?>
-	<h4><?php echo esc_html__( 'Competitive Benchmarks', 'rtbcb' ); ?></h4>
-	<ul>
-	<?php foreach ( $competitive_benchmarks as $benchmark ) : ?>
-	<li><?php echo esc_html( $benchmark ); ?></li>
-	<?php endforeach; ?>
-	</ul>
-	<?php endif; ?>
-	<?php if ( $regulatory_considerations ) : ?>
-	<h4><?php echo esc_html__( 'Regulatory Considerations', 'rtbcb' ); ?></h4>
-	<ul>
-	<?php foreach ( $regulatory_considerations as $reg ) : ?>
-	<li><?php echo esc_html( $reg ); ?></li>
-	<?php endforeach; ?>
-	</ul>
-	<?php endif; ?>
-	<?php endif; ?>
+$market_dynamics    = sanitize_text_field( $sector_analysis['market_dynamics'] ?? '' );
+$growth_trends      = sanitize_text_field( $sector_analysis['growth_trends'] ?? '' );
+$disruption_factors = array_map( 'sanitize_text_field', (array) ( $sector_analysis['disruption_factors'] ?? [] ) );
+$technology_adoption= sanitize_text_field( $sector_analysis['technology_adoption'] ?? '' );
+$typical_setup      = sanitize_text_field( $benchmarking['typical_treasury_setup'] ?? '' );
+$common_pains       = array_map( 'sanitize_text_field', (array) ( $benchmarking['common_pain_points'] ?? [] ) );
+$investment_patterns= sanitize_text_field( $benchmarking['investment_patterns'] ?? '' );
+$key_regulations    = array_map( 'sanitize_text_field', (array) ( $regulatory_land['key_regulations'] ?? [] ) );
+$compliance_complexity = sanitize_text_field( $regulatory_land['compliance_complexity'] ?? '' );
+$upcoming_changes   = array_map( 'sanitize_text_field', (array) ( $regulatory_land['upcoming_changes'] ?? [] ) );
+
+if ( $market_dynamics || $growth_trends || $disruption_factors || $technology_adoption || $typical_setup || $common_pains || $investment_patterns || $key_regulations || $compliance_complexity || $upcoming_changes ) :
+?>
+<h3><?php echo esc_html__( 'Industry Insights', 'rtbcb' ); ?></h3>
+<?php if ( $market_dynamics ) : ?>
+<h4><?php echo esc_html__( 'Market Dynamics', 'rtbcb' ); ?></h4>
+<p><?php echo esc_html( $market_dynamics ); ?></p>
+<?php endif; ?>
+<?php if ( $growth_trends ) : ?>
+<h4><?php echo esc_html__( 'Growth Trends', 'rtbcb' ); ?></h4>
+<p><?php echo esc_html( $growth_trends ); ?></p>
+<?php endif; ?>
+<?php if ( $disruption_factors ) : ?>
+<h4><?php echo esc_html__( 'Disruption Factors', 'rtbcb' ); ?></h4>
+<ul>
+<?php foreach ( $disruption_factors as $factor ) : ?>
+<li><?php echo esc_html( $factor ); ?></li>
+<?php endforeach; ?>
+</ul>
+<?php endif; ?>
+<?php if ( $technology_adoption ) : ?>
+<h4><?php echo esc_html__( 'Technology Adoption', 'rtbcb' ); ?></h4>
+<p><?php echo esc_html( $technology_adoption ); ?></p>
+<?php endif; ?>
+<?php if ( $typical_setup ) : ?>
+<h4><?php echo esc_html__( 'Typical Treasury Setup', 'rtbcb' ); ?></h4>
+<p><?php echo esc_html( $typical_setup ); ?></p>
+<?php endif; ?>
+<?php if ( $common_pains ) : ?>
+<h4><?php echo esc_html__( 'Common Pain Points', 'rtbcb' ); ?></h4>
+<ul>
+<?php foreach ( $common_pains as $pain ) : ?>
+<li><?php echo esc_html( $pain ); ?></li>
+<?php endforeach; ?>
+</ul>
+<?php endif; ?>
+<?php if ( $investment_patterns ) : ?>
+<h4><?php echo esc_html__( 'Investment Patterns', 'rtbcb' ); ?></h4>
+<p><?php echo esc_html( $investment_patterns ); ?></p>
+<?php endif; ?>
+<?php if ( $key_regulations ) : ?>
+<h4><?php echo esc_html__( 'Key Regulations', 'rtbcb' ); ?></h4>
+<ul>
+<?php foreach ( $key_regulations as $reg ) : ?>
+<li><?php echo esc_html( $reg ); ?></li>
+<?php endforeach; ?>
+</ul>
+<?php endif; ?>
+<?php if ( $compliance_complexity ) : ?>
+<h4><?php echo esc_html__( 'Compliance Complexity', 'rtbcb' ); ?></h4>
+<p><?php echo esc_html( $compliance_complexity ); ?></p>
+<?php endif; ?>
+<?php if ( $upcoming_changes ) : ?>
+<h4><?php echo esc_html__( 'Upcoming Changes', 'rtbcb' ); ?></h4>
+<ul>
+<?php foreach ( $upcoming_changes as $change ) : ?>
+<li><?php echo esc_html( $change ); ?></li>
+<?php endforeach; ?>
+</ul>
+<?php endif; ?>
+<?php endif; ?>
 
 	<?php if ( ! empty( $business_case_data['citations'] ) ) : ?>
 		<h3><?php echo esc_html__( 'Citations', 'rtbcb' ); ?></h3>

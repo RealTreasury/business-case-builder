@@ -1461,11 +1461,11 @@ class BusinessCaseBuilder {
             },
             executiveSummary: data.executive_summary || data.narrative || {},
             operationalAnalysis: data.operational_insights || data.operational_analysis || {},
-            industryInsights: {
-                sector_trends: data.industry_insights?.sector_trends || [],
-                competitive_benchmarks: data.industry_insights?.competitive_benchmarks || [],
-                regulatory_considerations: data.industry_insights?.regulatory_considerations || []
-            },
+industryContext: {
+sector_analysis: data.industry_context?.sector_analysis || {},
+benchmarking: data.industry_context?.benchmarking || {},
+regulatory_landscape: data.industry_context?.regulatory_landscape || {}
+},
             nextActions: data.narrative?.next_actions || [
                 ...(data.action_plan?.immediate_steps || []),
                 ...(data.action_plan?.short_term_milestones || []),
@@ -1497,7 +1497,7 @@ class BusinessCaseBuilder {
             companyName,
             executiveSummary,
             operationalAnalysis,
-            industryInsights,
+industryContext,
             nextActions
         } = data;
         const displayName = companyName || 'Your Company';
@@ -1517,7 +1517,7 @@ class BusinessCaseBuilder {
                 ${this.renderROISummary(scenarios, displayName)}
                 ${this.renderExecutiveSummary(executiveSummary)}
                 ${this.renderOperationalAnalysis(operationalAnalysis)}
-                ${this.renderIndustryInsights(industryInsights)}
+${this.renderIndustryInsights(industryContext)}
                 ${this.renderRiskAssessmentSection()}
                 ${this.renderNextSteps(nextActions || [], displayName)}
                 ${this.renderActions()}
@@ -1639,21 +1639,55 @@ class BusinessCaseBuilder {
         `;
     }
 
-    renderIndustryInsights(insights = {}) {
-        const { sector_trends = [], competitive_benchmarks = [], regulatory_considerations = [] } = insights || {};
-        if (!sector_trends.length && !competitive_benchmarks.length && !regulatory_considerations.length) {
-            return '';
-        }
-        const renderList = items => items.map(item => `<li>${this.escapeHTML(item)}</li>`).join('');
-        return `
-            <div class="rtbcb-industry-insights">
-                <h3>Industry Insights</h3>
-                ${sector_trends.length ? `<div class="rtbcb-industry-group"><h4>Sector Trends</h4><ul>${renderList(sector_trends)}</ul></div>` : ''}
-                ${competitive_benchmarks.length ? `<div class="rtbcb-industry-group"><h4>Competitive Benchmarks</h4><ul>${renderList(competitive_benchmarks)}</ul></div>` : ''}
-                ${regulatory_considerations.length ? `<div class="rtbcb-industry-group"><h4>Regulatory Considerations</h4><ul>${renderList(regulatory_considerations)}</ul></div>` : ''}
-            </div>
-        `;
-    }
+renderIndustryInsights(context = {}) {
+const { sector_analysis = {}, benchmarking = {}, regulatory_landscape = {} } = context || {};
+const {
+market_dynamics = '',
+growth_trends = '',
+disruption_factors = [],
+technology_adoption = ''
+} = sector_analysis;
+const {
+typical_treasury_setup = '',
+common_pain_points = [],
+investment_patterns = ''
+} = benchmarking;
+const {
+key_regulations = [],
+compliance_complexity = '',
+upcoming_changes = []
+} = regulatory_landscape;
+if (
+!market_dynamics &&
+!growth_trends &&
+disruption_factors.length === 0 &&
+!technology_adoption &&
+!typical_treasury_setup &&
+common_pain_points.length === 0 &&
+!investment_patterns &&
+key_regulations.length === 0 &&
+!compliance_complexity &&
+upcoming_changes.length === 0
+) {
+return '';
+}
+const renderList = items => items.map(item => `<li>${this.escapeHTML(item)}</li>`).join('');
+return `
+<div class="rtbcb-industry-insights">
+<h3>Industry Insights</h3>
+${market_dynamics ? `<div class="rtbcb-industry-group"><h4>Market Dynamics</h4><p>${this.escapeHTML(market_dynamics)}</p></div>` : ''}
+${growth_trends ? `<div class="rtbcb-industry-group"><h4>Growth Trends</h4><p>${this.escapeHTML(growth_trends)}</p></div>` : ''}
+${disruption_factors.length ? `<div class="rtbcb-industry-group"><h4>Disruption Factors</h4><ul>${renderList(disruption_factors)}</ul></div>` : ''}
+${technology_adoption ? `<div class="rtbcb-industry-group"><h4>Technology Adoption</h4><p>${this.escapeHTML(technology_adoption)}</p></div>` : ''}
+${typical_treasury_setup ? `<div class="rtbcb-industry-group"><h4>Typical Treasury Setup</h4><p>${this.escapeHTML(typical_treasury_setup)}</p></div>` : ''}
+${common_pain_points.length ? `<div class="rtbcb-industry-group"><h4>Common Pain Points</h4><ul>${renderList(common_pain_points)}</ul></div>` : ''}
+${investment_patterns ? `<div class="rtbcb-industry-group"><h4>Investment Patterns</h4><p>${this.escapeHTML(investment_patterns)}</p></div>` : ''}
+${key_regulations.length ? `<div class="rtbcb-industry-group"><h4>Key Regulations</h4><ul>${renderList(key_regulations)}</ul></div>` : ''}
+${compliance_complexity ? `<div class="rtbcb-industry-group"><h4>Compliance Complexity</h4><p>${this.escapeHTML(compliance_complexity)}</p></div>` : ''}
+${upcoming_changes.length ? `<div class="rtbcb-industry-group"><h4>Upcoming Changes</h4><ul>${renderList(upcoming_changes)}</ul></div>` : ''}
+</div>
+`;
+}
 
     renderRiskAssessmentSection() {
         return `
