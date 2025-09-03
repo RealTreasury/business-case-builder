@@ -521,8 +521,9 @@ $body['model'] = $model_name;
 			$events[] = $current_event;
 		}
 
-		$final_response      = null;
-		$accumulated_content = '';
+                $final_response = null;
+                $output_text    = '';
+                $reasoning      = [];
 
 		foreach ( $events as $event ) {
 			if ( ! isset( $event['data'] ) ) {
@@ -534,44 +535,56 @@ $body['model'] = $model_name;
 				continue;
 			}
 
-			if ( isset( $event_data['type'] ) ) {
-				switch ( $event_data['type'] ) {
-					case 'response.done':
-					case 'response.content_part.done':
-						if ( isset( $event_data['response'] ) ) {
-							$final_response = $event_data['response'];
-						}
-						break;
-					case 'response.content_part.delta':
-						if ( isset( $event_data['delta']['text'] ) ) {
-							$accumulated_content .= $event_data['delta']['text'];
-						}
-						break;
-				}
-			} else {
-				if ( isset( $event_data['choices'][0]['delta']['content'] ) ) {
-					$accumulated_content .= $event_data['choices'][0]['delta']['content'];
-				} elseif ( isset( $event_data['choices'][0]['message'] ) ) {
-					$final_response = $event_data;
-				}
-			}
-		}
+                        if ( isset( $event_data['type'] ) ) {
+                                switch ( $event_data['type'] ) {
+                                        case 'response.done':
+                                        case 'response.content_part.done':
+                                        case 'response.output_text.done':
+                                                if ( isset( $event_data['response'] ) ) {
+                                                        $final_response = $event_data['response'];
+                                                }
+                                                break;
+                                        case 'response.content_part.delta':
+                                        case 'response.output_text.delta':
+                                                if ( isset( $event_data['delta']['text'] ) ) {
+                                                        $output_text .= $event_data['delta']['text'];
+                                                }
+                                                break;
+                                        case 'response.reasoning.delta':
+                                                if ( isset( $event_data['delta']['text'] ) ) {
+                                                        $reasoning[] = $event_data['delta']['text'];
+                                                }
+                                                break;
+                                }
+                        } else {
+                                if ( isset( $event_data['choices'][0]['delta']['content'] ) ) {
+                                        $output_text .= $event_data['choices'][0]['delta']['content'];
+                                } elseif ( isset( $event_data['choices'][0]['message'] ) ) {
+                                        $final_response = $event_data;
+                                }
+                        }
+                }
 
-		if ( $final_response ) {
-			return $final_response;
-		}
+                if ( $final_response ) {
+                        if ( '' !== $output_text && ! isset( $final_response['output_text'] ) ) {
+                                $final_response['output_text'] = $output_text;
+                        }
+                        if ( $reasoning && ! isset( $final_response['reasoning'] ) ) {
+                                $final_response['reasoning'] = $reasoning;
+                        }
+                        return $final_response;
+                }
 
-		if ( ! empty( $accumulated_content ) ) {
-			return [
-				'choices' => [
-					[
-						'message' => [
-							'content' => $accumulated_content,
-						],
-					],
-				],
-			];
-		}
+                if ( '' !== $output_text || $reasoning ) {
+                        $response = [];
+                        if ( '' !== $output_text ) {
+                                $response['output_text'] = $output_text;
+                        }
+                        if ( $reasoning ) {
+                                $response['reasoning'] = $reasoning;
+                        }
+                        return $response;
+                }
 
 		$decoded = json_decode( $stream, true );
 		if ( JSON_ERROR_NONE === json_last_error() ) {

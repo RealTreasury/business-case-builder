@@ -329,9 +329,11 @@ return preg_match( '/^\s*(?:for\s*\(\s*;;\s*\);\s*)?(?:data|event):\s/m', $respo
  * @return array|string|false Parsed content or false.
  */
 private function parse_streaming_response( $response_body ) {
-$lines            = preg_split( "/\r?\n/", $response_body );
-$accumulated_text = '';
-$final_response   = null;
+$lines          = preg_split( "/\r?\n/", $response_body );
+$output_text    = '';
+$reasoning      = [];
+$function_calls = [];
+$final_response = null;
 
 foreach ( $lines as $line ) {
 $line = trim( $line );
@@ -365,19 +367,26 @@ if ( isset( $decoded['type'] ) ) {
 switch ( $decoded['type'] ) {
 case 'response.done':
 case 'response.content_part.done':
+case 'response.output_text.done':
 if ( isset( $decoded['response'] ) ) {
 $final_response = $decoded['response'];
 }
 break;
 case 'response.content_part.delta':
+case 'response.output_text.delta':
 if ( isset( $decoded['delta']['text'] ) ) {
-$accumulated_text .= $decoded['delta']['text'];
+$output_text .= $decoded['delta']['text'];
+}
+break;
+case 'response.reasoning.delta':
+if ( isset( $decoded['delta']['text'] ) ) {
+$reasoning[] = $decoded['delta']['text'];
 }
 break;
 }
 } else {
 if ( isset( $decoded['choices'][0]['delta']['content'] ) ) {
-$accumulated_text .= $decoded['choices'][0]['delta']['content'];
+$output_text .= $decoded['choices'][0]['delta']['content'];
 } elseif ( isset( $decoded['choices'][0]['message'] ) ) {
 $final_response = $decoded;
 }
@@ -385,11 +394,54 @@ $final_response = $decoded;
 }
 
 if ( $final_response ) {
-return $this->extract_content_from_decoded_response( $final_response );
+if ( isset( $final_response['output_text'] ) && '' === $output_text ) {
+$output_text = trim( (string) $final_response['output_text'] );
 }
 
-if ( $accumulated_text ) {
-return $accumulated_text;
+if ( isset( $final_response['output'] ) && is_array( $final_response['output'] ) ) {
+foreach ( $final_response['output'] as $chunk ) {
+$type = $chunk['type'] ?? '';
+
+if ( 'message' === $type && isset( $chunk['content'] ) && is_array( $chunk['content'] ) ) {
+foreach ( $chunk['content'] as $piece ) {
+if ( isset( $piece['text'] ) && ! empty( trim( $piece['text'] ) ) ) {
+$output_text = trim( $piece['text'] );
+break 2;
+}
+}
+}
+
+if ( 'reasoning' === $type && isset( $chunk['content'] ) && is_array( $chunk['content'] ) ) {
+foreach ( $chunk['content'] as $piece ) {
+if ( isset( $piece['text'] ) && ! empty( $piece['text'] ) ) {
+$reasoning[] = $piece['text'];
+}
+}
+}
+
+if ( 'function_call' === $type ) {
+$function_calls[] = $chunk;
+}
+}
+}
+
+return [
+'output_text'    => $output_text,
+'reasoning'      => $reasoning,
+'function_calls' => $function_calls,
+'raw'            => $final_response,
+'truncated'      => false,
+];
+}
+
+if ( $output_text || $reasoning ) {
+return [
+'output_text'    => $output_text,
+'reasoning'      => $reasoning,
+'function_calls' => [],
+'raw'            => [],
+'truncated'      => false,
+];
 }
 
 return false;
