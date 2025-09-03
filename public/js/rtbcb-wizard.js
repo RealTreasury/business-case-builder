@@ -174,18 +174,18 @@ class BusinessCaseBuilder {
         // Form submission
         this.form.addEventListener( 'submit', this.handleSubmit );
 
-        // Pain point cards
-        const painPointCards = this.form.querySelectorAll('.rtbcb-pain-point-card');
-        painPointCards.forEach(card => {
-            const checkbox = card.querySelector('input[type="checkbox"]');
-            if (checkbox) {
-                checkbox.addEventListener('change', () => {
-                    card.classList.toggle('rtbcb-selected', checkbox.checked);
-                    const checkedBoxes = this.form.querySelectorAll('input[name="pain_points[]"]:checked');
-                    if (checkedBoxes.length > 0) {
-                        this.clearStepError(3);
-                    }
-                });
+// Pain point cards
+        this.form.addEventListener('change', (event) => {
+            const target = event.target;
+            if (target.matches('input[name="pain_points[]"]')) {
+                const card = target.closest('.rtbcb-pain-point-card');
+                if (card) {
+                    card.classList.toggle('rtbcb-selected', target.checked);
+                }
+                const checkedBoxes = this.form.querySelectorAll('input[name="pain_points[]"]:checked');
+                if (checkedBoxes.length > 0) {
+                    this.clearStepError(3);
+                }
             }
         });
 

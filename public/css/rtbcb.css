@@ -146,13 +146,16 @@ html {
     overflow: hidden;
     transition: all 0.2s ease;
     cursor: pointer;
+    touch-action: manipulation;
     position: relative;
 }
 
-.rtbcb-pain-point-card:hover {
-    border-color: #c77dff;
-    box-shadow: 0 4px 12px rgba(114, 22, 244, 0.1);
-    transform: translateY(-2px);
+@media (hover:hover) {
+    .rtbcb-pain-point-card:hover {
+        border-color: #c77dff;
+        box-shadow: 0 4px 12px rgba(114, 22, 244, 0.1);
+        transform: translateY(-2px);
+    }
 }
 
 .rtbcb-pain-point-card.rtbcb-selected {
@@ -1573,11 +1576,14 @@ html {
     overflow: hidden;
     transition: all 0.2s ease;
     cursor: pointer;
+    touch-action: manipulation;
 }
 
-.rtbcb-pain-point-card:hover {
-    border-color: #c77dff;
-    box-shadow: 0 2px 8px rgba(114, 22, 244, 0.1);
+@media (hover:hover) {
+    .rtbcb-pain-point-card:hover {
+        border-color: #c77dff;
+        box-shadow: 0 2px 8px rgba(114, 22, 244, 0.1);
+    }
 }
 
 .rtbcb-pain-point-card.rtbcb-selected {
