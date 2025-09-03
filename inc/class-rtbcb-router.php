@@ -14,18 +14,24 @@ require_once __DIR__ . '/helpers.php';
 	*/
 class RTBCB_Router {
 	/**
-	* Handle form submission and generate the business case.
-	*
-	* @param string $report_type Optional report type (fast, basic or comprehensive).
-	*
-	* @return void
-	*/
-	public function handle_form_submission( $report_type = 'basic' ) {
-		// Nonce verification.
-		if (
-			! isset( $_POST['rtbcb_nonce'] )
-			|| ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['rtbcb_nonce'] ) ), 'rtbcb_generate' )
-		) {
+       * Handle form submission and generate the business case.
+       *
+       * @param string $report_type Optional report type (fast, basic or comprehensive).
+       *
+       * @return void|WP_Error
+       */
+       public function handle_form_submission( $report_type = 'basic' ) {
+               $allowed_types = [ 'fast', 'basic', 'comprehensive' ];
+
+               if ( ! in_array( $report_type, $allowed_types, true ) ) {
+                       $report_type = 'basic';
+               }
+
+               // Nonce verification.
+               if (
+                       ! isset( $_POST['rtbcb_nonce'] )
+                       || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['rtbcb_nonce'] ) ), 'rtbcb_generate' )
+               ) {
 			wp_send_json_error( [ 'message' => __( 'Nonce verification failed.', 'rtbcb' ) ], 403 );
 			return;
 		}
@@ -40,85 +46,106 @@ class RTBCB_Router {
 				return;
 			}
 
-			$form_data = $validated_data;
+                       $form_data = $validated_data;
 
-			// Determine report type from request if provided.
-			if ( isset( $_POST['report_type'] ) ) {
-				$report_type = sanitize_text_field( wp_unslash( $_POST['report_type'] ) );
-			}
+                       // Determine report type from request if provided.
+                       if ( isset( $_POST['report_type'] ) ) {
+                               $requested_type = sanitize_text_field( wp_unslash( $_POST['report_type'] ) );
+                               if ( ! in_array( $requested_type, $allowed_types, true ) ) {
+                                       return new WP_Error( 'rtbcb_invalid_report_type', __( 'Invalid report type.', 'rtbcb' ) );
+                               }
+                               $report_type = $requested_type;
+                       }
 
-						// Perform ROI calculations.
-						$calculations    = RTBCB_Calculator::calculate_roi( $form_data );
-						$recommendation  = RTBCB_Category_Recommender::recommend_category( $form_data );
-						$calculations    = RTBCB_Calculator::calculate_category_refined_roi(
-							$form_data,
-							$recommendation['category_info']
-						);
+                       // Perform ROI calculations.
+                       $calculations   = RTBCB_Calculator::calculate_roi( $form_data );
+                       $recommendation = RTBCB_Category_Recommender::recommend_category( $form_data );
+                       $calculations   = RTBCB_Calculator::calculate_category_refined_roi(
+                               $form_data,
+                               $recommendation['category_info']
+                       );
 
-			$fast_mode = 'fast' === $report_type || ! empty( $_POST['fast_mode'] ) || rtbcb_heavy_features_disabled();
-			if ( $fast_mode ) {
-				$report_html = $this->get_fast_report_html( $form_data, $calculations );
+                       $fast_mode   = 'fast' === $report_type || ! empty( $_POST['fast_mode'] ) || rtbcb_heavy_features_disabled();
+                       $llm         = null;
+                       $rag         = null;
+                       $rag_context = [];
 
-				$lead_data = array_merge(
-					$form_data,
-					[
-						'roi_low'    => $calculations['conservative']['roi_percentage'] ?? 0,
-						'roi_base'   => $calculations['base']['roi_percentage'] ?? 0,
-						'roi_high'   => $calculations['optimistic']['roi_percentage'] ?? 0,
-						'report_html' => $report_html,
-					]
-				);
+                       if ( $fast_mode ) {
+                               $model = 'fast';
+                       } else {
+                               $llm         = new RTBCB_LLM_Optimized();
+                               $rag         = new RTBCB_RAG();
+                               $rag_context = $rag->get_context( $form_data['company_description'] );
 
-				$lead_id = RTBCB_Leads::save_lead( $lead_data );
+                               if ( 'comprehensive' === $report_type ) {
+                                       $model = 'comprehensive';
+                               } else {
+                                       $model = $this->route_model( $form_data, $rag_context );
+                                       if ( is_wp_error( $model ) ) {
+                                               throw new Exception( $model->get_error_message() );
+                                       }
+                               }
+                       }
 
-				$upload_dir  = wp_upload_dir();
-				$reports_dir = trailingslashit( $upload_dir['basedir'] ) . 'rtbcb-reports';
-				if ( ! file_exists( $reports_dir ) ) {
-					wp_mkdir_p( $reports_dir );
-				}
+                       RTBCB_Logger::log(
+                               'report_config',
+                               [
+                                       'report_type' => $report_type,
+                                       'fast_mode'   => $fast_mode,
+                                       'model'       => $model,
+                               ]
+                       );
 
-				$filepath = trailingslashit( $reports_dir ) . 'report-' . $lead_id . '.html';
-				file_put_contents( $filepath, $report_html );
+                       if ( $fast_mode ) {
+                               $report_html = $this->get_fast_report_html( $form_data, $calculations );
 
-				$to      = sanitize_email( $form_data['email'] );
-				$subject = sprintf( __( 'Your Business Case from %s', 'rtbcb' ), get_bloginfo( 'name' ) );
-				$message = __( 'Thank you for using the Business Case Builder. Your report is attached.', 'rtbcb' );
-				wp_mail( $to, $subject, $message, [], [ $filepath ] );
+                               $lead_data = array_merge(
+                                       $form_data,
+                                       [
+                                               'roi_low'    => $calculations['conservative']['roi_percentage'] ?? 0,
+                                               'roi_base'   => $calculations['base']['roi_percentage'] ?? 0,
+                                               'roi_high'   => $calculations['optimistic']['roi_percentage'] ?? 0,
+                                               'report_html' => $report_html,
+                                       ]
+                               );
 
-				if ( file_exists( $filepath ) ) {
-					unlink( $filepath );
-				}
+                               $lead_id = RTBCB_Leads::save_lead( $lead_data );
 
-				wp_send_json_success(
-					[
-						'message'     => __( 'Business case generated successfully.', 'rtbcb' ),
-						'report_id'   => $lead_id,
-						'report_html' => $report_html,
-					]
-				);
-				return;
-			}
+                               $upload_dir  = wp_upload_dir();
+                               $reports_dir = trailingslashit( $upload_dir['basedir'] ) . 'rtbcb-reports';
+                               if ( ! file_exists( $reports_dir ) ) {
+                                       wp_mkdir_p( $reports_dir );
+                               }
 
-			// Instantiate necessary classes.
-			$llm = new RTBCB_LLM_Optimized();
-			$rag = new RTBCB_RAG();
+                               $filepath = trailingslashit( $reports_dir ) . 'report-' . $lead_id . '.html';
+                               file_put_contents( $filepath, $report_html );
 
-			// Generate context from RAG.
-			$rag_context = $rag->get_context( $form_data['company_description'] );
+                               $to      = sanitize_email( $form_data['email'] );
+                               $subject = sprintf( __( 'Your Business Case from %s', 'rtbcb' ), get_bloginfo( 'name' ) );
+                               $message = __( 'Thank you for using the Business Case Builder. Your report is attached.', 'rtbcb' );
+                               wp_mail( $to, $subject, $message, [], [ $filepath ] );
 
-			if ( 'comprehensive' === $report_type ) {
-				// Generate comprehensive business case with LLM.
-				$business_case_data = $llm->generate_comprehensive_business_case( $form_data, $calculations, $rag_context );
-			} else {
-				// Route to the appropriate model.
-				$model = $this->route_model( $form_data, $rag_context );
-				if ( is_wp_error( $model ) ) {
-					throw new Exception( $model->get_error_message() );
-				}
+                               if ( file_exists( $filepath ) ) {
+                                       unlink( $filepath );
+                               }
 
-				// Generate basic business case with LLM.
-				$business_case_data = $llm->generate_business_case( $form_data, $calculations, $rag_context, $model );
-			}
+                               wp_send_json_success(
+                                       [
+                                               'message'     => __( 'Business case generated successfully.', 'rtbcb' ),
+                                               'report_id'   => $lead_id,
+                                               'report_html' => $report_html,
+                                       ]
+                               );
+                               return;
+                       }
+
+                       if ( 'comprehensive' === $report_type ) {
+                               // Generate comprehensive business case with LLM.
+                               $business_case_data = $llm->generate_comprehensive_business_case( $form_data, $calculations, $rag_context );
+                       } else {
+                               // Generate basic business case with LLM.
+                               $business_case_data = $llm->generate_business_case( $form_data, $calculations, $rag_context, $model );
+                       }
 
 			// Check for LLM generation errors before proceeding.
 			if ( is_wp_error( $business_case_data ) ) {
