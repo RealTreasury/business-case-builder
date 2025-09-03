@@ -673,6 +673,11 @@ function displayReport(htmlContent) {
     iframe.style.height = '800px';
     iframe.style.border = '1px solid #ddd';
     iframe.srcdoc = sanitizeReportHTML(htmlContent);
+    iframe.addEventListener('load', () => {
+        if ( iframe.contentDocument ) {
+            initializeAIHighlights( iframe.contentDocument );
+        }
+    });
     document.getElementById('report-container').appendChild(iframe);
 }
 
@@ -737,13 +742,13 @@ async function generateAndDisplayReport(businessContext) {
     }
 }
 
-function initializeAIHighlights() {
-    if ( typeof document.getElementById !== 'function' || typeof document.querySelector !== 'function' ) {
+function initializeAIHighlights(doc = document) {
+    if ( typeof doc.getElementById !== 'function' || typeof doc.querySelector !== 'function' ) {
         return;
     }
 
-    const aiToggle = document.getElementById( 'rtbcb-ai-toggle' );
-    const reportContainer = document.querySelector( '.rtbcb-enhanced-report' );
+    const aiToggle = doc.getElementById( 'rtbcb-ai-toggle' );
+    const reportContainer = doc.querySelector( '.rtbcb-enhanced-report' );
 
     if ( ! aiToggle || ! reportContainer ) {
         return;
@@ -753,19 +758,18 @@ function initializeAIHighlights() {
         reportContainer.classList.toggle( 'show-ai-highlights', aiToggle.checked );
     } );
 
-    addHighlight( '.rtbcb-company-intelligence', 'This section was enriched by AI.' );
+    addHighlight( doc, '.rtbcb-company-intelligence', 'This section was enriched by AI.' );
 }
 
-function addHighlight(selector, tooltipText) {
-	const element = document.querySelector(selector);
-	if ( element ) {
-		element.classList.add('ai-highlight');
-		const tooltip = document.createElement('div');
-		tooltip.className = 'ai-tooltip';
-		tooltip.textContent = tooltipText;
-		element.appendChild(tooltip);
-		}
-
+function addHighlight(doc, selector, tooltipText) {
+    const element = doc.querySelector(selector);
+    if ( element ) {
+        element.classList.add('ai-highlight');
+        const tooltip = doc.createElement('div');
+        tooltip.className = 'ai-tooltip';
+        tooltip.textContent = tooltipText;
+        element.appendChild(tooltip);
+    }
 }
 
 // No export functions are available; users should access the report online.
