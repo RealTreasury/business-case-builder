@@ -115,7 +115,7 @@ return false;
  * @param array $decoded Decoded JSON.
  * @return array|string Parsed content.
  */
-private function extract_content_from_decoded_response( $decoded ) {
+	private function extract_content_from_decoded_response( $decoded ) {
 if ( isset( $decoded['choices'][0]['message']['content'] ) ) {
 $content = $decoded['choices'][0]['message']['content'];
 if ( is_string( $content ) ) {
@@ -170,7 +170,7 @@ return $decoded;
  * @param string $content Content string.
  * @return bool Whether content appears JSON.
  */
-private function looks_like_json( $content ) {
+	private function looks_like_json( $content ) {
 $content = trim( $content );
 return ( substr( $content, 0, 1 ) === '{' && substr( $content, -1 ) === '}' ) ||
 ( substr( $content, 0, 1 ) === '[' && substr( $content, -1 ) === ']' );
@@ -182,8 +182,8 @@ return ( substr( $content, 0, 1 ) === '{' && substr( $content, -1 ) === '}' ) ||
  * @param string $response_body Body string.
  * @return bool Streaming detected.
  */
-private function is_streaming_response( $response_body ) {
-return strpos( $response_body, 'data: {' ) !== false || strpos( $response_body, 'event: ' ) !== false;
+	private function is_streaming_response( $response_body ) {
+return preg_match( '/^data:\s/m', $response_body ) || preg_match( '/^event:\s/m', $response_body );
 }
 
 /**
@@ -192,23 +192,56 @@ return strpos( $response_body, 'data: {' ) !== false || strpos( $response_body, 
  * @param string $response_body Body string.
  * @return array|string|false Parsed content or false.
  */
-private function parse_streaming_response( $response_body ) {
-$lines     = explode( "\n", $response_body );
-$json_data = '';
+	private function parse_streaming_response( $response_body ) {
+$lines            = preg_split( "/\r?\n/", $response_body );
+$accumulated_text = '';
+$final_response   = null;
 
 foreach ( $lines as $line ) {
 $line = trim( $line );
-if ( strpos( $line, 'data: {' ) === 0 ) {
-$json_data = substr( $line, 6 );
+if ( '' === $line || 0 !== strpos( $line, 'data:' ) ) {
+continue;
+}
+
+$payload = trim( substr( $line, 5 ) );
+if ( '[DONE]' === $payload ) {
 break;
+}
+
+$decoded = json_decode( $payload, true );
+if ( JSON_ERROR_NONE !== json_last_error() ) {
+continue;
+}
+
+if ( isset( $decoded['type'] ) ) {
+switch ( $decoded['type'] ) {
+case 'response.done':
+case 'response.content_part.done':
+if ( isset( $decoded['response'] ) ) {
+$final_response = $decoded['response'];
+}
+break;
+case 'response.content_part.delta':
+if ( isset( $decoded['delta']['text'] ) ) {
+$accumulated_text .= $decoded['delta']['text'];
+}
+break;
+}
+} else {
+if ( isset( $decoded['choices'][0]['delta']['content'] ) ) {
+$accumulated_text .= $decoded['choices'][0]['delta']['content'];
+} elseif ( isset( $decoded['choices'][0]['message'] ) ) {
+$final_response = $decoded;
+}
 }
 }
 
-if ( $json_data ) {
-$decoded = json_decode( $json_data, true );
-if ( JSON_ERROR_NONE === json_last_error() ) {
-return $this->extract_content_from_decoded_response( $decoded );
+if ( $final_response ) {
+return $this->extract_content_from_decoded_response( $final_response );
 }
+
+if ( $accumulated_text ) {
+return $accumulated_text;
 }
 
 return false;
