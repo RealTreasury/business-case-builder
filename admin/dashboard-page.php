@@ -261,15 +261,6 @@ $avg_roi = intval( $roi_stats['avg_base'] ?? 0 );
 					</div>
 				</a>
 
-				<button type="button" id="rtbcb-export-data" class="rtbcb-action-card">
-					<div class="rtbcb-action-icon">
-						<span class="dashicons dashicons-download"></span>
-					</div>
-					<div class="rtbcb-action-content">
-						<h4><?php esc_html_e( 'Export Data', 'rtbcb' ); ?></h4>
-						<p><?php esc_html_e( 'Download leads as CSV', 'rtbcb' ); ?></p>
-					</div>
-				</button>
 			</div>
 		</div>
 	</div>

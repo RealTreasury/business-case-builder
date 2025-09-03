@@ -924,8 +924,7 @@ class BusinessCaseBuilder {
                     if (statusData.report_html) {
                         this.handleSuccess({
                             report_html: statusData.report_html,
-                            report_data: statusData.report_data,
-                            download_url: statusData.download_url
+                            report_data: statusData.report_data
                         });
                     } else if (statusData.report_data) {
                         this.handleSuccess(statusData.report_data);
@@ -950,8 +949,7 @@ class BusinessCaseBuilder {
                     if (statusData.report_html) {
                         this.handleSuccess({
                             report_html: statusData.report_html,
-                            report_data: statusData.report_data,
-                            download_url: statusData.download_url
+                            report_data: statusData.report_data
                         });
                     } else if (statusData.report_data) {
                         this.handleSuccess(statusData.report_data);
@@ -1180,8 +1178,6 @@ class BusinessCaseBuilder {
         // Initialize interactive metrics
         this.initializeInteractiveMetrics(container);
 
-        // Add print and export functionality
-        this.initializeExportFunctions(container);
     }
 
     initializeReportCharts(container) {
@@ -1394,25 +1390,6 @@ class BusinessCaseBuilder {
         metricCards.forEach(card => {
             card.addEventListener('click', function() {
                 this.classList.toggle('expanded');
-            });
-        });
-    }
-
-    initializeExportFunctions(container) {
-        // Print button
-        const printButtons = container.querySelectorAll('[onclick*="print"], .rtbcb-print-btn');
-        printButtons.forEach(btn => {
-            btn.onclick = null; // Remove inline handler
-            btn.addEventListener('click', () => {
-                window.print();
-            });
-        });
-
-        // PDF export button (same as print for now)
-        const pdfButtons = container.querySelectorAll('.rtbcb-export-pdf, .rtbcb-pdf-btn');
-        pdfButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                window.print(); // Browser will handle PDF export
             });
         });
     }
@@ -1739,10 +1716,6 @@ class BusinessCaseBuilder {
     renderActions() {
         return `
             <div class="rtbcb-actions-section">
-                <button type="button" class="rtbcb-action-btn rtbcb-btn-secondary" onclick="window.print()">
-                    <span class="rtbcb-btn-icon">🖨️</span>
-                    ${ __( 'Print Results', 'rtbcb' ) }
-                </button>
                 <button type="button" class="rtbcb-action-btn rtbcb-btn-secondary" onclick="window.businessCaseBuilder.copyResultsHTML()">
                     <span class="rtbcb-btn-icon">📋</span>
                     ${ __( 'Copy HTML', 'rtbcb' ) }

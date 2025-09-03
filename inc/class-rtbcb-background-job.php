@@ -150,26 +150,24 @@ $report_html = rtbcb_sanitize_report_html( $report_html );
 	mkdir( $reports_dir, 0777, true );
 	}
 	}
-	$html_path = rtrim( $reports_dir, '/\\' ) . '/' . $job_id . '.html';
-	file_put_contents( $html_path, $report_html );
-	$pdf_path = rtrim( $reports_dir, '/\\' ) . '/' . $job_id . '.pdf';
-	file_put_contents( $pdf_path, $report_html );
-	
-	if ( function_exists( 'rtbcb_send_report_email' ) ) {
-	rtbcb_send_report_email( $user_inputs, $pdf_path );
-	}
-	
-	$download_url = rtrim( $base_url, '/\\' ) . '/rtbcb-reports/' . $job_id . '.pdf';
-	
+        $html_path  = rtrim( $reports_dir, '/\\' ) . '/' . $job_id . '.html';
+        file_put_contents( $html_path, $report_html );
+
+        $report_url = rtrim( $base_url, '/\\' ) . '/rtbcb-reports/' . $job_id . '.html';
+
+        if ( function_exists( 'rtbcb_send_report_email' ) ) {
+        rtbcb_send_report_email( $user_inputs, $report_url );
+        }
+
         self::update_status(
         $job_id,
         'completed',
         [
-        'percent'      => 100,
-        'report_html'  => $report_html,
-        'report_data'  => $result['report_data'],
-        'download_url' => $download_url,
-        'result'       => $result,
+        'percent'     => 100,
+        'report_html' => $report_html,
+        'report_data' => $result['report_data'],
+        'report_url'  => $report_url,
+        'result'      => $result,
         ],
         );
 	}

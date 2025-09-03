@@ -27,12 +27,7 @@ $date_to   = isset( $leads_data['date_to'] ) ? sanitize_text_field( $leads_data[
 			<?php echo esc_html__( 'Leads Management', 'rtbcb' ); ?>
 			<span class="rtbcb-count-badge"><?php echo esc_html( number_format( $total_leads ) ); ?></span>
 		</h1>
-		<div class="rtbcb-admin-actions">
-			<button id="rtbcb-export-leads" class="button button-secondary">
-				<span class="dashicons dashicons-download"></span>
-				<?php esc_html_e( 'Export CSV', 'rtbcb' ); ?>
-			</button>
-		</div>
+                <div class="rtbcb-admin-actions"></div>
 	</div>
 
 <!-- Filters -->

@@ -72,7 +72,7 @@ node tests/report-interactivity-extended.test.js
 
 # Email and PDF test
 echo "14. Running email and PDF test..."
-php tests/email-and-pdf.test.php
+php tests/email-notification.test.php
 
 # AJAX error handling test (PHPUnit)
 echo "15. Running AJAX error handling tests..."
@@ -115,7 +115,6 @@ node tests/is-valid-url.test.js
 node tests/temperature-model.test.js
 node tests/min-output-tokens.test.js
 node tests/gpt5-config-defaults.test.js
-node tests/export-to-pdf-button.test.js
 node tests/api-logs-page.test.js
 node tests/wizard-report-flow.test.js
 npx --yes jest tests/poll-job-completed.test.js --config '{"testEnvironment":"node"}'

@@ -22,9 +22,6 @@ if ( ! current_user_can( 'manage_options' ) ) {
 <button type="button" id="rtbcb-clear-workflow" class="button">
 <?php echo esc_html__( 'Clear History', 'rtbcb' ); ?>
 </button>
-<button type="button" id="rtbcb-export-workflow" class="button">
-<?php echo esc_html__( 'Export Debug Data', 'rtbcb' ); ?>
-</button>
 </div>
 
 <div id="rtbcb-workflow-message" class="notice" style="display:none;"></div>

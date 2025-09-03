@@ -403,8 +403,8 @@ class RTBCB_Ajax {
 						}
 			if ( 'percent' === $field ) {
 				$response[ $field ] = floatval( $value );
-			} elseif ( 'download_url' === $field && is_string( $value ) ) {
-				$response[ $field ] = function_exists( 'esc_url_raw' ) ? esc_url_raw( $value ) : $value;
+                        } elseif ( 'report_url' === $field && is_string( $value ) ) {
+                                $response[ $field ] = function_exists( 'esc_url_raw' ) ? esc_url_raw( $value ) : $value;
 			} elseif ( in_array( $field, [ 'step', 'message' ], true ) && is_string( $value ) ) {
 				$response[ $field ] = sanitize_text_field( $value );
 			} else {

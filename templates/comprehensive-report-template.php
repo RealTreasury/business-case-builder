@@ -601,16 +601,6 @@ $processing_time = $metadata['processing_time'] ?? ( $report_data['processing_ti
 				</div>
 			</div>
 
-			<div class="rtbcb-footer-actions">
-				<button type="button" class="rtbcb-action-button primary" onclick="window.print()">
-					<span class="rtbcb-button-icon">🖨️</span>
-					<?php echo esc_html__( 'Print Report', 'rtbcb' ); ?>
-				</button>
-				<button type="button" class="rtbcb-action-button secondary" onclick="rtbcbExportPDF()">
-					<span class="rtbcb-button-icon">📄</span>
-					<?php echo esc_html__( 'Export PDF', 'rtbcb' ); ?>
-				</button>
-			</div>
 		</div>
 
 		<div class="rtbcb-footer-meta">
@@ -635,8 +625,6 @@ $report_js_data = [
 'confidence'   => $confidence_level,
 'hasCharts'    => $enable_charts,
 'strings'      => [
-'exportPDF'       => __( 'Export as PDF', 'rtbcb' ),
-'printReport'     => __( 'Print Report', 'rtbcb' ),
 'expandSection'   => __( 'Expand Section', 'rtbcb' ),
 'collapseSection' => __( 'Collapse Section', 'rtbcb' ),
 'loading'         => __( 'Loading...', 'rtbcb' ),
@@ -914,10 +902,6 @@ container.innerHTML = '<div class="rtbcb-chart-error">' + message + '</div>';
 }
 }
 
-// Export functions globally
-window.rtbcbExportPDF = function() {
-window.print();
-};
 
 console.log('RTBCB: Enhanced report JavaScript loaded successfully');
 </script>

@@ -743,31 +743,25 @@ function rtbcb_normalize_model_name( $model ) {
 /**
 	* Send the generated report to the user via email.
 	*
-	* @param array	$form_data	 Form submission data.
-	* @param string $report_path Absolute path to the HTML report file.
+	* @param array  $form_data Submitted form data.
+	* @param string $report_url URL to the generated report.
+	* @param callable $mailer     Optional mailer function for testing.
 	*
 	* @return void
 	*/
-/**
-	* Send the generated report to the user via email.
-	*
-	* @param array	  $form_data   Submitted form data.
-	* @param string	  $report_path Path to the generated report file.
-	* @param callable $mailer	   Optional mailer function for testing.
-	*/
-function rtbcb_send_report_email( $form_data, $report_path, $mailer = 'wp_mail' ) {
-	$email = isset( $form_data['email'] ) ? sanitize_email( $form_data['email'] ) : '';
+function rtbcb_send_report_email( $form_data, $report_url, $mailer = 'wp_mail' ) {
+        $email = isset( $form_data['email'] ) ? sanitize_email( $form_data['email'] ) : '';
 
-	if ( empty( $email ) || ! is_readable( $report_path ) ) {
-		return;
-	}
+        if ( empty( $email ) || empty( $report_url ) ) {
+                return;
+        }
 
-	$subject = __( 'Your Business Case Report', 'rtbcb' );
-	$message = __( 'Please find your business case report attached.', 'rtbcb' );
+        $subject = __( 'Your Business Case Report', 'rtbcb' );
+        $message = sprintf( __( 'View your business case report: %s', 'rtbcb' ), esc_url( $report_url ) );
 
-	if ( is_callable( $mailer ) ) {
-		call_user_func( $mailer, $email, $subject, $message, [], [ $report_path ] );
-	}
+        if ( is_callable( $mailer ) ) {
+                call_user_func( $mailer, $email, $subject, $message );
+        }
 }
 
 /**

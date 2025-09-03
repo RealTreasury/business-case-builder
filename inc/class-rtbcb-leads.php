@@ -631,53 +631,6 @@ $stats = function_exists( 'get_option' ) ? get_option( self::$cache_option, [] )
 	}
 
 	/**
-	* Export leads to CSV.
-	*
-	* @param array $args Export arguments.
-	* @return string CSV content.
-	*/
-	public static function export_to_csv( $args = [] ) {
-		$leads_data = self::get_all_leads( array_merge( $args, [ 'per_page' => -1 ] ) );
-		$leads = $leads_data['leads'];
-
-		$csv_content = '';
-
-		// Headers
-		$headers = [
-			'Email', 'Company Size', 'Industry', 'Hours Reconciliation',
-			'Hours Cash Positioning', 'Number of Banks', 'FTEs',
-			'Pain Points', 'Recommended Category', 'ROI Low', 'ROI Base',
-			'ROI High', 'Created At', 'UTM Source', 'UTM Medium', 'UTM Campaign'
-		];
-		$csv_content .= implode( ',', $headers ) . "\n";
-
-		// Data rows
-		foreach ( $leads as $lead ) {
-			$row = [
-				'"' . str_replace( '"', '""', $lead['email'] ) . '"',
-				'"' . str_replace( '"', '""', $lead['company_size'] ) . '"',
-				'"' . str_replace( '"', '""', $lead['industry'] ) . '"',
-				$lead['hours_reconciliation'],
-				$lead['hours_cash_positioning'],
-				$lead['num_banks'],
-				$lead['ftes'],
-				'"' . str_replace( '"', '""', implode( '; ', (array) $lead['pain_points'] ) ) . '"',
-				'"' . str_replace( '"', '""', $lead['recommended_category'] ) . '"',
-				$lead['roi_low'],
-				$lead['roi_base'],
-				$lead['roi_high'],
-				$lead['created_at'],
-				'"' . str_replace( '"', '""', $lead['utm_source'] ) . '"',
-				'"' . str_replace( '"', '""', $lead['utm_medium'] ) . '"',
-				'"' . str_replace( '"', '""', $lead['utm_campaign'] ) . '"',
-			];
-			$csv_content .= implode( ',', $row ) . "\n";
-		}
-
-		return $csv_content;
-	}
-
-	/**
 	* Get client IP address.
 	*
 	* @return string IP address.
