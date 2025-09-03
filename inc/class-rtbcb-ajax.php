@@ -62,11 +62,17 @@ class RTBCB_Ajax {
 		*
 		* @return void
 		*/
-       public static function stream_analysis() {
+	public static function stream_analysis() {
 
-	       if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) {
-		       wp_die( 'Invalid request' );
-	       }
+		$action = isset( $_REQUEST['action'] ) ? sanitize_key( wp_unslash( $_REQUEST['action'] ) ) : '';
+		if ( 'rtbcb_stream_analysis' !== $action ) {
+			// Jetpack also routes requests through admin-ajax.php; avoid processing unrelated actions.
+			return;
+	}
+
+               if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) {
+                       wp_die( 'Invalid request' );
+               }
 
 	       if ( ! function_exists( 'check_ajax_referer' ) ) {
 		       wp_die( 'WordPress not ready' );
@@ -94,17 +100,10 @@ class RTBCB_Ajax {
 		       return;
 	       }
 
-	       $action = isset( $_REQUEST['action'] ) ? sanitize_key( wp_unslash( $_REQUEST['action'] ) ) : '';
-			       if ( 'rtbcb_stream_analysis' !== $action ) {
-			       // Jetpack also routes requests through admin-ajax.php; avoid sending
-			       // streaming headers for unrelated actions.
-			       return;
-			       }
-
-				nocache_headers();
-				header( 'Content-Type: text/event-stream' );
-				header( 'Cache-Control: no-cache' );
-				header( 'Connection: keep-alive' );
+                               nocache_headers();
+                                header( 'Content-Type: text/event-stream' );
+                                header( 'Cache-Control: no-cache' );
+                                header( 'Connection: keep-alive' );
 
 				$scenarios      = RTBCB_Calculator::calculate_roi( $user_inputs );
 				$recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );

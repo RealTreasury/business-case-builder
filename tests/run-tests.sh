@@ -104,6 +104,9 @@ php tests/jetpack-compatibility.test.php
 echo "14e. Running reports bulk delete test..."
 php tests/reports-bulk-delete.test.php
 
+echo "14f. Running non-RTBCB AJAX test..."
+php tests/non-rtbcb-ajax.test.php
+
 # JavaScript tests
 echo "16. Running JavaScript tests..."
 node tests/handle-submit-error.test.js

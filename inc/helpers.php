@@ -1,4 +1,4 @@
-<?php
+	<?php
 defined( 'ABSPATH' ) || exit;
 require_once __DIR__ . '/class-rtbcb-response-parser.php';
 
@@ -1601,7 +1601,13 @@ function rtbcb_parse_gpt5_response( $response, $store_raw = false ) {
 	* @return void
 	*/
 function rtbcb_proxy_openai_responses() {
-		$api_key = rtbcb_get_openai_api_key();
+	$action = isset( $_REQUEST['action'] ) ? sanitize_key( wp_unslash( $_REQUEST['action'] ) ) : '';
+	if ( 'rtbcb_openai_responses' !== $action ) {
+		// Jetpack also routes requests through admin-ajax.php; avoid processing unrelated actions.
+		return;
+	}
+
+	$api_key = rtbcb_get_openai_api_key();
 		if ( ! rtbcb_has_openai_api_key() ) {
 			wp_send_json_error( [ 'message' => __( 'OpenAI API key not configured.', 'rtbcb' ) ], 500 );
 		}
@@ -1635,14 +1641,7 @@ function rtbcb_proxy_openai_responses() {
 	$body_array['stream']			 = true;
 	$payload						 = wp_json_encode( $body_array );
 
-	$action = isset( $_REQUEST['action'] ) ? sanitize_key( wp_unslash( $_REQUEST['action'] ) ) : '';
-	if ( 'rtbcb_openai_responses' !== $action ) {
-		// Jetpack also routes requests through admin-ajax.php; avoid sending
-		// streaming headers for unrelated actions.
-		return;
-	}
-
-	nocache_headers();
+       nocache_headers();
 	header( 'Content-Type: text/event-stream' );
 	header( 'Cache-Control: no-cache' );
 	header( 'Connection: keep-alive' );
