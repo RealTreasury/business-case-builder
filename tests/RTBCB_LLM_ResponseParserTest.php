@@ -48,14 +48,14 @@ final class RTBCB_LLM_ResponseParserTest extends TestCase {
 		ini_set( 'error_log', $orig );
 	}
 
-       public function test_handles_large_response() {
+	public function test_handles_large_response() {
                $large   = str_repeat( 'a', 10000 );
                $json    = '{"text":"' . $large . '"}';
                $decoded = $this->parser->process_openai_response( $json );
                $this->assertSame( $large, $decoded['text'] );
        }
 
-       public function test_preserves_usage_data() {
+	public function test_preserves_usage_data() {
                $payload = [
                        'output_text' => json_encode( [ 'result' => 'ok' ] ),
                        'usage'       => [
@@ -68,6 +68,15 @@ final class RTBCB_LLM_ResponseParserTest extends TestCase {
                $decoded = $this->parser->process_openai_response( $json );
                $this->assertSame( 5, $decoded['usage']['input_tokens'] );
                $this->assertSame( 'ok', $decoded['result'] );
+       }
+
+	public function test_parses_streaming_response() {
+		$stream  = "data: {\"choices\":[{\"delta\":{\"content\":\"Hello\"}}]}\n\n";
+		$stream .= "data: {\"choices\":[{\"delta\":{\"content\":\" world\"}}]}\n\n";
+		$stream .= "data: {\"choices\":[{\"message\":{\"role\":\"assistant\",\"content\":\"Hello world\"}}]}\n\n";
+		$stream .= "data: [DONE]\n\n";
+		$decoded = $this->parser->process_openai_response( $stream );
+		$this->assertSame( 'Hello world', $decoded );
        }
 }
 
