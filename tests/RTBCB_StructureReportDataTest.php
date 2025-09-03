@@ -106,16 +106,25 @@ $user_inputs     = [ 'company_name' => 'Test', 'industry' => 'finance' ];
 $enriched_profile = [];
 $roi_scenarios    = [ 'conservative' => [], 'base' => [], 'optimistic' => [] ];
 $recommendation   = [ 'recommended' => '', 'category_info' => [] ];
-$final_analysis   = [
+$analysis_data    = [
+'executive_summary' => [],
+'operational_insights' => [],
 'industry_insights' => [
-'sector_trends'            => 'trend',
-'competitive_benchmarks'   => 'benchmark',
-'regulatory_considerations' => 'regulation',
+'sector_trends'            => [ 'trend' ],
+'competitive_benchmarks'   => [ 'benchmark' ],
+'regulatory_considerations' => [ 'regulation' ],
 ],
 ];
 
+$llm_reflection  = new ReflectionClass( RTBCB_LLM::class );
+$llm             = $llm_reflection->newInstanceWithoutConstructor();
+$analysis_method = new ReflectionMethod( RTBCB_LLM::class, 'validate_and_structure_analysis' );
+$analysis_method->setAccessible( true );
+$final_analysis  = $analysis_method->invoke( $llm, $analysis_data );
+
 $result = $method->invoke( null, $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, [], microtime( true ), [] );
 
+self::assertSame( [ 'trend' ], $final_analysis['industry_insights']['sector_trends'] );
 self::assertSame( $final_analysis['industry_insights'], $result['industry_insights'] );
 }
 
