@@ -14,7 +14,6 @@ require_once __DIR__ . '/class-rtbcb-response-parser.php';
 require_once __DIR__ . '/class-rtbcb-llm-config.php';
 require_once __DIR__ . '/class-rtbcb-llm-prompt.php';
 require_once __DIR__ . '/class-rtbcb-llm-transport.php';
-require_once __DIR__ . '/class-rtbcb-llm-response-parser.php';
 class RTBCB_LLM {
 	private $current_inputs = [];
 
@@ -41,10 +40,10 @@ class RTBCB_LLM {
 
 	/**
 	* Response parser instance.
-	*
-	* @var RTBCB_LLM_Response_Parser
-	*/
-	private $response_parser;
+*
+* @var RTBCB_Response_Parser
+*/
+private $response_parser;
 
 	/**
 	* Serialized company research from the last request.
@@ -61,10 +60,10 @@ class RTBCB_LLM {
 	protected $last_prompt;
 
 	public function __construct() {
-	       $this->config          = new RTBCB_LLM_Config();
-	       $this->prompt_builder  = new RTBCB_LLM_Prompt();
-	       $this->transport       = new RTBCB_LLM_Transport( $this->config );
-	       $this->response_parser = new RTBCB_LLM_Response_Parser();
+$this->config          = new RTBCB_LLM_Config();
+$this->prompt_builder  = new RTBCB_LLM_Prompt();
+$this->transport       = new RTBCB_LLM_Transport( $this->config );
+$this->response_parser = new RTBCB_Response_Parser();
 
 	       if ( empty( $this->config->get_api_key() ) ) {
 	               rtbcb_log_error(
@@ -215,7 +214,7 @@ class RTBCB_LLM {
 			return new WP_Error( 'llm_failure', __( 'Unable to generate analysis at this time.', 'rtbcb' ) );
 		}
 
-		$parsed = ( new RTBCB_Response_Parser() )->parse( $response );
+$parsed = $this->response_parser->parse( $response );
 		$json   = $this->response_parser->process_openai_response( $parsed['output_text'] );
 
 		if ( ! is_array( $json ) ) {
@@ -275,7 +274,7 @@ class RTBCB_LLM {
 			return new WP_Error( 'llm_failure', __( 'Unable to generate commentary at this time.', 'rtbcb' ) );
 		}
 
-		$parsed     = ( new RTBCB_Response_Parser() )->parse( $response );
+$parsed     = $this->response_parser->parse( $response );
 		$commentary = sanitize_textarea_field( $parsed['output_text'] );
 
 		if ( empty( $commentary ) ) {
@@ -388,7 +387,7 @@ USER,
 			return new WP_Error( 'llm_failure', $response->get_error_message() );
 		}
 
-		$parsed  = ( new RTBCB_Response_Parser() )->parse( $response );
+$parsed  = $this->response_parser->parse( $response );
 		$content = $parsed['output_text'];
 
 		if ( empty( $content ) ) {
@@ -482,7 +481,7 @@ $json = $this->response_parser->process_openai_response( $content );
 			return new WP_Error( 'llm_failure', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
 		}
 
-		$parsed   = ( new RTBCB_Response_Parser() )->parse( $response );
+$parsed   = $this->response_parser->parse( $response );
 		$overview = sanitize_textarea_field( $parsed['output_text'] );
 
 		if ( empty( $overview ) ) {
@@ -532,7 +531,7 @@ $json = $this->response_parser->process_openai_response( $content );
 			return new WP_Error( 'llm_failure', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
 		}
 
-		$parsed   = ( new RTBCB_Response_Parser() )->parse( $response );
+$parsed   = $this->response_parser->parse( $response );
 		$overview = sanitize_textarea_field( $parsed['output_text'] );
 
 		if ( empty( $overview ) ) {
@@ -598,7 +597,7 @@ $json = $this->response_parser->process_openai_response( $content );
 			return new WP_Error( 'llm_failure', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
 		}
 
-		$parsed   = ( new RTBCB_Response_Parser() )->parse( $response );
+$parsed   = $this->response_parser->parse( $response );
 		$overview = sanitize_textarea_field( $parsed['output_text'] );
 
 		if ( empty( $overview ) ) {
@@ -643,7 +642,7 @@ $json = $this->response_parser->process_openai_response( $content );
 			return new WP_Error( 'llm_failure', __( 'Unable to generate recommendation details at this time.', 'rtbcb' ) );
 		}
 
-$parsed_response = ( new RTBCB_Response_Parser() )->parse( $response );
+$parsed_response = $this->response_parser->parse( $response );
 $parsed          = $this->response_parser->process_openai_response( $parsed_response['output_text'] );
 
 		if ( empty( $parsed ) || ! is_array( $parsed ) ) {
@@ -696,7 +695,7 @@ $parsed          = $this->response_parser->process_openai_response( $parsed_resp
 			return new WP_Error( 'llm_failure', __( 'Unable to generate benefits estimate at this time.', 'rtbcb' ) );
 		}
 
-$parsed_response = ( new RTBCB_Response_Parser() )->parse( $response );
+$parsed_response = $this->response_parser->parse( $response );
 $parsed          = $this->response_parser->process_openai_response( $parsed_response['output_text'] );
 
 		if ( empty( $parsed ) || ! is_array( $parsed ) ) {
@@ -974,8 +973,7 @@ $tech_prompt .= '\nContext: ' . implode( '\n', array_map( 'sanitize_text_field',
 			return $response;
 		}
 
-		$parser = new RTBCB_Response_Parser();
-	        $parsed = $parser->parse_business_case( $response );
+$parsed = $this->response_parser->parse_business_case( $response );
 
 		if ( is_wp_error( $parsed ) ) {
 			return $parsed;
@@ -1006,10 +1004,9 @@ $tech_prompt .= '\nContext: ' . implode( '\n', array_map( 'sanitize_text_field',
 	*
 	* @return array|WP_Error Structured analysis array or error object.
 	*/
-	private function parse_comprehensive_response( $response ) {
-	$parser = new RTBCB_Response_Parser();
-	return $parser->parse_business_case( $response );
-	}
+private function parse_comprehensive_response( $response ) {
+return $this->response_parser->parse_business_case( $response );
+}
 
 
 	/**
@@ -1177,7 +1174,7 @@ $tech_prompt .= '\nContext: ' . implode( '\n', array_map( 'sanitize_text_field',
 	                return $default;
 	        }
 
-	        $parsed = ( new RTBCB_Response_Parser() )->parse( $response );
+$parsed = $this->response_parser->parse( $response );
 	        $json   = $this->response_parser->process_openai_response( $parsed['output_text'] );
 
 		if ( ! is_array( $json ) || empty( $json['competitors'] ) || ! is_array( $json['competitors'] ) ) {
@@ -1410,7 +1407,7 @@ SYSTEM;
 	               return $response;
 	       }
 
-	       $parsed = ( new RTBCB_Response_Parser() )->parse( $response );
+$parsed = $this->response_parser->parse( $response );
 	       $json   = $this->response_parser->process_openai_response( $parsed['output_text'] );
 
 		if ( ! is_array( $json ) ) {
@@ -1612,7 +1609,7 @@ SYSTEM;
 			return $response;
 		}
 
-$parsed_response = ( new RTBCB_Response_Parser() )->parse( $response );
+$parsed_response = $this->response_parser->parse( $response );
 $json            = $this->response_parser->process_openai_response( $parsed_response['output_text'] );
 
 		if ( ! is_array( $json ) ) {
@@ -1662,7 +1659,7 @@ $json            = $this->response_parser->process_openai_response( $parsed_resp
 			return $response;
 		}
 
-		$parsed  = ( new RTBCB_Response_Parser() )->parse( $response );
+$parsed  = $this->response_parser->parse( $response );
 		$summary = sanitize_textarea_field( $parsed['output_text'] );
 
 		if ( empty( $summary ) ) {
@@ -2010,7 +2007,7 @@ return $prompt;
 	        return $response;
 	}
 
-	$parsed        = ( new RTBCB_Response_Parser() )->parse( $response );
+$parsed        = $this->response_parser->parse( $response );
 	$enriched_data = $this->validate_enrichment_response( $parsed['output_text'] );
 
 	if ( is_wp_error( $enriched_data ) ) {
