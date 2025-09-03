@@ -63,17 +63,17 @@ rtbcb_increase_memory_limit();
 		* @return void
 		*/
 
-	public static function stream_analysis() {
-		if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) {
-			wp_die( 'Invalid request' );
-		}
+       public static function stream_analysis() {
+               $action = isset( $_REQUEST['action'] ) ? sanitize_key( wp_unslash( $_REQUEST['action'] ) ) : '';
+               if ( 'rtbcb_stream_analysis' !== $action ) {
+                       // Jetpack also routes requests through admin-ajax.php; avoid sending
+                       // streaming headers for unrelated actions.
+                       return;
+               }
 
-		$action = isset( $_REQUEST['action'] ) ? sanitize_key( wp_unslash( $_REQUEST['action'] ) ) : '';
-		if ( 'rtbcb_stream_analysis' !== $action ) {
-			// Jetpack also routes requests through admin-ajax.php; avoid sending
-			// streaming headers for unrelated actions.
-			return;
-		}
+               if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) {
+                       wp_die( 'Invalid request' );
+               }
 
 		if ( ! function_exists( 'check_ajax_referer' ) ) {
 			wp_die( 'WordPress not ready' );
