@@ -66,6 +66,25 @@ return $this->last_response;
 }
 
 /**
+ * Save API interaction to log table when available.
+ *
+ * @param array $request  Request data.
+ * @param array $response Response data.
+ * @return void
+ */
+private function maybe_log_interaction( $request, $response ) {
+if ( ! class_exists( 'RTBCB_API_Log' ) ) {
+return;
+}
+
+$user_id      = function_exists( 'get_current_user_id' ) ? get_current_user_id() : 0;
+$user_email   = $request['email'] ?? '';
+$company_name = $request['company_name'] ?? '';
+
+RTBCB_API_Log::save_log( $request, $response, $user_id, $user_email, $company_name );
+}
+
+/**
 	* Call OpenAI Responses API with retries and optional streaming.
 	*
 	* @param string        $model             Model name.
@@ -75,19 +94,28 @@ return $this->last_response;
 	* @param callable|null $chunk_handler     Optional streaming handler.
 	* @return array|WP_Error Response array or WP_Error.
 	*/
-	public function call_openai_with_retry( $model, $prompt, $max_output_tokens = null, $max_retries = null, $chunk_handler = null ) {
-		if ( rtbcb_heavy_features_disabled() ) {
-			return new WP_Error( 'heavy_features_disabled', __( 'AI features temporarily disabled.', 'rtbcb' ) );
-		}
+public function call_openai_with_retry( $model, $prompt, $max_output_tokens = null, $max_retries = null, $chunk_handler = null ) {
+$request_data          = is_array( $prompt ) ? $prompt : [ 'input' => $prompt ];
+$request_data['model'] = $model;
 
-		if ( empty( $this->api_key ) ) {
-			return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
-		}
+if ( rtbcb_heavy_features_disabled() ) {
+$error = new WP_Error( 'heavy_features_disabled', __( 'AI features temporarily disabled.', 'rtbcb' ) );
+$this->maybe_log_interaction( $request_data, [ 'error' => $error->get_error_message() ] );
+return $error;
+}
 
-		$input = is_array( $prompt ) ? ( $prompt['input'] ?? '' ) : $prompt;
-		if ( '' === trim( (string) $input ) ) {
-			return new WP_Error( 'empty_prompt', __( 'Prompt cannot be empty.', 'rtbcb' ) );
-		}
+if ( empty( $this->api_key ) ) {
+$error = new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
+$this->maybe_log_interaction( $request_data, [ 'error' => $error->get_error_message() ] );
+return $error;
+}
+
+$input = is_array( $prompt ) ? ( $prompt['input'] ?? '' ) : $prompt;
+if ( '' === trim( (string) $input ) ) {
+$error = new WP_Error( 'empty_prompt', __( 'Prompt cannot be empty.', 'rtbcb' ) );
+$this->maybe_log_interaction( $request_data, [ 'error' => $error->get_error_message() ] );
+return $error;
+}
 
 		$max_retries     = min( 3, $max_retries ?? intval( $this->gpt5_config['max_retries'] ?? 3 ) );
 		$base_timeout    = intval( $this->gpt5_config['timeout'] ?? 300 );
@@ -105,12 +133,18 @@ return $this->last_response;
 			$remaining                    = $max_retry_time - $elapsed;
 			$this->gpt5_config['timeout'] = min( $current_timeout, $remaining );
 
-			$response = $this->call_openai( $model, $prompt, $current_tokens, $chunk_handler );
+$response = $this->call_openai( $model, $prompt, $current_tokens, $chunk_handler );
 
-			if ( ! is_wp_error( $response ) ) {
-				$this->gpt5_config['timeout'] = $base_timeout;
-				return $response;
-			}
+if ( ! is_wp_error( $response ) ) {
+$this->gpt5_config['timeout'] = $base_timeout;
+$response_body = $response['body'] ?? '';
+$decoded       = json_decode( $response_body, true );
+if ( null === $decoded ) {
+$decoded = [];
+}
+$this->maybe_log_interaction( $this->last_request ?? $request_data, $decoded );
+return $response;
+}
 
 			$error_code = $response->get_error_code();
 			if ( 'llm_http_status' === $error_code ) {
@@ -138,9 +172,10 @@ return $this->last_response;
 			}
 		}
 
-		$this->gpt5_config['timeout'] = $base_timeout;
+$this->gpt5_config['timeout'] = $base_timeout;
+$this->maybe_log_interaction( $this->last_request ?? $request_data, [ 'error' => $response->get_error_message() ] );
 
-		return $response; // Return last error.
+return $response; // Return last error.
 	}
 
 	/**
