@@ -1,4 +1,4 @@
-<?php
+								<?php
 defined( 'ABSPATH' ) || exit;
 require_once __DIR__ . '/class-rtbcb-response-parser.php';
 
@@ -138,22 +138,23 @@ $auto = true;
 	* @return array|WP_Error HTTP response array or WP_Error on failure.
 	*/
 function rtbcb_wp_remote_post_with_retry( $url, $args = [], $max_retries = 3 ) {
-	$url		 = function_exists( 'esc_url_raw' ) ? esc_url_raw( $url ) : $url;
-	$max_retries = max( 1, (int) $max_retries );
+	static $logging = false;
+	$url          = function_exists( 'esc_url_raw' ) ? esc_url_raw( $url ) : $url;
+	$max_retries  = max( 1, (int) $max_retries );
 
-	$base_timeout	= isset( $args['timeout'] ) ? (int) $args['timeout'] : rtbcb_get_api_timeout();
+	$base_timeout   = isset( $args['timeout'] ) ? (int) $args['timeout'] : rtbcb_get_api_timeout();
 	$max_retry_time = isset( $args['max_retry_time'] ) ? (int) $args['max_retry_time'] : $base_timeout * $max_retries;
 	unset( $args['max_retry_time'] );
 
 	if ( $base_timeout <= 0 || $max_retry_time <= 0 ) {
-		return new WP_Error(
-			'invalid_timeout',
-			__( 'Request timeout must be greater than zero.', 'rtbcb' )
-		);
+		$error_code    = 'invalid_timeout';
+		$error_message = __( 'Request timeout must be greater than zero.', 'rtbcb' );
+		rtbcb_log_error( $error_code . ': ' . $error_message );
+		return new WP_Error( $error_code, $error_message );
 	}
 
 	$current_timeout = $base_timeout;
-	$start_time		 = microtime( true );
+	$start_time      = microtime( true );
 
 	for ( $attempt = 1; $attempt <= $max_retries; $attempt++ ) {
 		$elapsed = microtime( true ) - $start_time;
@@ -161,22 +162,35 @@ function rtbcb_wp_remote_post_with_retry( $url, $args = [], $max_retries = 3 ) {
 			break;
 		}
 
-		$remaining		 = $max_retry_time - $elapsed;
+		$remaining       = $max_retry_time - $elapsed;
 		$args['timeout'] = min( $current_timeout, $remaining );
 
-		$response = wp_remote_post( $url, $args );
+		$response      = wp_remote_post( $url, $args );
+		$response_code = is_wp_error( $response ) ? 0 : (int) wp_remote_retrieve_response_code( $response );
+		if ( ! $logging ) {
+			$logging = true;
+			RTBCB_Logger::log(
+				'http_request',
+				[
+					'url'           => $url,
+					'attempt'       => $attempt,
+					'response_code' => $response_code,
+				],
+			);
+			$logging = false;
+		}
+
 		if ( ! is_wp_error( $response ) ) {
-			$status = (int) wp_remote_retrieve_response_code( $response );
+			$status = $response_code;
 			if ( $status >= 200 && $status < 300 ) {
 				return $response;
 			}
 
 			if ( $status >= 400 && $status < 500 && 429 !== $status ) {
-				return new WP_Error(
-					'http_error',
-					sprintf( __( 'HTTP error %d', 'rtbcb' ), $status ),
-					[ 'status' => $status ]
-				);
+				$error_code    = 'http_error';
+				$error_message = sprintf( __( 'HTTP error %d', 'rtbcb' ), $status );
+				rtbcb_log_error( $error_code . ': ' . $error_message );
+				return new WP_Error( $error_code, $error_message, [ 'status' => $status ] );
 			}
 		}
 
@@ -184,12 +198,16 @@ function rtbcb_wp_remote_post_with_retry( $url, $args = [], $max_retries = 3 ) {
 			$current_timeout = min( $current_timeout + 5, $max_retry_time );
 
 			$elapsed = microtime( true ) - $start_time;
-			$delay	 = min( pow( 2, $attempt - 1 ), $max_retry_time - $elapsed );
+			$delay   = min( pow( 2, $attempt - 1 ), $max_retry_time - $elapsed );
 			if ( $delay > 0 ) {
 				$jitter = wp_rand( 0, 1000 ) / 1000;
 				usleep( (int) ( ( $delay + $jitter ) * 1000000 ) );
 			}
 		}
+	}
+
+	if ( is_wp_error( $response ) ) {
+		rtbcb_log_error( $response->get_error_code() . ': ' . $response->get_error_message() );
 	}
 
 	return $response;
