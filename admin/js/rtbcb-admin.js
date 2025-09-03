@@ -101,6 +101,18 @@ jQuery(document).ready(function($) {
                     alert('Stored analysis may be outdated for new company.');
                 }
             });
+
+			// Reports bulk actions.
+$('#doaction, #doaction2').on('click', function() {
+var $form = $( this ).closest('form');
+if ( ! $form.find('input[name="page"][value="rtbcb-reports"]').length ) {
+return;
+}
+var action = $form.find('select[name="action"], select[name="action2"]').val();
+if ( 'delete_all' === action ) {
+$form.find('input[type="checkbox"][name="files[]"]').prop('checked', true );
+}
+});
         },
         
         initComponents: function() {
