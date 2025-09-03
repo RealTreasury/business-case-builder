@@ -2440,9 +2440,34 @@ return $this->validate_and_structure_analysis( $analysis_data );
 	'vendor_considerations' => [
 	'evaluation_criteria'   => array_map( 'sanitize_text_field', $analysis_data['vendor_considerations']['evaluation_criteria'] ?? [] ),
 	'due_diligence_areas'   => array_map( 'sanitize_text_field', $analysis_data['vendor_considerations']['due_diligence_areas'] ?? [] ),
-	'negotiation_priorities' => array_map( 'sanitize_text_field', $analysis_data['vendor_considerations']['negotiation_priorities'] ?? [] ),
-	],
-	];
+'negotiation_priorities' => array_map( 'sanitize_text_field', $analysis_data['vendor_considerations']['negotiation_priorities'] ?? [] ),
+],
+];
+
+$financial_benchmarks = $analysis_data['financial_benchmarks'] ?? ( $analysis_data['research']['financial'] ?? array() );
+if ( ! empty( $financial_benchmarks ) ) {
+$analysis['financial_benchmarks'] = [
+'industry_benchmarks' => array_map(
+function( $bench ) {
+return [
+'metric' => sanitize_text_field( $bench['metric'] ?? '' ),
+'value'  => sanitize_text_field( $bench['value'] ?? '' ),
+'source' => sanitize_text_field( $bench['source'] ?? '' ),
+];
+},
+$financial_benchmarks['industry_benchmarks'] ?? []
+),
+'valuation_multiples' => array_map(
+function( $mult ) {
+return [
+'metric' => sanitize_text_field( $mult['metric'] ?? '' ),
+'range'  => sanitize_text_field( $mult['range'] ?? '' ),
+];
+},
+$financial_benchmarks['valuation_multiples'] ?? []
+),
+];
+}
 
 	foreach ( (array) ( $analysis_data['operational_insights']['process_improvements'] ?? $analysis_data['operational_analysis']['process_improvements'] ?? [] ) as $item ) {
 	$analysis['operational_insights']['process_improvements'][] = [
