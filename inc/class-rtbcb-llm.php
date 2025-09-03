@@ -2235,8 +2235,9 @@ return $this->validate_and_structure_analysis( $analysis_data );
 	*/
 	private function validate_company_profile( $profile, $user_inputs ) {
 	return [
-	'name'                => $user_inputs['company_name'],
-	'enhanced_description' => wp_kses_post( $profile['enhanced_description'] ?? '' ),
+		'name'                => $user_inputs['company_name'],
+		'industry'            => sanitize_text_field( $user_inputs['industry'] ?? '' ),
+		'enhanced_description' => wp_kses_post( $profile['enhanced_description'] ?? '' ),
 	'business_model'      => wp_kses_post( $profile['business_model'] ?? '' ),
 	'market_position'     => wp_kses_post( $profile['market_position'] ?? '' ),
 	'maturity_level'      => in_array( $profile['maturity_level'] ?? '', [ 'basic', 'developing', 'strategic', 'optimized' ], true )

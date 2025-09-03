@@ -443,13 +443,18 @@ class RTBCB_Ajax {
 	public static function collect_and_validate_user_inputs() {
 		$validator = new RTBCB_Validator();
 		$validated = $validator->validate( $_POST );
-
+		
 		if ( isset( $validated['error'] ) ) {
-			return new WP_Error( 'validation_error', $validated['error'] );
-}
-
+		return new WP_Error( 'validation_error', $validated['error'] );
+		}
+		
+		$company = function_exists( 'rtbcb_get_current_company' ) ? rtbcb_get_current_company() : [];
+		if ( ! empty( $company['industry'] ) ) {
+		$validated['industry'] = sanitize_text_field( $company['industry'] );
+		}
+		
 		return $validated;
-}
+	}
 
 	private static function create_fallback_profile( $user_inputs ) {
 		return [
@@ -511,11 +516,12 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 	$regulatory_landscape_raw = (array) ( $industry_context_raw['regulatory_landscape'] ?? [] );
 	$enriched_profile_struct = [
 		'name'                => $company_profile['name'] ?? '',
+		'industry'           => $company_profile['industry'] ?? sanitize_text_field( $user_inputs['industry'] ?? '' ),
 		'enhanced_description'=> $company_profile['enhanced_description'] ?? ( $company_profile['description'] ?? '' ),
 		'maturity_level'      => $company_profile['maturity_level'] ?? '',
-               'treasury_maturity'   => (array) ( is_array( $company_profile['treasury_maturity'] ?? null ) ? $company_profile['treasury_maturity'] : [] ),
-               'key_challenges'      => (array) ( is_array( $company_profile['key_challenges'] ?? null ) ? $company_profile['key_challenges'] : [] ),
-               'strategic_priorities'=> (array) ( is_array( $company_profile['strategic_priorities'] ?? null ) ? $company_profile['strategic_priorities'] : [] ),
+		'treasury_maturity'   => (array) ( is_array( $company_profile['treasury_maturity'] ?? null ) ? $company_profile['treasury_maturity'] : [] ),
+		'key_challenges'      => (array) ( is_array( $company_profile['key_challenges'] ?? null ) ? $company_profile['key_challenges'] : [] ),
+		'strategic_priorities'=> (array) ( is_array( $company_profile['strategic_priorities'] ?? null ) ? $company_profile['strategic_priorities'] : [] ),
 	];
 	$industry_context_struct = [
 		'sector_analysis' => [
