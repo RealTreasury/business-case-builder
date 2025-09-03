@@ -34,6 +34,9 @@ overall report generation process.
     keys to the repository.
 - WordPress.com uses a shared hosting model. Ensure outbound HTTP requests to OpenAI are
     allowed and that the site’s plan includes external API access.
+- Server-sent events are blocked on WordPress.com. `RTBCB_Ajax::stream_analysis` and
+    `rtbcb_proxy_openai_responses` detect this hosting and return a
+    `streaming_unsupported` error so clients can fall back to polling.
 - Responses may include unexpected prefixes or truncated streaming data. Monitor logs for
     `RTBCB` entries to catch parsing warnings or errors.
 

@@ -126,9 +126,37 @@ $auto = true;
 }
 
 /**
-	* Perform a remote POST request with retry logic.
+	* Detect if the site is hosted on WordPress.com.
 	*
-	* Uses exponential backoff with jitter between attempts. Retries are
+	* Checks the `IS_WPCOM` constant and common Jetpack proxy headers used on
+	* WordPress.com infrastructure.
+	*
+	* @return bool True if WordPress.com environment is detected.
+	*/
+function rtbcb_is_wpcom() {
+	if ( defined( 'IS_WPCOM' ) && IS_WPCOM ) {
+	return true;
+	}
+	
+	$headers = [
+	'HTTP_X_WPCOM_REQUEST_ID',
+	'HTTP_X_WPCOM_PROXIED',
+	'HTTP_X_JETPACK_PROXIED_REQUEST',
+	];
+	
+	foreach ( $headers as $header ) {
+	if ( isset( $_SERVER[ $header ] ) ) {
+	return true;
+	}
+	}
+	
+	return false;
+}
+	
+/**
+ * Perform a remote POST request with retry logic.
+ *
+ * Uses exponential backoff with jitter between attempts. Retries are
 	* triggered for transport errors, HTTP 429 responses and server errors.
 	* Client errors (4xx) other than 429 will return immediately.
 	*
@@ -1636,10 +1664,14 @@ function rtbcb_proxy_openai_responses() {
 	$payload						 = wp_json_encode( $body_array );
 
 	$action = isset( $_REQUEST['action'] ) ? sanitize_key( wp_unslash( $_REQUEST['action'] ) ) : '';
-	if ( 'rtbcb_openai_responses' !== $action ) {
-		// Jetpack also routes requests through admin-ajax.php; avoid sending
-		// streaming headers for unrelated actions.
+	if ( function_exists( 'rtbcb_is_wpcom' ) && rtbcb_is_wpcom() ) {
+		wp_send_json_error( [ 'code' => 'streaming_unsupported', 'message' => __( 'Streaming is not supported on this hosting environment.', 'rtbcb' ) ], 400 );
 		return;
+	}
+	if ( 'rtbcb_openai_responses' !== $action ) {
+	// Jetpack also routes requests through admin-ajax.php; avoid sending
+	// streaming headers for unrelated actions.
+	return;
 	}
 
 	nocache_headers();
@@ -1647,7 +1679,7 @@ function rtbcb_proxy_openai_responses() {
 	header( 'Cache-Control: no-cache' );
 	header( 'Connection: keep-alive' );
 
-$timeout = intval( function_exists( 'get_option' ) ? get_option( 'rtbcb_responses_timeout', 120 ) : 120 );
+	$timeout = intval( function_exists( 'get_option' ) ? get_option( 'rtbcb_responses_timeout', 120 ) : 120 );
 	if ( $timeout <= 0 ) {
 		$timeout = 120;
 	}
