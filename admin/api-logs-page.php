@@ -19,22 +19,25 @@ if ( ! current_user_can( 'manage_options' ) ) {
 			<?php esc_html_e( 'Clear All Logs', 'rtbcb' ); ?>
 		</button>
 	</p>
+       <p><?php esc_html_e( 'Logs include prompt, completion, and total token usage.', 'rtbcb' ); ?></p>
        <div class="rtbcb-log-table-wrapper">
 <table id="rtbcb-api-logs-table" class="widefat fixed striped">
-			<thead>
-				<tr>
-	                               <th><?php esc_html_e( 'ID', 'rtbcb' ); ?></th>
-	                               <th><?php esc_html_e( 'Lead ID', 'rtbcb' ); ?></th>
-	                               <th><?php esc_html_e( 'Email', 'rtbcb' ); ?></th>
-					<th><?php esc_html_e( 'Company Name', 'rtbcb' ); ?></th>
-					<th><?php esc_html_e( 'Request', 'rtbcb' ); ?></th>
-					<th><?php esc_html_e( 'Tokens', 'rtbcb' ); ?></th>
-					<th><?php esc_html_e( 'Status', 'rtbcb' ); ?></th>
-					<th><?php esc_html_e( 'Timestamp', 'rtbcb' ); ?></th>
-					<th><?php esc_html_e( 'Actions', 'rtbcb' ); ?></th>
-				</tr>
-			</thead>
-			<tbody>
+                        <thead>
+                                <tr>
+                                       <th><?php esc_html_e( 'ID', 'rtbcb' ); ?></th>
+                                       <th><?php esc_html_e( 'Lead ID', 'rtbcb' ); ?></th>
+                                       <th><?php esc_html_e( 'Email', 'rtbcb' ); ?></th>
+                                        <th><?php esc_html_e( 'Company Name', 'rtbcb' ); ?></th>
+                                        <th><?php esc_html_e( 'Request', 'rtbcb' ); ?></th>
+                                        <th><?php esc_html_e( 'Prompt Tokens', 'rtbcb' ); ?></th>
+                                        <th><?php esc_html_e( 'Completion Tokens', 'rtbcb' ); ?></th>
+                                        <th><?php esc_html_e( 'Tokens', 'rtbcb' ); ?></th>
+                                        <th><?php esc_html_e( 'Status', 'rtbcb' ); ?></th>
+                                        <th><?php esc_html_e( 'Timestamp', 'rtbcb' ); ?></th>
+                                        <th><?php esc_html_e( 'Actions', 'rtbcb' ); ?></th>
+                                </tr>
+                        </thead>
+                        <tbody>
 <?php if ( ! empty( $logs ) ) : ?>
 <?php foreach ( $logs as $log ) :
 						$request  = json_decode( $log['request_json'], true );
@@ -58,10 +61,12 @@ if ( ! current_user_can( 'manage_options' ) ) {
 	                                       <td><?php echo esc_html( $log['user_email'] ); ?></td>
 						<td><?php echo esc_html( $log['company_name'] ); ?></td>
 						<td><?php echo esc_html( $summary ); ?></td>
-						<td><?php echo esc_html( $log['total_tokens'] ); ?></td>
-						<td><?php echo esc_html( $status ); ?></td>
-						<td><?php echo esc_html( $log['created_at'] ); ?></td>
-						<td>
+                                               <td><?php echo esc_html( $log['prompt_tokens'] ); ?></td>
+                                               <td><?php echo esc_html( $log['completion_tokens'] ); ?></td>
+                                               <td><?php echo esc_html( $log['total_tokens'] ); ?></td>
+                                               <td><?php echo esc_html( $status ); ?></td>
+                                               <td><?php echo esc_html( $log['created_at'] ); ?></td>
+                                               <td>
 							<button class="button rtbcb-view-log">
 								<?php esc_html_e( 'View', 'rtbcb' ); ?>
 							</button>
@@ -90,7 +95,20 @@ pageLength: 20,
 order: [[0, 'desc']],
 language: {
 emptyTable: '<?php echo esc_js( __( 'No logs found.', 'rtbcb' ) ); ?>'
-}
+},
+columns: [
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+{ orderable: false }
+]
 });
 var search = new URLSearchParams(window.location.search).get('search');
 if (search) {

@@ -167,6 +167,7 @@ The analytics dashboard uses Chart.js for its visualizations. The library is bun
 == Changelog ==
 = 2.1.13 =
 * Regenerated minified assets.
+* Added prompt and completion token columns to API Logs page.
 
 = 2.1.12 =
 * Refined wizard form styling and improved mobile responsiveness.

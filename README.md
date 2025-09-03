@@ -7,6 +7,7 @@ A comprehensive WordPress plugin that helps treasury teams quantify the benefits
 ### ✨ Enhancements
 - Regenerated minified assets.
 - Introduced RTBCB_Response_Parser for unified OpenAI response parsing and validation.
+- Added prompt and completion token columns to the API Logs page.
 
 
 ## 📋 Installation & Setup
