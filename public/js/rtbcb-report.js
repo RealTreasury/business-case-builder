@@ -697,13 +697,21 @@ async function generateAndDisplayReport(businessContext) {
     const errorElement = document.getElementById('error');
     const reportContainer = document.getElementById('report-container');
 
-    loadingElement.style.display = 'block';
-    errorElement.style.display = 'none';
-    reportContainer.innerHTML = '';
+    if (loadingElement) {
+        loadingElement.style.display = 'block';
+    }
+    if (errorElement) {
+        errorElement.style.display = 'none';
+    }
+    if (reportContainer) {
+        reportContainer.innerHTML = '';
+    }
 
     try {
         const htmlReport = await generateProfessionalReport(businessContext, partial => {
-            reportContainer.textContent = partial;
+            if (reportContainer) {
+                reportContainer.textContent = partial;
+            }
         });
 
         if (!htmlReport || !htmlReport.trim()) {
@@ -717,24 +725,38 @@ async function generateAndDisplayReport(businessContext) {
         const safeReport = sanitizeReportHTML(htmlReport);
         if (!safeReport || !safeReport.trim()) {
             console.error('RTBCB: Sanitized report is empty or invalid');
-            errorElement.textContent = 'Error: Malformed report content.';
-            errorElement.style.display = 'block';
+            if (errorElement) {
+                errorElement.textContent = 'Error: Malformed report content.';
+                errorElement.style.display = 'block';
+            } else {
+                console.error('RTBCB: Malformed report content.');
+            }
             return;
         }
 
-        reportContainer.innerHTML = '';
+        if (reportContainer) {
+            reportContainer.innerHTML = '';
+        }
         displayReport(safeReport);
 
         const exportBtn = document.createElement('button');
         exportBtn.textContent = 'Export to PDF';
         exportBtn.className = 'export-btn';
         exportBtn.onclick = function() { exportToPDF(safeReport); };
-        reportContainer.appendChild(exportBtn);
+        if (reportContainer) {
+            reportContainer.appendChild(exportBtn);
+        }
     } catch (error) {
-        errorElement.textContent = 'Error: ' + error.message;
-        errorElement.style.display = 'block';
+        if (errorElement) {
+            errorElement.textContent = 'Error: ' + error.message;
+            errorElement.style.display = 'block';
+        } else {
+            console.error('RTBCB: ' + error.message);
+        }
     } finally {
-        loadingElement.style.display = 'none';
+        if (loadingElement) {
+            loadingElement.style.display = 'none';
+        }
     }
 }
 
