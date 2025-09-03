@@ -53,6 +53,13 @@ class RTBCB_LLM {
 	*/
 	protected $last_company_research;
 
+	/**
+	 * Last prompt sent to the OpenAI API.
+	 *
+	 * @var array|string|null
+	 */
+	protected $last_prompt;
+
 	public function __construct() {
 	       $this->config          = new RTBCB_LLM_Config();
 	       $this->prompt_builder  = new RTBCB_LLM_Prompt();
@@ -99,6 +106,15 @@ class RTBCB_LLM {
 	*/
 	public function get_last_response() {
 	       return $this->transport->get_last_response();
+	}
+
+	/**
+	 * Retrieve the last prompt sent to the OpenAI API.
+	 *
+	 * @return array|string|null Last prompt.
+	 */
+	public function get_last_prompt() {
+		return $this->last_prompt;
 	}
 
 	/**
@@ -2498,8 +2514,10 @@ return $this->validate_and_structure_analysis( $analysis_data );
 	* @return array|WP_Error Response array or error.
 	*/
 	private function call_openai_with_retry( $model, $prompt, $max_output_tokens = null, $max_retries = null, $chunk_handler = null ) {
-	       return $this->transport->call_openai_with_retry( $model, $prompt, $max_output_tokens, $max_retries, $chunk_handler );
-	}
+		$prompt             = apply_filters( 'rtbcb_llm_final_prompt', $prompt, $model );
+		$this->last_prompt = $prompt;
+		return $this->transport->call_openai_with_retry( $model, $prompt, $max_output_tokens, $max_retries, $chunk_handler );
+        }
 	private function calculate_efficiency_rating( $user_inputs ) {
 		$total_hours = ($user_inputs['hours_reconciliation'] ?? 0) + ($user_inputs['hours_cash_positioning'] ?? 0);
 		$team_size = $user_inputs['ftes'] ?? 1;
