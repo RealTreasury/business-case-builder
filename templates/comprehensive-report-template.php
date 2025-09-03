@@ -83,10 +83,10 @@ $processing_time = $metadata['processing_time'] ?? ( $report_data['processing_ti
 										</div>
 </div>
 		<div class="rtbcb-ai-toggle-panel">
-			<span><?php echo esc_html__( 'Highlight AI-Generated Content', 'rtbcb' ); ?></span>
 			<label for="rtbcb-ai-toggle" class="rtbcb-toggle-switch">
 				<input type="checkbox" id="rtbcb-ai-toggle" class="rtbcb-sr-only" />
 				<div class="rtbcb-toggle-track"></div>
+				<span class="rtbcb-toggle-label"><?php echo esc_html__( 'Highlight AI-Generated Content', 'rtbcb' ); ?></span>
 			</label>
 		</div>
 	</div>
