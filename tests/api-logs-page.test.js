@@ -34,7 +34,11 @@ include 'admin/api-logs-page.php';
 
 const output = execSync('php', { input: php }).toString();
 const dom = new JSDOM(output);
-const tokenCell = dom.window.document.querySelector('#rtbcb-api-logs-table tbody tr td:nth-child(6)');
-assert.ok(tokenCell);
-assert.strictEqual(tokenCell.textContent.trim(), '42');
+const promptCell = dom.window.document.querySelector('#rtbcb-api-logs-table tbody tr td:nth-child(6)');
+const completionCell = dom.window.document.querySelector('#rtbcb-api-logs-table tbody tr td:nth-child(7)');
+const totalCell = dom.window.document.querySelector('#rtbcb-api-logs-table tbody tr td:nth-child(8)');
+assert.ok(promptCell && completionCell && totalCell);
+assert.strictEqual(promptCell.textContent.trim(), '40');
+assert.strictEqual(completionCell.textContent.trim(), '2');
+assert.strictEqual(totalCell.textContent.trim(), '42');
 console.log('api-logs-page.test.js passed');
