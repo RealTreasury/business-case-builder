@@ -3,6 +3,21 @@ if ( ! defined( 'ABSPATH' ) ) {
 define( 'ABSPATH', __DIR__ . '/../' );
 }
 
+define( 'RTBCB_TESTS', true );
+
+if ( ! function_exists( 'admin_url' ) ) {
+function admin_url( $path = '' ) {
+return 'http://example.com/wp-admin/' . ltrim( $path, '/' );
+}
+}
+
+if ( ! function_exists( 'wp_safe_redirect' ) ) {
+function wp_safe_redirect( $location ) {
+global $redirect_location;
+$redirect_location = $location;
+}
+}
+
 if ( ! class_exists( 'WP_List_Table' ) ) {
 class WP_List_Table {
 public function __construct( $args = [] ) {}
@@ -69,6 +84,8 @@ return true;
 }
 }
 
+$redirect_location = '';
+
 $clear_called = 0;
 function rtbcb_clear_report_cache() {
 global $clear_called;
@@ -117,6 +134,11 @@ $_REQUEST['action'] = 'delete_all';
 $_POST              = [ '_wpnonce' => 'nonce' ];
 
 $table->prepare_items();
+
+if ( admin_url( 'admin.php?page=rtbcb-reports' ) !== $redirect_location ) {
+echo "No redirect after delete all\n";
+exit( 1 );
+}
 
 if ( glob( $reports_dir . '/*' ) ) {
 echo "Delete all failed\n";
