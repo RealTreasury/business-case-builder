@@ -16,9 +16,33 @@ defined( 'ABSPATH' ) || exit;
         <?php submit_button( __( 'Delete Old Reports', 'rtbcb' ), 'secondary', 'rtbcb_delete_old_reports', false ); ?>
     </form>
 
-    <form method="post">
+    <form method="post" id="rtbcb-reports-form">
         <?php wp_nonce_field( 'rtbcb_reports_action' ); ?>
         <input type="hidden" name="page" value="rtbcb-reports" />
         <?php $table->display(); ?>
     </form>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+var form = document.getElementById('rtbcb-reports-form');
+if (!form) {
+return;
+}
+var selects = form.querySelectorAll('select[name="action"], select[name="action2"]');
+var applyButtons = form.querySelectorAll('input#doaction, input#doaction2');
+function maybeSelectAll() {
+var deleteAll = Array.from(selects).some(function(sel) {
+return 'delete_all' === sel.value;
+});
+if (deleteAll) {
+form.querySelectorAll('input[name="files[]"]').forEach(function(cb) {
+cb.checked = true;
+});
+}
+}
+applyButtons.forEach(function(btn) {
+btn.addEventListener('click', maybeSelectAll);
+});
+});
+</script>
