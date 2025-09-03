@@ -101,6 +101,8 @@ echo "14c. Running business analysis generation test..."
 vendor/bin/phpunit tests/RTBCB_GenerateBusinessAnalysisTest.php
 echo "14d. Running Jetpack compatibility test..."
 php tests/jetpack-compatibility.test.php
+echo "14e. Running reports bulk delete test..."
+php tests/reports-bulk-delete.test.php
 
 # JavaScript tests
 echo "16. Running JavaScript tests..."
