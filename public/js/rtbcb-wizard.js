@@ -1461,11 +1461,11 @@ class BusinessCaseBuilder {
             },
             executiveSummary: data.executive_summary || data.narrative || {},
             operationalAnalysis: data.operational_insights || data.operational_analysis || {},
-industryContext: {
-sector_analysis: data.industry_context?.sector_analysis || {},
-benchmarking: data.industry_context?.benchmarking || {},
-regulatory_landscape: data.industry_context?.regulatory_landscape || {}
-},
+            industryContext: {
+                sector_analysis: data.company_intelligence?.industry_context?.sector_analysis || data.industry_context?.sector_analysis || {},
+                benchmarking: data.company_intelligence?.industry_context?.benchmarking || data.industry_context?.benchmarking || {},
+                regulatory_landscape: data.company_intelligence?.industry_context?.regulatory_landscape || data.industry_context?.regulatory_landscape || {}
+            },
             nextActions: data.narrative?.next_actions || [
                 ...(data.action_plan?.immediate_steps || []),
                 ...(data.action_plan?.short_term_milestones || []),
