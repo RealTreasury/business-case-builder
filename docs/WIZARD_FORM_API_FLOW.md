@@ -29,6 +29,28 @@ Field definitions come from `templates/business-case-form.php` and the field reg
 
 `public/js/rtbcb-wizard.js` serializes the form and posts it to WordPress’s AJAX endpoint with the action `rtbcb_generate_case`. On success, the returned report data is rendered in the page; otherwise an error overlay is displayed.
 
+## Report Types
+
+The API accepts a `report_type` parameter:
+
+- `basic` - summary results with minimal narrative.
+- `comprehensive` - full report with ROI analysis and detailed sections.
+- `fast` - quick preview that skips heavy calculations.
+
+`action_plan`, `operational_insights`, and `risk_analysis` are returned only when
+`report_type` is `comprehensive` and `fast_mode` is `false`.
+
+### Example Request
+
+```json
+{
+    "action": "rtbcb_generate_case",
+    "report_type": "comprehensive",
+    "fast_mode": false,
+    "company_name": "Acme Corp"
+}
+```
+
 ## Server-side Processing
 
 `RTBCB_Main::ajax_generate_comprehensive_case()` validates the request and orchestrates report generation:

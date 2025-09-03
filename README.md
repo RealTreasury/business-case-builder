@@ -129,6 +129,28 @@ If testing the template outside WordPress, manually include:
 
 before the closing `</body>` tag.
 
+## Report Types
+
+The `report_type` parameter determines the depth of the generated report:
+
+- `basic` - summary results with minimal narrative.
+- `comprehensive` - full report with ROI analysis and detailed sections.
+- `fast` - quick preview that skips heavy calculations.
+
+`action_plan`, `operational_insights`, and `risk_analysis` are returned only when
+`report_type` is `comprehensive` and `fast_mode` is `false`.
+
+### Example Request
+
+```json
+{
+    "action": "rtbcb_generate_case",
+    "report_type": "comprehensive",
+    "fast_mode": false,
+    "company_name": "Acme Corp"
+}
+```
+
 ## 🗂️ Repository Structure
 
 - `admin/` – WordPress dashboard pages, settings, and nonces.
