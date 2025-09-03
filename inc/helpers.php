@@ -2211,7 +2211,7 @@ function rtbcb_transform_data_for_template( $business_case_data ) {
 	        'roi_base'               => 0,
 	        'recommended_category'   => '',
 	        'category_info'          => [],
-	        'executive_summary'      => '',
+	        'executive_summary'      => [],
 	        'narrative'              => '',
 	        'executive_recommendation' => '',
 	        'recommendation'         => '',
@@ -2234,23 +2234,33 @@ function rtbcb_transform_data_for_template( $business_case_data ) {
 	];
 	$business_case_data = wp_parse_args( (array) $business_case_data, $defaults );
 
-	// Normalize legacy executive summary structure without overwriting existing fields.
+	// Normalize executive summary structure without overwriting existing fields.
 	if ( is_array( $business_case_data['executive_summary'] ) ) {
-		$exec_summary = $business_case_data['executive_summary'];
+		$exec_summary = wp_parse_args(
+			$business_case_data['executive_summary'],
+			[
+				'strategic_positioning'	    => '',
+				'executive_recommendation' => '',
+				'key_value_drivers'	   => [],
+			]
+		);
 
-		if ( isset( $exec_summary['strategic_positioning'] ) ) {
-			$business_case_data['executive_summary'] = $exec_summary['strategic_positioning'];
-		}
-
-		if ( isset( $exec_summary['executive_recommendation'] ) ) {
+		if ( empty( $business_case_data['executive_recommendation'] ) && ! empty( $exec_summary['executive_recommendation'] ) ) {
 			$business_case_data['executive_recommendation'] = $exec_summary['executive_recommendation'];
 		}
 
-		if ( isset( $exec_summary['key_value_drivers'] ) ) {
+		if ( empty( $business_case_data['value_drivers'] ) && ! empty( $exec_summary['key_value_drivers'] ) ) {
 			$business_case_data['value_drivers'] = $exec_summary['key_value_drivers'];
 		}
-	}
 
+		$business_case_data['executive_summary'] = $exec_summary;
+	} else {
+		$business_case_data['executive_summary'] = [
+			'strategic_positioning'	    => (string) $business_case_data['executive_summary'],
+			'executive_recommendation' => (string) ( $business_case_data['executive_recommendation'] ?? '' ),
+			'key_value_drivers'	   => (array) ( $business_case_data['value_drivers'] ?? [] ),
+		];
+	}
 	// Get current company data.
 	$company      = rtbcb_get_current_company();
 	$company_name = sanitize_text_field( $business_case_data['company_name'] ?: ( $company['name'] ?? __( 'Your Company', 'rtbcb' ) ) );
@@ -2344,9 +2354,9 @@ function rtbcb_transform_data_for_template( $business_case_data ) {
 	                'processing_time'  => intval( $business_case_data['processing_time'] ),
 	        ],
 	        'executive_summary'  => [
-	                'strategic_positioning'    => wp_kses_post( $business_case_data['executive_summary'] ?: $business_case_data['narrative'] ),
+			'strategic_positioning'    => wp_kses_post( $business_case_data['executive_summary']['strategic_positioning'] ?? $business_case_data['narrative'] ),
 	                'key_value_drivers'       => rtbcb_extract_value_drivers( $business_case_data ),
-	                'executive_recommendation' => wp_kses_post( $business_case_data['executive_recommendation'] ?: $business_case_data['recommendation'] ),
+			'executive_recommendation' => wp_kses_post( $business_case_data['executive_summary']['executive_recommendation'] ?? $business_case_data['executive_recommendation'] ?? $business_case_data['recommendation'] ),
 	                'business_case_strength'  => rtbcb_determine_business_case_strength( $business_case_data ),
 	        ],
 	                'financial_analysis' => [
@@ -2396,7 +2406,9 @@ function rtbcb_transform_data_for_template( $business_case_data ) {
 	$drivers = [];
 
 	// Extract from various possible sources.
-	if ( ! empty( $data['value_drivers'] ) ) {
+	if ( ! empty( $data['executive_summary']['key_value_drivers'] ) ) {
+		$drivers = (array) $data['executive_summary']['key_value_drivers'];
+	} elseif ( ! empty( $data['value_drivers'] ) ) {
 		$drivers = (array) $data['value_drivers'];
 	} elseif ( ! empty( $data['key_benefits'] ) ) {
 		$drivers = (array) $data['key_benefits'];
@@ -2409,7 +2421,6 @@ function rtbcb_transform_data_for_template( $business_case_data ) {
 			__( 'Improved regulatory compliance', 'rtbcb' ),
 		];
 	}
-
 	return array_slice( $drivers, 0, 4 );
 	}
 
