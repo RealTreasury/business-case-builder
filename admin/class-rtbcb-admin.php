@@ -17,8 +17,9 @@ class RTBCB_Admin {
 	public function __construct() {
 		add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
 		add_action( 'admin_init', [ $this, 'register_settings' ] );
-		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ], 10 );
-		add_action( 'admin_notices', [ $this, 'maybe_show_timeout_notice' ], 10 );
+			   add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ], 10 );
+			   add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_preview_assets' ], 20 );
+			   add_action( 'admin_notices', [ $this, 'maybe_show_timeout_notice' ], 10 );
 		add_action( 'admin_notices', [ $this, 'maybe_show_bypass_notice' ], 20 );
 
 		// AJAX handlers
@@ -377,24 +378,24 @@ wp_localize_script(
 	}
 
 	/**
-    * Render enhanced leads page with filtering.
+	* Render enhanced leads page with filtering.
 	*
 	* @return void
 	*/
 	public function render_leads() {
-	       if ( ! current_user_can( 'manage_options' ) ) {
-	               return;
-	       }
+		   if ( ! current_user_can( 'manage_options' ) ) {
+				   return;
+		   }
 
-	       if ( isset( $_GET['rtbcb_leads_filter_nonce'] ) && ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['rtbcb_leads_filter_nonce'] ) ), 'rtbcb_leads_filter' ) ) {
-	               wp_die( esc_html__( 'Invalid filter request.', 'rtbcb' ) );
-	       }
+		   if ( isset( $_GET['rtbcb_leads_filter_nonce'] ) && ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['rtbcb_leads_filter_nonce'] ) ), 'rtbcb_leads_filter' ) ) {
+				   wp_die( esc_html__( 'Invalid filter request.', 'rtbcb' ) );
+		   }
 
-	       $page = isset( $_GET['paged'] ) ? intval( wp_unslash( $_GET['paged'] ) ) : 1;
-	       $search = isset( $_GET['search'] ) ? sanitize_text_field( wp_unslash( $_GET['search'] ) ) : '';
-	       $category = isset( $_GET['category'] ) ? sanitize_text_field( wp_unslash( $_GET['category'] ) ) : '';
-	       $date_from = isset( $_GET['date_from'] ) ? sanitize_text_field( wp_unslash( $_GET['date_from'] ) ) : '';
-	       $date_to = isset( $_GET['date_to'] ) ? sanitize_text_field( wp_unslash( $_GET['date_to'] ) ) : '';
+		   $page = isset( $_GET['paged'] ) ? intval( wp_unslash( $_GET['paged'] ) ) : 1;
+		   $search = isset( $_GET['search'] ) ? sanitize_text_field( wp_unslash( $_GET['search'] ) ) : '';
+		   $category = isset( $_GET['category'] ) ? sanitize_text_field( wp_unslash( $_GET['category'] ) ) : '';
+		   $date_from = isset( $_GET['date_from'] ) ? sanitize_text_field( wp_unslash( $_GET['date_from'] ) ) : '';
+		   $date_to = isset( $_GET['date_to'] ) ? sanitize_text_field( wp_unslash( $_GET['date_to'] ) ) : '';
 
 		$orderby = isset( $_GET['orderby'] ) ? sanitize_key( wp_unslash( $_GET['orderby'] ) ) : 'created_at';
 		$allowed_orderby = [ 'email', 'created_at' ];
@@ -454,9 +455,9 @@ wp_localize_script(
 	* @return void
 	*/
 	public function render_test_dashboard() {
-	       $test_results   = get_option( 'rtbcb_test_results', [] );
-	       $openai_key     = rtbcb_get_openai_api_key();
-	       $openai_status  = rtbcb_has_openai_api_key();
+		   $test_results   = get_option( 'rtbcb_test_results', [] );
+		   $openai_key     = rtbcb_get_openai_api_key();
+		   $openai_status  = rtbcb_has_openai_api_key();
 		$portal_active   = $this->check_portal_integration();
 		$rag_health_info = $this->check_rag_health();
 		$rag_health      = ( 'healthy' === ( $rag_health_info['status'] ?? '' ) );
@@ -489,43 +490,43 @@ wp_localize_script(
 	 * @return void
 	 */
 	public function render_reports() {
-                if ( ! current_user_can( 'manage_options' ) ) {
-                        return;
-                }
+				if ( ! current_user_can( 'manage_options' ) ) {
+						return;
+				}
 
-                require_once RTBCB_DIR . 'admin/class-rtbcb-reports-table.php';
+				require_once RTBCB_DIR . 'admin/class-rtbcb-reports-table.php';
 
-                $upload_dir  = wp_upload_dir();
-                $reports_dir = trailingslashit( $upload_dir['basedir'] ) . 'rtbcb-reports';
+				$upload_dir  = wp_upload_dir();
+				$reports_dir = trailingslashit( $upload_dir['basedir'] ) . 'rtbcb-reports';
 
-                if ( isset( $_POST['rtbcb_delete_old_reports'] ) ) {
-                        check_admin_referer( 'rtbcb_delete_old_reports' );
+				if ( isset( $_POST['rtbcb_delete_old_reports'] ) ) {
+						check_admin_referer( 'rtbcb_delete_old_reports' );
 
-                        $days      = isset( $_POST['rtbcb_delete_days'] ) ? intval( sanitize_text_field( wp_unslash( $_POST['rtbcb_delete_days'] ) ) ) : 30;
-                        $days      = max( 1, $days );
-                        $threshold = time() - ( $days * DAY_IN_SECONDS );
-                        $files     = glob( $reports_dir . '/*.{html,pdf}', GLOB_BRACE );
-                        $files     = $files ? $files : [];
+						$days      = isset( $_POST['rtbcb_delete_days'] ) ? intval( sanitize_text_field( wp_unslash( $_POST['rtbcb_delete_days'] ) ) ) : 30;
+						$days      = max( 1, $days );
+						$threshold = time() - ( $days * DAY_IN_SECONDS );
+						$files     = glob( $reports_dir . '/*.{html,pdf}', GLOB_BRACE );
+						$files     = $files ? $files : [];
 
-                        foreach ( $files as $filepath ) {
-                                if ( filemtime( $filepath ) < $threshold ) {
-                                        unlink( $filepath );
-                                }
-                        }
+						foreach ( $files as $filepath ) {
+								if ( filemtime( $filepath ) < $threshold ) {
+										unlink( $filepath );
+								}
+						}
 
-                        wp_safe_redirect( admin_url( 'admin.php?page=rtbcb-reports' ) );
-                        exit;
-                }
+						wp_safe_redirect( admin_url( 'admin.php?page=rtbcb-reports' ) );
+						exit;
+				}
 
-                $orderby = isset( $_GET['orderby'] ) ? sanitize_key( wp_unslash( $_GET['orderby'] ) ) : 'file';
-                $order   = isset( $_GET['order'] ) ? sanitize_key( wp_unslash( $_GET['order'] ) ) : 'asc';
-                $order   = in_array( $order, [ 'asc', 'desc' ], true ) ? $order : 'asc';
+				$orderby = isset( $_GET['orderby'] ) ? sanitize_key( wp_unslash( $_GET['orderby'] ) ) : 'file';
+				$order   = isset( $_GET['order'] ) ? sanitize_key( wp_unslash( $_GET['order'] ) ) : 'asc';
+				$order   = in_array( $order, [ 'asc', 'desc' ], true ) ? $order : 'asc';
 
-                $table = new RTBCB_Reports_Table();
-                $table->prepare_items( $orderby, $order );
+				$table = new RTBCB_Reports_Table();
+				$table->prepare_items( $orderby, $order );
 
-                include RTBCB_DIR . 'admin/reports-page.php';
-        }
+				include RTBCB_DIR . 'admin/reports-page.php';
+		}
 
 	/**
 	* AJAX handler to save test results from dashboard.
@@ -716,10 +717,10 @@ wp_localize_script(
 			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'rtbcb' ) ], 403 );
 		}
 
-	       $api_key = rtbcb_get_openai_api_key();
-	       if ( ! rtbcb_has_openai_api_key() ) {
-		       wp_send_json_error( [ 'message' => __( 'Missing API key.', 'rtbcb' ) ] );
-	       }
+		   $api_key = rtbcb_get_openai_api_key();
+		   if ( ! rtbcb_has_openai_api_key() ) {
+			   wp_send_json_error( [ 'message' => __( 'Missing API key.', 'rtbcb' ) ] );
+		   }
 
 		$cache_key = 'rtbcb_openai_models';
 		$response  = wp_cache_get( $cache_key );
@@ -1948,45 +1949,45 @@ wp_localize_script(
 			wp_send_json_error( __( 'Insufficient permissions', 'rtbcb' ) );
 		}
 
-               $raw_history = $this->get_workflow_history_from_logs();
+			   $raw_history = $this->get_workflow_history_from_logs();
 
-               $history = array_map(
-                       function ( $entry ) {
-                               $lead_id = isset( $entry['lead_id'] ) ? intval( $entry['lead_id'] ) : 0;
-                               $email   = isset( $entry['lead_email'] ) ? sanitize_email( $entry['lead_email'] ) : '';
-                               $company = isset( $entry['company_name'] ) ? sanitize_text_field( $entry['company_name'] ) : '';
-                               $started = isset( $entry['started_at'] ) ? sanitize_text_field( $entry['started_at'] ) : '';
-                               $template = isset( $entry['report_template'] ) ? sanitize_text_field( $entry['report_template'] ) : '';
-                               $steps   = [];
+			   $history = array_map(
+					   function ( $entry ) {
+							   $lead_id = isset( $entry['lead_id'] ) ? intval( $entry['lead_id'] ) : 0;
+							   $email   = isset( $entry['lead_email'] ) ? sanitize_email( $entry['lead_email'] ) : '';
+							   $company = isset( $entry['company_name'] ) ? sanitize_text_field( $entry['company_name'] ) : '';
+							   $started = isset( $entry['started_at'] ) ? sanitize_text_field( $entry['started_at'] ) : '';
+							   $template = isset( $entry['report_template'] ) ? sanitize_text_field( $entry['report_template'] ) : '';
+							   $steps   = [];
 
-                               if ( isset( $entry['steps'] ) && is_array( $entry['steps'] ) ) {
-                                       foreach ( $entry['steps'] as $step ) {
-                                               $steps[] = [
-                                                       'name'     => sanitize_text_field( $step['name'] ?? '' ),
-                                                       'status'   => sanitize_text_field( $step['status'] ?? '' ),
-                                                       'duration' => isset( $step['duration'] ) ? floatval( $step['duration'] ) : 0,
-                                                       'elapsed'  => isset( $step['elapsed'] ) ? floatval( $step['elapsed'] ) : 0,
-                                               ];
-                                       }
-                               }
+							   if ( isset( $entry['steps'] ) && is_array( $entry['steps'] ) ) {
+									   foreach ( $entry['steps'] as $step ) {
+											   $steps[] = [
+													   'name'     => sanitize_text_field( $step['name'] ?? '' ),
+													   'status'   => sanitize_text_field( $step['status'] ?? '' ),
+													   'duration' => isset( $step['duration'] ) ? floatval( $step['duration'] ) : 0,
+													   'elapsed'  => isset( $step['elapsed'] ) ? floatval( $step['elapsed'] ) : 0,
+											   ];
+									   }
+							   }
 
-                               $item = [
-                                       'lead_id'        => $lead_id,
-                                       'email'          => $email,
-                                       'company'        => $company,
-                                       'started_at'     => $started,
-                                       'report_template'=> $template,
-                                       'steps'          => $steps,
-                               ];
+							   $item = [
+									   'lead_id'        => $lead_id,
+									   'email'          => $email,
+									   'company'        => $company,
+									   'started_at'     => $started,
+									   'report_template'=> $template,
+									   'steps'          => $steps,
+							   ];
 
-                               if ( ! empty( $entry['logs_url'] ) ) {
-                                       $item['logs_url'] = esc_url_raw( $entry['logs_url'] );
-                               }
+							   if ( ! empty( $entry['logs_url'] ) ) {
+									   $item['logs_url'] = esc_url_raw( $entry['logs_url'] );
+							   }
 
-                               return $item;
-                       },
-                       $raw_history
-               );
+							   return $item;
+					   },
+					   $raw_history
+			   );
 
 		wp_send_json_success(
 			[
@@ -2066,6 +2067,334 @@ wp_localize_script(
 						}
 				}
 				return ( $success / count( $history ) ) * 100;
+		}
+
+		/**
+		 * Render comprehensive report preview page.
+		 *
+		 * @return void
+		 */
+		public function report_preview_page() {
+				if ( ! current_user_can( 'manage_options' ) ) {
+						wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'rtbcb' ) );
+				}
+
+				if ( isset( $_POST['refresh_preview'] ) && check_admin_referer( 'rtbcb_preview_refresh' ) ) {
+						wp_cache_flush();
+						echo '<div class="notice notice-success"><p>' . esc_html__( 'Preview refreshed successfully!', 'rtbcb' ) . '</p></div>';
+				}
+
+				echo '<div class="wrap">';
+				echo '<h1>' . esc_html__( 'Comprehensive Report Preview', 'rtbcb' ) . '</h1>';
+
+				echo '<div class="rtbcb-preview-controls" style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 5px;">';
+				echo '<form method="post" style="display: inline-block; margin-right: 15px;">';
+				wp_nonce_field( 'rtbcb_preview_refresh' );
+				echo '<input type="submit" name="refresh_preview" class="button button-primary" value="' . esc_attr__( 'Refresh Preview', 'rtbcb' ) . '">';
+				echo '</form>';
+
+				echo '<a href="' . esc_url( admin_url( 'admin.php?page=rtbcb-settings' ) ) . '" class="button button-secondary">' . esc_html__( 'Plugin Settings', 'rtbcb' ) . '</a>';
+				echo '<a href="' . esc_url( admin_url( 'admin.php?page=rtbcb-test-dashboard' ) ) . '" class="button button-secondary" style="margin-left: 10px;">' . esc_html__( 'Test Dashboard', 'rtbcb' ) . '</a>';
+				echo '</div>';
+
+				echo '<div class="rtbcb-preview-container" style="margin-top: 20px;">';
+
+				try {
+						$dummy_data  = $this->generate_dummy_report_data();
+						$report_html = $this->get_preview_report_html( $dummy_data );
+
+						if ( is_wp_error( $report_html ) ) {
+								echo '<div class="notice notice-error"><p>' . esc_html__( 'Error generating preview: ', 'rtbcb' ) . esc_html( $report_html->get_error_message() ) . '</p></div>';
+						} else {
+								echo '<iframe id="rtbcb-preview-frame" style="width: 100%; min-height: 800px; border: 1px solid #ddd; border-radius: 5px;" srcdoc="' . esc_attr( $report_html ) . '"></iframe>';
+						}
+				} catch ( Exception $e ) {
+						echo '<div class="notice notice-error"><p>' . esc_html__( 'Exception generating preview: ', 'rtbcb' ) . esc_html( $e->getMessage() ) . '</p></div>';
+				}
+
+				echo '</div>';
+				echo '</div>';
+		}
+
+		/**
+		 * Generate dummy data structure that matches the comprehensive template expectations.
+		 *
+		 * @return array
+		 */
+		private function generate_dummy_report_data() {
+				return [
+						'report_data' => [
+								'metadata' => [
+										'company_name'     => 'Acme Manufacturing Corp',
+										'analysis_date'    => current_time( 'Y-m-d' ),
+										'analysis_type'    => 'comprehensive',
+										'confidence_level' => 0.92,
+										'processing_time'  => 15.7,
+								],
+								'executive_summary' => [
+										'business_case_strength' => 'Strong',
+										'strategic_positioning'  => 'Acme Manufacturing Corp is well-positioned to leverage treasury technology automation to achieve significant operational efficiencies and cost reductions. The company\'s current manual processes present clear opportunities for improvement through strategic technology investment.',
+										'key_value_drivers'       => [
+												'Automated cash positioning reducing manual effort by 70%',
+												'Bank reconciliation automation eliminating 80% of manual processes',
+												'Real-time visibility enabling faster decision-making',
+												'Error reduction preventing costly mistakes and compliance issues',
+												'Scalable platform supporting future growth requirements',
+										],
+										'executive_recommendation' => 'We recommend immediate initiation of a treasury technology selection process, targeting implementation within 6 months. The projected ROI of 340% and 8-month payback period make this a compelling investment opportunity.',
+								],
+								'company_intelligence' => [
+										'enriched_profile' => [
+												'name'                => 'Acme Manufacturing Corp',
+												'enhanced_description' => 'Acme Manufacturing Corp is a mid-market manufacturing company with $250M in annual revenue, operating across multiple locations with complex cash management requirements. The company has grown significantly over the past 5 years, straining existing manual treasury processes.',
+												'maturity_level'      => 'developing',
+												'treasury_maturity'   => [
+														'current_state' => 'The treasury function currently operates with a mix of manual and semi-automated processes. While the team has strong foundational knowledge, the lack of integrated systems creates bottlenecks and limits real-time visibility into cash positions.',
+												],
+												'key_challenges' => [
+														'Manual bank reconciliation consuming 15+ hours weekly',
+														'Limited real-time cash visibility across multiple entities',
+														'Inefficient forecasting processes leading to suboptimal investment decisions',
+														'Manual error rates averaging 2-3% on reconciliation processes',
+												],
+												'strategic_priorities' => [
+														'Improve operational efficiency and reduce manual workload',
+														'Enhance cash forecasting accuracy and visibility',
+														'Strengthen internal controls and compliance capabilities',
+														'Support continued business growth with scalable processes',
+												],
+										],
+										'industry_context' => [
+												'sector_analysis' => [
+														'market_dynamics'    => 'The manufacturing sector is experiencing increased pressure for operational efficiency and working capital optimization, driven by supply chain complexities and margin pressures.',
+														'growth_trends'      => 'Digital transformation in treasury functions has accelerated, with 68% of similar-sized manufacturers implementing automated treasury solutions in the past 3 years.',
+														'technology_adoption' => 'medium',
+														'disruption_factors'  => [
+																'Supply chain volatility requiring agile cash management',
+																'ESG reporting requirements increasing compliance burden',
+																'Economic uncertainty demanding better forecasting capabilities',
+														],
+												],
+												'benchmarking' => [
+														'technology_penetration' => 'medium',
+														'typical_treasury_setup' => 'Most peer companies operate with 2-4 FTE treasury teams supported by partial automation tools',
+														'common_pain_points'     => [
+																'Manual reconciliation processes',
+																'Fragmented banking relationships',
+																'Limited cash forecasting accuracy',
+																'Compliance reporting challenges',
+														],
+														'investment_patterns' => 'Companies of similar size typically invest $150K-$400K in comprehensive treasury platforms with 12-18 month implementation timelines',
+												],
+												'regulatory_landscape' => [
+														'key_regulations' => [
+																'SOX compliance requirements for financial reporting',
+																'Industry-specific environmental regulations',
+																'Multi-state tax compliance obligations',
+														],
+														'compliance_complexity' => 'Moderate - requires systematic approach to documentation and reporting',
+														'upcoming_changes'      => [
+																'Enhanced ESG reporting requirements by 2025',
+																'Proposed changes to cash management regulations',
+														],
+												],
+										],
+								],
+								'financial_analysis' => [
+										'roi_scenarios' => [
+												'conservative' => [
+														'total_annual_benefit' => 285000,
+														'labor_savings'        => 156000,
+														'fee_savings'          => 48000,
+														'error_reduction'      => 81000,
+														'roi_percentage'       => 190,
+												],
+												'base' => [
+														'total_annual_benefit' => 425000,
+														'labor_savings'        => 234000,
+														'fee_savings'          => 72000,
+														'error_reduction'      => 119000,
+														'roi_percentage'       => 340,
+												],
+												'optimistic' => [
+														'total_annual_benefit' => 596000,
+														'labor_savings'        => 327000,
+														'fee_savings'          => 101000,
+														'error_reduction'      => 168000,
+														'roi_percentage'       => 476,
+												],
+										],
+										'sensitivity_analysis' => [
+												[
+														'factor'            => 'Implementation Delay (3 months)',
+														'impact_percentage' => -15,
+														'probability'       => 0.25,
+												],
+												[
+														'factor'            => 'User Adoption Challenges',
+														'impact_percentage' => -22,
+														'probability'       => 0.15,
+												],
+												[
+														'factor'            => 'Technology Evolution Benefits',
+														'impact_percentage' => 12,
+														'probability'       => 0.35,
+												],
+												[
+														'factor'            => 'Process Optimization Gains',
+														'impact_percentage' => 18,
+														'probability'       => 0.45,
+												],
+										],
+										'payback_analysis' => [
+												'payback_months' => 8.2,
+										],
+								],
+								'technology_strategy' => [
+										'recommended_category' => 'comprehensive_tms',
+										'category_details'     => [
+												'name'        => 'Comprehensive Treasury Management System',
+												'description' => 'Full-featured treasury platform with cash management, forecasting, and banking connectivity',
+												'features'    => [
+														'Multi-bank connectivity and automated reconciliation',
+														'Real-time cash positioning and forecasting',
+														'Investment and debt management capabilities',
+														'Advanced reporting and analytics dashboards',
+												],
+										],
+								],
+								'industry_insights' => [
+										'sector_trends' => [
+												'Increased adoption of cloud-based treasury platforms among mid-market manufacturers',
+												'Growing emphasis on ESG reporting requiring enhanced data capabilities',
+												'Supply chain finance integration becoming standard requirement',
+												'AI and machine learning applications in cash forecasting gaining traction',
+										],
+										'competitive_benchmarks' => [
+												'Industry average treasury team productivity: 2.3 FTE per $100M revenue',
+												'Best-in-class reconciliation automation: >85% straight-through processing',
+												'Peer group cash forecasting accuracy: 92% within 5% variance',
+												'Standard implementation timeline: 4-6 months for similar complexity',
+										],
+										'regulatory_considerations' => [
+												'Enhanced internal controls documentation requirements',
+												'Segregation of duties compliance in automated workflows',
+												'Audit trail maintenance for regulatory examinations',
+												'Data privacy and security compliance across multiple jurisdictions',
+										],
+								],
+								'operational_insights' => [
+										'Treasury staff currently spends 65% of time on manual, repetitive tasks',
+										'Bank reconciliation errors occur in approximately 8% of monthly closes',
+										'Cash forecasting accuracy currently averaging 78% within 10% variance',
+										'Month-end close process takes 7-9 business days with treasury bottlenecks',
+										'Multiple banking relationships create complexity in daily cash management',
+								],
+								'risk_analysis' => [
+										'implementation_risks' => [
+												'Integration complexity with existing ERP and banking systems',
+												'User adoption resistance due to process changes',
+												'Potential temporary disruption during cutover period',
+												'Vendor selection risk if requirements not properly defined',
+										],
+										'mitigation_strategies' => [
+												'Conduct thorough technical due diligence during vendor selection',
+												'Implement comprehensive change management and training program',
+												'Plan phased implementation to minimize business disruption',
+												'Establish clear success metrics and project governance structure',
+										],
+								],
+								'action_plan' => [
+										'immediate_steps' => [
+												'Secure executive sponsorship and project budget approval',
+												'Form cross-functional project team with IT and treasury representation',
+												'Define detailed requirements and success criteria',
+												'Develop RFP document and vendor evaluation framework',
+										],
+										'short_term_milestones' => [
+												'Complete vendor selection process and contract negotiations',
+												'Finalize implementation timeline and resource allocation',
+												'Begin system configuration and integration planning',
+												'Develop user training materials and change management plan',
+										],
+										'long_term_objectives' => [
+												'Complete full system implementation and user acceptance testing',
+												'Achieve target automation levels and efficiency improvements',
+												'Establish ongoing optimization and continuous improvement processes',
+												'Evaluate opportunities for additional functionality expansion',
+										],
+								],
+								'rag_context' => [
+										'Treasury technology market analysis shows 34% annual growth in mid-market segment',
+										'Industry case studies demonstrate average 18-month ROI achievement for similar implementations',
+										'Best practices research indicates phased implementation approach reduces risk by 40%',
+								],
+						],
+				];
+		}
+
+		/**
+		 * Get preview report HTML using the comprehensive template.
+		 *
+		 * @param array $dummy_data Dummy data.
+		 * @return string|WP_Error
+		 */
+		private function get_preview_report_html( $dummy_data ) {
+				$comprehensive_template = RTBCB_DIR . 'templates/comprehensive-report-template.php';
+
+				if ( ! file_exists( $comprehensive_template ) ) {
+						return new WP_Error( 'template_missing', sprintf( __( 'Comprehensive template not found at: %s', 'rtbcb' ), $comprehensive_template ) );
+				}
+
+				$report_data = $dummy_data['report_data'];
+
+				try {
+						ob_start();
+						include $comprehensive_template;
+						$html = ob_get_clean();
+
+						if ( false === $html ) {
+								return new WP_Error( 'template_render_failed', __( 'Failed to render template', 'rtbcb' ) );
+						}
+
+						return $html;
+				} catch ( Exception $e ) {
+						if ( ob_get_level() > 0 ) {
+								ob_end_clean();
+						}
+						return new WP_Error( 'template_exception', sprintf( __( 'Template rendering exception: %s', 'rtbcb' ), $e->getMessage() ) );
+				}
+		}
+
+		/**
+		 * Enqueue assets for the report preview page.
+		 *
+		 * @param string $hook Page hook.
+		 * @return void
+		 */
+		public function enqueue_preview_assets( $hook ) {
+				$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
+				if ( 'rtbcb-report-preview' !== $page ) {
+						return;
+				}
+
+				wp_enqueue_style(
+						'rtbcb-preview',
+						RTBCB_URL . 'admin/css/rtbcb-admin.css',
+						[],
+						RTBCB_VERSION
+				);
+				wp_enqueue_script(
+						'rtbcb-preview',
+						RTBCB_URL . 'admin/js/rtbcb-admin.js',
+						[ 'jquery' ],
+						RTBCB_VERSION,
+						true
+				);
+				wp_add_inline_script(
+						'rtbcb-preview',
+						'document.addEventListener("DOMContentLoaded",function(){var f=document.getElementById("rtbcb-preview-frame");if(f){f.addEventListener("load",function(){try{f.style.height=f.contentWindow.document.body.scrollHeight+"px";}catch(e){}});}});'
+				);
 		}
 
 		/**
