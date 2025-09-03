@@ -2027,12 +2027,20 @@ PROMPT;
        ],
        ];
 
-       $analysis_data = $client->request( $payload, $this->config->estimate_tokens( 2000 ) );
-       if ( is_wp_error( $analysis_data ) ) {
-       return $analysis_data;
-       }
-       return $this->validate_and_structure_analysis( $analysis_data );
-       }
+$response = $client->request( $payload, $this->config->estimate_tokens( 2000 ) );
+if ( is_wp_error( $response ) ) {
+return $response;
+}
+
+if ( class_exists( 'RTBCB_API_Log' ) ) {
+$user_email   = $this->current_inputs['email'] ?? '';
+$company_name = $this->current_inputs['company_name'] ?? '';
+RTBCB_API_Log::save_log( $payload, $response, get_current_user_id(), $user_email, $company_name );
+}
+
+$analysis_data = $response['choices'] ?? [];
+return $this->validate_and_structure_analysis( $analysis_data );
+}
 
        /**
        * Validate enrichment response JSON structure.

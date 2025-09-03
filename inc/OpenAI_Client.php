@@ -222,9 +222,9 @@ return false !== $json ? $json : '{}';
 /**
  * Send request to OpenAI and parse JSON response with one retry on failure.
  *
- * @param array $user_payload User payload sections.
+ * @param array $user_payload       User payload sections.
  * @param int   $max_output_tokens Optional token limit.
- * @return array|WP_Error Decoded response or error.
+ * @return array|WP_Error Array with choices and usage or error.
  */
 public function request( array $user_payload, $max_output_tokens = null ) {
 $messages = $this->build_messages( $user_payload );
@@ -244,10 +244,14 @@ if ( is_wp_error( $response ) ) {
 return $response;
 }
 
-$content = $this->extract_content( $response );
+$decoded = json_decode( wp_remote_retrieve_body( $response ), true );
+$content = $this->extract_content( $decoded );
 $data    = json_decode( $content, true );
 if ( $this->is_valid_response( $data ) ) {
-return $data;
+return [
+'choices' => $data,
+'usage'   => $decoded['usage'] ?? [],
+];
 }
 
 $messages[]            = [
@@ -259,10 +263,14 @@ $response        = $this->send_request( $body );
 if ( is_wp_error( $response ) ) {
 return $response;
 }
-$content = $this->extract_content( $response );
+$decoded = json_decode( wp_remote_retrieve_body( $response ), true );
+$content = $this->extract_content( $decoded );
 $data    = json_decode( $content, true );
 if ( $this->is_valid_response( $data ) ) {
-return $data;
+return [
+'choices' => $data,
+'usage'   => $decoded['usage'] ?? [],
+];
 }
 
 return new WP_Error( 'invalid_json', __( 'Model returned invalid JSON.', 'rtbcb' ), [ 'raw' => $content ] );
@@ -296,15 +304,13 @@ return $response;
 }
 
 /**
- * Extract content from OpenAI response.
+ * Extract content from decoded OpenAI response.
  *
- * @param array $response HTTP response.
+ * @param array $payload Decoded response payload.
  * @return string Content string.
  */
-private function extract_content( $response ) {
-$body = wp_remote_retrieve_body( $response );
-$data = json_decode( $body, true );
-return $data['choices'][0]['message']['content'] ?? '';
+private function extract_content( $payload ) {
+return $payload['choices'][0]['message']['content'] ?? '';
 }
 
 /**
@@ -351,6 +357,9 @@ $payload = [
 $result = $client->request( $payload );
 if ( is_wp_error( $result ) ) {
 WP_CLI::error( $result->get_error_message() );
+}
+if ( empty( $result['choices'] ) ) {
+WP_CLI::error( 'No choices returned.' );
 }
 WP_CLI::success( 'Valid JSON received.' );
 }
