@@ -778,18 +778,18 @@ function rtbcb_normalize_model_name( $model ) {
 	* @return void
 	*/
 function rtbcb_send_report_email( $form_data, $report_url, $mailer = 'wp_mail' ) {
-        $email = isset( $form_data['email'] ) ? sanitize_email( $form_data['email'] ) : '';
+		$email = isset( $form_data['email'] ) ? sanitize_email( $form_data['email'] ) : '';
 
-        if ( empty( $email ) || empty( $report_url ) ) {
-                return;
-        }
+		if ( empty( $email ) || empty( $report_url ) ) {
+				return;
+		}
 
-        $subject = __( 'Your Business Case Report', 'rtbcb' );
-        $message = sprintf( __( 'View your business case report: %s', 'rtbcb' ), esc_url( $report_url ) );
+		$subject = __( 'Your Business Case Report', 'rtbcb' );
+		$message = sprintf( __( 'View your business case report: %s', 'rtbcb' ), esc_url( $report_url ) );
 
-        if ( is_callable( $mailer ) ) {
-                call_user_func( $mailer, $email, $subject, $message );
-        }
+		if ( is_callable( $mailer ) ) {
+				call_user_func( $mailer, $email, $subject, $message );
+		}
 }
 
 /**
@@ -882,7 +882,7 @@ function rtbcb_set_current_lead( $lead_id, $lead_email = '' ) {
 	* @return array|null Array with 'id' and 'email' or null if not set.
 	*/
 function rtbcb_get_current_lead() {
-                return isset( $GLOBALS['rtbcb_current_lead'] ) ? $GLOBALS['rtbcb_current_lead'] : null;
+				return isset( $GLOBALS['rtbcb_current_lead'] ) ? $GLOBALS['rtbcb_current_lead'] : null;
 }
 
 /**
@@ -896,15 +896,15 @@ function rtbcb_get_current_lead() {
 	* @return mixed Decoded array or original response.
 */
 function rtbcb_clean_json_response( $response ) {
-        if ( is_string( $response ) ) {
-                $decoded = json_decode( $response, true );
+		if ( is_string( $response ) ) {
+				$decoded = json_decode( $response, true );
 
-                if ( json_last_error() === JSON_ERROR_NONE ) {
-                        return $decoded;
-                }
-        }
+				if ( json_last_error() === JSON_ERROR_NONE ) {
+				        return $decoded;
+				}
+		}
 
-        return $response;
+		return $response;
 }
 
 /**
@@ -981,9 +981,9 @@ function rtbcb_log_clean( $message, $data = null ) {
 }
 
 /**
-        * Log API debug messages.
-        *
-        * @param string $message Log message.
+		* Log API debug messages.
+		*
+		* @param string $message Log message.
 	* @param mixed	$data	 Optional data.
 	* @return void
 	*/
@@ -1628,18 +1628,26 @@ function rtbcb_parse_gpt5_response( $response, $store_raw = false ) {
 	*
 	* @return void
 	*/
-function rtbcb_proxy_openai_responses() {
-		$api_key = rtbcb_get_openai_api_key();
-		if ( ! rtbcb_has_openai_api_key() ) {
-			wp_send_json_error( [ 'message' => __( 'OpenAI API key not configured.', 'rtbcb' ) ], 500 );
-		}
-		if ( ! function_exists( 'curl_init' ) ) {
-			wp_send_json_error( [ 'message' => __( 'The cURL PHP extension is required.', 'rtbcb' ) ], 500 );
-		}
 
-		if ( isset( $_POST['nonce'] ) ) {
-				check_ajax_referer( 'rtbcb_openai_responses', 'nonce' );
-		}
+function rtbcb_proxy_openai_responses() {
+	$action = isset( $_REQUEST['action'] ) ? sanitize_key( wp_unslash( $_REQUEST['action'] ) ) : '';
+	if ( 'rtbcb_openai_responses' !== $action ) {
+		// Jetpack also routes requests through admin-ajax.php; avoid sending
+		// streaming headers for unrelated actions.
+		return;
+	}
+
+	$api_key = rtbcb_get_openai_api_key();
+	if ( ! rtbcb_has_openai_api_key() ) {
+		wp_send_json_error( [ 'message' => __( 'OpenAI API key not configured.', 'rtbcb' ) ], 500 );
+	}
+	if ( ! function_exists( 'curl_init' ) ) {
+		wp_send_json_error( [ 'message' => __( 'The cURL PHP extension is required.', 'rtbcb' ) ], 500 );
+	}
+
+	if ( isset( $_POST['nonce'] ) ) {
+		check_ajax_referer( 'rtbcb_openai_responses', 'nonce' );
+	}
 
 	$body = isset( $_POST['body'] ) ? wp_unslash( $_POST['body'] ) : '';
 	if ( '' === $body ) {
@@ -1651,27 +1659,21 @@ function rtbcb_proxy_openai_responses() {
 		wp_send_json_error( [ 'message' => __( 'Invalid JSON body.', 'rtbcb' ) ], 400 );
 	}
 
-		$company	  = rtbcb_get_current_company();
-		$user_email	  = isset( $company['email'] ) ? sanitize_email( $company['email'] ) : '';
-		$company_name = isset( $company['name'] ) ? sanitize_text_field( $company['name'] ) : '';
+	$company          = rtbcb_get_current_company();
+	$user_email       = isset( $company['email'] ) ? sanitize_email( $company['email'] ) : '';
+	$company_name = isset( $company['name'] ) ? sanitize_text_field( $company['name'] ) : '';
 
-	$config			   = rtbcb_get_gpt5_config();
+	$config                    = rtbcb_get_gpt5_config();
 	$max_output_tokens = intval( $body_array['max_output_tokens'] ?? $config['max_output_tokens'] );
-	$min_tokens		   = intval( $config['min_output_tokens'] );
+	$min_tokens                = intval( $config['min_output_tokens'] );
 	$max_output_tokens = min( 128000, max( $min_tokens, $max_output_tokens ) );
 	$body_array['max_output_tokens'] = $max_output_tokens;
-	$body_array['stream']			 = true;
-	$payload						 = wp_json_encode( $body_array );
+	$body_array['stream']            = true;
+	$payload                         = wp_json_encode( $body_array );
 
-	$action = isset( $_REQUEST['action'] ) ? sanitize_key( wp_unslash( $_REQUEST['action'] ) ) : '';
 	if ( function_exists( 'rtbcb_is_wpcom' ) && rtbcb_is_wpcom() ) {
 		wp_send_json_error( [ 'code' => 'streaming_unsupported', 'message' => __( 'Streaming is not supported on this hosting environment.', 'rtbcb' ) ], 400 );
 		return;
-	}
-	if ( 'rtbcb_openai_responses' !== $action ) {
-	// Jetpack also routes requests through admin-ajax.php; avoid sending
-	// streaming headers for unrelated actions.
-	return;
 	}
 
 	nocache_headers();
@@ -1700,18 +1702,17 @@ function rtbcb_proxy_openai_responses() {
 		return strlen( $data );
 	} );
 
-	$ok	   = curl_exec( $ch );
+	$ok        = curl_exec( $ch );
 	$error = curl_error( $ch );
 	curl_close( $ch );
 
-if ( false === $ok && '' !== $error ) {
-$msg = sanitize_text_field( $error );
-	echo 'data: ' . wp_json_encode( [ 'error' => $msg ] ) . "\n\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-}
+	if ( false === $ok && '' !== $error ) {
+		$msg = sanitize_text_field( $error );
+		echo 'data: ' . wp_json_encode( [ 'error' => $msg ] ) . "\n\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+	}
 
 	wp_die();
 }
-
 /**
 	* Placeholder handler for professional report generation.
 	*
@@ -2233,36 +2234,36 @@ function rtbcb_enable_persistent_connection() {
 }
 
 if ( function_exists( 'add_action' ) ) {
-        add_action( 'plugins_loaded', 'rtbcb_enable_persistent_connection', 1 );
+		add_action( 'plugins_loaded', 'rtbcb_enable_persistent_connection', 1 );
 }
 
 function rtbcb_transform_data_for_template( $business_case_data ) {
 	$defaults = [
-	        'company_name'           => '',
-	        'base_roi'               => 0,
-	        'roi_base'               => 0,
-	        'recommended_category'   => '',
-	        'category_info'          => [],
-	        'executive_summary'      => [],
-	        'narrative'              => '',
-	        'executive_recommendation' => '',
-	        'recommendation'         => '',
-	        'payback_months'         => 'N/A',
-	        'sensitivity_analysis'   => [],
-	        'company_analysis'       => '',
-	        'maturity_level'         => 'intermediate',
-	        'current_state_analysis' => '',
-	        'market_analysis'        => '',
-	        'tech_adoption_level'    => 'medium',
-	        'operational_insights'   => [],
-	        'operational_analysis'   => [],
-	        'industry_insights'      => [],
-	        'action_plan'            => [],
-	        'risk_analysis'          => [],
-	        'risks'                  => [],
-	        'company_intelligence'   => [],
-	        'confidence'             => 0.85,
-	        'processing_time'        => 0,
+			'company_name'           => '',
+			'base_roi'               => 0,
+			'roi_base'               => 0,
+			'recommended_category'   => '',
+			'category_info'          => [],
+			'executive_summary'      => [],
+			'narrative'              => '',
+			'executive_recommendation' => '',
+			'recommendation'         => '',
+			'payback_months'         => 'N/A',
+			'sensitivity_analysis'   => [],
+			'company_analysis'       => '',
+			'maturity_level'         => 'intermediate',
+			'current_state_analysis' => '',
+			'market_analysis'        => '',
+			'tech_adoption_level'    => 'medium',
+			'operational_insights'   => [],
+			'operational_analysis'   => [],
+			'industry_insights'      => [],
+			'action_plan'            => [],
+			'risk_analysis'          => [],
+			'risks'                  => [],
+			'company_intelligence'   => [],
+			'confidence'             => 0.85,
+			'processing_time'        => 0,
 	];
 	$business_case_data = wp_parse_args( (array) $business_case_data, $defaults );
 
@@ -2310,19 +2311,19 @@ function rtbcb_transform_data_for_template( $business_case_data ) {
 
 	// Prepare operational insights.
 	if ( ! empty( $business_case_data['operational_insights'] ) ) {
-	        $operational_insights = [
-	            'current_state_assessment' => array_map( 'sanitize_text_field', (array) ( $business_case_data['operational_insights']['current_state_assessment'] ?? [] ) ),
-	            'process_improvements'     => rtbcb_sanitize_recursive( $business_case_data['operational_insights']['process_improvements'] ?? [] ),
-	            'automation_opportunities' => rtbcb_sanitize_recursive( $business_case_data['operational_insights']['automation_opportunities'] ?? [] ),
-	        ];
+			$operational_insights = [
+				'current_state_assessment' => array_map( 'sanitize_text_field', (array) ( $business_case_data['operational_insights']['current_state_assessment'] ?? [] ) ),
+				'process_improvements'     => rtbcb_sanitize_recursive( $business_case_data['operational_insights']['process_improvements'] ?? [] ),
+				'automation_opportunities' => rtbcb_sanitize_recursive( $business_case_data['operational_insights']['automation_opportunities'] ?? [] ),
+			];
 	} elseif ( ! empty( $business_case_data['operational_analysis'] ) ) {
-	        $operational_insights = [
-	            'current_state_assessment' => array_map( 'sanitize_text_field', (array) ( $business_case_data['operational_analysis']['current_state_assessment'] ?? [] ) ),
-	            'process_improvements'     => rtbcb_sanitize_recursive( $business_case_data['operational_analysis']['process_improvements'] ?? [] ),
-	            'automation_opportunities' => rtbcb_sanitize_recursive( $business_case_data['operational_analysis']['automation_opportunities'] ?? [] ),
-	        ];
+			$operational_insights = [
+				'current_state_assessment' => array_map( 'sanitize_text_field', (array) ( $business_case_data['operational_analysis']['current_state_assessment'] ?? [] ) ),
+				'process_improvements'     => rtbcb_sanitize_recursive( $business_case_data['operational_analysis']['process_improvements'] ?? [] ),
+				'automation_opportunities' => rtbcb_sanitize_recursive( $business_case_data['operational_analysis']['automation_opportunities'] ?? [] ),
+			];
 	} else {
-	        $operational_insights = rtbcb_generate_operational_fallbacks( $business_case_data );
+			$operational_insights = rtbcb_generate_operational_fallbacks( $business_case_data );
 	}
 	// Prepare industry insights.
 	if ( ! empty( $business_case_data['industry_insights'] ) ) {
@@ -2336,92 +2337,92 @@ function rtbcb_transform_data_for_template( $business_case_data ) {
 
 	// Prepare action plan.
 	if ( ! empty( $business_case_data['action_plan'] ) ) {
-	        $action_plan = rtbcb_sanitize_recursive( $business_case_data['action_plan'] );
+			$action_plan = rtbcb_sanitize_recursive( $business_case_data['action_plan'] );
 	} else {
-	        $action_plan = rtbcb_generate_action_plan_fallbacks( $business_case_data );
+			$action_plan = rtbcb_generate_action_plan_fallbacks( $business_case_data );
 	}
 
 	// Prepare company intelligence.
 	if ( ! empty( $business_case_data['company_intelligence'] ) ) {
-	        $company_intelligence = rtbcb_sanitize_recursive( $business_case_data['company_intelligence'] );
+			$company_intelligence = rtbcb_sanitize_recursive( $business_case_data['company_intelligence'] );
 	} else {
-	        $company_intelligence = [
-	                'enriched_profile' => [
-	                        'enhanced_description' => wp_kses_post( $business_case_data['company_analysis'] ),
-	                        'maturity_level'       => sanitize_text_field( $business_case_data['maturity_level'] ),
-	                        'treasury_maturity'    => [
-	                                'current_state' => wp_kses_post( $business_case_data['current_state_analysis'] ),
-	                        ],
-	                ],
-	                'industry_context' => [
-	                        'sector_analysis' => [
-	                                'market_dynamics' => wp_kses_post( $business_case_data['market_analysis'] ),
-	                        ],
-	                        'benchmarking'   => [
-	                                'technology_penetration' => sanitize_text_field( $business_case_data['tech_adoption_level'] ),
-	                        ],
-	                ],
-	        ];
+			$company_intelligence = [
+				    'enriched_profile' => [
+				            'enhanced_description' => wp_kses_post( $business_case_data['company_analysis'] ),
+				            'maturity_level'       => sanitize_text_field( $business_case_data['maturity_level'] ),
+				            'treasury_maturity'    => [
+				                    'current_state' => wp_kses_post( $business_case_data['current_state_analysis'] ),
+				            ],
+				    ],
+				    'industry_context' => [
+				            'sector_analysis' => [
+				                    'market_dynamics' => wp_kses_post( $business_case_data['market_analysis'] ),
+				            ],
+				            'benchmarking'   => [
+				                    'technology_penetration' => sanitize_text_field( $business_case_data['tech_adoption_level'] ),
+				            ],
+				    ],
+			];
 	}
 
 	// Prepare risk analysis.
 	if ( ! empty( $business_case_data['risk_analysis']['implementation_risks'] ) ) {
-	        $implementation_risks = array_map( 'sanitize_text_field', (array) $business_case_data['risk_analysis']['implementation_risks'] );
+			$implementation_risks = array_map( 'sanitize_text_field', (array) $business_case_data['risk_analysis']['implementation_risks'] );
 	} elseif ( ! empty( $business_case_data['risks'] ) ) {
-	        $implementation_risks = array_map( 'sanitize_text_field', (array) $business_case_data['risks'] );
+			$implementation_risks = array_map( 'sanitize_text_field', (array) $business_case_data['risks'] );
 	} else {
-	        $implementation_risks = [
-	                __( 'Integration complexity with existing systems', 'rtbcb' ),
-	                __( 'Change management and user adoption challenges', 'rtbcb' ),
-	        ];
+			$implementation_risks = [
+				    __( 'Integration complexity with existing systems', 'rtbcb' ),
+				    __( 'Change management and user adoption challenges', 'rtbcb' ),
+			];
 	}
 
 	// Create structured data format expected by template.
 	$report_data = [
-	        'metadata'           => [
-	                'company_name'     => $company_name,
-	                'analysis_date'    => current_time( 'Y-m-d' ),
-	                'analysis_type'    => rtbcb_get_analysis_type(),
-	                'confidence_level' => floatval( $business_case_data['confidence'] ),
-	                'processing_time'  => intval( $business_case_data['processing_time'] ),
-	        ],
-	        'executive_summary'  => [
+			'metadata'           => [
+				    'company_name'     => $company_name,
+				    'analysis_date'    => current_time( 'Y-m-d' ),
+				    'analysis_type'    => rtbcb_get_analysis_type(),
+				    'confidence_level' => floatval( $business_case_data['confidence'] ),
+				    'processing_time'  => intval( $business_case_data['processing_time'] ),
+			],
+			'executive_summary'  => [
 			'strategic_positioning'    => wp_kses_post( $business_case_data['executive_summary']['strategic_positioning'] ?? $business_case_data['narrative'] ),
-	                'key_value_drivers'       => rtbcb_extract_value_drivers( $business_case_data ),
+				    'key_value_drivers'       => rtbcb_extract_value_drivers( $business_case_data ),
 			'executive_recommendation' => wp_kses_post( $business_case_data['executive_summary']['executive_recommendation'] ?? $business_case_data['executive_recommendation'] ?? $business_case_data['recommendation'] ),
-	                'business_case_strength'  => rtbcb_determine_business_case_strength( $business_case_data ),
-	        ],
-	                'financial_analysis' => [
-	                'roi_scenarios'      => $roi_scenarios,
-	                'payback_analysis'   => [
-	                        'payback_months' => sanitize_text_field( $business_case_data['payback_months'] ),
-	                ],
-	                'sensitivity_analysis' => $business_case_data['sensitivity_analysis'],
-	                'chart_data'          => [
-	                        'labels'   => [
-	                                __( 'Conservative', 'rtbcb' ),
-	                                __( 'Base', 'rtbcb' ),
-	                                __( 'Optimistic', 'rtbcb' ),
-	                        ],
-	                        'datasets' => [
-	                                [
-	                                        'data'            => [ $conservative_roi, $base_roi, $optimistic_roi ],
-	                                        'backgroundColor' => [ '#ff6384', '#36a2eb', '#4bc0c0' ],
-	                                ],
-	                        ],
-	                ],
-	        ],
-	        'company_intelligence' => $company_intelligence,
-	        'industry_insights'    => $industry_insights,
-	        'technology_strategy' => [
-	                'recommended_category' => $recommended_category,
-	                'category_details'     => $category_details,
-	        ],
-	        'operational_insights' => $operational_insights,
-	        'risk_analysis'        => [
-	                'implementation_risks' => $implementation_risks,
-	        ],
-	        'action_plan'          => $action_plan,
+				    'business_case_strength'  => rtbcb_determine_business_case_strength( $business_case_data ),
+			],
+				    'financial_analysis' => [
+				    'roi_scenarios'      => $roi_scenarios,
+				    'payback_analysis'   => [
+				            'payback_months' => sanitize_text_field( $business_case_data['payback_months'] ),
+				    ],
+				    'sensitivity_analysis' => $business_case_data['sensitivity_analysis'],
+				    'chart_data'          => [
+				            'labels'   => [
+				                    __( 'Conservative', 'rtbcb' ),
+				                    __( 'Base', 'rtbcb' ),
+				                    __( 'Optimistic', 'rtbcb' ),
+				            ],
+				            'datasets' => [
+				                    [
+				                            'data'            => [ $conservative_roi, $base_roi, $optimistic_roi ],
+				                            'backgroundColor' => [ '#ff6384', '#36a2eb', '#4bc0c0' ],
+				                    ],
+				            ],
+				    ],
+			],
+			'company_intelligence' => $company_intelligence,
+			'industry_insights'    => $industry_insights,
+			'technology_strategy' => [
+				    'recommended_category' => $recommended_category,
+				    'category_details'     => $category_details,
+			],
+			'operational_insights' => $operational_insights,
+			'risk_analysis'        => [
+				    'implementation_risks' => $implementation_risks,
+			],
+			'action_plan'          => $action_plan,
 	];
 
 	return $report_data;
@@ -2464,190 +2465,190 @@ function rtbcb_transform_data_for_template( $business_case_data ) {
 	* @return array
 	*/
 function rtbcb_format_roi_scenarios( $data ) {
-       $allowed = array( 'conservative', 'base', 'optimistic' );
+	   $allowed = array( 'conservative', 'base', 'optimistic' );
 
-       // Try to get ROI data from various possible locations.
-       if ( ! empty( $data['scenarios'] ) && is_array( $data['scenarios'] ) ) {
-	       return array_intersect_key( $data['scenarios'], array_flip( $allowed ) );
-       }
+	   // Try to get ROI data from various possible locations.
+	   if ( ! empty( $data['scenarios'] ) && is_array( $data['scenarios'] ) ) {
+		   return array_intersect_key( $data['scenarios'], array_flip( $allowed ) );
+	   }
 
-       if ( ! empty( $data['roi_scenarios'] ) && is_array( $data['roi_scenarios'] ) ) {
-	       return array_intersect_key( $data['roi_scenarios'], array_flip( $allowed ) );
-       }
+	   if ( ! empty( $data['roi_scenarios'] ) && is_array( $data['roi_scenarios'] ) ) {
+		   return array_intersect_key( $data['roi_scenarios'], array_flip( $allowed ) );
+	   }
 
-       // Fallback to default structure.
-       $scenarios = [
-	       'conservative' => [
-	               'total_annual_benefit' => $data['roi_low'] ?? 0,
-	               'labor_savings'        => ( $data['roi_low'] ?? 0 ) * 0.6,
-	               'fee_savings'          => ( $data['roi_low'] ?? 0 ) * 0.3,
-	               'error_reduction'      => ( $data['roi_low'] ?? 0 ) * 0.1,
-	       ],
-	       'base' => [
-	               'total_annual_benefit' => $data['roi_base'] ?? 0,
-	               'labor_savings'        => ( $data['roi_base'] ?? 0 ) * 0.6,
-	               'fee_savings'          => ( $data['roi_base'] ?? 0 ) * 0.3,
-	               'error_reduction'      => ( $data['roi_base'] ?? 0 ) * 0.1,
-	       ],
-	       'optimistic' => [
-	               'total_annual_benefit' => $data['roi_high'] ?? 0,
-	               'labor_savings'        => ( $data['roi_high'] ?? 0 ) * 0.6,
-	               'fee_savings'          => ( $data['roi_high'] ?? 0 ) * 0.3,
-	               'error_reduction'      => ( $data['roi_high'] ?? 0 ) * 0.1,
-	       ],
-       ];
+	   // Fallback to default structure.
+	   $scenarios = [
+		   'conservative' => [
+				   'total_annual_benefit' => $data['roi_low'] ?? 0,
+				   'labor_savings'        => ( $data['roi_low'] ?? 0 ) * 0.6,
+				   'fee_savings'          => ( $data['roi_low'] ?? 0 ) * 0.3,
+				   'error_reduction'      => ( $data['roi_low'] ?? 0 ) * 0.1,
+		   ],
+		   'base' => [
+				   'total_annual_benefit' => $data['roi_base'] ?? 0,
+				   'labor_savings'        => ( $data['roi_base'] ?? 0 ) * 0.6,
+				   'fee_savings'          => ( $data['roi_base'] ?? 0 ) * 0.3,
+				   'error_reduction'      => ( $data['roi_base'] ?? 0 ) * 0.1,
+		   ],
+		   'optimistic' => [
+				   'total_annual_benefit' => $data['roi_high'] ?? 0,
+				   'labor_savings'        => ( $data['roi_high'] ?? 0 ) * 0.6,
+				   'fee_savings'          => ( $data['roi_high'] ?? 0 ) * 0.3,
+				   'error_reduction'      => ( $data['roi_high'] ?? 0 ) * 0.1,
+		   ],
+	   ];
 
-       return $scenarios;
-       }
+	   return $scenarios;
+	   }
 
-       /**
-       * Determine business case strength based on ROI.
-       *
-       * @param array $data Business case data.
-       *
-       * @return string
-       */
+	   /**
+	   * Determine business case strength based on ROI.
+	   *
+	   * @param array $data Business case data.
+	   *
+	   * @return string
+	   */
 function rtbcb_determine_business_case_strength( $data ) {
-	       $base_roi = $data['roi_base'] ?? $data['scenarios']['base']['total_annual_benefit'] ?? 0;
+		   $base_roi = $data['roi_base'] ?? $data['scenarios']['base']['total_annual_benefit'] ?? 0;
 
-	       if ( $base_roi > 500000 ) {
-	               return 'Compelling';
-	       } elseif ( $base_roi > 200000 ) {
-	               return 'Strong';
-	       } elseif ( $base_roi > 50000 ) {
-	               return 'Moderate';
-	       } else {
-	               return 'Developing';
-	       }
-       }
+		   if ( $base_roi > 500000 ) {
+				   return 'Compelling';
+		   } elseif ( $base_roi > 200000 ) {
+				   return 'Strong';
+		   } elseif ( $base_roi > 50000 ) {
+				   return 'Moderate';
+		   } else {
+				   return 'Developing';
+		   }
+	   }
 
-       /**
-       * Recursively sanitize array data using sanitize_text_field.
-       *
-       * @param mixed $data Data to sanitize.
-       *
-       * @return mixed
-       */
+	   /**
+	   * Recursively sanitize array data using sanitize_text_field.
+	   *
+	   * @param mixed $data Data to sanitize.
+	   *
+	   * @return mixed
+	   */
 function rtbcb_sanitize_recursive( $data ) {
-	       if ( is_array( $data ) ) {
-	               foreach ( $data as $key => $value ) {
-	                       $data[ $key ] = rtbcb_sanitize_recursive( $value );
-	               }
-	               return $data;
-	       }
+		   if ( is_array( $data ) ) {
+				   foreach ( $data as $key => $value ) {
+				           $data[ $key ] = rtbcb_sanitize_recursive( $value );
+				   }
+				   return $data;
+		   }
 
-	       return is_scalar( $data ) ? sanitize_text_field( $data ) : $data;
-       }
+		   return is_scalar( $data ) ? sanitize_text_field( $data ) : $data;
+	   }
 
-       /**
-       * Generate fallback operational insights when LLM data is missing.
-       *
-       * @param array $data Business case data.
-       *
-       * @return array
-       */
+	   /**
+	   * Generate fallback operational insights when LLM data is missing.
+	   *
+	   * @param array $data Business case data.
+	   *
+	   * @return array
+	   */
 function rtbcb_generate_operational_fallbacks( $data ) {
-	       return [
-	               'current_state_assessment' => [
-	                       __( 'Manual processes dominate cash and liquidity management', 'rtbcb' ),
-	                       __( 'Limited integration between treasury and ERP systems', 'rtbcb' ),
-	               ],
-	               'process_improvements'     => [
-	                       __( 'Centralize cash visibility across subsidiaries', 'rtbcb' ),
-	                       __( 'Standardize payment workflows to reduce errors', 'rtbcb' ),
-	               ],
-	               'automation_opportunities' => [
-	                       __( 'Automate bank reconciliation tasks', 'rtbcb' ),
-	                       __( 'Implement API connections for real-time balances', 'rtbcb' ),
-	               ],
-	       ];
-       }
+		   return [
+				   'current_state_assessment' => [
+				           __( 'Manual processes dominate cash and liquidity management', 'rtbcb' ),
+				           __( 'Limited integration between treasury and ERP systems', 'rtbcb' ),
+				   ],
+				   'process_improvements'     => [
+				           __( 'Centralize cash visibility across subsidiaries', 'rtbcb' ),
+				           __( 'Standardize payment workflows to reduce errors', 'rtbcb' ),
+				   ],
+				   'automation_opportunities' => [
+				           __( 'Automate bank reconciliation tasks', 'rtbcb' ),
+				           __( 'Implement API connections for real-time balances', 'rtbcb' ),
+				   ],
+		   ];
+	   }
 
-       /**
-       * Generate fallback action plan when LLM data is missing.
-       *
-       * @param array $data Business case data.
-       *
-       * @return array
-       */
+	   /**
+	   * Generate fallback action plan when LLM data is missing.
+	   *
+	   * @param array $data Business case data.
+	   *
+	   * @return array
+	   */
 function rtbcb_generate_action_plan_fallbacks( $data ) {
-	       return [
-	               'immediate_steps'       => rtbcb_extract_immediate_steps( $data ),
-	               'short_term_milestones' => rtbcb_extract_short_term_steps( $data ),
-	               'long_term_objectives'  => rtbcb_extract_long_term_steps( $data ),
-	       ];
-       }
+		   return [
+				   'immediate_steps'       => rtbcb_extract_immediate_steps( $data ),
+				   'short_term_milestones' => rtbcb_extract_short_term_steps( $data ),
+				   'long_term_objectives'  => rtbcb_extract_long_term_steps( $data ),
+		   ];
+	   }
 
-       /**
-       * Generate fallback industry insights when LLM data is missing.
-       *
-       * @param array $data Business case data.
-       *
-       * @return array
-       */
+	   /**
+	   * Generate fallback industry insights when LLM data is missing.
+	   *
+	   * @param array $data Business case data.
+	   *
+	   * @return array
+	   */
 function rtbcb_generate_industry_insights_fallbacks( $data ) {
-	       return [
-	               'sector_trends'           => [
-	                       __( 'Increasing focus on real-time liquidity management', 'rtbcb' ),
-	                       __( 'Growing adoption of API-based bank connectivity', 'rtbcb' ),
-	               ],
-	               'competitive_benchmarks'  => [
-	                       __( 'Leading firms leverage AI for cash forecasting', 'rtbcb' ),
-	               ],
-	               'regulatory_considerations' => [
-	                       __( 'Heightened emphasis on KYC and AML compliance', 'rtbcb' ),
-	               ],
-	       ];
-       }
+		   return [
+				   'sector_trends'           => [
+				           __( 'Increasing focus on real-time liquidity management', 'rtbcb' ),
+				           __( 'Growing adoption of API-based bank connectivity', 'rtbcb' ),
+				   ],
+				   'competitive_benchmarks'  => [
+				           __( 'Leading firms leverage AI for cash forecasting', 'rtbcb' ),
+				   ],
+				   'regulatory_considerations' => [
+				           __( 'Heightened emphasis on KYC and AML compliance', 'rtbcb' ),
+				   ],
+		   ];
+	   }
 
-       /**
-       * Extract action steps from business case data.
-       *
-       * @param array $data Business case data.
-       *
-       * @return array
-       */
+	   /**
+	   * Extract action steps from business case data.
+	   *
+	   * @param array $data Business case data.
+	   *
+	   * @return array
+	   */
 function rtbcb_extract_immediate_steps( $data ) {
-	       if ( ! empty( $data['next_actions'] ) ) {
-	               $all_actions = (array) $data['next_actions'];
-	               return array_slice( $all_actions, 0, 3 );
-	       }
+		   if ( ! empty( $data['next_actions'] ) ) {
+				   $all_actions = (array) $data['next_actions'];
+				   return array_slice( $all_actions, 0, 3 );
+		   }
 
-	       return [
-	               __( 'Secure executive sponsorship and budget approval', 'rtbcb' ),
-	               __( 'Form project steering committee', 'rtbcb' ),
-	               __( 'Conduct detailed requirements gathering', 'rtbcb' ),
-	       ];
-       }
+		   return [
+				   __( 'Secure executive sponsorship and budget approval', 'rtbcb' ),
+				   __( 'Form project steering committee', 'rtbcb' ),
+				   __( 'Conduct detailed requirements gathering', 'rtbcb' ),
+		   ];
+	   }
 
-       /**
-       * Extract short term action steps.
-       *
-       * @param array $data Business case data.
-       *
-       * @return array
-       */
+	   /**
+	   * Extract short term action steps.
+	   *
+	   * @param array $data Business case data.
+	   *
+	   * @return array
+	   */
 function rtbcb_extract_short_term_steps( $data ) {
-	       if ( ! empty( $data['implementation_steps'] ) ) {
-	               $steps = (array) $data['implementation_steps'];
-	               return array_slice( $steps, 0, 4 );
-	       }
+		   if ( ! empty( $data['implementation_steps'] ) ) {
+				   $steps = (array) $data['implementation_steps'];
+				   return array_slice( $steps, 0, 4 );
+		   }
 
-	       return [
-	               __( 'Issue RFP to qualified vendors', 'rtbcb' ),
-	               __( 'Conduct vendor demonstrations and evaluations', 'rtbcb' ),
-	               __( 'Negotiate contracts and terms', 'rtbcb' ),
-	               __( 'Begin system implementation planning', 'rtbcb' ),
-	       ];
-       }
+		   return [
+				   __( 'Issue RFP to qualified vendors', 'rtbcb' ),
+				   __( 'Conduct vendor demonstrations and evaluations', 'rtbcb' ),
+				   __( 'Negotiate contracts and terms', 'rtbcb' ),
+				   __( 'Begin system implementation planning', 'rtbcb' ),
+		   ];
+	   }
 
-       /**
-       * Extract long term action steps.
-       *
-       * @param array $data Business case data.
-       *
-       * @return array
-       */
+	   /**
+	   * Extract long term action steps.
+	   *
+	   * @param array $data Business case data.
+	   *
+	   * @return array
+	   */
 function rtbcb_extract_long_term_steps( $data ) {
 return [
 __( 'Complete system implementation and testing', 'rtbcb' ),

@@ -712,3 +712,22 @@
 .rtbcb-meta-value {
     font-weight: 600;
 }
+
+/* Source badge styles */
+.rtbcb-source-badge {
+display: inline-block;
+padding: 0.1rem 0.4rem;
+border-radius: 4px;
+font-size: 0.75rem;
+color: #fff;
+margin-right: 0.5rem;
+background-color: #6b7280;
+}
+
+.rtbcb-source-badge.source-vendor {
+background-color: #2563eb;
+}
+
+.rtbcb-source-badge.source-note {
+background-color: #10b981;
+}

@@ -150,6 +150,9 @@ php tests/wpcom-sse-fallback.test.php
 echo "18e. Running WP.com streaming response parser test..."
 php tests/wpcom-streaming-response.test.php
 
+echo "18f. Running non-RTBCB AJAX isolation test..."
+php tests/non-rtbcb-ajax.test.php
+
 echo "19. Running validator tests..."
 vendor/bin/phpunit -c phpunit.xml
 

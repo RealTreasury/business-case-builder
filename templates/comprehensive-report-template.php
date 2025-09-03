@@ -614,7 +614,29 @@ $tech_adoption      = $sector_analysis['technology_adoption'] ?? ( $benchmarking
 		<div class="rtbcb-section-content">
 			<ul class="rtbcb-context-list">
 				<?php foreach ( (array) $rag_context as $context_item ) : ?>
-					<li><?php echo esc_html( $context_item ); ?></li>
+					<?php
+					$context_text = '';
+					$source_type  = '';
+					if ( is_array( $context_item ) ) {
+						$source_type  = $context_item['type'] ?? '';
+						if ( isset( $context_item['metadata'] ) ) {
+						       if ( is_array( $context_item['metadata'] ) ) {
+							       $context_text = $context_item['metadata']['content'] ?? '';
+						       } else {
+							       $context_text = $context_item['metadata'];
+						       }
+						}
+					} else {
+						$context_text = $context_item;
+					}
+					$context_text = is_string( $context_text ) ? $context_text : '';
+					?>
+					<li>
+						<?php if ( $source_type ) : ?>
+						       <span class="rtbcb-source-badge source-<?php echo esc_attr( $source_type ); ?>"><?php echo esc_html( ucfirst( $source_type ) ); ?></span>
+						<?php endif; ?>
+						<?php echo esc_html( $context_text ); ?>
+					</li>
 				<?php endforeach; ?>
 			</ul>
 		</div>
