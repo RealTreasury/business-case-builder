@@ -11,58 +11,58 @@ require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/helpers.php';
 
 require_once __DIR__ . '/class-rtbcb-response-parser.php';
+require_once __DIR__ . '/class-rtbcb-llm-config.php';
+require_once __DIR__ . '/class-rtbcb-llm-prompt.php';
+require_once __DIR__ . '/class-rtbcb-llm-transport.php';
+require_once __DIR__ . '/class-rtbcb-llm-response-parser.php';
 class RTBCB_LLM {
-	private $api_key;
-	private $current_inputs = [];
+       private $current_inputs = [];
 
-	/**
-	* GPT-5 configuration settings.
-	*
-	* @var array
-	*/
-	private $gpt5_config;
+       /**
+       * Configuration instance.
+       *
+       * @var RTBCB_LLM_Config
+       */
+       private $config;
 
-	/**
-	* Last JSON-decoded request body sent to OpenAI.
-	*
-	* @var array|null
-	*/
-	protected $last_request;
+       /**
+       * Prompt builder instance.
+       *
+       * @var RTBCB_LLM_Prompt
+       */
+       private $prompt_builder;
 
-	/**
-	* Last response or WP_Error returned from the OpenAI API.
-	*
-	* @var array|WP_Error|null
-	*/
-	protected $last_response;
+       /**
+       * Transport instance.
+       *
+       * @var RTBCB_LLM_Transport
+       */
+       private $transport;
 
-	/**
-	* Serialized company research from the last request.
-	*
-	* @var string|null
-	*/
-	protected $last_company_research;
+       /**
+       * Response parser instance.
+       *
+       * @var RTBCB_LLM_Response_Parser
+       */
+       private $response_parser;
 
-	public function __construct() {
-		$this->api_key = rtbcb_get_openai_api_key();
+       /**
+       * Serialized company research from the last request.
+       *
+       * @var string|null
+       */
+       protected $last_company_research;
 
-		$timeout           = rtbcb_get_api_timeout();
-		$max_output_tokens = intval( function_exists( 'get_option' ) ? get_option( 'rtbcb_gpt5_max_output_tokens', 8000 ) : 8000 );
-		$config            = rtbcb_get_gpt5_config(
-			array_merge(
-				function_exists( 'get_option' ) ? get_option( 'rtbcb_gpt5_config', [] ) : [],
-				[
-				'timeout'           => $timeout,
-				'max_output_tokens' => $max_output_tokens,
-				]
-			)
-		);
-		$this->gpt5_config = $config;
+       public function __construct() {
+               $this->config          = new RTBCB_LLM_Config();
+               $this->prompt_builder  = new RTBCB_LLM_Prompt();
+               $this->transport       = new RTBCB_LLM_Transport( $this->config );
+               $this->response_parser = new RTBCB_LLM_Response_Parser();
 
-		if ( empty( $this->api_key ) ) {
-			error_log( 'RTBCB: OpenAI API key not configured' );
-	}
-	}
+               if ( empty( $this->config->get_api_key() ) ) {
+                       error_log( 'RTBCB: OpenAI API key not configured' );
+               }
+       }
 
 	/**
 	* Get the configured model for a given tier.
@@ -85,9 +85,9 @@ class RTBCB_LLM {
 	*
 	* @return array|null Last request body.
 	*/
-	public function get_last_request() {
-		return $this->last_request;
-	}
+         public function get_last_request() {
+                 return $this->transport->get_last_request();
+         }
 
 	/**
 	* Retrieve the last response returned from the OpenAI API.
@@ -95,352 +95,26 @@ class RTBCB_LLM {
 	* @return array|WP_Error|null Last response or WP_Error.
 	*/
        public function get_last_response() {
-               return $this->last_response;
+               return $this->transport->get_last_response();
        }
-
-	/**
-	 * Enhanced JSON response processing with better error handling.
-	 *
-	 * Attempts multiple strategies to decode JSON responses, including
-	 * handling of markdown code blocks and streaming formats. Logs useful
-	 * debugging information when failures occur.
-	 *
-	 * @param string $response_body Raw response body.
-	 * @return array|string|false Decoded content or false on failure.
-	 */
-	public function process_openai_response( $response_body ) {
-		// Log the raw response for debugging.
-		error_log( 'RTBCB: Raw API response: ' . substr( $response_body, 0, 500 ) . '...' );
-		
-		if ( empty( $response_body ) ) {
-		error_log( 'RTBCB: Empty response body received' );
-		return false;
-		}
-		
-		// Clean up the response body.
-		$response_body = trim( $response_body );
-		$response_body = preg_replace( '/\x{FEFF}/u', '', $response_body );
-		
-		if ( function_exists( 'wp_unslash' ) ) {
-		$response_body = wp_unslash( $response_body );
-		}
-		
-		if ( function_exists( 'mb_detect_encoding' ) ) {
-		$encoding = mb_detect_encoding( $response_body, [ 'UTF-8', 'ISO-8859-1', 'ASCII' ], true );
-		if ( $encoding && 'UTF-8' !== $encoding ) {
-		if ( function_exists( 'mb_convert_encoding' ) ) {
-		$converted = mb_convert_encoding( $response_body, 'UTF-8', $encoding );
-		if ( false !== $converted ) {
-		$response_body = $converted;
-		}
-		}
-		}
-		}
-		
-		// First attempt: Direct JSON decode.
-		$decoded    = json_decode( $response_body, true );
-		$json_error = json_last_error();
-		
-		if ( JSON_ERROR_NONE === $json_error && is_array( $decoded ) ) {
-		error_log( 'RTBCB: JSON decoded successfully on first attempt' );
-		return $this->extract_content_from_decoded_response( $decoded );
-		}
-		
-		error_log( 'RTBCB: JSON decode failed: ' . json_last_error_msg() );
-		
-		// Second attempt: Handle potential markdown wrapping.
-		if ( preg_match( '/```(?:json)?\s*(\{.*\})\s*```/s', $response_body, $matches ) ) {
-		$json_content = trim( $matches[1] );
-		$decoded      = json_decode( $json_content, true );
-		if ( JSON_ERROR_NONE === json_last_error() && is_array( $decoded ) ) {
-		error_log( 'RTBCB: JSON extracted from markdown successfully' );
-		return $this->extract_content_from_decoded_response( $decoded );
-		}
-		}
-		
-		// Third attempt: Extract JSON from mixed content.
-		if ( preg_match( '/\{.*\}/s', $response_body, $matches ) ) {
-		$json_content = $matches[0];
-		$decoded      = json_decode( $json_content, true );
-		if ( JSON_ERROR_NONE === json_last_error() && is_array( $decoded ) ) {
-		error_log( 'RTBCB: JSON extracted from mixed content successfully' );
-		return $this->extract_content_from_decoded_response( $decoded );
-		}
-		}
-		
-		// Fourth attempt: Handle streaming response format.
-		if ( $this->is_streaming_response( $response_body ) ) {
-		return $this->parse_streaming_response( $response_body );
-		}
-		
-error_log( 'RTBCB: All JSON parsing attempts failed for response: ' . substr( $response_body, 0, 200 ) );
-return false;
-}
-
-	/**
-	 * Extract content from successfully decoded response.
-	 *
-	 * Handles different response structures and attempts to decode nested JSON
-	 * when present.
-	 *
-	 * @param array $decoded Decoded JSON response.
-	 * @return array|string Decoded content.
-	 */
-		private function extract_content_from_decoded_response( $decoded ) {
-		// Direct content structure.
-		if ( isset( $decoded['choices'][0]['message']['content'] ) ) {
-		$content = $decoded['choices'][0]['message']['content'];
-		if ( is_string( $content ) ) {
-		if ( $this->looks_like_json( $content ) ) {
-		$inner_decoded = json_decode( $content, true );
-		if ( JSON_ERROR_NONE === json_last_error() ) {
-		return $inner_decoded;
-		}
-		}
-		return $content;
-		}
-		}
-		
-		// GPT-5 Responses API format.
-		if ( isset( $decoded['output'] ) && is_array( $decoded['output'] ) ) {
-		foreach ( $decoded['output'] as $chunk ) {
-		if ( 'message' === ( $chunk['type'] ?? '' ) && isset( $chunk['content'] ) ) {
-		if ( is_array( $chunk['content'] ) ) {
-		foreach ( $chunk['content'] as $piece ) {
-		if ( isset( $piece['text'] ) ) {
-		$text = $piece['text'];
-		if ( $this->looks_like_json( $text ) ) {
-		$inner_decoded = json_decode( $text, true );
-		if ( JSON_ERROR_NONE === json_last_error() ) {
-		return $inner_decoded;
-		}
-		}
-		return $text;
-		}
-		}
-		}
-		}
-		}
-		}
-		
-		// Direct output_text field.
-		if ( isset( $decoded['output_text'] ) ) {
-		$content = $decoded['output_text'];
-		if ( $this->looks_like_json( $content ) ) {
-		$inner_decoded = json_decode( $content, true );
-		if ( JSON_ERROR_NONE === json_last_error() ) {
-		return $inner_decoded;
-		}
-		}
-		return $content;
-		}
-		
-		// Return the decoded response as-is if it's already structured.
-		return $decoded;
-		}
-		
-		/**
-		 * Check if content looks like JSON.
-		 *
-		 * @param string $content Content to evaluate.
-		 * @return bool True if the content appears to be JSON.
-		 */
-		private function looks_like_json( $content ) {
-		$content = trim( $content );
-		return ( substr( $content, 0, 1 ) === '{' && substr( $content, -1 ) === '}' ) ||
-		( substr( $content, 0, 1 ) === '[' && substr( $content, -1 ) === ']' );
-		}
-		
-		/**
-		 * Check if response is in streaming format.
-		 *
-		 * @param string $response_body Raw response body.
-		 * @return bool True if streaming markers are found.
-		 */
-		private function is_streaming_response( $response_body ) {
-		return strpos( $response_body, 'data: {' ) !== false ||
-		strpos( $response_body, 'event: ' ) !== false;
-		}
-		
-		/**
-		 * Parse streaming response format.
-		 *
-		 * Extracts the first JSON object from a streaming response and returns the
-		 * decoded content.
-		 *
-		 * @param string $response_body Raw response body.
-		 * @return array|string|false Decoded content or false on failure.
-		 */
-		private function parse_streaming_response( $response_body ) {
-		$lines    = explode( "\n", $response_body );
-		$json_data = '';
-		
-		foreach ( $lines as $line ) {
-		$line = trim( $line );
-		if ( strpos( $line, 'data: {' ) === 0 ) {
-		$json_data = substr( $line, 6 );
-		break;
-		}
-		}
-		
-		if ( $json_data ) {
-		$decoded = json_decode( $json_data, true );
-		if ( JSON_ERROR_NONE === json_last_error() ) {
-		return $this->extract_content_from_decoded_response( $decoded );
-		}
-		}
-		
-		return false;
-		}
 
        /**
-        * Process streaming response chunks from the OpenAI API.
+        * Process an OpenAI response body.
         *
-        * Splits the raw stream into events and assembles the final response
-        * structure, handling both modern and legacy formats.
-        *
-        * @param string $stream Raw streaming data from cURL.
-        * @return array|null Structured response array or null on failure.
+        * @param string $response_body Raw response body.
+        * @return array|string|false Parsed content or false on failure.
         */
-       private function process_streaming_response( $stream ) {
-               error_log( 'RTBCB: Processing streaming response, length: ' . strlen( $stream ) );
-
-               if ( empty( $stream ) ) {
-                       error_log( 'RTBCB: Empty stream received' );
-                       return null;
-               }
-
-               // Split stream into events.
-               $events        = [];
-               $lines         = preg_split( "/\r?\n/", $stream );
-               $current_event = [];
-
-               foreach ( $lines as $line ) {
-                       $line = trim( $line );
-
-                       if ( empty( $line ) ) {
-                               // Empty line indicates end of event.
-                               if ( ! empty( $current_event ) ) {
-                                       $events[]      = $current_event;
-                                       $current_event = [];
-                               }
-                               continue;
-                       }
-
-                       if ( strpos( $line, ':' ) !== false ) {
-                               list( $field, $value ) = explode( ':', $line, 2 );
-                               $field = trim( $field );
-                               $value = trim( $value );
-
-                               if ( 'data' === $field && '[DONE]' !== $value ) {
-                                       $current_event['data'] = $value;
-                               } elseif ( 'event' === $field ) {
-                                       $current_event['event'] = $value;
-                               }
-                       }
-               }
-
-               // Add final event if exists.
-               if ( ! empty( $current_event ) ) {
-                       $events[] = $current_event;
-               }
-
-               error_log( 'RTBCB: Found ' . count( $events ) . ' events in stream' );
-
-               // Process events to find the final response.
-               $final_response      = null;
-               $accumulated_content = '';
-
-               foreach ( $events as $event ) {
-                       if ( ! isset( $event['data'] ) ) {
-                               continue;
-                       }
-
-                       $event_data = json_decode( $event['data'], true );
-                       if ( JSON_ERROR_NONE !== json_last_error() ) {
-                               error_log( 'RTBCB: Failed to parse event data: ' . json_last_error_msg() );
-                               continue;
-                       }
-
-                       // Handle different event types.
-                       if ( isset( $event_data['type'] ) ) {
-                               switch ( $event_data['type'] ) {
-                                       case 'response.done':
-                                       case 'response.content_part.done':
-                                               if ( isset( $event_data['response'] ) ) {
-                                                       $final_response = $event_data['response'];
-                                               }
-                                               break;
-                                       case 'response.content_part.delta':
-                                               if ( isset( $event_data['delta']['text'] ) ) {
-                                                       $accumulated_content .= $event_data['delta']['text'];
-                                               }
-                                               break;
-                               }
-                       } else {
-                               // Handle legacy format.
-                               if ( isset( $event_data['choices'][0]['delta']['content'] ) ) {
-                                       $accumulated_content .= $event_data['choices'][0]['delta']['content'];
-                               } elseif ( isset( $event_data['choices'][0]['message'] ) ) {
-                                       $final_response = $event_data;
-                               }
-                       }
-               }
-
-               // If we have a final response, use it.
-               if ( $final_response ) {
-                       error_log( 'RTBCB: Using final response from stream' );
-                       return $final_response;
-               }
-
-               // If we have accumulated content, create a response structure.
-               if ( ! empty( $accumulated_content ) ) {
-                       error_log( 'RTBCB: Using accumulated content from stream' );
-	return [
-                               'choices' => [
-                                       [
-                                               'message' => [
-                                                       'content' => $accumulated_content,
-                                               ],
-                                       ],
-                               ],
-                       ];
-               }
-
-               // Try to parse the entire stream as a single JSON response.
-               $decoded = json_decode( $stream, true );
-               if ( JSON_ERROR_NONE === json_last_error() ) {
-                       error_log( 'RTBCB: Stream parsed as single JSON response' );
-                       return $decoded;
-               }
-
-               error_log( 'RTBCB: No valid response found in stream' );
-               return null;
+       public function process_openai_response( $response_body ) {
+               return $this->response_parser->process_openai_response( $response_body );
        }
 
-	/**
-	* Estimate token usage from a desired word count.
-	*
-	* @param int $words Desired word count.
-	* @return int Estimated token count capped by configuration.
-	*/
-	private function estimate_tokens( $words ) {
-		$words       = max( 0, intval( $words ) );
-		$tokens      = (int) ceil( $words * 1.5 );
-		$limit       = intval( $this->gpt5_config['max_output_tokens'] ?? 8000 );
-		$min_tokens  = intval( $this->gpt5_config['min_output_tokens'] ?? 1 );
-		$limit       = min( 128000, max( $min_tokens, $limit ) );
-
-		return max( $min_tokens, min( $tokens, $limit ) );
-	}
-
-	/**
-	* Determine token limit for a report type.
-	*
-	* @param string $type Report type identifier.
-	* @return int Estimated token count for the report.
-	*/
-	private function tokens_for_report( $type ) {
+       /**
+        * Estimate token usage from a desired word count.
+        *
+        * @param int $words Desired word count.
+        * @return int Estimated token count capped by configuration.
+        */
+       private function tokens_for_report( $type ) {
 		$targets = [
 			'business_case'             => 600,
 			'industry_commentary'       => 60,
@@ -458,7 +132,7 @@ return false;
 
 		$words = $targets[ $type ] ?? 800;
 
-		return $this->estimate_tokens( $words );
+		return $this->config->estimate_tokens( $words );
 	}
 
 	/**
@@ -490,7 +164,7 @@ return false;
 
                $this->current_inputs            = $inputs;
 
-		if ( empty( $this->api_key ) ) {
+		if ( empty( $this->config->get_api_key() ) ) {
 			return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
 		}
 
@@ -514,16 +188,16 @@ return false;
 				'content' => $prompt,
 			],
 		];
-		$context = $this->build_context_for_responses( $history );
+		$context = $this->prompt_builder->build_context_for_responses( $history );
 		$tokens  = $this->tokens_for_report( 'business_case' );
-		$response = $this->call_openai_with_retry( $selected_model, $context, $tokens );
+		$response = $this->transport->call_openai_with_retry( $selected_model, $context, $tokens );
 
 		if ( is_wp_error( $response ) ) {
 			return new WP_Error( 'llm_failure', __( 'Unable to generate analysis at this time.', 'rtbcb' ) );
 		}
 
 		$parsed = ( new RTBCB_Response_Parser() )->parse( $response );
-		$json   = $this->process_openai_response( $parsed['output_text'] );
+		$json   = $this->response_parser->process_openai_response( $parsed['output_text'] );
 
 		if ( ! is_array( $json ) ) {
 			return new WP_Error( 'llm_parse_error', __( 'Invalid response from language model.', 'rtbcb' ) );
@@ -561,7 +235,7 @@ return false;
 	public function generate_industry_commentary( $industry ) {
 		$industry = sanitize_text_field( $industry );
 
-		if ( empty( $this->api_key ) ) {
+		if ( empty( $this->config->get_api_key() ) ) {
 			return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
 		}
 
@@ -574,9 +248,9 @@ return false;
 				'content' => $prompt,
 			],
 		];
-		$context = $this->build_context_for_responses( $history );
+		$context = $this->prompt_builder->build_context_for_responses( $history );
 		$tokens  = $this->tokens_for_report( 'industry_commentary' );
-		$response = $this->call_openai_with_retry( $model, $context, $tokens, null, $chunk_callback );
+		$response = $this->transport->call_openai_with_retry( $model, $context, $tokens, null, $chunk_callback );
 
 		if ( is_wp_error( $response ) ) {
 			return new WP_Error( 'llm_failure', __( 'Unable to generate commentary at this time.', 'rtbcb' ) );
@@ -601,7 +275,7 @@ return false;
 	public function generate_company_overview( $company_name ) {
 		$company_name = sanitize_text_field( $company_name );
 
-		if ( empty( $this->api_key ) ) {
+		if ( empty( $this->config->get_api_key() ) ) {
 			return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
 		}
 
@@ -687,9 +361,9 @@ USER,
 			],
 		];
 
-		$context = $this->build_context_for_responses( $history, $system_prompt );
+		$context = $this->prompt_builder->build_context_for_responses( $history, $system_prompt );
 		$tokens  = $this->tokens_for_report( 'company_overview' );
-		$response = $this->call_openai_with_retry( $model, $context, $tokens, 3 ); // Reduce retries
+		$response = $this->transport->call_openai_with_retry( $model, $context, $tokens, 3 ); // Reduce retries
 
 		if ( is_wp_error( $response ) ) {
 			return new WP_Error( 'llm_failure', $response->get_error_message() );
@@ -703,7 +377,7 @@ USER,
 		}
 
 // Parse JSON response
-$json = $this->process_openai_response( $content );
+$json = $this->response_parser->process_openai_response( $content );
 
 		if ( ! is_array( $json ) ) {
 			return new WP_Error( 'llm_parse_error', __( 'Invalid JSON response from language model.', 'rtbcb' ) );
@@ -767,7 +441,7 @@ $json = $this->process_openai_response( $content );
 			return new WP_Error( 'invalid_params', __( 'Industry and company size required.', 'rtbcb' ) );
 		}
 
-		if ( empty( $this->api_key ) ) {
+		if ( empty( $this->config->get_api_key() ) ) {
 			return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
 		}
 
@@ -781,9 +455,9 @@ $json = $this->process_openai_response( $content );
 				'content' => $prompt,
 			],
 		];
-		$context = $this->build_context_for_responses( $history );
+		$context = $this->prompt_builder->build_context_for_responses( $history );
 		$tokens  = $this->tokens_for_report( 'industry_overview' );
-		$response = $this->call_openai_with_retry( $model, $context, $tokens );
+		$response = $this->transport->call_openai_with_retry( $model, $context, $tokens );
 
 		if ( is_wp_error( $response ) ) {
 			return new WP_Error( 'llm_failure', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
@@ -817,7 +491,7 @@ $json = $this->process_openai_response( $content );
 			return new WP_Error( 'no_focus_areas', __( 'No focus areas provided.', 'rtbcb' ) );
 		}
 
-		if ( empty( $this->api_key ) ) {
+		if ( empty( $this->config->get_api_key() ) ) {
 			return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
 		}
 
@@ -831,9 +505,9 @@ $json = $this->process_openai_response( $content );
 				'content' => $prompt,
 			],
 		];
-		$context = $this->build_context_for_responses( $history );
+		$context = $this->prompt_builder->build_context_for_responses( $history );
 		$tokens  = $this->tokens_for_report( 'treasury_tech_overview' );
-		$response = $this->call_openai_with_retry( $model, $context, $tokens );
+		$response = $this->transport->call_openai_with_retry( $model, $context, $tokens );
 
 		if ( is_wp_error( $response ) ) {
 			return new WP_Error( 'llm_failure', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
@@ -870,7 +544,7 @@ $json = $this->process_openai_response( $content );
 		$challenges     = array_filter( array_map( 'sanitize_text_field', (array) ( $company_data['challenges'] ?? [] ) ) );
 		$categories     = array_filter( array_map( 'sanitize_text_field', (array) ( $company_data['categories'] ?? [] ) ) );
 
-		if ( empty( $this->api_key ) ) {
+		if ( empty( $this->config->get_api_key() ) ) {
 			return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
 		}
 
@@ -897,9 +571,9 @@ $json = $this->process_openai_response( $content );
 				'content' => $prompt,
 			],
 		];
-		$context = $this->build_context_for_responses( $history );
+		$context = $this->prompt_builder->build_context_for_responses( $history );
 		$tokens  = $this->tokens_for_report( 'real_treasury_overview' );
-		$response = $this->call_openai_with_retry( $model, $context, $tokens );
+		$response = $this->transport->call_openai_with_retry( $model, $context, $tokens );
 
 		if ( is_wp_error( $response ) ) {
 			return new WP_Error( 'llm_failure', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
@@ -924,7 +598,7 @@ $json = $this->process_openai_response( $content );
 	public function generate_category_recommendation( $category ) {
 		$category = sanitize_text_field( $category );
 
-		if ( empty( $this->api_key ) ) {
+		if ( empty( $this->config->get_api_key() ) ) {
 			return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
 		}
 
@@ -942,16 +616,16 @@ $json = $this->process_openai_response( $content );
 				'content' => $prompt,
 			],
 		];
-		$context = $this->build_context_for_responses( $history );
+		$context = $this->prompt_builder->build_context_for_responses( $history );
 		$tokens  = $this->tokens_for_report( 'category_recommendation' );
-		$response = $this->call_openai_with_retry( $model, $context, $tokens );
+		$response = $this->transport->call_openai_with_retry( $model, $context, $tokens );
 
 		if ( is_wp_error( $response ) ) {
 			return new WP_Error( 'llm_failure', __( 'Unable to generate recommendation details at this time.', 'rtbcb' ) );
 		}
 
 $parsed_response = ( new RTBCB_Response_Parser() )->parse( $response );
-$parsed          = $this->process_openai_response( $parsed_response['output_text'] );
+$parsed          = $this->response_parser->process_openai_response( $parsed_response['output_text'] );
 
 		if ( empty( $parsed ) || ! is_array( $parsed ) ) {
 			return new WP_Error( 'llm_empty_response', __( 'No recommendation details returned.', 'rtbcb' ) );
@@ -978,7 +652,7 @@ $parsed          = $this->process_openai_response( $parsed_response['output_text
 		$efficiency  = floatval( $efficiency );
 		$category    = sanitize_text_field( $category );
 
-		if ( empty( $this->api_key ) ) {
+		if ( empty( $this->config->get_api_key() ) ) {
 			return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
 		}
 
@@ -995,16 +669,16 @@ $parsed          = $this->process_openai_response( $parsed_response['output_text
 				'content' => $prompt,
 			],
 		];
-		$context = $this->build_context_for_responses( $history );
+		$context = $this->prompt_builder->build_context_for_responses( $history );
 		$tokens  = $this->tokens_for_report( 'benefits_estimate' );
-		$response = $this->call_openai_with_retry( $model, $context, $tokens );
+		$response = $this->transport->call_openai_with_retry( $model, $context, $tokens );
 
 		if ( is_wp_error( $response ) ) {
 			return new WP_Error( 'llm_failure', __( 'Unable to generate benefits estimate at this time.', 'rtbcb' ) );
 		}
 
 $parsed_response = ( new RTBCB_Response_Parser() )->parse( $response );
-$parsed          = $this->process_openai_response( $parsed_response['output_text'] );
+$parsed          = $this->response_parser->process_openai_response( $parsed_response['output_text'] );
 
 		if ( empty( $parsed ) || ! is_array( $parsed ) ) {
 			return new WP_Error( 'llm_empty_response', __( 'No estimate returned.', 'rtbcb' ) );
@@ -1043,7 +717,7 @@ $parsed          = $this->process_openai_response( $parsed_response['output_text
 		}
 		$this->current_inputs = $user_inputs;
 
-		if ( empty( $this->api_key ) ) {
+		if ( empty( $this->config->get_api_key() ) ) {
 			return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
 		}
 
@@ -1102,7 +776,7 @@ $batch_prompts['tech'] = [
 
                 if ( false === $company_research ) {
                         if ( isset( $batch_results['company'] ) && ! is_wp_error( $batch_results['company'] ) ) {
-                                $json = $this->process_openai_response( $batch_results['company'] );
+                                $json = $this->response_parser->process_openai_response( $batch_results['company'] );
                                 if ( is_array( $json ) ) {
 					$company_research = [
 						'company_profile'  => [
@@ -1131,7 +805,7 @@ $batch_prompts['tech'] = [
 
                 if ( false === $industry_analysis ) {
                         if ( isset( $batch_results['industry'] ) && ! is_wp_error( $batch_results['industry'] ) ) {
-                                $json = $this->process_openai_response( $batch_results['industry'] );
+                                $json = $this->response_parser->process_openai_response( $batch_results['industry'] );
                                 if ( is_array( $json ) ) {
 					$industry_analysis = [
 						'analysis'        => sanitize_text_field( $json['analysis'] ?? '' ),
@@ -1185,9 +859,9 @@ $batch_prompts['tech'] = [
 				'content' => $prompt,
 			],
 		];
-		$context = $this->build_context_for_responses( $history );
+		$context = $this->prompt_builder->build_context_for_responses( $history );
 		$tokens  = $this->tokens_for_report( 'comprehensive_business_case' );
-		$response = $this->call_openai_with_retry( $model, $context, $tokens, null, $chunk_callback );
+		$response = $this->transport->call_openai_with_retry( $model, $context, $tokens, null, $chunk_callback );
 
 		if ( is_wp_error( $response ) ) {
 			return $response;
@@ -1369,7 +1043,7 @@ $batch_prompts['tech'] = [
 			],
 		];
 
-		if ( empty( $this->api_key ) ) {
+		if ( empty( $this->config->get_api_key() ) ) {
 			return $default;
 		}
 
@@ -1388,16 +1062,16 @@ $batch_prompts['tech'] = [
 			],
 		];
 
-                $context  = $this->build_context_for_responses( $history );
+                $context  = $this->prompt_builder->build_context_for_responses( $history );
                 $tokens   = $this->tokens_for_report( 'competitive_context' );
-                $response = $this->call_openai_with_retry( $model, $context, $tokens );
+                $response = $this->transport->call_openai_with_retry( $model, $context, $tokens );
 
                 if ( is_wp_error( $response ) ) {
                         return $default;
                 }
 
                 $parsed = ( new RTBCB_Response_Parser() )->parse( $response );
-                $json   = $this->process_openai_response( $parsed['output_text'] );
+                $json   = $this->response_parser->process_openai_response( $parsed['output_text'] );
 
 		if ( ! is_array( $json ) || empty( $json['competitors'] ) || ! is_array( $json['competitors'] ) ) {
 			return $default;
@@ -1575,7 +1249,7 @@ $batch_prompts['tech'] = [
 	* }
 	*/
 	private function run_batched_research( $user_inputs, $context_chunks ) {
-		if ( empty( $this->api_key ) ) {
+		if ( empty( $this->config->get_api_key() ) ) {
 			return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
 		}
 
@@ -1623,14 +1297,14 @@ SYSTEM;
 				'content' => $user_prompt,
 			],
 		];
-		$context  = $this->build_context_for_responses( $history, $system_prompt );
-		$response = $this->call_openai_with_retry( $model, $context );
+		$context  = $this->prompt_builder->build_context_for_responses( $history, $system_prompt );
+		$response = $this->transport->call_openai_with_retry( $model, $context );
                if ( is_wp_error( $response ) ) {
                        return $response;
                }
 
                $parsed = ( new RTBCB_Response_Parser() )->parse( $response );
-               $json   = $this->process_openai_response( $parsed['output_text'] );
+               $json   = $this->response_parser->process_openai_response( $parsed['output_text'] );
 
 		if ( ! is_array( $json ) ) {
 			return new WP_Error( 'llm_parse_error', __( 'Invalid response from language model.', 'rtbcb' ) );
@@ -1681,7 +1355,7 @@ SYSTEM;
 	* @return array|WP_Error Array of responses or error object.
 	*/
 	private function generate_research_batch( $prompts ) {
-		if ( empty( $this->api_key ) ) {
+		if ( empty( $this->config->get_api_key() ) ) {
 			return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
 		}
 
@@ -1697,22 +1371,23 @@ SYSTEM;
 			$inputs[]     = $instructions ? $instructions . "\n" . $input : $input;
 		}
 
-		$body = [
-			'model'            => $model,
-			'input'            => $inputs,
-			'max_output_tokens'=> intval( $this->gpt5_config['max_output_tokens'] ?? 8000 ),
-			'stream'           => false,
-		];
+               $config = $this->config->get_gpt5_config();
+               $body   = [
+                       'model'            => $model,
+                       'input'            => $inputs,
+                       'max_output_tokens'=> intval( $config['max_output_tokens'] ?? 8000 ),
+                       'stream'           => false,
+               ];
 
-		if ( rtbcb_model_supports_temperature( $model ) ) {
-			$body['temperature'] = floatval( $this->gpt5_config['temperature'] ?? 0.7 );
-		}
+               if ( rtbcb_model_supports_temperature( $model ) ) {
+                       $body['temperature'] = floatval( $config['temperature'] ?? 0.7 );
+               }
 
 		$response = wp_remote_post(
 			'https://api.openai.com/v1/responses',
 			[
 				'headers' => [
-					'Authorization' => 'Bearer ' . $this->api_key,
+					'Authorization' => 'Bearer ' . $this->config->get_api_key(),
 					'Content-Type'  => 'application/json',
 				],
 				'body'    => wp_json_encode( $body ),
@@ -1738,7 +1413,7 @@ SYSTEM;
 			);
 		}
 
-                $decoded = $this->process_openai_response( wp_remote_retrieve_body( $response ) );
+                $decoded = $this->response_parser->process_openai_response( wp_remote_retrieve_body( $response ) );
                 if ( ! is_array( $decoded ) ) {
                         return new WP_Error( 'llm_response_decode_error', __( 'Failed to decode response body.', 'rtbcb' ) );
                 }
@@ -1777,7 +1452,7 @@ SYSTEM;
 	* @return array|WP_Error Industry analysis or error object.
 	*/
 	private function analyze_industry_context( $user_inputs ) {
-		if ( empty( $this->api_key ) ) {
+		if ( empty( $this->config->get_api_key() ) ) {
 			return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
 		}
 
@@ -1823,15 +1498,15 @@ SYSTEM;
 				'content' => $user_prompt,
 			],
 		];
-		$context = $this->build_context_for_responses( $history, $system_prompt );
+		$context = $this->prompt_builder->build_context_for_responses( $history, $system_prompt );
 		$tokens  = $this->tokens_for_report( 'industry_analysis' );
-		$response = $this->call_openai_with_retry( $model, $context, $tokens );
+		$response = $this->transport->call_openai_with_retry( $model, $context, $tokens );
 		if ( is_wp_error( $response ) ) {
 			return $response;
 		}
 
 $parsed_response = ( new RTBCB_Response_Parser() )->parse( $response );
-$json            = $this->process_openai_response( $parsed_response['output_text'] );
+$json            = $this->response_parser->process_openai_response( $parsed_response['output_text'] );
 
 		if ( ! is_array( $json ) ) {
 			return new WP_Error( 'llm_parse_error', __( 'Invalid response from language model.', 'rtbcb' ) );
@@ -1853,7 +1528,7 @@ $json            = $this->process_openai_response( $parsed_response['output_text
 	* @return string|WP_Error Research summary or error object.
 	*/
 	private function research_treasury_solutions( $user_inputs, $context_chunks ) {
-		if ( empty( $this->api_key ) ) {
+		if ( empty( $this->config->get_api_key() ) ) {
 			return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
 		}
 
@@ -1873,9 +1548,9 @@ $json            = $this->process_openai_response( $parsed_response['output_text
 				'content' => $prompt,
 			],
 		];
-		$context = $this->build_context_for_responses( $history );
+		$context = $this->prompt_builder->build_context_for_responses( $history );
 		$tokens  = $this->tokens_for_report( 'tech_research' );
-		$response = $this->call_openai_with_retry( $model, $context, $tokens );
+		$response = $this->transport->call_openai_with_retry( $model, $context, $tokens );
 		if ( is_wp_error( $response ) ) {
 			return $response;
 		}
@@ -2165,17 +1840,17 @@ return $analysis;
 		if ( rtbcb_heavy_features_disabled() ) {
 			return new WP_Error( 'heavy_features_disabled', __( 'AI features are disabled.', 'rtbcb' ) );
 		}
-	if ( empty( $this->api_key ) ) {
+	if ( empty( $this->config->get_api_key() ) ) {
 	return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
 	}
 
 	$system_prompt = $this->build_enrichment_system_prompt();
 	$user_prompt   = $this->build_enrichment_user_prompt( $user_inputs );
 
-	$response = $this->call_openai_with_retry(
+	$response = $this->transport->call_openai_with_retry(
 	$this->get_model( 'advanced' ),
 	[ 'instructions' => $system_prompt, 'input' => $user_prompt ],
-	$this->estimate_tokens( 1500 )
+	$this->config->estimate_tokens( 1500 )
 	);
 
         if ( is_wp_error( $response ) ) {
@@ -2330,11 +2005,11 @@ PROMPT;
                if ( rtbcb_heavy_features_disabled() ) {
                        return new WP_Error( 'heavy_features_disabled', __( 'AI features are disabled.', 'rtbcb' ) );
                }
-       if ( empty( $this->api_key ) ) {
+       if ( empty( $this->config->get_api_key() ) ) {
        return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
        }
 
-       $client  = new RTBCB_OpenAI_Client( $this->api_key, $this->get_model( 'premium' ) );
+       $client  = new RTBCB_OpenAI_Client( $this->config->get_api_key(), $this->get_model( 'premium' ) );
        $payload = [
        'company_intelligence'       => $enriched_profile,
        'financial_analysis'         => $roi_scenarios,
@@ -2349,7 +2024,7 @@ PROMPT;
        ],
        ];
 
-       $analysis_data = $client->request( $payload, $this->estimate_tokens( 2000 ) );
+       $analysis_data = $client->request( $payload, $this->config->estimate_tokens( 2000 ) );
        if ( is_wp_error( $analysis_data ) ) {
        return $analysis_data;
        }
@@ -2363,7 +2038,7 @@ PROMPT;
         * @return array|WP_Error Decoded array or error.
         */
         private function validate_enrichment_response( $response ) {
-                $decoded = $this->process_openai_response( $response );
+                $decoded = $this->response_parser->process_openai_response( $response );
 
                 if ( ! $decoded ) {
                         return new WP_Error( 'invalid_json', __( 'Response is not valid JSON', 'rtbcb' ) );
@@ -2623,14 +2298,14 @@ PROMPT;
         */
        public function call_openai_api( $prompt, $model = null ) {
                $model    = $model ? sanitize_text_field( $model ) : $this->get_model( 'mini' );
-               $response = $this->call_openai_with_retry( $model, $prompt );
+               $response = $this->transport->call_openai_with_retry( $model, $prompt );
 
                if ( is_wp_error( $response ) ) {
                        return $response;
                }
 
                $response_body = $response['body'] ?? '';
-               $response_data = $this->process_openai_response( $response_body );
+               $response_data = $this->response_parser->process_openai_response( $response_body );
 
                if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
                        error_log( 'OpenAI Response (clean): ' . wp_json_encode( $response_data, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT ) );
@@ -2639,489 +2314,20 @@ PROMPT;
                return $response_data;
        }
 
-        /**
+       /**
         * Call OpenAI with retry logic.
-	*
-	* Uses exponential backoff with jitter between retries. Each subsequent
-	* attempt slightly reduces the maximum output tokens and increases the
-	* timeout to improve the chances of success.
-	*
-	* @param string       $model             Model name.
-	* @param array|string $prompt            Prompt for the model.
-	* @param int|null     $max_output_tokens Maximum output tokens.
-	* @param int|null     $max_retries       Number of retries.
-	* @param callable|null $chunk_handler     Optional streaming handler.
-	* @return array|WP_Error Response array or error.
-	*/
-	private function call_openai_with_retry( $model, $prompt, $max_output_tokens = null, $max_retries = null, $chunk_handler = null ) {
-		$raw_key   = $model . '|' . wp_json_encode( $prompt );
-		$cache_key = 'rtbcb_llm_' . md5( $raw_key );
-		$ttl       = (int) apply_filters( 'rtbcb_llm_cache_ttl', HOUR_IN_SECONDS, $cache_key, $model, $prompt );
-		$invalidate = (bool) apply_filters( 'rtbcb_llm_invalidate_cache', false, $cache_key, $model, $prompt );
-
-			if ( $invalidate ) {
-			wp_cache_delete( $cache_key, 'rtbcb_llm' );
-			delete_transient( $cache_key );
-			} else {
-			$cached = wp_cache_get( $cache_key, 'rtbcb_llm' );
-			if ( false === $cached ) {
-			$cached = get_transient( $cache_key );
-			if ( false !== $cached ) {
-			wp_cache_set( $cache_key, $cached, 'rtbcb_llm', $ttl );
-			}
-			}
-
-			if ( false !== $cached && '' !== $cached ) {
-			$response            = [ 'body' => $cached, 'response' => [ 'code' => 200, 'message' => '' ], 'headers' => [] ];
-			$this->last_response = $response;
-			return $response;
-			}
-		}
-		$max_retries     = min( 3, $max_retries ?? intval( $this->gpt5_config['max_retries'] ) );
-		$base_timeout    = intval( $this->gpt5_config['timeout'] ?? 300 );
-		$current_timeout = $base_timeout;
-		$current_tokens  = $max_output_tokens;
-		$max_retry_time  = max( $base_timeout, intval( $this->gpt5_config['max_retry_time'] ?? $base_timeout ) );
-		$start_time      = microtime( true );
-
-				for ( $attempt = 1; $attempt <= $max_retries; $attempt++ ) {
-					$elapsed = microtime( true ) - $start_time;
-					if ( $elapsed >= $max_retry_time ) {
-						break;
-					}
-				$remaining                    = $max_retry_time - $elapsed;
-				$this->gpt5_config['timeout'] = min( $current_timeout, $remaining );
-				try {
-					$response = $this->call_openai( $model, $prompt, $current_tokens, $chunk_handler );
-
-					if ( ! is_wp_error( $response ) ) {
-	$this->gpt5_config['timeout'] = $base_timeout;
-if ( isset( $response['body'] ) ) {
-							$max_size = (int) apply_filters( 'rtbcb_llm_cache_max_size', 100000, $cache_key, $model, $prompt );
-$body     = (string) $response['body'];
-if ( strlen( $body ) <= $max_size ) {
-wp_cache_set( $cache_key, $body, 'rtbcb_llm', $ttl );
-set_transient( $cache_key, $body, $ttl );
-}
-}
-	return $response;
-}
-
-$error_code = $response->get_error_code();
-if ( 'llm_http_status' === $error_code ) {
-$data   = $response->get_error_data();
-$status = isset( $data['status'] ) ? intval( $data['status'] ) : 0;
-if ( $status >= 400 && $status < 500 && 429 !== $status ) {
-					break;
-}
-}
-
-if ( ! in_array( $error_code, [ 'llm_timeout', 'llm_http_status' ], true ) ) {
-break;
-}
-				} catch ( Throwable $e ) {
-					$error_message = sanitize_text_field( $e->getMessage() );
-					$response      = new WP_Error(
-						'llm_exception',
-						sprintf( __( 'Language model request failed: %s', 'rtbcb' ), $error_message )
-			);
-					$this->last_response = $response;
-					error_log( 'RTBCB: API call failed: ' . $error_message );
-break;
-}
-
-				error_log( "RTBCB: OpenAI attempt {$attempt} failed: " . $response->get_error_message() );
-
-				if ( $attempt < $max_retries ) {
-					if ( null !== $current_tokens ) {
-						$min_tokens    = intval( $this->gpt5_config['min_output_tokens'] ?? 1 );
-						$current_tokens = max( $min_tokens, (int) ( $current_tokens * 0.9 ) );
-					}
-
-					$current_timeout = min( $current_timeout + 5, $max_retry_time );
-
-					$delay = min( 5, pow( 2, $attempt - 1 ) );
-					usleep( (int) ( $delay * 1000000 ) );
-				}
-			}
-
-	$this->gpt5_config['timeout'] = $base_timeout;
-
-	return $response; // Return last error
-	}
-
-	/**
-	* Build instructions and input for the Responses API.
-	*
-	* @param array       $history       Array of conversation items.
-	* @param string|null $system_prompt Optional system prompt.
-	*
-	* @return array {
-	*     @type string $instructions System prompt for the model.
-	*     @type string $input        User prompt for the model.
-	* }
-	*/
-	private function build_context_for_responses( $history, $system_prompt = null ) {
-		$default_system = 'You are a senior treasury technology consultant. Provide detailed, research-driven analysis in the exact JSON format requested. Do not include any text outside the JSON structure.';
-
-		$system_prompt = $system_prompt ? $system_prompt : $default_system;
-
-		$input_parts = [];
-
-		foreach ( (array) $history as $item ) {
-			if ( ! is_array( $item ) || 'user' !== ( $item['role'] ?? '' ) || ! isset( $item['content'] ) ) {
-				continue;
-			}
-
-			$input_parts[] = function_exists( 'sanitize_textarea_field' ) ? sanitize_textarea_field( $item['content'] ) : $item['content'];
-		}
-
-		$instructions = function_exists( 'sanitize_textarea_field' ) ? sanitize_textarea_field( $system_prompt ) : $system_prompt;
-
-	return [
-			'instructions' => $instructions,
-			'input'        => implode( "\n", $input_parts ),
-		];
-	}
-
-	/**
-	* Call the OpenAI Responses API.
-	*
-	* @param string       $model             Model name.
-	* @param array|string $prompt            Prompt array or string.
-	* @param int|null     $max_output_tokens Maximum output tokens.
-	* @param callable|null $chunk_handler    Optional streaming handler.
-	* @return array|WP_Error HTTP response array or WP_Error on failure.
-	*/
-private function call_openai( $model, $prompt, $max_output_tokens = null, $chunk_handler = null ) {
-if ( rtbcb_heavy_features_disabled() ) {
-return new WP_Error( 'heavy_features_disabled', __( 'AI features temporarily disabled.', 'rtbcb' ) );
-}
-if ( empty( $this->api_key ) ) {
-return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
-}
-if ( ! function_exists( 'curl_init' ) ) {
-return new WP_Error( 'missing_curl', __( 'The cURL PHP extension is required.', 'rtbcb' ) );
-}
-
-$endpoint         = 'https://api.openai.com/v1/responses'; // Correct endpoint.
-$model_name       = sanitize_text_field( $model ?: 'gpt-5-mini' );
-$model_name       = rtbcb_normalize_model_name( $model_name );
-$default_tokens    = intval( $this->gpt5_config['max_output_tokens'] ?? 8000 );
-$max_output_tokens = intval( $max_output_tokens ?? $default_tokens );
-$min_tokens        = intval( $this->gpt5_config['min_output_tokens'] ?? 1 );
-$max_output_tokens = min( 128000, max( $min_tokens, $max_output_tokens ) );
-
-		if ( is_array( $prompt ) && isset( $prompt['input'] ) ) {
-			$instructions = sanitize_textarea_field( $prompt['instructions'] ?? '' );
-			$input        = sanitize_textarea_field( $prompt['input'] );
-		} else {
-			$instructions = '';
-			$input        = sanitize_textarea_field( (string) $prompt );
-		}
-
-		if ( '' === trim( $input ) ) {
-			return new WP_Error( 'empty_prompt', __( 'Prompt cannot be empty.', 'rtbcb' ) );
-		}
-
-		$body = [
-			'model' => $model_name,
-			'input' => $input,
-			'max_output_tokens' => $max_output_tokens,
-		];
-
-		if ( ! empty( $instructions ) ) {
-			$body['instructions'] = $instructions;
-		}
-
-		if ( strpos( $model_name, 'gpt-5' ) === 0 ) {
-			$body['reasoning'] = [
-				'effort' => $this->get_reasoning_effort_for_task( $prompt ),
-			];
-			$body['text'] = [
-				'verbosity' => $this->get_verbosity_for_task( $prompt ),
-			];
-		}
-
-		if ( rtbcb_model_supports_temperature( $model_name ) ) {
-			$body['temperature'] = floatval( $this->gpt5_config['temperature'] ?? 0.7 );
-		}
-
-		if ( isset( $this->gpt5_config['store'] ) ) {
-			$body['store'] = (bool) $this->gpt5_config['store'];
-		}
-
-		// Enable streaming so partial chunks are returned progressively.
-		$body['stream'] = true;
-
-		do_action( 'rtbcb_llm_prompt_sent', $body );
-
-		$timeout  = intval( $this->gpt5_config['timeout'] ?? 300 );
-		$payload  = wp_json_encode( $body );
-		$stream   = '';
-		$ch       = curl_init( $endpoint );
-		curl_setopt( $ch, CURLOPT_HTTPHEADER, [
-			'Authorization: Bearer ' . $this->api_key,
-			'Content-Type: application/json',
-		] );
-		curl_setopt( $ch, CURLOPT_POST, true );
-		curl_setopt( $ch, CURLOPT_POSTFIELDS, $payload );
-		curl_setopt( $ch, CURLOPT_TIMEOUT, $timeout );
-               curl_setopt( $ch, CURLOPT_WRITEFUNCTION, function ( $curl, $data ) use ( &$stream, $chunk_handler ) {
-                       // Call custom chunk handler if provided.
-                       if ( is_callable( $chunk_handler ) ) {
-                               try {
-                                       call_user_func( $chunk_handler, $data );
-                               } catch ( Exception $e ) {
-                                       error_log( 'RTBCB: Chunk handler error: ' . $e->getMessage() );
-                               }
-                       }
-
-                       // Accumulate stream data.
-                       $stream .= $data;
-
-                       // Log chunk for debugging (first 100 chars only).
-                       if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-                               error_log( 'RTBCB: Stream chunk (' . strlen( $data ) . ' bytes): ' . substr( trim( $data ), 0, 100 ) );
-                       }
-
-                       return strlen( $data );
-               } );
-
-               $this->last_request = $body;
-               $ok                = curl_exec( $ch );
-               $error             = curl_error( $ch );
-               $http_code         = curl_getinfo( $ch, CURLINFO_HTTP_CODE );
-               curl_close( $ch );
-
-               if ( false === $ok ) {
-                       if ( false !== strpos( strtolower( $error ), 'timed out' ) ) {
-                               return new WP_Error(
-                                       'llm_timeout',
-                                       __( 'The request took longer than our 5-minute limit. Try Fast Mode or request email delivery.', 'rtbcb' )
-                               );
-                       }
-
-                       return new WP_Error(
-                               'llm_http_error',
-                               sprintf( __( 'Language model request failed: %s', 'rtbcb' ), $error )
-                       );
-               }
-
-               // Process the accumulated stream.
-               $final_response = $this->process_streaming_response( $stream );
-
-               if ( null === $final_response ) {
-                       error_log( 'RTBCB: Failed to process streaming response' );
-                       return new WP_Error(
-                               'llm_response_format',
-                               __( 'Invalid response format received from language model.', 'rtbcb' )
-                       );
-               }
-
-               // Convert to expected response format.
-               $response_body = wp_json_encode( $final_response );
-
-               if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-                       error_log( 'RTBCB: Final assembled response: ' . substr( $response_body, 0, 500 ) . '...' );
-               }
-
-               $decoded = $this->process_openai_response( $response_body );
-
-                if ( false === $decoded || ! is_array( $decoded ) ) {
-                        error_log( 'RTBCB: Malformed LLM response: ' . $response_body );
-
-                        if ( class_exists( 'RTBCB_API_Log' ) ) {
-                                $user_email   = $this->current_inputs['email'] ?? '';
-                                $company_name = $this->current_inputs['company_name'] ?? '';
-                                RTBCB_API_Log::save_log( $body, [ 'raw_body' => $response_body ], get_current_user_id(), $user_email, $company_name );
-                        }
-
-                        $error               = new WP_Error( 'llm_response_format', __( 'Malformed response received from language model.', 'rtbcb' ) );
-                        $this->last_response = $error;
-                        return $error;
-                }
-
-                if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-                        error_log( 'OpenAI Response (clean): ' . wp_json_encode( $decoded, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT ) );
-                }
-
-                $response = [
-                        'body'     => $response_body,
-                        'response' => [ 'code' => $http_code, 'message' => '' ],
-                        'headers'  => [],
-                ];
-
-		$this->last_response = $response;
-
-		if ( class_exists( 'RTBCB_API_Log' ) ) {
-			$user_email   = $this->current_inputs['email'] ?? '';
-			$company_name = $this->current_inputs['company_name'] ?? '';
-			RTBCB_API_Log::save_log( $body, $decoded, get_current_user_id(), $user_email, $company_name );
-		}
-
-		if ( $http_code >= 400 ) {
-			if ( isset( $decoded['error']['message'] ) ) {
-				$message = $decoded['error']['message'];
-			} elseif ( isset( $decoded['message'] ) ) {
-				$message = $decoded['message'];
-			} else {
-				$message = wp_json_encode( $decoded );
-			}
-
-			$message = sanitize_text_field( $message );
-
-			return new WP_Error( 'llm_http_status', $message, [ 'status' => $http_code ] );
-		}
-
-		return $response;
-	}
-
-	/**
-	* Determine appropriate reasoning effort based on task complexity.
-	*
-	* @param array|string $prompt Prompt data or text.
-	* @return string Reasoning effort level.
-	*/
-	private function get_reasoning_effort_for_task( $prompt ) {
-		$prompt_text = is_array( $prompt )
-			? ( $prompt['input'] ?? '' ) . ' ' . ( $prompt['instructions'] ?? '' )
-			: (string) $prompt;
-
-		$prompt_lower = strtolower( $prompt_text );
-
-		// High effort for complex business analysis
-		if ( strpos( $prompt_lower, 'comprehensive' ) !== false ||
-			strpos( $prompt_lower, 'business case' ) !== false ||
-			strpos( $prompt_lower, 'analysis' ) !== false ||
-			strpos( $prompt_lower, 'financial' ) !== false ) {
-			return 'high';
-		}
-
-		// Medium effort for standard tasks
-		if ( strpos( $prompt_lower, 'generate' ) !== false ||
-			strpos( $prompt_lower, 'create' ) !== false ) {
-			return 'medium';
-		}
-
-		// Low effort for simple requests
-		return 'low';
-	}
-
-	/**
-	* Determine appropriate verbosity based on output requirements.
-	*
-	* @param array|string $prompt Prompt data or text.
-	* @return string Verbosity level.
-	*/
-	private function get_verbosity_for_task( $prompt ) {
-		$prompt_text = is_array( $prompt )
-			? ( $prompt['input'] ?? '' ) . ' ' . ( $prompt['instructions'] ?? '' )
-			: (string) $prompt;
-
-		$prompt_lower = strtolower( $prompt_text );
-
-		// High verbosity for detailed business cases
-		if ( strpos( $prompt_lower, 'comprehensive' ) !== false ||
-			strpos( $prompt_lower, 'detailed' ) !== false ||
-			strpos( $prompt_lower, 'analysis' ) !== false ) {
-			return 'high';
-		}
-
-		// Medium verbosity for standard generation
-		return 'medium';
-	}
-
-	/**
-	* Log details about a GPT-5 API call.
-	*
-	* @param array|string $context  Context or instructions sent to the model.
-	* @param array        $response Decoded response array or HTTP response array.
-	* @param string|null  $error    Optional error message.
-	*/
-	private function log_gpt5_call( $context, $response, $error = null ) {
-		$context_serialized = is_array( $context ) ? wp_json_encode( $context ) : (string) $context;
-		$context_size       = strlen( $context_serialized );
-
-		$response_for_parser = ( is_array( $response ) && isset( $response['body'] ) )
-			? $response
-			: [ 'body' => wp_json_encode( is_array( $response ) ? $response : [] ) ];
-
-		$parsed = ( new RTBCB_Response_Parser() )->parse( $response_for_parser, true );
-		$content = $parsed['output_text'];
-		$usage   = $parsed['raw']['usage'] ?? [];
-
-		$completion_tokens = intval( $usage['completion_tokens'] ?? 0 );
-		$reasoning_tokens  = intval( $usage['reasoning_tokens'] ?? 0 );
-		$total_tokens      = intval( $usage['total_tokens'] ?? 0 );
-		$response_length   = strlen( $content );
-		$memory            = rtbcb_get_memory_status();
-
-		$log_message = sprintf(
-			'RTBCB GPT5 Call: context_size=%d, completion_tokens=%d, reasoning_tokens=%d, total_tokens=%d, response_length=%d, peak_memory=%d',
-			$context_size,
-			$completion_tokens,
-			$reasoning_tokens,
-			$total_tokens,
-			$response_length,
-			intval( $memory['peak'] ?? 0 )
-		);
-
-		if ( ! empty( $error ) ) {
-			$log_message .= ', error=' . $error;
-		}
-
-		error_log( $log_message );
-	}
-
-	/**
-	* Extract content and decoded data from an OpenAI response.
-	*
-	* @param array $response HTTP response array.
-	* @return array {string, array} Content string and decoded array.
-	*/
-       private function extract_openai_output( $response ) {
-               $body    = wp_remote_retrieve_body( $response );
-               $decoded = $this->process_openai_response( $body );
-
-               if ( ! is_array( $decoded ) ) {
-                       return [ '', [] ];
-               }
-
-		$content = '';
-
-		if ( isset( $decoded['output'] ) && is_array( $decoded['output'] ) ) {
-			foreach ( $decoded['output'] as $chunk ) {
-				if ( ! is_array( $chunk ) ) {
-					continue;
-				}
-
-				$text = '';
-				if ( isset( $chunk['content'] ) && is_array( $chunk['content'] ) ) {
-					foreach ( $chunk['content'] as $piece ) {
-						if ( isset( $piece['text'] ) && '' !== $piece['text'] ) {
-							$text = $piece['text'];
-							break;
-						}
-					}
-				}
-
-				if ( 'message' === ( $chunk['type'] ?? '' ) || '' !== $text ) {
-					$content = $text;
-					break;
-				}
-			}
-		}
-
-		if ( '' === $content && isset( $decoded['output_text'] ) ) {
-			$content = is_array( $decoded['output_text'] ) ? implode( ' ', (array) $decoded['output_text'] ) : $decoded['output_text'];
-		}
-
-		return [ $content, $decoded ];
-	}
-
-	// Helper methods for enhanced analysis
-	private function calculate_efficiency_rating( $user_inputs ) {
+        *
+        * @param string       $model             Model name.
+        * @param array|string $prompt            Prompt for the model.
+        * @param int|null     $max_output_tokens Maximum output tokens.
+        * @param int|null     $max_retries       Number of retries.
+        * @param callable|null $chunk_handler    Optional streaming handler.
+        * @return array|WP_Error Response array or error.
+        */
+       private function call_openai_with_retry( $model, $prompt, $max_output_tokens = null, $max_retries = null, $chunk_handler = null ) {
+               return $this->transport->call_openai_with_retry( $model, $prompt, $max_output_tokens, $max_retries, $chunk_handler );
+       }
+    private function calculate_efficiency_rating( $user_inputs ) {
 		$total_hours = ($user_inputs['hours_reconciliation'] ?? 0) + ($user_inputs['hours_cash_positioning'] ?? 0);
 		$team_size = $user_inputs['ftes'] ?? 1;
 		$hours_per_fte = $team_size > 0 ? $total_hours / $team_size : $total_hours;
