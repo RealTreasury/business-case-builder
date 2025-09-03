@@ -7,6 +7,7 @@ defined( 'ABSPATH' ) || exit;
 use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../inc/class-rtbcb-ajax.php';
+require_once __DIR__ . '/../inc/class-rtbcb-llm.php';
 
 if ( ! function_exists( '__' ) ) {
 function __( $text, $domain = null ) {
