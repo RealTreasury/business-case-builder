@@ -144,6 +144,9 @@ php tests/company-research-cache.test.php
 echo "18c. Running Jetpack cron test..."
 php tests/jetpack-cron.test.php
 
+echo "18d. Running WordPress.com streaming fallback test..."
+php tests/wpcom-sse-fallback.test.php
+
 echo "19. Running validator tests..."
 vendor/bin/phpunit -c phpunit.xml
 

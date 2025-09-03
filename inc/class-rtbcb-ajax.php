@@ -17,9 +17,9 @@ class RTBCB_Ajax {
 		       wp_die( 'WordPress not ready' );
 	       }
 
-	       $params = self::get_sanitized_params();
+$params = self::get_sanitized_params();
 
-	       rtbcb_increase_memory_limit();
+rtbcb_increase_memory_limit();
 	       $timeout = absint( rtbcb_get_api_timeout() );
 	       if ( ! ini_get( 'safe_mode' ) && $timeout > 0 ) {
 		       set_time_limit( $timeout );
@@ -62,7 +62,7 @@ class RTBCB_Ajax {
 		*
 		* @return void
 		*/
-       public static function stream_analysis() {
+public static function stream_analysis() {
 
 	       if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) {
 		       wp_die( 'Invalid request' );
@@ -72,9 +72,15 @@ class RTBCB_Ajax {
 		       wp_die( 'WordPress not ready' );
 	       }
 
-	       $params = self::get_sanitized_params();
-
-	       rtbcb_increase_memory_limit();
+	$params = self::get_sanitized_params();
+	
+	if ( function_exists( 'rtbcb_is_wpcom' ) && rtbcb_is_wpcom() ) {
+		self::log_request( __FUNCTION__, $params, 'error', [ 'code' => 'streaming_unsupported' ] );
+		wp_send_json_error( [ 'code' => 'streaming_unsupported', 'message' => __( 'Streaming is not supported on this hosting environment.', 'rtbcb' ) ], 400 );
+		return;
+	}
+	
+	rtbcb_increase_memory_limit();
 	       $timeout = absint( rtbcb_get_api_timeout() );
 	       if ( ! ini_get( 'safe_mode' ) && $timeout > 0 ) {
 		       set_time_limit( $timeout );
