@@ -2382,20 +2382,25 @@ return $this->validate_and_structure_analysis( $analysis_data );
 	'executive_recommendation' => sanitize_textarea_field( $analysis_data['executive_summary']['executive_recommendation'] ?? '' ),
 	'confidence_level'        => floatval( $analysis_data['executive_summary']['confidence_level'] ?? 0 ),
 	],
-	'operational_insights' => [
-	'current_state_assessment' => [
-	'efficiency_rating'   => sanitize_text_field( $analysis_data['operational_insights']['current_state_assessment']['efficiency_rating'] ?? ( $analysis_data['operational_analysis']['current_state_assessment']['efficiency_rating'] ?? '' ) ),
-	'benchmark_comparison' => sanitize_textarea_field( $analysis_data['operational_insights']['current_state_assessment']['benchmark_comparison'] ?? ( $analysis_data['operational_analysis']['current_state_assessment']['benchmark_comparison'] ?? '' ) ),
-	'capacity_utilization' => sanitize_textarea_field( $analysis_data['operational_insights']['current_state_assessment']['capacity_utilization'] ?? ( $analysis_data['operational_analysis']['current_state_assessment']['capacity_utilization'] ?? '' ) ),
-	],
-	'process_improvements'     => [],
-	'automation_opportunities' => [],
-	],
-	'financial_analysis' => [
-	'investment_breakdown' => [
-	'software_licensing'        => sanitize_textarea_field( $analysis_data['financial_analysis']['investment_breakdown']['software_licensing'] ?? '' ),
-	'implementation_services'   => sanitize_textarea_field( $analysis_data['financial_analysis']['investment_breakdown']['implementation_services'] ?? '' ),
-	'training_change_management' => sanitize_textarea_field( $analysis_data['financial_analysis']['investment_breakdown']['training_change_management'] ?? '' ),
+'operational_insights' => [
+'current_state_assessment' => [
+'efficiency_rating'   => sanitize_text_field( $analysis_data['operational_insights']['current_state_assessment']['efficiency_rating'] ?? ( $analysis_data['operational_analysis']['current_state_assessment']['efficiency_rating'] ?? '' ) ),
+'benchmark_comparison' => sanitize_textarea_field( $analysis_data['operational_insights']['current_state_assessment']['benchmark_comparison'] ?? ( $analysis_data['operational_analysis']['current_state_assessment']['benchmark_comparison'] ?? '' ) ),
+'capacity_utilization' => sanitize_textarea_field( $analysis_data['operational_insights']['current_state_assessment']['capacity_utilization'] ?? ( $analysis_data['operational_analysis']['current_state_assessment']['capacity_utilization'] ?? '' ) ),
+],
+'process_improvements'     => [],
+'automation_opportunities' => [],
+],
+'industry_insights'   => [
+'sector_trends'          => sanitize_textarea_field( $analysis_data['industry_insights']['sector_trends'] ?? '' ),
+'competitive_benchmarks' => sanitize_textarea_field( $analysis_data['industry_insights']['competitive_benchmarks'] ?? '' ),
+'regulatory_considerations' => sanitize_textarea_field( $analysis_data['industry_insights']['regulatory_considerations'] ?? '' ),
+],
+'financial_analysis' => [
+'investment_breakdown' => [
+'software_licensing'        => sanitize_textarea_field( $analysis_data['financial_analysis']['investment_breakdown']['software_licensing'] ?? '' ),
+'implementation_services'   => sanitize_textarea_field( $analysis_data['financial_analysis']['investment_breakdown']['implementation_services'] ?? '' ),
+'training_change_management' => sanitize_textarea_field( $analysis_data['financial_analysis']['investment_breakdown']['training_change_management'] ?? '' ),
 	'ongoing_support'           => sanitize_textarea_field( $analysis_data['financial_analysis']['investment_breakdown']['ongoing_support'] ?? '' ),
 	],
 	'payback_analysis' => [

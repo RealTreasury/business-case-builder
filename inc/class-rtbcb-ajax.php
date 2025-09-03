@@ -566,11 +566,7 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
                                'maturity_assessment' => (array) ( is_array( $enriched_profile['maturity_assessment'] ?? null ) ? $enriched_profile['maturity_assessment'] : [] ),
                                'competitive_position'=> (array) ( is_array( $enriched_profile['competitive_position'] ?? null ) ? $enriched_profile['competitive_position'] : [] ),
 			],
-		       'industry_insights' => [
-			       'sector_trends'          => (array) ( $final_analysis['industry_insights']['sector_trends'] ?? [] ),
-			       'competitive_benchmarks' => (array) ( $final_analysis['industry_insights']['competitive_benchmarks'] ?? [] ),
-			       'regulatory_considerations' => (array) ( $final_analysis['industry_insights']['regulatory_considerations'] ?? [] ),
-		       ],
+'industry_insights' => $final_analysis['industry_insights'] ?? [],
                                        'financial_analysis' => [
                                                        'roi_scenarios'        => self::format_roi_scenarios( $roi_scenarios ),
                                                        'investment_breakdown' => (array) ( is_array( $final_analysis['financial_analysis']['investment_breakdown'] ?? null ) ? $final_analysis['financial_analysis']['investment_breakdown'] : [] ),
