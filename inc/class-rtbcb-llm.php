@@ -991,7 +991,7 @@ $tech_prompt .= '\nContext: ' . implode( '\n', array_map( 'sanitize_text_field',
 'operational_insights'   => $analysis['operational_insights'] ?? [],
 'risk_analysis'          => $analysis['risk_analysis'] ?? [],
 'action_plan'            => $analysis['action_plan'] ?? [],
-'industry_insights'      => $analysis['industry_insights'] ?? [],
+	'industry_insights'      => $analysis['industry_insights'] ?? [],
 'technology_strategy'    => $analysis['technology_strategy'] ?? [],
 'financial_analysis'     => $analysis['financial_analysis'] ?? [],
 'implementation_roadmap' => $analysis['implementation_roadmap'] ?? [],
@@ -1873,7 +1873,7 @@ $json            = $this->response_parser->process_openai_response( $parsed_resp
 'complexity'            => 'low|medium|high',
 'potential_savings'     => 'time/cost savings',
 'implementation_effort' => 'effort required',
-],
+	],
 ],
 ],
 'financial_analysis' => [
@@ -1938,9 +1938,9 @@ $json            = $this->response_parser->process_openai_response( $parsed_resp
 'vendor_considerations' => [ 'vendor selection criteria', 'implementation considerations' ],
 ],
 'industry_insights' => [
-'sector_trends' => [ 'trend 1 affecting treasury operations', 'trend 2 driving technology adoption' ],
-'competitive_benchmarks' => [ 'benchmark 1 for treasury efficiency', 'benchmark 2 for technology adoption' ],
-'regulatory_considerations' => [ 'regulatory requirement 1', 'regulatory requirement 2' ],
+		'sector_trends' => [ 'trend 1 affecting treasury operations', 'trend 2 driving technology adoption' ],
+		'competitive_benchmarks' => [ 'benchmark 1 for treasury efficiency', 'benchmark 2 for technology adoption' ],
+		'regulatory_considerations' => [ 'regulatory requirement 1', 'regulatory requirement 2' ],
 ],
 'risk_analysis' => [
 'implementation_risks' => [ 'risk 1: description and likelihood', 'risk 2: description and impact' ],
@@ -2407,11 +2407,11 @@ return $this->validate_and_structure_analysis( $analysis_data );
 'process_improvements'     => [],
 'automation_opportunities' => [],
 ],
-'industry_insights'   => [
-'sector_trends'          => sanitize_textarea_field( $analysis_data['industry_insights']['sector_trends'] ?? '' ),
-'competitive_benchmarks' => sanitize_textarea_field( $analysis_data['industry_insights']['competitive_benchmarks'] ?? '' ),
-'regulatory_considerations' => sanitize_textarea_field( $analysis_data['industry_insights']['regulatory_considerations'] ?? '' ),
-],
+	'industry_insights'   => [
+		'sector_trends'          => array_map( 'sanitize_textarea_field', (array) ( $analysis_data['industry_insights']['sector_trends'] ?? [] ) ),
+		'competitive_benchmarks' => array_map( 'sanitize_textarea_field', (array) ( $analysis_data['industry_insights']['competitive_benchmarks'] ?? [] ) ),
+		'regulatory_considerations' => array_map( 'sanitize_textarea_field', (array) ( $analysis_data['industry_insights']['regulatory_considerations'] ?? [] ) ),
+	],
 'financial_analysis' => [
 'investment_breakdown' => [
 'software_licensing'        => sanitize_textarea_field( $analysis_data['financial_analysis']['investment_breakdown']['software_licensing'] ?? '' ),
