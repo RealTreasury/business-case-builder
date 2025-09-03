@@ -63,17 +63,17 @@ rtbcb_increase_memory_limit();
 		* @return void
 		*/
 
-       public static function stream_analysis() {
-               $action = isset( $_REQUEST['action'] ) ? sanitize_key( wp_unslash( $_REQUEST['action'] ) ) : '';
-               if ( 'rtbcb_stream_analysis' !== $action ) {
-                       // Jetpack also routes requests through admin-ajax.php; avoid sending
-                       // streaming headers for unrelated actions.
-                       return;
-               }
+	   public static function stream_analysis() {
+			   $action = isset( $_REQUEST['action'] ) ? sanitize_key( wp_unslash( $_REQUEST['action'] ) ) : '';
+			   if ( 'rtbcb_stream_analysis' !== $action ) {
+					   // Jetpack also routes requests through admin-ajax.php; avoid sending
+					   // streaming headers for unrelated actions.
+					   return;
+			   }
 
-               if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) {
-                       wp_die( 'Invalid request' );
-               }
+			   if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) {
+					   wp_die( 'Invalid request' );
+			   }
 
 		if ( ! function_exists( 'check_ajax_referer' ) ) {
 			wp_die( 'WordPress not ready' );
@@ -497,26 +497,112 @@ $final_analysis['financial_benchmarks'] ?? ( $final_analysis['research']['financ
 		];
 	}
 
+/**
+ * Structure report data for client consumption.
+ *
+ * @param array $user_inputs          User-provided inputs.
+ * @param array $enriched_profile     Enriched company profile.
+ * @param array $roi_scenarios        ROI scenarios.
+ * @param array $recommendation       Category recommendation.
+ * @param array $final_analysis       Final AI analysis.
+ * @param array $rag_context          Retrieval augmented generation context.
+ * @param array $chart_data           Prepared chart data.
+ * @param float $request_start        Request start time.
+ * @param array $financial_benchmarks Financial benchmark data.
+ * @return array Structured report data.
+ */
 private static function structure_report_data( $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, $rag_context, $chart_data, $request_start, $financial_benchmarks = array() ) {
-		$operational_insights = (array) ( $final_analysis['operational_insights'] ?? $final_analysis['operational_analysis'] ?? [] );
-		$current_state_assessment = (array) ( $operational_insights['current_state_assessment'] ?? [] );
-		if ( empty( $current_state_assessment ) ) {
+	$operational_insights     = (array) ( $final_analysis['operational_insights'] ?? $final_analysis['operational_analysis'] ?? [] );
+	$current_state_assessment = (array) ( $operational_insights['current_state_assessment'] ?? [] );
+	if ( empty( $current_state_assessment ) ) {
 		$current_state_assessment = [ __( 'No data provided', 'rtbcb' ) ];
+	}
+
+	$process_improvements_raw = (array) ( $operational_insights['process_improvements'] ?? [] );
+	$process_improvements     = array();
+	foreach ( $process_improvements_raw as $item ) {
+		if ( is_array( $item ) ) {
+			$process_area   = sanitize_text_field( $item['process_area'] ?? '' );
+			$current_state  = sanitize_text_field( $item['current_state'] ?? '' );
+			$improved_state = sanitize_text_field( $item['improved_state'] ?? '' );
+			$impact_level   = sanitize_text_field( $item['impact_level'] ?? '' );
+
+			if ( '' === $process_area && '' === $current_state && '' === $improved_state && '' === $impact_level ) {
+				continue;
+			}
+
+			$summary_parts = array();
+			if ( $current_state || $improved_state ) {
+				$summary_parts[] = trim( sprintf( '%s → %s', $current_state, $improved_state ) );
+			}
+			if ( $impact_level ) {
+				$summary_parts[] = sprintf( '(%s %s)', $impact_level, __( 'impact', 'rtbcb' ) );
+			}
+
+			$summary = $process_area;
+			if ( ! empty( $summary_parts ) ) {
+				$summary .= ': ' . implode( ' ', $summary_parts );
+			}
+
+			$process_improvements[] = $summary;
+		} else {
+			$summary = sanitize_text_field( $item );
+			if ( '' !== $summary ) {
+				$process_improvements[] = $summary;
+			}
 		}
-		$process_improvements = (array) ( $operational_insights['process_improvements'] ?? [] );
-		if ( empty( $process_improvements ) ) {
+	}
+	if ( empty( $process_improvements ) ) {
 		$process_improvements = [ __( 'No data provided', 'rtbcb' ) ];
+	}
+
+	$automation_opportunities_raw = (array) ( $operational_insights['automation_opportunities'] ?? [] );
+	$automation_opportunities     = array();
+	foreach ( $automation_opportunities_raw as $item ) {
+		if ( is_array( $item ) ) {
+			$opportunity           = sanitize_text_field( $item['opportunity'] ?? '' );
+			$complexity            = sanitize_text_field( $item['complexity'] ?? '' );
+			$time_savings          = floatval( $item['time_savings'] ?? 0 );
+			$implementation_effort = sanitize_text_field( $item['implementation_effort'] ?? '' );
+
+			if ( '' === $opportunity && '' === $complexity && '' === $implementation_effort && 0 === $time_savings ) {
+				continue;
+			}
+
+			$summary = $opportunity;
+			$details = array();
+			if ( $complexity ) {
+				$details[] = sprintf( __( '%s complexity', 'rtbcb' ), $complexity );
+			}
+			if ( $implementation_effort ) {
+				$details[] = sprintf( __( '%s effort', 'rtbcb' ), $implementation_effort );
+			}
+			if ( ! empty( $details ) ) {
+				$summary .= ': ' . implode( ', ', $details );
+			}
+			if ( $time_savings > 0 ) {
+				$formatted = function_exists( 'number_format_i18n' ) ? number_format_i18n( $time_savings ) : $time_savings;
+				$summary  .= ' → ' . $formatted . ' ' . __( 'hours saved', 'rtbcb' );
+			}
+
+			$automation_opportunities[] = $summary;
+		} else {
+			$summary = sanitize_text_field( $item );
+			if ( '' !== $summary ) {
+				$automation_opportunities[] = $summary;
+			}
 		}
-		$automation_opportunities = (array) ( $operational_insights['automation_opportunities'] ?? [] );
-		if ( empty( $automation_opportunities ) ) {
+	}
+	if ( empty( $automation_opportunities ) ) {
 		$automation_opportunities = [ __( 'No data provided', 'rtbcb' ) ];
-		}
-		$risk_analysis = (array) ( $final_analysis['risk_analysis'] ?? $final_analysis['risk_mitigation'] ?? [] );
-		$implementation_risks = (array) ( $risk_analysis['implementation_risks'] ?? [] );
-		if ( empty( $implementation_risks ) ) {
+	}
+
+	$risk_analysis        = (array) ( $final_analysis['risk_analysis'] ?? $final_analysis['risk_mitigation'] ?? [] );
+	$implementation_risks = (array) ( $risk_analysis['implementation_risks'] ?? [] );
+	if ( empty( $implementation_risks ) ) {
 		$implementation_risks = [ __( 'No data provided', 'rtbcb' ) ];
-		}
-		$action_plan = (array) ( $final_analysis['action_plan'] ?? [] );
+	}
+	$action_plan = (array) ( $final_analysis['action_plan'] ?? [] );
 		$immediate_steps = (array) ( $action_plan['immediate_steps'] ?? ( $final_analysis['next_steps']['immediate'] ?? [] ) );
 		if ( empty( $immediate_steps ) ) {
 		$immediate_steps = [ __( 'No data provided', 'rtbcb' ) ];
