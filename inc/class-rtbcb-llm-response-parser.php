@@ -15,11 +15,17 @@ class RTBCB_LLM_Response_Parser {
  */
 public function process_openai_response( $response_body ) {
 // Log the raw response for debugging.
-error_log( 'RTBCB: Raw API response: ' . substr( $response_body, 0, 500 ) . '...' );
+RTBCB_Logger::log(
+       'raw_api_response',
+       [ 'snippet' => substr( $response_body, 0, 500 ) ]
+);
 
 if ( empty( $response_body ) ) {
-error_log( 'RTBCB: Empty response body received' );
-return false;
+       rtbcb_log_error(
+               'Empty response body received',
+               [ 'operation' => 'process_openai_response' ]
+       );
+       return false;
 }
 
 $response_body = trim( $response_body );
@@ -45,35 +51,41 @@ $decoded    = json_decode( $response_body, true );
 $json_error = json_last_error();
 
 if ( JSON_ERROR_NONE === $json_error && is_array( $decoded ) ) {
-error_log( 'RTBCB: JSON decoded successfully on first attempt' );
-return $this->extract_content_from_decoded_response( $decoded );
+       RTBCB_Logger::log( 'json_decode_first_attempt_success' );
+       return $this->extract_content_from_decoded_response( $decoded );
 }
 
-error_log( 'RTBCB: JSON decode failed: ' . json_last_error_msg() );
+rtbcb_log_error(
+       'JSON decode failed',
+       [ 'error' => json_last_error_msg() ]
+);
 
 if ( preg_match( '/```(?:json)?\s*(\{.*\})\s*```/s', $response_body, $matches ) ) {
 $json_content = trim( $matches[1] );
 $decoded      = json_decode( $json_content, true );
-if ( JSON_ERROR_NONE === json_last_error() && is_array( $decoded ) ) {
-error_log( 'RTBCB: JSON extracted from markdown successfully' );
-return $this->extract_content_from_decoded_response( $decoded );
-}
+       if ( JSON_ERROR_NONE === json_last_error() && is_array( $decoded ) ) {
+               RTBCB_Logger::log( 'json_extracted_from_markdown' );
+               return $this->extract_content_from_decoded_response( $decoded );
+       }
 }
 
 if ( preg_match( '/\{.*\}/s', $response_body, $matches ) ) {
 $json_content = $matches[0];
 $decoded      = json_decode( $json_content, true );
-if ( JSON_ERROR_NONE === json_last_error() && is_array( $decoded ) ) {
-error_log( 'RTBCB: JSON extracted from mixed content successfully' );
-return $this->extract_content_from_decoded_response( $decoded );
-}
+       if ( JSON_ERROR_NONE === json_last_error() && is_array( $decoded ) ) {
+               RTBCB_Logger::log( 'json_extracted_from_mixed_content' );
+               return $this->extract_content_from_decoded_response( $decoded );
+       }
 }
 
 if ( $this->is_streaming_response( $response_body ) ) {
 return $this->parse_streaming_response( $response_body );
 }
 
-error_log( 'RTBCB: All JSON parsing attempts failed for response: ' . substr( $response_body, 0, 200 ) );
+rtbcb_log_error(
+       'All JSON parsing attempts failed',
+       [ 'snippet' => substr( $response_body, 0, 200 ) ]
+);
 return false;
 }
 

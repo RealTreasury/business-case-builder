@@ -81,10 +81,16 @@ class RTBCB_Leads {
 				self::$table_name
 			) );
 
-			if ( ! $table_exists ) {
-				error_log( 'RTBCB: Failed to create table ' . self::$table_name );
+                       if ( ! $table_exists ) {
+                               rtbcb_log_error(
+                                       'Failed to create leads table',
+                                       [
+                                               'table'     => self::$table_name,
+                                               'operation' => 'create_table',
+                                       ]
+                               );
 
-				// Try to create table with simpler structure as fallback
+                               // Try to create table with simpler structure as fallback
 				$simple_sql = "CREATE TABLE IF NOT EXISTS " . self::$table_name . " (
 					id mediumint(9) NOT NULL AUTO_INCREMENT,
 					email varchar(255) NOT NULL,
@@ -122,22 +128,48 @@ class RTBCB_Leads {
 					self::$table_name
 				) );
 
-				if ( ! $table_exists ) {
-					error_log( 'RTBCB: Failed to create table even with simple structure' );
-					return false;
-				}
-			}
+                               if ( ! $table_exists ) {
+                                       rtbcb_log_error(
+                                               'Failed to create leads table even with simple structure',
+                                               [
+                                                       'table'     => self::$table_name,
+                                                       'operation' => 'create_table_fallback',
+                                               ]
+                                       );
+                                       return false;
+                               }
+                       }
 
-			error_log( 'RTBCB: Successfully created/updated table ' . self::$table_name );
-			return true;
+                       RTBCB_Logger::log(
+                               'leads_table_created',
+                               [
+                                       'table'     => self::$table_name,
+                                       'operation' => 'create_or_update',
+                               ]
+                       );
+                       return true;
 
-		} catch ( Exception $e ) {
-			error_log( 'RTBCB: Exception creating table: ' . $e->getMessage() );
-			return false;
-		} catch ( Error $e ) {
-			error_log( 'RTBCB: Fatal error creating table: ' . $e->getMessage() );
-			return false;
-		}
+               } catch ( Exception $e ) {
+                       rtbcb_log_error(
+                               'Exception creating leads table',
+                               [
+                                       'table'     => self::$table_name,
+                                       'operation' => 'create_table',
+                                       'error'     => $e->getMessage(),
+                               ]
+                       );
+                       return false;
+               } catch ( Error $e ) {
+                       rtbcb_log_error(
+                               'Fatal error creating leads table',
+                               [
+                                       'table'     => self::$table_name,
+                                       'operation' => 'create_table',
+                                       'error'     => $e->getMessage(),
+                               ]
+                       );
+                       return false;
+               }
 	}
 
 	/**
@@ -150,8 +182,14 @@ class RTBCB_Leads {
 		// Try to create table and log results
 		$table_created = self::create_table();
 
-		if ( ! $table_created ) {
-			error_log( 'RTBCB: Warning - leads table creation failed, plugin may not function correctly' );
+               if ( ! $table_created ) {
+                       rtbcb_log_error(
+                               'Leads table creation failed, plugin may not function correctly',
+                               [
+                                       'table'     => self::$table_name,
+                                       'operation' => 'create_table',
+                               ]
+                       );
 
 			// Add admin notice for database issues
 			add_action( 'admin_notices', function() {
@@ -253,10 +291,16 @@ class RTBCB_Leads {
 		global $wpdb;
 
 		// Validate required fields
-		if ( empty( $lead_data['email'] ) || ! is_email( $lead_data['email'] ) ) {
-			error_log( 'RTBCB: Invalid email provided to save_lead' );
-			return false;
-		}
+               if ( empty( $lead_data['email'] ) || ! is_email( $lead_data['email'] ) ) {
+                       rtbcb_log_error(
+                               'Invalid email provided to save_lead',
+                               [
+                                       'operation' => 'save_lead',
+                                       'email'     => $lead_data['email'] ?? null,
+                               ]
+                       );
+                       return false;
+               }
 
 		// Sanitize data with proper validation
 		$sanitized_data = [
@@ -322,10 +366,17 @@ class RTBCB_Leads {
 					[ '%s' ]
 				);
 
-				if ( false === $result ) {
-					error_log( 'RTBCB: Database update failed: ' . $wpdb->last_error );
-					return false;
-				}
+                               if ( false === $result ) {
+                                       rtbcb_log_error(
+                                               'Database update failed',
+                                               [
+                                                       'operation' => 'save_lead_update',
+                                                       'table'     => self::$table_name,
+                                                       'error'     => $wpdb->last_error,
+                                               ]
+                                       );
+                                       return false;
+                               }
 
                                self::update_cached_statistics();
                                if ( function_exists( 'rtbcb_clear_report_cache' ) ) {
@@ -346,10 +397,17 @@ class RTBCB_Leads {
 					$formats
 				);
 
-				if ( false === $result ) {
-					error_log( 'RTBCB: Database insert failed: ' . $wpdb->last_error );
-					return false;
-				}
+                               if ( false === $result ) {
+                                       rtbcb_log_error(
+                                               'Database insert failed',
+                                               [
+                                                       'operation' => 'save_lead_insert',
+                                                       'table'     => self::$table_name,
+                                                       'error'     => $wpdb->last_error,
+                                               ]
+                                       );
+                                       return false;
+                               }
 
                                $lead_id = $wpdb->insert_id;
                                self::update_cached_statistics();
@@ -364,13 +422,25 @@ class RTBCB_Leads {
                                }
                                return $lead_id;
                        }
-		} catch ( Exception $e ) {
-			error_log( 'RTBCB: Exception in save_lead: ' . $e->getMessage() );
-			return false;
-		} catch ( Error $e ) {
-			error_log( 'RTBCB: Fatal error in save_lead: ' . $e->getMessage() );
-			return false;
-		}
+               } catch ( Exception $e ) {
+                       rtbcb_log_error(
+                               'Exception in save_lead',
+                               [
+                                       'operation' => 'save_lead',
+                                       'error'     => $e->getMessage(),
+                               ]
+                       );
+                       return false;
+               } catch ( Error $e ) {
+                       rtbcb_log_error(
+                               'Fatal error in save_lead',
+                               [
+                                       'operation' => 'save_lead',
+                                       'error'     => $e->getMessage(),
+                               ]
+                       );
+                       return false;
+               }
 	}
 
 	/**

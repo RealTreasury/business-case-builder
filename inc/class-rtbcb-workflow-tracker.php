@@ -86,7 +86,12 @@ $this->current_step = [
 'status'     => 'running',
 ];
 
-error_log( "RTBCB Workflow: Starting step '{$step_name}'" );
+       RTBCB_Logger::log(
+               'workflow_start',
+               [
+                       'step' => $step_name,
+               ]
+       );
 }
 
 /**
@@ -113,7 +118,13 @@ $this->current_step = null;
 
 do_action( 'rtbcb_workflow_step_completed', $step_name );
 
-error_log( 'RTBCB Workflow: Completed step ' . $step_name . ' in ' . round( $this->steps[ count( $this->steps ) - 1 ]['duration'], 2 ) . 's' );
+       RTBCB_Logger::log(
+               'workflow_step_completed',
+               [
+                       'step'     => $step_name,
+                       'duration' => round( $this->steps[ count( $this->steps ) - 1 ]['duration'], 2 ),
+               ]
+       );
 }
 }
 
@@ -134,7 +145,14 @@ public function add_warning( $code, $message ) {
 	];
 
 	$this->warnings[] = $warning;
-	error_log( "RTBCB Workflow Warning [{$code}]: {$message}" );
+       rtbcb_log_error(
+               'Workflow warning',
+               [
+                       'code'    => $code,
+                       'message' => $message,
+                       'step'    => $step_name,
+               ]
+       );
 	do_action( 'rtbcb_workflow_warning', $warning );
 }
 
@@ -155,7 +173,14 @@ public function add_error( $code, $message ) {
 	];
 
 	$this->errors[] = $error;
-	error_log( "RTBCB Workflow Error [{$code}]: {$message}" );
+       rtbcb_log_error(
+               'Workflow error',
+               [
+                       'code'    => $code,
+                       'message' => $message,
+                       'step'    => $step_name,
+               ]
+       );
 	do_action( 'rtbcb_workflow_error', $error );
 }
 

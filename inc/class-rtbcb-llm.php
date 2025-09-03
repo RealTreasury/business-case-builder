@@ -60,7 +60,10 @@ class RTBCB_LLM {
                $this->response_parser = new RTBCB_LLM_Response_Parser();
 
                if ( empty( $this->config->get_api_key() ) ) {
-                       error_log( 'RTBCB: OpenAI API key not configured' );
+                       rtbcb_log_error(
+                               'OpenAI API key not configured',
+                               [ 'operation' => '__construct' ]
+                       );
                }
        }
 
@@ -2308,7 +2311,10 @@ PROMPT;
                $response_data = $this->response_parser->process_openai_response( $response_body );
 
                if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-                       error_log( 'OpenAI Response (clean): ' . wp_json_encode( $response_data, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT ) );
+                       RTBCB_Logger::log(
+                               'openai_response_clean',
+                               [ 'response' => $response_data ]
+                       );
                }
 
                return $response_data;
