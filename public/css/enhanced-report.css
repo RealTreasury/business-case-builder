@@ -731,3 +731,12 @@ background-color: #2563eb;
 .rtbcb-source-badge.source-note {
 background-color: #10b981;
 }
+
+/* Source context item styles */
+.rtbcb-context-item.source-vendor {
+color: #2563eb;
+}
+
+.rtbcb-context-item.source-note {
+color: #10b981;
+}
