@@ -97,5 +97,26 @@ self::assertSame( [], $tech['vendor_considerations'] );
 self::assertSame( [], $risk['mitigation_strategies'] );
 self::assertSame( [], $risk['success_factors'] );
 }
+
+public function test_industry_insights_preserved() {
+$method = new ReflectionMethod( RTBCB_Ajax::class, 'structure_report_data' );
+$method->setAccessible( true );
+
+$user_inputs     = [ 'company_name' => 'Test', 'industry' => 'finance' ];
+$enriched_profile = [];
+$roi_scenarios    = [ 'conservative' => [], 'base' => [], 'optimistic' => [] ];
+$recommendation   = [ 'recommended' => '', 'category_info' => [] ];
+$final_analysis   = [
+'industry_insights' => [
+'sector_trends'            => 'trend',
+'competitive_benchmarks'   => 'benchmark',
+'regulatory_considerations' => 'regulation',
+],
+];
+
+$result = $method->invoke( null, $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, [], microtime( true ) );
+
+self::assertSame( $final_analysis['industry_insights'], $result['industry_insights'] );
+}
 }
 

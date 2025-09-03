@@ -54,9 +54,14 @@ if ( ! function_exists( 'update_option' ) ) {
 	}
 }
 if ( ! function_exists( 'sanitize_text_field' ) ) {
-	function sanitize_text_field( $text ) {
-		return is_string( $text ) ? trim( $text ) : '';
-	}
+        function sanitize_text_field( $text ) {
+                return is_string( $text ) ? trim( $text ) : '';
+        }
+}
+if ( ! function_exists( 'sanitize_textarea_field' ) ) {
+function sanitize_textarea_field( $text ) {
+return is_string( $text ) ? trim( $text ) : '';
+}
 }
 if ( ! function_exists( 'sanitize_email' ) ) {
 	function sanitize_email( $email ) {
