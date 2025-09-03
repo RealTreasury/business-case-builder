@@ -993,7 +993,7 @@ $tech_prompt .= '\nContext: ' . implode( '\n', array_map( 'sanitize_text_field',
 	private function parse_comprehensive_response( $response ) {
 	$parser = new RTBCB_Response_Parser();
 	return $parser->parse_business_case( $response );
-    }
+	}
 
 
 	/**
@@ -2063,65 +2063,65 @@ Focus on treasury-specific challenges and opportunities within the {$user_inputs
 ```json
 {
   "company_profile": {
-    "enhanced_description": "string - comprehensive company description",
-    "business_model": "string - primary business model and revenue streams",
-    "market_position": "string - competitive position and market standing",
-    "maturity_level": "basic|developing|strategic|optimized",
-    "financial_indicators": {
+	"enhanced_description": "string - comprehensive company description",
+	"business_model": "string - primary business model and revenue streams",
+	"market_position": "string - competitive position and market standing",
+	"maturity_level": "basic|developing|strategic|optimized",
+	"financial_indicators": {
 	"estimated_revenue": "number - best estimate in USD",
 	"growth_stage": "startup|growth|mature|decline",
 	"financial_health": "strong|stable|concerning|unknown"
-    },
-    "treasury_maturity": {
+	},
+	"treasury_maturity": {
 	"current_state": "string - assessment of current treasury operations",
 	"sophistication_level": "manual|semi_automated|automated|strategic",
 	"key_gaps": ["array of identified gaps"],
 	"automation_readiness": "low|medium|high"
-    },
-    "strategic_context": {
+	},
+	"strategic_context": {
 	"primary_challenges": ["array of business challenges"],
 	"growth_objectives": ["array of growth objectives"],
 	"competitive_pressures": ["array of competitive factors"],
 	"regulatory_environment": "string - regulatory considerations"
-    }
+	}
   },
   "industry_context": {
-    "sector_analysis": {
+	"sector_analysis": {
 	"market_dynamics": "string - current market conditions",
 	"growth_trends": "string - industry growth patterns",
 	"disruption_factors": ["array of disruptive forces"],
 	"technology_adoption": "laggard|follower|mainstream|leader"
-    },
-    "benchmarking": {
+	},
+	"benchmarking": {
 	"typical_treasury_setup": "string - industry norm for treasury operations",
 	"common_pain_points": ["array of industry-wide challenges"],
 	"technology_penetration": "low|medium|high",
 	"investment_patterns": "string - typical technology investment patterns"
-    },
-    "regulatory_landscape": {
+	},
+	"regulatory_landscape": {
 	"key_regulations": ["array of relevant regulations"],
 	"compliance_complexity": "low|medium|high|very_high",
 	"upcoming_changes": ["array of anticipated regulatory changes"]
-    }
+	}
   },
   "strategic_insights": {
-    "technology_readiness": "not_ready|ready|urgent_need",
-    "investment_justification": "weak|moderate|strong|compelling",
-    "implementation_complexity": "low|medium|high|very_high",
-    "expected_benefits": {
+	"technology_readiness": "not_ready|ready|urgent_need",
+	"investment_justification": "weak|moderate|strong|compelling",
+	"implementation_complexity": "low|medium|high|very_high",
+	"expected_benefits": {
 	"efficiency_gains": "string - expected efficiency improvements",
 	"risk_reduction": "string - risk mitigation benefits",
 	"strategic_value": "string - strategic business value",
 	"competitive_advantage": "string - competitive positioning benefits"
-    },
-    "critical_success_factors": ["array of key success factors"],
-    "potential_obstacles": ["array of implementation challenges"]
+	},
+	"critical_success_factors": ["array of key success factors"],
+	"potential_obstacles": ["array of 4-5 likely implementation challenges"]
   },
   "enrichment_metadata": {
-    "confidence_level": "number - 0.0 to 1.0",
-    "data_sources": ["array of information sources considered"],
-    "analysis_depth": "surface|moderate|comprehensive",
-    "recommendations_priority": "low|medium|high|urgent"
+	"confidence_level": "number - 0.0 to 1.0",
+	"data_sources": ["array of information sources considered"],
+	"analysis_depth": "surface|moderate|comprehensive",
+	"recommendations_priority": "low|medium|high|urgent"
   }
 	}
 ```
@@ -2315,19 +2315,38 @@ return $this->validate_and_structure_analysis( $analysis_data );
 	* @return array Validated insights.
 	*/
 	private function validate_strategic_insights( $insights ) {
-	return [
-	'technology_readiness'     => sanitize_text_field( $insights['technology_readiness'] ?? 'not_ready' ),
-	'investment_justification' => sanitize_text_field( $insights['investment_justification'] ?? 'weak' ),
-	'implementation_complexity' => sanitize_text_field( $insights['implementation_complexity'] ?? 'medium' ),
-	'expected_benefits'        => [
-	'efficiency_gains'     => wp_kses_post( $insights['expected_benefits']['efficiency_gains'] ?? '' ),
-	'risk_reduction'       => wp_kses_post( $insights['expected_benefits']['risk_reduction'] ?? '' ),
-	'strategic_value'      => wp_kses_post( $insights['expected_benefits']['strategic_value'] ?? '' ),
-	'competitive_advantage' => wp_kses_post( $insights['expected_benefits']['competitive_advantage'] ?? '' ),
-	],
-	'critical_success_factors' => array_map( 'sanitize_text_field', $insights['critical_success_factors'] ?? [] ),
-	'potential_obstacles'      => array_map( 'sanitize_text_field', $insights['potential_obstacles'] ?? [] ),
-	];
+		$obstacles = array_map( 'sanitize_text_field', $insights['potential_obstacles'] ?? [] );
+		$count     = count( $obstacles );
+
+		if ( $count < 4 ) {
+			while ( count( $obstacles ) < 4 ) {
+				$obstacles[] = __( 'unspecified challenge', 'rtbcb' );
+			}
+			RTBCB_Logger::log(
+				'insufficient_potential_obstacles',
+				[ 'count' => $count ]
+			);
+		} elseif ( $count > 5 ) {
+			$obstacles = array_slice( $obstacles, 0, 5 );
+			RTBCB_Logger::log(
+				'too_many_potential_obstacles',
+				[ 'count' => $count ]
+			);
+		}
+
+		return [
+			'technology_readiness'     => sanitize_text_field( $insights['technology_readiness'] ?? 'not_ready' ),
+			'investment_justification' => sanitize_text_field( $insights['investment_justification'] ?? 'weak' ),
+			'implementation_complexity' => sanitize_text_field( $insights['implementation_complexity'] ?? 'medium' ),
+			'expected_benefits'        => [
+				'efficiency_gains'     => wp_kses_post( $insights['expected_benefits']['efficiency_gains'] ?? '' ),
+				'risk_reduction'       => wp_kses_post( $insights['expected_benefits']['risk_reduction'] ?? '' ),
+				'strategic_value'      => wp_kses_post( $insights['expected_benefits']['strategic_value'] ?? '' ),
+				'competitive_advantage' => wp_kses_post( $insights['expected_benefits']['competitive_advantage'] ?? '' ),
+			],
+			'critical_success_factors' => array_map( 'sanitize_text_field', $insights['critical_success_factors'] ?? [] ),
+			'potential_obstacles'      => $obstacles,
+		];
 	}
 
 	/**
@@ -2476,7 +2495,7 @@ return $this->validate_and_structure_analysis( $analysis_data );
 	private function call_openai_with_retry( $model, $prompt, $max_output_tokens = null, $max_retries = null, $chunk_handler = null ) {
 	       return $this->transport->call_openai_with_retry( $model, $prompt, $max_output_tokens, $max_retries, $chunk_handler );
 	}
-    private function calculate_efficiency_rating( $user_inputs ) {
+	private function calculate_efficiency_rating( $user_inputs ) {
 		$total_hours = ($user_inputs['hours_reconciliation'] ?? 0) + ($user_inputs['hours_cash_positioning'] ?? 0);
 		$team_size = $user_inputs['ftes'] ?? 1;
 		$hours_per_fte = $team_size > 0 ? $total_hours / $team_size : $total_hours;
