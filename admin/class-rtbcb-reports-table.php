@@ -195,6 +195,10 @@ class RTBCB_Reports_Table extends WP_List_Table {
 
         check_admin_referer( 'rtbcb_reports_action' );
 
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+
         if ( 'delete_all' === $action ) {
             $files = glob( trailingslashit( $this->reports_dir ) . '*.{html,pdf}', GLOB_BRACE );
             $files = $files ? $files : [];
@@ -205,6 +209,7 @@ class RTBCB_Reports_Table extends WP_List_Table {
                 }
             }
 
+            rtbcb_clear_report_cache();
             return;
         }
 
@@ -216,6 +221,10 @@ class RTBCB_Reports_Table extends WP_List_Table {
             if ( file_exists( $file_path ) ) {
                 unlink( $file_path );
             }
+        }
+
+        if ( ! empty( $files ) ) {
+            rtbcb_clear_report_cache();
         }
     }
 }

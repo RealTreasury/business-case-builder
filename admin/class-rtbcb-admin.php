@@ -514,6 +514,7 @@ wp_localize_script(
 								}
 						}
 
+						rtbcb_clear_report_cache();
 						wp_safe_redirect( admin_url( 'admin.php?page=rtbcb-reports' ) );
 						exit;
 				}
