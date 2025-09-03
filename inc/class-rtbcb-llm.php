@@ -2158,39 +2158,98 @@ PROMPT;
 	       if ( rtbcb_heavy_features_disabled() ) {
 	               return new WP_Error( 'heavy_features_disabled', __( 'AI features are disabled.', 'rtbcb' ) );
 	       }
-	if ( empty( $this->config->get_api_key() ) ) {
-	return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
-	}
+               if ( empty( $this->config->get_api_key() ) ) {
+                       return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
+               }
 
-	$client  = new RTBCB_OpenAI_Client( $this->config->get_api_key(), $this->get_model( 'premium' ) );
-	$payload = [
-	'company_intelligence'       => $enriched_profile,
-	'financial_analysis'         => $roi_scenarios,
-	'technology_recommendations' => $recommendation,
-	'market_research_context'    => $rag_baseline,
-	'analysis_requirements'      => [
-	'Justify the Investment: Clear business case with financial backing',
-	'Address Specific Needs: Solutions tailored to identified challenges',
-	'Mitigate Risks: Comprehensive risk assessment and mitigation strategies',
-	'Enable Success: Practical implementation roadmap with success metrics',
-	'Competitive Advantage: Position technology investment within competitive context',
-	],
-	];
+               $payload = [
+                       'company_intelligence'       => $enriched_profile,
+                       'financial_analysis'         => $roi_scenarios,
+                       'technology_recommendations' => $recommendation,
+                       'market_research_context'    => $rag_baseline,
+                       'analysis_requirements'      => [
+                               'Justify the Investment: Clear business case with financial backing',
+                               'Address Specific Needs: Solutions tailored to identified challenges',
+                               'Mitigate Risks: Comprehensive risk assessment and mitigation strategies',
+                               'Enable Success: Practical implementation roadmap with success metrics',
+                               'Competitive Advantage: Position technology investment within competitive context',
+                       ],
+               ];
 
-$response = $client->request( $payload, $this->config->estimate_tokens( 2000 ) );
-	if ( is_wp_error( $response ) ) {
-return $response;
-	}
+               $messages = [
+                       [
+                               'role'    => 'system',
+                               'content' => $this->get_strategic_system_prompt(),
+                       ],
+                       [
+                               'role'    => 'user',
+                               'content' => wp_json_encode( $payload ),
+                       ],
+               ];
 
-	if ( class_exists( 'RTBCB_API_Log' ) ) {
-$user_email   = $this->current_inputs['email'] ?? '';
-$company_name = $this->current_inputs['company_name'] ?? '';
-RTBCB_API_Log::save_log( $payload, $response, get_current_user_id(), $user_email, $company_name );
-	}
+               $body     = [ 'messages' => $messages ];
+               $model    = $this->get_model( 'premium' );
+               $response = $this->transport->call_openai_with_retry( $model, $body );
 
-$analysis_data = $response['choices'] ?? [];
-return $this->validate_and_structure_analysis( $analysis_data );
-	}
+               if ( is_wp_error( $response ) ) {
+                       return $response;
+               }
+
+               $decoded = json_decode( wp_remote_retrieve_body( $response ), true );
+               $content = $decoded['choices'][0]['message']['content'] ?? '';
+               $data    = json_decode( $content, true );
+
+               if ( $this->is_valid_strategic_response( $data ) ) {
+                       if ( class_exists( 'RTBCB_API_Log' ) ) {
+                               $user_email   = $this->current_inputs['email'] ?? '';
+                               $company_name = $this->current_inputs['company_name'] ?? '';
+                               RTBCB_API_Log::save_log( $payload, $decoded, get_current_user_id(), $user_email, $company_name );
+                       }
+
+                       return $this->validate_and_structure_analysis( $data );
+               }
+
+               return new WP_Error( 'invalid_json', __( 'Model returned invalid JSON.', 'rtbcb' ), [ 'raw' => $content ] );
+       }
+
+       /**
+        * Get system prompt for strategic analysis.
+        *
+        * @return string System prompt string.
+        */
+       private function get_strategic_system_prompt() {
+               return 'You are a senior treasury technology consultant tasked with creating executive-level strategic recommendations.';
+       }
+
+       /**
+        * Validate strategic analysis response structure.
+        *
+        * @param mixed $data Decoded JSON data.
+        * @return bool Whether the response contains required sections.
+        */
+       private function is_valid_strategic_response( $data ) {
+               if ( ! is_array( $data ) ) {
+                       return false;
+               }
+
+               $required = [
+                       'executive_summary',
+                       'operational_insights',
+                       'financial_analysis',
+                       'implementation_roadmap',
+                       'risk_analysis',
+                       'action_plan',
+                       'vendor_considerations',
+               ];
+
+               foreach ( $required as $key ) {
+                       if ( ! array_key_exists( $key, $data ) ) {
+                               return false;
+                       }
+               }
+
+               return true;
+       }
 
 	/**
 	* Validate enrichment response JSON structure.

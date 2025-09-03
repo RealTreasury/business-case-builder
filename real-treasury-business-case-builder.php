@@ -280,7 +280,6 @@ return true;
 				   'inc/class-rtbcb-maturity-model.php'	 => 'RTBCB_Maturity_Model',
 				   'inc/class-rtbcb-leads.php'		 => 'RTBCB_Leads',
 				   'inc/class-rtbcb-rag.php'             => 'RTBCB_RAG',
-                                   'inc/OpenAI_Client.php'               => 'RTBCB_OpenAI_Client',
                                    'inc/class-rtbcb-response-parser.php' => 'RTBCB_Response_Parser',
                                    'inc/class-rtbcb-llm.php'             => 'RTBCB_LLM',
                                    'inc/class-rtbcb-llm-optimized.php'   => 'RTBCB_LLM_Optimized',
