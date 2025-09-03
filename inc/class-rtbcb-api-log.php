@@ -73,8 +73,14 @@ class RTBCB_API_Log {
 				)
 			);
 
-			if ( ! $table_exists ) {
-				error_log( 'RTBCB: Failed to create table ' . self::$table_name );
+                       if ( ! $table_exists ) {
+                               rtbcb_log_error(
+                                       'Failed to create API log table',
+                                       [
+                                               'table'     => self::$table_name,
+                                               'operation' => 'create_table',
+                                       ]
+                               );
 
                                $simple_sql = 'CREATE TABLE IF NOT EXISTS ' . self::$table_name . " (
                                        id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -104,20 +110,40 @@ class RTBCB_API_Log {
 					)
 				);
 
-				if ( ! $table_exists ) {
-					error_log( 'RTBCB: Failed to create API log table even with simple structure' );
-					return false;
-                }
-        }
+                               if ( ! $table_exists ) {
+                                       rtbcb_log_error(
+                                               'Failed to create API log table even with simple structure',
+                                               [
+                                                       'table'     => self::$table_name,
+                                                       'operation' => 'create_table_fallback',
+                                               ]
+                                       );
+                                       return false;
+               }
+       }
 
                        return true;
-               } catch ( Exception $e ) {
-                       error_log( 'RTBCB: Exception creating API log table: ' . $e->getMessage() );
-                       return false;
-               } catch ( Error $e ) {
-                       error_log( 'RTBCB: Fatal error creating API log table: ' . $e->getMessage() );
-                       return false;
-               }
+              } catch ( Exception $e ) {
+                      rtbcb_log_error(
+                              'Exception creating API log table',
+                              [
+                                      'table'     => self::$table_name,
+                                      'operation' => 'create_table',
+                                      'error'     => $e->getMessage(),
+                              ]
+                      );
+                      return false;
+              } catch ( Error $e ) {
+                      rtbcb_log_error(
+                              'Fatal error creating API log table',
+                              [
+                                      'table'     => self::$table_name,
+                                      'operation' => 'create_table',
+                                      'error'     => $e->getMessage(),
+                              ]
+                      );
+                      return false;
+              }
        }
 
        /**

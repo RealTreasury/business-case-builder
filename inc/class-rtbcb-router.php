@@ -189,7 +189,13 @@ class RTBCB_Router {
                        throw $e;
                } catch ( Exception $e ) {
                        // Log the detailed error to debug.log.
-                       error_log( 'RTBCB Form Submission Error: ' . $e->getMessage() );
+                       rtbcb_log_error(
+                               'Form submission error',
+                               [
+                                       'operation' => 'generate_case',
+                                       'error'     => $e->getMessage(),
+                               ]
+                       );
 
                        // Send a generic error response to the client.
                        wp_send_json_error(
@@ -233,15 +239,26 @@ $premium_model = function_exists( 'get_option' ) ? get_option( 'rtbcb_premium_mo
 
 		// Validate selected model
 		if ( empty( $model ) ) {
-			$error = new WP_Error(
-				'rtbcb_missing_model',
-				__( 'No language model configured. Please review the plugin settings.', 'rtbcb' )
-			);
-			error_log( 'RTBCB: ' . $error->get_error_message() );
-			return $error;
+                       $error = new WP_Error(
+                               'rtbcb_missing_model',
+                               __( 'No language model configured. Please review the plugin settings.', 'rtbcb' )
+                       );
+                       rtbcb_log_error(
+                               $error->get_error_message(),
+                               [ 'operation' => 'route_model' ]
+                       );
+                       return $error;
 		}
 
-		error_log( "RTBCB: Model selected: {$model} (Complexity: {$complexity}, Category: {$category}, Reason: {$reasoning})" );
+               RTBCB_Logger::log(
+                       'model_selected',
+                       [
+                               'model'      => $model,
+                               'complexity' => $complexity,
+                               'category'   => $category,
+                               'reason'     => $reasoning,
+                       ]
+               );
 
 		return $model;
 	}
