@@ -31,7 +31,7 @@ $company_intelligence  = $report_data['company_intelligence'] ?? [];
 	 * @var array $report_data Structured report data from the new workflow
 	 */
 	
-	$company_name    = $metadata['company_name'] ?? __( 'Your Company', 'rtbcb' );
+$company_name    = $metadata['company_name'] ?? ( $company_intelligence['enriched_profile']['name'] ?? __( 'Your Company', 'rtbcb' ) );
 	$analysis_date   = $metadata['analysis_date'] ?? current_time( 'Y-m-d' );
 	$analysis_type   = $metadata['analysis_type'] ?? 'basic';
 	$confidence_level = round( ( $metadata['confidence_level'] ?? 0.85 ) * 100 );

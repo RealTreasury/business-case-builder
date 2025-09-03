@@ -1,15 +1,15 @@
 <?php
-/**
+	/**
 	* Plugin Name: Real Treasury - Business Case Builder (Enhanced Pro)
 	* Description: Professional-grade ROI calculator and comprehensive business case generator for treasury technology with advanced analysis and consultant-style reports.
-* Version: 2.1.13
+	* Version: 2.1.13
 	* Requires PHP: 7.4
 	* Author: Real Treasury
 	* Text Domain: rtbcb
 	* License: GPL v2 or later
 	*
 	* @package RealTreasuryBusinessCaseBuilder
-*/
+	*/
 defined( 'ABSPATH' ) || exit;
 
 define( 'RTBCB_VERSION', '2.1.13' );
@@ -23,18 +23,18 @@ define( 'RTBCB_DEBUG', false );
 
 
 if ( ! function_exists( 'rt_bcb_log' ) ) {
-/**
- * Simple logger for debugging.
- *
- * @param mixed $msg Message to log.
- * @return void
- */
+	/**
+	* Simple logger for debugging.
+	*
+	* @param mixed $msg Message to log.
+	* @return void
+	*/
 function rt_bcb_log( $msg ) {
 	error_log( '[RT-BCB] ' . ( is_string( $msg ) ? $msg : wp_json_encode( $msg ) ) );
 }
 }
 
-/**
+	/**
 	* Enhanced main plugin class.
 	*/
 class RTBCB_Main {
@@ -1105,20 +1105,26 @@ return true;
 								return;
 						}
 
-						// Merge all data for report generation.
-						$report_data = array_merge(
-								$comprehensive_analysis,
-								[
-										'company_name'	  => $user_inputs['company_name'],
-										'scenarios'	  => $scenarios,
-										'recommendation'  => $recommendation,
-										'rag_context'	  => $rag_context,
-										'processing_time' => microtime( true ) - $_SERVER['REQUEST_TIME_FLOAT'],
-								]
-						);
+			// Determine company name from analysis or user input.
+			$analysis_company = $comprehensive_analysis['company_intelligence']['enriched_profile']['name']
+				?? ( $comprehensive_analysis['company_name'] ?? '' );
+			$company_name     = $analysis_company ? sanitize_text_field( $analysis_company ) : $user_inputs['company_name'];
+			$comprehensive_analysis['company_name'] = $company_name;
 
-			// Generate HTML report using our fixed method.
-			$report_html = $this->get_comprehensive_report_html( $report_data );
+			// Merge all data for report generation.
+			$report_data = array_merge(
+				$comprehensive_analysis,
+				[
+					'company_name'    => $company_name,
+					'scenarios'       => $scenarios,
+					'recommendation'  => $recommendation,
+					'rag_context'     => $rag_context,
+					'processing_time' => microtime( true ) - $_SERVER['REQUEST_TIME_FLOAT'],
+				]
+			);
+
+		// Generate HTML report using our fixed method.
+		$report_html = $this->get_comprehensive_report_html( [ 'report_data' => $report_data ] );
 
 			if ( is_wp_error( $report_html ) ) {
 				wp_send_json_error( [ 'message' => $report_html->get_error_message() ], 500 );
@@ -1130,8 +1136,8 @@ return true;
 				return;
 			}
 
-			// Save lead data.
-			$lead_id = $this->save_lead_data( $user_inputs, $scenarios, $recommendation, $report_html );
+// Save lead data.
+$lead_id = $this->save_lead_data( $user_inputs, $scenarios, $recommendation, $report_html, $company_name );
 
 			// Format response data.
 			$formatted_scenarios = $this->format_scenarios_for_response( $scenarios );
@@ -1142,7 +1148,7 @@ return true;
 				'comprehensive_analysis' => $comprehensive_analysis,
 				'report_html'		 => $report_html,
 				'lead_id'		 => $lead_id,
-				'company_name'		 => $user_inputs['company_name'],
+				'company_name'           => $company_name,
 									'analysis_type'		 => rtbcb_get_analysis_type(),
 				'memory_info'		 => rtbcb_get_memory_status(),
 			];
@@ -1422,8 +1428,16 @@ $required_keys = [
 
 	/**
 	* Save lead data to database.
+	*
+	* @param array  $user_inputs   User inputs.
+	* @param array  $scenarios     ROI scenarios.
+	* @param array  $recommendation Recommendation data.
+	* @param string $report_html   Report HTML.
+	* @param string $company_name  Company name.
+	*
+	* @return int|null Lead ID or null on failure.
 	*/
-	private function save_lead_data( $user_inputs, $scenarios, $recommendation, $report_html ) {
+	private function save_lead_data( $user_inputs, $scenarios, $recommendation, $report_html, $company_name ) {
 	if ( ! class_exists( 'RTBCB_Leads' ) ) {
 	return null;
 	}
@@ -1431,7 +1445,7 @@ $required_keys = [
 	try {
 	$lead_data = [
 	'email'			 => $user_inputs['email'],
-	'company_name'		 => $user_inputs['company_name'],
+	'company_name'           => $company_name,
 	'company_size'		 => $user_inputs['company_size'],
 	'industry'		 => $user_inputs['industry'],
 	'hours_reconciliation'	 => $user_inputs['hours_reconciliation'],
@@ -2076,7 +2090,7 @@ $missing_sections  = array_diff( $required_sections, array_keys( $comprehensive_
 			'recommendation'=> $recommendation,
 			'rag_context'   => $rag_context,
 			'lead_id'       => $lead_id,
-			'company_name'  => $user_inputs['company_name'],
+			'company_name'           => $company_name,
 			'analysis_type' => rtbcb_get_analysis_type(),
 			'api_used'      => rtbcb_has_openai_api_key(),
 			'fallback_used' => isset( $comprehensive_analysis['enhanced_fallback'] ),
@@ -3503,10 +3517,10 @@ true
 }
 
 /**
- * Render debug panel in admin footer.
- *
- * @return void
- */
+	* Render debug panel in admin footer.
+	*
+	* @return void
+	*/
 function rtbcb_render_debug_panel() {
 	if ( ! current_user_can( 'manage_options' ) ) {
 		return;
