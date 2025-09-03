@@ -635,7 +635,7 @@ $tech_adoption      = $sector_analysis['technology_adoption'] ?? ( $benchmarking
 						<?php if ( $source_type ) : ?>
 						       <span class="rtbcb-source-badge source-<?php echo esc_attr( $source_type ); ?>"><?php echo esc_html( ucfirst( $source_type ) ); ?></span>
 						<?php endif; ?>
-						<?php echo esc_html( $context_text ); ?>
+						<span class="rtbcb-context-item<?php echo $source_type ? ' source-' . esc_attr( $source_type ) : ''; ?>"><?php echo esc_html( $context_text ); ?></span>
 					</li>
 				<?php endforeach; ?>
 			</ul>
