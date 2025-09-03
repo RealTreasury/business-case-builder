@@ -194,9 +194,10 @@ class RTBCB_Ajax {
 			self::safe_update_status( $job_id, 'processing', [ 'category' => $recommendation['recommended'] ] );
 								}
 
-								$workflow_tracker->start_step( 'hybrid_rag_analysis' );
-								$final_analysis = self::create_fallback_analysis( $enriched_profile, $roi_scenarios );
-								$workflow_tracker->complete_step( 'hybrid_rag_analysis', $final_analysis );
+                                                                  $workflow_tracker->start_step( 'hybrid_rag_analysis' );
+                                                                  $final_analysis = self::create_fallback_analysis( $enriched_profile, $roi_scenarios );
+                                                                  $workflow_tracker->complete_step( 'hybrid_rag_analysis', $final_analysis );
+                                                                  $rag_context   = [];
 								if ( $job_id ) {
 			self::safe_update_status( $job_id, 'processing', [ 'analysis' => $final_analysis ] );
 								}
@@ -210,6 +211,7 @@ $enriched_profile,
 $roi_scenarios,
 $recommendation,
 $final_analysis,
+$rag_context,
 $chart_data,
 $request_start,
 $final_analysis['financial_benchmarks'] ?? ( $final_analysis['research']['financial'] ?? [] )
@@ -287,16 +289,16 @@ $final_analysis['financial_benchmarks'] ?? ( $final_analysis['research']['financ
 
 						$workflow_tracker->start_step( 'hybrid_rag_analysis' );
 						if ( $enable_ai ) {
-								$rag_baseline = [];
+								$rag_context = [];
 								if ( class_exists( 'RTBCB_RAG' ) ) {
 										$rag          = new RTBCB_RAG();
 										$search_query = self::build_rag_search_query( $user_inputs, $enriched_profile );
-										$rag_baseline = $rag->search_similar( $search_query, 5 );
+										$rag_context = $rag->search_similar( $search_query, 5 );
 								}
 								$final_analysis = new WP_Error( 'analysis_unavailable', 'Final analysis unavailable.' );
 								if ( isset( $llm ) && method_exists( $llm, 'generate_strategic_analysis' ) ) {
 										try {
-												$final_analysis = $llm->generate_strategic_analysis( $enriched_profile, $roi_scenarios, $recommendation, $rag_baseline );
+												$final_analysis = $llm->generate_strategic_analysis( $enriched_profile, $roi_scenarios, $recommendation, $rag_context );
 										} catch ( Exception $e ) {
 												return new WP_Error( 'llm_exception', __( 'AI analysis failed.', 'rtbcb' ) );
 										}
@@ -307,7 +309,7 @@ $final_analysis['financial_benchmarks'] ?? ( $final_analysis['research']['financ
 									       $workflow_tracker->add_warning( 'final_analysis_failed', sanitize_text_field( $error_message ) );
 							       }
 						} else {
-								$rag_baseline  = [];
+								$rag_context  = [];
 								$final_analysis = self::create_fallback_analysis( $enriched_profile, $roi_scenarios );
 								$workflow_tracker->add_warning( 'hybrid_rag_disabled', __( 'AI analysis disabled.', 'rtbcb' ) );
 						}
@@ -325,6 +327,7 @@ $enriched_profile,
 $roi_scenarios,
 $recommendation,
 $final_analysis,
+$rag_context,
 $chart_data,
 $request_start,
 $final_analysis['financial_benchmarks'] ?? ( $final_analysis['research']['financial'] ?? [] )
@@ -494,7 +497,7 @@ $final_analysis['financial_benchmarks'] ?? ( $final_analysis['research']['financ
 		];
 	}
 
-private static function structure_report_data( $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, $chart_data, $request_start, $financial_benchmarks = array() ) {
+private static function structure_report_data( $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, $rag_context, $chart_data, $request_start, $financial_benchmarks = array() ) {
         $operational_insights = (array) ( $final_analysis['operational_insights'] ?? $final_analysis['operational_analysis'] ?? [] );
         $current_state_assessment = (array) ( $operational_insights['current_state_assessment'] ?? [] );
         if ( empty( $current_state_assessment ) ) {
@@ -586,6 +589,7 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 			],
 'industry_insights'    => $final_analysis['industry_insights'] ?? [],
 'financial_benchmarks' => (array) ( is_array( $financial_benchmarks ) ? $financial_benchmarks : [] ),
+'rag_context'          => (array) ( is_array( $rag_context ) ? $rag_context : [] ),
 'financial_analysis'   => [
                                                        'roi_scenarios'        => self::format_roi_scenarios( $roi_scenarios ),
                                                        'investment_breakdown' => (array) ( is_array( $final_analysis['financial_analysis']['investment_breakdown'] ?? null ) ? $final_analysis['financial_analysis']['investment_breakdown'] : [] ),

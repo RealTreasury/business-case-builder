@@ -40,7 +40,7 @@ $business_case_data = [
                 'key_value_drivers'       => [ 'Efficiency', 'Compliance' ],
                 'executive_recommendation'=> 'Proceed',
         ],
-       'company_intelligence' => [
+        'company_intelligence' => [
                'industry_context' => [
                        'sector_analysis' => [
                                'market_dynamics'   => 'Volatile market',
@@ -61,6 +61,7 @@ $business_case_data = [
                        ],
                ],
        ],
+       'rag_context' => [ 'Example RAG item' ],
 ];
 
 $report_data = $business_case_data;
@@ -71,6 +72,11 @@ $output = ob_get_clean();
 
 if ( strpos( $output, 'rtbcb-executive-summary' ) === false || strpos( $output, 'Industry Insights' ) === false || strpos( $output, 'Volatile market' ) === false || strpos( $output, 'Regulation X' ) === false ) {
         echo "Executive summary not found\n";
+        exit( 1 );
+}
+
+if ( strpos( $output, 'Example RAG item' ) === false ) {
+        echo "RAG context not rendered\n";
         exit( 1 );
 }
 
