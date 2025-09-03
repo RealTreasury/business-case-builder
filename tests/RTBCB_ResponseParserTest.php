@@ -129,19 +129,21 @@ final class RTBCB_ResponseParserTest extends TestCase {
 				$this->assertCount( 1, $result['function_calls'] );
 		}
 
-	   public function test_validate_strategic_insights_requires_four_obstacles() {
-			   $ref    = new ReflectionClass( RTBCB_LLM::class );
-			   $llm    = $ref->newInstanceWithoutConstructor();
-			   $method = $ref->getMethod( 'validate_strategic_insights' );
-			   $method->setAccessible( true );
-
-			   $input  = [ 'potential_obstacles' => [ 'a', 'b', 'c' ] ];
-			   $result = $method->invoke( $llm, $input );
-			   $this->assertTrue( is_wp_error( $result ) );
-
-			   $input['potential_obstacles'][] = 'd';
-			   $result = $method->invoke( $llm, $input );
-			   $this->assertFalse( is_wp_error( $result ) );
-			   $this->assertCount( 4, $result['potential_obstacles'] );
-	   }
+		public function test_validate_strategic_insights_normalizes_obstacle_count() {
+				$ref    = new ReflectionClass( RTBCB_LLM::class );
+				$llm    = $ref->newInstanceWithoutConstructor();
+				$method = $ref->getMethod( 'validate_strategic_insights' );
+				$method->setAccessible( true );
+				
+				$input  = [ 'potential_obstacles' => [ 'a', 'b', 'c' ] ];
+				$result = $method->invoke( $llm, $input );
+				$this->assertIsArray( $result );
+				$this->assertCount( 4, $result['potential_obstacles'] );
+				
+				$input['potential_obstacles'][] = 'd';
+				$input['potential_obstacles'][] = 'e';
+				$input['potential_obstacles'][] = 'f';
+				$result = $method->invoke( $llm, $input );
+				$this->assertCount( 5, $result['potential_obstacles'] );
+		}
 }
