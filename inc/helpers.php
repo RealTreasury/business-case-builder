@@ -1,4 +1,4 @@
-								<?php
+<?php
 defined( 'ABSPATH' ) || exit;
 require_once __DIR__ . '/class-rtbcb-response-parser.php';
 
