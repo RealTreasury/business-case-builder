@@ -629,7 +629,10 @@ $tech_adoption      = $sector_analysis['technology_adoption'] ?? ( $benchmarking
 						if ( isset( $context_item['metadata'] ) ) {
 						       if ( is_array( $context_item['metadata'] ) ) {
 							       $context_text = $context_item['metadata']['content'] ?? '';
-						       } else {
+							       if ( 'vendor' === $source_type && '' === $context_text ) {
+								       $context_text = $context_item['metadata']['description'] ?? $context_item['metadata']['name'] ?? '';
+							}
+						} else {
 							       $context_text = $context_item['metadata'];
 						       }
 						}
