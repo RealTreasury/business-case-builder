@@ -171,214 +171,224 @@ PROMPT;
 	* @return string Prompt.
 	*/
 	protected function build_comprehensive_prompt( $user_inputs, $roi_data, $company_research, $industry_analysis, $tech_landscape, $risk_analysis, $financial_benchmarks ) {
-	       $company_name        = $user_inputs['company_name'] ?? 'the company';
-	       $company_profile     = $company_research['company_profile'] ?? [];
-	       $business_stage      = $company_profile['business_stage'] ?? 'Not specified';
-	       $key_characteristics = $company_profile['key_characteristics'] ?? 'Not specified';
-	       $treasury_priorities = $company_profile['treasury_priorities'] ?? 'Not specified';
-
-	       return <<<PROMPT
-# Treasury Technology Business Case Generation
-
-## Executive Brief
-Create a strategic business case for {$company_name} that justifies treasury technology investment with:
-- **Clear ROI Projections**: Risk-adjusted scenarios with quantified benefits
-- **Strategic Value Drivers**: Key business value creation opportunities  
-- **Implementation Roadmap**: Practical phases with success metrics and timelines
-- **Risk Mitigation Strategy**: Comprehensive risk assessment with mitigation approaches
-
-## Company Intelligence
-
-### Company Profile
-- **Name**: {$company_name}
-- **Industry**: {$user_inputs['industry']}
-- **Revenue Size**: {$user_inputs['company_size']}
-- **Business Stage**: {$business_stage}
-- **Key Characteristics**: {$key_characteristics}
-- **Treasury Priorities**: {$treasury_priorities}
-
-### Current Treasury Operations
-- **Team Size**: {$user_inputs['ftes']} FTEs
-- **Weekly Reconciliation**: {$user_inputs['hours_reconciliation']} hours
-- **Weekly Cash Positioning**: {$user_inputs['hours_cash_positioning']} hours  
-- **Banking Relationships**: {$user_inputs['num_banks']}
-- **Primary Pain Points**: {$this->format_pain_points( $user_inputs['pain_points'] ?? [] )}
-
-### Strategic Context
-- **Business Objective**: {$user_inputs['business_objective']}
-- **Implementation Timeline**: {$user_inputs['implementation_timeline']}
-- **Budget Range**: {$user_inputs['budget_range']}
-
-## Market Intelligence
-
-### Industry Analysis
-{$this->format_industry_analysis( $industry_analysis )}
-
-### Technology Landscape
-{$tech_landscape}
-
-### Financial Benchmarks
-{$this->format_financial_context( $financial_benchmarks )}
-
-### Risk Overview
-{$this->format_risk_context( $risk_analysis )}
-
-## Financial Projections
-- **Conservative Scenario**: \\${number_format( $roi_data['conservative']['total_annual_benefit'] ?? 0 )}
-- **Base Case Scenario**: \\${number_format( $roi_data['base']['total_annual_benefit'] ?? 0 )}
-- **Optimistic Scenario**: \\${number_format( $roi_data['optimistic']['total_annual_benefit'] ?? 0 )}
-
-## Required Comprehensive Analysis
-
-Return a complete JSON business case covering:
-
-1. **Executive Summary**: Strategic positioning, value drivers, and executive recommendation
-2. **Company Intelligence**: Enhanced company profile and industry context analysis
-3. **Operational Insights**: Current state assessment and improvement opportunities
-4. **Financial Analysis**: Detailed ROI scenarios, investment breakdown, and payback analysis
-5. **Technology Strategy**: Recommended solutions and implementation roadmap
-6. **Risk Analysis**: Implementation risks and comprehensive mitigation strategies
-7. **Action Plan**: Immediate steps, short-term milestones, and long-term objectives
-
-### Complete Business Case Schema
-```json
-{
-  "executive_summary": {
-    "strategic_positioning": "string - 3-4 sentences on strategic rationale and business context",
-    "key_value_drivers": ["array of 4 primary value creation opportunities"],
-    "business_case_strength": "weak|moderate|strong|compelling",
-    "executive_recommendation": "string - clear next steps with rationale and timeline",
-    "confidence_level": "number between 0.80 and 0.95"
-  },
-  "company_intelligence": {
-    "enriched_profile": {
-      "name": "{$company_name}",
-      "enhanced_description": "string - comprehensive business model and market position",
-      "maturity_level": "basic|developing|strategic|optimized",
-      "key_challenges": ["array of 3-4 current operational challenges"],
-      "strategic_priorities": ["array of 2-3 top strategic priorities"]
-    },
-    "industry_context": {
-      "competitive_pressure": "low|moderate|high",
-      "regulatory_environment": "string - regulatory considerations and compliance requirements",
-      "sector_trends": "string - key industry trends affecting treasury operations"
-    },
-    "maturity_assessment": [
-      {
-	"dimension": "string - specific assessment area",
-	"current_level": "string - current capability level",
-	"target_level": "string - desired future state",
-	"gap_analysis": "string - specific gaps and improvement requirements"
-      }
-    ]
-  },
-  "operational_insights": {
-    "current_state_assessment": ["array of 3-4 key current state observations"],
-    "process_improvements": [
-      {
-	"process": "string - specific process name",
-	"current_state": "string - how process works today",
-	"improved_state": "string - how process will work post-implementation",
-	"impact": "string - quantified business impact where possible"
-      }
-    ],
-    "automation_opportunities": [
-      {
-	"opportunity": "string - specific automation opportunity",
-	"complexity": "low|medium|high",
-	"potential_savings": "string - time and cost savings description",
-	"implementation_effort": "string - effort and resources required"
-      }
-    ]
-  },
-  "financial_analysis": {
-    "roi_scenarios": {
-      "conservative": {
-	"total_annual_benefit": "number",
-	"labor_savings": "number",
-	"fee_savings": "number",
-	"error_reduction": "number"
-      },
-      "base": {
-	"total_annual_benefit": "number",
-	"labor_savings": "number",
-	"fee_savings": "number",
-	"error_reduction": "number"
-      },
-      "optimistic": {
-	"total_annual_benefit": "number",
-	"labor_savings": "number",
-	"fee_savings": "number",
-	"error_reduction": "number"
-      }
-    },
-    "investment_breakdown": [
-      {
-	"category": "string - investment category",
-	"amount": "number - estimated cost",
-	"description": "string - detailed description"
-      }
-    ],
-    "payback_analysis": [
-      {
-	"scenario": "string - scenario name",
-	"payback_months": "number",
-	"roi_3_year": "number - percentage",
-	"npv": "number - net present value"
-      }
-    ],
-    "sensitivity_analysis": [
-      {
-	"factor": "string - factor name",
-	"impact_percentage": "number - impact on ROI",
-	"probability": "number - likelihood between 0-1"
-      }
-    ]
-  },
-  "technology_strategy": {
-    "recommended_category": "string - solution category",
-    "category_details": {
-      "name": "string - category name",
-      "features": ["array of key features needed"],
-      "ideal_for": "string - why this fits the company profile"
-    },
-    "implementation_roadmap": [
-      {
-	"phase": "string - phase name",
-	"timeline": "string - duration estimate",
-	"activities": ["array of key phase activities"],
-	"success_criteria": ["array of success measures"]
-      }
-    ],
-    "vendor_considerations": ["array of 4-5 vendor evaluation factors"]
-  },
-  "industry_insights": {
-    "sector_trends": ["array of 3-4 industry trends affecting treasury"],
-    "competitive_benchmarks": ["array of 2-3 competitive benchmarking insights"],
-    "regulatory_considerations": ["array of 2-3 regulatory factors"]
-  },
-  "risk_analysis": {
-    "implementation_risks": ["array of 5-6 key implementation risks"],
-    "mitigation_strategies": ["array of 5-6 specific risk mitigation approaches"],
-    "success_factors": ["array of 5-6 critical success factors"]
-  },
-  "action_plan": {
-    "immediate_steps": ["array of immediate actions for next 30 days"],
-    "short_term_milestones": ["array of milestones for 3-6 months"], 
-    "long_term_objectives": ["array of objectives for 6+ months"]
-  }
-}
-```
-PROMPT;
+	$company_name        = $user_inputs['company_name'] ?? 'the company';
+	$company_profile     = $company_research['company_profile'] ?? [];
+	$business_stage      = $company_profile['business_stage'] ?? 'Not specified';
+	$key_characteristics = $company_profile['key_characteristics'] ?? 'Not specified';
+	$treasury_priorities = $company_profile['treasury_priorities'] ?? 'Not specified';
+	
+	// Build prompt with explicit references to research batches.
+	$prompt  = "# Treasury Technology Business Case Generation\n\n";
+	$prompt .= "Leverage the provided Company Research, Industry Analysis, Technology Landscape, Risk Overview, and Financial Benchmarks. Cite each source in brackets when referenced (e.g., [Company Research]) and maintain a professional consultant-style tone.\n\n";
+	
+	// Executive Brief - synthesizes company_research, industry_analysis, tech_landscape, risk_analysis, financial_benchmarks.
+	$prompt .= "## Executive Brief\n";
+	$prompt .= "Create a strategic business case for {$company_name} that justifies treasury technology investment with:\n";
+	$prompt .= "- **Clear ROI Projections**: Risk-adjusted scenarios with quantified benefits\n";
+	$prompt .= "- **Strategic Value Drivers**: Key business value creation opportunities\n";
+	$prompt .= "- **Implementation Roadmap**: Practical phases with success metrics and timelines\n";
+	$prompt .= "- **Risk Mitigation Strategy**: Comprehensive risk assessment with mitigation approaches\n";
+	$prompt .= "Use evidence from [Company Research], [Industry Analysis], [Technology Landscape], [Risk Overview], and [Financial Benchmarks].\n\n";
+	
+	// Company Intelligence - uses company_research.
+	$prompt .= "## Company Intelligence\n\n";
+	$prompt .= "### Company Profile\n";
+	$prompt .= "- **Name**: {$company_name}\n";
+	$prompt .= "- **Industry**: {$user_inputs['industry']}\n";
+	$prompt .= "- **Revenue Size**: {$user_inputs['company_size']}\n";
+	$prompt .= "- **Business Stage**: {$business_stage}\n";
+	$prompt .= "- **Key Characteristics**: {$key_characteristics}\n";
+	$prompt .= "- **Treasury Priorities**: {$treasury_priorities}\n\n";
+	
+	// Current Treasury Operations - derived from user inputs.
+	$prompt .= "### Current Treasury Operations\n";
+	$prompt .= "- **Team Size**: {$user_inputs['ftes']} FTEs\n";
+	$prompt .= "- **Weekly Reconciliation**: {$user_inputs['hours_reconciliation']} hours\n";
+	$prompt .= "- **Weekly Cash Positioning**: {$user_inputs['hours_cash_positioning']} hours\n";
+	$prompt .= "- **Banking Relationships**: {$user_inputs['num_banks']}\n";
+	$prompt .= "- **Primary Pain Points**: {$this->format_pain_points( $user_inputs['pain_points'] ?? [] )}\n\n";
+	
+	// Strategic Context - from user inputs.
+	$prompt .= "### Strategic Context\n";
+	$prompt .= "- **Business Objective**: {$user_inputs['business_objective']}\n";
+	$prompt .= "- **Implementation Timeline**: {$user_inputs['implementation_timeline']}\n";
+	$prompt .= "- **Budget Range**: {$user_inputs['budget_range']}\n\n";
+	
+	// Market Intelligence - combines industry_analysis, tech_landscape, financial_benchmarks, risk_analysis.
+	$prompt .= "## Market Intelligence\n\n";
+	$prompt .= "### Industry Analysis\n";
+	$prompt .= $this->format_industry_analysis( $industry_analysis ) . "\n\n"; // industry_analysis batch
+	$prompt .= "### Technology Landscape\n";
+	$prompt .= "{$tech_landscape}\n\n"; // tech_landscape batch
+	$prompt .= "### Financial Benchmarks\n";
+	$prompt .= $this->format_financial_context( $financial_benchmarks ) . "\n\n"; // financial_benchmarks batch
+	$prompt .= "### Risk Overview\n";
+	$prompt .= $this->format_risk_context( $risk_analysis ) . "\n\n"; // risk_analysis batch
+	
+	// Financial Projections - from ROI calculation results.
+	$prompt .= "## Financial Projections\n";
+	$prompt .= "- **Conservative Scenario**: \\\\$" . number_format( $roi_data['conservative']['total_annual_benefit'] ?? 0 ) . "\n";
+	$prompt .= "- **Base Case Scenario**: \\\\$" . number_format( $roi_data['base']['total_annual_benefit'] ?? 0 ) . "\n";
+	$prompt .= "- **Optimistic Scenario**: \\\\$" . number_format( $roi_data['optimistic']['total_annual_benefit'] ?? 0 ) . "\n\n";
+	
+	// Required Comprehensive Analysis - instructs LLM to use all data.
+	$prompt .= "## Required Comprehensive Analysis\n\n";
+	$prompt .= "Return a complete JSON business case covering:\n\n";
+	$prompt .= "1. **Executive Summary**: Strategic positioning, value drivers, and executive recommendation\n";
+	$prompt .= "2. **Company Intelligence**: Enhanced company profile and industry context analysis\n";
+	$prompt .= "3. **Operational Insights**: Current state assessment and improvement opportunities\n";
+	$prompt .= "4. **Financial Analysis**: Detailed ROI scenarios, investment breakdown, and payback analysis\n";
+	$prompt .= "5. **Technology Strategy**: Recommended solutions and implementation roadmap\n";
+	$prompt .= "6. **Risk Analysis**: Implementation risks and comprehensive mitigation strategies\n";
+	$prompt .= "7. **Action Plan**: Immediate steps, short-term milestones, and long-term objectives\n\n";
+	
+	// Complete schema definition for the LLM output.
+	$prompt .= <<<SCHEMA
+	### Complete Business Case Schema
+	```json
+	{
+	  "executive_summary": {
+	    "strategic_positioning": "string - 3-4 sentences on strategic rationale and business context",
+	    "key_value_drivers": ["array of 4 primary value creation opportunities"],
+	    "business_case_strength": "weak|moderate|strong|compelling",
+	    "executive_recommendation": "string - clear next steps with rationale and timeline",
+	    "confidence_level": "number between 0.80 and 0.95"
+	  },
+	  "company_intelligence": {
+	    "enriched_profile": {
+	      "name": "{$company_name}",
+	      "enhanced_description": "string - comprehensive business model and market position",
+	      "maturity_level": "basic|developing|strategic|optimized",
+	      "key_challenges": ["array of 3-4 current operational challenges"],
+	      "strategic_priorities": ["array of 2-3 top strategic priorities"]
+	    },
+	    "industry_context": {
+	      "competitive_pressure": "low|moderate|high",
+	      "regulatory_environment": "string - regulatory considerations and compliance requirements",
+	      "sector_trends": "string - key industry trends affecting treasury operations"
+	    },
+	    "maturity_assessment": [
+	      {
+	        "dimension": "string - specific assessment area",
+	        "current_level": "string - current capability level",
+	        "target_level": "string - desired future state",
+	        "gap_analysis": "string - specific gaps and improvement requirements"
+	      }
+	    ]
+	  },
+	  "operational_insights": {
+	    "current_state_assessment": ["array of 3-4 key current state observations"],
+	    "process_improvements": [
+	      {
+	        "process": "string - specific process name",
+	        "current_state": "string - how process works today",
+	        "improved_state": "string - how process will work post-implementation",
+	        "impact": "string - quantified business impact where possible"
+	      }
+	    ],
+	    "automation_opportunities": [
+	      {
+	        "opportunity": "string - specific automation opportunity",
+	        "complexity": "low|medium|high",
+	        "potential_savings": "string - time and cost savings description",
+	        "implementation_effort": "string - effort and resources required"
+	      }
+	    ]
+	  },
+	  "financial_analysis": {
+	    "roi_scenarios": {
+	      "conservative": {
+	        "total_annual_benefit": "number",
+	        "labor_savings": "number",
+	        "fee_savings": "number",
+	        "error_reduction": "number"
+	      },
+	      "base": {
+	        "total_annual_benefit": "number",
+	        "labor_savings": "number",
+	        "fee_savings": "number",
+	        "error_reduction": "number"
+	      },
+	      "optimistic": {
+	        "total_annual_benefit": "number",
+	        "labor_savings": "number",
+	        "fee_savings": "number",
+	        "error_reduction": "number"
+	      }
+	    },
+	    "investment_breakdown": [
+	      {
+	        "category": "string - investment category",
+	        "amount": "number - estimated cost",
+	        "description": "string - detailed description"
+	      }
+	    ],
+	    "payback_analysis": [
+	      {
+	        "scenario": "string - scenario name",
+	        "payback_months": "number",
+	        "roi_3_year": "number - percentage",
+	        "npv": "number - net present value"
+	      }
+	    ],
+	    "sensitivity_analysis": [
+	      {
+	        "factor": "string - factor name",
+	        "impact_percentage": "number - impact on ROI",
+	        "probability": "number - likelihood between 0-1"
+	      }
+	    ]
+	  },
+	  "technology_strategy": {
+	    "recommended_category": "string - solution category",
+	    "category_details": {
+	      "name": "string - category name",
+	      "features": ["array of key features needed"],
+	      "ideal_for": "string - why this fits the company profile"
+	    },
+	    "implementation_roadmap": [
+	      {
+	        "phase": "string - phase name",
+	        "timeline": "string - duration estimate",
+	        "activities": ["array of key phase activities"],
+	        "success_criteria": ["array of success measures"]
+	      }
+	    ],
+	    "vendor_considerations": ["array of 4-5 vendor evaluation factors"]
+	  },
+	  "industry_insights": {
+	    "sector_trends": ["array of 3-4 industry trends affecting treasury"],
+	    "competitive_benchmarks": ["array of 2-3 competitive benchmarking insights"],
+	    "regulatory_considerations": ["array of 2-3 regulatory factors"]
+	  },
+	  "risk_analysis": {
+	    "implementation_risks": ["array of 5-6 key implementation risks"],
+	    "mitigation_strategies": ["array of 5-6 specific risk mitigation approaches"],
+	    "success_factors": ["array of 5-6 critical success factors"]
+	  },
+	  "action_plan": {
+	    "immediate_steps": ["array of immediate actions for next 30 days"],
+	    "short_term_milestones": ["array of milestones for 3-6 months"],
+	    "long_term_objectives": ["array of objectives for 6+ months"]
+	  }
+	}
+	```
+	SCHEMA;
+	
+	return $prompt;
 	}
 
-	/**
-	* Format industry analysis for better prompt integration.
-	*
-	* @param array $industry_analysis Industry analysis data.
-	* @return string Formatted analysis block.
-	*/
+/**
+ * Format industry analysis for better prompt integration.
+ *
+ * Maps the industry_analysis batch result into a human-readable block for
+ * the Market Intelligence section.
+ *
+ * @param array $industry_analysis Industry analysis data.
+ * @return string Formatted analysis block.
+ */
 	private function format_industry_analysis( $industry_analysis ) {
+	// industry_analysis batch result -> Market Intelligence section.
 	       if ( empty( $industry_analysis ) ) {
 	               return 'No specific industry analysis provided.';
 	       }
@@ -404,13 +414,17 @@ PROMPT;
 	       return trim( $formatted );
 	}
 
-	/**
-	* Format risk data for prompt.
-	*
-	* @param array $risk_analysis Risk analysis data.
-	* @return string Formatted risk block.
-	*/
+/**
+ * Format risk data for prompt.
+ *
+ * Maps the risk_analysis batch result into bullet points for the Market
+ * Intelligence and Executive Brief sections.
+ *
+ * @param array $risk_analysis Risk analysis data.
+ * @return string Formatted risk block.
+ */
 	private function format_risk_context( $risk_analysis ) {
+	// risk_analysis batch result -> Risk Overview section.
 	       if ( empty( $risk_analysis ) ) {
 	               return 'No risk data provided.';
 	       }
@@ -430,13 +444,17 @@ PROMPT;
 	       return implode( "\n", $lines );
 	}
 
-	/**
-	* Format financial benchmarks for prompt.
-	*
-	* @param array $financial_benchmarks Financial benchmark data.
-	* @return string Formatted financial block.
-	*/
+/**
+ * Format financial benchmarks for prompt.
+ *
+ * Maps the financial_benchmarks batch result into summary bullets for the
+ * Market Intelligence section.
+ *
+ * @param array $financial_benchmarks Financial benchmark data.
+ * @return string Formatted financial block.
+ */
 	private function format_financial_context( $financial_benchmarks ) {
+	// financial_benchmarks batch result -> Financial Benchmarks section.
 	       if ( empty( $financial_benchmarks ) ) {
 	               return 'No financial benchmarks provided.';
 	       }
