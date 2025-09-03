@@ -31,11 +31,13 @@ $company_intelligence  = $report_data['company_intelligence'] ?? [];
 	 * @var array $report_data Structured report data from the new workflow
 	 */
 	
-$company_name    = $metadata['company_name'] ?? ( $company_intelligence['enriched_profile']['name'] ?? __( 'Your Company', 'rtbcb' ) );
-	$analysis_date   = $metadata['analysis_date'] ?? current_time( 'Y-m-d' );
-	$analysis_type   = $metadata['analysis_type'] ?? 'basic';
-	$confidence_level = round( ( $metadata['confidence_level'] ?? 0.85 ) * 100 );
-	$processing_time = $metadata['processing_time'] ?? 0;
+$raw_company_name = $company_intelligence['enriched_profile']['name']
+	?? ( $report_data['company_name'] ?? ( $metadata['company_name'] ?? __( 'Your Company', 'rtbcb' ) ) );
+$company_name    = $raw_company_name;
+$analysis_date   = $metadata['analysis_date'] ?? current_time( 'Y-m-d' );
+$analysis_type   = $metadata['analysis_type'] ?? ( $report_data['analysis_type'] ?? 'basic' );
+$confidence_level = round( ( $metadata['confidence_level'] ?? ( $report_data['confidence'] ?? 0.85 ) ) * 100 );
+$processing_time = $metadata['processing_time'] ?? ( $report_data['processing_time'] ?? 0 );
 	?>
 	
 	<div class="rtbcb-enhanced-report" data-company="<?php echo esc_attr( $company_name ); ?>">
