@@ -72,12 +72,12 @@ final class RTBCB_ResponseParserProcessTest extends TestCase {
        }
 
 	public function test_parses_streaming_response() {
-		$stream  = "data: {\"choices\":[{\"delta\":{\"content\":\"Hello\"}}]}\n\n";
-		$stream .= "data: {\"choices\":[{\"delta\":{\"content\":\" world\"}}]}\n\n";
-		$stream .= "data: {\"choices\":[{\"message\":{\"role\":\"assistant\",\"content\":\"Hello world\"}}]}\n\n";
-		$stream .= "data: [DONE]\n\n";
-		$decoded = $this->parser->process_openai_response( $stream );
-		$this->assertSame( 'Hello world', $decoded );
-       }
+                $stream  = "data: {\"type\":\"response.output_text.delta\",\"delta\":{\"text\":\"Hello\"}}\n\n";
+                $stream .= "data: {\"type\":\"response.output_text.delta\",\"delta\":{\"text\":\" world\"}}\n\n";
+                $stream .= "data: {\"type\":\"response.output_text.done\",\"response\":{\"output_text\":\"Hello world\"}}\n\n";
+                $stream .= "data: [DONE]\n\n";
+                $decoded = $this->parser->process_openai_response( $stream );
+                $this->assertSame( 'Hello world', $decoded['output_text'] );
+        }
 }
 
