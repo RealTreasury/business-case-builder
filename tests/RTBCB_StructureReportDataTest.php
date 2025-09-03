@@ -125,6 +125,70 @@ self::assertSame( [ 'trend' ], $final_analysis['industry_insights']['sector_tren
 self::assertSame( $final_analysis['industry_insights'], $result['industry_insights'] );
 }
 
+public function test_operational_insights_retained() {
+$method = new ReflectionMethod( RTBCB_Ajax::class, 'structure_report_data' );
+$method->setAccessible( true );
+
+$user_inputs     = [ 'company_name' => 'Test', 'industry' => 'finance' ];
+$enriched_profile = [];
+$roi_scenarios    = [ 'conservative' => [], 'base' => [], 'optimistic' => [] ];
+$recommendation   = [ 'recommended' => '', 'category_info' => [] ];
+$analysis_data    = [
+'operational_insights' => [
+'current_state_assessment' => [ 'Manual process', 'Siloed data' ],
+'process_improvements'     => [
+[
+'process'        => 'Reconciliation',
+'current_state'  => 'Manual spreadsheets',
+'improved_state' => 'Automated workflow',
+'impact'         => 'High',
+],
+],
+'automation_opportunities' => [
+[
+'opportunity'           => 'Cash Forecasting',
+'complexity'            => 'Medium',
+'potential_savings'     => 8,
+'implementation_effort' => 'Low',
+],
+],
+],
+];
+
+$llm_reflection  = new ReflectionClass( RTBCB_LLM::class );
+$llm             = $llm_reflection->newInstanceWithoutConstructor();
+$analysis_method = new ReflectionMethod( RTBCB_LLM::class, 'validate_and_structure_analysis' );
+$analysis_method->setAccessible( true );
+$final_analysis  = $analysis_method->invoke( $llm, $analysis_data );
+
+$result = $method->invoke( null, $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, [], microtime( true ), [] );
+
+self::assertSame( [ 'Manual process', 'Siloed data' ], $final_analysis['operational_insights']['current_state_assessment'] );
+self::assertSame(
+[
+[
+'process_area'   => 'Reconciliation',
+'current_state'  => 'Manual spreadsheets',
+'improved_state' => 'Automated workflow',
+'impact_level'   => 'High',
+],
+],
+$final_analysis['operational_insights']['process_improvements']
+);
+self::assertSame(
+[
+[
+'opportunity'           => 'Cash Forecasting',
+'complexity'            => 'Medium',
+'time_savings'         => 8.0,
+'implementation_effort' => 'Low',
+],
+],
+$final_analysis['operational_insights']['automation_opportunities']
+);
+self::assertSame( $final_analysis['operational_insights'], $result['operational_insights'] );
+}
+
 public function test_financial_benchmarks_pass_through() {
 $method = new ReflectionMethod( RTBCB_Ajax::class, 'structure_report_data' );
 $method->setAccessible( true );

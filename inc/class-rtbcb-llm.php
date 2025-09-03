@@ -2455,11 +2455,11 @@ PROMPT;
 	'confidence_level'        => floatval( $analysis_data['executive_summary']['confidence_level'] ?? 0 ),
 	],
 'operational_insights' => [
-'current_state_assessment' => [
-'efficiency_rating'   => sanitize_text_field( $analysis_data['operational_insights']['current_state_assessment']['efficiency_rating'] ?? ( $analysis_data['operational_analysis']['current_state_assessment']['efficiency_rating'] ?? '' ) ),
-'benchmark_comparison' => sanitize_textarea_field( $analysis_data['operational_insights']['current_state_assessment']['benchmark_comparison'] ?? ( $analysis_data['operational_analysis']['current_state_assessment']['benchmark_comparison'] ?? '' ) ),
-'capacity_utilization' => sanitize_textarea_field( $analysis_data['operational_insights']['current_state_assessment']['capacity_utilization'] ?? ( $analysis_data['operational_analysis']['current_state_assessment']['capacity_utilization'] ?? '' ) ),
-],
+'current_state_assessment' => array_map(
+'sanitize_textarea_field',
+(array) ( $analysis_data['operational_insights']['current_state_assessment'] ??
+( $analysis_data['operational_analysis']['current_state_assessment'] ?? [] ) )
+),
 'process_improvements'     => [],
 'automation_opportunities' => [],
 ],
@@ -2525,23 +2525,23 @@ $financial_benchmarks['valuation_multiples'] ?? []
 ];
 }
 
-	foreach ( (array) ( $analysis_data['operational_insights']['process_improvements'] ?? $analysis_data['operational_analysis']['process_improvements'] ?? [] ) as $item ) {
-	$analysis['operational_insights']['process_improvements'][] = [
-	'process_area'   => sanitize_text_field( $item['process_area'] ?? '' ),
-	'current_state'  => sanitize_textarea_field( $item['current_state'] ?? '' ),
-	'improved_state' => sanitize_textarea_field( $item['improved_state'] ?? '' ),
-	'impact_level'   => sanitize_text_field( $item['impact_level'] ?? '' ),
-	];
-	}
+foreach ( (array) ( $analysis_data['operational_insights']['process_improvements'] ?? $analysis_data['operational_analysis']['process_improvements'] ?? [] ) as $item ) {
+$analysis['operational_insights']['process_improvements'][] = [
+'process_area'   => sanitize_text_field( $item['process'] ?? ( $item['process_area'] ?? '' ) ),
+'current_state'  => sanitize_textarea_field( $item['current_state'] ?? '' ),
+'improved_state' => sanitize_textarea_field( $item['improved_state'] ?? '' ),
+'impact_level'   => sanitize_text_field( $item['impact'] ?? ( $item['impact_level'] ?? '' ) ),
+];
+}
 
-	foreach ( (array) ( $analysis_data['operational_insights']['automation_opportunities'] ?? $analysis_data['operational_analysis']['automation_opportunities'] ?? [] ) as $item ) {
-	$analysis['operational_insights']['automation_opportunities'][] = [
-	'opportunity'          => sanitize_text_field( $item['opportunity'] ?? '' ),
-	'complexity'           => sanitize_text_field( $item['complexity'] ?? '' ),
-	'time_savings'         => floatval( $item['time_savings'] ?? 0 ),
-	'implementation_effort' => sanitize_text_field( $item['implementation_effort'] ?? '' ),
-	];
-	}
+foreach ( (array) ( $analysis_data['operational_insights']['automation_opportunities'] ?? $analysis_data['operational_analysis']['automation_opportunities'] ?? [] ) as $item ) {
+$analysis['operational_insights']['automation_opportunities'][] = [
+'opportunity'          => sanitize_text_field( $item['opportunity'] ?? '' ),
+'complexity'           => sanitize_text_field( $item['complexity'] ?? '' ),
+'time_savings'         => floatval( $item['potential_savings'] ?? ( $item['time_savings'] ?? 0 ) ),
+'implementation_effort' => sanitize_text_field( $item['implementation_effort'] ?? '' ),
+];
+}
 
 	foreach ( (array) ( $analysis_data['implementation_roadmap'] ?? [] ) as $phase ) {
 		$analysis['implementation_roadmap'][] = [
