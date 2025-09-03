@@ -12,133 +12,127 @@ class RTBCB_Ajax {
 	*
 	* @return void
 	*/
-       public static function generate_comprehensive_case() {
-	       if ( ! function_exists( 'check_ajax_referer' ) ) {
-		       wp_die( 'WordPress not ready' );
-	       }
+	   public static function generate_comprehensive_case() {
+		   if ( ! function_exists( 'check_ajax_referer' ) ) {
+			   wp_die( 'WordPress not ready' );
+		   }
 
 $params = self::get_sanitized_params();
 
 rtbcb_increase_memory_limit();
-	       $timeout = absint( rtbcb_get_api_timeout() );
-	       if ( ! ini_get( 'safe_mode' ) && $timeout > 0 ) {
-		       set_time_limit( $timeout );
-	       }
-	       rtbcb_log_memory_usage( 'start' );
+		   $timeout = absint( rtbcb_get_api_timeout() );
+		   if ( ! ini_get( 'safe_mode' ) && $timeout > 0 ) {
+			   set_time_limit( $timeout );
+		   }
+		   rtbcb_log_memory_usage( 'start' );
 
-	       if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
+		   if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
 			self::log_request( __FUNCTION__, $params, 'error', [ 'code' => 'invalid_nonce' ] );
-		       wp_send_json_error( [ 'code' => 'invalid_nonce', 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
-		       return;
-	       }
+			   wp_send_json_error( [ 'code' => 'invalid_nonce', 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
+			   return;
+		   }
 
-	       $user_inputs = self::collect_and_validate_user_inputs();
-	       if ( is_wp_error( $user_inputs ) ) {
+		   $user_inputs = self::collect_and_validate_user_inputs();
+		   if ( is_wp_error( $user_inputs ) ) {
 			self::log_request( __FUNCTION__, $params, 'error', [ 'code' => 'validation_error', 'message' => $user_inputs->get_error_message() ] );
-		       wp_send_json_error( [ 'code' => 'validation_error', 'message' => $user_inputs->get_error_message() ], 400 );
-		       return;
-	       }
+			   wp_send_json_error( [ 'code' => 'validation_error', 'message' => $user_inputs->get_error_message() ], 400 );
+			   return;
+		   }
 
-	       try {
-		       $job_id = RTBCB_Background_Job::enqueue( $user_inputs );
-	       } catch ( Exception $e ) {
+		   try {
+			   $job_id = RTBCB_Background_Job::enqueue( $user_inputs );
+		   } catch ( Exception $e ) {
 			self::log_request( __FUNCTION__, $params, 'error', [ 'code' => 'background_job_exception', 'message' => $e->getMessage() ] );
-		       wp_send_json_error( [ 'code' => 'background_job_exception', 'message' => __( 'An unexpected error occurred.', 'rtbcb' ) ], 500 );
-		       return;
-	       }
+			   wp_send_json_error( [ 'code' => 'background_job_exception', 'message' => __( 'An unexpected error occurred.', 'rtbcb' ) ], 500 );
+			   return;
+		   }
 
-	       if ( is_wp_error( $job_id ) ) {
+		   if ( is_wp_error( $job_id ) ) {
 			self::log_request( __FUNCTION__, $params, 'error', [ 'code' => 'background_job_error', 'message' => $job_id->get_error_message() ] );
-		       wp_send_json_error( [ 'code' => 'background_job_error', 'message' => $job_id->get_error_message() ], 500 );
-		       return;
-	       }
+			   wp_send_json_error( [ 'code' => 'background_job_error', 'message' => $job_id->get_error_message() ], 500 );
+			   return;
+		   }
 
 			self::log_request( __FUNCTION__, $params, 'success', [ 'job_id' => $job_id ] );
-	       wp_send_json_success( [ 'job_id' => $job_id ] );
-       }
+		   wp_send_json_success( [ 'job_id' => $job_id ] );
+	   }
 
 		/**
 		* Stream business analysis chunks via AJAX.
 		*
 		* @return void
 		*/
-public static function stream_analysis() {
 
-	       if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) {
-		       wp_die( 'Invalid request' );
-	       }
+	public static function stream_analysis() {
+		if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) {
+			wp_die( 'Invalid request' );
+		}
 
-	       if ( ! function_exists( 'check_ajax_referer' ) ) {
-		       wp_die( 'WordPress not ready' );
-	       }
+		$action = isset( $_REQUEST['action'] ) ? sanitize_key( wp_unslash( $_REQUEST['action'] ) ) : '';
+		if ( 'rtbcb_stream_analysis' !== $action ) {
+			// Jetpack also routes requests through admin-ajax.php; avoid sending
+			// streaming headers for unrelated actions.
+			return;
+		}
 
-	$params = self::get_sanitized_params();
-	
-	if ( function_exists( 'rtbcb_is_wpcom' ) && rtbcb_is_wpcom() ) {
-		self::log_request( __FUNCTION__, $params, 'error', [ 'code' => 'streaming_unsupported' ] );
-		wp_send_json_error( [ 'code' => 'streaming_unsupported', 'message' => __( 'Streaming is not supported on this hosting environment.', 'rtbcb' ) ], 400 );
-		return;
-	}
-	
-	rtbcb_increase_memory_limit();
-	       $timeout = absint( rtbcb_get_api_timeout() );
-	       if ( ! ini_get( 'safe_mode' ) && $timeout > 0 ) {
-		       set_time_limit( $timeout );
-	       }
-	       rtbcb_log_memory_usage( 'start' );
+		if ( ! function_exists( 'check_ajax_referer' ) ) {
+			wp_die( 'WordPress not ready' );
+		}
 
-	       if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
+		$params = self::get_sanitized_params();
+
+		if ( function_exists( 'rtbcb_is_wpcom' ) && rtbcb_is_wpcom() ) {
+			self::log_request( __FUNCTION__, $params, 'error', [ 'code' => 'streaming_unsupported' ] );
+			wp_send_json_error( [ 'code' => 'streaming_unsupported', 'message' => __( 'Streaming is not supported on this hosting environment.', 'rtbcb' ) ], 400 );
+			return;
+		}
+
+		rtbcb_increase_memory_limit();
+		$timeout = absint( rtbcb_get_api_timeout() );
+		if ( ! ini_get( 'safe_mode' ) && $timeout > 0 ) {
+			set_time_limit( $timeout );
+		}
+		rtbcb_log_memory_usage( 'start' );
+
+		if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
 			self::log_request( __FUNCTION__, $params, 'error', [ 'code' => 'invalid_nonce' ] );
-		       wp_send_json_error( [ 'code' => 'invalid_nonce', 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
-		       return;
-	       }
+			wp_send_json_error( [ 'code' => 'invalid_nonce', 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
+			return;
+		}
 
-	       $user_inputs = self::collect_and_validate_user_inputs();
-	       if ( is_wp_error( $user_inputs ) ) {
+		$user_inputs = self::collect_and_validate_user_inputs();
+		if ( is_wp_error( $user_inputs ) ) {
 			self::log_request( __FUNCTION__, $params, 'error', [ 'code' => 'validation_error', 'message' => $user_inputs->get_error_message() ] );
-		       wp_send_json_error( [ 'code' => 'validation_error', 'message' => $user_inputs->get_error_message() ], 400 );
-		       return;
-	       }
+			wp_send_json_error( [ 'code' => 'validation_error', 'message' => $user_inputs->get_error_message() ], 400 );
+			return;
+		}
 
-	       $action = isset( $_REQUEST['action'] ) ? sanitize_key( wp_unslash( $_REQUEST['action'] ) ) : '';
-			       if ( 'rtbcb_stream_analysis' !== $action ) {
-			       // Jetpack also routes requests through admin-ajax.php; avoid sending
-			       // streaming headers for unrelated actions.
-			       return;
-			       }
+		nocache_headers();
+		header( 'Content-Type: text/event-stream' );
+		header( 'Cache-Control: no-cache' );
+		header( 'Connection: keep-alive' );
 
-				nocache_headers();
-				header( 'Content-Type: text/event-stream' );
-				header( 'Cache-Control: no-cache' );
-				header( 'Connection: keep-alive' );
+		$scenarios      = RTBCB_Calculator::calculate_roi( $user_inputs );
+		$recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
 
-				$scenarios      = RTBCB_Calculator::calculate_roi( $user_inputs );
-				$recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
+		$plugin = RTBCB_Main::instance();
 
-				$plugin = RTBCB_Main::instance();
+		$chunk_callback = function( $chunk ) {
+			echo 'data: ' . wp_json_encode( $chunk ) . "\n\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		};
 
-				$chunk_callback = function( $chunk ) {
-					echo $chunk; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-					if ( function_exists( 'flush' ) ) {
-						flush();
-				}
-				};
+		$complete_callback = function() {
+			echo "data: [DONE]\n\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		};
 
-	       try {
-		       $result = $plugin->generate_business_analysis( $user_inputs, $scenarios, $recommendation, $chunk_callback );
-	       } catch ( Exception $e ) {
-			self::log_request( __FUNCTION__, $params, 'error', [ 'code' => 'analysis_error', 'message' => $e->getMessage() ] );
-		       wp_send_json_error( [ 'code' => 'analysis_error', 'message' => __( 'An unexpected error occurred.', 'rtbcb' ) ], 500 );
-		       return;
-	       }
+		$error_callback = function( $error ) {
+			echo 'data: ' . wp_json_encode( [ 'error' => $error->get_error_message() ] ) . "\n\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		};
 
-			       echo 'data: ' . wp_json_encode( [ 'type' => 'final', 'payload' => $result ] ) . "\n\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			       if ( function_exists( 'flush' ) ) {
-				       flush();
-			       }
-			self::log_request( __FUNCTION__, $params, 'success', [] );
-	       wp_die();
-		       }
+		RTBCB_LLM::stream_business_analysis( $plugin, $scenarios, $recommendation, $chunk_callback, $complete_callback, $error_callback );
+
+		wp_die();
+	}
 	/**
 	* Process the basic ROI calculation step.
 	*
@@ -200,10 +194,10 @@ public static function stream_analysis() {
 			self::safe_update_status( $job_id, 'processing', [ 'category' => $recommendation['recommended'] ] );
 								}
 
-                                                                  $workflow_tracker->start_step( 'hybrid_rag_analysis' );
-                                                                  $final_analysis = self::create_fallback_analysis( $enriched_profile, $roi_scenarios );
-                                                                  $workflow_tracker->complete_step( 'hybrid_rag_analysis', $final_analysis );
-                                                                  $rag_context   = [];
+				                                                  $workflow_tracker->start_step( 'hybrid_rag_analysis' );
+				                                                  $final_analysis = self::create_fallback_analysis( $enriched_profile, $roi_scenarios );
+				                                                  $workflow_tracker->complete_step( 'hybrid_rag_analysis', $final_analysis );
+				                                                  $rag_context   = [];
 								if ( $job_id ) {
 			self::safe_update_status( $job_id, 'processing', [ 'analysis' => $final_analysis ] );
 								}
@@ -380,49 +374,49 @@ $final_analysis['financial_benchmarks'] ?? ( $final_analysis['research']['financ
 	*
 	* @return void
 	*/
-       public static function get_job_status() {
-	       if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) {
-		       wp_die( 'Invalid request' );
-	       }
+	   public static function get_job_status() {
+		   if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) {
+			   wp_die( 'Invalid request' );
+		   }
 
-	       if ( ! function_exists( 'check_ajax_referer' ) ) {
-		       wp_die( 'WordPress not ready' );
-	       }
+		   if ( ! function_exists( 'check_ajax_referer' ) ) {
+			   wp_die( 'WordPress not ready' );
+		   }
 
-	       $params = self::get_sanitized_params();
+		   $params = self::get_sanitized_params();
 
-	       if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
+		   if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
 			self::log_request( __FUNCTION__, $params, 'error', [ 'code' => 'invalid_nonce' ] );
-		       wp_send_json_error( [ 'code' => 'invalid_nonce', 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
-		       return;
-	       }
+			   wp_send_json_error( [ 'code' => 'invalid_nonce', 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
+			   return;
+		   }
 
-	       $job_id = sanitize_text_field( wp_unslash( $_GET['job_id'] ?? '' ) );
-	       if ( empty( $job_id ) ) {
+		   $job_id = sanitize_text_field( wp_unslash( $_GET['job_id'] ?? '' ) );
+		   if ( empty( $job_id ) ) {
 			self::log_request( __FUNCTION__, $params, 'error', [ 'code' => 'missing_job_id' ] );
-		       wp_send_json_error( [ 'code' => 'missing_job_id', 'message' => __( 'Missing job ID.', 'rtbcb' ) ], 400 );
-		       return;
-	       }
+			   wp_send_json_error( [ 'code' => 'missing_job_id', 'message' => __( 'Missing job ID.', 'rtbcb' ) ], 400 );
+			   return;
+		   }
 
-	       try {
-		       $status = RTBCB_Background_Job::get_status( $job_id );
-	       } catch ( Exception $e ) {
+		   try {
+			   $status = RTBCB_Background_Job::get_status( $job_id );
+		   } catch ( Exception $e ) {
 			self::log_request( __FUNCTION__, $params, 'error', [ 'code' => 'status_exception', 'message' => $e->getMessage() ] );
-		       wp_send_json_error( [ 'code' => 'status_exception', 'message' => __( 'Unable to retrieve job status.', 'rtbcb' ) ], 500 );
-		       return;
-	       }
+			   wp_send_json_error( [ 'code' => 'status_exception', 'message' => __( 'Unable to retrieve job status.', 'rtbcb' ) ], 500 );
+			   return;
+		   }
 
-	       if ( is_wp_error( $status ) ) {
+		   if ( is_wp_error( $status ) ) {
 			self::log_request( __FUNCTION__, $params, 'error', [ 'code' => 'status_error', 'message' => $status->get_error_message() ] );
-		       $status = [
-			       'state'   => 'error',
-			       'message' => sanitize_text_field( $status->get_error_message() ),
-		       ];
-	       }
+			   $status = [
+				   'state'   => 'error',
+				   'message' => sanitize_text_field( $status->get_error_message() ),
+			   ];
+		   }
 
-	       $response = [
-		       'status' => $status['state'] ?? '',
-	       ];
+		   $response = [
+			   'status' => $status['state'] ?? '',
+		   ];
 
 				foreach ( $status as $field => $value ) {
 						if ( in_array( $field, [ 'state', 'created', 'updated', 'result' ], true ) ) {
@@ -430,8 +424,8 @@ $final_analysis['financial_benchmarks'] ?? ( $final_analysis['research']['financ
 						}
 			if ( 'percent' === $field ) {
 				$response[ $field ] = floatval( $value );
-                        } elseif ( 'report_url' === $field && is_string( $value ) ) {
-                                $response[ $field ] = function_exists( 'esc_url_raw' ) ? esc_url_raw( $value ) : $value;
+				        } elseif ( 'report_url' === $field && is_string( $value ) ) {
+				                $response[ $field ] = function_exists( 'esc_url_raw' ) ? esc_url_raw( $value ) : $value;
 			} elseif ( in_array( $field, [ 'step', 'message' ], true ) && is_string( $value ) ) {
 				$response[ $field ] = sanitize_text_field( $value );
 			} else {
@@ -439,29 +433,29 @@ $final_analysis['financial_benchmarks'] ?? ( $final_analysis['research']['financ
 			}
 				}
 
-	       if ( isset( $status['result'] ) ) {
-		       if (
-			       'completed' === ( $response['status'] ?? '' ) &&
-			       ! empty( $status['result']['report_data'] )
-		       ) {
-			       $result                  = $status['result'];
-			       $response['report_data'] = $result['report_data'];
-			       if ( is_array( $result ) ) {
+		   if ( isset( $status['result'] ) ) {
+			   if (
+				   'completed' === ( $response['status'] ?? '' ) &&
+				   ! empty( $status['result']['report_data'] )
+			   ) {
+				   $result                  = $status['result'];
+				   $response['report_data'] = $result['report_data'];
+				   if ( is_array( $result ) ) {
 				       foreach ( $result as $key => $value ) {
 					       if ( 'report_data' === $key ) {
 						       continue;
 					       }
 					       $response[ $key ] = $value;
 				       }
-			       }
-		       } else {
-			       $response['result'] = $status['result'];
-		       }
-	       }
+				   }
+			   } else {
+				   $response['result'] = $status['result'];
+			   }
+		   }
 
 			self::log_request( __FUNCTION__, $params, 'success', [ 'job_id' => $job_id, 'status' => $response['status'] ] );
-	       wp_send_json_success( $response );
-       }
+		   wp_send_json_success( $response );
+	   }
 	/**
 	 * Collect and validate user input from the POST request.
  *
@@ -504,37 +498,37 @@ $final_analysis['financial_benchmarks'] ?? ( $final_analysis['research']['financ
 	}
 
 private static function structure_report_data( $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, $rag_context, $chart_data, $request_start, $financial_benchmarks = array() ) {
-        $operational_insights = (array) ( $final_analysis['operational_insights'] ?? $final_analysis['operational_analysis'] ?? [] );
-        $current_state_assessment = (array) ( $operational_insights['current_state_assessment'] ?? [] );
-        if ( empty( $current_state_assessment ) ) {
-        $current_state_assessment = [ __( 'No data provided', 'rtbcb' ) ];
-        }
-        $process_improvements = (array) ( $operational_insights['process_improvements'] ?? [] );
-        if ( empty( $process_improvements ) ) {
-        $process_improvements = [ __( 'No data provided', 'rtbcb' ) ];
-        }
-        $automation_opportunities = (array) ( $operational_insights['automation_opportunities'] ?? [] );
-        if ( empty( $automation_opportunities ) ) {
-        $automation_opportunities = [ __( 'No data provided', 'rtbcb' ) ];
-        }
-        $risk_analysis = (array) ( $final_analysis['risk_analysis'] ?? $final_analysis['risk_mitigation'] ?? [] );
-        $implementation_risks = (array) ( $risk_analysis['implementation_risks'] ?? [] );
-        if ( empty( $implementation_risks ) ) {
-        $implementation_risks = [ __( 'No data provided', 'rtbcb' ) ];
-        }
-        $action_plan = (array) ( $final_analysis['action_plan'] ?? [] );
-        $immediate_steps = (array) ( $action_plan['immediate_steps'] ?? ( $final_analysis['next_steps']['immediate'] ?? [] ) );
-        if ( empty( $immediate_steps ) ) {
-        $immediate_steps = [ __( 'No data provided', 'rtbcb' ) ];
-        }
-        $short_term_milestones = (array) ( $action_plan['short_term_milestones'] ?? ( $final_analysis['next_steps']['short_term'] ?? [] ) );
-        if ( empty( $short_term_milestones ) ) {
-        $short_term_milestones = [ __( 'No data provided', 'rtbcb' ) ];
-        }
-        $long_term_objectives = (array) ( $action_plan['long_term_objectives'] ?? ( $final_analysis['next_steps']['long_term'] ?? [] ) );
-        if ( empty( $long_term_objectives ) ) {
-        $long_term_objectives = [ __( 'No data provided', 'rtbcb' ) ];
-        }
+		$operational_insights = (array) ( $final_analysis['operational_insights'] ?? $final_analysis['operational_analysis'] ?? [] );
+		$current_state_assessment = (array) ( $operational_insights['current_state_assessment'] ?? [] );
+		if ( empty( $current_state_assessment ) ) {
+		$current_state_assessment = [ __( 'No data provided', 'rtbcb' ) ];
+		}
+		$process_improvements = (array) ( $operational_insights['process_improvements'] ?? [] );
+		if ( empty( $process_improvements ) ) {
+		$process_improvements = [ __( 'No data provided', 'rtbcb' ) ];
+		}
+		$automation_opportunities = (array) ( $operational_insights['automation_opportunities'] ?? [] );
+		if ( empty( $automation_opportunities ) ) {
+		$automation_opportunities = [ __( 'No data provided', 'rtbcb' ) ];
+		}
+		$risk_analysis = (array) ( $final_analysis['risk_analysis'] ?? $final_analysis['risk_mitigation'] ?? [] );
+		$implementation_risks = (array) ( $risk_analysis['implementation_risks'] ?? [] );
+		if ( empty( $implementation_risks ) ) {
+		$implementation_risks = [ __( 'No data provided', 'rtbcb' ) ];
+		}
+		$action_plan = (array) ( $final_analysis['action_plan'] ?? [] );
+		$immediate_steps = (array) ( $action_plan['immediate_steps'] ?? ( $final_analysis['next_steps']['immediate'] ?? [] ) );
+		if ( empty( $immediate_steps ) ) {
+		$immediate_steps = [ __( 'No data provided', 'rtbcb' ) ];
+		}
+		$short_term_milestones = (array) ( $action_plan['short_term_milestones'] ?? ( $final_analysis['next_steps']['short_term'] ?? [] ) );
+		if ( empty( $short_term_milestones ) ) {
+		$short_term_milestones = [ __( 'No data provided', 'rtbcb' ) ];
+		}
+		$long_term_objectives = (array) ( $action_plan['long_term_objectives'] ?? ( $final_analysis['next_steps']['long_term'] ?? [] ) );
+		if ( empty( $long_term_objectives ) ) {
+		$long_term_objectives = [ __( 'No data provided', 'rtbcb' ) ];
+		}
 
 	$company_profile      = $enriched_profile['company_profile'] ?? [];
 	$industry_context_raw = $enriched_profile['industry_context'] ?? [];
@@ -590,41 +584,41 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 			'company_intelligence' => [
 				'enriched_profile'    => $enriched_profile_struct,
 				'industry_context'    => $industry_context_struct,
-                               'maturity_assessment' => (array) ( is_array( $enriched_profile['maturity_assessment'] ?? null ) ? $enriched_profile['maturity_assessment'] : [] ),
-                               'competitive_position'=> (array) ( is_array( $enriched_profile['competitive_position'] ?? null ) ? $enriched_profile['competitive_position'] : [] ),
+				               'maturity_assessment' => (array) ( is_array( $enriched_profile['maturity_assessment'] ?? null ) ? $enriched_profile['maturity_assessment'] : [] ),
+				               'competitive_position'=> (array) ( is_array( $enriched_profile['competitive_position'] ?? null ) ? $enriched_profile['competitive_position'] : [] ),
 			],
 'industry_insights'    => $final_analysis['industry_insights'] ?? [],
 'financial_benchmarks' => (array) ( is_array( $financial_benchmarks ) ? $financial_benchmarks : [] ),
 'rag_context'          => (array) ( is_array( $rag_context ) ? $rag_context : [] ),
 'financial_analysis'   => [
-                                                       'roi_scenarios'        => self::format_roi_scenarios( $roi_scenarios ),
-                                                       'investment_breakdown' => (array) ( is_array( $final_analysis['financial_analysis']['investment_breakdown'] ?? null ) ? $final_analysis['financial_analysis']['investment_breakdown'] : [] ),
-                                                       'payback_analysis'     => (array) ( is_array( $final_analysis['financial_analysis']['payback_analysis'] ?? null ) ? $final_analysis['financial_analysis']['payback_analysis'] : [] ),
-                                                       'sensitivity_analysis' => (array) ( is_array( $roi_scenarios['sensitivity_analysis'] ?? null ) ? $roi_scenarios['sensitivity_analysis'] : [] ),
-                                                       'confidence_metrics'   => (array) ( is_array( $roi_scenarios['confidence_metrics'] ?? null ) ? $roi_scenarios['confidence_metrics'] : [] ),
-                                                       'chart_data'           => $chart_data,
-                                       ],
+				                                       'roi_scenarios'        => self::format_roi_scenarios( $roi_scenarios ),
+				                                       'investment_breakdown' => (array) ( is_array( $final_analysis['financial_analysis']['investment_breakdown'] ?? null ) ? $final_analysis['financial_analysis']['investment_breakdown'] : [] ),
+				                                       'payback_analysis'     => (array) ( is_array( $final_analysis['financial_analysis']['payback_analysis'] ?? null ) ? $final_analysis['financial_analysis']['payback_analysis'] : [] ),
+				                                       'sensitivity_analysis' => (array) ( is_array( $roi_scenarios['sensitivity_analysis'] ?? null ) ? $roi_scenarios['sensitivity_analysis'] : [] ),
+				                                       'confidence_metrics'   => (array) ( is_array( $roi_scenarios['confidence_metrics'] ?? null ) ? $roi_scenarios['confidence_metrics'] : [] ),
+				                                       'chart_data'           => $chart_data,
+				                       ],
 			'technology_strategy' => [
-                               'recommended_category' => $recommendation['recommended'],
-                               'category_details'     => (array) ( is_array( $recommendation['category_info'] ?? null ) ? $recommendation['category_info'] : [] ),
-                               'implementation_roadmap' => (array) ( is_array( $final_analysis['implementation_roadmap'] ?? null ) ? $final_analysis['implementation_roadmap'] : [] ),
-                               'vendor_considerations'=> (array) ( is_array( $final_analysis['vendor_considerations'] ?? null ) ? $final_analysis['vendor_considerations'] : [] ),
+				               'recommended_category' => $recommendation['recommended'],
+				               'category_details'     => (array) ( is_array( $recommendation['category_info'] ?? null ) ? $recommendation['category_info'] : [] ),
+				               'implementation_roadmap' => (array) ( is_array( $final_analysis['implementation_roadmap'] ?? null ) ? $final_analysis['implementation_roadmap'] : [] ),
+				               'vendor_considerations'=> (array) ( is_array( $final_analysis['vendor_considerations'] ?? null ) ? $final_analysis['vendor_considerations'] : [] ),
 			],
-                        'operational_insights' => [
-                                                        'current_state_assessment' => $current_state_assessment,
-                                                        'process_improvements'     => $process_improvements,
-                                                        'automation_opportunities' => $automation_opportunities,
-                        ],
-                        'risk_analysis' => [
-                                                        'implementation_risks' => $implementation_risks,
-                                                       'mitigation_strategies' => (array) ( is_array( $risk_analysis['mitigation_strategies'] ?? null ) ? $risk_analysis['mitigation_strategies'] : [] ),
-                                                       'success_factors'      => (array) ( is_array( $risk_analysis['success_factors'] ?? null ) ? $risk_analysis['success_factors'] : [] ),
-                        ],
-                        'action_plan' => [
-                                'immediate_steps'       => $immediate_steps,
-                                'short_term_milestones' => $short_term_milestones,
-                                'long_term_objectives'  => $long_term_objectives,
-                        ],
+				        'operational_insights' => [
+				                                        'current_state_assessment' => $current_state_assessment,
+				                                        'process_improvements'     => $process_improvements,
+				                                        'automation_opportunities' => $automation_opportunities,
+				        ],
+				        'risk_analysis' => [
+				                                        'implementation_risks' => $implementation_risks,
+				                                       'mitigation_strategies' => (array) ( is_array( $risk_analysis['mitigation_strategies'] ?? null ) ? $risk_analysis['mitigation_strategies'] : [] ),
+				                                       'success_factors'      => (array) ( is_array( $risk_analysis['success_factors'] ?? null ) ? $risk_analysis['success_factors'] : [] ),
+				        ],
+				        'action_plan' => [
+				                'immediate_steps'       => $immediate_steps,
+				                'short_term_milestones' => $short_term_milestones,
+				                'long_term_objectives'  => $long_term_objectives,
+				        ],
 		];
 	}
 
@@ -720,35 +714,35 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 			return $base > 0 ? 'strong' : 'weak';
 	}
 
-       private static function format_roi_scenarios( $roi_scenarios ) {
-               $allowed   = array( 'conservative', 'base', 'optimistic' );
-               $formatted = array();
+	   private static function format_roi_scenarios( $roi_scenarios ) {
+			   $allowed   = array( 'conservative', 'base', 'optimistic' );
+			   $formatted = array();
 
-               foreach ( $allowed as $key ) {
-                       if ( isset( $roi_scenarios[ $key ] ) && is_array( $roi_scenarios[ $key ] ) ) {
-                               $formatted[ $key ] = $roi_scenarios[ $key ];
-                       }
-               }
+			   foreach ( $allowed as $key ) {
+				       if ( isset( $roi_scenarios[ $key ] ) && is_array( $roi_scenarios[ $key ] ) ) {
+				               $formatted[ $key ] = $roi_scenarios[ $key ];
+				       }
+			   }
 
-               return $formatted;
-       }
+			   return $formatted;
+	   }
 
-       /**
+	   /**
 	* Sanitize request parameters for logging.
 	*
 	* @return array
 	*/
 	private static function get_sanitized_params() {
-	       $params = [];
-	       foreach ( $_REQUEST as $key => $value ) {
-		       if ( is_scalar( $value ) ) {
-			       $params[ sanitize_key( $key ) ] = sanitize_text_field( wp_unslash( $value ) );
-		       }
-	       }
-	       return $params;
-       }
+		   $params = [];
+		   foreach ( $_REQUEST as $key => $value ) {
+			   if ( is_scalar( $value ) ) {
+				   $params[ sanitize_key( $key ) ] = sanitize_text_field( wp_unslash( $value ) );
+			   }
+		   }
+		   return $params;
+	   }
 
-       /**
+	   /**
 	* Log AJAX request details.
 	*
 	* @param string $action Action name.
@@ -758,21 +752,21 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 	* @return void
 	*/
 	private static function log_request( $action, $params, $status, $extra = [] ) {
-	       if ( class_exists( 'RTBCB_Logger' ) ) {
-		       $context = array_merge(
-			       [
+		   if ( class_exists( 'RTBCB_Logger' ) ) {
+			   $context = array_merge(
+				   [
 				       'action'  => $action,
 				       'params'  => $params,
 				       'user_id' => function_exists( 'get_current_user_id' ) ? get_current_user_id() : 0,
 				       'status'  => $status,
-			       ],
-			       $extra
-		       );
-		       RTBCB_Logger::log( 'ajax_request', $context );
-	       }
-       }
+				   ],
+				   $extra
+			   );
+			   RTBCB_Logger::log( 'ajax_request', $context );
+		   }
+	   }
 
-       /**
+	   /**
 	* Safely update background job status.
 	*
 	* @param string $job_id Job ID.
@@ -781,19 +775,19 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 	* @return void
 	*/
 	private static function safe_update_status( $job_id, $state, $data ) {
-	       if ( ! $job_id ) {
-		       return;
-	       }
-	       try {
-		       RTBCB_Background_Job::update_status( $job_id, $state, $data );
-	       } catch ( Exception $e ) {
-		       if ( class_exists( 'RTBCB_Logger' ) ) {
-			       RTBCB_Logger::log( 'background_job_error', [ 'job_id' => $job_id, 'message' => $e->getMessage() ] );
-		       }
-	       }
-       }
+		   if ( ! $job_id ) {
+			   return;
+		   }
+		   try {
+			   RTBCB_Background_Job::update_status( $job_id, $state, $data );
+		   } catch ( Exception $e ) {
+			   if ( class_exists( 'RTBCB_Logger' ) ) {
+				   RTBCB_Logger::log( 'background_job_error', [ 'job_id' => $job_id, 'message' => $e->getMessage() ] );
+			   }
+		   }
+	   }
 
-       /**
+	   /**
 	* Store workflow history and associated lead metadata.
 	*
 	* @param array     $debug_info  Workflow debug information.
@@ -802,24 +796,24 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 	* @return void
 	*/
 	private static function store_workflow_history( $debug_info, $lead_id = null, $lead_email = '', $company_name = '' ) {
-	       $history = function_exists( 'get_option' ) ? get_option( 'rtbcb_workflow_history', [] ) : [];
-	       if ( ! is_array( $history ) ) {
-		       $history = [];
-	       }
+		   $history = function_exists( 'get_option' ) ? get_option( 'rtbcb_workflow_history', [] ) : [];
+		   if ( ! is_array( $history ) ) {
+			   $history = [];
+		   }
 			$debug_info['lead_id'] = $lead_id ? intval( $lead_id ) : null;
-	       if ( ! empty( $lead_email ) ) {
+		   if ( ! empty( $lead_email ) ) {
 			$debug_info['lead_email'] = sanitize_email( $lead_email );
-	       }
-	       if ( ! empty( $company_name ) ) {
+		   }
+		   if ( ! empty( $company_name ) ) {
 			$debug_info['company_name'] = sanitize_text_field( $company_name );
-	       }
-	       $history[] = $debug_info;
-	       if ( count( $history ) > 20 ) {
-		       $history = array_slice( $history, -20 );
-	       }
-	       if ( function_exists( 'update_option' ) ) {
-		       update_option( 'rtbcb_workflow_history', $history, false );
-	       }
-       }
+		   }
+		   $history[] = $debug_info;
+		   if ( count( $history ) > 20 ) {
+			   $history = array_slice( $history, -20 );
+		   }
+		   if ( function_exists( 'update_option' ) ) {
+			   update_option( 'rtbcb_workflow_history', $history, false );
+		   }
+	   }
 }
 
