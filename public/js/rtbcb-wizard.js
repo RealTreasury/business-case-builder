@@ -1451,6 +1451,7 @@ class BusinessCaseBuilder {
         this.hideLoading();
         
         // Map nested report data to expected structure
+        const context = data.company_intelligence?.industry_context || data.industry_context || data.industry_insights || {};
         const mapped = {
             companyName: data.company_name || data.metadata?.company_name || 'Your Company',
             scenarios: data.scenarios || data.financial_analysis?.roi_scenarios || {},
@@ -1461,11 +1462,11 @@ class BusinessCaseBuilder {
             },
             executiveSummary: data.executive_summary || data.narrative || {},
             operationalAnalysis: data.operational_insights || data.operational_analysis || {},
-industryContext: {
-sector_analysis: data.industry_context?.sector_analysis || {},
-benchmarking: data.industry_context?.benchmarking || {},
-regulatory_landscape: data.industry_context?.regulatory_landscape || {}
-},
+            industryContext: {
+                sector_analysis: context.sector_analysis || {},
+                benchmarking: context.benchmarking || {},
+                regulatory_landscape: context.regulatory_landscape || {}
+            },
             nextActions: data.narrative?.next_actions || [
                 ...(data.action_plan?.immediate_steps || []),
                 ...(data.action_plan?.short_term_milestones || []),
