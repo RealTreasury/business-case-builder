@@ -147,6 +147,9 @@ php tests/jetpack-cron.test.php
 echo "18d. Running WordPress.com streaming fallback test..."
 php tests/wpcom-sse-fallback.test.php
 
+echo "18e. Running WP.com streaming response parser test..."
+php tests/wpcom-streaming-response.test.php
+
 echo "19. Running validator tests..."
 vendor/bin/phpunit -c phpunit.xml
 
