@@ -245,7 +245,6 @@ wp_localize_script(
 				'all_sections_done'   => __( 'All sections completed', 'rtbcb' ),
 			],
 		] );
-
 	}
 
 	/**
@@ -343,6 +342,15 @@ wp_localize_script(
 			'manage_options',
 			'rtbcb-workflow-visualizer',
 			[ $this, 'render_workflow_visualizer' ]
+		);
+
+		add_submenu_page(
+			'rtbcb-dashboard',
+			__( 'Report Preview', 'rtbcb' ),
+			__( 'Report Preview', 'rtbcb' ),
+			'manage_options',
+			'rtbcb-report-preview',
+			[ $this, 'report_preview_page' ]
 		);
 
 	}
@@ -914,7 +922,6 @@ wp_localize_script(
 					],
 				]
 			);
-
 		} catch ( Exception $e ) {
 			error_log( 'RTBCB Company Overview Error: ' . $e->getMessage() );
 			wp_send_json_error( [
