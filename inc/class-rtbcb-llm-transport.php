@@ -38,6 +38,20 @@ private $last_request;
 private $last_response;
 
 /**
+ * Last decoded response body.
+ *
+ * @var array|null
+ */
+private $last_response_parsed;
+
+/**
+ * Last decoded object that includes usage data.
+ *
+ * @var array|null
+ */
+private $last_usage;
+
+/**
  * Constructor.
  *
  * @param RTBCB_LLM_Config $config Configuration instance.
@@ -133,18 +147,22 @@ return $error;
 			$remaining                    = $max_retry_time - $elapsed;
 			$this->gpt5_config['timeout'] = min( $current_timeout, $remaining );
 
-$response = $this->call_openai( $model, $prompt, $current_tokens, $chunk_handler );
+	                $response = $this->call_openai( $model, $prompt, $current_tokens, $chunk_handler );
 
-if ( ! is_wp_error( $response ) ) {
-$this->gpt5_config['timeout'] = $base_timeout;
-$response_body = $response['body'] ?? '';
-$decoded       = json_decode( $response_body, true );
-if ( null === $decoded ) {
-$decoded = [];
-}
-$this->maybe_log_interaction( $this->last_request ?? $request_data, $decoded );
-return $response;
-}
+	                if ( ! is_wp_error( $response ) ) {
+	                        $this->gpt5_config['timeout'] = $base_timeout;
+	                        $decoded = $this->last_response_parsed;
+	                        if ( null === $decoded ) {
+	                                $response_body = $response['body'] ?? '';
+	                                $decoded       = json_decode( $response_body, true );
+	                                if ( null === $decoded ) {
+	                                        $decoded = [];
+	                                }
+	                        }
+
+	                        $this->maybe_log_interaction( $this->last_request ?? $request_data, $decoded );
+	                        return $response;
+	                }
 
 			$error_code = $response->get_error_code();
 			if ( 'llm_http_status' === $error_code ) {
@@ -203,42 +221,96 @@ return $response; // Return last error.
 			$body['stream'] = true;
 		}
 
-		$timeout = intval( $this->gpt5_config['timeout'] ?? 300 );
-		$payload = wp_json_encode( $body );
-		$stream  = '';
+	        $timeout = intval( $this->gpt5_config['timeout'] ?? 300 );
+	        $payload = wp_json_encode( $body );
+	        $stream  = '';
+	        $buffer  = '';
+	        $usage   = null;
 
-		$ch = curl_init( $endpoint );
-		curl_setopt( $ch, CURLOPT_HTTPHEADER, [
-			'Authorization: Bearer ' . $this->api_key,
-			'Content-Type: application/json',
-		] );
-		curl_setopt( $ch, CURLOPT_POST, true );
-		curl_setopt( $ch, CURLOPT_POSTFIELDS, $payload );
-		curl_setopt( $ch, CURLOPT_TIMEOUT, $timeout );
-		curl_setopt( $ch, CURLOPT_WRITEFUNCTION, function ( $curl, $data ) use ( &$stream, $chunk_handler ) {
-			if ( is_callable( $chunk_handler ) ) {
-                               try {
-                                       call_user_func( $chunk_handler, $data );
-                               } catch ( Exception $e ) {
-                                       rtbcb_log_error(
-                                               'Chunk handler error',
-                                               [
-                                                       'operation' => 'call_openai_with_retry',
-                                                       'error'     => $e->getMessage(),
-                                               ]
-                                       );
-                               }
-			}
-			$stream .= $data;
-			return strlen( $data );
-		} );
+	        $ch = curl_init( $endpoint );
+	        curl_setopt( $ch, CURLOPT_HTTPHEADER, [
+	                'Authorization: Bearer ' . $this->api_key,
+	                'Content-Type: application/json',
+	        ] );
+	        curl_setopt( $ch, CURLOPT_POST, true );
+	        curl_setopt( $ch, CURLOPT_POSTFIELDS, $payload );
+	        curl_setopt( $ch, CURLOPT_TIMEOUT, $timeout );
+	        curl_setopt( $ch, CURLOPT_WRITEFUNCTION, function ( $curl, $data ) use ( &$stream, &$buffer, &$usage, $chunk_handler ) {
+	                if ( is_callable( $chunk_handler ) ) {
+	                        try {
+	                                call_user_func( $chunk_handler, $data );
+	                        } catch ( Exception $e ) {
+	                                rtbcb_log_error(
+	                                        'Chunk handler error',
+	                                        [
+	                                                'operation' => 'call_openai_with_retry',
+	                                                'error'     => $e->getMessage(),
+	                                        ]
+	                                );
+	                        }
+	                }
+
+	                $stream .= $data;
+	                $buffer .= $data;
+
+	                while ( false !== ( $pos = strpos( $buffer, "\n" ) ) ) {
+	                        $line   = substr( $buffer, 0, $pos );
+	                        $buffer = substr( $buffer, $pos + 1 );
+	                        $line   = trim( $line );
+
+	                        if ( '' === $line ) {
+	                                continue;
+	                        }
+
+	                        if ( 0 === strpos( $line, 'data:' ) ) {
+	                                $json = trim( substr( $line, 5 ) );
+	                                if ( '[DONE]' === $json ) {
+	                                        continue;
+	                                }
+
+	                                $decoded_line = json_decode( $json, true );
+	                                if ( JSON_ERROR_NONE === json_last_error() && isset( $decoded_line['usage'] ) ) {
+	                                        $usage = $decoded_line;
+	                                }
+	                        }
+	                }
+
+	                return strlen( $data );
+	        } );
 
 		$this->last_request = $body;
 
-		$ok        = curl_exec( $ch );
-		$error     = curl_error( $ch );
-		$http_code = curl_getinfo( $ch, CURLINFO_HTTP_CODE );
-		curl_close( $ch );
+	        $ok        = curl_exec( $ch );
+	        $error     = curl_error( $ch );
+	        $http_code = curl_getinfo( $ch, CURLINFO_HTTP_CODE );
+	        curl_close( $ch );
+
+	        if ( '' !== $buffer ) {
+	                $buffer .= "\n";
+	                while ( false !== ( $pos = strpos( $buffer, "\n" ) ) ) {
+	                        $line   = substr( $buffer, 0, $pos );
+	                        $buffer = substr( $buffer, $pos + 1 );
+	                        $line   = trim( $line );
+
+	                        if ( '' === $line ) {
+	                                continue;
+	                        }
+
+	                        if ( 0 === strpos( $line, 'data:' ) ) {
+	                                $json = trim( substr( $line, 5 ) );
+	                                if ( '[DONE]' === $json ) {
+	                                        continue;
+	                                }
+
+	                                $decoded_line = json_decode( $json, true );
+	                                if ( JSON_ERROR_NONE === json_last_error() && isset( $decoded_line['usage'] ) ) {
+	                                        $usage = $decoded_line;
+	                                }
+	                        }
+	                }
+	        }
+
+	        $this->last_usage = $usage;
 
 		if ( false === $ok ) {
 			if ( false !== strpos( strtolower( $error ), 'timed out' ) ) {
@@ -254,16 +326,22 @@ return $response; // Return last error.
 			);
 		}
 
-		$final_response = $this->process_streaming_response( $stream );
-		if ( null === $final_response ) {
-			return new WP_Error(
-				'llm_response_format',
-				__( 'Invalid response format received from language model.', 'rtbcb' )
-			);
-		}
+	        $final_response = $this->process_streaming_response( $stream );
+	        if ( null === $final_response ) {
+	                return new WP_Error(
+	                        'llm_response_format',
+	                        __( 'Invalid response format received from language model.', 'rtbcb' )
+	                );
+	        }
 
-		$response_body = wp_json_encode( $final_response );
-		$response      = [
+	        if ( $this->last_usage && isset( $this->last_usage['usage'] ) && is_array( $final_response ) && ! isset( $final_response['usage'] ) ) {
+	                $final_response['usage'] = $this->last_usage['usage'];
+	        }
+
+	        $this->last_response_parsed = $final_response;
+
+	        $response_body = wp_json_encode( $final_response );
+	        $response      = [
 			'body'     => $response_body,
 			'response' => [ 'code' => $http_code, 'message' => '' ],
 			'headers'  => [],
