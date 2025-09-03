@@ -16,31 +16,22 @@ if ( typeof require === 'function' ) {
     }
 }
 
-if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('RTBCB Report: Initializing enhanced dashboard');
+if ( typeof document !== 'undefined' && typeof document.addEventListener === 'function' ) {
+    document.addEventListener( 'DOMContentLoaded', function() {
+        console.log( 'RTBCB Report: Initializing enhanced dashboard' );
 
         // Initialize all interactive features
         initializeCharts();
         initializeSectionToggles();
         initializeInteractiveMetrics();
         initializeResponsiveFeatures();
+        initializeAIHighlights();
 
         // Add loading animation completion
         if ( typeof document.querySelector === 'function' ) {
-            document.querySelector('.rtbcb-enhanced-report')?.classList.add('loaded');
+            document.querySelector( '.rtbcb-enhanced-report' )?.classList.add( 'loaded' );
         }
-
-const aiToggle = document.getElementById('rtbcb-ai-toggle');
-const reportContainer = document.querySelector('.rtbcb-enhanced-report');
-if ( aiToggle && reportContainer ) {
-aiToggle.addEventListener('change', () => {
-reportContainer.classList.toggle('show-ai-highlights', aiToggle.checked);
-});
-}
-
-addHighlight('.rtbcb-company-intelligence', 'This section was enriched by AI.');
-    });
+    } );
 }
 
 /**
@@ -744,6 +735,25 @@ async function generateAndDisplayReport(businessContext) {
             loadingElement.style.display = 'none';
         }
     }
+}
+
+function initializeAIHighlights() {
+    if ( typeof document.getElementById !== 'function' || typeof document.querySelector !== 'function' ) {
+        return;
+    }
+
+    const aiToggle = document.getElementById( 'rtbcb-ai-toggle' );
+    const reportContainer = document.querySelector( '.rtbcb-enhanced-report' );
+
+    if ( ! aiToggle || ! reportContainer ) {
+        return;
+    }
+
+    aiToggle.addEventListener( 'change', () => {
+        reportContainer.classList.toggle( 'show-ai-highlights', aiToggle.checked );
+    } );
+
+    addHighlight( '.rtbcb-company-intelligence', 'This section was enriched by AI.' );
 }
 
 function addHighlight(selector, tooltipText) {
