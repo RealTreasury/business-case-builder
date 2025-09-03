@@ -2322,17 +2322,15 @@ return $this->validate_and_structure_analysis( $analysis_data );
 			while ( count( $obstacles ) < 4 ) {
 				$obstacles[] = __( 'unspecified challenge', 'rtbcb' );
 			}
-			return new WP_Error(
+			RTBCB_Logger::log(
 				'insufficient_potential_obstacles',
-				__( 'At least four potential obstacles are required.', 'rtbcb' ),
-				$obstacles
+				[ 'count' => $count ]
 			);
-		}
-
-		if ( $count > 5 ) {
-			return new WP_Error(
+		} elseif ( $count > 5 ) {
+			$obstacles = array_slice( $obstacles, 0, 5 );
+			RTBCB_Logger::log(
 				'too_many_potential_obstacles',
-				__( 'No more than five potential obstacles allowed.', 'rtbcb' )
+				[ 'count' => $count ]
 			);
 		}
 
