@@ -398,12 +398,23 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 						</div>
 					</div>
 					<div class="rtbcb-field">
-						<label>
-							<input type="checkbox" name="fast_mode" id="fast_mode" value="1" />
-							<?php esc_html_e( 'Enable fast mode (ROI only)', 'rtbcb' ); ?>
-						</label>
+						<fieldset class="rtbcb-report-type">
+							<legend><?php esc_html_e( 'Report Type', 'rtbcb' ); ?></legend>
+							<label>
+								<input type="radio" name="report_type" value="basic" checked />
+								<?php esc_html_e( 'Basic report', 'rtbcb' ); ?>
+							</label>
+							<label>
+								<input type="radio" name="report_type" value="comprehensive" />
+								<?php esc_html_e( 'Full report with analysis', 'rtbcb' ); ?>
+							</label>
+							<label>
+								<input type="radio" name="report_type" value="fast" id="fast_mode" />
+								<?php esc_html_e( 'Fast mode (ROI only)', 'rtbcb' ); ?>
+							</label>
+						</fieldset>
 						<div class="rtbcb-field-help">
-							<?php esc_html_e( 'Skip AI analysis and only calculate ROI.', 'rtbcb' ); ?>
+								<?php esc_html_e( 'Choose your report detail level.', 'rtbcb' ); ?>
 						</div>
 					</div>
 
