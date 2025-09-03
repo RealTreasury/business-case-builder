@@ -1,15 +1,15 @@
 <?php
-/**
+	/**
 	* Plugin Name: Real Treasury - Business Case Builder (Enhanced Pro)
 	* Description: Professional-grade ROI calculator and comprehensive business case generator for treasury technology with advanced analysis and consultant-style reports.
-* Version: 2.1.13
+	* Version: 2.1.13
 	* Requires PHP: 7.4
 	* Author: Real Treasury
 	* Text Domain: rtbcb
 	* License: GPL v2 or later
 	*
 	* @package RealTreasuryBusinessCaseBuilder
-*/
+	*/
 defined( 'ABSPATH' ) || exit;
 
 define( 'RTBCB_VERSION', '2.1.13' );
@@ -23,18 +23,18 @@ define( 'RTBCB_DEBUG', false );
 
 
 if ( ! function_exists( 'rt_bcb_log' ) ) {
-/**
- * Simple logger for debugging.
- *
- * @param mixed $msg Message to log.
- * @return void
- */
+	/**
+	* Simple logger for debugging.
+	*
+	* @param mixed $msg Message to log.
+	* @return void
+	*/
 function rt_bcb_log( $msg ) {
 	error_log( '[RT-BCB] ' . ( is_string( $msg ) ? $msg : wp_json_encode( $msg ) ) );
 }
 }
 
-/**
+	/**
 	* Enhanced main plugin class.
 	*/
 class RTBCB_Main {
@@ -1136,8 +1136,8 @@ return true;
 				return;
 			}
 
-			// Save lead data.
-			$lead_id = $this->save_lead_data( $user_inputs, $scenarios, $recommendation, $report_html );
+// Save lead data.
+$lead_id = $this->save_lead_data( $user_inputs, $scenarios, $recommendation, $report_html, $company_name );
 
 			// Format response data.
 			$formatted_scenarios = $this->format_scenarios_for_response( $scenarios );
@@ -1428,8 +1428,16 @@ $required_keys = [
 
 	/**
 	* Save lead data to database.
+	*
+	* @param array  $user_inputs   User inputs.
+	* @param array  $scenarios     ROI scenarios.
+	* @param array  $recommendation Recommendation data.
+	* @param string $report_html   Report HTML.
+	* @param string $company_name  Company name.
+	*
+	* @return int|null Lead ID or null on failure.
 	*/
-	private function save_lead_data( $user_inputs, $scenarios, $recommendation, $report_html ) {
+	private function save_lead_data( $user_inputs, $scenarios, $recommendation, $report_html, $company_name ) {
 	if ( ! class_exists( 'RTBCB_Leads' ) ) {
 	return null;
 	}
@@ -3509,10 +3517,10 @@ true
 }
 
 /**
- * Render debug panel in admin footer.
- *
- * @return void
- */
+	* Render debug panel in admin footer.
+	*
+	* @return void
+	*/
 function rtbcb_render_debug_panel() {
 	if ( ! current_user_can( 'manage_options' ) ) {
 		return;
