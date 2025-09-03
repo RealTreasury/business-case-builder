@@ -30,6 +30,7 @@ global.document = {
             tagName: tag,
             style: {},
             appendChild() {},
+            addEventListener() {},
             set srcdoc(v) { this.srcdoc = v; },
             srcdoc: '',
             className: '',

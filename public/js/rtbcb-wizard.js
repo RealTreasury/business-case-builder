@@ -1633,16 +1633,81 @@ ${this.renderIndustryInsights(industryContext)}
             process_improvements = [],
             automation_opportunities = []
         } = analysis || {};
-        if (!current_state_assessment && !process_improvements.length && !automation_opportunities.length) {
+
+        const hasProcess = Object.prototype.hasOwnProperty.call(analysis, 'process_improvements');
+        const hasAutomation = Object.prototype.hasOwnProperty.call(analysis, 'automation_opportunities');
+        if ( ! current_state_assessment && ! hasProcess && ! hasAutomation ) {
             return '';
         }
-        const renderList = items => items.map(item => `<li>${this.escapeHTML(item)}</li>`).join('');
+
+        const sanitizeItems = items => ( Array.isArray( items ) ? items.filter( item => {
+            if ( item && typeof item === 'object' ) {
+                return Object.values( item ).some( val => val );
+            }
+            return item;
+        } ) : [] );
+
+        const renderProcessImprovements = items => {
+            const valid = sanitizeItems( items );
+            if ( ! valid.length ) {
+                return `<li>${this.escapeHTML( __('No data provided') )}</li>`;
+            }
+            return valid.map( item => {
+                if ( item && typeof item === 'object' ) {
+                    const process = this.escapeHTML( item.process || item.process_area || '' );
+                    const current = this.escapeHTML( item.current_state || '' );
+                    const improved = this.escapeHTML( item.improved_state || '' );
+                    const impact = this.escapeHTML( item.impact || item.impact_level || '' );
+                    let details = '';
+                    if ( current || improved ) {
+                        details += `${current} \u2192 ${improved}`;
+                    }
+                    if ( impact ) {
+                        details += details ? ` (${impact})` : `(${impact})`;
+                    }
+                    return `<li><strong>${process}</strong>${details ? `: ${details}` : ''}</li>`;
+                }
+                return `<li>${this.escapeHTML( item )}</li>`;
+            } ).join( '' );
+        };
+
+        const renderAutomationOpportunities = items => {
+            const valid = sanitizeItems( items );
+            if ( ! valid.length ) {
+                return `<li>${this.escapeHTML( __('No data provided') )}</li>`;
+            }
+            return valid.map( item => {
+                if ( item && typeof item === 'object' ) {
+                    const opportunity = this.escapeHTML( item.opportunity || '' );
+                    const complexity = this.escapeHTML( item.complexity || '' );
+                    const savings = this.escapeHTML( item.savings || item.time_savings || '' );
+                    const parts = [];
+                    if ( complexity ) {
+                        parts.push( `${complexity} ${this.escapeHTML( __('complexity') )}` );
+                    }
+                    if ( savings ) {
+                        parts.push( savings );
+                    }
+                    const detail = parts.length ? `: ${parts.join( ' \u2192 ' )}` : '';
+                    return `<li><strong>${opportunity}</strong>${detail}</li>`;
+                }
+                return `<li>${this.escapeHTML( item )}</li>`;
+            } ).join( '' );
+        };
+
+        const processSection = hasProcess
+            ? `<div class="rtbcb-industry-group"><h4>Process Improvements</h4><ul>${renderProcessImprovements( process_improvements )}</ul></div>`
+            : '';
+        const automationSection = hasAutomation
+            ? `<div class="rtbcb-industry-group"><h4>Automation Opportunities</h4><ul>${renderAutomationOpportunities( automation_opportunities )}</ul></div>`
+            : '';
+
         return `
             <div class="rtbcb-operational-analysis">
                 <h3>Operational Analysis</h3>
-                ${current_state_assessment ? `<p>${this.escapeHTML(current_state_assessment)}</p>` : ''}
-                ${process_improvements.length ? `<div class="rtbcb-industry-group"><h4>Process Improvements</h4><ul>${renderList(process_improvements)}</ul></div>` : ''}
-                ${automation_opportunities.length ? `<div class="rtbcb-industry-group"><h4>Automation Opportunities</h4><ul>${renderList(automation_opportunities)}</ul></div>` : ''}
+                ${current_state_assessment ? `<p>${this.escapeHTML( current_state_assessment )}</p>` : ''}
+                ${processSection}
+                ${automationSection}
             </div>
         `;
     }

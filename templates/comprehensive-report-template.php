@@ -272,25 +272,68 @@ $processing_time = $metadata['processing_time'] ?? ( $report_data['processing_ti
 <?php if ( ! empty( $operational_insights['current_state_assessment'] ) ) : ?>
 <h3><?php echo esc_html__( 'Current State Assessment', 'rtbcb' ); ?></h3>
 <ul>
-<?php foreach ( $operational_insights['current_state_assessment'] as $item ) : ?>
+<?php foreach ( (array) $operational_insights['current_state_assessment'] as $item ) : ?>
 <li><?php echo esc_html( $item ); ?></li>
 <?php endforeach; ?>
 </ul>
 <?php endif; ?>
-<?php if ( ! empty( $operational_insights['process_improvements'] ) ) : ?>
+
+<?php if ( array_key_exists( 'process_improvements', $operational_insights ) ) : ?>
 <h3><?php echo esc_html__( 'Process Improvements', 'rtbcb' ); ?></h3>
 <ul>
-<?php foreach ( $operational_insights['process_improvements'] as $item ) : ?>
-<li><?php echo esc_html( $item ); ?></li>
+<?php
+$process_items = 0;
+foreach ( (array) $operational_insights['process_improvements'] as $item ) :
+$process = $item['process'] ?? ( $item['process_area'] ?? '' );
+$current = $item['current_state'] ?? '';
+$improved = $item['improved_state'] ?? '';
+$impact = $item['impact'] ?? ( $item['impact_level'] ?? '' );
+if ( '' === $process && '' === $current && '' === $improved && '' === $impact ) {
+continue;
+}
+$details = '';
+if ( $current || $improved ) {
+$details .= trim( $current . ' → ' . $improved );
+}
+if ( $impact ) {
+$details .= $details ? ' (' . $impact . ')' : '(' . $impact . ')';
+}
+$process_items++;
+?>
+<li><strong><?php echo esc_html( $process ); ?></strong><?php echo $details ? ': ' . esc_html( $details ) : ''; ?></li>
 <?php endforeach; ?>
+<?php if ( 0 === $process_items ) : ?>
+<li><?php esc_html_e( 'No data provided', 'rtbcb' ); ?></li>
+<?php endif; ?>
 </ul>
 <?php endif; ?>
-<?php if ( ! empty( $operational_insights['automation_opportunities'] ) ) : ?>
+
+<?php if ( array_key_exists( 'automation_opportunities', $operational_insights ) ) : ?>
 <h3><?php echo esc_html__( 'Automation Opportunities', 'rtbcb' ); ?></h3>
 <ul>
-<?php foreach ( $operational_insights['automation_opportunities'] as $item ) : ?>
-<li><?php echo esc_html( $item ); ?></li>
+<?php
+$automation_items = 0;
+foreach ( (array) $operational_insights['automation_opportunities'] as $item ) :
+$opportunity = $item['opportunity'] ?? '';
+$complexity = $item['complexity'] ?? '';
+$savings    = $item['savings'] ?? ( $item['time_savings'] ?? '' );
+if ( '' === $opportunity && '' === $complexity && '' === $savings ) {
+continue;
+}
+$parts = [];
+if ( $complexity ) {
+$parts[] = sprintf( __( '%s complexity', 'rtbcb' ), $complexity );
+}
+if ( $savings ) {
+$parts[] = $savings;
+}
+$automation_items++;
+?>
+<li><strong><?php echo esc_html( $opportunity ); ?></strong><?php echo $parts ? ': ' . esc_html( implode( ' → ', $parts ) ) : ''; ?></li>
 <?php endforeach; ?>
+<?php if ( 0 === $automation_items ) : ?>
+<li><?php esc_html_e( 'No data provided', 'rtbcb' ); ?></li>
+<?php endif; ?>
 </ul>
 <?php endif; ?>
 </div>
