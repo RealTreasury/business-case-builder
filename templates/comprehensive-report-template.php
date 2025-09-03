@@ -6,13 +6,16 @@ $report_data           = $report_data ?? [];
 $metadata              = $report_data['metadata'] ?? [];
 $executive_summary     = $report_data['executive_summary'] ?? [];
 $company_intelligence  = $report_data['company_intelligence'] ?? [];
-	$financial_analysis    = $report_data['financial_analysis'] ?? [];
-	$technology_strategy   = $report_data['technology_strategy'] ?? [];
-	$industry_insights     = $report_data['industry_insights'] ?? [];
-	$operational_insights  = $report_data['operational_insights'] ?? [];
-	$risk_analysis         = $report_data['risk_analysis'] ?? [];
-	$action_plan           = $report_data['action_plan'] ?? [];
-	$rag_context           = $report_data['rag_context'] ?? [];
+$financial_analysis    = $report_data['financial_analysis'] ?? [];
+$technology_strategy   = $report_data['technology_strategy'] ?? [];
+$industry_insights     = $report_data['industry_insights'] ?? [];
+$operational_insights  = $report_data['operational_insights'] ?? [];
+$risk_analysis         = $report_data['risk_analysis'] ?? [];
+$action_plan           = $report_data['action_plan'] ?? [];
+$rag_context           = $report_data['rag_context'] ?? [];
+$research              = $report_data['raw']['research'] ?? ( $report_data['research'] ?? [] );
+$risk_research         = $research['risk'] ?? [];
+$financial_research    = $research['financial'] ?? [];
 	
 	// Ensure classes exist.
 	$enable_charts         = class_exists( 'RTBCB_Settings' ) ? RTBCB_Settings::get_setting( 'enable_charts', true ) : true;
@@ -503,10 +506,94 @@ $processing_time = $metadata['processing_time'] ?? ( $report_data['processing_ti
 	<?php endforeach; ?>
 	</ul>
 	</div>
-	<?php endif; ?>
-	</div>
-	</div>
-	<?php endif; ?>
+<?php endif; ?>
+</div>
+</div>
+<?php endif; ?>
+
+<?php if ( ! empty( $risk_research ) ) : ?>
+<div class="rtbcb-section-enhanced rtbcb-risk-assessment">
+<div class="rtbcb-section-header-enhanced">
+<h2 class="rtbcb-section-title">
+<span class="rtbcb-section-icon">⚠️</span>
+<?php echo esc_html__( 'Risk Assessment', 'rtbcb' ); ?>
+</h2>
+</div>
+<div class="rtbcb-section-content">
+<?php if ( ! empty( $risk_research['risk_matrix'] ) ) : ?>
+<h3><?php echo esc_html__( 'Risk Matrix', 'rtbcb' ); ?></h3>
+<table class="rtbcb-risk-matrix">
+<thead>
+<tr>
+<th><?php esc_html_e( 'Risk', 'rtbcb' ); ?></th>
+<th><?php esc_html_e( 'Likelihood', 'rtbcb' ); ?></th>
+<th><?php esc_html_e( 'Impact', 'rtbcb' ); ?></th>
+</tr>
+</thead>
+<tbody>
+<?php foreach ( $risk_research['risk_matrix'] as $risk ) : ?>
+<tr>
+<td><?php echo esc_html( $risk['risk'] ?? '' ); ?></td>
+<td><?php echo esc_html( $risk['likelihood'] ?? '' ); ?></td>
+<td><?php echo esc_html( $risk['impact'] ?? '' ); ?></td>
+</tr>
+<?php endforeach; ?>
+</tbody>
+</table>
+<?php endif; ?>
+
+<?php if ( ! empty( $risk_research['mitigations'] ) ) : ?>
+<h3><?php echo esc_html__( 'Mitigation Strategies', 'rtbcb' ); ?></h3>
+<ul>
+<?php foreach ( $risk_research['mitigations'] as $mitigation ) : ?>
+<li>
+<?php echo esc_html( $mitigation['risk'] ?? '' ); ?>: <?php echo esc_html( $mitigation['strategy'] ?? '' ); ?>
+</li>
+<?php endforeach; ?>
+</ul>
+<?php endif; ?>
+</div>
+</div>
+<?php endif; ?>
+
+<?php if ( ! empty( $financial_research ) ) : ?>
+<div class="rtbcb-section-enhanced rtbcb-financial-benchmarks">
+<div class="rtbcb-section-header-enhanced">
+<h2 class="rtbcb-section-title">
+<span class="rtbcb-section-icon">📈</span>
+<?php echo esc_html__( 'Industry & Financial Benchmarks', 'rtbcb' ); ?>
+</h2>
+</div>
+<div class="rtbcb-section-content">
+<?php if ( ! empty( $financial_research['industry_benchmarks'] ) ) : ?>
+<div class="rtbcb-industry-benchmarks">
+<h3><?php echo esc_html__( 'Industry Benchmarks', 'rtbcb' ); ?></h3>
+<ul>
+<?php foreach ( $financial_research['industry_benchmarks'] as $bench ) : ?>
+<li>
+<?php echo esc_html( $bench['metric'] ?? '' ); ?>: <?php echo esc_html( $bench['value'] ?? '' ); ?>
+<?php if ( ! empty( $bench['source'] ) ) : ?>
+(<?php echo esc_html( $bench['source'] ); ?>)
+<?php endif; ?>
+</li>
+<?php endforeach; ?>
+</ul>
+</div>
+<?php endif; ?>
+
+<?php if ( ! empty( $financial_research['valuation_multiples'] ) ) : ?>
+<div class="rtbcb-valuation-multiples">
+<h3><?php echo esc_html__( 'Valuation Multiples', 'rtbcb' ); ?></h3>
+<ul>
+<?php foreach ( $financial_research['valuation_multiples'] as $mult ) : ?>
+<li><?php echo esc_html( $mult['metric'] ?? '' ); ?>: <?php echo esc_html( $mult['range'] ?? '' ); ?></li>
+<?php endforeach; ?>
+</ul>
+</div>
+<?php endif; ?>
+</div>
+</div>
+<?php endif; ?>
 
 <!-- Action Plan Section with Timeline -->
 <?php if ( ! empty( $action_plan ) ) : ?>

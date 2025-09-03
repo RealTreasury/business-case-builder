@@ -239,6 +239,7 @@ Return a complete JSON business case covering:
 5. **Technology Strategy**: Recommended solutions and implementation roadmap
 6. **Risk Analysis**: Implementation risks and comprehensive mitigation strategies
 7. **Action Plan**: Immediate steps, short-term milestones, and long-term objectives
+8. **Research Context**: Supporting risk assessment and financial benchmarks
 
 ### Complete Business Case Schema
 ```json
@@ -364,13 +365,23 @@ Return a complete JSON business case covering:
   },
   "action_plan": {
     "immediate_steps": ["array of immediate actions for next 30 days"],
-    "short_term_milestones": ["array of milestones for 3-6 months"], 
+    "short_term_milestones": ["array of milestones for 3-6 months"],
     "long_term_objectives": ["array of objectives for 6+ months"]
+  },
+  "research": {
+    "risk": {
+      "risk_matrix": [{"risk": "string", "likelihood": "string", "impact": "string"}],
+      "mitigations": [{"risk": "string", "strategy": "string"}]
+    },
+    "financial": {
+      "industry_benchmarks": [{"metric": "string", "value": "string", "source": "string"}],
+      "valuation_multiples": [{"metric": "string", "range": "string"}]
+    }
   }
 }
 ```
 PROMPT;
-	}
+        }
 
 	/**
 	* Format industry analysis for better prompt integration.
