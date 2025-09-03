@@ -506,9 +506,9 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 
 	$company_profile      = $enriched_profile['company_profile'] ?? [];
 	$industry_context_raw = $enriched_profile['industry_context'] ?? [];
-	$enriched_profile_struct = [
-		'name'                => $company_profile['name'] ?? '',
-		'enhanced_description'=> $company_profile['enhanced_description'] ?? ( $company_profile['description'] ?? '' ),
+        $enriched_profile_struct = [
+                'name'                => sanitize_text_field( $company_profile['name'] ?? '' ),
+                'enhanced_description'=> $company_profile['enhanced_description'] ?? ( $company_profile['description'] ?? '' ),
 		'maturity_level'      => $company_profile['maturity_level'] ?? '',
 		'treasury_maturity'   => $company_profile['treasury_maturity'] ?? [],
 		'key_challenges'      => $company_profile['key_challenges'] ?? [],
@@ -524,9 +524,9 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 	];
 
 	return [
-			'metadata' => [
-				'company_name'   => $user_inputs['company_name'],
-				'analysis_date'  => current_time( 'Y-m-d' ),
+                        'metadata' => [
+                                'company_name'   => $enriched_profile_struct['name'] ?: sanitize_text_field( $user_inputs['company_name'] ),
+                                'analysis_date'  => current_time( 'Y-m-d' ),
 							'analysis_type'  => rtbcb_get_analysis_type(),
 				'confidence_level' => $final_analysis['confidence_level'] ?? 0.85,
 				'processing_time' => microtime( true ) - $request_start,

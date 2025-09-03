@@ -2090,7 +2090,7 @@ PROMPT;
 	*/
 	private function validate_company_profile( $profile, $user_inputs ) {
 	return [
-	'name'                => $user_inputs['company_name'],
+        'name'                => sanitize_text_field( $profile['name'] ?? $user_inputs['company_name'] ),
 	'enhanced_description' => wp_kses_post( $profile['enhanced_description'] ?? '' ),
 	'business_model'      => wp_kses_post( $profile['business_model'] ?? '' ),
 	'market_position'     => wp_kses_post( $profile['market_position'] ?? '' ),
