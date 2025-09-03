@@ -386,23 +386,99 @@ $processing_time = $metadata['processing_time'] ?? ( $report_data['processing_ti
 </div>
 <?php endif; ?>
 
-<?php if ( ! empty( $company_intelligence['industry_context'] ) ) : ?>
+<?php if ( ! empty( $company_intelligence['industry_context'] ) ) :
+$industry_context   = $company_intelligence['industry_context'];
+$sector_analysis    = $industry_context['sector_analysis'] ?? [];
+$benchmarking       = $industry_context['benchmarking'] ?? [];
+$regulatory_land    = $industry_context['regulatory_landscape'] ?? [];
+$tech_adoption      = $sector_analysis['technology_adoption'] ?? ( $benchmarking['technology_penetration'] ?? '' );
+?>
 <div class="rtbcb-intelligence-card">
 <h3><?php echo esc_html__( 'Industry Context', 'rtbcb' ); ?></h3>
 <div class="rtbcb-industry-insights">
-<?php if ( ! empty( $company_intelligence['industry_context']['sector_analysis']['market_dynamics'] ) ) : ?>
+<?php if ( ! empty( $sector_analysis['market_dynamics'] ) ) : ?>
 <div class="rtbcb-insight-item">
 <strong><?php echo esc_html__( 'Market Dynamics:', 'rtbcb' ); ?></strong>
-<span><?php echo esc_html( $company_intelligence['industry_context']['sector_analysis']['market_dynamics'] ); ?></span>
+<span><?php echo esc_html( $sector_analysis['market_dynamics'] ); ?></span>
 </div>
 <?php endif; ?>
 
-<?php if ( ! empty( $company_intelligence['industry_context']['benchmarking']['technology_penetration'] ) ) : ?>
+<?php if ( ! empty( $sector_analysis['growth_trends'] ) ) : ?>
+<div class="rtbcb-insight-item">
+<strong><?php echo esc_html__( 'Growth Trends:', 'rtbcb' ); ?></strong>
+<span><?php echo esc_html( $sector_analysis['growth_trends'] ); ?></span>
+</div>
+<?php endif; ?>
+
+<?php if ( ! empty( $sector_analysis['disruption_factors'] ) ) : ?>
+<div class="rtbcb-insight-item">
+<strong><?php echo esc_html__( 'Disruption Factors:', 'rtbcb' ); ?></strong>
+<ul>
+<?php foreach ( $sector_analysis['disruption_factors'] as $factor ) : ?>
+<li><?php echo esc_html( $factor ); ?></li>
+<?php endforeach; ?>
+</ul>
+</div>
+<?php endif; ?>
+
+<?php if ( ! empty( $tech_adoption ) ) : ?>
 <div class="rtbcb-insight-item">
 <strong><?php echo esc_html__( 'Technology Adoption:', 'rtbcb' ); ?></strong>
-<span class="rtbcb-adoption-level <?php echo esc_attr( $company_intelligence['industry_context']['benchmarking']['technology_penetration'] ); ?>">
-<?php echo esc_html( ucfirst( $company_intelligence['industry_context']['benchmarking']['technology_penetration'] ) ); ?>
-</span>
+<span class="rtbcb-adoption-level <?php echo esc_attr( $tech_adoption ); ?>"><?php echo esc_html( ucfirst( $tech_adoption ) ); ?></span>
+</div>
+<?php endif; ?>
+
+<?php if ( ! empty( $benchmarking['typical_treasury_setup'] ) ) : ?>
+<div class="rtbcb-insight-item">
+<strong><?php echo esc_html__( 'Typical Treasury Setup:', 'rtbcb' ); ?></strong>
+<span><?php echo esc_html( $benchmarking['typical_treasury_setup'] ); ?></span>
+</div>
+<?php endif; ?>
+
+<?php if ( ! empty( $benchmarking['common_pain_points'] ) ) : ?>
+<div class="rtbcb-insight-item">
+<strong><?php echo esc_html__( 'Common Pain Points:', 'rtbcb' ); ?></strong>
+<ul>
+<?php foreach ( $benchmarking['common_pain_points'] as $pain ) : ?>
+<li><?php echo esc_html( $pain ); ?></li>
+<?php endforeach; ?>
+</ul>
+</div>
+<?php endif; ?>
+
+<?php if ( ! empty( $benchmarking['investment_patterns'] ) ) : ?>
+<div class="rtbcb-insight-item">
+<strong><?php echo esc_html__( 'Investment Patterns:', 'rtbcb' ); ?></strong>
+<span><?php echo esc_html( $benchmarking['investment_patterns'] ); ?></span>
+</div>
+<?php endif; ?>
+
+<?php if ( ! empty( $regulatory_land['key_regulations'] ) ) : ?>
+<div class="rtbcb-insight-item">
+<strong><?php echo esc_html__( 'Key Regulations:', 'rtbcb' ); ?></strong>
+<ul>
+<?php foreach ( $regulatory_land['key_regulations'] as $reg ) : ?>
+<li><?php echo esc_html( $reg ); ?></li>
+<?php endforeach; ?>
+</ul>
+</div>
+<?php endif; ?>
+
+<?php if ( ! empty( $regulatory_land['compliance_complexity'] ) ) : ?>
+<div class="rtbcb-insight-item">
+<strong><?php echo esc_html__( 'Compliance Complexity:', 'rtbcb' ); ?></strong>
+<span><?php echo esc_html( $regulatory_land['compliance_complexity'] ); ?></span>
+</div>
+<?php endif; ?>
+
+<?php if ( ! empty( $regulatory_land['upcoming_changes'] ) ) : ?>
+<div class="rtbcb-insight-item">
+<strong><?php echo esc_html__( 'Upcoming Changes:', 'rtbcb' ); ?></strong>
+<ul>
+<?php foreach ( $regulatory_land['upcoming_changes'] as $change ) : ?>
+<li><?php echo esc_html( $change ); ?></li>
+<?php endforeach; ?>
+</ul>
 </div>
 <?php endif; ?>
 </div>

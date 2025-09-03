@@ -506,6 +506,9 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 
 	$company_profile      = $enriched_profile['company_profile'] ?? [];
 	$industry_context_raw = $enriched_profile['industry_context'] ?? [];
+	$sector_analysis_raw      = (array) ( $industry_context_raw['sector_analysis'] ?? [] );
+	$benchmarking_raw         = (array) ( $industry_context_raw['benchmarking'] ?? [] );
+	$regulatory_landscape_raw = (array) ( $industry_context_raw['regulatory_landscape'] ?? [] );
 	$enriched_profile_struct = [
 		'name'                => $company_profile['name'] ?? '',
 		'enhanced_description'=> $company_profile['enhanced_description'] ?? ( $company_profile['description'] ?? '' ),
@@ -516,10 +519,21 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 	];
 	$industry_context_struct = [
 		'sector_analysis' => [
-			'market_dynamics' => $industry_context_raw['sector_trends'] ?? ( $industry_context_raw['market_dynamics'] ?? '' ),
+			'market_dynamics'    => $sector_analysis_raw['market_dynamics'] ?? ( $industry_context_raw['sector_trends'] ?? ( $industry_context_raw['market_dynamics'] ?? '' ) ),
+			'growth_trends'      => $sector_analysis_raw['growth_trends'] ?? '',
+			'disruption_factors' => (array) ( $sector_analysis_raw['disruption_factors'] ?? [] ),
+			'technology_adoption'=> $sector_analysis_raw['technology_adoption'] ?? ( $industry_context_raw['technology_adoption'] ?? '' ),
 		],
 		'benchmarking'    => [
-			'technology_penetration' => $industry_context_raw['technology_penetration'] ?? ( $industry_context_raw['technology_adoption'] ?? '' ),
+			'typical_treasury_setup' => $benchmarking_raw['typical_treasury_setup'] ?? '',
+			'common_pain_points'     => (array) ( $benchmarking_raw['common_pain_points'] ?? [] ),
+			'technology_penetration' => $benchmarking_raw['technology_penetration'] ?? ( $industry_context_raw['technology_penetration'] ?? '' ),
+			'investment_patterns'    => $benchmarking_raw['investment_patterns'] ?? '',
+		],
+		'regulatory_landscape' => [
+			'key_regulations'      => (array) ( $regulatory_landscape_raw['key_regulations'] ?? [] ),
+			'compliance_complexity'=> $regulatory_landscape_raw['compliance_complexity'] ?? '',
+			'upcoming_changes'     => (array) ( $regulatory_landscape_raw['upcoming_changes'] ?? [] ),
 		],
 	];
 

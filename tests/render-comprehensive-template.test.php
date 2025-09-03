@@ -40,6 +40,27 @@ $business_case_data = [
                 'key_value_drivers'       => [ 'Efficiency', 'Compliance' ],
                 'executive_recommendation'=> 'Proceed',
         ],
+       'company_intelligence' => [
+               'industry_context' => [
+                       'sector_analysis' => [
+                               'market_dynamics'   => 'Volatile market',
+                               'growth_trends'     => '5% annual growth',
+                               'disruption_factors'=> [ 'Fintech competitors' ],
+                               'technology_adoption'=> 'mainstream',
+                       ],
+                       'benchmarking' => [
+                               'typical_treasury_setup' => 'Centralized',
+                               'common_pain_points'     => [ 'Manual processes' ],
+                               'technology_penetration' => 'high',
+                               'investment_patterns'    => 'Aggressive',
+                       ],
+                       'regulatory_landscape' => [
+                               'key_regulations'      => [ 'Regulation X' ],
+                               'compliance_complexity'=> 'high',
+                               'upcoming_changes'     => [ 'New tax rules' ],
+                       ],
+               ],
+       ],
        'industry_insights' => [
                'sector_trends'          => [ 'Growth' ],
                'competitive_benchmarks' => [ 'Benchmark' ],
@@ -53,7 +74,7 @@ ob_start();
 include __DIR__ . '/../templates/comprehensive-report-template.php';
 $output = ob_get_clean();
 
-if ( strpos( $output, 'rtbcb-executive-summary' ) === false || strpos( $output, 'Industry Insights' ) === false ) {
+if ( strpos( $output, 'rtbcb-executive-summary' ) === false || strpos( $output, 'Industry Insights' ) === false || strpos( $output, 'Volatile market' ) === false || strpos( $output, 'Regulation X' ) === false ) {
         echo "Executive summary not found\n";
         exit( 1 );
 }
