@@ -319,7 +319,7 @@ return ( substr( $content, 0, 1 ) === '{' && substr( $content, -1 ) === '}' ) ||
  * @return bool Streaming detected.
  */
 private function is_streaming_response( $response_body ) {
-return preg_match( '/^data:\s/m', $response_body ) || preg_match( '/^event:\s/m', $response_body );
+return preg_match( '/^\s*(?:for\s*\(\s*;;\s*\);\s*)?(?:data|event):\s/m', $response_body );
 }
 
 /**
@@ -335,11 +335,23 @@ $final_response   = null;
 
 foreach ( $lines as $line ) {
 $line = trim( $line );
+if ( '' === $line ) {
+continue;
+}
+
+if ( 0 === strpos( $line, 'for' ) ) {
+$line = preg_replace( '/^for\s*\(\s*;;\s*\);\s*/', '', $line );
+$line = ltrim( $line );
+}
+
 if ( '' === $line || 0 !== strpos( $line, 'data:' ) ) {
 continue;
 }
 
 $payload = trim( substr( $line, 5 ) );
+if ( '' === $payload ) {
+continue;
+}
 if ( '[DONE]' === $payload ) {
 break;
 }
