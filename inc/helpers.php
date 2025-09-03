@@ -1630,12 +1630,12 @@ function rtbcb_parse_gpt5_response( $response, $store_raw = false ) {
 	*/
 
 function rtbcb_proxy_openai_responses() {
-	$action = isset( $_REQUEST['action'] ) ? sanitize_key( wp_unslash( $_REQUEST['action'] ) ) : '';
-	if ( 'rtbcb_openai_responses' !== $action ) {
-		// Jetpack also routes requests through admin-ajax.php; avoid sending
-		// streaming headers for unrelated actions.
-		return;
-	}
+        // Only handle our specific AJAX action; bail early for others.
+        if ( ! isset( $_REQUEST['action'] ) || 'rtbcb_openai_responses' !== sanitize_key( wp_unslash( $_REQUEST['action'] ) ) ) {
+                // Jetpack also routes requests through admin-ajax.php; avoid sending
+                // streaming headers for unrelated actions.
+                return;
+        }
 
 	$api_key = rtbcb_get_openai_api_key();
 	if ( ! rtbcb_has_openai_api_key() ) {
