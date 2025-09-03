@@ -523,14 +523,16 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 		],
 	];
 
+	$company_name_meta = sanitize_text_field( $enriched_profile_struct['name'] ?: $user_inputs['company_name'] );
+
 	return [
-			'metadata' => [
-				'company_name'   => $user_inputs['company_name'],
-				'analysis_date'  => current_time( 'Y-m-d' ),
-							'analysis_type'  => rtbcb_get_analysis_type(),
-				'confidence_level' => $final_analysis['confidence_level'] ?? 0.85,
-				'processing_time' => microtime( true ) - $request_start,
-			],
+		'metadata' => [
+			'company_name'   => $company_name_meta,
+			'analysis_date'  => current_time( 'Y-m-d' ),
+			'analysis_type'  => rtbcb_get_analysis_type(),
+			'confidence_level' => $final_analysis['confidence_level'] ?? 0.85,
+			'processing_time' => microtime( true ) - $request_start,
+		],
 			'executive_summary' => [
 				'strategic_positioning'   => $final_analysis['executive_summary']['strategic_positioning'] ?? '',
 				'business_case_strength'  => self::calculate_business_case_strength( $roi_scenarios, $recommendation ),

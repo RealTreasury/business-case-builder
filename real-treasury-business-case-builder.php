@@ -1105,20 +1105,26 @@ return true;
 								return;
 						}
 
-						// Merge all data for report generation.
-						$report_data = array_merge(
-								$comprehensive_analysis,
-								[
-										'company_name'	  => $user_inputs['company_name'],
-										'scenarios'	  => $scenarios,
-										'recommendation'  => $recommendation,
-										'rag_context'	  => $rag_context,
-										'processing_time' => microtime( true ) - $_SERVER['REQUEST_TIME_FLOAT'],
-								]
-						);
+			// Determine company name from analysis or user input.
+			$analysis_company = $comprehensive_analysis['company_intelligence']['enriched_profile']['name']
+				?? ( $comprehensive_analysis['company_name'] ?? '' );
+			$company_name     = $analysis_company ? sanitize_text_field( $analysis_company ) : $user_inputs['company_name'];
+			$comprehensive_analysis['company_name'] = $company_name;
 
-			// Generate HTML report using our fixed method.
-			$report_html = $this->get_comprehensive_report_html( $report_data );
+			// Merge all data for report generation.
+			$report_data = array_merge(
+				$comprehensive_analysis,
+				[
+					'company_name'    => $company_name,
+					'scenarios'       => $scenarios,
+					'recommendation'  => $recommendation,
+					'rag_context'     => $rag_context,
+					'processing_time' => microtime( true ) - $_SERVER['REQUEST_TIME_FLOAT'],
+				]
+			);
+
+		// Generate HTML report using our fixed method.
+		$report_html = $this->get_comprehensive_report_html( [ 'report_data' => $report_data ] );
 
 			if ( is_wp_error( $report_html ) ) {
 				wp_send_json_error( [ 'message' => $report_html->get_error_message() ], 500 );
@@ -1142,7 +1148,7 @@ return true;
 				'comprehensive_analysis' => $comprehensive_analysis,
 				'report_html'		 => $report_html,
 				'lead_id'		 => $lead_id,
-				'company_name'		 => $user_inputs['company_name'],
+				'company_name'           => $company_name,
 									'analysis_type'		 => rtbcb_get_analysis_type(),
 				'memory_info'		 => rtbcb_get_memory_status(),
 			];
@@ -1431,7 +1437,7 @@ $required_keys = [
 	try {
 	$lead_data = [
 	'email'			 => $user_inputs['email'],
-	'company_name'		 => $user_inputs['company_name'],
+	'company_name'           => $company_name,
 	'company_size'		 => $user_inputs['company_size'],
 	'industry'		 => $user_inputs['industry'],
 	'hours_reconciliation'	 => $user_inputs['hours_reconciliation'],
@@ -2076,7 +2082,7 @@ $missing_sections  = array_diff( $required_sections, array_keys( $comprehensive_
 			'recommendation'=> $recommendation,
 			'rag_context'   => $rag_context,
 			'lead_id'       => $lead_id,
-			'company_name'  => $user_inputs['company_name'],
+			'company_name'           => $company_name,
 			'analysis_type' => rtbcb_get_analysis_type(),
 			'api_used'      => rtbcb_has_openai_api_key(),
 			'fallback_used' => isset( $comprehensive_analysis['enhanced_fallback'] ),
