@@ -139,195 +139,6 @@ $processing_time = $metadata['processing_time'] ?? ( $report_data['processing_ti
 		</div>
 	</div>
 
-	<!-- Executive Summary with Enhanced Visual Design -->
-	<?php if ( ! empty( $executive_summary ) ) : ?>
-<div class="rtbcb-section-enhanced rtbcb-executive-summary rtbcb-executive-summary-enhanced">
-		<div class="rtbcb-section-header-enhanced">
-			<h2 class="rtbcb-section-title">
-				<span class="rtbcb-section-icon">📋</span>
-				<?php echo esc_html__( 'Executive Summary', 'rtbcb' ); ?>
-			</h2>
-			<div class="rtbcb-business-case-strength-enhanced <?php echo esc_attr( strtolower( $executive_summary['business_case_strength'] ?? 'strong' ) ); ?>">
-				<span class="rtbcb-strength-indicator"></span>
-				<?php echo esc_html( $executive_summary['business_case_strength'] ?? esc_html__( 'Strong', 'rtbcb' ) ); ?>
-				<?php echo esc_html__( 'Business Case', 'rtbcb' ); ?>
-			</div>
-		</div>
-
-		<div class="rtbcb-section-content">
-			<?php if ( ! empty( $executive_summary['strategic_positioning'] ) ) : ?>
-				<div class="rtbcb-strategic-positioning-enhanced">
-					<div class="rtbcb-content-card">
-						<h3><?php echo esc_html__( 'Strategic Positioning', 'rtbcb' ); ?></h3>
-						<p class="rtbcb-strategic-text"><?php echo esc_html( $executive_summary['strategic_positioning'] ); ?></p>
-					</div>
-				</div>
-			<?php endif; ?>
-
-			<?php if ( ! empty( $executive_summary['key_value_drivers'] ) ) : ?>
-				<div class="rtbcb-value-drivers-enhanced">
-					<h3><?php echo esc_html__( 'Key Value Drivers', 'rtbcb' ); ?></h3>
-					<div class="rtbcb-value-drivers-grid-enhanced">
-						<?php foreach ( $executive_summary['key_value_drivers'] as $index => $driver ) : ?>
-							<div class="rtbcb-value-driver-enhanced">
-								<div class="rtbcb-driver-number-enhanced"><?php echo esc_html( $index + 1 ); ?></div>
-								<div class="rtbcb-driver-content">
-									<div class="rtbcb-driver-text"><?php echo esc_html( $driver ); ?></div>
-								</div>
-							</div>
-						<?php endforeach; ?>
-					</div>
-				</div>
-			<?php endif; ?>
-
-			<?php if ( ! empty( $executive_summary['executive_recommendation'] ) ) : ?>
-				<div class="rtbcb-executive-recommendation-enhanced">
-					<div class="rtbcb-recommendation-card">
-						<div class="rtbcb-recommendation-header">
-							<span class="rtbcb-recommendation-icon">💡</span>
-							<h3><?php echo esc_html__( 'Executive Recommendation', 'rtbcb' ); ?></h3>
-						</div>
-						<div class="rtbcb-recommendation-content">
-							<?php echo esc_html( $executive_summary['executive_recommendation'] ); ?>
-						</div>
-					</div>
-				</div>
-			<?php endif; ?>
-		</div>
-	</div>
-	<?php endif; ?>
-
-	<!-- Interactive ROI Analysis Section with Charts -->
-	<?php if ( ! empty( $financial_analysis['roi_scenarios'] ) ) : ?>
-	<div class="rtbcb-section-enhanced rtbcb-financial-analysis-enhanced">
-		<div class="rtbcb-section-header-enhanced">
-			<h2 class="rtbcb-section-title">
-				<span class="rtbcb-section-icon">💰</span>
-				<?php echo esc_html__( 'Financial Analysis & ROI Projections', 'rtbcb' ); ?>
-			</h2>
-			<button type="button" class="rtbcb-section-toggle" data-target="financial-content">
-				<span class="rtbcb-toggle-text"><?php echo esc_html__( 'Expand', 'rtbcb' ); ?></span>
-				<span class="rtbcb-toggle-arrow">▼</span>
-			</button>
-		</div>
-
-		<div id="financial-content" class="rtbcb-section-content">
-				<!-- ROI Scenarios Chart -->
-				<?php if ( $enable_charts ) : ?>
-				<div class="rtbcb-roi-chart-container">
-						<h3><?php echo esc_html__( 'ROI Scenario Analysis', 'rtbcb' ); ?></h3>
-						<canvas id="rtbcb-roi-chart" width="800" height="400"></canvas>
-						<div class="rtbcb-chart-legend">
-								<div class="rtbcb-legend-item">
-										<span class="rtbcb-legend-color conservative"></span>
-										<span><?php echo esc_html__( 'Conservative Scenario', 'rtbcb' ); ?></span>
-								</div>
-								<div class="rtbcb-legend-item">
-										<span class="rtbcb-legend-color base"></span>
-										<span><?php echo esc_html__( 'Base Case', 'rtbcb' ); ?></span>
-								</div>
-								<div class="rtbcb-legend-item">
-										<span class="rtbcb-legend-color optimistic"></span>
-										<span><?php echo esc_html__( 'Optimistic Scenario', 'rtbcb' ); ?></span>
-								</div>
-						</div>
-				</div>
-				<?php endif; ?>
-
-			<!-- ROI Breakdown -->
-			<div class="rtbcb-roi-breakdown-enhanced">
-				<h3><?php echo esc_html__( 'ROI Component Breakdown', 'rtbcb' ); ?></h3>
-				<div class="rtbcb-roi-components">
-					<?php foreach ( $financial_analysis['roi_scenarios'] as $scenario_name => $scenario ) :
-						if ( in_array( $scenario_name, array( 'sensitivity_analysis', 'confidence_metrics' ), true ) ) {
-						continue;
-						}
-					?>
-					<div class="rtbcb-scenario-card <?php echo esc_attr( $scenario_name ); ?>">
-							<h4><?php echo esc_html( ucfirst( $scenario_name ) ); ?> <?php echo esc_html__( 'Case', 'rtbcb' ); ?></h4>
-							<div class="rtbcb-scenario-metrics">
-								<div class="rtbcb-scenario-metric">
-									<span class="rtbcb-metric-label"><?php echo esc_html__( 'Total Annual Benefit', 'rtbcb' ); ?></span>
-									<span class="rtbcb-metric-value primary">$<?php echo esc_html( number_format( $scenario['total_annual_benefit'] ?? 0 ) ); ?></span>
-								</div>
-								<div class="rtbcb-scenario-metric">
-									<span class="rtbcb-metric-label"><?php echo esc_html__( 'Labor Savings', 'rtbcb' ); ?></span>
-									<span class="rtbcb-metric-value">$<?php echo esc_html( number_format( $scenario['labor_savings'] ?? 0 ) ); ?></span>
-								</div>
-								<div class="rtbcb-scenario-metric">
-									<span class="rtbcb-metric-label"><?php echo esc_html__( 'Fee Savings', 'rtbcb' ); ?></span>
-									<span class="rtbcb-metric-value">$<?php echo esc_html( number_format( $scenario['fee_savings'] ?? 0 ) ); ?></span>
-								</div>
-								<div class="rtbcb-scenario-metric">
-									<span class="rtbcb-metric-label"><?php echo esc_html__( 'Error Reduction', 'rtbcb' ); ?></span>
-									<span class="rtbcb-metric-value">$<?php echo esc_html( number_format( $scenario['error_reduction'] ?? 0 ) ); ?></span>
-								</div>
-							</div>
-						</div>
-					<?php endforeach; ?>
-				</div>
-			</div>
-
-			
-			<!-- ROI Scenario Table -->
-			<?php if ( ! empty( $financial_analysis['roi_scenarios'] ) ) : ?>
-			<table class="rtbcb-roi-table">
-				<thead>
-					<tr>
-						<th><?php esc_html_e( 'Scenario', 'rtbcb' ); ?></th>
-						<th><?php esc_html_e( 'Labor Savings', 'rtbcb' ); ?></th>
-						<th><?php esc_html_e( 'Fee Savings', 'rtbcb' ); ?></th>
-						<th><?php esc_html_e( 'Error Reduction', 'rtbcb' ); ?></th>
-						<th><?php esc_html_e( 'Total Benefit', 'rtbcb' ); ?></th>
-						<th><?php esc_html_e( 'ROI %', 'rtbcb' ); ?></th>
-					</tr>
-				</thead>
-				<tbody>
-					<?php foreach ( $financial_analysis['roi_scenarios'] as $scenario_name => $scenario ) : ?>
-						<?php
-						if ( in_array( $scenario_name, array( 'sensitivity_analysis', 'confidence_metrics' ), true ) ) {
-							continue;
-						}
-						?>
-						<tr>
-							<td><?php echo esc_html( ucfirst( $scenario_name ) ); ?></td>
-							<td><?php echo esc_html( number_format_i18n( $scenario['labor_savings'] ?? 0 ) ); ?></td>
-							<td><?php echo esc_html( number_format_i18n( $scenario['fee_savings'] ?? 0 ) ); ?></td>
-							<td><?php echo esc_html( number_format_i18n( $scenario['error_reduction'] ?? 0 ) ); ?></td>
-							<td><?php echo esc_html( number_format_i18n( $scenario['total_annual_benefit'] ?? 0 ) ); ?></td>
-							<td><?php echo esc_html( number_format_i18n( $scenario['roi_percentage'] ?? 0 ) ); ?>%</td>
-						</tr>
-					<?php endforeach; ?>
-				</tbody>
-			</table>
-			<?php endif; ?>
-
-<!-- Sensitivity Analysis -->
-			<?php if ( ! empty( $financial_analysis['sensitivity_analysis'] ) ) : ?>
-				<div class="rtbcb-sensitivity-analysis">
-					<h3><?php echo esc_html__( 'Sensitivity Analysis', 'rtbcb' ); ?></h3>
-					<div class="rtbcb-sensitivity-grid">
-						<?php foreach ( $financial_analysis['sensitivity_analysis'] as $factor ) : ?>
-							<div class="rtbcb-sensitivity-item">
-								<div class="rtbcb-sensitivity-header">
-									<span class="rtbcb-sensitivity-factor"><?php echo esc_html( $factor['factor'] ?? '' ); ?></span>
-									<span class="rtbcb-sensitivity-probability"><?php echo esc_html( round( ( $factor['probability'] ?? 0 ) * 100 ) ); ?>% <?php echo esc_html__( 'likelihood', 'rtbcb' ); ?></span>
-								</div>
-								<div class="rtbcb-sensitivity-impact <?php
-									// Escaped for safe output.
-									echo esc_attr( ( $factor['impact_percentage'] ?? 0 ) >= 0 ? 'positive' : 'negative' );
-								?>">
-									<?php echo esc_html( $factor['impact_percentage'] ?? 0 ); ?>% <?php echo esc_html__( 'impact', 'rtbcb' ); ?>
-								</div>
-							</div>
-						<?php endforeach; ?>
-					</div>
-				</div>
-			<?php endif; ?>
-		</div>
-	</div>
-	<?php endif; ?>
-
 	<!-- Company Intelligence Section (AI-Enhanced) -->
 	<?php if ( ! empty( $company_intelligence ) ) : ?>
 	<div class="rtbcb-section-enhanced rtbcb-company-intelligence">
@@ -672,6 +483,64 @@ $tech_adoption      = $sector_analysis['technology_adoption'] ?? ( $benchmarking
 </div>
 <?php endif; ?>
 
+	<!-- Executive Summary with Enhanced Visual Design -->
+	<?php if ( ! empty( $executive_summary ) ) : ?>
+<div class="rtbcb-section-enhanced rtbcb-executive-summary rtbcb-executive-summary-enhanced">
+		<div class="rtbcb-section-header-enhanced">
+			<h2 class="rtbcb-section-title">
+				<span class="rtbcb-section-icon">📋</span>
+				<?php echo esc_html__( 'Executive Summary', 'rtbcb' ); ?>
+			</h2>
+			<div class="rtbcb-business-case-strength-enhanced <?php echo esc_attr( strtolower( $executive_summary['business_case_strength'] ?? 'strong' ) ); ?>">
+				<span class="rtbcb-strength-indicator"></span>
+				<?php echo esc_html( $executive_summary['business_case_strength'] ?? esc_html__( 'Strong', 'rtbcb' ) ); ?>
+				<?php echo esc_html__( 'Business Case', 'rtbcb' ); ?>
+			</div>
+		</div>
+
+		<div class="rtbcb-section-content">
+			<?php if ( ! empty( $executive_summary['strategic_positioning'] ) ) : ?>
+				<div class="rtbcb-strategic-positioning-enhanced">
+					<div class="rtbcb-content-card">
+						<h3><?php echo esc_html__( 'Strategic Positioning', 'rtbcb' ); ?></h3>
+						<p class="rtbcb-strategic-text"><?php echo esc_html( $executive_summary['strategic_positioning'] ); ?></p>
+					</div>
+				</div>
+			<?php endif; ?>
+
+			<?php if ( ! empty( $executive_summary['key_value_drivers'] ) ) : ?>
+				<div class="rtbcb-value-drivers-enhanced">
+					<h3><?php echo esc_html__( 'Key Value Drivers', 'rtbcb' ); ?></h3>
+					<div class="rtbcb-value-drivers-grid-enhanced">
+						<?php foreach ( $executive_summary['key_value_drivers'] as $index => $driver ) : ?>
+							<div class="rtbcb-value-driver-enhanced">
+								<div class="rtbcb-driver-number-enhanced"><?php echo esc_html( $index + 1 ); ?></div>
+								<div class="rtbcb-driver-content">
+									<div class="rtbcb-driver-text"><?php echo esc_html( $driver ); ?></div>
+								</div>
+							</div>
+						<?php endforeach; ?>
+					</div>
+				</div>
+			<?php endif; ?>
+
+			<?php if ( ! empty( $executive_summary['executive_recommendation'] ) ) : ?>
+				<div class="rtbcb-executive-recommendation-enhanced">
+					<div class="rtbcb-recommendation-card">
+						<div class="rtbcb-recommendation-header">
+							<span class="rtbcb-recommendation-icon">💡</span>
+							<h3><?php echo esc_html__( 'Executive Recommendation', 'rtbcb' ); ?></h3>
+						</div>
+						<div class="rtbcb-recommendation-content">
+							<?php echo esc_html( $executive_summary['executive_recommendation'] ); ?>
+						</div>
+					</div>
+				</div>
+			<?php endif; ?>
+		</div>
+	</div>
+	<?php endif; ?>
+
 <!-- Action Plan Section with Timeline -->
 <?php if ( ! empty( $action_plan ) ) : ?>
 	<div class="rtbcb-section-enhanced rtbcb-action-plan">
@@ -748,6 +617,137 @@ $tech_adoption      = $sector_analysis['technology_adoption'] ?? ( $benchmarking
 					<li><?php echo esc_html( $context_item ); ?></li>
 				<?php endforeach; ?>
 			</ul>
+		</div>
+	</div>
+	<?php endif; ?>
+
+	<!-- Interactive ROI Analysis Section with Charts -->
+	<?php if ( ! empty( $financial_analysis['roi_scenarios'] ) ) : ?>
+	<div class="rtbcb-section-enhanced rtbcb-financial-analysis-enhanced">
+		<div class="rtbcb-section-header-enhanced">
+			<h2 class="rtbcb-section-title">
+				<span class="rtbcb-section-icon">💰</span>
+				<?php echo esc_html__( 'Financial Analysis & ROI Projections', 'rtbcb' ); ?>
+			</h2>
+			<button type="button" class="rtbcb-section-toggle" data-target="financial-content">
+				<span class="rtbcb-toggle-text"><?php echo esc_html__( 'Expand', 'rtbcb' ); ?></span>
+				<span class="rtbcb-toggle-arrow">▼</span>
+			</button>
+		</div>
+
+		<div id="financial-content" class="rtbcb-section-content">
+				<!-- ROI Scenarios Chart -->
+				<?php if ( $enable_charts ) : ?>
+				<div class="rtbcb-roi-chart-container">
+						<h3><?php echo esc_html__( 'ROI Scenario Analysis', 'rtbcb' ); ?></h3>
+						<canvas id="rtbcb-roi-chart" width="800" height="400"></canvas>
+						<div class="rtbcb-chart-legend">
+								<div class="rtbcb-legend-item">
+										<span class="rtbcb-legend-color conservative"></span>
+										<span><?php echo esc_html__( 'Conservative Scenario', 'rtbcb' ); ?></span>
+								</div>
+								<div class="rtbcb-legend-item">
+										<span class="rtbcb-legend-color base"></span>
+										<span><?php echo esc_html__( 'Base Case', 'rtbcb' ); ?></span>
+								</div>
+								<div class="rtbcb-legend-item">
+										<span class="rtbcb-legend-color optimistic"></span>
+										<span><?php echo esc_html__( 'Optimistic Scenario', 'rtbcb' ); ?></span>
+								</div>
+						</div>
+				</div>
+				<?php endif; ?>
+
+			<!-- ROI Breakdown -->
+			<div class="rtbcb-roi-breakdown-enhanced">
+				<h3><?php echo esc_html__( 'ROI Component Breakdown', 'rtbcb' ); ?></h3>
+				<div class="rtbcb-roi-components">
+					<?php foreach ( $financial_analysis['roi_scenarios'] as $scenario_name => $scenario ) :
+						if ( in_array( $scenario_name, array( 'sensitivity_analysis', 'confidence_metrics' ), true ) ) {
+						continue;
+						}
+					?>
+					<div class="rtbcb-scenario-card <?php echo esc_attr( $scenario_name ); ?>">
+							<h4><?php echo esc_html( ucfirst( $scenario_name ) ); ?> <?php echo esc_html__( 'Case', 'rtbcb' ); ?></h4>
+							<div class="rtbcb-scenario-metrics">
+								<div class="rtbcb-scenario-metric">
+									<span class="rtbcb-metric-label"><?php echo esc_html__( 'Total Annual Benefit', 'rtbcb' ); ?></span>
+									<span class="rtbcb-metric-value primary">$<?php echo esc_html( number_format( $scenario['total_annual_benefit'] ?? 0 ) ); ?></span>
+								</div>
+								<div class="rtbcb-scenario-metric">
+									<span class="rtbcb-metric-label"><?php echo esc_html__( 'Labor Savings', 'rtbcb' ); ?></span>
+									<span class="rtbcb-metric-value">$<?php echo esc_html( number_format( $scenario['labor_savings'] ?? 0 ) ); ?></span>
+								</div>
+								<div class="rtbcb-scenario-metric">
+									<span class="rtbcb-metric-label"><?php echo esc_html__( 'Fee Savings', 'rtbcb' ); ?></span>
+									<span class="rtbcb-metric-value">$<?php echo esc_html( number_format( $scenario['fee_savings'] ?? 0 ) ); ?></span>
+								</div>
+								<div class="rtbcb-scenario-metric">
+									<span class="rtbcb-metric-label"><?php echo esc_html__( 'Error Reduction', 'rtbcb' ); ?></span>
+									<span class="rtbcb-metric-value">$<?php echo esc_html( number_format( $scenario['error_reduction'] ?? 0 ) ); ?></span>
+								</div>
+							</div>
+						</div>
+					<?php endforeach; ?>
+				</div>
+			</div>
+
+			
+			<!-- ROI Scenario Table -->
+			<?php if ( ! empty( $financial_analysis['roi_scenarios'] ) ) : ?>
+			<table class="rtbcb-roi-table">
+				<thead>
+					<tr>
+						<th><?php esc_html_e( 'Scenario', 'rtbcb' ); ?></th>
+						<th><?php esc_html_e( 'Labor Savings', 'rtbcb' ); ?></th>
+						<th><?php esc_html_e( 'Fee Savings', 'rtbcb' ); ?></th>
+						<th><?php esc_html_e( 'Error Reduction', 'rtbcb' ); ?></th>
+						<th><?php esc_html_e( 'Total Benefit', 'rtbcb' ); ?></th>
+						<th><?php esc_html_e( 'ROI %', 'rtbcb' ); ?></th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php foreach ( $financial_analysis['roi_scenarios'] as $scenario_name => $scenario ) : ?>
+						<?php
+						if ( in_array( $scenario_name, array( 'sensitivity_analysis', 'confidence_metrics' ), true ) ) {
+							continue;
+						}
+						?>
+						<tr>
+							<td><?php echo esc_html( ucfirst( $scenario_name ) ); ?></td>
+							<td><?php echo esc_html( number_format_i18n( $scenario['labor_savings'] ?? 0 ) ); ?></td>
+							<td><?php echo esc_html( number_format_i18n( $scenario['fee_savings'] ?? 0 ) ); ?></td>
+							<td><?php echo esc_html( number_format_i18n( $scenario['error_reduction'] ?? 0 ) ); ?></td>
+							<td><?php echo esc_html( number_format_i18n( $scenario['total_annual_benefit'] ?? 0 ) ); ?></td>
+							<td><?php echo esc_html( number_format_i18n( $scenario['roi_percentage'] ?? 0 ) ); ?>%</td>
+						</tr>
+					<?php endforeach; ?>
+				</tbody>
+			</table>
+			<?php endif; ?>
+
+<!-- Sensitivity Analysis -->
+			<?php if ( ! empty( $financial_analysis['sensitivity_analysis'] ) ) : ?>
+				<div class="rtbcb-sensitivity-analysis">
+					<h3><?php echo esc_html__( 'Sensitivity Analysis', 'rtbcb' ); ?></h3>
+					<div class="rtbcb-sensitivity-grid">
+						<?php foreach ( $financial_analysis['sensitivity_analysis'] as $factor ) : ?>
+							<div class="rtbcb-sensitivity-item">
+								<div class="rtbcb-sensitivity-header">
+									<span class="rtbcb-sensitivity-factor"><?php echo esc_html( $factor['factor'] ?? '' ); ?></span>
+									<span class="rtbcb-sensitivity-probability"><?php echo esc_html( round( ( $factor['probability'] ?? 0 ) * 100 ) ); ?>% <?php echo esc_html__( 'likelihood', 'rtbcb' ); ?></span>
+								</div>
+								<div class="rtbcb-sensitivity-impact <?php
+									// Escaped for safe output.
+									echo esc_attr( ( $factor['impact_percentage'] ?? 0 ) >= 0 ? 'positive' : 'negative' );
+								?>">
+									<?php echo esc_html( $factor['impact_percentage'] ?? 0 ); ?>% <?php echo esc_html__( 'impact', 'rtbcb' ); ?>
+								</div>
+							</div>
+						<?php endforeach; ?>
+					</div>
+				</div>
+			<?php endif; ?>
 		</div>
 	</div>
 	<?php endif; ?>
