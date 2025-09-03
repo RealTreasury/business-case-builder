@@ -116,6 +116,7 @@ node tests/temperature-model.test.js
 node tests/min-output-tokens.test.js
 node tests/gpt5-config-defaults.test.js
 node tests/export-to-pdf-button.test.js
+node tests/api-logs-page.test.js
 node tests/wizard-report-flow.test.js
 npx --yes jest tests/poll-job-completed.test.js --config '{"testEnvironment":"node"}'
 npx --yes jest tests/poll-job-show-results.test.js --config '{"testEnvironment":"node"}'
