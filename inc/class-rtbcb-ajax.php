@@ -506,6 +506,9 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 
 	$company_profile      = $enriched_profile['company_profile'] ?? [];
 	$industry_context_raw = $enriched_profile['industry_context'] ?? [];
+	$sector_analysis_raw      = (array) ( $industry_context_raw['sector_analysis'] ?? [] );
+	$benchmarking_raw         = (array) ( $industry_context_raw['benchmarking'] ?? [] );
+	$regulatory_landscape_raw = (array) ( $industry_context_raw['regulatory_landscape'] ?? [] );
 	$enriched_profile_struct = [
 		'name'                => $company_profile['name'] ?? '',
 		'enhanced_description'=> $company_profile['enhanced_description'] ?? ( $company_profile['description'] ?? '' ),
@@ -514,25 +517,25 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 		'key_challenges'      => $company_profile['key_challenges'] ?? [],
 		'strategic_priorities'=> $company_profile['strategic_priorities'] ?? [],
 	];
-$industry_context_struct = [
-'sector_analysis' => [
-'market_dynamics'    => $industry_context_raw['sector_analysis']['market_dynamics'] ?? ( $industry_context_raw['sector_trends'] ?? ( $industry_context_raw['market_dynamics'] ?? '' ) ),
-'growth_trends'      => $industry_context_raw['sector_analysis']['growth_trends'] ?? '',
-'disruption_factors' => (array) ( $industry_context_raw['sector_analysis']['disruption_factors'] ?? [] ),
-'technology_adoption'=> $industry_context_raw['sector_analysis']['technology_adoption'] ?? ( $industry_context_raw['technology_adoption'] ?? '' ),
-],
-'benchmarking'    => [
-'typical_treasury_setup' => $industry_context_raw['benchmarking']['typical_treasury_setup'] ?? '',
-'common_pain_points'     => (array) ( $industry_context_raw['benchmarking']['common_pain_points'] ?? [] ),
-'technology_penetration' => $industry_context_raw['benchmarking']['technology_penetration'] ?? ( $industry_context_raw['technology_penetration'] ?? '' ),
-'investment_patterns'    => $industry_context_raw['benchmarking']['investment_patterns'] ?? '',
-],
-'regulatory_landscape' => [
-'key_regulations'      => (array) ( $industry_context_raw['regulatory_landscape']['key_regulations'] ?? [] ),
-'compliance_complexity'=> $industry_context_raw['regulatory_landscape']['compliance_complexity'] ?? '',
-'upcoming_changes'     => (array) ( $industry_context_raw['regulatory_landscape']['upcoming_changes'] ?? [] ),
-],
-];
+	$industry_context_struct = [
+		'sector_analysis' => [
+			'market_dynamics'    => $sector_analysis_raw['market_dynamics'] ?? ( $industry_context_raw['sector_trends'] ?? ( $industry_context_raw['market_dynamics'] ?? '' ) ),
+			'growth_trends'      => $sector_analysis_raw['growth_trends'] ?? '',
+			'disruption_factors' => (array) ( $sector_analysis_raw['disruption_factors'] ?? [] ),
+			'technology_adoption'=> $sector_analysis_raw['technology_adoption'] ?? ( $industry_context_raw['technology_adoption'] ?? '' ),
+		],
+		'benchmarking'    => [
+			'typical_treasury_setup' => $benchmarking_raw['typical_treasury_setup'] ?? '',
+			'common_pain_points'     => (array) ( $benchmarking_raw['common_pain_points'] ?? [] ),
+			'technology_penetration' => $benchmarking_raw['technology_penetration'] ?? ( $industry_context_raw['technology_penetration'] ?? '' ),
+			'investment_patterns'    => $benchmarking_raw['investment_patterns'] ?? '',
+		],
+		'regulatory_landscape' => [
+			'key_regulations'      => (array) ( $regulatory_landscape_raw['key_regulations'] ?? [] ),
+			'compliance_complexity'=> $regulatory_landscape_raw['compliance_complexity'] ?? '',
+			'upcoming_changes'     => (array) ( $regulatory_landscape_raw['upcoming_changes'] ?? [] ),
+		],
+	];
 
 	$company_name_meta = sanitize_text_field( $enriched_profile_struct['name'] ?: $user_inputs['company_name'] );
 
