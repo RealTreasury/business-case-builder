@@ -667,7 +667,11 @@ class BusinessCaseBuilder {
         const formData = new FormData();
         const numericFields = ['hours_reconciliation', 'hours_cash_positioning', 'num_banks', 'ftes'];
 
+        const skipFields = ['fast_mode', 'report_type'];
         for (const [key, value] of rawData.entries()) {
+            if (skipFields.includes(key)) {
+                continue;
+            }
             if (numericFields.includes(key)) {
                 const num = parseFloat(value);
                 formData.append(key, Number.isFinite(num) ? num : 0);
@@ -680,8 +684,11 @@ class BusinessCaseBuilder {
         if (typeof rtbcb_ajax !== 'undefined' && rtbcb_ajax.nonce) {
             formData.append('rtbcb_nonce', rtbcb_ajax.nonce);
         }
-        const fastMode = this.form.querySelector('#fast_mode');
-        formData.append('fast_mode', fastMode && fastMode.checked ? '1' : '0');
+
+        const selectedReport = this.form.querySelector('input[name="report_type"]:checked');
+        const reportType = selectedReport ? selectedReport.value : 'basic';
+        formData.append('report_type', reportType);
+        formData.append('fast_mode', reportType === 'fast' ? '1' : '0');
         return formData;
     }
 
