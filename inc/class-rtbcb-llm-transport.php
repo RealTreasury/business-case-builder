@@ -110,6 +110,10 @@ RTBCB_API_Log::save_log( $request, $response, $user_id, $user_email, $company_na
 	*/
 public function call_openai_with_retry( $model, $prompt, $max_output_tokens = null, $max_retries = null, $chunk_handler = null ) {
 $request_data          = is_array( $prompt ) ? $prompt : [ 'input' => $prompt ];
+if ( isset( $request_data['messages'] ) && ! isset( $request_data['input'] ) ) {
+$request_data['input'] = $request_data['messages'];
+unset( $request_data['messages'] );
+}
 $request_data['model'] = $model;
 
 if ( rtbcb_heavy_features_disabled() ) {
@@ -124,8 +128,9 @@ $this->maybe_log_interaction( $request_data, [ 'error' => $error->get_error_mess
 return $error;
 }
 
-$input = is_array( $prompt ) ? ( $prompt['input'] ?? '' ) : $prompt;
-if ( '' === trim( (string) $input ) ) {
+$input       = $request_data['input'] ?? '';
+$input_check = is_array( $input ) ? wp_json_encode( $input ) : (string) $input;
+if ( '' === trim( (string) $input_check ) ) {
 $error = new WP_Error( 'empty_prompt', __( 'Prompt cannot be empty.', 'rtbcb' ) );
 $this->maybe_log_interaction( $request_data, [ 'error' => $error->get_error_message() ] );
 return $error;
@@ -210,10 +215,14 @@ return $error;
 	 * @return array|WP_Error HTTP-like response or WP_Error.
 	 */
 	   protected function call_openai( $model, $prompt, $max_tokens = null, $chunk_handler = null ) {
-	           $endpoint   = 'https://api.openai.com/v1/responses';
-	           $model_name = sanitize_text_field( $model ?: 'gpt-5-mini' );
-	           $body       = is_array( $prompt ) ? $prompt : [ 'input' => sanitize_textarea_field( (string) $prompt ) ];
-	           $body['model'] = $model_name;
+$endpoint   = 'https://api.openai.com/v1/responses';
+$model_name = sanitize_text_field( $model ?: 'gpt-5-mini' );
+$body       = is_array( $prompt ) ? $prompt : [ 'input' => sanitize_textarea_field( (string) $prompt ) ];
+if ( isset( $body['messages'] ) && ! isset( $body['input'] ) ) {
+$body['input'] = $body['messages'];
+unset( $body['messages'] );
+}
+$body['model'] = $model_name;
 	           if ( $max_tokens ) {
 	                   $body['max_output_tokens'] = intval( $max_tokens );
 	           }
