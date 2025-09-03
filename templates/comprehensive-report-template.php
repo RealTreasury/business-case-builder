@@ -60,7 +60,7 @@ $processing_time = $metadata['processing_time'] ?? ( $report_data['processing_ti
 					<span class="rtbcb-title-subtitle"><?php echo esc_html__( 'Treasury Technology Business Case', 'rtbcb' ); ?></span>
 				</h1>
 
-				<div class="rtbcb-report-meta-enhanced">
+<div class="rtbcb-report-meta-enhanced">
 					<div class="rtbcb-meta-item">
 						<span class="rtbcb-meta-icon">📅</span>
 						<span class="rtbcb-meta-label"><?php echo esc_html__( 'Analysis Date', 'rtbcb' ); ?></span>
@@ -81,11 +81,18 @@ $processing_time = $metadata['processing_time'] ?? ( $report_data['processing_ti
 												<span class="rtbcb-meta-label"><?php echo esc_html__( 'Version', 'rtbcb' ); ?></span>
 									<span class="rtbcb-meta-value"><?php echo esc_html( defined( 'RTBCB_VERSION' ) ? RTBCB_VERSION : __( 'dev', 'rtbcb' ) ); ?></span>
 										</div>
-								</div>
-			</div>
+</div>
+		<div class="rtbcb-ai-toggle-panel">
+			<span><?php echo esc_html__( 'Highlight AI-Generated Content', 'rtbcb' ); ?></span>
+			<label for="rtbcb-ai-toggle" class="rtbcb-toggle-switch">
+				<input type="checkbox" id="rtbcb-ai-toggle" class="rtbcb-sr-only" />
+				<div class="rtbcb-toggle-track"></div>
+			</label>
+		</div>
+	</div>
 
-			<!-- Key Metrics Dashboard -->
-			<div class="rtbcb-metrics-dashboard">
+	<!-- Key Metrics Dashboard -->
+<div class="rtbcb-metrics-dashboard">
 				<?php if ( ! empty( $financial_analysis['roi_scenarios'] ) ) : ?>
 					<?php $base_roi = $financial_analysis['roi_scenarios']['base'] ?? []; ?>
 					<div class="rtbcb-metric-card primary">
