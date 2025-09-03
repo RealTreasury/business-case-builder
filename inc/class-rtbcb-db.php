@@ -1,8 +1,9 @@
 <?php
 defined( 'ABSPATH' ) || exit;
+require_once __DIR__ . '/helpers.php';
 
 /**
-	* Database management and migration handling.
+* Database management and migration handling.
 	*
 	* @package RealTreasuryBusinessCaseBuilder
 	*/
@@ -25,10 +26,10 @@ class RTBCB_DB {
 	public static function init() {
 		global $wpdb;
 
-		if ( ! $wpdb ) {
-			error_log( 'RTBCB: WordPress database not available' );
-			return false;
-		}
+if ( ! $wpdb ) {
+rtbcb_log_error( 'WordPress database not available', [ 'source' => 'db_init' ] );
+return false;
+}
 
 		try {
 			$current = function_exists( 'get_option' ) ? get_option( 'rtbcb_db_version', '1.0.0' ) : '1.0.0';
@@ -49,10 +50,10 @@ class RTBCB_DB {
 			self::seed_rag_sample_data();
 
 			return true;
-		} catch ( Throwable $e ) {
-			error_log( 'RTBCB: Database initialization failed: ' . $e->getMessage() );
-			return false;
-		}
+} catch ( Throwable $e ) {
+rtbcb_log_error( 'Database initialization failed', [ 'error' => $e->getMessage() ] );
+return false;
+}
 	}
 
 
@@ -96,8 +97,10 @@ class RTBCB_DB {
 
        // Future migrations can be handled here.
 
-		// Log the upgrade.
-		error_log( 'RTBCB: Database upgraded from version ' . $from_version . ' to ' . self::DB_VERSION );
+// Log the upgrade.
+if ( class_exists( 'RTBCB_Logger' ) ) {
+RTBCB_Logger::log( 'database_upgraded', [ 'from' => $from_version, 'to' => self::DB_VERSION ] );
+}
 	}
 
 	/**

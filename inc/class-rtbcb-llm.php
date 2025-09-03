@@ -59,9 +59,9 @@ class RTBCB_LLM {
                $this->transport       = new RTBCB_LLM_Transport( $this->config );
                $this->response_parser = new RTBCB_LLM_Response_Parser();
 
-               if ( empty( $this->config->get_api_key() ) ) {
-                       error_log( 'RTBCB: OpenAI API key not configured' );
-               }
+if ( empty( $this->config->get_api_key() ) ) {
+rtbcb_log_error( 'OpenAI API key not configured', [ 'source' => 'llm' ] );
+}
        }
 
 	/**
@@ -2307,9 +2307,11 @@ PROMPT;
                $response_body = $response['body'] ?? '';
                $response_data = $this->response_parser->process_openai_response( $response_body );
 
-               if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-                       error_log( 'OpenAI Response (clean): ' . wp_json_encode( $response_data, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT ) );
-               }
+if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+if ( class_exists( 'RTBCB_Logger' ) ) {
+RTBCB_Logger::log( 'openai_response_clean', $response_data );
+}
+}
 
                return $response_data;
        }

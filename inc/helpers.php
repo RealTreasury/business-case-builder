@@ -960,9 +960,11 @@ error_log( $log_message );
 }
 
 function rtbcb_log_error( $message, $context = null ) {
-		$lead = rtbcb_get_current_lead();
-	if ( $lead ) {
-	$message .= ' [Lead ID: ' . $lead['id'] . ' Email: ' . $lead['email'] . ']';
+if ( function_exists( 'rtbcb_get_current_lead' ) && function_exists( 'wp_cache_get' ) ) {
+$lead = rtbcb_get_current_lead();
+if ( $lead ) {
+$message .= ' [Lead ID: ' . $lead['id'] . ' Email: ' . $lead['email'] . ']';
+}
 }
 $log_message = 'RTBCB Error: ' . $message;
 if ( $context ) {

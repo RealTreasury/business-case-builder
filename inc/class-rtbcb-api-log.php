@@ -1,5 +1,6 @@
 <?php
 defined( 'ABSPATH' ) || exit;
+require_once __DIR__ . '/helpers.php';
 
 /**
 	* API log management class.
@@ -73,26 +74,26 @@ class RTBCB_API_Log {
 				)
 			);
 
-			if ( ! $table_exists ) {
-				error_log( 'RTBCB: Failed to create table ' . self::$table_name );
+if ( ! $table_exists ) {
+rtbcb_log_error( 'Failed to create API log table', [ 'table' => self::$table_name ] );
 
-                               $simple_sql = 'CREATE TABLE IF NOT EXISTS ' . self::$table_name . " (
-                                       id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-                                       user_id bigint(20) unsigned DEFAULT 0,
-                                       user_email varchar(255) DEFAULT '',
-                                       lead_id bigint(20) unsigned DEFAULT 0,
-                                       company_name varchar(255) DEFAULT '',
-                                       request_json longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-                                       response_json longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-                                       is_truncated tinyint(1) DEFAULT 0,
-                                       original_size bigint(20) unsigned DEFAULT 0,
-                                       corruption_detected tinyint(1) DEFAULT 0,
-                                       prompt_tokens int(11) DEFAULT 0,
-                                       completion_tokens int(11) DEFAULT 0,
-                                       total_tokens int(11) DEFAULT 0,
-                                       created_at datetime DEFAULT CURRENT_TIMESTAMP,
-                                       PRIMARY KEY (id)
-                               ) $charset_collate;";
+$simple_sql = 'CREATE TABLE IF NOT EXISTS ' . self::$table_name . " (
+id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+user_id bigint(20) unsigned DEFAULT 0,
+user_email varchar(255) DEFAULT '',
+lead_id bigint(20) unsigned DEFAULT 0,
+company_name varchar(255) DEFAULT '',
+request_json longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+response_json longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+is_truncated tinyint(1) DEFAULT 0,
+original_size bigint(20) unsigned DEFAULT 0,
+corruption_detected tinyint(1) DEFAULT 0,
+prompt_tokens int(11) DEFAULT 0,
+completion_tokens int(11) DEFAULT 0,
+total_tokens int(11) DEFAULT 0,
+created_at datetime DEFAULT CURRENT_TIMESTAMP,
+PRIMARY KEY (id)
+) $charset_collate;";
 
 				$wpdb->query( $simple_sql );
 
@@ -104,20 +105,20 @@ class RTBCB_API_Log {
 					)
 				);
 
-				if ( ! $table_exists ) {
-					error_log( 'RTBCB: Failed to create API log table even with simple structure' );
-					return false;
-                }
-        }
+if ( ! $table_exists ) {
+rtbcb_log_error( 'Failed to create API log table even with simple structure', [ 'table' => self::$table_name ] );
+return false;
+}
+}
 
-                       return true;
-               } catch ( Exception $e ) {
-                       error_log( 'RTBCB: Exception creating API log table: ' . $e->getMessage() );
-                       return false;
-               } catch ( Error $e ) {
-                       error_log( 'RTBCB: Fatal error creating API log table: ' . $e->getMessage() );
-                       return false;
-               }
+return true;
+} catch ( Exception $e ) {
+rtbcb_log_error( 'Exception creating API log table', [ 'table' => self::$table_name, 'error' => $e->getMessage() ] );
+return false;
+} catch ( Error $e ) {
+rtbcb_log_error( 'Fatal error creating API log table', [ 'table' => self::$table_name, 'error' => $e->getMessage() ] );
+return false;
+}
        }
 
        /**

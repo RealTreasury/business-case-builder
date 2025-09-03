@@ -188,8 +188,8 @@ class RTBCB_Router {
                } catch ( RTBCB_JSON_Error $e ) {
                        throw $e;
                } catch ( Exception $e ) {
-                       // Log the detailed error to debug.log.
-                       error_log( 'RTBCB Form Submission Error: ' . $e->getMessage() );
+// Log the detailed error.
+rtbcb_log_error( 'Form submission error', [ 'error' => $e->getMessage() ] );
 
                        // Send a generic error response to the client.
                        wp_send_json_error(
@@ -237,11 +237,21 @@ $premium_model = function_exists( 'get_option' ) ? get_option( 'rtbcb_premium_mo
 				'rtbcb_missing_model',
 				__( 'No language model configured. Please review the plugin settings.', 'rtbcb' )
 			);
-			error_log( 'RTBCB: ' . $error->get_error_message() );
-			return $error;
+rtbcb_log_error( 'Model routing error', [ 'message' => $error->get_error_message() ] );
+return $error;
 		}
 
-		error_log( "RTBCB: Model selected: {$model} (Complexity: {$complexity}, Category: {$category}, Reason: {$reasoning})" );
+if ( class_exists( 'RTBCB_Logger' ) ) {
+RTBCB_Logger::log(
+'model_selected',
+[
+'model'      => $model,
+'complexity' => $complexity,
+'category'   => $category,
+'reason'     => $reasoning,
+]
+);
+}
 
 		return $model;
 	}

@@ -7,6 +7,7 @@ defined( 'ABSPATH' ) || exit;
  * @package RealTreasuryBusinessCaseBuilder
  */
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/helpers.php';
 
 class RTBCB_Response_Parser {
 /**
@@ -35,7 +36,7 @@ $body    = wp_remote_retrieve_body( $response );
 $decoded = json_decode( $body, true );
 
 if ( ! is_array( $decoded ) ) {
-error_log( 'RTBCB: Malformed JSON response' );
+rtbcb_log_error( 'Malformed JSON response', [ 'source' => 'response_parser' ] );
 return [
 'output_text'    => '',
 'reasoning'      => [],
@@ -56,7 +57,7 @@ $output_text = trim( $decoded['output_text'] );
 if ( strlen( $output_text ) < 20 ||
 false !== stripos( $output_text, 'pong' ) ||
 false !== stripos( $output_text, 'how can I help' ) ) {
-error_log( 'RTBCB: Detected trivial response: ' . $output_text );
+rtbcb_log_error( 'Detected trivial response', [ 'output_text' => $output_text ] );
 $output_text = '';
 }
 }
@@ -104,17 +105,19 @@ $output_tokens = $usage['output_tokens'] ?? 0;
 $config        = rtbcb_get_gpt5_config();
 if ( 'incomplete' === ( $decoded['status'] ?? '' ) || ( ! empty( $output_tokens ) && $output_tokens >= $config['max_output_tokens'] ) ) {
 $truncated = true;
-error_log( 'RTBCB: OpenAI response truncated at ' . $output_tokens . ' tokens' );
+rtbcb_log_error( 'OpenAI response truncated', [ 'output_tokens' => $output_tokens ] );
 }
 
-error_log(
-sprintf(
-'RTBCB: Parsed response - text_length=%d, output_tokens=%d, reasoning_chunks=%d',
-strlen( $output_text ),
-$output_tokens,
-count( $reasoning )
-)
+if ( class_exists( 'RTBCB_Logger' ) ) {
+RTBCB_Logger::log(
+'parsed_response',
+[
+'text_length'      => strlen( $output_text ),
+'output_tokens'    => $output_tokens,
+'reasoning_chunks' => count( $reasoning ),
+]
 );
+}
 
 return [
 'output_text'    => $output_text,

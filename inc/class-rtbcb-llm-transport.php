@@ -217,11 +217,11 @@ return $response; // Return last error.
 		curl_setopt( $ch, CURLOPT_TIMEOUT, $timeout );
 		curl_setopt( $ch, CURLOPT_WRITEFUNCTION, function ( $curl, $data ) use ( &$stream, $chunk_handler ) {
 			if ( is_callable( $chunk_handler ) ) {
-				try {
-					call_user_func( $chunk_handler, $data );
-				} catch ( Exception $e ) {
-					error_log( 'RTBCB: Chunk handler error: ' . $e->getMessage() );
-				}
+try {
+call_user_func( $chunk_handler, $data );
+} catch ( Exception $e ) {
+rtbcb_log_error( 'Chunk handler error', [ 'error' => $e->getMessage() ] );
+}
 			}
 			$stream .= $data;
 			return strlen( $data );

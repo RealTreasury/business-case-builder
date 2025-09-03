@@ -415,7 +415,15 @@ PROMPT;
 
                $total_complexity = array_sum( $complexity_factors );
 
-               error_log( sprintf( 'RTBCB: Complexity calculation - Total: %.2f, Factors: %s', $total_complexity, wp_json_encode( $complexity_factors ) ) );
+if ( class_exists( 'RTBCB_Logger' ) ) {
+RTBCB_Logger::log(
+'complexity_calculation',
+[
+'total'   => $total_complexity,
+'factors' => $complexity_factors,
+]
+);
+}
 
                if ( $total_complexity >= 0.8 ) {
                        $selected_model = $this->get_model( 'premium' );
@@ -428,7 +436,16 @@ PROMPT;
                        $reasoning      = 'Standard complexity suitable for mini model';
                }
 
-               error_log( sprintf( 'RTBCB: Model selected - %s (Complexity: %.2f, Reason: %s)', $selected_model, $total_complexity, $reasoning ) );
+if ( class_exists( 'RTBCB_Logger' ) ) {
+RTBCB_Logger::log(
+'model_selected',
+[
+'model'      => $selected_model,
+'complexity' => $total_complexity,
+'reason'     => $reasoning,
+]
+);
+}
 
                return $selected_model;
        }
