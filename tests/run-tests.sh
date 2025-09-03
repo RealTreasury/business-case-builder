@@ -103,6 +103,8 @@ echo "14d. Running Jetpack compatibility test..."
 php tests/jetpack-compatibility.test.php
 echo "14e. Running reports bulk delete test..."
 php tests/reports-bulk-delete.test.php
+echo "14f. Running report type test..."
+vendor/bin/phpunit tests/RTBCB_ReportTypeTest.php
 
 # JavaScript tests
 echo "16. Running JavaScript tests..."
@@ -122,6 +124,7 @@ node tests/min-output-tokens.test.js
 node tests/gpt5-config-defaults.test.js
 node tests/api-logs-page.test.js
 node tests/wizard-report-flow.test.js
+node tests/operational-insights-render.test.js
 npx --yes jest tests/poll-job-completed.test.js --config '{"testEnvironment":"node"}'
 npx --yes jest tests/poll-job-show-results.test.js --config '{"testEnvironment":"node"}'
 npx --yes jest tests/poll-job-progress-text.test.js --config '{"testEnvironment":"node"}'

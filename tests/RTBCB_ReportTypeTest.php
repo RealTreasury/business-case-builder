@@ -210,17 +210,34 @@ if ( 'error' === self::$mode ) {
 return new WP_Error( 'missing_sections', 'Required sections missing.', [ 'status' => 500 ] );
 }
 return [
-'report_data' => [
-'action_plan'         => [ 'immediate_steps' => [ 'Step 1' ] ],
-'operational_insights' => [ 'Insight' ],
-'risk_analysis'       => [ 'Risk' ],
-'company_intelligence'=> [],
-'executive_summary'   => [],
-'financial_analysis'  => [],
-'technology_strategy' => [],
-'financial_benchmarks'=> [],
-'metadata'            => [],
-],
+    'report_data' => [
+    'action_plan'         => [ 'immediate_steps' => [ 'Step 1' ] ],
+    'operational_insights' => [
+        'current_state_assessment' => [ 'Manual process' ],
+        'process_improvements'     => [
+            [
+                'process'        => 'Reconciliation',
+                'current_state'  => 'Manual spreadsheets',
+                'improved_state' => 'Automated workflow',
+                'impact'         => 'High',
+            ],
+        ],
+        'automation_opportunities' => [
+            [
+                'opportunity' => 'Cash Forecasting',
+                'complexity'  => 'Medium',
+                'savings'     => '10 hours',
+            ],
+        ],
+    ],
+    'risk_analysis'       => [ 'Risk' ],
+    'company_intelligence'=> [],
+    'executive_summary'   => [],
+    'financial_analysis'  => [],
+    'technology_strategy' => [],
+    'financial_benchmarks'=> [],
+    'metadata'            => [],
+    ],
 ];
 }
 public function generate_business_case( $form_data, $calculations, $rag_context, $model ) {
@@ -249,16 +266,27 @@ $_POST         = [
 RTBCB_LLM_Optimized::$mode = 'success';
 }
 
-public function test_comprehensive_includes_sections() {
-$router = new RTBCB_Router();
-$router->handle_form_submission( 'comprehensive' );
-global $last_response;
-$this->assertTrue( $last_response['success'] );
-$html = $last_response['data']['report_html'] ?? '';
-$this->assertStringContainsString( 'Implementation Action Plan', $html );
-$this->assertStringContainsString( 'Operational Insights', $html );
-$this->assertStringContainsString( 'Risk Assessment', $html );
-}
+    public function test_comprehensive_includes_sections() {
+        $router = new RTBCB_Router();
+        $router->handle_form_submission( 'comprehensive' );
+        global $last_response;
+        $this->assertTrue( $last_response['success'] );
+        $html = $last_response['data']['report_html'] ?? '';
+        $this->assertStringContainsString( 'Implementation Action Plan', $html );
+        $this->assertStringContainsString( 'Operational Insights', $html );
+        $this->assertStringContainsString( 'Risk Assessment', $html );
+    }
+
+    public function test_operational_insights_section_populates() {
+        $router = new RTBCB_Router();
+        $router->handle_form_submission( 'comprehensive' );
+        global $last_response;
+        $this->assertTrue( $last_response['success'] );
+        $html = $last_response['data']['report_html'] ?? '';
+        $this->assertStringContainsString( 'Reconciliation', $html );
+        $this->assertStringContainsString( 'Cash Forecasting', $html );
+        $this->assertStringNotContainsString( 'No data provided', $html );
+    }
 
 public function test_basic_omits_sections() {
 $router = new RTBCB_Router();

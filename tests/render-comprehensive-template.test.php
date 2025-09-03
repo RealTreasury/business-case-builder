@@ -33,8 +33,8 @@ if ( ! function_exists( 'current_time' ) ) {
 }
 
 $business_case_data = [
-        'company_name'      => 'Demo Corp',
-        'executive_summary' => [
+       'company_name'      => 'Demo Corp',
+       'executive_summary' => [
                 'strategic_positioning'   => 'Positioned well.',
                 'business_case_strength'  => 'Strong',
                 'key_value_drivers'       => [ 'Efficiency', 'Compliance' ],
@@ -62,6 +62,24 @@ $business_case_data = [
                ],
        ],
        'rag_context' => [ 'Example RAG item' ],
+       'operational_insights' => [
+               'current_state_assessment' => [ 'Manual process' ],
+               'process_improvements'     => [
+                       [
+                               'process'        => 'Reconciliation',
+                               'current_state'  => 'Manual spreadsheets',
+                               'improved_state' => 'Automated workflow',
+                               'impact'         => 'High',
+                       ],
+               ],
+               'automation_opportunities' => [
+                       [
+                               'opportunity' => 'Cash Forecasting',
+                               'complexity'  => 'Medium',
+                               'savings'     => '10 hours',
+                       ],
+               ],
+       ],
 ];
 
 $report_data = $business_case_data;
@@ -77,6 +95,16 @@ if ( strpos( $output, 'rtbcb-executive-summary' ) === false || strpos( $output, 
 
 if ( strpos( $output, 'Example RAG item' ) === false ) {
         echo "RAG context not rendered\n";
+        exit( 1 );
+}
+
+if ( strpos( $output, 'Operational Insights' ) === false || strpos( $output, 'Reconciliation' ) === false || strpos( $output, 'Cash Forecasting' ) === false ) {
+        echo "Operational insights not rendered\n";
+        exit( 1 );
+}
+
+if ( strpos( $output, 'No data provided' ) !== false ) {
+        echo "Operational insights fallback triggered unexpectedly\n";
         exit( 1 );
 }
 
