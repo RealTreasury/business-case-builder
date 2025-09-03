@@ -8,7 +8,6 @@ $executive_summary     = $report_data['executive_summary'] ?? [];
 $company_intelligence  = $report_data['company_intelligence'] ?? [];
 $financial_analysis    = $report_data['financial_analysis'] ?? [];
 $technology_strategy   = $report_data['technology_strategy'] ?? [];
-$industry_insights     = $report_data['industry_insights'] ?? [];
 $operational_insights  = $report_data['operational_insights'] ?? [];
 $risk_analysis         = $report_data['risk_analysis'] ?? [];
 $financial_benchmarks  = $report_data['financial_benchmarks'] ?? [];
@@ -198,6 +197,62 @@ $processing_time = $metadata['processing_time'] ?? ( $report_data['processing_ti
 </div>
 <?php endif; ?>
 
+<?php // Industry context moved to Industry Insights section. ?>
+
+						<?php if ( ! empty( $company_intelligence['maturity_assessment'] ) ) : ?>
+						<div class="rtbcb-intelligence-card">
+						<h3><?php echo esc_html__( 'Maturity Assessment', 'rtbcb' ); ?></h3>
+						<table class="rtbcb-table">
+						<thead>
+						<tr>
+						<th><?php esc_html_e( 'Dimension', 'rtbcb' ); ?></th>
+						<th><?php esc_html_e( 'Current Level', 'rtbcb' ); ?></th>
+						<th><?php esc_html_e( 'Target Level', 'rtbcb' ); ?></th>
+						<th><?php esc_html_e( 'Gap Analysis', 'rtbcb' ); ?></th>
+						</tr>
+						</thead>
+						<tbody>
+						<?php foreach ( $company_intelligence['maturity_assessment'] as $assessment ) : ?>
+						<tr>
+						<td><?php echo esc_html( $assessment['dimension'] ?? '' ); ?></td>
+						<td><?php echo esc_html( $assessment['current_level'] ?? '' ); ?></td>
+						<td><?php echo esc_html( $assessment['target_level'] ?? '' ); ?></td>
+						<td><?php echo esc_html( $assessment['gap_analysis'] ?? '' ); ?></td>
+						</tr>
+						<?php endforeach; ?>
+						</tbody>
+						</table>
+						</div>
+						<?php endif; ?>
+
+						<?php if ( ! empty( $company_intelligence['competitive_position'] ) ) : ?>
+						<div class="rtbcb-intelligence-card">
+						<h3><?php echo esc_html__( 'Competitive Position', 'rtbcb' ); ?></h3>
+						<table class="rtbcb-table">
+						<thead>
+						<tr>
+						<th><?php esc_html_e( 'Competitor', 'rtbcb' ); ?></th>
+						<th><?php esc_html_e( 'Position', 'rtbcb' ); ?></th>
+						<th><?php esc_html_e( 'Key Differentiator', 'rtbcb' ); ?></th>
+						</tr>
+						</thead>
+						<tbody>
+						<?php foreach ( $company_intelligence['competitive_position'] as $position ) : ?>
+						<tr>
+						<td><?php echo esc_html( $position['competitor'] ?? '' ); ?></td>
+						<td><?php echo esc_html( $position['relative_position'] ?? '' ); ?></td>
+						<td><?php echo esc_html( $position['key_differentiator'] ?? '' ); ?></td>
+						</tr>
+						<?php endforeach; ?>
+						</tbody>
+						</table>
+						</div>
+						<?php endif; ?>
+</div>
+</div>
+</div>
+<?php endif; ?>
+
 <?php if ( ! empty( $company_intelligence['industry_context'] ) ) :
 $industry_context   = $company_intelligence['industry_context'];
 $sector_analysis    = $industry_context['sector_analysis'] ?? [];
@@ -205,8 +260,14 @@ $benchmarking       = $industry_context['benchmarking'] ?? [];
 $regulatory_land    = $industry_context['regulatory_landscape'] ?? [];
 $tech_adoption      = $sector_analysis['technology_adoption'] ?? ( $benchmarking['technology_penetration'] ?? '' );
 ?>
-<div class="rtbcb-intelligence-card">
-<h3><?php echo esc_html__( 'Industry Context', 'rtbcb' ); ?></h3>
+<div class="rtbcb-section-enhanced rtbcb-industry-insights">
+<div class="rtbcb-section-header-enhanced">
+<h2 class="rtbcb-section-title">
+<span class="rtbcb-section-icon">🌐</span>
+<?php echo esc_html__( 'Industry Insights', 'rtbcb' ); ?>
+</h2>
+</div>
+<div class="rtbcb-section-content">
 <div class="rtbcb-industry-insights">
 <?php if ( ! empty( $sector_analysis['market_dynamics'] ) ) : ?>
 <div class="rtbcb-insight-item">
@@ -295,105 +356,7 @@ $tech_adoption      = $sector_analysis['technology_adoption'] ?? ( $benchmarking
 <?php endif; ?>
 </div>
 </div>
-<?php endif; ?>
-
-						<?php if ( ! empty( $company_intelligence['maturity_assessment'] ) ) : ?>
-						<div class="rtbcb-intelligence-card">
-						<h3><?php echo esc_html__( 'Maturity Assessment', 'rtbcb' ); ?></h3>
-						<table class="rtbcb-table">
-						<thead>
-						<tr>
-						<th><?php esc_html_e( 'Dimension', 'rtbcb' ); ?></th>
-						<th><?php esc_html_e( 'Current Level', 'rtbcb' ); ?></th>
-						<th><?php esc_html_e( 'Target Level', 'rtbcb' ); ?></th>
-						<th><?php esc_html_e( 'Gap Analysis', 'rtbcb' ); ?></th>
-						</tr>
-						</thead>
-						<tbody>
-						<?php foreach ( $company_intelligence['maturity_assessment'] as $assessment ) : ?>
-						<tr>
-						<td><?php echo esc_html( $assessment['dimension'] ?? '' ); ?></td>
-						<td><?php echo esc_html( $assessment['current_level'] ?? '' ); ?></td>
-						<td><?php echo esc_html( $assessment['target_level'] ?? '' ); ?></td>
-						<td><?php echo esc_html( $assessment['gap_analysis'] ?? '' ); ?></td>
-						</tr>
-						<?php endforeach; ?>
-						</tbody>
-						</table>
-						</div>
-						<?php endif; ?>
-
-						<?php if ( ! empty( $company_intelligence['competitive_position'] ) ) : ?>
-						<div class="rtbcb-intelligence-card">
-						<h3><?php echo esc_html__( 'Competitive Position', 'rtbcb' ); ?></h3>
-						<table class="rtbcb-table">
-						<thead>
-						<tr>
-						<th><?php esc_html_e( 'Competitor', 'rtbcb' ); ?></th>
-						<th><?php esc_html_e( 'Position', 'rtbcb' ); ?></th>
-						<th><?php esc_html_e( 'Key Differentiator', 'rtbcb' ); ?></th>
-						</tr>
-						</thead>
-						<tbody>
-						<?php foreach ( $company_intelligence['competitive_position'] as $position ) : ?>
-						<tr>
-						<td><?php echo esc_html( $position['competitor'] ?? '' ); ?></td>
-						<td><?php echo esc_html( $position['relative_position'] ?? '' ); ?></td>
-						<td><?php echo esc_html( $position['key_differentiator'] ?? '' ); ?></td>
-						</tr>
-						<?php endforeach; ?>
-						</tbody>
-						</table>
-						</div>
-						<?php endif; ?>
 </div>
-</div>
-</div>
-<?php endif; ?>
-
-	<?php if ( ! empty( $industry_insights ) ) : ?>
-	<div class="rtbcb-section-enhanced rtbcb-industry-insights">
-	<div class="rtbcb-section-header-enhanced">
-	<h2 class="rtbcb-section-title">
-	<span class="rtbcb-section-icon">🌐</span>
-	<?php echo esc_html__( 'Industry Insights', 'rtbcb' ); ?>
-	</h2>
-	</div>
-	<div class="rtbcb-section-content">
-	<?php if ( ! empty( $industry_insights['sector_trends'] ) ) : ?>
-	<div class="rtbcb-industry-block">
-	<h3><?php echo esc_html__( 'Sector Trends', 'rtbcb' ); ?></h3>
-	<ul>
-	<?php foreach ( $industry_insights['sector_trends'] as $trend ) : ?>
-	<li><?php echo esc_html( $trend ); ?></li>
-	<?php endforeach; ?>
-	</ul>
-	</div>
-	<?php endif; ?>
-	
-	<?php if ( ! empty( $industry_insights['competitive_benchmarks'] ) ) : ?>
-	<div class="rtbcb-industry-block">
-	<h3><?php echo esc_html__( 'Competitive Benchmarks', 'rtbcb' ); ?></h3>
-	<ul>
-	<?php foreach ( $industry_insights['competitive_benchmarks'] as $benchmark ) : ?>
-	<li><?php echo esc_html( $benchmark ); ?></li>
-	<?php endforeach; ?>
-	</ul>
-	</div>
-	<?php endif; ?>
-	
-	<?php if ( ! empty( $industry_insights['regulatory_considerations'] ) ) : ?>
-	<div class="rtbcb-industry-block">
-	<h3><?php echo esc_html__( 'Regulatory Considerations', 'rtbcb' ); ?></h3>
-	<ul>
-	<?php foreach ( $industry_insights['regulatory_considerations'] as $reg ) : ?>
-	<li><?php echo esc_html( $reg ); ?></li>
-	<?php endforeach; ?>
-	</ul>
-	</div>
-	<?php endif; ?>
-	</div>
-	</div>
 <?php endif; ?>
 
 <?php if ( ! empty( $financial_benchmarks ) ) : ?>

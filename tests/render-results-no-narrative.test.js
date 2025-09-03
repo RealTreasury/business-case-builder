@@ -23,7 +23,7 @@ const data = {
     companyName: 'Test Co',
     executiveSummary: {},
     operationalAnalysis: {},
-    industryInsights: { sector_trends: ['Growth trend'] }
+    industryContext: { sector_analysis: { market_dynamics: 'Growth trend' } }
 };
 
 const html = builder.renderResults(data);
