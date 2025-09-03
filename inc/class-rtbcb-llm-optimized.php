@@ -238,7 +238,8 @@ Return a complete JSON business case covering:
 4. **Financial Analysis**: Detailed ROI scenarios, investment breakdown, and payback analysis
 5. **Technology Strategy**: Recommended solutions and implementation roadmap
 6. **Risk Analysis**: Implementation risks and comprehensive mitigation strategies
-7. **Action Plan**: Immediate steps, short-term milestones, and long-term objectives
+7. **Research Context**: Risk profile and financial benchmark summaries
+8. **Action Plan**: Immediate steps, short-term milestones, and long-term objectives
 
 ### Complete Business Case Schema
 ```json
@@ -356,6 +357,38 @@ Return a complete JSON business case covering:
     "sector_trends": ["array of 3-4 industry trends affecting treasury"],
     "competitive_benchmarks": ["array of 2-3 competitive benchmarking insights"],
     "regulatory_considerations": ["array of 2-3 regulatory factors"]
+  },
+  "research_context": {
+    "risk_profile": {
+      "risk_matrix": [
+        {
+          "risk": "string - risk description",
+          "likelihood": "low|medium|high",
+          "impact": "low|medium|high"
+        }
+      ],
+      "mitigations": [
+        {
+          "risk": "string - risk description",
+          "strategy": "string - mitigation approach"
+        }
+      ]
+    },
+    "financial_benchmarks": {
+      "industry_benchmarks": [
+        {
+          "metric": "string - benchmark metric",
+          "value": "string - benchmark value",
+          "source": "string - data source"
+        }
+      ],
+      "valuation_multiples": [
+        {
+          "metric": "string - valuation metric",
+          "range": "string - industry range"
+        }
+      ]
+    }
   },
   "risk_analysis": {
     "implementation_risks": ["array of 5-6 key implementation risks"],
