@@ -48,15 +48,22 @@ class RTBCB_Router {
 
                        $form_data = $validated_data;
 
-                       // Determine report type from request if provided.
-                       if ( isset( $_POST['report_type'] ) ) {
-                               $requested_type = sanitize_text_field( wp_unslash( $_POST['report_type'] ) );
-                               if ( ! in_array( $requested_type, $allowed_types, true ) ) {
-                                       return new WP_Error( 'rtbcb_invalid_report_type', __( 'Invalid report type.', 'rtbcb' ) );
-                               }
-                               $report_type = $requested_type;
-                       }
-
+			// Determine report type from request if provided.
+			if ( isset( $_POST['report_type'] ) ) {
+				$requested_type = sanitize_text_field( wp_unslash( $_POST['report_type'] ) );
+				if ( ! in_array( $requested_type, $allowed_types, true ) ) {
+					RTBCB_Logger::log(
+						'invalid_report_type',
+						[ 'requested_type' => $requested_type ]
+					);
+					wp_send_json_error(
+						[ 'message' => __( 'Invalid report type.', 'rtbcb' ) ],
+						400
+					);
+					return;
+				}
+				$report_type = $requested_type;
+			}
                        // Perform ROI calculations.
                        $calculations   = RTBCB_Calculator::calculate_roi( $form_data );
                        $recommendation = RTBCB_Category_Recommender::recommend_category( $form_data );
