@@ -960,14 +960,23 @@ error_log( $log_message );
 }
 
 function rtbcb_log_error( $message, $context = null ) {
-		$lead = rtbcb_get_current_lead();
-	if ( $lead ) {
-	$message .= ' [Lead ID: ' . $lead['id'] . ' Email: ' . $lead['email'] . ']';
+$lead = rtbcb_get_current_lead();
+if ( $lead ) {
+$message .= ' [Lead ID: ' . $lead['id'] . ' Email: ' . $lead['email'] . ']';
 }
 $log_message = 'RTBCB Error: ' . $message;
 if ( $context ) {
 $log_message .= ' - Context: ' . wp_json_encode( $context );
 }
+
+if ( class_exists( 'RTBCB_Logger' ) ) {
+$logger_context = [ 'message' => $log_message ];
+if ( null !== $context ) {
+$logger_context['context'] = $context;
+}
+RTBCB_Logger::log( 'error', $logger_context );
+}
+
 error_log( $log_message );
 }
 
