@@ -64,53 +64,53 @@ rtbcb_increase_memory_limit();
 		*/
 public static function stream_analysis() {
 
-	       if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) {
-		       wp_die( 'Invalid request' );
-	       }
-
-	       if ( ! function_exists( 'check_ajax_referer' ) ) {
-		       wp_die( 'WordPress not ready' );
-	       }
-
+	$action = isset( $_REQUEST['action'] ) ? sanitize_key( wp_unslash( $_REQUEST['action'] ) ) : '';
+	if ( 'rtbcb_stream_analysis' !== $action ) {
+	// Jetpack also routes requests through admin-ajax.php; avoid sending
+	// streaming headers for unrelated actions.
+	return;
+	}
+	
+	if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) {
+	wp_die( 'Invalid request' );
+	}
+	
+	if ( ! function_exists( 'check_ajax_referer' ) ) {
+	wp_die( 'WordPress not ready' );
+	}
+	
 	$params = self::get_sanitized_params();
 	
 	if ( function_exists( 'rtbcb_is_wpcom' ) && rtbcb_is_wpcom() ) {
-		self::log_request( __FUNCTION__, $params, 'error', [ 'code' => 'streaming_unsupported' ] );
-		wp_send_json_error( [ 'code' => 'streaming_unsupported', 'message' => __( 'Streaming is not supported on this hosting environment.', 'rtbcb' ) ], 400 );
-		return;
+	self::log_request( __FUNCTION__, $params, 'error', [ 'code' => 'streaming_unsupported' ] );
+	wp_send_json_error( [ 'code' => 'streaming_unsupported', 'message' => __( 'Streaming is not supported on this hosting environment.', 'rtbcb' ) ], 400 );
+	return;
 	}
 	
 	rtbcb_increase_memory_limit();
-	       $timeout = absint( rtbcb_get_api_timeout() );
-	       if ( ! ini_get( 'safe_mode' ) && $timeout > 0 ) {
-		       set_time_limit( $timeout );
-	       }
-	       rtbcb_log_memory_usage( 'start' );
-
-	       if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
-			self::log_request( __FUNCTION__, $params, 'error', [ 'code' => 'invalid_nonce' ] );
-		       wp_send_json_error( [ 'code' => 'invalid_nonce', 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
-		       return;
-	       }
-
-	       $user_inputs = self::collect_and_validate_user_inputs();
-	       if ( is_wp_error( $user_inputs ) ) {
-			self::log_request( __FUNCTION__, $params, 'error', [ 'code' => 'validation_error', 'message' => $user_inputs->get_error_message() ] );
-		       wp_send_json_error( [ 'code' => 'validation_error', 'message' => $user_inputs->get_error_message() ], 400 );
-		       return;
-	       }
-
-	       $action = isset( $_REQUEST['action'] ) ? sanitize_key( wp_unslash( $_REQUEST['action'] ) ) : '';
-			       if ( 'rtbcb_stream_analysis' !== $action ) {
-			       // Jetpack also routes requests through admin-ajax.php; avoid sending
-			       // streaming headers for unrelated actions.
-			       return;
-			       }
-
-				nocache_headers();
-				header( 'Content-Type: text/event-stream' );
-				header( 'Cache-Control: no-cache' );
-				header( 'Connection: keep-alive' );
+	$timeout = absint( rtbcb_get_api_timeout() );
+	if ( ! ini_get( 'safe_mode' ) && $timeout > 0 ) {
+	set_time_limit( $timeout );
+	}
+	rtbcb_log_memory_usage( 'start' );
+	
+	if ( ! check_ajax_referer( 'rtbcb_generate', 'rtbcb_nonce', false ) ) {
+	self::log_request( __FUNCTION__, $params, 'error', [ 'code' => 'invalid_nonce' ] );
+	wp_send_json_error( [ 'code' => 'invalid_nonce', 'message' => __( 'Security check failed.', 'rtbcb' ) ], 403 );
+	return;
+	}
+	
+	$user_inputs = self::collect_and_validate_user_inputs();
+	if ( is_wp_error( $user_inputs ) ) {
+	self::log_request( __FUNCTION__, $params, 'error', [ 'code' => 'validation_error', 'message' => $user_inputs->get_error_message() ] );
+	wp_send_json_error( [ 'code' => 'validation_error', 'message' => $user_inputs->get_error_message() ], 400 );
+	return;
+	}
+	
+	nocache_headers();
+	header( 'Content-Type: text/event-stream' );
+	header( 'Cache-Control: no-cache' );
+	header( 'Connection: keep-alive' );
 
 				$scenarios      = RTBCB_Calculator::calculate_roi( $user_inputs );
 				$recommendation = RTBCB_Category_Recommender::recommend_category( $user_inputs );
