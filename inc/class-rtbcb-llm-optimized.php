@@ -70,6 +70,8 @@ Provide deep, actionable insights to support:
 2. **Technology Category Selection**: Solution complexity and feature requirements
 3. **Implementation Planning**: Timeline, resource requirements, and risk factors
 4. **Strategic Positioning**: Competitive context and business value alignment
+5. **Risk Baseline**: Key operational and strategic risk considerations
+6. **Financial Benchmarking**: Relevant industry metrics and valuation references
 
 Focus on treasury-specific challenges and opportunities within the {$user_inputs['industry']} industry for a {$user_inputs['company_size']} organization.
 
@@ -125,6 +127,36 @@ Focus on treasury-specific challenges and opportunities within the {$user_inputs
     },
     "critical_success_factors": ["array of 4-5 key implementation success factors"],
     "potential_obstacles": ["array of 4-5 likely implementation challenges"]
+  },
+  "risk": {
+    "risk_matrix": [
+      {
+        "risk": "string - risk description",
+        "likelihood": "low|medium|high",
+        "impact": "low|medium|high"
+      }
+    ],
+    "mitigations": [
+      {
+        "risk": "string - risk addressed",
+        "strategy": "string - mitigation approach"
+      }
+    ]
+  },
+  "financial": {
+    "industry_benchmarks": [
+      {
+        "metric": "string - benchmark metric",
+        "value": "string - benchmark value",
+        "source": "string - data source"
+      }
+    ],
+    "valuation_multiples": [
+      {
+        "metric": "string - multiple name",
+        "range": "string - typical range"
+      }
+    ]
   },
   "enrichment_metadata": {
     "confidence_level": "number between 0.7 and 0.95",
@@ -234,13 +266,14 @@ PROMPT;
 	// Required Comprehensive Analysis - instructs LLM to use all data.
 	$prompt .= "## Required Comprehensive Analysis\n\n";
 	$prompt .= "Return a complete JSON business case covering:\n\n";
-	$prompt .= "1. **Executive Summary**: Strategic positioning, value drivers, and executive recommendation\n";
-	$prompt .= "2. **Company Intelligence**: Enhanced company profile and industry context analysis\n";
-	$prompt .= "3. **Operational Insights**: Current state assessment and improvement opportunities\n";
-	$prompt .= "4. **Financial Analysis**: Detailed ROI scenarios, investment breakdown, and payback analysis\n";
-	$prompt .= "5. **Technology Strategy**: Recommended solutions and implementation roadmap\n";
-	$prompt .= "6. **Risk Analysis**: Implementation risks and comprehensive mitigation strategies\n";
-	$prompt .= "7. **Action Plan**: Immediate steps, short-term milestones, and long-term objectives\n\n";
+        $prompt .= "1. **Executive Summary**: Strategic positioning, value drivers, and executive recommendation\n";
+        $prompt .= "2. **Company Intelligence**: Enhanced company profile and industry context analysis\n";
+        $prompt .= "3. **Operational Insights**: Current state assessment and improvement opportunities\n";
+        $prompt .= "4. **Financial Analysis**: Detailed ROI scenarios, investment breakdown, and payback analysis\n";
+        $prompt .= "5. **Technology Strategy**: Recommended solutions and implementation roadmap\n";
+        $prompt .= "6. **Risk Analysis**: Implementation risks and comprehensive mitigation strategies\n";
+        $prompt .= "7. **Financial Benchmarks**: Industry metrics and valuation references\n";
+        $prompt .= "8. **Action Plan**: Immediate steps, short-term milestones, and long-term objectives\n\n";
 	
 	// Complete schema definition for the LLM output.
 	$prompt .= <<<SCHEMA
@@ -356,24 +389,39 @@ PROMPT;
 	    ],
 	    "vendor_considerations": ["array of 4-5 vendor evaluation factors"]
 	  },
-	  "industry_insights": {
-	    "sector_trends": ["array of 3-4 industry trends affecting treasury"],
-	    "competitive_benchmarks": ["array of 2-3 competitive benchmarking insights"],
-	    "regulatory_considerations": ["array of 2-3 regulatory factors"]
-	  },
-	  "risk_analysis": {
-	    "implementation_risks": ["array of 5-6 key implementation risks"],
-	    "mitigation_strategies": ["array of 5-6 specific risk mitigation approaches"],
-	    "success_factors": ["array of 5-6 critical success factors"]
-	  },
-	  "action_plan": {
-	    "immediate_steps": ["array of immediate actions for next 30 days"],
-	    "short_term_milestones": ["array of milestones for 3-6 months"],
-	    "long_term_objectives": ["array of objectives for 6+ months"]
-	  }
+          "industry_insights": {
+            "sector_trends": ["array of 3-4 industry trends affecting treasury"],
+            "competitive_benchmarks": ["array of 2-3 competitive benchmarking insights"],
+            "regulatory_considerations": ["array of 2-3 regulatory factors"]
+          },
+          "risk_analysis": {
+            "implementation_risks": ["array of 5-6 key implementation risks"],
+            "mitigation_strategies": ["array of 5-6 specific risk mitigation approaches"],
+            "success_factors": ["array of 5-6 critical success factors"]
+          },
+          "financial_benchmarks": {
+            "industry_benchmarks": [
+              {
+                "metric": "string - benchmark metric",
+                "value": "string - benchmark value",
+                "source": "string - data source"
+              }
+            ],
+            "valuation_multiples": [
+              {
+                "metric": "string - multiple name",
+                "range": "string - typical range"
+              }
+            ]
+          },
+          "action_plan": {
+            "immediate_steps": ["array of immediate actions for next 30 days"],
+            "short_term_milestones": ["array of milestones for 3-6 months"],
+            "long_term_objectives": ["array of objectives for 6+ months"]
+          }
 	}
-	```
-	SCHEMA;
+        ```
+SCHEMA;
 	
 	return $prompt;
 	}
