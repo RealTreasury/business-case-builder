@@ -93,6 +93,8 @@ if ( ! current_user_can( 'manage_options' ) ) {
 var table = $('#rtbcb-api-logs-table').DataTable({
 pageLength: 20,
 order: [[0, 'desc']],
+scrollX: true,
+autoWidth: false,
 language: {
 emptyTable: '<?php echo esc_js( __( 'No logs found.', 'rtbcb' ) ); ?>'
 },
