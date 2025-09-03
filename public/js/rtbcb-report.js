@@ -30,6 +30,16 @@ if (typeof document !== 'undefined' && typeof document.addEventListener === 'fun
         if ( typeof document.querySelector === 'function' ) {
             document.querySelector('.rtbcb-enhanced-report')?.classList.add('loaded');
         }
+
+const aiToggle = document.getElementById('rtbcb-ai-toggle');
+const reportContainer = document.querySelector('.rtbcb-enhanced-report');
+if ( aiToggle && reportContainer ) {
+aiToggle.addEventListener('change', () => {
+reportContainer.classList.toggle('show-ai-highlights', aiToggle.checked);
+});
+}
+
+addHighlight('.rtbcb-company-intelligence', 'This section was enriched by AI.');
     });
 }
 
@@ -734,6 +744,18 @@ async function generateAndDisplayReport(businessContext) {
             loadingElement.style.display = 'none';
         }
     }
+}
+
+function addHighlight(selector, tooltipText) {
+	const element = document.querySelector(selector);
+	if ( element ) {
+		element.classList.add('ai-highlight');
+		const tooltip = document.createElement('div');
+		tooltip.className = 'ai-tooltip';
+		tooltip.textContent = tooltipText;
+		element.appendChild(tooltip);
+		}
+
 }
 
 // No export functions are available; users should access the report online.
