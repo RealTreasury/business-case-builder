@@ -413,10 +413,12 @@ class BusinessCaseBuilder {
             event.preventDefault();
         }
 
+        // Determine questionnaire path before validating step 1
+        if ( this.currentStep === 1 ) {
+            this.initializePath();
+        }
+
         if ( this.validateStep( this.currentStep ) ) {
-            if ( this.currentStep === 1 ) {
-                this.initializePath();
-            }
             if ( this.currentStep < this.totalSteps ) {
                 this.currentStep++;
                 this.updateStepVisibility();
