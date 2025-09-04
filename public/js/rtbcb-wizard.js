@@ -290,19 +290,9 @@ this.lastValidationErrors = [];
                                 this.form.querySelector('.rtbcb-wizard-step[data-step="6"]'),
                                this.form.querySelector('.rtbcb-wizard-step[data-step="7"]')
                        ];
-                       this.getStepFields = this.getEnhancedFields.bind(this);
-                       this.progressSteps = Array.from(this.form.querySelectorAll('.rtbcb-progress-step')).filter(Boolean);
-                        this.progressSteps.forEach((step, index) => {
-                                if (step) {
-                                        step.style.display = 'flex';
-                                        const num = step.querySelector('.rtbcb-progress-number');
-                                        if (num) {
-                                                num.textContent = index + 1;
-                                        }
-                                }
-                        });
-
-                        this.totalSteps = 7;
+this.getStepFields = this.getEnhancedFields.bind(this);
+this.totalSteps = 7;
+this.syncProgressSteps();
                 } else {
                         // Basic path logic
                         this.form.querySelectorAll('.rtbcb-enhanced-only input, .rtbcb-enhanced-only select').forEach(field => {
@@ -314,43 +304,54 @@ this.lastValidationErrors = [];
                         });
 
 
-                       this.steps = [
-                               this.form.querySelector('.rtbcb-wizard-step[data-step="1"]'),
-                               this.form.querySelector('.rtbcb-wizard-step[data-step="2"]'),
-                               this.form.querySelector('.rtbcb-wizard-step[data-step="7"]')
-                       ];
-                       this.getStepFields = (step) => this.basicStepFields[step] || [];
+this.steps = [
+this.form.querySelector('.rtbcb-wizard-step[data-step="1"]'),
+this.form.querySelector('.rtbcb-wizard-step[data-step="2"]'),
+this.form.querySelector('.rtbcb-wizard-step[data-step="7"]')
+];
+this.getStepFields = (step) => this.basicStepFields[step] || [];
 
-                        this.progressSteps = [
-                                this.form.querySelector('.rtbcb-progress-step[data-step="1"]'),
-                                this.form.querySelector('.rtbcb-progress-step[data-step="2"]'),
-                                this.form.querySelector('.rtbcb-progress-step[data-step="7"]')
-                        ].filter(Boolean);
-
-                        // Hide unused progress steps and renumber
-                        this.form.querySelectorAll('.rtbcb-progress-step').forEach(step => {
-                                if (step) {
-                                        step.style.display = 'none';
-                                }
-                        });
-                        this.progressSteps.forEach((step, index) => {
-                                step.style.display = 'flex';
-                                const num = step.querySelector('.rtbcb-progress-number');
-                                if (num) {
-                                        num.textContent = index + 1;
-                                }
-                        });
-
-                        this.totalSteps = 3;
-                }
+this.totalSteps = 3;
+this.syncProgressSteps();
+}
 
                console.log('RTBCB: Path initialized. Total steps:', this.totalSteps, 'Current step fields:', this.getStepFields(this.currentStep));
 
-                this.updateStepVisibility();
-                this.updateProgressIndicator();
-        }
+this.updateStepVisibility();
+this.updateProgressIndicator();
+}
 
-	saveFormData( formData ) {
+syncProgressSteps() {
+const container = this.form.querySelector('.rtbcb-progress-steps');
+if (!container) {
+this.progressSteps = [];
+return;
+}
+this.progressSteps = Array.from(container.querySelectorAll('.rtbcb-progress-step')).filter(Boolean);
+if (this.progressSteps.length !== this.totalSteps) {
+container.innerHTML = '';
+for (let i = 1; i <= this.totalSteps; i++) {
+const step = document.createElement('div');
+step.className = 'rtbcb-progress-step';
+step.dataset.step = String(i);
+const num = document.createElement('div');
+num.className = 'rtbcb-progress-number';
+num.textContent = i;
+step.appendChild(num);
+container.appendChild(step);
+}
+this.progressSteps = Array.from(container.querySelectorAll('.rtbcb-progress-step'));
+}
+this.progressSteps.forEach((step, index) => {
+step.style.display = 'flex';
+const num = step.querySelector('.rtbcb-progress-number');
+if (num) {
+num.textContent = index + 1;
+}
+});
+}
+
+saveFormData( formData ) {
 		try {
 			const storage = window.sessionStorage;
 			if ( ! storage ) {
