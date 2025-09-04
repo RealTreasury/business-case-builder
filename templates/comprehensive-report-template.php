@@ -593,11 +593,17 @@ echo '<li>' . esc_html( $label . ': ' . $value ) . '</li>';
 </tr>
 </thead>
 <tbody>
-<?php foreach ( $risk_analysis['risk_matrix'] as $risk ) : ?>
+<?php foreach ( $risk_analysis['risk_matrix'] as $risk_item ) : ?>
+<?php
+$risk_item  = (array) $risk_item;
+$risk_name  = $risk_item['risk'] ?? ( $risk_item['name'] ?? '' );
+$likelihood = $risk_item['likelihood'] ?? ( $risk_item['probability'] ?? '' );
+$impact     = $risk_item['impact'] ?? '';
+?>
 <tr>
-<td><?php echo esc_html( $risk['risk'] ); ?></td>
-<td><?php echo esc_html( $risk['likelihood'] ); ?></td>
-<td><?php echo esc_html( $risk['impact'] ); ?></td>
+<td><?php echo esc_html( $risk_name ); ?></td>
+<td><?php echo esc_html( $likelihood ); ?></td>
+<td><?php echo esc_html( $impact ); ?></td>
 </tr>
 <?php endforeach; ?>
 </tbody>
