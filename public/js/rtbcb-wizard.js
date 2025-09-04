@@ -231,15 +231,17 @@ class BusinessCaseBuilder {
     restorePersistentState() {
         try {
             const storage = window.sessionStorage;
-            if ( ! storage ) {
+            const persistent = window.localStorage;
+            if ( ! storage && ! persistent ) {
                 return;
             }
-            const reportHtml = storage.getItem( 'rtbcbFinalReport' );
+            const reportHtml = ( storage && storage.getItem( 'rtbcbFinalReport' ) ) ||
+                ( persistent && persistent.getItem( 'rtbcbFinalReport' ) );
             if ( reportHtml ) {
                 this.showEnhancedHTMLReport( reportHtml );
                 return;
             }
-            const savedData = storage.getItem( 'rtbcbFormData' );
+            const savedData = storage ? storage.getItem( 'rtbcbFormData' ) : null;
             if ( savedData ) {
                 try {
                     const parsed = JSON.parse( savedData );
@@ -309,6 +311,14 @@ class BusinessCaseBuilder {
             }
         } catch ( e ) {
             console.warn( 'RTBCB: Session storage unavailable', e );
+        }
+        try {
+            const persistent = window.localStorage;
+            if ( persistent ) {
+                persistent.setItem( 'rtbcbFinalReport', html );
+            }
+        } catch ( e ) {
+            console.warn( 'RTBCB: Local storage unavailable', e );
         }
     }
 
