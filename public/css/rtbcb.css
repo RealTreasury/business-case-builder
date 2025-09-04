@@ -478,6 +478,19 @@ html {
     word-wrap: break-word;
 }
 
+#rtbcb-progress-container .rtbcb-progress-cancel {
+    all: unset;
+    margin-top: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text-secondary);
+    text-decoration: underline;
+}
+
+#rtbcb-progress-container .rtbcb-progress-cancel:hover {
+    color: var(--text-primary);
+}
+
 /* Mobile Responsive Improvements */
 @media (max-width: 480px) {
     .rtbcb-progress-overlay {
