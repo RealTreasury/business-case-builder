@@ -504,6 +504,60 @@ $tech_adoption      = $sector_analysis['technology_adoption'] ?? ( $benchmarking
 </div>
 <?php endif; ?>
 
+<?php if ( ! empty( $technology_strategy['category_details'] ) || ! empty( $technology_strategy['implementation_roadmap'] ) || ! empty( $technology_strategy['vendor_considerations'] ) ) : ?>
+<div class="rtbcb-section-enhanced rtbcb-technology-strategy">
+<div class="rtbcb-section-header-enhanced">
+<h2 class="rtbcb-section-title">
+<span class="rtbcb-section-icon">🛠️</span>
+<?php echo esc_html__( 'Technology Strategy', 'rtbcb' ); ?>
+</h2>
+</div>
+<div class="rtbcb-section-content">
+<?php if ( ! empty( $technology_strategy['category_details'] ) ) : ?>
+<div class="rtbcb-tech-category-details">
+<h3><?php echo esc_html__( 'Solution Details', 'rtbcb' ); ?></h3>
+<ul>
+<?php foreach ( $technology_strategy['category_details'] as $key => $value ) : ?>
+<?php
+$label = ucwords( str_replace( '_', ' ', $key ) );
+if ( is_array( $value ) ) {
+foreach ( $value as $item ) {
+echo '<li>' . esc_html( $label . ': ' . $item ) . '</li>';
+}
+} else {
+echo '<li>' . esc_html( $label . ': ' . $value ) . '</li>';
+}
+?>
+<?php endforeach; ?>
+</ul>
+</div>
+<?php endif; ?>
+
+<?php if ( ! empty( $technology_strategy['implementation_roadmap'] ) ) : ?>
+<div class="rtbcb-tech-roadmap">
+<h3><?php echo esc_html__( 'Implementation Roadmap', 'rtbcb' ); ?></h3>
+<ul>
+<?php foreach ( $technology_strategy['implementation_roadmap'] as $step ) : ?>
+<li><?php echo esc_html( $step ); ?></li>
+<?php endforeach; ?>
+</ul>
+</div>
+<?php endif; ?>
+
+<?php if ( ! empty( $technology_strategy['vendor_considerations'] ) ) : ?>
+<div class="rtbcb-vendor-considerations">
+<h3><?php echo esc_html__( 'Vendor Considerations', 'rtbcb' ); ?></h3>
+<ul>
+<?php foreach ( $technology_strategy['vendor_considerations'] as $consideration ) : ?>
+<li><?php echo esc_html( $consideration ); ?></li>
+<?php endforeach; ?>
+</ul>
+</div>
+<?php endif; ?>
+</div>
+</div>
+<?php endif; ?>
+
 <?php if ( ! empty( $risk_analysis ) ) : ?>
 <div class="rtbcb-section-enhanced rtbcb-risk-analysis">
 <div class="rtbcb-section-header-enhanced">

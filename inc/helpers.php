@@ -2303,8 +2303,9 @@ function rtbcb_transform_data_for_template( $business_case_data ) {
 	$business_case_data['roi_base'] = $base_roi;
 
 	// Derive recommended category and details from recommendation if not provided.
-	$recommended_category = sanitize_text_field( $business_case_data['recommended_category'] ?: ( $business_case_data['recommendation']['recommended'] ?? 'treasury_management_system' ) );
-	$category_details     = $business_case_data['category_info'] ?: ( $business_case_data['recommendation']['category_info'] ?? [] );
+        $recommended_category = sanitize_text_field( $business_case_data['recommended_category'] ?: ( $business_case_data['recommendation']['recommended'] ?? 'treasury_management_system' ) );
+        $category_details     = $business_case_data['category_info'] ?: ( $business_case_data['recommendation']['category_info'] ?? [] );
+        $category_details     = rtbcb_sanitize_recursive( $category_details );
 
 	$roi_scenarios    = rtbcb_format_roi_scenarios( $business_case_data );
 	$conservative_roi = floatval( $roi_scenarios['conservative']['total_annual_benefit'] ?? 0 );
@@ -2337,12 +2338,16 @@ function rtbcb_transform_data_for_template( $business_case_data ) {
 		$industry_insights = rtbcb_generate_industry_insights_fallbacks( $business_case_data );
 	}
 
-	// Prepare action plan.
+        // Prepare action plan.
 	if ( ! empty( $business_case_data['action_plan'] ) ) {
 			$action_plan = rtbcb_sanitize_recursive( $business_case_data['action_plan'] );
 	} else {
 			$action_plan = rtbcb_generate_action_plan_fallbacks( $business_case_data );
-	}
+        }
+
+        // Prepare additional contextual sections.
+        $financial_benchmarks = ! empty( $business_case_data['financial_benchmarks'] ) ? rtbcb_sanitize_recursive( $business_case_data['financial_benchmarks'] ) : [];
+        $rag_context          = ! empty( $business_case_data['rag_context'] ) ? rtbcb_sanitize_recursive( $business_case_data['rag_context'] ) : [];
 
 	// Prepare company intelligence.
 	if ( ! empty( $business_case_data['company_intelligence'] ) ) {
@@ -2426,18 +2431,22 @@ $success_factors = array_map( 'sanitize_text_field', (array) $business_case_data
 			],
 			'company_intelligence' => $company_intelligence,
 			'industry_insights'    => $industry_insights,
-			'technology_strategy' => [
-				    'recommended_category' => $recommended_category,
-				    'category_details'     => $category_details,
-			],
+                        'technology_strategy' => [
+                                'recommended_category'  => $recommended_category,
+                                'category_details'      => $category_details,
+                                'implementation_roadmap' => rtbcb_sanitize_recursive( $business_case_data['technology_strategy']['implementation_roadmap'] ?? $business_case_data['implementation_roadmap'] ?? [] ),
+                                'vendor_considerations' => rtbcb_sanitize_recursive( $business_case_data['technology_strategy']['vendor_considerations'] ?? $business_case_data['vendor_considerations'] ?? [] ),
+                        ],
                         'operational_insights' => $operational_insights,
                           'risk_analysis'        => [
-				'implementation_risks' => $implementation_risks,
-				'mitigation_strategies' => $mitigation_strategies,
-				'success_factors'      => $success_factors,
+                                'implementation_risks' => $implementation_risks,
+                                'mitigation_strategies' => $mitigation_strategies,
+                                'success_factors'      => $success_factors,
                           ],
-			'action_plan'          => $action_plan,
-	];
+                        'action_plan'          => $action_plan,
+                        'financial_benchmarks' => $financial_benchmarks,
+                        'rag_context'          => $rag_context,
+        ];
 
 	return $report_data;
 	}
