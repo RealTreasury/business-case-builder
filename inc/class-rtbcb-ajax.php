@@ -476,8 +476,9 @@ $final_analysis['financial_benchmarks'] ?? ( $final_analysis['research']['financ
  * @return array|WP_Error Sanitized input array or validation error.
  */
 	public static function collect_and_validate_user_inputs() {
-		$validator = new RTBCB_Validator();
-		$validated = $validator->validate( $_POST );
+               $report_type = isset( $_POST['report_type'] ) ? sanitize_text_field( wp_unslash( $_POST['report_type'] ) ) : 'basic';
+               $validator   = new RTBCB_Validator();
+               $validated   = $validator->validate( $_POST, $report_type );
 		
 		if ( isset( $validated['error'] ) ) {
 		return new WP_Error( 'validation_error', $validated['error'] );

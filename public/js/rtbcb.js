@@ -146,6 +146,10 @@ async function handleSubmit(e) {
     if (rtbcb_ajax.nonce) {
         formData.append('rtbcb_nonce', rtbcb_ajax.nonce);
     }
+    var reportInput = form.querySelector('input[name="report_type"]:checked');
+    var reportType = reportInput ? reportInput.value : 'basic';
+    formData.append('report_type', reportType);
+    formData.append('fast_mode', reportType === 'fast' ? '1' : '0');
     var progressContainer = document.getElementById('rtbcb-progress-container');
     var formContainer = document.querySelector('.rtbcb-form-container');
 

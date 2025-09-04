@@ -21,9 +21,23 @@ class RTBCB_Router {
        * @return void|WP_Error
        */
        public function handle_form_submission( $report_type = 'basic' ) {
-               $allowed_types = [ 'fast', 'basic', 'comprehensive' ];
+               $allowed_types = [ 'fast', 'basic', 'comprehensive', 'enhanced' ];
 
-               if ( ! in_array( $report_type, $allowed_types, true ) ) {
+               if ( isset( $_POST['report_type'] ) ) {
+                       $requested_type = sanitize_text_field( wp_unslash( $_POST['report_type'] ) );
+                       if ( ! in_array( $requested_type, $allowed_types, true ) ) {
+                               RTBCB_Logger::log(
+                                       'invalid_report_type',
+                                       [ 'requested_type' => $requested_type ]
+                               );
+                               wp_send_json_error(
+                                       [ 'message' => __( 'Invalid report type.', 'rtbcb' ) ],
+                                       400
+                               );
+                               return;
+                       }
+                       $report_type = $requested_type;
+               } elseif ( ! in_array( $report_type, $allowed_types, true ) ) {
                        $report_type = 'basic';
                }
 
@@ -32,38 +46,21 @@ class RTBCB_Router {
                        ! isset( $_POST['rtbcb_nonce'] )
                        || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['rtbcb_nonce'] ) ), 'rtbcb_generate' )
                ) {
-			wp_send_json_error( [ 'message' => __( 'Nonce verification failed.', 'rtbcb' ) ], 403 );
-			return;
-		}
+                       wp_send_json_error( [ 'message' => __( 'Nonce verification failed.', 'rtbcb' ) ], 403 );
+                       return;
+               }
 
-		try {
-			// Sanitize and validate input.
-			$validator      = new RTBCB_Validator();
-			$validated_data = $validator->validate( $_POST );
+               try {
+                       // Sanitize and validate input.
+                       $validator      = new RTBCB_Validator();
+                       $validated_data = $validator->validate( $_POST, $report_type );
 
-			if ( isset( $validated_data['error'] ) ) {
-				wp_send_json_error( [ 'message' => $validated_data['error'] ], 400 );
-				return;
-			}
+                       if ( isset( $validated_data['error'] ) ) {
+                               wp_send_json_error( [ 'message' => $validated_data['error'] ], 400 );
+                               return;
+                       }
 
                        $form_data = $validated_data;
-
-			// Determine report type from request if provided.
-			if ( isset( $_POST['report_type'] ) ) {
-				$requested_type = sanitize_text_field( wp_unslash( $_POST['report_type'] ) );
-				if ( ! in_array( $requested_type, $allowed_types, true ) ) {
-					RTBCB_Logger::log(
-						'invalid_report_type',
-						[ 'requested_type' => $requested_type ]
-					);
-					wp_send_json_error(
-						[ 'message' => __( 'Invalid report type.', 'rtbcb' ) ],
-						400
-					);
-					return;
-				}
-				$report_type = $requested_type;
-			}
                        // Perform ROI calculations.
                        $calculations   = RTBCB_Calculator::calculate_roi( $form_data );
                        $recommendation = RTBCB_Category_Recommender::recommend_category( $form_data );
