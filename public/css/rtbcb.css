@@ -477,6 +477,9 @@ html {
     text-align: left;
     word-wrap: break-word;
 }
+#rtbcb-progress-container .rtbcb-progress-cancel {
+    margin-top: 20px;
+}
 
 /* Mobile Responsive Improvements */
 @media (max-width: 480px) {

@@ -913,6 +913,10 @@ class BusinessCaseBuilder {
                         <div id="rtbcb-partial-category" style="display: none;"></div>
                         <div id="rtbcb-partial-analysis" style="display: none;"></div>
                     </div>
+
+                    <button type="button" class="rtbcb-nav-btn rtbcb-progress-cancel" id="rtbcb-cancel-btn">
+                        ${ __( 'Cancel', 'rtbcb' ) }
+                    </button>
                 </div>
             `;
 
@@ -927,6 +931,18 @@ class BusinessCaseBuilder {
             progressContainer.setAttribute('role', 'dialog');
             progressContainer.setAttribute('aria-label', 'Generating business case report');
             progressContainer.setAttribute('aria-live', 'polite');
+
+            const cancelBtn = progressContainer.querySelector('#rtbcb-cancel-btn');
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', () => {
+                    this.cancelPolling();
+                    this.hideLoading();
+                    if (this.form) {
+                        this.form.reset();
+                    }
+                    this.reinitialize();
+                });
+            }
 
             console.log('RTBCB: Progress overlay shown');
         }
