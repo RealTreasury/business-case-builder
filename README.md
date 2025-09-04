@@ -176,7 +176,6 @@ The `report_type` parameter determines the depth of the generated report:
 ├── admin
 │  ├── AGENTS.md
 │  ├── analytics-page.php
-│  ├── calculations-page.php
 │  ├── class-rtbcb-admin.php
 │  ├── css
 │  │  └── rtbcb-admin.css
