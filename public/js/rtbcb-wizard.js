@@ -1421,6 +1421,12 @@ class BusinessCaseBuilder {
 
     createROIChart(canvas, roiData) {
         console.log('RTBCB: Creating ROI chart');
+        // Destroy existing chart instance if re-rendering
+        const existingChart = typeof Chart.getChart === 'function' ? Chart.getChart(canvas) : null;
+        if (existingChart) {
+            existingChart.destroy();
+        }
+
         const ctx = canvas.getContext('2d');
         if (!ctx) {
             console.error('RTBCB: Failed to get canvas context for ROI chart.');
