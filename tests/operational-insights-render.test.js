@@ -21,17 +21,17 @@ const html = renderOperationalAnalysis.call(context, {
 current_state_assessment: ['Assessment'],
 process_improvements: [
 {
-process: 'Reconciliation',
+process_area: 'Reconciliation',
 current_state: 'Manual',
 improved_state: 'Automated',
-impact: 'High',
+impact_level: 'High',
 },
 ],
 automation_opportunities: [
 {
 opportunity: 'Cash Forecasting',
 complexity: 'Medium',
-savings: '10 hours',
+time_savings: '10 hours',
 },
 ],
 });

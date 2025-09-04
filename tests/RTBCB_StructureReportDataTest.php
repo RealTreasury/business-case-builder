@@ -138,17 +138,17 @@ $analysis_data    = [
 'current_state_assessment' => [ 'Manual process', 'Siloed data' ],
 'process_improvements'     => [
 [
-'process'        => 'Reconciliation',
+'process_area'   => 'Reconciliation',
 'current_state'  => 'Manual spreadsheets',
 'improved_state' => 'Automated workflow',
-'impact'         => 'High',
+'impact_level'   => 'High',
 ],
 ],
 'automation_opportunities' => [
 [
 'opportunity'           => 'Cash Forecasting',
 'complexity'            => 'Medium',
-'potential_savings'     => 8,
+'time_savings'          => 8,
 'implementation_effort' => 'Low',
 ],
 ],

@@ -66,17 +66,17 @@ $business_case_data = [
                'current_state_assessment' => [ 'Manual process' ],
                'process_improvements'     => [
                        [
-                               'process'        => 'Reconciliation',
+                               'process_area'   => 'Reconciliation',
                                'current_state'  => 'Manual spreadsheets',
                                'improved_state' => 'Automated workflow',
-                               'impact'         => 'High',
+                               'impact_level'   => 'High',
                        ],
                ],
                'automation_opportunities' => [
                        [
-                               'opportunity' => 'Cash Forecasting',
-                               'complexity'  => 'Medium',
-                               'savings'     => '10 hours',
+                               'opportunity'       => 'Cash Forecasting',
+                               'complexity'        => 'Medium',
+                               'time_savings'      => '10 hours',
                        ],
                ],
        ],
