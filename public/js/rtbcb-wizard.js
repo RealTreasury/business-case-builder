@@ -967,10 +967,14 @@ class BusinessCaseBuilder {
 			formData.append('rtbcb_nonce', rtbcb_ajax.nonce);
 		}
 
-		const selectedReport = this.form.querySelector('input[name="report_type"]:checked');
-		const reportType = selectedReport ? selectedReport.value : 'basic';
-		formData.append('report_type', reportType);
-		formData.append('fast_mode', reportType === 'fast' ? '1' : '0');
+                const selectedReport = this.form.querySelector('input[name="report_type"]:checked');
+                const reportType = selectedReport ? selectedReport.value : 'basic';
+                if ( typeof formData.set === 'function' ) {
+                        formData.set('report_type', reportType);
+                } else {
+                        formData.append('report_type', reportType);
+                }
+                formData.append('fast_mode', reportType === 'fast' ? '1' : '0');
 		return formData;
 	}
 

@@ -24,26 +24,48 @@ class RTBCB_Validator {
 			$sanitized['company_name'] = sanitize_text_field( wp_unslash( $data['company_name'] ) );
 		}
 
-		$required_fields = [
-			'company_name' => __( 'Company name is required.', 'rtbcb' ),
-			'email'        => __( 'Email is required.', 'rtbcb' ),
-			'company_size' => __( 'Company size is required.', 'rtbcb' ),
-		];
+               $report_type = isset( $data['report_type'] ) ? sanitize_text_field( wp_unslash( $data['report_type'] ) ) : 'basic';
+               $report_type = in_array( $report_type, [ 'basic', 'enhanced' ], true ) ? $report_type : 'basic';
 
-		foreach ( $required_fields as $field => $message ) {
-			if ( empty( $sanitized[ $field ] ) ) {
-				return [
-					'error' => $message,
-				];
-			}
-		}
+               $required_fields = [
+                       'company_name' => __( 'Company name is required.', 'rtbcb' ),
+                       'email'        => __( 'Email is required.', 'rtbcb' ),
+               ];
 
-	$numeric_fields = [
-			'hours_reconciliation',
-			'hours_cash_positioning',
-			'num_banks',
-			'ftes',
-	];
+               if ( 'enhanced' === $report_type ) {
+                       $required_fields = array_merge(
+                               $required_fields,
+                               [
+                                       'company_size'           => __( 'Company size is required.', 'rtbcb' ),
+                                       'industry'               => __( 'Industry is required.', 'rtbcb' ),
+                                       'job_title'              => __( 'Job title is required.', 'rtbcb' ),
+                                       'num_entities'           => __( 'Number of entities is required.', 'rtbcb' ),
+                                       'num_currencies'         => __( 'Number of currencies is required.', 'rtbcb' ),
+                                       'num_banks'              => __( 'Number of banks is required.', 'rtbcb' ),
+                                       'hours_reconciliation'   => __( 'Reconciliation hours are required.', 'rtbcb' ),
+                                       'hours_cash_positioning' => __( 'Cash positioning hours are required.', 'rtbcb' ),
+                                       'ftes'                   => __( 'FTEs are required.', 'rtbcb' ),
+                               ]
+                       );
+               }
+
+               foreach ( $required_fields as $field => $message ) {
+                       $value = $sanitized[ $field ] ?? ( $data[ $field ] ?? '' );
+                       if ( empty( $value ) ) {
+                               return [
+                                       'error' => $message,
+                               ];
+                       }
+               }
+
+$numeric_fields = [
+'num_entities',
+'num_currencies',
+'num_banks',
+'hours_reconciliation',
+'hours_cash_positioning',
+'ftes',
+];
 
 	foreach ( $numeric_fields as $field ) {
 			if ( isset( $data[ $field ] ) && '' !== $data[ $field ] && ! is_numeric( $data[ $field ] ) ) {
