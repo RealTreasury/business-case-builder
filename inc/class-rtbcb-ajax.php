@@ -616,19 +616,22 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 	if ( empty( $implementation_risks ) ) {
 		$implementation_risks = [ __( 'No data provided', 'rtbcb' ) ];
 	}
-	$action_plan = (array) ( $final_analysis['action_plan'] ?? [] );
-		$immediate_steps = (array) ( $action_plan['immediate_steps'] ?? ( $final_analysis['next_steps']['immediate'] ?? [] ) );
-		if ( empty( $immediate_steps ) ) {
-		$immediate_steps = [ __( 'No data provided', 'rtbcb' ) ];
-		}
-		$short_term_milestones = (array) ( $action_plan['short_term_milestones'] ?? ( $final_analysis['next_steps']['short_term'] ?? [] ) );
-		if ( empty( $short_term_milestones ) ) {
-		$short_term_milestones = [ __( 'No data provided', 'rtbcb' ) ];
-		}
-		$long_term_objectives = (array) ( $action_plan['long_term_objectives'] ?? ( $final_analysis['next_steps']['long_term'] ?? [] ) );
-		if ( empty( $long_term_objectives ) ) {
-		$long_term_objectives = [ __( 'No data provided', 'rtbcb' ) ];
-		}
+       $action_plan             = (array) ( $final_analysis['action_plan'] ?? [] );
+       $immediate_steps_raw     = $action_plan['immediate_steps'] ?? ( $final_analysis['next_steps']['immediate'] ?? [] );
+       $immediate_steps         = self::normalize_action_items( $immediate_steps_raw );
+       if ( empty( $immediate_steps ) ) {
+               $immediate_steps = [ __( 'No data provided', 'rtbcb' ) ];
+       }
+       $short_term_raw          = $action_plan['short_term_milestones'] ?? ( $final_analysis['next_steps']['short_term'] ?? [] );
+       $short_term_milestones   = self::normalize_action_items( $short_term_raw );
+       if ( empty( $short_term_milestones ) ) {
+               $short_term_milestones = [ __( 'No data provided', 'rtbcb' ) ];
+       }
+       $long_term_raw           = $action_plan['long_term_objectives'] ?? ( $final_analysis['next_steps']['long_term'] ?? [] );
+       $long_term_objectives    = self::normalize_action_items( $long_term_raw );
+       if ( empty( $long_term_objectives ) ) {
+               $long_term_objectives = [ __( 'No data provided', 'rtbcb' ) ];
+       }
 
 	$company_profile      = $enriched_profile['company_profile'] ?? [];
 	$industry_context_raw = $enriched_profile['industry_context'] ?? [];
@@ -809,38 +812,65 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 			];
 	}
 
-	private static function calculate_business_case_strength( $roi_scenarios, $recommendation ) {
-			$base = $roi_scenarios['base']['total_annual_benefit'] ?? 0;
-			return $base > 0 ? 'strong' : 'weak';
-	}
+       private static function calculate_business_case_strength( $roi_scenarios, $recommendation ) {
+               $base = $roi_scenarios['base']['total_annual_benefit'] ?? 0;
+               return $base > 0 ? 'strong' : 'weak';
+       }
 
-	   private static function format_roi_scenarios( $roi_scenarios ) {
-			   $allowed   = array( 'conservative', 'base', 'optimistic' );
-			   $formatted = array();
+       /**
+        * Normalize action plan items into summary strings.
+        *
+        * @param array $items Raw action plan items.
+        * @return array Sanitized summary strings.
+        */
+       private static function normalize_action_items( $items ) {
+               $normalized = array();
+               foreach ( (array) $items as $item ) {
+                       if ( is_array( $item ) ) {
+                               $action   = sanitize_text_field( $item['action'] ?? ( $item['step'] ?? ( $item['milestone'] ?? ( $item['objective'] ?? '' ) ) ) );
+                               $owner    = sanitize_text_field( $item['owner'] ?? '' );
+                               $timeline = sanitize_text_field( $item['timeline'] ?? ( $item['timeframe'] ?? '' ) );
+                               $parts    = array_filter( array( $action, $owner, $timeline ) );
+                               $summary  = implode( ' - ', $parts );
+                       } else {
+                               $summary = sanitize_text_field( $item );
+                       }
 
-			   foreach ( $allowed as $key ) {
-				       if ( isset( $roi_scenarios[ $key ] ) && is_array( $roi_scenarios[ $key ] ) ) {
-				               $formatted[ $key ] = $roi_scenarios[ $key ];
-				       }
-			   }
+                       if ( '' !== $summary ) {
+                               $normalized[] = $summary;
+                       }
+               }
 
-			   return $formatted;
-	   }
+               return $normalized;
+       }
 
-	   /**
-	* Sanitize request parameters for logging.
-	*
-	* @return array
-	*/
-	private static function get_sanitized_params() {
-		   $params = [];
-		   foreach ( $_REQUEST as $key => $value ) {
-			   if ( is_scalar( $value ) ) {
-				   $params[ sanitize_key( $key ) ] = sanitize_text_field( wp_unslash( $value ) );
-			   }
-		   }
-		   return $params;
-	   }
+       private static function format_roi_scenarios( $roi_scenarios ) {
+               $allowed   = array( 'conservative', 'base', 'optimistic' );
+               $formatted = array();
+
+               foreach ( $allowed as $key ) {
+                       if ( isset( $roi_scenarios[ $key ] ) && is_array( $roi_scenarios[ $key ] ) ) {
+                               $formatted[ $key ] = $roi_scenarios[ $key ];
+                       }
+               }
+
+               return $formatted;
+       }
+
+       /**
+        * Sanitize request parameters for logging.
+        *
+        * @return array
+        */
+       private static function get_sanitized_params() {
+               $params = [];
+               foreach ( $_REQUEST as $key => $value ) {
+                       if ( is_scalar( $value ) ) {
+                               $params[ sanitize_key( $key ) ] = sanitize_text_field( wp_unslash( $value ) );
+                       }
+               }
+               return $params;
+        }
 
 	   /**
 	* Log AJAX request details.
