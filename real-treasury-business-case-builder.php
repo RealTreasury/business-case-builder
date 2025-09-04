@@ -19,7 +19,7 @@ define( 'RTBCB_DIR', plugin_dir_path( RTBCB_FILE ) );
 
 if ( ! defined( 'RTBCB_DEBUG' ) ) {
 define( 'RTBCB_DEBUG', false );
-}
+			}
 
 
 if ( ! function_exists( 'rt_bcb_log' ) ) {
@@ -176,7 +176,7 @@ false !== strpos( $request_uri, '/wp-admin/rest-proxy/' )
 ) {
 return true;
 }
-}
+			}
 
 		return false;
 	}
@@ -1347,25 +1347,12 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 			];
 		}
 
-		$required_keys = [
-			'executive_summary',
-			'financial_analysis',
-			'technology_strategy',
-			'action_plan',
-			'company_intelligence',
-			'operational_insights',
-			'risk_analysis',
-			'industry_insights',
-		];
-		$missing_keys  = array_diff( $required_keys, array_keys( $result ) );
-
-		if ( ! empty( $missing_keys ) ) {
-			rtbcb_log_error( 'LLM missing required sections', [ 'missing' => $missing_keys ] );
-			return [
-				'analysis'    => $this->generate_fallback_analysis( $user_inputs, $scenarios ),
-				'rag_context' => [],
-			];
-		}
+			if ( ! $this->validate_comprehensive_analysis( $result ) ) {
+				return [
+					'analysis'    => $this->generate_fallback_analysis( $user_inputs, $scenarios ),
+					'rag_context' => [],
+				];
+			}
 
 		return [
 			'analysis'    => $result,
@@ -1426,24 +1413,29 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 	 * @param array $analysis Analysis data from the LLM.
 	 * @return bool True when all required sections exist, false otherwise.
 	 */
-	private function validate_comprehensive_analysis( $analysis ) {
-		$required_sections = [
-			'executive_summary',
-			'company_intelligence',
-			'industry_insights',
-			'operational_insights',
-			'risk_analysis',
-			'technology_strategy',
-			'financial_analysis',
-			'action_plan',
-		];
-		$missing_sections = array_diff( $required_sections, array_keys( $analysis ) );
-		if ( ! empty( $missing_sections ) ) {
-			rtbcb_log_error( 'LLM missing required sections', [ 'missing' => $missing_sections ] );
-			return false;
+		private function validate_comprehensive_analysis( $analysis ) {
+			$required_sections = [
+				'executive_summary',
+				'company_intelligence',
+				'industry_insights',
+				'operational_insights',
+				'risk_analysis',
+				'technology_strategy',
+				'financial_analysis',
+				'action_plan',
+			];
+			$missing_sections = [];
+			foreach ( $required_sections as $section ) {
+				if ( empty( $analysis[ $section ] ) ) {
+					$missing_sections[] = $section;
+				}
+			}
+			if ( ! empty( $missing_sections ) ) {
+				rtbcb_log_error( 'LLM missing required sections', [ 'missing' => $missing_sections ] );
+				return false;
+			}
+			return true;
 		}
-		return true;
-	}
 
 	/**
 	* Save lead data to database.
