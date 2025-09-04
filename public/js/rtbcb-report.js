@@ -74,6 +74,12 @@ function initializeROIChart() {
     }
     
     try {
+        // Destroy existing chart instance if reinitializing
+        const existingChart = typeof Chart.getChart === 'function' ? Chart.getChart(ctx) : null;
+        if (existingChart) {
+            existingChart.destroy();
+        }
+
         const chart = new Chart(ctx, {
             type: 'bar',
             data: chartData,
@@ -205,6 +211,12 @@ function createScenarioMiniChart(canvas, scenario) {
     if (!dataset) return;
 
     try {
+        // Destroy existing chart on this canvas before creating a new one
+        const existingChart = typeof Chart.getChart === 'function' ? Chart.getChart(canvas) : null;
+        if (existingChart) {
+            existingChart.destroy();
+        }
+
         new Chart(canvas, {
             type: 'bar',
             data: {
@@ -236,9 +248,15 @@ function createScenarioMiniChart(canvas, scenario) {
 function initializeSensitivityChart() {
     const ctx = document.getElementById('rtbcb-sensitivity-chart');
     if (!ctx) return;
-    
+
     const sensitivityData = window.rtbcbSensitivityData || generateFallbackSensitivityData();
-    
+
+    // Destroy existing chart instance if present
+    const existingChart = typeof Chart.getChart === 'function' ? Chart.getChart(ctx) : null;
+    if (existingChart) {
+        existingChart.destroy();
+    }
+
     try {
         new Chart(ctx, {
             type: 'bar',
