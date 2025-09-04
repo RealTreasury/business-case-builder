@@ -2298,13 +2298,6 @@ PROMPT;
                $data    = json_decode( $parsed['output_text'], true );
 
                if ( $this->is_valid_strategic_response( $data ) ) {
-                       if ( class_exists( 'RTBCB_API_Log' ) ) {
-                               $user_email   = $this->current_inputs['email'] ?? '';
-                               $company_name = $this->current_inputs['company_name'] ?? '';
-                               $model = $payload['model'] ?? '';
-                               RTBCB_API_Log::save_log( $payload, $decoded, get_current_user_id(), $user_email, $company_name, 0, $model );
-                       }
-
                        return $this->validate_and_structure_analysis( $data );
                }
 
@@ -3137,9 +3130,9 @@ return $analysis;
                         return;
                 }
 
-                $user_id      = function_exists( 'get_current_user_id' ) ? get_current_user_id() : 0;
-                $user_email   = $request['email'] ?? '';
-                $company_name = $request['company_name'] ?? '';
+               $user_id      = function_exists( 'get_current_user_id' ) ? get_current_user_id() : 0;
+               $user_email   = $request['email'] ?? ( $this->current_inputs['email'] ?? '' );
+               $company_name = $request['company_name'] ?? ( $this->current_inputs['company_name'] ?? '' );
 
                 $model = $request['model'] ?? '';
                 RTBCB_API_Log::save_log( $request, $response, $user_id, $user_email, $company_name, 0, $model );
