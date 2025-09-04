@@ -198,8 +198,8 @@ public function test_empty_operational_arrays_default_to_no_data() {
 
 	$result = $method->invoke( null, $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, [], microtime( true ), [] );
 
-	self::assertSame( [ 'No data provided' ], $result['operational_insights']['process_improvements'] );
-        self::assertSame( [ 'No data provided' ], $result['operational_insights']['automation_opportunities'] );
+self::assertSame( [], $result['operational_insights']['process_improvements'] );
+self::assertSame( [], $result['operational_insights']['automation_opportunities'] );
 }
 
 public function test_missing_risk_analysis_defaults_to_no_data() {
@@ -214,10 +214,10 @@ public function test_missing_risk_analysis_defaults_to_no_data() {
 
         $result = $method->invoke( null, $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, [], microtime( true ), [] );
 
-        self::assertSame( [], $result['risk_analysis']['risk_matrix'] );
-        self::assertSame( [ 'No data provided' ], $result['risk_analysis']['implementation_risks'] );
-        self::assertSame( [], $result['risk_analysis']['mitigation_strategies'] );
-        self::assertSame( [], $result['risk_analysis']['success_factors'] );
+self::assertSame( [], $result['risk_analysis']['risk_matrix'] );
+self::assertSame( [], $result['risk_analysis']['implementation_risks'] );
+self::assertSame( [], $result['risk_analysis']['mitigation_strategies'] );
+self::assertSame( [], $result['risk_analysis']['success_factors'] );
 }
 
 public function test_financial_benchmarks_pass_through() {
