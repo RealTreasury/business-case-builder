@@ -841,15 +841,15 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
        private static function normalize_action_items( $items ) {
                $normalized = array();
                foreach ( (array) $items as $item ) {
-                       if ( is_array( $item ) ) {
-                               $action   = sanitize_text_field( $item['action'] ?? ( $item['step'] ?? ( $item['milestone'] ?? ( $item['objective'] ?? '' ) ) ) );
-                               $owner    = sanitize_text_field( $item['owner'] ?? '' );
-                               $timeline = sanitize_text_field( $item['timeline'] ?? ( $item['timeframe'] ?? '' ) );
-                               $parts    = array_filter( array( $action, $owner, $timeline ) );
-                               $summary  = implode( ' - ', $parts );
-                       } else {
-                               $summary = sanitize_text_field( $item );
-                       }
+if ( is_array( $item ) ) {
+$action   = sanitize_text_field( $item['action'] ?? ( $item['step'] ?? ( $item['milestone'] ?? ( $item['objective'] ?? ( $item['description'] ?? ( $item['task'] ?? '' ) ) ) ) ) );
+$owner    = sanitize_text_field( $item['owner'] ?? '' );
+$timeline = sanitize_text_field( $item['timeline'] ?? ( $item['timeframe'] ?? ( $item['deadline'] ?? '' ) ) );
+$parts    = array_filter( array( $action, $owner, $timeline ) );
+$summary  = implode( ' - ', $parts );
+} else {
+$summary = sanitize_text_field( $item );
+}
 
                        if ( '' !== $summary ) {
                                $normalized[] = $summary;

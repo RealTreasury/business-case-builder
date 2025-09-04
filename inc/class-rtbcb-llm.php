@@ -2509,11 +2509,11 @@ PROMPT;
 		'mitigation_strategies' => array_map( 'sanitize_text_field', (array) ( $analysis_data['risk_analysis']['mitigation_strategies'] ?? [] ) ),
 		'success_factors'      => array_map( 'sanitize_text_field', (array) ( $analysis_data['risk_analysis']['success_factors'] ?? [] ) ),
 		],
-	'action_plan' => [
-		'immediate_steps'       => array_map( 'sanitize_text_field', (array) ( $analysis_data['action_plan']['immediate_steps'] ?? $analysis_data['next_steps']['immediate'] ?? [] ) ),
-		'short_term_milestones' => array_map( 'sanitize_text_field', (array) ( $analysis_data['action_plan']['short_term_milestones'] ?? $analysis_data['next_steps']['short_term'] ?? [] ) ),
-		'long_term_objectives'  => array_map( 'sanitize_text_field', (array) ( $analysis_data['action_plan']['long_term_objectives'] ?? $analysis_data['next_steps']['long_term'] ?? [] ) ),
-		],
+'action_plan' => [
+'immediate_steps'       => function_exists( 'rtbcb_sanitize_recursive' ) ? rtbcb_sanitize_recursive( (array) ( $analysis_data['action_plan']['immediate_steps'] ?? $analysis_data['next_steps']['immediate'] ?? [] ) ) : array(),
+'short_term_milestones' => function_exists( 'rtbcb_sanitize_recursive' ) ? rtbcb_sanitize_recursive( (array) ( $analysis_data['action_plan']['short_term_milestones'] ?? $analysis_data['next_steps']['short_term'] ?? [] ) ) : array(),
+'long_term_objectives'  => function_exists( 'rtbcb_sanitize_recursive' ) ? rtbcb_sanitize_recursive( (array) ( $analysis_data['action_plan']['long_term_objectives'] ?? $analysis_data['next_steps']['long_term'] ?? [] ) ) : array(),
+],
 	'vendor_considerations' => [],
 	];
 	
