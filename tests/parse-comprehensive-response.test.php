@@ -59,12 +59,12 @@ $parser = new RTBCB_Response_Parser();
 $valid_json = [
         'executive_summary' => [ 'strategic_positioning' => 'pos' ],
         'company_intelligence' => [],
-        'operational_insights' => [],
-        'risk_analysis' => [],
-        'action_plan' => [],
-        'industry_insights' => [],
-        'technology_strategy' => [],
-        'financial_analysis' => [],
+'operational_insights' => [],
+'risk_analysis' => [],
+'action_plan' => [],
+'financial_benchmarks' => [],
+'technology_strategy' => [],
+'financial_analysis' => [],
 ];
 
 $response = [
@@ -86,7 +86,7 @@ $required = [
         'operational_insights',
         'risk_analysis',
         'action_plan',
-        'industry_insights',
+'financial_benchmarks',
         'technology_strategy',
         'financial_analysis',
 ];
