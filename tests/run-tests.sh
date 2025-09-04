@@ -67,6 +67,9 @@ php tests/render-comprehensive-template.test.php
 echo "12b. Rendering financial benchmarks in template..."
 php tests/financial-benchmarks-template.test.php
 
+echo "12c. Rendering comprehensive template with missing fields..."
+php tests/render-comprehensive-template-missing-fields.test.php
+
 echo "13. Running report interactivity test..."
 node tests/report-interactivity.test.js
 

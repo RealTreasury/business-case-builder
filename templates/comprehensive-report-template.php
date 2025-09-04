@@ -4,14 +4,14 @@ defined( 'ABSPATH' ) || exit;
 // Add safety checks for all main variables.
 $report_data           = $report_data ?? [];
 $metadata              = $report_data['metadata'] ?? [];
-$executive_summary     = $report_data['executive_summary'] ?? [];
-$company_intelligence  = $report_data['company_intelligence'] ?? [];
-$financial_analysis    = $report_data['financial_analysis'] ?? [];
-$technology_strategy   = $report_data['technology_strategy'] ?? [];
-$operational_insights  = $report_data['operational_insights'] ?? [];
-$risk_analysis         = $report_data['risk_analysis'] ?? [];
-$financial_benchmarks  = $report_data['financial_benchmarks'] ?? [];
-$action_plan           = $report_data['action_plan'] ?? [];
+$executive_summary     = $report_data['executive_summary'] ?? [];    // Guard missing executive summary.
+$company_intelligence  = $report_data['company_intelligence'] ?? []; // Guard missing company intelligence.
+$financial_analysis    = $report_data['financial_analysis'] ?? [];   // Guard missing financial analysis.
+$technology_strategy   = $report_data['technology_strategy'] ?? [];  // Guard missing technology strategy.
+$operational_insights  = $report_data['operational_insights'] ?? []; // Guard missing operational insights.
+$risk_analysis         = $report_data['risk_analysis'] ?? [];        // Guard missing risk analysis.
+$financial_benchmarks  = $report_data['financial_benchmarks'] ?? []; // Guard missing financial benchmarks.
+$action_plan           = $report_data['action_plan'] ?? [];          // Guard missing action plan.
 $rag_context           = $report_data['rag_context'] ?? [];
 	
 	// Ensure classes exist.
