@@ -38,7 +38,6 @@ $required_fields,
 [
 'company_size'         => __( 'Company size is required.', 'rtbcb' ),
 'industry'             => __( 'Industry is required.', 'rtbcb' ),
-'job_title'            => __( 'Job title is required.', 'rtbcb' ),
 'num_entities'         => __( 'Number of legal entities is required.', 'rtbcb' ),
 'num_currencies'       => __( 'Number of active currencies is required.', 'rtbcb' ),
 'num_banks'            => __( 'Number of banking relationships is required.', 'rtbcb' ),

@@ -31,6 +31,7 @@ const html = `<!DOCTYPE html><html><body>
         <input id="company_name" name="company_name" />
         <select id="company_size" name="company_size"><option value="small">Small</option></select>
         <select id="industry" name="industry"><option value="tech">Tech</option></select>
+        <select id="job_title" name="job_title"><option value="">Select</option><option value="cfo">CFO</option></select>
       </div>
       <div class="rtbcb-wizard-step" data-step="3">
         <input id="num_entities" name="num_entities" type="number" />
@@ -103,6 +104,7 @@ vm.runInThisContext(wizardCode);
   document.getElementById('company_size').value = 'small';
   document.getElementById('industry').value = 'tech';
   await builder.handleNext();
+  assert.strictEqual(builder.currentStep, 3, 'Should progress without job title');
 
   document.getElementById('num_entities').value = '1';
   document.getElementById('num_currencies').value = '1';

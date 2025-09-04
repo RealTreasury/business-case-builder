@@ -519,6 +519,9 @@ class BusinessCaseBuilder {
                if (stepNumber === 5 && !requiredFields.includes('pain_points')) {
                        requiredFields.push('pain_points');
                }
+               if (stepNumber === 2) {
+                       return requiredFields.filter((fieldName) => fieldName !== 'job_title');
+               }
                return requiredFields;
        }
 

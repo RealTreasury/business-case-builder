@@ -55,10 +55,6 @@ $this->assertSame( 'Industry is required.', $result['error'] );
 
 $base['industry'] = 'finance';
 $result           = $validator->validate( $base, 'enhanced' );
-$this->assertSame( 'Job title is required.', $result['error'] );
-
-$base['job_title'] = 'cfo';
-$result            = $validator->validate( $base, 'enhanced' );
 $this->assertSame( 'Number of legal entities is required.', $result['error'] );
 
 $base['num_entities'] = 1;
