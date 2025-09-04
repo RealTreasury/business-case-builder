@@ -1,5 +1,14 @@
 # AI Coding Guidelines for Real Treasury Business Case Builder
 
+## Architecture Overview
+- Business logic resides under `inc/`.
+- Database tables are managed by `RTBCB_DB` and `RTBCB_Leads`.
+- API classes (`RTBCB_API_*`) handle external integrations and logging.
+- `RTBCB_Workflow_Tracker` captures step-level diagnostics.
+- `RTBCB_RAG` powers retrieval-augmented generation.
+- New modules should follow existing naming conventions and reside in `inc/`.
+
+## Development Guidelines
 - Follow [WordPress PHP coding standards](https://developer.wordpress.org/coding-standards/wordpress-coding-standards/php/).
 - Use tabs for indentation; spaces only for alignment per WordPress PHP standards.
 - Prefix global functions with `rtbcb_`.
