@@ -159,9 +159,13 @@ The `report_type` parameter determines the depth of the generated report:
 - `tests/` – Automated tests and diagnostics.
 - `vendor/` – Composer-managed third-party libraries (do not modify).
 
-Development guidelines are defined in `AGENTS.md` files. The root `AGENTS.md` outlines global
-WordPress standards and test commands, while directories such as `admin/` and `docs/` include
-their own `AGENTS.md` with additional rules.
+### Core Architecture
+
+- **ROI calculator** – Computes benefit scenarios. [`inc/class-rtbcb-calculator.php`](inc/class-rtbcb-calculator.php)
+- **Database & leads management** – Manages plugin tables and lead records. [`inc/class-rtbcb-db.php`](inc/class-rtbcb-db.php), [`inc/class-rtbcb-leads.php`](inc/class-rtbcb-leads.php)
+- **API integrations** – Logs and tests external requests. [`inc/class-rtbcb-api-log.php`](inc/class-rtbcb-api-log.php), [`inc/class-rtbcb-api-tester.php`](inc/class-rtbcb-api-tester.php)
+- **Workflow tracking** – Records generation steps and diagnostics. [`inc/class-rtbcb-workflow-tracker.php`](inc/class-rtbcb-workflow-tracker.php)
+- **RAG engine** – Builds and queries the vendor knowledge index. [`inc/class-rtbcb-rag.php`](inc/class-rtbcb-rag.php)
 
 ### Full Directory Tree
 
@@ -267,6 +271,10 @@ their own `AGENTS.md` with additional rules.
 └── vendor
    └── AGENTS.md
 ```
+
+Development guidelines are defined in `AGENTS.md` files. The root `AGENTS.md` outlines global
+WordPress standards and test commands, while directories such as `admin/` and `docs/` include
+their own `AGENTS.md` with additional rules.
 
 ## 🤖 AI Coding Guidelines
 
