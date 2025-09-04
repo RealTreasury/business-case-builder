@@ -232,17 +232,19 @@ class BusinessCaseBuilder {
                 this.form.querySelector( '.rtbcb-wizard-step[data-step="1"]' ),
                 this.form.querySelector( '.rtbcb-wizard-step[data-step="2"]' ),
                 this.form.querySelector( '.rtbcb-wizard-step[data-step="7"]' )
-            ];
+            ].filter( Boolean );
 
             this.progressSteps = [
                 this.form.querySelector( '.rtbcb-progress-step[data-step="1"]' ),
                 this.form.querySelector( '.rtbcb-progress-step[data-step="2"]' ),
                 this.form.querySelector( '.rtbcb-progress-step[data-step="7"]' )
-            ];
+            ].filter( Boolean );
 
             // Hide unused progress steps and renumber
             this.form.querySelectorAll( '.rtbcb-progress-step' ).forEach( step => {
-                step.style.display = 'none';
+                if ( step ) {
+                    step.style.display = 'none';
+                }
             } );
             this.progressSteps.forEach( ( step, index ) => {
                 step.style.display = 'flex';
@@ -262,13 +264,15 @@ class BusinessCaseBuilder {
                 el.style.display = '';
             } );
 
-            this.steps = Array.from( this.form.querySelectorAll( '.rtbcb-wizard-step' ) );
-            this.progressSteps = Array.from( this.form.querySelectorAll( '.rtbcb-progress-step' ) );
+            this.steps = Array.from( this.form.querySelectorAll( '.rtbcb-wizard-step' ) ).filter( Boolean );
+            this.progressSteps = Array.from( this.form.querySelectorAll( '.rtbcb-progress-step' ) ).filter( Boolean );
             this.progressSteps.forEach( ( step, index ) => {
-                step.style.display = 'flex';
-                const num = step.querySelector( '.rtbcb-progress-number' );
-                if ( num ) {
-                    num.textContent = index + 1;
+                if ( step ) {
+                    step.style.display = 'flex';
+                    const num = step.querySelector( '.rtbcb-progress-number' );
+                    if ( num ) {
+                        num.textContent = index + 1;
+                    }
                 }
             } );
 
@@ -561,6 +565,9 @@ class BusinessCaseBuilder {
     updateStepVisibility() {
         // Update step visibility
         this.steps.forEach((step, index) => {
+            if ( ! step ) {
+                return;
+            }
             const stepNum = index + 1;
             if (stepNum === this.currentStep) {
                 step.classList.add('active');
@@ -600,8 +607,11 @@ class BusinessCaseBuilder {
 
     updateProgressIndicator() {
         this.progressSteps.forEach((step, index) => {
+            if ( ! step ) {
+                return;
+            }
             const stepNum = index + 1;
-            
+
             if (stepNum < this.currentStep) {
                 step.classList.add('completed');
                 step.classList.remove('active');
