@@ -72,8 +72,11 @@ public static function enqueue( $user_inputs ) {
 	* @param array  $user_inputs User inputs.
 	* @return void
 	*/
-	public static function process_job( $job_id, $user_inputs ) {
-	self::update_status( $job_id, 'processing' );
+public static function process_job( $job_id, $user_inputs ) {
+if ( function_exists( 'ignore_user_abort' ) ) {
+ignore_user_abort( true );
+}
+self::update_status( $job_id, 'processing' );
 	
 	try {
 	$basic_roi = RTBCB_Ajax::process_basic_roi_step( $user_inputs );
