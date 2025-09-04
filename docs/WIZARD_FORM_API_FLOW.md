@@ -27,7 +27,11 @@ Field definitions come from `templates/business-case-form.php` and the field reg
 
 ## AJAX Submission
 
-`public/js/rtbcb-wizard.js` serializes the form and posts it to WordPress’s AJAX endpoint with the action `rtbcb_generate_case`. On success, the returned report data is rendered in the page; otherwise an error overlay is displayed.
+`public/js/rtbcb-wizard.js` serializes the form and posts it to WordPress’s AJAX
+endpoint with the action `rtbcb_generate_case`. `RTBCB_Ajax::generate_comprehensive_case()`
+enqueues a background job and returns a `job_id`. `public/js/rtbcb-report.js`
+polls `rtbcb_job_status` until the job completes and then injects the report
+HTML; otherwise an error overlay is displayed.
 
 ## Report Types
 
@@ -53,12 +57,18 @@ The API accepts a `report_type` parameter:
 
 ## Server-side Processing
 
-`RTBCB_Main::ajax_generate_comprehensive_case()` validates the request and orchestrates report generation:
+`RTBCB_Ajax::process_comprehensive_case()` validates the request and orchestrates
+report generation:
 
 1. **ROI Calculation** – `RTBCB_Calculator::calculate_roi()` builds conservative, base, and optimistic scenarios.
-2. **Category Recommendation & ROI Refinement** – `RTBCB_Category_Recommender::recommend_category()` scores the selected challenges to suggest a treasury solution type, then `RTBCB_Calculator::calculate_category_refined_roi()` recalculates ROI based on that category.
+2. **Category Recommendation & ROI Refinement** –
+   `RTBCB_Category_Recommender::recommend_category()` scores the selected
+   challenges to suggest a treasury solution type, then
+   `RTBCB_Calculator::calculate_category_refined_roi()` recalculates ROI based on
+   that category.
 3. **RAG Search** – `RTBCB_RAG::search_similar()` retrieves supporting context using the company profile and pain points.
-4. **OpenAI Call** – `RTBCB_LLM::generate_comprehensive_business_case()` combines user inputs, ROI data, and RAG context to produce narrative analysis.
+4. **OpenAI Call** – `RTBCB_LLM_Unified::generate_comprehensive_business_case()`
+   combines user inputs, ROI data, and RAG context to produce narrative analysis.
 5. **Report Assembly** – `get_comprehensive_report_html()` renders the final HTML which is returned in the AJAX response.
 
 ## End-to-End Flow
@@ -67,7 +77,7 @@ The API accepts a `report_type` parameter:
 sequenceDiagram
     participant U as User
     participant JS as Wizard JS
-    participant WP as ajax_generate_comprehensive_case
+    participant WP as process_comprehensive_case
     participant ROI as Calculator
     participant Cat as Recommender
     participant RAG as RAG
