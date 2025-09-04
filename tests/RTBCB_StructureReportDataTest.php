@@ -254,5 +254,31 @@ public function test_rag_context_pass_through() {
 
 	self::assertSame( $rag_context, $result['rag_context'] );
 }
+
+       public function test_section_messages_preserved() {
+               $method = new ReflectionMethod( RTBCB_Ajax::class, 'structure_report_data' );
+               $method->setAccessible( true );
+
+               $user_inputs     = [ 'company_name' => 'Test' ];
+               $enriched_profile = [];
+               $roi_scenarios    = [ 'conservative' => [], 'base' => [], 'optimistic' => [] ];
+               $recommendation   = [ 'recommended' => '', 'category_info' => [] ];
+               $final_analysis   = [
+                       'executive_summary'    => [],
+                       'company_intelligence' => [],
+                       'industry_insights'    => [],
+                       'technology_strategy'  => [],
+                       'financial_analysis'   => [],
+                       'operational_insights' => 'ops message',
+                       'risk_analysis'        => 'risk message',
+                       'action_plan'          => 'plan message',
+               ];
+
+               $result = $method->invoke( null, $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, [], microtime( true ), [] );
+
+               self::assertSame( 'ops message', $result['operational_insights']['message'] );
+               self::assertSame( 'risk message', $result['risk_analysis']['message'] );
+               self::assertSame( 'plan message', $result['action_plan']['message'] );
+       }
 }
 
