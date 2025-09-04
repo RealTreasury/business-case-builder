@@ -518,9 +518,13 @@ class BusinessCaseBuilder {
                const requiredFields = Array.from(step.querySelectorAll('[name][required]')).map(field => field.name);
 
                if (stepNumber === 2) {
-                       const index = requiredFields.indexOf('job_title');
-                       if (index !== -1) {
-                               requiredFields.splice(index, 1);
+                       // Job title is optional; only validate when a value is provided.
+                       const jobField = step.querySelector('[name="job_title"]');
+                       if (jobField && ! jobField.value) {
+                               const index = requiredFields.indexOf('job_title');
+                               if (index !== -1) {
+                                       requiredFields.splice(index, 1);
+                               }
                        }
                }
 
@@ -993,14 +997,15 @@ class BusinessCaseBuilder {
                        if (skipFields.includes(key)) {
                                continue;
                        }
-                       if (key === 'job_title' && !value) {
+                       const stringValue = typeof value === 'string' ? value.trim() : value;
+                       if (key === 'job_title' && ! stringValue) {
                                continue;
                        }
                        if (numericFields.includes(key)) {
-                               const num = parseFloat(value);
+                               const num = parseFloat(stringValue);
                                formData.append(key, Number.isFinite(num) ? num : 0);
                        } else {
-                               formData.append(key, value);
+                               formData.append(key, stringValue);
                        }
                }
 
