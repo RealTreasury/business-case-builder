@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', function() {
 class BusinessCaseBuilder {
     constructor() {
         this.currentStep = 1;
-        this.totalSteps = 6;
+        this.totalSteps = 7;
         this.form = document.getElementById('rtbcbForm');
         this.overlay = document.getElementById('rtbcbModalOverlay');
         this.ajaxUrl = ( typeof rtbcb_ajax !== 'undefined' && isValidUrl( rtbcb_ajax.ajax_url ) ) ? rtbcb_ajax.ajax_url : '';
@@ -156,11 +156,12 @@ class BusinessCaseBuilder {
         // Form fields by step
         this.enhancedStepFields = {
             1: ['report_type'],
-            2: ['company_name', 'company_size', 'industry', 'job_title', 'num_entities', 'num_currencies'],
-            3: ['hours_reconciliation', 'hours_cash_positioning', 'num_banks', 'ftes', 'treasury_automation'],
-            4: ['pain_points'],
-            5: ['business_objective', 'implementation_timeline', 'budget_range'],
-            6: ['email']
+            2: ['company_name', 'company_size', 'industry', 'job_title'],
+            3: ['num_entities', 'num_currencies', 'num_banks'],
+            4: ['hours_reconciliation', 'hours_cash_positioning', 'ftes', 'treasury_automation', 'primary_systems', 'bank_import_frequency', 'reporting_cadence', 'annual_payment_volume', 'forecast_horizon', 'fx_management', 'investment_activities', 'intercompany_lending', 'treasury_kpis', 'audit_trail'],
+            5: ['pain_points'],
+            6: ['business_objective', 'implementation_timeline', 'budget_range'],
+            7: ['email']
         };
 
         this.basicStepFields = {
@@ -195,7 +196,7 @@ class BusinessCaseBuilder {
                 }
                 const checkedBoxes = this.form.querySelectorAll('input[name="pain_points[]"]:checked');
                 if (checkedBoxes.length > 0) {
-                    this.clearStepError(4);
+                    this.clearStepError(5);
                 }
             }
         });
@@ -230,13 +231,13 @@ class BusinessCaseBuilder {
             this.steps = [
                 this.form.querySelector( '.rtbcb-wizard-step[data-step="1"]' ),
                 this.form.querySelector( '.rtbcb-wizard-step[data-step="2"]' ),
-                this.form.querySelector( '.rtbcb-wizard-step[data-step="6"]' )
+                this.form.querySelector( '.rtbcb-wizard-step[data-step="7"]' )
             ];
 
             this.progressSteps = [
                 this.form.querySelector( '.rtbcb-progress-step[data-step="1"]' ),
                 this.form.querySelector( '.rtbcb-progress-step[data-step="2"]' ),
-                this.form.querySelector( '.rtbcb-progress-step[data-step="6"]' )
+                this.form.querySelector( '.rtbcb-progress-step[data-step="7"]' )
             ];
 
             // Hide unused progress steps and renumber
@@ -272,7 +273,7 @@ class BusinessCaseBuilder {
             } );
 
             this.stepFields = this.enhancedStepFields;
-            this.totalSteps = 6;
+            this.totalSteps = 7;
         }
 
         this.updateStepVisibility();
@@ -432,14 +433,14 @@ class BusinessCaseBuilder {
         let isValid = true;
         const fieldsToValidate = this.stepFields[stepNumber];
 
-        if (this.reportType !== 'basic' && stepNumber === 4) {
+        if (this.reportType !== 'basic' && stepNumber === 5) {
             // Special validation for pain points
             const checkedBoxes = this.form.querySelectorAll('input[name="pain_points[]"]:checked');
             if (checkedBoxes.length === 0) {
-                this.showStepError(4, __( 'Please select at least one challenge', 'rtbcb' ) );
+                this.showStepError(5, __( 'Please select at least one challenge', 'rtbcb' ) );
                 return false;
             }
-            this.clearStepError(4);
+            this.clearStepError(5);
         } else {
             // Standard field validation
             fieldsToValidate.forEach(fieldName => {
