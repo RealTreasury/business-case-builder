@@ -588,16 +588,31 @@ this.lastValidationErrors = [];
 			return isValid;
 		}
 
-	validateField(field) {
-		const value = field.value.trim();
-		let isValid = true;
-		let errorMessage = '';
+       validateField(field) {
+               // Special handling for radio groups
+               if (field.type === 'radio') {
+                       const group = document.querySelectorAll(`input[name="${field.name}"]`);
+                       const checked = document.querySelector(`input[name="${field.name}"]:checked`);
 
-		// Required field check
-		if (field.hasAttribute('required') && !value) {
-			errorMessage = __( 'This field is required', 'rtbcb' );
-			isValid = false;
-		}
+                       if (!checked) {
+                               group.forEach(radio => radio.classList.add('rtbcb-field-invalid'));
+                               this.showFieldError(group[0], __( 'Please select an option', 'rtbcb' ));
+                               return false;
+                       }
+
+                       group.forEach(radio => this.clearFieldError(radio));
+                       return true;
+               }
+
+               const value = field.value.trim();
+               let isValid = true;
+               let errorMessage = '';
+
+               // Required field check
+               if (field.hasAttribute('required') && !value) {
+                       errorMessage = __( 'This field is required', 'rtbcb' );
+                       isValid = false;
+               }
 
 		// Company name validation
 		if (field.name === 'company_name' && value) {
