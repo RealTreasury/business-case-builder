@@ -10,7 +10,7 @@ if ( ! function_exists( 'get_option' ) ) {
         }
 }
 
-require_once __DIR__ . '/../inc/class-rtbcb-response-parser.php';
+require_once __DIR__ . '/../inc/class-rtbcb-response-handler.php';
 
 if ( ! function_exists( 'wp_remote_retrieve_body' ) ) {
         function wp_remote_retrieve_body( $response ) {
@@ -51,7 +51,7 @@ $mock_response = [
         ),
 ];
 
-$parser = new RTBCB_Response_Parser();
+$parser = new RTBCB_Response_Handler();
 $result = $parser->parse( $mock_response );
 $log    = file_exists( $log_file ) ? trim( file_get_contents( $log_file ) ) : '';
 ini_set( 'error_log', $prev_error );

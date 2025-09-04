@@ -1,6 +1,6 @@
 # LLM Response Handling on WordPress.com
 
-`RTBCB_LLM` generates model responses and `RTBCB_Response_Parser` validates the
+`RTBCB_LLM` generates model responses and `RTBCB_Response_Handler` validates the
 returned content. When deploying this plugin on WordPress.com, developers must account for
 platform-specific credential storage and hosting constraints.
 
@@ -11,7 +11,7 @@ platform-specific credential storage and hosting constraints.
     `RTBCB_OPENAI_API_KEY` environment variable or the `rtbcb_openai_api_key` option.
 - Prompts are assembled by `RTBCB_LLM_Prompt` and sent via `RTBCB_LLM_Transport` to the
     OpenAI API.
-- Raw responses pass to `RTBCB_Response_Parser::process_openai_response()` for
+- Raw responses pass to `RTBCB_Response_Handler::process_openai_response()` for
     cleanup and JSON extraction.
 
 See [End-to-End Workflow](END_TO_END_WORKFLOW.md) and
@@ -20,7 +20,7 @@ overall report generation process.
 
 ## Parsing Responses on WordPress.com
 
-- `RTBCB_Response_Parser` strips BOM characters, normalizes encoding, and attempts
+- `RTBCB_Response_Handler` strips BOM characters, normalizes encoding, and attempts
     a standard `json_decode()`.
 - If decoding fails, the parser searches for fenced JSON blocks, mixed content, or
     streaming chunks before giving up.
@@ -50,7 +50,7 @@ overall report generation process.
 
 ## References
 
-- [`RTBCB_LLM`](../inc/class-rtbcb-llm.php)
-- [`RTBCB_Response_Parser`](../inc/class-rtbcb-response-parser.php)
+- [`RTBCB_LLM_Unified`](../inc/class-rtbcb-llm-unified.php)
+- [`RTBCB_Response_Handler`](../inc/class-rtbcb-response-handler.php)
 - [End-to-End Workflow](END_TO_END_WORKFLOW.md)
 - [Wizard Form & API Flow](WIZARD_FORM_API_FLOW.md)

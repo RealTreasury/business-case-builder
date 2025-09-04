@@ -1,6 +1,5 @@
 <?php
 defined( 'ABSPATH' ) || exit;
-require_once __DIR__ . '/class-rtbcb-response-parser.php';
 
 /**
 	* API connection testing utilities.
@@ -95,7 +94,7 @@ $response = rtbcb_wp_remote_post_with_retry( 'https://api.openai.com/v1/response
 			];
 		}
 
-		$parsed      = ( new RTBCB_Response_Parser() )->parse( $response );
+            $parsed      = ( new RTBCB_Response_Handler() )->parse( $response );
 		$output_text = $parsed['output_text'];
 
 		if ( empty( $output_text ) ) {

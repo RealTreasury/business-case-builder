@@ -1,6 +1,6 @@
 <?php
 defined( 'ABSPATH' ) || exit;
-require_once __DIR__ . '/class-rtbcb-response-parser.php';
+require_once __DIR__ . '/class-rtbcb-response-handler.php';
 
 /**
 	* Helper functions for the Real Treasury Business Case Builder plugin.

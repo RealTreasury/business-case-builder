@@ -73,7 +73,7 @@ Values outside the `256`–`128000` range are ignored.
 
 Update the list in `inc/helpers.php` if OpenAI changes temperature capabilities.
 ### Parser Architecture
-The `RTBCB_Response_Parser` class centralizes extraction of message text, reasoning traces, function calls, and business-case validation. Legacy helpers now proxy to this class for consistent handling across the plugin.
+The `RTBCB_Response_Handler` class centralizes extraction of message text, reasoning traces, function calls, and business-case validation, while also providing integrity utilities. Legacy helpers now proxy to this class for consistent handling across the plugin.
 
 
 ### Step 3: Configure Persistent Database Connections
