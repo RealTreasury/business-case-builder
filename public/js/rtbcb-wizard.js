@@ -138,6 +138,7 @@ class BusinessCaseBuilder {
         this.bindEvents();
         this.updateStepVisibility();
         this.updateProgressIndicator();
+        this.restorePersistentState();
     }
 
     cacheElements() {
@@ -201,6 +202,94 @@ class BusinessCaseBuilder {
                 window.closeBusinessCaseModal();
             }
         });
+    }
+
+    saveFormData( formData ) {
+        try {
+            const storage = window.sessionStorage;
+            if ( ! storage ) {
+                return;
+            }
+            const data = {};
+            for ( const [ key, value ] of formData.entries() ) {
+                if ( data[ key ] ) {
+                    if ( Array.isArray( data[ key ] ) ) {
+                        data[ key ].push( value );
+                    } else {
+                        data[ key ] = [ data[ key ], value ];
+                    }
+                } else {
+                    data[ key ] = value;
+                }
+            }
+            storage.setItem( 'rtbcbFormData', JSON.stringify( data ) );
+        } catch ( e ) {
+            console.warn( 'RTBCB: Session storage unavailable', e );
+        }
+    }
+
+    restorePersistentState() {
+        try {
+            const storage = window.sessionStorage;
+            if ( ! storage ) {
+                return;
+            }
+            const savedData = storage.getItem( 'rtbcbFormData' );
+            if ( savedData ) {
+                try {
+                    const parsed = JSON.parse( savedData );
+                    this.populateForm( parsed );
+                } catch ( err ) {}
+            }
+            const jobId = storage.getItem( 'rtbcbJobId' );
+            if ( jobId ) {
+                this.activeJobId = jobId;
+                this.showLoading();
+                this.startProgressiveLoading();
+                this.pollingCancelled = false;
+                this.pollJob( jobId, Date.now(), 0 );
+            }
+        } catch ( e ) {
+            console.warn( 'RTBCB: Session storage unavailable', e );
+        }
+    }
+
+    populateForm( data ) {
+        Object.entries( data ).forEach( ( [ key, value ] ) => {
+            if ( Array.isArray( value ) ) {
+                value.forEach( ( val ) => {
+                    const field = this.form.querySelector( `[name="${ key }"][value="${ val }"]` );
+                    if ( field ) {
+                        field.checked = true;
+                    }
+                } );
+            } else {
+                const field = this.form.querySelector( `[name="${ key }"]` );
+                if ( ! field ) {
+                    return;
+                }
+                if ( field.type === 'checkbox' ) {
+                    field.checked = true;
+                } else if ( field.type === 'radio' ) {
+                    const radio = this.form.querySelector( `[name="${ key }"][value="${ value }"]` );
+                    if ( radio ) {
+                        radio.checked = true;
+                    }
+                } else {
+                    field.value = value;
+                }
+            }
+        } );
+    }
+
+    clearPersistentState() {
+        try {
+            const storage = window.sessionStorage;
+            if ( storage ) {
+                storage.removeItem( 'rtbcbFormData' );
+                storage.removeItem( 'rtbcbJobId' );
+            }
+        } catch ( e ) {}
     }
 
     handleNext( event ) {
@@ -526,7 +615,8 @@ class BusinessCaseBuilder {
             this.startProgressiveLoading();
 
             const formData = this.collectFormData();
-            this.validateFormData(formData);
+            this.saveFormData( formData );
+            this.validateFormData( formData );
 
             // Submit form
             if (!isValidUrl(this.ajaxUrl)) {
@@ -630,10 +720,13 @@ class BusinessCaseBuilder {
                     this.cancelPolling();
                     this.pollingCancelled = false;
                     this.activeJobId = payload.job_id;
+                    try {
+                        window.sessionStorage && window.sessionStorage.setItem( 'rtbcbJobId', payload.job_id );
+                    } catch ( e ) {}
 
                     // Replace progressive loading with polling updates
                     this.cancelProgressiveLoading();
-                    this.pollJob(this.activeJobId, Date.now(), 0);
+                    this.pollJob( this.activeJobId, Date.now(), 0 );
                 } else {
                     // Direct response
                     this.cancelProgressiveLoading();
@@ -845,6 +938,7 @@ class BusinessCaseBuilder {
             clearTimeout(this.pollTimeout);
             this.pollTimeout = null;
         }
+        this.clearPersistentState();
         console.log('RTBCB: All polling and progress timers cancelled');
     }
 
@@ -1116,6 +1210,7 @@ class BusinessCaseBuilder {
     }
 
     handleSuccess(data) {
+        this.clearPersistentState();
         console.log('RTBCB: Success data received:', data);
 
         if (typeof data === 'string') {
@@ -1846,6 +1941,7 @@ ${upcoming_changes.length ? `<div class="rtbcb-industry-group"><h4>Upcoming Chan
     }
 
     handleError(errorData) {
+        this.clearPersistentState();
         const message = errorData.message || __( 'An unexpected error occurred', 'rtbcb' );
 
         console.group('RTBCB Error Details');
