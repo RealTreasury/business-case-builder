@@ -33,6 +33,7 @@ const html = `<!DOCTYPE html><html><body>
         <div class="rtbcb-field"><input id="company_name" name="company_name" /></div>
         <div class="rtbcb-field"><select id="company_size" name="company_size"><option value="small">Small</option></select></div>
         <div class="rtbcb-field"><select id="industry" name="industry"><option value="tech">Tech</option></select></div>
+        <div class="rtbcb-field rtbcb-enhanced-only"><select id="job_title" name="job_title"><option value=""></option><option value="cfo">CFO</option></select></div>
       </div>
       <div class="rtbcb-wizard-step" data-step="3">
         <div class="rtbcb-field"><input id="num_entities" name="num_entities" type="number" /></div>

@@ -327,19 +327,22 @@ class BusinessCaseBuilder {
 			if ( ! storage ) {
 				return;
 			}
-			const data = {};
-			for ( const [ key, value ] of formData.entries() ) {
-				if ( data[ key ] ) {
-					if ( Array.isArray( data[ key ] ) ) {
-						data[ key ].push( value );
-					} else {
-						data[ key ] = [ data[ key ], value ];
-					}
-				} else {
-					data[ key ] = value;
-				}
-			}
-			storage.setItem( 'rtbcbFormData', JSON.stringify( data ) );
+                       const data = {};
+                       for ( const [ key, value ] of formData.entries() ) {
+                               if ( key === 'job_title' && ! value ) {
+                                       continue;
+                               }
+                               if ( data[ key ] ) {
+                                       if ( Array.isArray( data[ key ] ) ) {
+                                               data[ key ].push( value );
+                                       } else {
+                                               data[ key ] = [ data[ key ], value ];
+                                       }
+                               } else {
+                                       data[ key ] = value;
+                               }
+                       }
+                       storage.setItem( 'rtbcbFormData', JSON.stringify( data ) );
 		} catch ( e ) {
 			console.warn( 'RTBCB: Session storage unavailable', e );
 		}
@@ -488,6 +491,9 @@ class BusinessCaseBuilder {
                        return [];
                }
                const requiredFields = Array.from(step.querySelectorAll('[name][required]')).map(field => field.name);
+               if (stepNumber === 2) {
+                       return requiredFields.filter(name => name !== 'job_title');
+               }
                if (stepNumber === 5 && !requiredFields.includes('pain_points')) {
                        requiredFields.push('pain_points');
                }
@@ -949,21 +955,24 @@ class BusinessCaseBuilder {
 
 	collectFormData() {
 		const rawData = new FormData(this.form);
-		const formData = new FormData();
-		const numericFields = ['hours_reconciliation', 'hours_cash_positioning', 'num_banks', 'ftes'];
-
-		const skipFields = ['report_type'];
-		for (const [key, value] of rawData.entries()) {
-			if (skipFields.includes(key)) {
-				continue;
-			}
-			if (numericFields.includes(key)) {
-				const num = parseFloat(value);
-				formData.append(key, Number.isFinite(num) ? num : 0);
-			} else {
-				formData.append(key, value);
-			}
-		}
+               const formData = new FormData();
+               const numericFields = ['hours_reconciliation', 'hours_cash_positioning', 'num_banks', 'ftes'];
+               const skipFields = ['report_type'];
+               const optionalFields = ['job_title'];
+               for (const [key, value] of rawData.entries()) {
+                       if (skipFields.includes(key)) {
+                               continue;
+                       }
+                       if (optionalFields.includes(key) && ! value) {
+                               continue;
+                       }
+                       if (numericFields.includes(key)) {
+                               const num = parseFloat(value);
+                               formData.append(key, Number.isFinite(num) ? num : 0);
+                       } else {
+                               formData.append(key, value);
+                       }
+               }
 
 		formData.append('action', 'rtbcb_generate_case');
 		if (typeof rtbcb_ajax !== 'undefined' && rtbcb_ajax.nonce) {
