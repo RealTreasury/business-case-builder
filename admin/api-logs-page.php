@@ -44,8 +44,8 @@ if ( ! current_user_can( 'manage_options' ) ) {
 						$request  = json_decode( $log['request_json'], true );
 						$response = json_decode( $log['response_json'], true );
 						$summary  = '';
-						if ( isset( $request['messages'][0]['content'] ) ) {
-							$summary = wp_trim_words( $request['messages'][0]['content'], 10, '...' );
+						if ( isset( $request['input'][0]['content'] ) ) {
+							$summary = wp_trim_words( $request['input'][0]['content'], 10, '...' );
 						} else {
 							$summary = wp_trim_words( $log['request_json'], 10, '...' );
 						}
