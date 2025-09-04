@@ -893,6 +893,8 @@ class BusinessCaseBuilder {
                 ? `Analyzing ${escapedCompanyName}'s treasury operations...`
                 : 'Calculating ROI scenarios...';
 
+            const cancelText = __( 'Cancel and Start Over', 'rtbcb' );
+
             // Create properly structured loader content
             progressContainer.innerHTML = `
                 <div class="rtbcb-progress-content">
@@ -913,6 +915,7 @@ class BusinessCaseBuilder {
                         <div id="rtbcb-partial-category" style="display: none;"></div>
                         <div id="rtbcb-partial-analysis" style="display: none;"></div>
                     </div>
+                    <button type="button" class="rtbcb-progress-cancel">${ cancelText }</button>
                 </div>
             `;
 
@@ -927,6 +930,17 @@ class BusinessCaseBuilder {
             progressContainer.setAttribute('role', 'dialog');
             progressContainer.setAttribute('aria-label', 'Generating business case report');
             progressContainer.setAttribute('aria-live', 'polite');
+
+            const cancelBtn = progressContainer.querySelector('.rtbcb-progress-cancel');
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', () => {
+                    this.cancelPolling();
+                    this.hideLoading();
+                    if ( typeof this.reinitialize === 'function' ) {
+                        this.reinitialize();
+                    }
+                });
+            }
 
             console.log('RTBCB: Progress overlay shown');
         }
@@ -969,6 +983,7 @@ class BusinessCaseBuilder {
             this.pollTimeout = null;
         }
         this.clearPersistentState();
+        this.activeJobId = null;
         console.log('RTBCB: All polling and progress timers cancelled');
     }
 

@@ -469,7 +469,8 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
             <div class="rtbcb-progress-step">
                 <span class="rtbcb-progress-step-text"><?php esc_html_e( 'Preparing your analysis...', 'rtbcb' ); ?></span>
             </div>
-            <div class="rtbcb-progress-partial"><!-- Partial results will be shown here --></div>
+			<div class="rtbcb-progress-partial"><!-- Partial results will be shown here --></div>
+			<button type="button" class="rtbcb-progress-cancel"><?php esc_html_e( 'Cancel and Start Over', 'rtbcb' ); ?></button>
         </div>
     </div>
 </div>
