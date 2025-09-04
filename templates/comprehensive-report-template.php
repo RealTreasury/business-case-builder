@@ -284,10 +284,12 @@ $processing_time = $metadata['processing_time'] ?? ( $report_data['processing_ti
 <?php
 $process_items = 0;
 foreach ( (array) $operational_insights['process_improvements'] as $item ) :
+if ( is_array( $item ) || is_object( $item ) ) {
+$item    = (array) $item;
 $process = $item['process'] ?? ( $item['process_area'] ?? '' );
 $current = $item['current_state'] ?? '';
 $improved = $item['improved_state'] ?? '';
-$impact = $item['impact'] ?? ( $item['impact_level'] ?? '' );
+$impact  = $item['impact'] ?? ( $item['impact_level'] ?? '' );
 if ( '' === $process && '' === $current && '' === $improved && '' === $impact ) {
 continue;
 }
@@ -301,7 +303,15 @@ $details .= $details ? ' (' . $impact . ')' : '(' . $impact . ')';
 $process_items++;
 ?>
 <li><strong><?php echo esc_html( $process ); ?></strong><?php echo $details ? ': ' . esc_html( $details ) : ''; ?></li>
-<?php endforeach; ?>
+<?php
+} elseif ( '' !== trim( (string) $item ) ) {
+$process_items++;
+?>
+<li><?php echo esc_html( $item ); ?></li>
+<?php
+}
+endforeach;
+?>
 <?php if ( 0 === $process_items ) : ?>
 <li><?php esc_html_e( 'No data provided', 'rtbcb' ); ?></li>
 <?php endif; ?>
@@ -314,9 +324,11 @@ $process_items++;
 <?php
 $automation_items = 0;
 foreach ( (array) $operational_insights['automation_opportunities'] as $item ) :
+if ( is_array( $item ) || is_object( $item ) ) {
+$item        = (array) $item;
 $opportunity = $item['opportunity'] ?? '';
-$complexity = $item['complexity'] ?? '';
-$savings    = $item['savings'] ?? ( $item['time_savings'] ?? '' );
+$complexity  = $item['complexity'] ?? '';
+$savings     = $item['savings'] ?? ( $item['time_savings'] ?? '' );
 if ( '' === $opportunity && '' === $complexity && '' === $savings ) {
 continue;
 }
@@ -330,7 +342,15 @@ $parts[] = $savings;
 $automation_items++;
 ?>
 <li><strong><?php echo esc_html( $opportunity ); ?></strong><?php echo $parts ? ': ' . esc_html( implode( ' → ', $parts ) ) : ''; ?></li>
-<?php endforeach; ?>
+<?php
+} elseif ( '' !== trim( (string) $item ) ) {
+$automation_items++;
+?>
+<li><?php echo esc_html( $item ); ?></li>
+<?php
+}
+endforeach;
+?>
 <?php if ( 0 === $automation_items ) : ?>
 <li><?php esc_html_e( 'No data provided', 'rtbcb' ); ?></li>
 <?php endif; ?>
