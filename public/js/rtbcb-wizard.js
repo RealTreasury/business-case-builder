@@ -525,7 +525,9 @@ this.lastValidationErrors = [];
                if (!step) {
                        return [];
                }
-               const requiredFields = Array.from(step.querySelectorAll('[name][required]')).map(field => field.name);
+               const requiredFields = [...new Set(
+                       Array.from(step.querySelectorAll('[name][required]')).map(field => field.name)
+               )];
 
                if (stepNumber === 2) {
                        const jobField = step.querySelector('[name="job_title"]');
@@ -576,28 +578,36 @@ this.lastValidationErrors = [];
 					continue;
 				}
 
-				if (!this.validateField(field)) {
-					isValid = false;
-					const fieldContainer = field.closest('.rtbcb-field');
-					const label = fieldContainer ? fieldContainer.querySelector('label') : null;
-					const fieldLabel = label ? label.textContent.trim() : fieldName;
-					this.lastValidationErrors.push( fieldLabel );
-				}
-			}
+                               if (!this.validateField(field, true)) {
+                                       isValid = false;
+                                       const fieldContainer = field.closest('.rtbcb-field');
+                                       const label = fieldContainer ? fieldContainer.querySelector('label') : null;
+                                       const fieldLabel = label ? label.textContent.trim() : fieldName;
+                                       this.lastValidationErrors.push( fieldLabel );
+                               }
+                       }
 
 			return isValid;
 		}
 
-	validateField(field) {
-		const value = field.value.trim();
-		let isValid = true;
-		let errorMessage = '';
+       validateField(field, forceRequired = false) {
+               const value = field.value.trim();
+               let isValid = true;
+               let errorMessage = '';
 
-		// Required field check
-		if (field.hasAttribute('required') && !value) {
-			errorMessage = __( 'This field is required', 'rtbcb' );
-			isValid = false;
-		}
+               // Required field check
+               if ( forceRequired || field.hasAttribute( 'required' ) ) {
+                       if ( field.type === 'checkbox' || field.type === 'radio' ) {
+                               const checked = this.form.querySelectorAll( `[name="${ field.name }"]:checked` ).length > 0;
+                               if ( ! checked ) {
+                                       errorMessage = __( 'This field is required', 'rtbcb' );
+                                       isValid = false;
+                               }
+                       } else if ( ! value ) {
+                               errorMessage = __( 'This field is required', 'rtbcb' );
+                               isValid = false;
+                       }
+               }
 
 		// Company name validation
 		if (field.name === 'company_name' && value) {
