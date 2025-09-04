@@ -3,15 +3,21 @@ defined( 'ABSPATH' ) || exit;
 
 // Add safety checks for all main variables.
 $report_data           = $report_data ?? [];
+array_walk_recursive(
+       $report_data,
+       function ( &$value, $key ) {
+               $value = '{{' . $key . '}}';
+       }
+);
 $metadata              = $report_data['metadata'] ?? [];
-$executive_summary     = $report_data['executive_summary'] ?? [];    // Guard missing executive summary.
-$company_intelligence  = $report_data['company_intelligence'] ?? []; // Guard missing company intelligence.
-$financial_analysis    = $report_data['financial_analysis'] ?? [];   // Guard missing financial analysis.
-$technology_strategy   = $report_data['technology_strategy'] ?? [];  // Guard missing technology strategy.
-$operational_insights  = $report_data['operational_insights'] ?? []; // Guard missing operational insights.
-$risk_analysis         = $report_data['risk_analysis'] ?? [];        // Guard missing risk analysis.
-$financial_benchmarks  = $report_data['financial_benchmarks'] ?? []; // Guard missing financial benchmarks.
-$action_plan           = $report_data['action_plan'] ?? [];          // Guard missing action plan.
+$executive_summary     = $report_data['executive_summary'] ?? [];
+$company_intelligence  = $report_data['company_intelligence'] ?? [];
+$financial_analysis    = $report_data['financial_analysis'] ?? [];
+$technology_strategy   = $report_data['technology_strategy'] ?? [];
+$operational_insights  = $report_data['operational_insights'] ?? [];
+$risk_analysis         = $report_data['risk_analysis'] ?? [];
+$financial_benchmarks  = $report_data['financial_benchmarks'] ?? [];
+$action_plan           = $report_data['action_plan'] ?? [];
 $rag_context           = $report_data['rag_context'] ?? [];
 	
 	// Ensure classes exist.
@@ -31,13 +37,16 @@ $rag_context           = $report_data['rag_context'] ?? [];
 	 * @var array $report_data Structured report data from the new workflow
 	 */
 	
-$raw_company_name = $company_intelligence['enriched_profile']['name']
-	?? ( $report_data['company_name'] ?? ( $metadata['company_name'] ?? __( 'Your Company', 'rtbcb' ) ) );
-$company_name    = $raw_company_name;
-$analysis_date   = $metadata['analysis_date'] ?? current_time( 'Y-m-d' );
-$analysis_type   = $metadata['analysis_type'] ?? ( $report_data['analysis_type'] ?? 'basic' );
-$confidence_level = round( ( $metadata['confidence_level'] ?? ( $report_data['confidence'] ?? 0.85 ) ) * 100 );
-$processing_time = $metadata['processing_time'] ?? ( $report_data['processing_time'] ?? 0 );
+$raw_company_name   = $company_intelligence['enriched_profile']['name']
+        ?? ( $report_data['company_name'] ?? ( $metadata['company_name'] ?? __( 'Your Company', 'rtbcb' ) ) );
+$company_name      = $raw_company_name;
+$analysis_date     = $metadata['analysis_date'] ?? current_time( 'Y-m-d' );
+$analysis_type     = $metadata['analysis_type'] ?? ( $report_data['analysis_type'] ?? 'basic' );
+$raw_confidence    = $metadata['confidence_level'] ?? ( $report_data['confidence'] ?? 0.85 );
+$confidence_numeric = is_numeric( $raw_confidence );
+$confidence_level  = $confidence_numeric ? round( $raw_confidence * 100 ) : $raw_confidence;
+$processing_time   = $metadata['processing_time'] ?? ( $report_data['processing_time'] ?? 0 );
+$processing_display = is_numeric( $processing_time ) ? round( $processing_time, 1 ) : $processing_time;
 	?>
 	
 	<div class="rtbcb-enhanced-report" data-company="<?php echo esc_attr( $company_name ); ?>">
@@ -49,10 +58,10 @@ $processing_time = $metadata['processing_time'] ?? ( $report_data['processing_ti
 					<div class="rtbcb-report-badge-enhanced">
 						<span class="rtbcb-badge-icon">🏆</span>
 						<span class="rtbcb-badge-text"><?php echo esc_html__( 'AI-ENHANCED ANALYSIS', 'rtbcb' ); ?></span>
-						<div class="rtbcb-confidence-meter">
-							<div class="rtbcb-confidence-bar" style="width: <?php echo esc_attr( $confidence_level ); ?>%"></div>
-							<span class="rtbcb-confidence-text"><?php echo esc_html( $confidence_level ); ?>% <?php echo esc_html__( 'Confidence', 'rtbcb' ); ?></span>
-					</div>
+                                                <div class="rtbcb-confidence-meter">
+                                                        <div class="rtbcb-confidence-bar" style="width: <?php echo esc_attr( $confidence_numeric ? $confidence_level : 0 ); ?>%"></div>
+                                                        <span class="rtbcb-confidence-text"><?php echo esc_html( $confidence_level ); ?><?php echo $confidence_numeric ? '%' : ''; ?> <?php echo esc_html__( 'Confidence', 'rtbcb' ); ?></span>
+                                                </div>
 				</div>
 
 				<h1 class="rtbcb-report-title-enhanced">
@@ -68,8 +77,16 @@ $processing_time = $metadata['processing_time'] ?? ( $report_data['processing_ti
 					</div>
 					<div class="rtbcb-meta-item">
 						<span class="rtbcb-meta-icon">⚡</span>
-						<span class="rtbcb-meta-label"><?php echo esc_html__( 'Processing Time', 'rtbcb' ); ?></span>
-									<span class="rtbcb-meta-value"><?php printf( esc_html__( '%ss', 'rtbcb' ), esc_html( round( $processing_time, 1 ) ) ); ?></span>
+                                                <span class="rtbcb-meta-label"><?php echo esc_html__( 'Processing Time', 'rtbcb' ); ?></span>
+                                                <span class="rtbcb-meta-value">
+                                                        <?php
+                                                        if ( is_numeric( $processing_time ) ) {
+                                                                printf( esc_html__( '%ss', 'rtbcb' ), esc_html( $processing_display ) );
+                                                        } else {
+                                                                echo esc_html( $processing_display );
+                                                        }
+                                                        ?>
+                                                </span>
 					</div>
 										<div class="rtbcb-meta-item">
 												<span class="rtbcb-meta-icon">📊</span>
@@ -98,9 +115,16 @@ $processing_time = $metadata['processing_time'] ?? ( $report_data['processing_ti
 					<div class="rtbcb-metric-card primary">
 						<div class="rtbcb-metric-icon">💰</div>
 						<div class="rtbcb-metric-content">
-							<div class="rtbcb-metric-value">
-								$<?php echo esc_html( number_format( $base_roi['total_annual_benefit'] ?? 0 ) ); ?>
-							</div>
+                                                        <div class="rtbcb-metric-value">
+                                                                <?php
+                                                                $value = $base_roi['total_annual_benefit'] ?? '';
+                                                                if ( is_numeric( $value ) ) {
+                                                                        echo '$' . esc_html( number_format( $value ) );
+                                                                } else {
+                                                                        echo esc_html( $value );
+                                                                }
+                                                                ?>
+                                                        </div>
 							<div class="rtbcb-metric-label"><?php echo esc_html__( 'Annual ROI (Base Case)', 'rtbcb' ); ?></div>
 						</div>
 					</div>
@@ -863,19 +887,55 @@ $impact     = $risk_item['impact'] ?? '';
 							<div class="rtbcb-scenario-metrics">
 								<div class="rtbcb-scenario-metric">
 									<span class="rtbcb-metric-label"><?php echo esc_html__( 'Total Annual Benefit', 'rtbcb' ); ?></span>
-									<span class="rtbcb-metric-value primary">$<?php echo esc_html( number_format( $scenario['total_annual_benefit'] ?? 0 ) ); ?></span>
+                                                                        <span class="rtbcb-metric-value primary">
+                                                                                <?php
+                                                                                $value = $scenario['total_annual_benefit'] ?? '';
+                                                                                if ( is_numeric( $value ) ) {
+                                                                                        echo '$' . esc_html( number_format( $value ) );
+                                                                                } else {
+                                                                                        echo esc_html( $value );
+                                                                                }
+                                                                                ?>
+                                                                        </span>
 								</div>
 								<div class="rtbcb-scenario-metric">
 									<span class="rtbcb-metric-label"><?php echo esc_html__( 'Labor Savings', 'rtbcb' ); ?></span>
-									<span class="rtbcb-metric-value">$<?php echo esc_html( number_format( $scenario['labor_savings'] ?? 0 ) ); ?></span>
+                                                                        <span class="rtbcb-metric-value">
+                                                                                <?php
+                                                                                $value = $scenario['labor_savings'] ?? '';
+                                                                                if ( is_numeric( $value ) ) {
+                                                                                        echo '$' . esc_html( number_format( $value ) );
+                                                                                } else {
+                                                                                        echo esc_html( $value );
+                                                                                }
+                                                                                ?>
+                                                                        </span>
 								</div>
 								<div class="rtbcb-scenario-metric">
 									<span class="rtbcb-metric-label"><?php echo esc_html__( 'Fee Savings', 'rtbcb' ); ?></span>
-									<span class="rtbcb-metric-value">$<?php echo esc_html( number_format( $scenario['fee_savings'] ?? 0 ) ); ?></span>
+                                                                        <span class="rtbcb-metric-value">
+                                                                                <?php
+                                                                                $value = $scenario['fee_savings'] ?? '';
+                                                                                if ( is_numeric( $value ) ) {
+                                                                                        echo '$' . esc_html( number_format( $value ) );
+                                                                                } else {
+                                                                                        echo esc_html( $value );
+                                                                                }
+                                                                                ?>
+                                                                        </span>
 								</div>
 								<div class="rtbcb-scenario-metric">
 									<span class="rtbcb-metric-label"><?php echo esc_html__( 'Error Reduction', 'rtbcb' ); ?></span>
-									<span class="rtbcb-metric-value">$<?php echo esc_html( number_format( $scenario['error_reduction'] ?? 0 ) ); ?></span>
+                                                                        <span class="rtbcb-metric-value">
+                                                                                <?php
+                                                                                $value = $scenario['error_reduction'] ?? '';
+                                                                                if ( is_numeric( $value ) ) {
+                                                                                        echo '$' . esc_html( number_format( $value ) );
+                                                                                } else {
+                                                                                        echo esc_html( $value );
+                                                                                }
+                                                                                ?>
+                                                                        </span>
 								</div>
 							</div>
 						</div>
@@ -906,11 +966,40 @@ $impact     = $risk_item['impact'] ?? '';
 						?>
 						<tr>
 							<td><?php echo esc_html( ucfirst( $scenario_name ) ); ?></td>
-							<td><?php echo esc_html( number_format_i18n( $scenario['labor_savings'] ?? 0 ) ); ?></td>
-							<td><?php echo esc_html( number_format_i18n( $scenario['fee_savings'] ?? 0 ) ); ?></td>
-							<td><?php echo esc_html( number_format_i18n( $scenario['error_reduction'] ?? 0 ) ); ?></td>
-							<td><?php echo esc_html( number_format_i18n( $scenario['total_annual_benefit'] ?? 0 ) ); ?></td>
-							<td><?php echo esc_html( number_format_i18n( $scenario['roi_percentage'] ?? 0 ) ); ?>%</td>
+                                                        <td>
+                                                                <?php
+                                                                $value = $scenario['labor_savings'] ?? '';
+                                                                echo esc_html( is_numeric( $value ) ? number_format_i18n( $value ) : $value );
+                                                                ?>
+                                                        </td>
+                                                        <td>
+                                                                <?php
+                                                                $value = $scenario['fee_savings'] ?? '';
+                                                                echo esc_html( is_numeric( $value ) ? number_format_i18n( $value ) : $value );
+                                                                ?>
+                                                        </td>
+                                                        <td>
+                                                                <?php
+                                                                $value = $scenario['error_reduction'] ?? '';
+                                                                echo esc_html( is_numeric( $value ) ? number_format_i18n( $value ) : $value );
+                                                                ?>
+                                                        </td>
+                                                        <td>
+                                                                <?php
+                                                                $value = $scenario['total_annual_benefit'] ?? '';
+                                                                echo esc_html( is_numeric( $value ) ? number_format_i18n( $value ) : $value );
+                                                                ?>
+                                                        </td>
+                                                        <td>
+                                                                <?php
+                                                                $value = $scenario['roi_percentage'] ?? '';
+                                                                if ( is_numeric( $value ) ) {
+                                                                        echo esc_html( number_format_i18n( $value ) ) . '%';
+                                                                } else {
+                                                                        echo esc_html( $value );
+                                                                }
+                                                                ?>
+                                                        </td>
 						</tr>
 					<?php endforeach; ?>
 				</tbody>
@@ -926,7 +1015,16 @@ $impact     = $risk_item['impact'] ?? '';
 							<div class="rtbcb-sensitivity-item">
 								<div class="rtbcb-sensitivity-header">
 									<span class="rtbcb-sensitivity-factor"><?php echo esc_html( $factor['factor'] ?? '' ); ?></span>
-									<span class="rtbcb-sensitivity-probability"><?php echo esc_html( round( ( $factor['probability'] ?? 0 ) * 100 ) ); ?>% <?php echo esc_html__( 'likelihood', 'rtbcb' ); ?></span>
+                                                                        <span class="rtbcb-sensitivity-probability">
+                                                                                <?php
+                                                                                $prob = $factor['probability'] ?? '';
+                                                                                if ( is_numeric( $prob ) ) {
+                                                                                        echo esc_html( round( $prob * 100 ) ) . '% ' . esc_html__( 'likelihood', 'rtbcb' );
+                                                                                } else {
+                                                                                        echo esc_html( $prob );
+                                                                                }
+                                                                                ?>
+                                                                        </span>
 								</div>
 								<div class="rtbcb-sensitivity-impact <?php
 									// Escaped for safe output.
@@ -964,9 +1062,25 @@ $impact     = $risk_item['impact'] ?? '';
 				<?php echo esc_html__( 'This AI-enhanced analysis is based on provided information and industry benchmarks. Results may vary depending on implementation approach and organizational factors. Confidence level reflects data quality and analysis depth.', 'rtbcb' ); ?></p>
 			</div>
 			<div class="rtbcb-footer-stats">
-				<span><?php printf( esc_html__( 'Confidence: %s%%', 'rtbcb' ), esc_html( $confidence_level ) ); ?></span>
-				<span><?php printf( esc_html__( 'Generated: %s', 'rtbcb' ), esc_html( $analysis_date ) ); ?></span>
-				<span><?php printf( esc_html__( 'Processing: %ss', 'rtbcb' ), esc_html( round( $processing_time, 1 ) ) ); ?></span>
+                                <span>
+                                        <?php
+                                        if ( $confidence_numeric ) {
+                                                printf( esc_html__( 'Confidence: %s%%', 'rtbcb' ), esc_html( $confidence_level ) );
+                                        } else {
+                                                echo esc_html__( 'Confidence: ', 'rtbcb' ) . esc_html( $confidence_level );
+                                        }
+                                        ?>
+                                </span>
+                                <span><?php printf( esc_html__( 'Generated: %s', 'rtbcb' ), esc_html( $analysis_date ) ); ?></span>
+                                <span>
+                                        <?php
+                                        if ( is_numeric( $processing_time ) ) {
+                                                printf( esc_html__( 'Processing: %ss', 'rtbcb' ), esc_html( $processing_display ) );
+                                        } else {
+                                                echo esc_html__( 'Processing: ', 'rtbcb' ) . esc_html( $processing_display );
+                                        }
+                                        ?>
+                                </span>
 			</div>
 		</div>
 	</div>
