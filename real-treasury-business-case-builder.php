@@ -1417,7 +1417,7 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 			$required_sections = [
 				'executive_summary',
 				'company_intelligence',
-				'industry_insights',
+				'financial_benchmarks',
 				'operational_insights',
 				'risk_analysis',
 				'technology_strategy',
