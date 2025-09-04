@@ -2462,9 +2462,6 @@ $html = rtbcb_sanitize_report_html( $html );
                        return array_map( 'wp_kses_post', $data['operational_insights'] );
                }
 
-               if ( ! empty( $data['operational_analysis'] ) && is_array( $data['operational_analysis'] ) ) {
-                       return array_map( 'wp_kses_post', $data['operational_analysis'] );
-               }
 
 		$insights    = [];
 		$pain_points = (array) ( $data['pain_points'] ?? [] );
@@ -2489,7 +2486,8 @@ $html = rtbcb_sanitize_report_html( $html );
 			);
 		}
 
-		return $insights ?: [ __( 'Treasury operations show opportunities for process optimization and technology enhancement', 'rtbcb' ) ];
+		$insights = $insights ?: [ __( 'Treasury operations show opportunities for process optimization and technology enhancement', 'rtbcb' ) ];
+		return array_map( 'wp_kses_post', $insights );
 	}
 
 	/**
