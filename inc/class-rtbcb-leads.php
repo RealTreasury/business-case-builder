@@ -53,6 +53,7 @@ class RTBCB_Leads {
                         roi_high decimal(12,2) DEFAULT 0,
                         report_html longtext DEFAULT '',
                         api_response longtext DEFAULT '',
+                        form_data longtext DEFAULT '',
                         ip_address varchar(45) DEFAULT '',
                         user_agent text DEFAULT '',
                         utm_source varchar(100) DEFAULT '',
@@ -108,6 +109,7 @@ class RTBCB_Leads {
                                         roi_high decimal(12,2) DEFAULT 0,
                                         report_html text DEFAULT '',
                                         api_response longtext DEFAULT '',
+                                        form_data longtext DEFAULT '',
                                         ip_address varchar(45) DEFAULT '',
                                         user_agent text DEFAULT '',
                                         utm_source varchar(100) DEFAULT '',
@@ -317,8 +319,9 @@ class RTBCB_Leads {
 			'roi_low'                 => floatval( $lead_data['roi_low'] ?? 0 ),
 			'roi_base'                => floatval( $lead_data['roi_base'] ?? 0 ),
 			'roi_high'                => floatval( $lead_data['roi_high'] ?? 0 ),
-			'report_html'             => wp_kses_post( $lead_data['report_html'] ?? '' ),
-			'ip_address'              => self::get_client_ip(),
+                       'report_html'             => wp_kses_post( $lead_data['report_html'] ?? '' ),
+                       'form_data'              => maybe_serialize( $lead_data['form_data'] ?? [] ),
+                       'ip_address'              => self::get_client_ip(),
 			'user_agent'              => sanitize_text_field( $_SERVER['HTTP_USER_AGENT'] ?? '' ),
 			'utm_source'              => sanitize_text_field( $_GET['utm_source'] ?? '' ),
 			'utm_medium'              => sanitize_text_field( $_GET['utm_medium'] ?? '' ),
@@ -343,10 +346,11 @@ class RTBCB_Leads {
 			'%s', // recommended_category
 			'%f', // roi_low
 			'%f', // roi_base
-			'%f', // roi_high
-			'%s', // report_html
-			'%s', // ip_address
-			'%s', // user_agent
+                       '%f', // roi_high
+                       '%s', // report_html
+                       '%s', // form_data
+                       '%s', // ip_address
+                       '%s', // user_agent
 			'%s', // utm_source
 			'%s', // utm_medium
 			'%s', // utm_campaign

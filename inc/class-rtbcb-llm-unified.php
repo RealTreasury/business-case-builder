@@ -243,7 +243,7 @@ class RTBCB_LLM_Unified {
 	* @return array|WP_Error Simplified analysis array or error object.
 	*/
 	public function generate_business_case( $user_inputs, $roi_data, $context_chunks = [], $model = null ) {
-	       $inputs = [
+               $inputs = [
                        'company_name'           => sanitize_text_field( $user_inputs['company_name'] ?? '' ),
                        'company_size'           => sanitize_text_field( $user_inputs['company_size'] ?? '' ),
                        'industry'               => '',
@@ -253,6 +253,24 @@ class RTBCB_LLM_Unified {
                        'ftes'                   => floatval( $user_inputs['ftes'] ?? 0 ),
                        'pain_points'            => array_map( 'sanitize_text_field', (array) ( $user_inputs['pain_points'] ?? [] ) ),
                        'email'                  => sanitize_email( $user_inputs['email'] ?? '' ),
+                       'num_entities'           => intval( $user_inputs['num_entities'] ?? 0 ),
+                       'num_currencies'         => intval( $user_inputs['num_currencies'] ?? 0 ),
+                       'treasury_automation'    => sanitize_text_field( $user_inputs['treasury_automation'] ?? '' ),
+                       'primary_systems'        => array_map( 'sanitize_text_field', (array) ( $user_inputs['primary_systems'] ?? [] ) ),
+                       'bank_import_frequency'  => sanitize_text_field( $user_inputs['bank_import_frequency'] ?? '' ),
+                       'reporting_cadence'      => sanitize_text_field( $user_inputs['reporting_cadence'] ?? '' ),
+                       'annual_payment_volume'  => intval( $user_inputs['annual_payment_volume'] ?? 0 ),
+                       'payment_approval_workflow' => sanitize_text_field( $user_inputs['payment_approval_workflow'] ?? '' ),
+                       'reconciliation_method'  => sanitize_text_field( $user_inputs['reconciliation_method'] ?? '' ),
+                       'cash_update_frequency'  => sanitize_text_field( $user_inputs['cash_update_frequency'] ?? '' ),
+                       'reg_reporting'          => array_map( 'sanitize_text_field', (array) ( $user_inputs['reg_reporting'] ?? [] ) ),
+                       'integration_requirements' => array_map( 'sanitize_text_field', (array) ( $user_inputs['integration_requirements'] ?? [] ) ),
+                       'forecast_horizon'       => sanitize_text_field( $user_inputs['forecast_horizon'] ?? '' ),
+                       'fx_management'          => sanitize_text_field( $user_inputs['fx_management'] ?? '' ),
+                       'investment_activities'  => array_map( 'sanitize_text_field', (array) ( $user_inputs['investment_activities'] ?? [] ) ),
+                       'intercompany_lending'   => sanitize_text_field( $user_inputs['intercompany_lending'] ?? '' ),
+                       'treasury_kpis'          => array_map( 'sanitize_text_field', (array) ( $user_inputs['treasury_kpis'] ?? [] ) ),
+                       'audit_trail'            => sanitize_text_field( $user_inputs['audit_trail'] ?? '' ),
                ];
 
                $company          = function_exists( 'rtbcb_get_current_company' ) ? rtbcb_get_current_company() : [];
@@ -276,6 +294,23 @@ class RTBCB_LLM_Unified {
                }
 
                $prompt .= '\nSize: ' . $inputs['company_size']
+                        . '\nEntities: ' . $inputs['num_entities']
+                        . '\nCurrencies: ' . $inputs['num_currencies']
+                        . '\nAutomation: ' . $inputs['treasury_automation']
+                        . '\nSystems: ' . implode( ', ', $inputs['primary_systems'] )
+                        . '\nBank Imports: ' . $inputs['bank_import_frequency']
+                        . '\nReporting: ' . $inputs['reporting_cadence']
+                        . '\nAnnual Payments: ' . $inputs['annual_payment_volume']
+                        . '\nApproval Workflow: ' . $inputs['payment_approval_workflow']
+                        . '\nReconciliation: ' . $inputs['reconciliation_method']
+                        . '\nCash Updates: ' . $inputs['cash_update_frequency']
+                        . '\nIntegrations: ' . implode( ', ', $inputs['integration_requirements'] )
+                        . '\nForecast Horizon: ' . $inputs['forecast_horizon']
+                        . '\nFX Management: ' . $inputs['fx_management']
+                        . '\nInvestments: ' . implode( ', ', $inputs['investment_activities'] )
+                        . '\nIntercompany: ' . $inputs['intercompany_lending']
+                        . '\nKPIs: ' . implode( ', ', $inputs['treasury_kpis'] )
+                        . '\nAudit Trail: ' . $inputs['audit_trail']
                         . '\nPain Points: ' . implode( ', ', $inputs['pain_points'] );
 
 		if ( ! empty( $context_chunks ) ) {

@@ -961,6 +961,10 @@ html {
     box-sizing: border-box;
 }
 
+.rtbcb-form select[multiple] {
+min-height: 120px;
+}
+
 
 .rtbcb-form input:focus,
 .rtbcb-form select:focus {
