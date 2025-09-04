@@ -2462,8 +2462,7 @@ PROMPT;
 'operational_insights' => [
 'current_state_assessment' => array_map(
 'sanitize_textarea_field',
-(array) ( $analysis_data['operational_insights']['current_state_assessment'] ??
-( $analysis_data['operational_analysis']['current_state_assessment'] ?? [] ) )
+(array) ( $analysis_data['operational_insights']['current_state_assessment'] ?? [] )
 ),
 'process_improvements'     => [],
 'automation_opportunities' => [],
@@ -2494,11 +2493,11 @@ PROMPT;
 	'vendor_considerations'  => is_array( $analysis_data['technology_strategy']['vendor_considerations'] ?? null ) ? array_map( 'sanitize_text_field', $analysis_data['technology_strategy']['vendor_considerations'] ) : [],
 	],
 	'implementation_roadmap' => [],
-	'risk_analysis' => [
-		'implementation_risks'  => array_map( 'sanitize_text_field', (array) ( $analysis_data['risk_analysis']['implementation_risks'] ?? $analysis_data['risk_mitigation']['implementation_risks'] ?? [] ) ),
-		'mitigation_strategies' => array_map( 'sanitize_text_field', (array) ( $analysis_data['risk_analysis']['mitigation_strategies'] ?? $analysis_data['risk_mitigation']['mitigation_strategies'] ?? [] ) ),
-		'success_factors'      => array_map( 'sanitize_text_field', (array) ( $analysis_data['risk_analysis']['success_factors'] ?? $analysis_data['risk_mitigation']['success_factors'] ?? [] ) ),
-		],
+'risk_analysis' => [
+'implementation_risks'  => array_map( 'sanitize_text_field', (array) ( $analysis_data['risk_analysis']['implementation_risks'] ?? [] ) ),
+'mitigation_strategies' => array_map( 'sanitize_text_field', (array) ( $analysis_data['risk_analysis']['mitigation_strategies'] ?? [] ) ),
+'success_factors'      => array_map( 'sanitize_text_field', (array) ( $analysis_data['risk_analysis']['success_factors'] ?? [] ) ),
+],
 	'action_plan' => [
 		'immediate_steps'       => array_map( 'sanitize_text_field', (array) ( $analysis_data['action_plan']['immediate_steps'] ?? $analysis_data['next_steps']['immediate'] ?? [] ) ),
 		'short_term_milestones' => array_map( 'sanitize_text_field', (array) ( $analysis_data['action_plan']['short_term_milestones'] ?? $analysis_data['next_steps']['short_term'] ?? [] ) ),
@@ -2532,7 +2531,7 @@ PROMPT;
 ];
 }
 
-foreach ( (array) ( $analysis_data['operational_insights']['process_improvements'] ?? $analysis_data['operational_analysis']['process_improvements'] ?? [] ) as $item ) {
+foreach ( (array) ( $analysis_data['operational_insights']['process_improvements'] ?? [] ) as $item ) {
 $analysis['operational_insights']['process_improvements'][] = [
 'process_area'   => sanitize_text_field( $item['process'] ?? ( $item['process_area'] ?? '' ) ),
 'current_state'  => sanitize_textarea_field( $item['current_state'] ?? '' ),
@@ -2541,7 +2540,7 @@ $analysis['operational_insights']['process_improvements'][] = [
 ];
 }
 
-foreach ( (array) ( $analysis_data['operational_insights']['automation_opportunities'] ?? $analysis_data['operational_analysis']['automation_opportunities'] ?? [] ) as $item ) {
+foreach ( (array) ( $analysis_data['operational_insights']['automation_opportunities'] ?? [] ) as $item ) {
 $analysis['operational_insights']['automation_opportunities'][] = [
 'opportunity'          => sanitize_text_field( $item['opportunity'] ?? '' ),
 'complexity'           => sanitize_text_field( $item['complexity'] ?? '' ),
