@@ -18,7 +18,7 @@ global.require = originalRequire;
 const renderOperationalAnalysis = BusinessCaseBuilder.prototype.renderOperationalAnalysis;
 const context = { escapeHTML: (s) => s };
 const html = renderOperationalAnalysis.call(context, {
-current_state_assessment: 'Assessment',
+current_state_assessment: ['Assessment'],
 process_improvements: [
 {
 process: 'Reconciliation',
@@ -36,6 +36,7 @@ savings: '10 hours',
 ],
 });
 
+assert.ok(html.includes('<li>Assessment</li>'), 'Assessment missing');
 assert.ok(html.includes('Reconciliation'), 'Process name missing');
 assert.ok(html.includes('Manual'), 'Current state missing');
 assert.ok(html.includes('Automated'), 'Improved state missing');

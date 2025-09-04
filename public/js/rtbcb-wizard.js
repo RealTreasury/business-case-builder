@@ -1724,14 +1724,17 @@ ${this.renderIndustryInsights(industryContext)}
 
     renderOperationalAnalysis(analysis = {}) {
         const {
-            current_state_assessment = '',
+            current_state_assessment = [],
             process_improvements = [],
             automation_opportunities = []
         } = analysis || {};
 
         const hasProcess = Object.prototype.hasOwnProperty.call(analysis, 'process_improvements');
         const hasAutomation = Object.prototype.hasOwnProperty.call(analysis, 'automation_opportunities');
-        if ( ! current_state_assessment && ! hasProcess && ! hasAutomation ) {
+        const hasCurrent = Array.isArray( current_state_assessment )
+            ? current_state_assessment.some( item => item )
+            : !! current_state_assessment;
+        if ( ! hasCurrent && ! hasProcess && ! hasAutomation ) {
             return '';
         }
 
@@ -1741,6 +1744,17 @@ ${this.renderIndustryInsights(industryContext)}
             }
             return item;
         } ) : [] );
+
+        const renderCurrentState = items => {
+            if ( Array.isArray( items ) ) {
+                const valid = sanitizeItems( items );
+                if ( ! valid.length ) {
+                    return `<p>${this.escapeHTML( __('No data provided') )}</p>`;
+                }
+                return `<ul>${valid.map( item => `<li>${this.escapeHTML( item )}</li>` ).join( '' )}</ul>`;
+            }
+            return `<p>${this.escapeHTML( items )}</p>`;
+        };
 
         const renderProcessImprovements = items => {
             const valid = sanitizeItems( items );
@@ -1790,6 +1804,7 @@ ${this.renderIndustryInsights(industryContext)}
             } ).join( '' );
         };
 
+        const currentSection = hasCurrent ? renderCurrentState( current_state_assessment ) : '';
         const processSection = hasProcess
             ? `<div class="rtbcb-industry-group"><h4>Process Improvements</h4><ul>${renderProcessImprovements( process_improvements )}</ul></div>`
             : '';
@@ -1800,7 +1815,7 @@ ${this.renderIndustryInsights(industryContext)}
         return `
             <div class="rtbcb-operational-analysis">
                 <h3>Operational Analysis</h3>
-                ${current_state_assessment ? `<p>${this.escapeHTML( current_state_assessment )}</p>` : ''}
+                ${currentSection}
                 ${processSection}
                 ${automationSection}
             </div>
