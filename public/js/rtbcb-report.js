@@ -337,21 +337,22 @@ function initializeSectionToggles(doc = document) {
                     }, 300);
                 }
                 
-                // Update toggle button
+                // Update toggle button and state based on new visibility
+                const nowVisible = !isVisible;
                 if (arrow) {
-                    arrow.textContent = isVisible ? '▼' : '▲';
+                    arrow.textContent = nowVisible ? '▲' : '▼';
                 }
                 if (text) {
-                    text.textContent = isVisible ? 'Expand' : 'Collapse';
+                    text.textContent = nowVisible ? 'Collapse' : 'Expand';
                 }
-                
+
                 // Update section state
                 if (section) {
-                    section.classList.toggle('collapsed', isVisible);
+                    section.classList.toggle('collapsed', !nowVisible);
                 }
-                
+
                 // Track analytics
-                trackSectionToggle(targetId, !isVisible);
+                trackSectionToggle(targetId, nowVisible);
             }
         });
     });
