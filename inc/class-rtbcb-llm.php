@@ -230,9 +230,9 @@ $parsed = $this->response_parser->parse( $response );
 				'key_value_drivers'       => array_map( 'sanitize_text_field', $json['executive_summary']['key_value_drivers'] ?? [] ),
 				'executive_recommendation'=> sanitize_text_field( $json['executive_summary']['executive_recommendation'] ?? '' ),
 			],
-	               'operational_insights' => [
-	                       'current_state_assessment' => sanitize_text_field( $json['operational_insights']['current_state_assessment'] ?? ( $json['operational_analysis']['current_state_assessment'] ?? '' ) ),
-	               ],
+                      'operational_insights' => [
+                              'current_state_assessment' => sanitize_text_field( $json['operational_insights']['current_state_assessment'] ?? '' ),
+                      ],
 			'industry_insights'   => [
 				'sector_trends'          => sanitize_text_field( $json['industry_insights']['sector_trends'] ?? '' ),
 				'competitive_benchmarks' => sanitize_text_field( $json['industry_insights']['competitive_benchmarks'] ?? '' ),
