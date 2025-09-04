@@ -127,6 +127,7 @@ node tests/min-output-tokens.test.js
 node tests/gpt5-config-defaults.test.js
 node tests/api-logs-page.test.js
 node tests/wizard-report-flow.test.js
+node tests/wizard-basic-flow.test.js
 node tests/operational-insights-render.test.js
 node tests/progress-cancel-button.test.js
 npx --yes jest tests/poll-job-completed.test.js --config '{"testEnvironment":"node"}'
