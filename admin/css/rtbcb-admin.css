@@ -551,3 +551,26 @@ html {
 	border-bottom-color: #7216f4;
 	color: #7216f4;
 }
+
+.rtbcb-wizard-prompts {
+	background: #fff;
+	padding: 20px;
+	border-radius: 8px;
+	margin-top: 20px;
+}
+
+.rtbcb-wizard-prompts-columns {
+	display: flex;
+	gap: 30px;
+}
+
+.rtbcb-wizard-section {
+	flex: 1;
+}
+
+.rtbcb-prompt-structure pre {
+	background: #f8f9ff;
+	padding: 10px;
+	border-radius: 4px;
+	overflow: auto;
+}

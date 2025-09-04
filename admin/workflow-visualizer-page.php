@@ -8,8 +8,72 @@ defined( 'ABSPATH' ) || exit;
  */
 
 if ( ! current_user_can( 'manage_options' ) ) {
-	return;
+        return;
 }
+
+$rtbcb_wizard_questions = [
+	[
+		'title'  => __( 'Company', 'rtbcb' ),
+		'fields' => [
+			__( 'Company Name', 'rtbcb' ),
+			__( 'Company Size (Annual Revenue)', 'rtbcb' ),
+			__( 'Industry', 'rtbcb' ),
+			__( 'Your Role (Optional)', 'rtbcb' ),
+		],
+	],
+	[
+		'title'  => __( 'Operations', 'rtbcb' ),
+		'fields' => [
+			__( 'Weekly Hours: Bank Reconciliation', 'rtbcb' ),
+			__( 'Weekly Hours: Cash Positioning', 'rtbcb' ),
+			__( 'Number of Banking Relationships', 'rtbcb' ),
+			__( 'Treasury Team Size (FTEs)', 'rtbcb' ),
+		],
+	],
+	[
+		'title'  => __( 'Challenges', 'rtbcb' ),
+		'fields' => [
+			__( 'Manual Processes', 'rtbcb' ),
+			__( 'Poor Visibility', 'rtbcb' ),
+			__( 'Forecast Accuracy', 'rtbcb' ),
+			__( 'Compliance Risk', 'rtbcb' ),
+			__( 'Bank Fees', 'rtbcb' ),
+			__( 'System Integration', 'rtbcb' ),
+		],
+	],
+	[
+		'title'  => __( 'Strategy', 'rtbcb' ),
+		'fields' => [
+			__( 'Current Treasury Technology', 'rtbcb' ),
+			__( 'Primary Business Objective', 'rtbcb' ),
+			__( 'Implementation Timeline', 'rtbcb' ),
+			__( 'Decision Makers', 'rtbcb' ),
+			__( 'Budget Range', 'rtbcb' ),
+		],
+	],
+	[
+		'title'  => __( 'Contact', 'rtbcb' ),
+		'fields' => [
+			__( 'Business Email Address', 'rtbcb' ),
+			__( 'Consent', 'rtbcb' ),
+			__( 'Report Type', 'rtbcb' ),
+		],
+	],
+];
+$rtbcb_prompt_structures = [
+	[
+		'title'  => __( 'Company Enrichment', 'rtbcb' ),
+		'format' => "{\n\t\"company_profile\": { ... },\n\t\"industry_context\": { ... },\n\t\"strategic_insights\": [ ... ],\n\t\"enrichment_metadata\": { ... }\n}",
+	],
+	[
+		'title'  => __( 'Benefits Estimate', 'rtbcb' ),
+		'format' => "{\n\t\"time_savings_hours\": number,\n\t\"cost_reduction_usd\": number,\n\t\"efficiency_gain_percent\": number,\n\t\"roi_percent\": number,\n\t\"roi_timeline_months\": number,\n\t\"risk_mitigation\": string,\n\t\"productivity_gain_percent\": number\n}",
+	],
+	[
+		'title'  => __( 'Implementation Roadmap', 'rtbcb' ),
+		'format' => "{\n\t\"roadmap\": [ ... ],\n\t\"success_factors\": [ ... ]\n}",
+	],
+];
 
 ?>
 <div class="wrap rtbcb-workflow-visualizer">
@@ -136,7 +200,36 @@ if ( ! current_user_can( 'manage_options' ) ) {
 <div class="rtbcb-loading"><?php echo esc_html__( 'Loading workflow history...', 'rtbcb' ); ?></div>
 </div>
 </div>
-
+<!-- Wizard Questions and Prompts -->
+<div class="rtbcb-wizard-prompts">
+	<h2><?php echo esc_html__( 'Wizard Questions & Prompt Structure', 'rtbcb' ); ?></h2>
+	<div class="rtbcb-wizard-prompts-columns">
+		<div class="rtbcb-wizard-section">
+			<h3><?php echo esc_html__( 'Wizard Questions', 'rtbcb' ); ?></h3>
+			<ol>
+				<?php foreach ( $rtbcb_wizard_questions as $section ) : ?>
+				<li>
+				<strong><?php echo esc_html( $section['title'] ); ?></strong>
+				<ul>
+					<?php foreach ( $section['fields'] as $field ) : ?>
+					<li><?php echo esc_html( $field ); ?></li>
+					<?php endforeach; ?>
+				</ul>
+			</li>
+			<?php endforeach; ?>
+		</ol>
+	</div>
+	<div class="rtbcb-wizard-section">
+		<h3><?php echo esc_html__( 'Prompt Structures', 'rtbcb' ); ?></h3>
+		<?php foreach ( $rtbcb_prompt_structures as $prompt ) : ?>
+		<div class="rtbcb-prompt-structure">
+			<h4><?php echo esc_html( $prompt['title'] ); ?></h4>
+			<pre><?php echo esc_html( $prompt['format'] ); ?></pre>
+		</div>
+		<?php endforeach; ?>
+	</div>
+</div>
+</div>
 <!-- Debug Interface -->
 <div class="rtbcb-debug-interface" style="display: none;">
 <h2><?php echo esc_html__( 'Debug Information', 'rtbcb' ); ?></h2>
