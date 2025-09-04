@@ -611,11 +611,30 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 		$automation_opportunities = [ __( 'No data provided', 'rtbcb' ) ];
 	}
 
-	$risk_analysis        = (array) ( $final_analysis['risk_analysis'] ?? $final_analysis['risk_mitigation'] ?? [] );
-	$implementation_risks = (array) ( $risk_analysis['implementation_risks'] ?? [] );
-	if ( empty( $implementation_risks ) ) {
-		$implementation_risks = [ __( 'No data provided', 'rtbcb' ) ];
-	}
+$risk_analysis   = (array) ( $final_analysis['risk_analysis'] ?? $final_analysis['risk_mitigation'] ?? [] );
+$risk_matrix_raw = (array) ( $risk_analysis['risk_matrix'] ?? [] );
+$risk_matrix     = array_map(
+function( $risk ) {
+return [
+'risk'       => sanitize_text_field( $risk['risk'] ?? '' ),
+'likelihood' => sanitize_text_field( $risk['likelihood'] ?? '' ),
+'impact'     => sanitize_text_field( $risk['impact'] ?? '' ),
+];
+},
+$risk_matrix_raw
+);
+$implementation_risks = (array) ( $risk_analysis['implementation_risks'] ?? [] );
+if ( empty( $implementation_risks ) && ! empty( $risk_matrix ) ) {
+foreach ( $risk_matrix as $risk ) {
+$parts = array_filter( $risk );
+if ( $parts ) {
+$implementation_risks[] = implode( ' - ', $parts );
+}
+}
+}
+if ( empty( $implementation_risks ) ) {
+$implementation_risks = [ __( 'No data provided', 'rtbcb' ) ];
+}
 	$action_plan = (array) ( $final_analysis['action_plan'] ?? [] );
 		$immediate_steps = (array) ( $action_plan['immediate_steps'] ?? ( $final_analysis['next_steps']['immediate'] ?? [] ) );
 		if ( empty( $immediate_steps ) ) {
@@ -709,11 +728,12 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 				                                        'process_improvements'     => $process_improvements,
 				                                        'automation_opportunities' => $automation_opportunities,
 				        ],
-				        'risk_analysis' => [
-				                                        'implementation_risks' => $implementation_risks,
-				                                       'mitigation_strategies' => (array) ( is_array( $risk_analysis['mitigation_strategies'] ?? null ) ? $risk_analysis['mitigation_strategies'] : [] ),
-				                                       'success_factors'      => (array) ( is_array( $risk_analysis['success_factors'] ?? null ) ? $risk_analysis['success_factors'] : [] ),
-				        ],
+'risk_analysis' => [
+'implementation_risks' => $implementation_risks,
+'mitigation_strategies' => (array) ( is_array( $risk_analysis['mitigation_strategies'] ?? null ) ? $risk_analysis['mitigation_strategies'] : [] ),
+'success_factors'      => (array) ( is_array( $risk_analysis['success_factors'] ?? null ) ? $risk_analysis['success_factors'] : [] ),
+'risk_matrix'          => $risk_matrix,
+],
 				        'action_plan' => [
 				                'immediate_steps'       => $immediate_steps,
 				                'short_term_milestones' => $short_term_milestones,

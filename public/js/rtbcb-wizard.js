@@ -1605,7 +1605,7 @@ class BusinessCaseBuilder {
                 ...(data.action_plan?.short_term_milestones || []),
                 ...(data.action_plan?.long_term_objectives || [])
             ],
-            risks: data.risks || data.risk_analysis?.implementation_risks || []
+risks: data.risks || data.risk_analysis?.implementation_risks || data.risk_analysis?.risk_matrix || []
         };
 
         // Close modal
@@ -1918,16 +1918,17 @@ ${upcoming_changes.length ? `<div class="rtbcb-industry-group"><h4>Upcoming Chan
         if (!list) return;
 
         list.innerHTML = '';
-        (risks || []).forEach(risk => {
-            const item = document.createElement('li');
-            if (risk && typeof risk === 'object') {
-                const values = Object.values(risk).filter(Boolean);
-                item.textContent = values.join(' - ');
-            } else if (risk != null) {
-                item.textContent = String(risk);
-            }
-            list.appendChild(item);
-        });
+(risks || []).forEach(risk => {
+const item = document.createElement('li');
+if (risk && typeof risk === 'object') {
+const { risk: label, likelihood, impact } = risk;
+const values = [label, likelihood, impact].filter(Boolean);
+item.textContent = values.join(' - ');
+} else if (risk != null) {
+item.textContent = String(risk);
+}
+list.appendChild(item);
+});
     }
 
     renderNextSteps(steps) {

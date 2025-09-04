@@ -2372,9 +2372,33 @@ function rtbcb_transform_data_for_template( $business_case_data ) {
 			];
 	}
 
- // Prepare risk analysis.
+// Prepare risk analysis.
+$risk_matrix = [];
+if ( ! empty( $business_case_data['risk_analysis']['risk_matrix'] ) ) {
+$risk_matrix = array_map(
+function( $risk ) {
+return [
+'risk'       => sanitize_text_field( $risk['risk'] ?? '' ),
+'likelihood' => sanitize_text_field( $risk['likelihood'] ?? '' ),
+'impact'     => sanitize_text_field( $risk['impact'] ?? '' ),
+];
+},
+(array) $business_case_data['risk_analysis']['risk_matrix']
+);
+}
+
 if ( ! empty( $business_case_data['risk_analysis']['implementation_risks'] ) ) {
 $implementation_risks = array_map( 'sanitize_text_field', (array) $business_case_data['risk_analysis']['implementation_risks'] );
+} elseif ( ! empty( $risk_matrix ) ) {
+$implementation_risks = array_filter(
+array_map(
+function( $risk ) {
+$parts = array_filter( $risk );
+return $parts ? implode( ' - ', $parts ) : '';
+},
+$risk_matrix
+)
+);
 } elseif ( ! empty( $business_case_data['risks'] ) ) {
 $implementation_risks = array_map( 'sanitize_text_field', (array) $business_case_data['risks'] );
 } else {
@@ -2438,11 +2462,12 @@ $success_factors = array_map( 'sanitize_text_field', (array) $business_case_data
                                 'vendor_considerations' => rtbcb_sanitize_recursive( $business_case_data['technology_strategy']['vendor_considerations'] ?? $business_case_data['vendor_considerations'] ?? [] ),
                         ],
                         'operational_insights' => $operational_insights,
-                          'risk_analysis'        => [
-                                'implementation_risks' => $implementation_risks,
-                                'mitigation_strategies' => $mitigation_strategies,
-                                'success_factors'      => $success_factors,
-                          ],
+'risk_analysis'        => [
+'implementation_risks' => $implementation_risks,
+'mitigation_strategies' => $mitigation_strategies,
+'success_factors'      => $success_factors,
+'risk_matrix'          => $risk_matrix,
+],
                         'action_plan'          => $action_plan,
                         'financial_benchmarks' => $financial_benchmarks,
                         'rag_context'          => $rag_context,
