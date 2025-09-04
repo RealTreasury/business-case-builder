@@ -2334,11 +2334,12 @@ wp_localize_script(
 				}
 
 				$report_data = $dummy_data['report_data'];
+				$is_preview  = true;
 
 				try {
-						ob_start();
-						include $comprehensive_template;
-						$html = ob_get_clean();
+					ob_start();
+					include $comprehensive_template;
+					$html = ob_get_clean();
 
 						if ( false === $html ) {
 								return new WP_Error( 'template_render_failed', __( 'Failed to render template', 'rtbcb' ) );

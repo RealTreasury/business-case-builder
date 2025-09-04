@@ -3,12 +3,16 @@ defined( 'ABSPATH' ) || exit;
 
 // Add safety checks for all main variables.
 $report_data           = $report_data ?? [];
-array_walk_recursive(
-       $report_data,
-       function ( &$value, $key ) {
-               $value = '{{' . $key . '}}';
-       }
-);
+$is_preview            = $is_preview ?? false;
+
+if ( $is_preview ) {
+	array_walk_recursive(
+		$report_data,
+		function ( &$value, $key ) {
+			$value = '{{' . $key . '}}';
+		}
+		);
+}
 $metadata              = $report_data['metadata'] ?? [];
 $executive_summary     = $report_data['executive_summary'] ?? [];
 $company_intelligence  = $report_data['company_intelligence'] ?? [];
