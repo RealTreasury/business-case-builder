@@ -526,8 +526,16 @@ $final_analysis['financial_benchmarks'] ?? ( $final_analysis['research']['financ
  * @return array Structured report data.
  */
 private static function structure_report_data( $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, $rag_context, $chart_data, $request_start, $financial_benchmarks = array() ) {
-	$operational_insights     = (array) ( is_array( $final_analysis['operational_insights'] ?? null ) ? $final_analysis['operational_insights'] : [] );
-$current_state_assessment = (array) ( $operational_insights['current_state_assessment'] ?? [] );
+       $operational_raw      = $final_analysis['operational_insights'] ?? array();
+       $operational_message  = '';
+       if ( is_array( $operational_raw ) ) {
+               $operational_message = sanitize_text_field( $operational_raw['message'] ?? '' );
+               $operational_insights = $operational_raw;
+       } else {
+               $operational_message = sanitize_text_field( $operational_raw );
+               $operational_insights = array();
+       }
+       $current_state_assessment = (array) ( $operational_insights['current_state_assessment'] ?? array() );
 
 	$process_improvements_raw = (array) ( $operational_insights['process_improvements'] ?? [] );
 	$process_improvements     = array();
@@ -565,8 +573,8 @@ $current_state_assessment = (array) ( $operational_insights['current_state_asses
 	}
 // Keep empty array if no valid process improvements were provided.
 
-	$automation_opportunities_raw = (array) ( $operational_insights['automation_opportunities'] ?? [] );
-	$automation_opportunities     = array();
+       $automation_opportunities_raw = (array) ( $operational_insights['automation_opportunities'] ?? array() );
+       $automation_opportunities     = array();
 	foreach ( $automation_opportunities_raw as $item ) {
 		if ( is_array( $item ) ) {
 			$opportunity           = sanitize_text_field( $item['opportunity'] ?? '' );
@@ -604,8 +612,16 @@ $current_state_assessment = (array) ( $operational_insights['current_state_asses
 	}
 // Keep empty array if no automation opportunities were supplied.
 
-       $risk_analysis        = (array) ( is_array( $final_analysis['risk_analysis'] ?? null ) ? $final_analysis['risk_analysis'] : [] );
-       $risk_matrix_raw      = (array) ( $risk_analysis['risk_matrix'] ?? [] );
+       $risk_raw             = $final_analysis['risk_analysis'] ?? array();
+       $risk_message         = '';
+       if ( is_array( $risk_raw ) ) {
+               $risk_message = sanitize_text_field( $risk_raw['message'] ?? '' );
+               $risk_analysis = $risk_raw;
+       } else {
+               $risk_message = sanitize_text_field( $risk_raw );
+               $risk_analysis = array();
+       }
+       $risk_matrix_raw      = (array) ( $risk_analysis['risk_matrix'] ?? array() );
        $risk_matrix          = [];
        foreach ( $risk_matrix_raw as $risk_item ) {
                if ( is_array( $risk_item ) ) {
@@ -619,16 +635,24 @@ $current_state_assessment = (array) ( $operational_insights['current_state_asses
                        }
                }
        }
-       $implementation_risks = (array) ( $risk_analysis['implementation_risks'] ?? [] );
+       $implementation_risks = (array) ( $risk_analysis['implementation_risks'] ?? array() );
 // Leave implementation risks empty if not provided.
-       $action_plan             = (array) ( $final_analysis['action_plan'] ?? [] );
-       $immediate_steps_raw     = $action_plan['immediate_steps'] ?? ( $final_analysis['next_steps']['immediate'] ?? [] );
+       $action_raw            = $final_analysis['action_plan'] ?? array();
+       $action_message        = '';
+       if ( is_array( $action_raw ) ) {
+               $action_message = sanitize_text_field( $action_raw['message'] ?? '' );
+               $action_plan    = $action_raw;
+       } else {
+               $action_message = sanitize_text_field( $action_raw );
+               $action_plan    = array();
+       }
+       $immediate_steps_raw     = $action_plan['immediate_steps'] ?? ( $final_analysis['next_steps']['immediate'] ?? array() );
        $immediate_steps         = self::normalize_action_items( $immediate_steps_raw );
 // Leave immediate steps empty when none are available.
-       $short_term_raw          = $action_plan['short_term_milestones'] ?? ( $final_analysis['next_steps']['short_term'] ?? [] );
+       $short_term_raw          = $action_plan['short_term_milestones'] ?? ( $final_analysis['next_steps']['short_term'] ?? array() );
        $short_term_milestones   = self::normalize_action_items( $short_term_raw );
 // Leave short-term milestones empty when none are available.
-       $long_term_raw           = $action_plan['long_term_objectives'] ?? ( $final_analysis['next_steps']['long_term'] ?? [] );
+       $long_term_raw           = $action_plan['long_term_objectives'] ?? ( $final_analysis['next_steps']['long_term'] ?? array() );
        $long_term_objectives    = self::normalize_action_items( $long_term_raw );
 // Leave long-term objectives empty when none are available.
 
@@ -706,22 +730,25 @@ $current_state_assessment = (array) ( $operational_insights['current_state_asses
 'implementation_roadmap' => (array) ( is_array( $final_analysis['technology_strategy']['implementation_roadmap'] ?? null ) ? $final_analysis['technology_strategy']['implementation_roadmap'] : [] ),
 'vendor_considerations'=> (array) ( is_array( $final_analysis['technology_strategy']['vendor_considerations'] ?? null ) ? $final_analysis['technology_strategy']['vendor_considerations'] : [] ),
 ],
-				        'operational_insights' => [
-				                                        'current_state_assessment' => $current_state_assessment,
-				                                        'process_improvements'     => $process_improvements,
-				                                        'automation_opportunities' => $automation_opportunities,
-				        ],
-                                       'risk_analysis' => [
-                                                                       'risk_matrix'          => $risk_matrix,
-                                                                       'implementation_risks' => $implementation_risks,
-                                                                       'mitigation_strategies' => (array) ( is_array( $risk_analysis['mitigation_strategies'] ?? null ) ? $risk_analysis['mitigation_strategies'] : [] ),
-                                                                       'success_factors'      => (array) ( is_array( $risk_analysis['success_factors'] ?? null ) ? $risk_analysis['success_factors'] : [] ),
+                                       'operational_insights' => [
+                                                                       'current_state_assessment' => $current_state_assessment,
+                                                                       'process_improvements'     => $process_improvements,
+                                                                       'automation_opportunities' => $automation_opportunities,
+                                                                       'message'                  => $operational_message,
                                        ],
-				        'action_plan' => [
-				                'immediate_steps'       => $immediate_steps,
-				                'short_term_milestones' => $short_term_milestones,
-				                'long_term_objectives'  => $long_term_objectives,
-				        ],
+                                      'risk_analysis' => [
+                                                                      'risk_matrix'          => $risk_matrix,
+                                                                      'implementation_risks' => $implementation_risks,
+                                                                      'mitigation_strategies' => (array) ( is_array( $risk_analysis['mitigation_strategies'] ?? null ) ? $risk_analysis['mitigation_strategies'] : [] ),
+                                                                      'success_factors'      => (array) ( is_array( $risk_analysis['success_factors'] ?? null ) ? $risk_analysis['success_factors'] : [] ),
+                                                                      'message'              => $risk_message,
+                                      ],
+                                       'action_plan' => [
+                                               'immediate_steps'       => $immediate_steps,
+                                               'short_term_milestones' => $short_term_milestones,
+                                               'long_term_objectives'  => $long_term_objectives,
+                                               'message'               => $action_message,
+                                       ],
 		];
 	}
 
