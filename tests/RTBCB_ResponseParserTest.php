@@ -100,6 +100,26 @@ final class RTBCB_ResponseParserTest extends TestCase {
 				$result   = $parser->parse_business_case( $response );
 				$this->assertTrue( is_wp_error( $result ) );
 		}
+		public function test_parse_business_case_wrapped_analysis() {
+			$wrapped = [
+				'analysis' => [
+					'executive_summary'    => [],
+					'company_intelligence' => [],
+					'operational_insights' => [],
+					'risk_analysis'        => [],
+					'action_plan'          => [],
+					'industry_insights'    => [],
+					'technology_strategy'  => [],
+					'financial_analysis'   => [],
+				],
+			];
+			$response = [ 'body' => json_encode( [ 'output_text' => json_encode( $wrapped ) ] ) ];
+			$parser   = new RTBCB_Response_Parser();
+			$result   = $parser->parse_business_case( $response );
+			$this->assertIsArray( $result );
+			$this->assertArrayHasKey( 'executive_summary', $result );
+		}
+
 
 		public function test_parse_marks_truncated_output() {
 				$payload = [
