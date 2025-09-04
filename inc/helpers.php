@@ -1798,7 +1798,8 @@ function rtbcb_handle_openai_responses_job( $job_id, $user_id ) {
 
 	if ( is_wp_error( $response ) ) {
 				if ( class_exists( 'RTBCB_API_Log' ) ) {
-					RTBCB_API_Log::save_log( $body_array, [ 'error' => $response->get_error_message() ], $user_id, $user_email, $company_name );
+                                        $model = $body_array['model'] ?? '';
+                                        RTBCB_API_Log::save_log( $body_array, [ 'error' => $response->get_error_message() ], $user_id, $user_email, $company_name, 0, $model );
 				}
 		set_transient(
 			'rtbcb_openai_job_' . $job_id,
@@ -1819,7 +1820,8 @@ function rtbcb_handle_openai_responses_job( $job_id, $user_id ) {
 	}
 
 		if ( class_exists( 'RTBCB_API_Log' ) ) {
-				RTBCB_API_Log::save_log( $body_array, $decoded, $user_id, $user_email, $company_name );
+                                $model = $body_array['model'] ?? '';
+                                RTBCB_API_Log::save_log( $body_array, $decoded, $user_id, $user_email, $company_name, 0, $model );
 		}
 
 	set_transient(

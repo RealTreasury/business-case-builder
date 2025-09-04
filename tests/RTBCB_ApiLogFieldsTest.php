@@ -41,12 +41,13 @@ final class RTBCB_ApiLogFieldsTest extends TestCase {
                         'company_name' => 'Example Co',
                 ];
 
-                RTBCB_API_Log::save_log( $request, [], 1, '', '', 7 );
+               RTBCB_API_Log::save_log( $request, [], 1, '', '', 7, 'gpt-5' );
 
                 $this->assertNotEmpty( $wpdb->rows );
                 $row = $wpdb->rows[0];
                 $this->assertSame( 'user@example.com', $row['user_email'] );
                 $this->assertSame( 'Example Co', $row['company_name'] );
-                $this->assertSame( 7, $row['lead_id'] );
+               $this->assertSame( 7, $row['lead_id'] );
+               $this->assertSame( 'gpt-5', $row['llm_model'] );
         }
 }

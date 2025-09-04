@@ -95,7 +95,8 @@ $user_id      = function_exists( 'get_current_user_id' ) ? get_current_user_id()
 $user_email   = $request['email'] ?? '';
 $company_name = $request['company_name'] ?? '';
 
-RTBCB_API_Log::save_log( $request, $response, $user_id, $user_email, $company_name );
+       $model = $request['model'] ?? '';
+       RTBCB_API_Log::save_log( $request, $response, $user_id, $user_email, $company_name, 0, $model );
 }
 
 /**

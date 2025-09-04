@@ -27,14 +27,15 @@ if ( ! current_user_can( 'manage_options' ) ) {
                                        <th><?php esc_html_e( 'ID', 'rtbcb' ); ?></th>
                                        <th><?php esc_html_e( 'Lead ID', 'rtbcb' ); ?></th>
                                        <th><?php esc_html_e( 'Email', 'rtbcb' ); ?></th>
-                                        <th><?php esc_html_e( 'Company Name', 'rtbcb' ); ?></th>
-                                        <th><?php esc_html_e( 'Request', 'rtbcb' ); ?></th>
-                                        <th><?php esc_html_e( 'Prompt Tokens', 'rtbcb' ); ?></th>
-                                        <th><?php esc_html_e( 'Completion Tokens', 'rtbcb' ); ?></th>
-                                        <th><?php esc_html_e( 'Tokens', 'rtbcb' ); ?></th>
-                                        <th><?php esc_html_e( 'Status', 'rtbcb' ); ?></th>
-                                        <th><?php esc_html_e( 'Timestamp', 'rtbcb' ); ?></th>
-                                        <th><?php esc_html_e( 'Actions', 'rtbcb' ); ?></th>
+                                       <th><?php esc_html_e( 'Company Name', 'rtbcb' ); ?></th>
+                                       <th><?php esc_html_e( 'Model', 'rtbcb' ); ?></th>
+                                       <th><?php esc_html_e( 'Request', 'rtbcb' ); ?></th>
+                                       <th><?php esc_html_e( 'Prompt Tokens', 'rtbcb' ); ?></th>
+                                       <th><?php esc_html_e( 'Completion Tokens', 'rtbcb' ); ?></th>
+                                       <th><?php esc_html_e( 'Tokens', 'rtbcb' ); ?></th>
+                                       <th><?php esc_html_e( 'Status', 'rtbcb' ); ?></th>
+                                       <th><?php esc_html_e( 'Timestamp', 'rtbcb' ); ?></th>
+                                       <th><?php esc_html_e( 'Actions', 'rtbcb' ); ?></th>
                                 </tr>
                         </thead>
                         <tbody>
@@ -59,8 +60,9 @@ if ( ! current_user_can( 'manage_options' ) ) {
 	                                       <td><?php echo esc_html( $log['id'] ); ?></td>
 	                                       <td><?php echo esc_html( $log['lead_id'] ); ?></td>
 	                                       <td><?php echo esc_html( $log['user_email'] ); ?></td>
-						<td><?php echo esc_html( $log['company_name'] ); ?></td>
-						<td><?php echo esc_html( $summary ); ?></td>
+                                               <td><?php echo esc_html( $log['company_name'] ); ?></td>
+                                               <td><?php echo esc_html( $log['llm_model'] ); ?></td>
+                                               <td><?php echo esc_html( $summary ); ?></td>
                                                <td><?php echo esc_html( $log['prompt_tokens'] ); ?></td>
                                                <td><?php echo esc_html( $log['completion_tokens'] ); ?></td>
                                                <td><?php echo esc_html( $log['total_tokens'] ); ?></td>
@@ -90,28 +92,29 @@ if ( ! current_user_can( 'manage_options' ) ) {
 </div>
 <script type="text/javascript">
         jQuery(function($){
-var table = $('#rtbcb-api-logs-table').DataTable({
-pageLength: 20,
-order: [[0, 'desc']],
-scrollX: true,
-autoWidth: false,
-language: {
-emptyTable: '<?php echo esc_js( __( 'No logs found.', 'rtbcb' ) ); ?>'
-},
-columns: [
-null,
-null,
-null,
-null,
-null,
-null,
-null,
-null,
-null,
-null,
-{ orderable: false }
-]
-});
+        var table = $('#rtbcb-api-logs-table').DataTable({
+        pageLength: 20,
+        order: [[0, 'desc']],
+        scrollX: true,
+        autoWidth: false,
+        language: {
+        emptyTable: '<?php echo esc_js( __( 'No logs found.', 'rtbcb' ) ); ?>'
+        },
+        columns: [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        { orderable: false }
+        ]
+        });
 var search = new URLSearchParams(window.location.search).get('search');
 if (search) {
 table.search(search).draw();

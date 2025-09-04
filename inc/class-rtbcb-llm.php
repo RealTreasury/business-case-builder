@@ -1503,7 +1503,8 @@ $parsed = $this->response_parser->parse( $response );
 			if ( class_exists( 'RTBCB_API_Log' ) ) {
 				$user_email   = $this->current_inputs['email'] ?? '';
 				$company_name = $this->current_inputs['company_name'] ?? '';
-				RTBCB_API_Log::save_log( $body, [ 'error' => $response->get_error_message() ], get_current_user_id(), $user_email, $company_name );
+                               $model = $body['model'] ?? '';
+                               RTBCB_API_Log::save_log( $body, [ 'error' => $response->get_error_message() ], get_current_user_id(), $user_email, $company_name, 0, $model );
 			}
 			return $response;
 		}
@@ -2200,7 +2201,8 @@ PROMPT;
                        if ( class_exists( 'RTBCB_API_Log' ) ) {
                                $user_email   = $this->current_inputs['email'] ?? '';
                                $company_name = $this->current_inputs['company_name'] ?? '';
-                               RTBCB_API_Log::save_log( $payload, $decoded, get_current_user_id(), $user_email, $company_name );
+                               $model = $payload['model'] ?? '';
+                               RTBCB_API_Log::save_log( $payload, $decoded, get_current_user_id(), $user_email, $company_name, 0, $model );
                        }
 
                        return $this->validate_and_structure_analysis( $data );

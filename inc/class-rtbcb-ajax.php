@@ -893,13 +893,20 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 		   if ( ! empty( $company_name ) ) {
 			$debug_info['company_name'] = sanitize_text_field( $company_name );
 		   }
-		   $history[] = $debug_info;
-		   if ( count( $history ) > 20 ) {
-			   $history = array_slice( $history, -20 );
-		   }
-		   if ( function_exists( 'update_option' ) ) {
-			   update_option( 'rtbcb_workflow_history', $history, false );
-		   }
-	   }
+                   if ( class_exists( 'RTBCB_API_Log' ) ) {
+                           $log_ids = RTBCB_API_Log::get_log_ids_for_contact( $debug_info['lead_id'] ?? 0, $debug_info['lead_email'] ?? '' );
+                           if ( ! empty( $log_ids ) ) {
+                                   $debug_info['log_ids'] = array_map( 'intval', $log_ids );
+                           }
+                   }
+
+                   $history[] = $debug_info;
+                   if ( count( $history ) > 20 ) {
+                           $history = array_slice( $history, -20 );
+                   }
+                   if ( function_exists( 'update_option' ) ) {
+                           update_option( 'rtbcb_workflow_history', $history, false );
+                   }
+           }
 }
 
