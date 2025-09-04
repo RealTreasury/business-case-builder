@@ -2458,35 +2458,42 @@ $html = rtbcb_sanitize_report_html( $html );
 	 * @return array
 	 */
       private function generate_operational_insights( $data ) {
+              $insights = [];
+
               if ( ! empty( $data['operational_insights'] ) && is_array( $data['operational_insights'] ) ) {
-                      return array_map( 'wp_kses_post', $data['operational_insights'] );
+                      $insights = array_map( 'wp_kses_post', $data['operational_insights'] );
               }
 
-               $insights    = [];
-		$pain_points = (array) ( $data['pain_points'] ?? [] );
+              if ( empty( $insights ) ) {
+                      $pain_points = (array) ( $data['pain_points'] ?? [] );
 
-		if ( in_array( 'manual_processes', $pain_points, true ) ) {
-			$insights[] = __( 'Manual bank reconciliation processes create bottlenecks and increase error risk', 'rtbcb' );
-		}
+                      if ( in_array( 'manual_processes', $pain_points, true ) ) {
+                              $insights[] = __( 'Manual bank reconciliation processes create bottlenecks and increase error risk', 'rtbcb' );
+                      }
 
-		if ( in_array( 'poor_visibility', $pain_points, true ) ) {
-			$insights[] = __( 'Limited cash visibility delays critical financial decisions and impacts working capital optimization', 'rtbcb' );
-		}
+                      if ( in_array( 'poor_visibility', $pain_points, true ) ) {
+                              $insights[] = __( 'Limited cash visibility delays critical financial decisions and impacts working capital optimization', 'rtbcb' );
+                      }
 
-		if ( in_array( 'forecast_accuracy', $pain_points, true ) ) {
-			$insights[] = __( 'Cash forecasting challenges lead to suboptimal liquidity management and increased financing costs', 'rtbcb' );
-		}
+                      if ( in_array( 'forecast_accuracy', $pain_points, true ) ) {
+                              $insights[] = __( 'Cash forecasting challenges lead to suboptimal liquidity management and increased financing costs', 'rtbcb' );
+                      }
 
-		$hours_recon = floatval( $data['hours_reconciliation'] ?? 0 );
-		if ( $hours_recon > 0 ) {
-			$insights[] = sprintf(
-				__( 'Bank reconciliation automation could save up to %d hours weekly', 'rtbcb' ),
-				round( $hours_recon * 0.7 )
-			);
-		}
+                      $hours_recon = floatval( $data['hours_reconciliation'] ?? 0 );
+                      if ( $hours_recon > 0 ) {
+                              $insights[] = sprintf(
+                                      __( 'Bank reconciliation automation could save up to %d hours weekly', 'rtbcb' ),
+                                      round( $hours_recon * 0.7 )
+                              );
+                      }
 
-		return $insights ?: [ __( 'Treasury operations show opportunities for process optimization and technology enhancement', 'rtbcb' ) ];
-	}
+                      if ( empty( $insights ) ) {
+                              $insights[] = __( 'Treasury operations show opportunities for process optimization and technology enhancement', 'rtbcb' );
+                      }
+              }
+
+              return $insights;
+        }
 
 	/**
 	 * Generate risk analysis
