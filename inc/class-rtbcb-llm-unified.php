@@ -2274,7 +2274,7 @@ PROMPT;
                        ],
                ];
 
-               $messages = [
+               $input = [
                        [
                                'role'    => 'system',
                                'content' => $this->get_strategic_system_prompt(),
@@ -2285,7 +2285,7 @@ PROMPT;
                        ],
                ];
 
-               $body     = [ 'messages' => $messages ];
+               $body     = [ 'input' => $input ];
                $model    = $this->get_model( 'premium' );
                $response = $this->call_openai_with_retry( $model, $body );
 
@@ -2293,9 +2293,9 @@ PROMPT;
                        return $response;
                }
 
+               $parsed  = $this->response_parser->parse( $response );
                $decoded = json_decode( wp_remote_retrieve_body( $response ), true );
-               $content = $decoded['choices'][0]['message']['content'] ?? '';
-               $data    = json_decode( $content, true );
+               $data    = json_decode( $parsed['output_text'], true );
 
                if ( $this->is_valid_strategic_response( $data ) ) {
                        if ( class_exists( 'RTBCB_API_Log' ) ) {
@@ -2308,7 +2308,7 @@ PROMPT;
                        return $this->validate_and_structure_analysis( $data );
                }
 
-               return new WP_Error( 'invalid_json', __( 'Model returned invalid JSON.', 'rtbcb' ), [ 'raw' => $content ] );
+               return new WP_Error( 'invalid_json', __( 'Model returned invalid JSON.', 'rtbcb' ), [ 'raw' => $parsed['output_text'] ] );
        }
 
        /**
@@ -2709,12 +2709,8 @@ return $analysis;
 	* @return array|WP_Error Response array or error.
 	*/
         public function call_openai_with_retry( $model, $prompt, $max_output_tokens = null, $max_retries = null, $chunk_handler = null ) {
-                $request_data          = is_array( $prompt ) ? $prompt : [ 'input' => $prompt ];
-                if ( isset( $request_data['messages'] ) && ! isset( $request_data['input'] ) ) {
-                        $request_data['input'] = $request_data['messages'];
-                        unset( $request_data['messages'] );
-                }
-                $request_data['model'] = $model;
+               $request_data          = is_array( $prompt ) ? $prompt : [ 'input' => $prompt ];
+               $request_data['model'] = $model;
 
                 if ( rtbcb_heavy_features_disabled() ) {
                         $error = new WP_Error( 'heavy_features_disabled', __( 'AI features temporarily disabled.', 'rtbcb' ) );
@@ -2817,12 +2813,8 @@ return $analysis;
         protected function call_openai( $model, $prompt, $max_tokens = null, $chunk_handler = null ) {
                 $endpoint   = 'https://api.openai.com/v1/responses';
                 $model_name = sanitize_text_field( $model ?: 'gpt-5-mini' );
-                $body       = is_array( $prompt ) ? $prompt : [ 'input' => sanitize_textarea_field( (string) $prompt ) ];
-                if ( isset( $body['messages'] ) && ! isset( $body['input'] ) ) {
-                        $body['input'] = $body['messages'];
-                        unset( $body['messages'] );
-                }
-                $body['model'] = $model_name;
+               $body       = is_array( $prompt ) ? $prompt : [ 'input' => sanitize_textarea_field( (string) $prompt ) ];
+               $body['model'] = $model_name;
                 if ( $max_tokens ) {
                         $body['max_output_tokens'] = intval( $max_tokens );
                 }
