@@ -132,7 +132,7 @@ html {
 /* Pain Points Grid Layout Fix */
 .rtbcb-pain-points-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 16px;
     margin: 24px 0;
 }
@@ -140,6 +140,7 @@ html {
 .rtbcb-pain-point-card {
     all: unset;
     display: block;
+    box-sizing: border-box;
     background: #ffffff;
     border: 2px solid #cbd5e1;
     border-radius: 12px;
@@ -175,6 +176,7 @@ html {
     width: 100%;
     height: 100%;
     text-align: center;
+    box-sizing: border-box;
 }
 
 .rtbcb-pain-point-label input[type="checkbox"] {
@@ -183,6 +185,42 @@ html {
     pointer-events: none;
     width: 0;
     height: 0;
+}
+
+/* Pain point content and typography */
+.rtbcb-pain-point-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 100%;
+    text-align: center;
+}
+
+.rtbcb-pain-point-icon {
+    font-size: 24px;
+}
+
+.rtbcb-pain-point-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.rtbcb-pain-point-description {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.3;
+}
+
+.rtbcb-pain-point-card.rtbcb-selected .rtbcb-pain-point-title {
+    color: var(--dark-text);
+}
+
+.rtbcb-pain-point-card.rtbcb-selected .rtbcb-pain-point-description {
+    color: var(--gray-text);
 }
 
 /* Navigation Buttons Fix */
@@ -1569,93 +1607,10 @@ html {
     font-weight: 500;
 }
 
+
 .rtbcb-field-error::before {
     content: "⚠";
     font-size: 14px;
-}
-
-/* Pain Points Grid - Compact cards */
-.rtbcb-pain-points-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 12px;
-    margin-top: 16px;
-}
-
-.rtbcb-pain-point-card {
-    background: white;
-    border: 2px solid #cbd5e1;
-    border-radius: 6px;
-    overflow: hidden;
-    transition: all 0.2s ease;
-    cursor: pointer;
-    touch-action: manipulation;
-}
-
-@media (hover:hover) {
-    .rtbcb-pain-point-card:hover {
-        border-color: #c77dff;
-        box-shadow: 0 2px 8px rgba(114, 22, 244, 0.1);
-    }
-}
-
-.rtbcb-pain-point-card.rtbcb-selected {
-    border-color: #7216f4;
-    background: linear-gradient(135deg, #f8f9ff, #ffffff);
-}
-
-.rtbcb-pain-point-label {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 14px;
-    cursor: pointer;
-    margin: 0;
-    font-weight: 500;
-}
-
-.rtbcb-pain-point-label input[type="checkbox"] {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
-}
-
-.rtbcb-pain-point-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    text-align: center;
-}
-
-.rtbcb-pain-point-icon {
-    font-size: 20px;
-    margin-bottom: 6px;
-    display: block;
-}
-
-.rtbcb-pain-point-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 4px;
-    line-height: 1.2;
-}
-
-.rtbcb-pain-point-description {
-    font-size: 13px;
-    color: var(--text-secondary);
-    line-height: 1.3;
-}
-
-.rtbcb-pain-point-card.rtbcb-selected .rtbcb-pain-point-title {
-    color: var(--dark-text);
-}
-
-.rtbcb-pain-point-card.rtbcb-selected .rtbcb-pain-point-description {
-    color: var(--gray-text);
 }
 
 /* Navigation - Compact */
