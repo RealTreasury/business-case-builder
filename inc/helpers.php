@@ -683,7 +683,7 @@ function rtbcb_sanitize_form_data( $data ) {
 	}
 
 	// Text fields
-	$text_fields = [ 'company_size', 'industry' ];
+	$text_fields = [ 'company_size', 'industry', 'job_title', 'treasury_automation' ];
 	foreach ( $text_fields as $field ) {
 		if ( isset( $data[ $field ] ) ) {
 			$sanitized[ $field ] = sanitize_text_field( $data[ $field ] );
@@ -692,11 +692,13 @@ function rtbcb_sanitize_form_data( $data ) {
 
 	// Numeric fields
 	$numeric_fields = [
-		'hours_reconciliation'	 => [ 'min' => 0,	'max' => 168 ],
-		'hours_cash_positioning' => [ 'min' => 0,	'max' => 168 ],
-		'num_banks'				 => [ 'min' => 1,	'max' => 50 ],
-		'ftes'					 => [ 'min' => 0.5, 'max' => 100 ],
-	];
+                'hours_reconciliation'   => [ 'min' => 0,   'max' => 168 ],
+                'hours_cash_positioning' => [ 'min' => 0,   'max' => 168 ],
+                'num_banks'              => [ 'min' => 1,   'max' => 50 ],
+                'ftes'                   => [ 'min' => 0.5, 'max' => 100 ],
+                'num_entities'           => [ 'min' => 1,   'max' => 1000 ],
+                'num_currencies'         => [ 'min' => 1,   'max' => 100 ],
+        ];
 
 	foreach ( $numeric_fields as $field => $limits ) {
 		if ( isset( $data[ $field ] ) ) {
