@@ -308,7 +308,7 @@ $final_analysis['financial_benchmarks'] ?? ( $final_analysis['research']['financ
 								$error_data     = $final_analysis->get_error_data();
 								$analysis_data  = [];
 
-								if ( isset( $error_data['raw'] ) && isset( $llm ) && method_exists( $llm, 'validate_and_structure_analysis' ) ) {
+								if ( isset( $error_data['raw'] ) && isset( $llm ) && is_callable( [ $llm, 'validate_and_structure_analysis' ] ) ) {
 								$decoded = json_decode( $error_data['raw'], true );
 								if ( is_array( $decoded ) ) {
 								$analysis_data = $llm->validate_and_structure_analysis( $decoded );
