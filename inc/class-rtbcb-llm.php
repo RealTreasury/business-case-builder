@@ -2452,7 +2452,7 @@ PROMPT;
 	'executive_summary' => [
 	'strategic_positioning'   => sanitize_textarea_field( $analysis_data['executive_summary']['strategic_positioning'] ?? '' ),
 	'business_case_strength'  => sanitize_text_field( $analysis_data['executive_summary']['business_case_strength'] ?? 'weak' ),
-	'key_value_drivers'       => array_map( 'sanitize_text_field', $analysis_data['executive_summary']['key_value_drivers'] ?? [] ),
+	'key_value_drivers'       => array_map( 'sanitize_text_field', (array) ( $analysis_data['executive_summary']['key_value_drivers'] ?? [] ) ),
 	'executive_recommendation' => sanitize_textarea_field( $analysis_data['executive_summary']['executive_recommendation'] ?? '' ),
 	'confidence_level'        => floatval( $analysis_data['executive_summary']['confidence_level'] ?? 0 ),
 	],
@@ -2481,24 +2481,24 @@ PROMPT;
 	'payback_months'     => floatval( $analysis_data['financial_analysis']['payback_analysis']['payback_months'] ?? 0 ),
 	'roi_3_year'         => floatval( $analysis_data['financial_analysis']['payback_analysis']['roi_3_year'] ?? 0 ),
 	'npv_analysis'       => sanitize_textarea_field( $analysis_data['financial_analysis']['payback_analysis']['npv_analysis'] ?? '' ),
-	'sensitivity_factors' => array_map( 'sanitize_text_field', $analysis_data['financial_analysis']['payback_analysis']['sensitivity_factors'] ?? [] ),
+	'sensitivity_factors' => array_map( 'sanitize_text_field', (array) ( $analysis_data['financial_analysis']['payback_analysis']['sensitivity_factors'] ?? [] ) ),
 	],
 	],
 	'implementation_roadmap' => [],
 	'risk_analysis' => [
-	'implementation_risks'  => array_map( 'sanitize_text_field', ( $analysis_data['risk_analysis']['implementation_risks'] ?? $analysis_data['risk_mitigation']['implementation_risks'] ?? [] ) ),
-	'mitigation_strategies' => array_map( 'sanitize_text_field', ( $analysis_data['risk_analysis']['mitigation_strategies'] ?? $analysis_data['risk_mitigation']['mitigation_strategies'] ?? [] ) ),
-	'success_factors'      => array_map( 'sanitize_text_field', ( $analysis_data['risk_analysis']['success_factors'] ?? $analysis_data['risk_mitigation']['success_factors'] ?? [] ) ),
+	'implementation_risks'  => array_map( 'sanitize_text_field', (array) ( $analysis_data['risk_analysis']['implementation_risks'] ?? $analysis_data['risk_mitigation']['implementation_risks'] ?? [] ) ),
+	'mitigation_strategies' => array_map( 'sanitize_text_field', (array) ( $analysis_data['risk_analysis']['mitigation_strategies'] ?? $analysis_data['risk_mitigation']['mitigation_strategies'] ?? [] ) ),
+	'success_factors'      => array_map( 'sanitize_text_field', (array) ( $analysis_data['risk_analysis']['success_factors'] ?? $analysis_data['risk_mitigation']['success_factors'] ?? [] ) ),
 	],
 	'action_plan' => [
-	'immediate_steps'       => array_map( 'sanitize_text_field', ( $analysis_data['action_plan']['immediate_steps'] ?? $analysis_data['next_steps']['immediate'] ?? [] ) ),
-	'short_term_milestones' => array_map( 'sanitize_text_field', ( $analysis_data['action_plan']['short_term_milestones'] ?? $analysis_data['next_steps']['short_term'] ?? [] ) ),
-	'long_term_objectives'  => array_map( 'sanitize_text_field', ( $analysis_data['action_plan']['long_term_objectives'] ?? $analysis_data['next_steps']['long_term'] ?? [] ) ),
+	'immediate_steps'       => array_map( 'sanitize_text_field', (array) ( $analysis_data['action_plan']['immediate_steps'] ?? $analysis_data['next_steps']['immediate'] ?? [] ) ),
+	'short_term_milestones' => array_map( 'sanitize_text_field', (array) ( $analysis_data['action_plan']['short_term_milestones'] ?? $analysis_data['next_steps']['short_term'] ?? [] ) ),
+	'long_term_objectives'  => array_map( 'sanitize_text_field', (array) ( $analysis_data['action_plan']['long_term_objectives'] ?? $analysis_data['next_steps']['long_term'] ?? [] ) ),
 	],
 	'vendor_considerations' => [
-	'evaluation_criteria'   => array_map( 'sanitize_text_field', $analysis_data['vendor_considerations']['evaluation_criteria'] ?? [] ),
-	'due_diligence_areas'   => array_map( 'sanitize_text_field', $analysis_data['vendor_considerations']['due_diligence_areas'] ?? [] ),
-'negotiation_priorities' => array_map( 'sanitize_text_field', $analysis_data['vendor_considerations']['negotiation_priorities'] ?? [] ),
+	'evaluation_criteria'   => array_map( 'sanitize_text_field', (array) ( $analysis_data['vendor_considerations']['evaluation_criteria'] ?? [] ) ),
+	'due_diligence_areas'   => array_map( 'sanitize_text_field', (array) ( $analysis_data['vendor_considerations']['due_diligence_areas'] ?? [] ) ),
+'negotiation_priorities' => array_map( 'sanitize_text_field', (array) ( $analysis_data['vendor_considerations']['negotiation_priorities'] ?? [] ) ),
 ],
 ];
 
