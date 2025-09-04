@@ -439,35 +439,37 @@ class BusinessCaseBuilder {
 		}
 	}
 
-	handleNext( event ) {
-		if ( event && event.preventDefault ) {
-			event.preventDefault();
-		}
+        handleNext( event ) {
+                if ( event && event.preventDefault ) {
+                        event.preventDefault();
+                }
 
-		console.log('RTBCB: handleNext called for step', this.currentStep);
+                console.log('RTBCB: handleNext called for step', this.currentStep);
 
-		// Determine questionnaire path before validating step 1
-		if ( this.currentStep === 1 ) {
-			console.log('RTBCB: Initializing path for step 1');
-			this.initializePath();
-		}
+                // Determine questionnaire path before validating step 1
+                if ( this.currentStep === 1 ) {
+                        console.log('RTBCB: Initializing path for step 1');
+                        this.initializePath();
+                }
 
-		console.log('RTBCB: About to validate step', this.currentStep);
-		if ( this.validateStep( this.currentStep ) ) {
-			console.log('RTBCB: Step validation passed');
-			if ( this.currentStep < this.totalSteps ) {
-				this.currentStep++;
-				console.log('RTBCB: Moving to step', this.currentStep);
-				this.updateStepVisibility();
-				this.updateProgressIndicator();
-				this.scrollToTop();
-			} else {
-				console.log('RTBCB: Already at last step');
-			}
-		} else {
-			console.log('RTBCB: Step validation failed');
-		}
-	}
+                console.log('RTBCB: About to validate step', this.currentStep);
+                const validation = this.validateStep( this.currentStep );
+                if ( validation.isValid ) {
+                        console.log('RTBCB: Step validation passed');
+                        if ( this.currentStep < this.totalSteps ) {
+                                this.currentStep++;
+                                console.log('RTBCB: Moving to step', this.currentStep);
+                                this.updateStepVisibility();
+                                this.updateProgressIndicator();
+                                this.scrollToTop();
+                        } else {
+                                console.log('RTBCB: Already at last step');
+                        }
+                } else {
+                        console.log('RTBCB: Step validation failed');
+                        this.notifyValidationErrors( validation.invalidFields );
+                }
+        }
 
         handlePrev( event ) {
                 if ( event && event.preventDefault ) {
@@ -494,15 +496,17 @@ class BusinessCaseBuilder {
                return requiredFields;
        }
 
-        validateStep(stepNumber) {
+       validateStep(stepNumber) {
                const currentFields = this.getStepFields(stepNumber) || [];
                 let isValid = true;
+                const invalidFields = [];
 
                 if (stepNumber === 5 && currentFields.includes('pain_points')) {
                         const checkedBoxes = this.form.querySelectorAll('input[name="pain_points[]"]:checked');
                         if (checkedBoxes.length === 0) {
                                 this.showStepError(5, __( 'Please select at least one challenge', 'rtbcb' ) );
-                                return false;
+                                invalidFields.push('pain_points');
+                                return { isValid: false, invalidFields };
                         }
                         this.clearStepError(5);
                 }
@@ -525,11 +529,12 @@ class BusinessCaseBuilder {
 
                         if (!this.validateField(field)) {
                                 isValid = false;
+                                invalidFields.push(fieldName);
                         }
                 }
 
-                return isValid;
-        }
+                return { isValid, invalidFields };
+       }
 
 	validateField(field) {
 		const value = field.value.trim();
@@ -622,18 +627,35 @@ class BusinessCaseBuilder {
 		}
 	}
 
-	clearStepError(stepNumber) {
-		const step = this.steps[stepNumber - 1];
-		if (!step) return;
+       clearStepError(stepNumber) {
+               const step = this.steps[stepNumber - 1];
+               if (!step) return;
 
-		const validationDiv = step.querySelector('.rtbcb-pain-points-validation');
-		if (validationDiv) {
-			const messageDiv = validationDiv.querySelector('.rtbcb-validation-message');
-			if (messageDiv) {
-				messageDiv.style.display = 'none';
-			}
-		}
-	}
+               const validationDiv = step.querySelector('.rtbcb-pain-points-validation');
+               if (validationDiv) {
+                       const messageDiv = validationDiv.querySelector('.rtbcb-validation-message');
+                       if (messageDiv) {
+                               messageDiv.style.display = 'none';
+                       }
+               }
+       }
+
+       notifyValidationErrors(invalidFields = []) {
+               const fieldLabels = invalidFields.map(name => this.getFieldLabel(name));
+               const message = fieldLabels.length
+                       ? __( 'Please correct the following fields: ', 'rtbcb' ) + fieldLabels.join(', ')
+                       : __( 'Please fix the highlighted fields before proceeding.', 'rtbcb' );
+               alert( message );
+       }
+
+       getFieldLabel(fieldName) {
+               const field = this.form.querySelector(`[name="${fieldName}"]`);
+               if (!field) {
+                       return fieldName;
+               }
+               const label = field.closest('.rtbcb-field')?.querySelector('label');
+               return label ? label.textContent.trim() : fieldName;
+       }
 
 	updateStepVisibility() {
 		// Update step visibility
@@ -790,7 +812,9 @@ class BusinessCaseBuilder {
 		}
 
 		// Final step validation before submission
-               if (!this.validateStep(this.currentStep)) {
+               const finalValidation = this.validateStep(this.currentStep);
+               if (!finalValidation.isValid) {
+                       this.notifyValidationErrors(finalValidation.invalidFields);
                        return;
                }
 
