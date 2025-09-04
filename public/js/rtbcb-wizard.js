@@ -151,10 +151,11 @@ class BusinessCaseBuilder {
 		this.pollTimeout = null;
 		this.pollingCancelled = false;
 		this.activeJobId = null;
-		this.progressStates = [];
-		this.currentProgressIndex = 0;
-		this.progressTimer = null;
-		this.reportType = '';
+this.progressStates = [];
+this.currentProgressIndex = 0;
+this.progressTimer = null;
+this.reportType = '';
+this.lastValidationErrors = [];
 
 		console.log('RTBCB: BusinessCaseBuilder constructor called');
 		console.log('RTBCB: Form found:', !!this.form);
@@ -481,7 +482,8 @@ class BusinessCaseBuilder {
 		}
 
 		console.log('RTBCB: About to validate step', this.currentStep);
-		if ( this.validateStep( this.currentStep ) ) {
+		const validationPassed = this.validateStep( this.currentStep );
+		if ( validationPassed ) {
 			console.log('RTBCB: Step validation passed');
 			if ( this.currentStep < this.totalSteps ) {
 				this.currentStep++;
@@ -494,6 +496,14 @@ class BusinessCaseBuilder {
 			}
 		} else {
 			console.log('RTBCB: Step validation failed');
+			const errors = this.lastValidationErrors || [];
+			let message;
+			if ( errors.length ) {
+				message = __( 'Please review the following fields: ', 'rtbcb' ) + errors.join( ', ' );
+			} else {
+				message = __( 'Please correct the highlighted fields.', 'rtbcb' );
+			}
+			alert( message );
 		}
 	}
 
@@ -530,42 +540,49 @@ class BusinessCaseBuilder {
                return requiredFields;
        }
 
-        validateStep(stepNumber) {
-               const currentFields = this.getStepFields(stepNumber) || [];
-                let isValid = true;
+		validateStep(stepNumber) {
+			const currentFields = this.getStepFields(stepNumber) || [];
+			let isValid = true;
+			this.lastValidationErrors = [];
 
-                if (stepNumber === 5 && currentFields.includes('pain_points')) {
-                        const checkedBoxes = this.form.querySelectorAll('input[name="pain_points[]"]:checked');
-                        if (checkedBoxes.length === 0) {
-                                this.showStepError(5, __( 'Please select at least one challenge', 'rtbcb' ) );
-                                return false;
-                        }
-                        this.clearStepError(5);
-                }
+			if (stepNumber === 5 && currentFields.includes('pain_points')) {
+				const checkedBoxes = this.form.querySelectorAll('input[name="pain_points[]"]:checked');
+				if (checkedBoxes.length === 0) {
+					const message = __( 'Please select at least one challenge', 'rtbcb' );
+					this.showStepError(5, message);
+					this.lastValidationErrors.push( message );
+					return false;
+				}
+				this.clearStepError(5);
+			}
 
-                for (const fieldName of currentFields) {
-                        const field = this.form.querySelector(`[name="${fieldName}"]`);
-                        if (!field) {
-                                continue;
-                        }
+			for (const fieldName of currentFields) {
+				const field = this.form.querySelector(`[name="${fieldName}"]`);
+				if (!field) {
+					continue;
+				}
 
-                        // Skip validation for disabled enhanced-only fields in basic mode
-                        if (this.reportType === 'basic' && field.closest('.rtbcb-enhanced-only')) {
-                                continue;
-                        }
+				// Skip validation for disabled enhanced-only fields in basic mode
+				if (this.reportType === 'basic' && field.closest('.rtbcb-enhanced-only')) {
+					continue;
+				}
 
-                        // Skip validation for enabled enhanced-only fields in enhanced mode that aren't required
-                        if (this.reportType === 'enhanced' && field.closest('.rtbcb-enhanced-only') && !field.hasAttribute('required')) {
-                                continue;
-                        }
+				// Skip validation for enabled enhanced-only fields in enhanced mode that aren't required
+				if (this.reportType === 'enhanced' && field.closest('.rtbcb-enhanced-only') && !field.hasAttribute('required')) {
+					continue;
+				}
 
-                        if (!this.validateField(field)) {
-                                isValid = false;
-                        }
-                }
+				if (!this.validateField(field)) {
+					isValid = false;
+					const fieldContainer = field.closest('.rtbcb-field');
+					const label = fieldContainer ? fieldContainer.querySelector('label') : null;
+					const fieldLabel = label ? label.textContent.trim() : fieldName;
+					this.lastValidationErrors.push( fieldLabel );
+				}
+			}
 
-                return isValid;
-        }
+			return isValid;
+		}
 
 	validateField(field) {
 		const value = field.value.trim();
