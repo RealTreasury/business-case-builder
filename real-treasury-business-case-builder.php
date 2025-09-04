@@ -1347,17 +1347,16 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 			];
 		}
 
-$required_keys = [
-'executive_summary',
-'financial_analysis',
-'implementation_roadmap',
-'company_intelligence',
-'operational_insights',
-'risk_analysis',
-'action_plan',
-'industry_insights',
-'technology_strategy',
-];
+		$required_keys = [
+			'executive_summary',
+			'financial_analysis',
+			'technology_strategy',
+			'action_plan',
+			'company_intelligence',
+			'operational_insights',
+			'risk_analysis',
+			'industry_insights',
+		];
 		$missing_keys  = array_diff( $required_keys, array_keys( $result ) );
 
 		if ( ! empty( $missing_keys ) ) {
@@ -1419,6 +1418,31 @@ $required_keys = [
 		'confidence'	    => 0.75,
 		'enhanced_fallback' => true,
 		];
+	}
+
+	/**
+	 * Validate the comprehensive analysis returned by the LLM.
+	 *
+	 * @param array $analysis Analysis data from the LLM.
+	 * @return bool True when all required sections exist, false otherwise.
+	 */
+	private function validate_comprehensive_analysis( $analysis ) {
+		$required_sections = [
+			'executive_summary',
+			'company_intelligence',
+			'industry_insights',
+			'operational_insights',
+			'risk_analysis',
+			'technology_strategy',
+			'financial_analysis',
+			'action_plan',
+		];
+		$missing_sections = array_diff( $required_sections, array_keys( $analysis ) );
+		if ( ! empty( $missing_sections ) ) {
+			rtbcb_log_error( 'LLM missing required sections', [ 'missing' => $missing_sections ] );
+			return false;
+		}
+		return true;
 	}
 
 	/**
@@ -1908,15 +1932,11 @@ $required_keys = [
 					);
 					return;
 				}
-$required_sections = [ 'executive_summary', 'financial_analysis', 'implementation_roadmap' ];
-$missing_sections  = array_diff( $required_sections, array_keys( $comprehensive_analysis ) );
-
-				if ( ! empty( $missing_sections ) ) {
-					rtbcb_log_error( 'LLM missing required sections', [ 'missing' => $missing_sections ] );
-					$comprehensive_analysis = $this->generate_fallback_analysis( $user_inputs, $scenarios );
-				} else {
-					rtbcb_log_api_debug( 'LLM generation succeeded' );
-				}
+		if ( ! $this->validate_comprehensive_analysis( $comprehensive_analysis ) ) {
+			$comprehensive_analysis = $this->generate_fallback_analysis( $user_inputs, $scenarios );
+		} else {
+			rtbcb_log_api_debug( 'LLM generation succeeded' );
+		}
 			} catch ( Exception $e ) {
 				$error_code = 'E_LLM_EXCEPTION';
 				rtbcb_log_error( $error_code . ': ' . $e->getMessage() );
