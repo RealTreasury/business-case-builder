@@ -1593,20 +1593,24 @@ class BusinessCaseBuilder {
                 confidence: data.recommendation?.confidence || data.metadata?.confidence_level || 0.75,
                 reasoning: data.recommendation?.reasoning || data.technology_strategy?.recommended_category || ''
             },
-            executiveSummary: data.executive_summary || data.narrative || {},
-            operationalAnalysis: data.operational_insights || {},
-            industryContext: {
-                sector_analysis: context.sector_analysis || {},
-                benchmarking: context.benchmarking || {},
-                regulatory_landscape: context.regulatory_landscape || {}
-            },
-            nextActions: data.narrative?.next_actions || [
-                ...(data.action_plan?.immediate_steps || []),
-                ...(data.action_plan?.short_term_milestones || []),
-                ...(data.action_plan?.long_term_objectives || [])
-            ],
-            risks: data.risks || data.risk_analysis?.implementation_risks || []
-        };
+           executiveSummary: data.executive_summary || data.narrative || {},
+           operationalAnalysis: data.operational_insights || {},
+           industryContext: {
+               sector_analysis: context.sector_analysis || {},
+               benchmarking: context.benchmarking || {},
+               regulatory_landscape: context.regulatory_landscape || {}
+           },
+           nextActions: data.narrative?.next_actions || [
+               ...(data.action_plan?.immediate_steps || []),
+               ...(data.action_plan?.short_term_milestones || []),
+               ...(data.action_plan?.long_term_objectives || [])
+           ],
+           risks: data.risks || [
+               ...(data.risk_analysis?.implementation_risks || []),
+               ...(data.risk_analysis?.risk_matrix || []),
+               ...(data.risk_analysis?.mitigation_strategies || [])
+           ]
+       };
 
         // Close modal
         window.closeBusinessCaseModal();
@@ -1614,8 +1618,8 @@ class BusinessCaseBuilder {
         // Render results
         const resultsContainer = document.getElementById('rtbcbResults');
         if (resultsContainer) {
-            resultsContainer.innerHTML = this.renderResults(mapped);
-            this.populateRiskAssessment(mapped.risks);
+           resultsContainer.innerHTML = this.renderResults(mapped);
+           this.populateRiskAssessment(mapped.risks);
             resultsContainer.style.display = 'block';
             this.saveFinalReport( resultsContainer.innerHTML );
             resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1627,14 +1631,15 @@ class BusinessCaseBuilder {
 
     renderResults(data) {
         const {
-            scenarios,
-            recommendation,
-            companyName,
-            executiveSummary,
-            operationalAnalysis,
-industryContext,
-            nextActions
-        } = data;
+           scenarios,
+           recommendation,
+           companyName,
+           executiveSummary,
+           operationalAnalysis,
+           industryContext,
+           nextActions,
+           risks
+       } = data;
         const displayName = companyName || 'Your Company';
 
         return `
@@ -1650,15 +1655,15 @@ industryContext,
 
                 ${this.renderRecommendation(recommendation, displayName)}
                 ${this.renderROISummary(scenarios, displayName)}
-                ${this.renderExecutiveSummary(executiveSummary)}
-                ${this.renderOperationalAnalysis(operationalAnalysis)}
+               ${this.renderExecutiveSummary(executiveSummary)}
+               ${this.renderOperationalAnalysis(operationalAnalysis)}
 ${this.renderIndustryInsights(industryContext)}
-                ${this.renderRiskAssessmentSection()}
-                ${this.renderNextSteps(nextActions || [], displayName)}
-                ${this.renderActions()}
-            </div>
-        `;
-    }
+               ${risks && risks.length ? this.renderRiskAssessmentSection() : ''}
+               ${this.renderNextSteps(nextActions || [], displayName)}
+               ${this.renderActions()}
+           </div>
+       `;
+   }
 
     renderRecommendation(recommendation, companyName) {
         const category = recommendation.category_info || {};
@@ -1740,19 +1745,23 @@ ${this.renderIndustryInsights(industryContext)}
         `;
     }
 
-    renderExecutiveSummary(summary = {}) {
-        const text = summary?.narrative || summary?.executive_recommendation ||
-            'Treasury technology investment presents a compelling opportunity for operational efficiency.';
-        const keyDrivers = Array.isArray(summary?.key_value_drivers) ? summary.key_value_drivers : [];
-        const renderList = items => items.map(item => `<li>${this.escapeHTML(item)}</li>`).join('');
-        return `
-            <div class="rtbcb-narrative-section">
-                <h3>Executive Summary</h3>
-                <div class="rtbcb-narrative-content">${this.escapeHTML(text)}</div>
-                ${keyDrivers.length ? `<div class="rtbcb-industry-group"><h4>Key Value Drivers</h4><ul>${renderList(keyDrivers)}</ul></div>` : ''}
-            </div>
-        `;
-    }
+   renderExecutiveSummary(summary = {}) {
+       const positioning = summary?.strategic_positioning || '';
+       const recommendation = summary?.executive_recommendation || summary?.narrative || '';
+       const keyDrivers = Array.isArray(summary?.key_value_drivers) ? summary.key_value_drivers : [];
+       const renderList = items => items.map(item => `<li>${this.escapeHTML(item)}</li>`).join('');
+       if (!positioning && !recommendation && !keyDrivers.length) {
+           return '';
+       }
+       return `
+           <div class="rtbcb-narrative-section">
+               <h3>${__('Executive Summary', 'rtbcb')}</h3>
+               ${positioning ? `<p>${this.escapeHTML(positioning)}</p>` : ''}
+               ${recommendation ? `<div class="rtbcb-executive-recommendation"><strong>${__('Executive Recommendation', 'rtbcb')}:</strong> ${this.escapeHTML(recommendation)}</div>` : ''}
+               ${keyDrivers.length ? `<div class="rtbcb-industry-group"><h4>${__('Key Value Drivers', 'rtbcb')}</h4><ul>${renderList(keyDrivers)}</ul></div>` : ''}
+           </div>
+       `;
+   }
 
 renderOperationalAnalysis(analysis = {}) {
 analysis = analysis || {};
@@ -1893,14 +1902,14 @@ ${upcoming_changes.length ? `<div class="rtbcb-industry-group"><h4>Upcoming Chan
 `;
 }
 
-    renderRiskAssessmentSection() {
-        return `
-            <div class="rtbcb-risk-assessment">
-                <h3>Risk Assessment</h3>
-                <ul class="rtbcb-risk-list"></ul>
-            </div>
-        `;
-    }
+   renderRiskAssessmentSection() {
+       return `
+           <div class="rtbcb-risk-assessment">
+               <h3>${__('Risk Assessment', 'rtbcb')}</h3>
+               <ul class="rtbcb-risk-list"></ul>
+           </div>
+       `;
+   }
 
     populateRiskAssessment(risks) {
         const list = document.querySelector('.rtbcb-risk-list');
