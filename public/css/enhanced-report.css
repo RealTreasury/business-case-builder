@@ -249,6 +249,22 @@
     padding: 2rem;
 }
 
+.rtbcb-section-content img,
+.rtbcb-section-content table {
+    max-width: 100%;
+}
+
+.rtbcb-section-content img {
+    height: auto;
+}
+
+.rtbcb-section-content table {
+    width: 100%;
+    overflow-x: auto;
+    display: block;
+    -webkit-overflow-scrolling: touch;
+}
+
 /* Executive Summary Enhancements */
 .rtbcb-business-case-strength-enhanced {
     display: inline-flex;
@@ -629,6 +645,32 @@
     .rtbcb-footer-content {
         flex-direction: column;
         text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .rtbcb-header-content {
+        padding: 0 0.75rem;
+    }
+
+    .rtbcb-report-title-enhanced {
+        font-size: 1.75rem;
+    }
+
+    .rtbcb-title-subtitle {
+        font-size: 1rem;
+    }
+
+    .rtbcb-section-content {
+        padding: 1rem;
+    }
+
+    .rtbcb-metrics-dashboard {
+        gap: 1rem;
+    }
+
+    .rtbcb-metric-card {
+        padding: 1rem;
     }
 }
 
