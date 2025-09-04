@@ -60,10 +60,14 @@ $data = [
 'executive_summary'      => [],
 'operational_insights'   => [],
 'financial_analysis'     => [],
+'technology_strategy'    => [
+'recommended_category' => '',
+'category_details'     => [],
 'implementation_roadmap' => [],
+'vendor_considerations'  => [],
+],
 'risk_analysis'          => [],
 'action_plan'            => [],
-'vendor_considerations'  => [],
 ];
 return [ 'body' => wp_json_encode( [ 'choices' => [ [ 'message' => [ 'content' => wp_json_encode( $data ) ] ] ] ] ) ];
 }

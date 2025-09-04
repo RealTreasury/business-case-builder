@@ -2467,65 +2467,67 @@ PROMPT;
 ),
 'process_improvements'     => [],
 'automation_opportunities' => [],
-],
-	'industry_insights'   => [
-		'sector_trends'          => array_map( 'sanitize_textarea_field', (array) ( $analysis_data['industry_insights']['sector_trends'] ?? [] ) ),
-		'competitive_benchmarks' => array_map( 'sanitize_textarea_field', (array) ( $analysis_data['industry_insights']['competitive_benchmarks'] ?? [] ) ),
-		'regulatory_considerations' => array_map( 'sanitize_textarea_field', (array) ( $analysis_data['industry_insights']['regulatory_considerations'] ?? [] ) ),
 	],
-'financial_analysis' => [
-'investment_breakdown' => [
-'software_licensing'        => sanitize_textarea_field( $analysis_data['financial_analysis']['investment_breakdown']['software_licensing'] ?? '' ),
-'implementation_services'   => sanitize_textarea_field( $analysis_data['financial_analysis']['investment_breakdown']['implementation_services'] ?? '' ),
-'training_change_management' => sanitize_textarea_field( $analysis_data['financial_analysis']['investment_breakdown']['training_change_management'] ?? '' ),
-	'ongoing_support'           => sanitize_textarea_field( $analysis_data['financial_analysis']['investment_breakdown']['ongoing_support'] ?? '' ),
+		'industry_insights'   => [
+			'sector_trends'          => array_map( 'sanitize_textarea_field', (array) ( $analysis_data['industry_insights']['sector_trends'] ?? [] ) ),
+			'competitive_benchmarks' => array_map( 'sanitize_textarea_field', (array) ( $analysis_data['industry_insights']['competitive_benchmarks'] ?? [] ) ),
+			'regulatory_considerations' => array_map( 'sanitize_textarea_field', (array) ( $analysis_data['industry_insights']['regulatory_considerations'] ?? [] ) ),
+		],
+	'financial_analysis' => [
+	'investment_breakdown' => [
+	'software_licensing'        => sanitize_textarea_field( $analysis_data['financial_analysis']['investment_breakdown']['software_licensing'] ?? '' ),
+	'implementation_services'   => sanitize_textarea_field( $analysis_data['financial_analysis']['investment_breakdown']['implementation_services'] ?? '' ),
+	'training_change_management' => sanitize_textarea_field( $analysis_data['financial_analysis']['investment_breakdown']['training_change_management'] ?? '' ),
+		'ongoing_support'           => sanitize_textarea_field( $analysis_data['financial_analysis']['investment_breakdown']['ongoing_support'] ?? '' ),
+		],
+		'payback_analysis' => [
+		'payback_months'     => floatval( $analysis_data['financial_analysis']['payback_analysis']['payback_months'] ?? 0 ),
+		'roi_3_year'         => floatval( $analysis_data['financial_analysis']['payback_analysis']['roi_3_year'] ?? 0 ),
+		'npv_analysis'       => sanitize_textarea_field( $analysis_data['financial_analysis']['payback_analysis']['npv_analysis'] ?? '' ),
+		'sensitivity_factors' => array_map( 'sanitize_text_field', (array) ( $analysis_data['financial_analysis']['payback_analysis']['sensitivity_factors'] ?? [] ) ),
+		],
 	],
-	'payback_analysis' => [
-	'payback_months'     => floatval( $analysis_data['financial_analysis']['payback_analysis']['payback_months'] ?? 0 ),
-	'roi_3_year'         => floatval( $analysis_data['financial_analysis']['payback_analysis']['roi_3_year'] ?? 0 ),
-	'npv_analysis'       => sanitize_textarea_field( $analysis_data['financial_analysis']['payback_analysis']['npv_analysis'] ?? '' ),
-	'sensitivity_factors' => array_map( 'sanitize_text_field', (array) ( $analysis_data['financial_analysis']['payback_analysis']['sensitivity_factors'] ?? [] ) ),
-	],
+	'technology_strategy' => [
+	'recommended_category' => sanitize_text_field( $analysis_data['technology_strategy']['recommended_category'] ?? '' ),
+	'category_details'     => function_exists( 'rtbcb_sanitize_recursive' ) ? rtbcb_sanitize_recursive( $analysis_data['technology_strategy']['category_details'] ?? [] ) : array(),
+	'implementation_roadmap' => [],
+	'vendor_considerations'  => is_array( $analysis_data['technology_strategy']['vendor_considerations'] ?? null ) ? array_map( 'sanitize_text_field', $analysis_data['technology_strategy']['vendor_considerations'] ) : [],
 	],
 	'implementation_roadmap' => [],
 	'risk_analysis' => [
-	'implementation_risks'  => array_map( 'sanitize_text_field', (array) ( $analysis_data['risk_analysis']['implementation_risks'] ?? $analysis_data['risk_mitigation']['implementation_risks'] ?? [] ) ),
-	'mitigation_strategies' => array_map( 'sanitize_text_field', (array) ( $analysis_data['risk_analysis']['mitigation_strategies'] ?? $analysis_data['risk_mitigation']['mitigation_strategies'] ?? [] ) ),
-	'success_factors'      => array_map( 'sanitize_text_field', (array) ( $analysis_data['risk_analysis']['success_factors'] ?? $analysis_data['risk_mitigation']['success_factors'] ?? [] ) ),
-	],
+		'implementation_risks'  => array_map( 'sanitize_text_field', (array) ( $analysis_data['risk_analysis']['implementation_risks'] ?? $analysis_data['risk_mitigation']['implementation_risks'] ?? [] ) ),
+		'mitigation_strategies' => array_map( 'sanitize_text_field', (array) ( $analysis_data['risk_analysis']['mitigation_strategies'] ?? $analysis_data['risk_mitigation']['mitigation_strategies'] ?? [] ) ),
+		'success_factors'      => array_map( 'sanitize_text_field', (array) ( $analysis_data['risk_analysis']['success_factors'] ?? $analysis_data['risk_mitigation']['success_factors'] ?? [] ) ),
+		],
 	'action_plan' => [
-	'immediate_steps'       => array_map( 'sanitize_text_field', (array) ( $analysis_data['action_plan']['immediate_steps'] ?? $analysis_data['next_steps']['immediate'] ?? [] ) ),
-	'short_term_milestones' => array_map( 'sanitize_text_field', (array) ( $analysis_data['action_plan']['short_term_milestones'] ?? $analysis_data['next_steps']['short_term'] ?? [] ) ),
-	'long_term_objectives'  => array_map( 'sanitize_text_field', (array) ( $analysis_data['action_plan']['long_term_objectives'] ?? $analysis_data['next_steps']['long_term'] ?? [] ) ),
-	],
-	'vendor_considerations' => [
-	'evaluation_criteria'   => array_map( 'sanitize_text_field', (array) ( $analysis_data['vendor_considerations']['evaluation_criteria'] ?? [] ) ),
-	'due_diligence_areas'   => array_map( 'sanitize_text_field', (array) ( $analysis_data['vendor_considerations']['due_diligence_areas'] ?? [] ) ),
-'negotiation_priorities' => array_map( 'sanitize_text_field', (array) ( $analysis_data['vendor_considerations']['negotiation_priorities'] ?? [] ) ),
-],
-];
-
-$financial_benchmarks = $analysis_data['financial_benchmarks'] ?? ( $analysis_data['research']['financial'] ?? array() );
-if ( ! empty( $financial_benchmarks ) ) {
-$analysis['financial_benchmarks'] = [
-'industry_benchmarks' => array_map(
-function( $bench ) {
-return [
-'metric' => sanitize_text_field( $bench['metric'] ?? '' ),
-'value'  => sanitize_text_field( $bench['value'] ?? '' ),
-'source' => sanitize_text_field( $bench['source'] ?? '' ),
-];
-},
-$financial_benchmarks['industry_benchmarks'] ?? []
-),
-'valuation_multiples' => array_map(
-function( $mult ) {
-return [
-'metric' => sanitize_text_field( $mult['metric'] ?? '' ),
-'range'  => sanitize_text_field( $mult['range'] ?? '' ),
-];
-},
-$financial_benchmarks['valuation_multiples'] ?? []
+		'immediate_steps'       => array_map( 'sanitize_text_field', (array) ( $analysis_data['action_plan']['immediate_steps'] ?? $analysis_data['next_steps']['immediate'] ?? [] ) ),
+		'short_term_milestones' => array_map( 'sanitize_text_field', (array) ( $analysis_data['action_plan']['short_term_milestones'] ?? $analysis_data['next_steps']['short_term'] ?? [] ) ),
+		'long_term_objectives'  => array_map( 'sanitize_text_field', (array) ( $analysis_data['action_plan']['long_term_objectives'] ?? $analysis_data['next_steps']['long_term'] ?? [] ) ),
+		],
+	'vendor_considerations' => [],
+	];
+	
+	$financial_benchmarks = $analysis_data['financial_benchmarks'] ?? ( $analysis_data['research']['financial'] ?? array() );
+	if ( ! empty( $financial_benchmarks ) ) {
+	$analysis['financial_benchmarks'] = [
+	'industry_benchmarks' => array_map(
+	function( $bench ) {
+	return [
+	'metric' => sanitize_text_field( $bench['metric'] ?? '' ),
+	'value'  => sanitize_text_field( $bench['value'] ?? '' ),
+	'source' => sanitize_text_field( $bench['source'] ?? '' ),
+	];
+	},
+	$financial_benchmarks['industry_benchmarks'] ?? []
+	),
+	'valuation_multiples' => array_map(
+	function( $mult ) {
+	return [
+	'metric' => sanitize_text_field( $mult['metric'] ?? '' ),
+	'range'  => sanitize_text_field( $mult['range'] ?? '' ),
+	];
+	},
+	$financial_benchmarks['valuation_multiples'] ?? []
 ),
 ];
 }
@@ -2548,18 +2550,26 @@ $analysis['operational_insights']['automation_opportunities'][] = [
 ];
 }
 
-	foreach ( (array) ( $analysis_data['implementation_roadmap'] ?? [] ) as $phase ) {
-		$analysis['implementation_roadmap'][] = [
-			'phase'            => sanitize_text_field( $phase['phase'] ?? '' ),
-			'timeline'         => sanitize_text_field( $phase['timeline'] ?? ( $phase['duration'] ?? '' ) ),
-			'activities'       => array_map( 'sanitize_text_field', (array) ( $phase['activities'] ?? ( $phase['key_activities'] ?? [] ) ) ),
-			'success_criteria' => array_map( 'sanitize_text_field', (array) ( $phase['success_criteria'] ?? [] ) ),
-			'risks'            => array_map( 'sanitize_text_field', (array) ( $phase['risks'] ?? [] ) ),
-		];
-	}
+$roadmap_source = $analysis_data['technology_strategy']['implementation_roadmap'] ?? $analysis_data['implementation_roadmap'] ?? [];
+foreach ( (array) $roadmap_source as $phase ) {
+if ( ! is_array( $phase ) ) {
+continue;
+}
+$parsed = [
+'phase'            => sanitize_text_field( $phase['phase'] ?? '' ),
+'timeline'         => sanitize_text_field( $phase['timeline'] ?? ( $phase['duration'] ?? '' ) ),
+'activities'       => array_map( 'sanitize_text_field', (array) ( $phase['activities'] ?? ( $phase['key_activities'] ?? [] ) ) ),
+'success_criteria' => array_map( 'sanitize_text_field', (array) ( $phase['success_criteria'] ?? [] ) ),
+'risks'            => array_map( 'sanitize_text_field', (array) ( $phase['risks'] ?? [] ) ),
+];
+$analysis['technology_strategy']['implementation_roadmap'][] = $parsed;
+$analysis['implementation_roadmap'][]                       = $parsed;
+}
 
-	return $analysis;
-	}
+$analysis['vendor_considerations'] = $analysis['technology_strategy']['vendor_considerations'];
+
+return $analysis;
+}
 
 	/**
 	* Directly call the OpenAI API and return decoded data.
