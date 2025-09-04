@@ -2365,7 +2365,21 @@ function rtbcb_transform_data_for_template( $business_case_data ) {
 			];
 	}
 
- // Prepare risk analysis.
+// Prepare risk analysis.
+$risk_matrix = [];
+if ( ! empty( $business_case_data['risk_analysis']['risk_matrix'] ) ) {
+$risk_matrix = array_map(
+function ( $risk ) {
+return [
+'risk'       => sanitize_text_field( $risk['risk'] ?? '' ),
+'likelihood' => sanitize_text_field( $risk['likelihood'] ?? '' ),
+'impact'     => sanitize_text_field( $risk['impact'] ?? '' ),
+];
+},
+(array) $business_case_data['risk_analysis']['risk_matrix']
+);
+}
+
 if ( ! empty( $business_case_data['risk_analysis']['implementation_risks'] ) ) {
 $implementation_risks = array_map( 'sanitize_text_field', (array) $business_case_data['risk_analysis']['implementation_risks'] );
 } elseif ( ! empty( $business_case_data['risks'] ) ) {
@@ -2432,6 +2446,7 @@ $success_factors = array_map( 'sanitize_text_field', (array) $business_case_data
                         ],
                         'operational_insights' => $operational_insights,
                           'risk_analysis'        => [
+                                'risk_matrix'          => $risk_matrix,
                                 'implementation_risks' => $implementation_risks,
                                 'mitigation_strategies' => $mitigation_strategies,
                                 'success_factors'      => $success_factors,
