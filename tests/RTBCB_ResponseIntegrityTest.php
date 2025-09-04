@@ -25,26 +25,26 @@ return [
 }
 }
 
-require_once __DIR__ . '/../inc/class-rtbcb-response-handler.php';
+require_once __DIR__ . '/../inc/class-rtbcb-response-integrity.php';
 
-final class RTBCB_ResponseHandlerIntegrityTest extends TestCase {
+final class RTBCB_ResponseIntegrityTest extends TestCase {
 public function test_validate_response() {
-$this->assertTrue( RTBCB_Response_Handler::validate_response( '{"a":1}' ) );
-$this->assertFalse( RTBCB_Response_Handler::validate_response( '{"a":}' ) );
+$this->assertTrue( RTBCB_Response_Integrity::validateResponse( '{"a":1}' ) );
+$this->assertFalse( RTBCB_Response_Integrity::validateResponse( '{"a":}' ) );
 }
 
 public function test_repair_response() {
 $corrupted = '{"a":1,}';
-$repaired  = RTBCB_Response_Handler::repair_response( $corrupted );
-$this->assertTrue( RTBCB_Response_Handler::validate_response( $repaired ) );
+$repaired  = RTBCB_Response_Integrity::repairResponse( $corrupted );
+$this->assertTrue( RTBCB_Response_Integrity::validateResponse( $repaired ) );
 }
 
 public function test_detect_corruption_and_reprocess() {
-$result = RTBCB_Response_Handler::detect_corruption( '{"a":1}', '{"a":2}' );
+$result = RTBCB_Response_Integrity::detectCorruption( '{"a":1}', '{"a":2}' );
 $this->assertTrue( $result['corrupted'] );
 $this->assertContains( 'mismatch', $result['issues'] );
 
-$processed = RTBCB_Response_Handler::reprocess_historical_data( function( $log, $repaired ) use ( & $ids ) {
+$processed = RTBCB_Response_Integrity::reprocessHistoricalData( function( $log, $repaired ) use ( & $ids ) {
 $ids[] = $log['id'];
 } );
 $this->assertSame( 1, $processed );

@@ -4,9 +4,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 defined( 'ABSPATH' ) || exit;
 
-require_once __DIR__ . '/../inc/class-rtbcb-response-handler.php';
+require_once __DIR__ . '/../inc/class-rtbcb-response-parser.php';
 
-$parser = new RTBCB_Response_Handler();
+$parser = new RTBCB_Response_Parser();
 
 $stream  = "for (;;); data: {\"type\":\"response.reasoning.delta\",\"delta\":{\"text\":\"thinking\"}}\n\n";
 $stream .= "for (;;); data: {\"type\":\"response.output_text.delta\",\"delta\":{\"text\":\"Hello\"}}\n\n";

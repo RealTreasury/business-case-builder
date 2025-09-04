@@ -2,13 +2,13 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Handle OpenAI responses including parsing and integrity checks.
+ * Parse OpenAI responses and business case JSON.
  *
  * @package RealTreasuryBusinessCaseBuilder
  */
 require_once __DIR__ . '/config.php';
 
-class RTBCB_Response_Handler {
+class RTBCB_Response_Parser {
 /**
  * Parse raw OpenAI response.
  *
@@ -514,169 +514,5 @@ return 0 + $value;
 }
 
 return sanitize_text_field( (string) $value );
-}
-
-/**
- * Validate JSON structure integrity.
- *
- * @param string $response JSON response string.
- * @return bool True when valid JSON, false otherwise.
- */
-public static function validate_response( $response ) {
-$response = function_exists( 'wp_unslash' ) ? wp_unslash( $response ) : $response;
-json_decode( $response );
-$valid = JSON_ERROR_NONE === json_last_error();
-
-if ( class_exists( 'RTBCB_Logger' ) ) {
-RTBCB_Logger::log(
-'response_validate',
-[
-'valid'  => $valid,
-'length' => strlen( $response ),
-]
-);
-}
-
-return $valid;
-}
-
-/**
- * Detect corruption patterns between stored and original responses.
- *
- * @param string $stored_response   Stored response string.
- * @param string $original_response Original response string.
- * @return array{corrupted:bool,issues:array}
- */
-public static function detect_corruption( $stored_response, $original_response ) {
-$issues = [];
-
-json_decode( $stored_response );
-if ( JSON_ERROR_NONE !== json_last_error() ) {
-$issues[] = 'invalid_json';
-}
-
-if ( $stored_response !== $original_response ) {
-$issues[] = 'mismatch';
-}
-
-$result = [
-'corrupted' => ! empty( $issues ),
-'issues'    => $issues,
-];
-
-if ( class_exists( 'RTBCB_Logger' ) ) {
-RTBCB_Logger::log( 'response_detect_corruption', $result );
-}
-
-return $result;
-}
-
-/**
- * Attempt automatic repair of minor JSON issues.
- *
- * @param string $corrupted_response Possibly corrupted JSON.
- * @return string Repaired JSON string or original when unrepaired.
- */
-public static function repair_response( $corrupted_response ) {
-$attempts = [
-$corrupted_response,
-str_replace( ',}', '}', $corrupted_response ),
-str_replace( ',]', ']', $corrupted_response ),
-];
-
-foreach ( $attempts as $attempt ) {
-json_decode( $attempt );
-if ( JSON_ERROR_NONE === json_last_error() ) {
-if ( class_exists( 'RTBCB_Logger' ) ) {
-RTBCB_Logger::log(
-'response_repair_success',
-[
-'original_length' => strlen( $corrupted_response ),
-'repaired_length' => strlen( $attempt ),
-]
-);
-}
-return wp_json_encode( json_decode( $attempt, true ) );
-}
-}
-
-if ( class_exists( 'RTBCB_Logger' ) ) {
-RTBCB_Logger::log( 'response_repair_failed', [ 'length' => strlen( $corrupted_response ) ] );
-}
-
-return $corrupted_response;
-}
-
-/**
- * Generate integrity report for a log entry.
- *
- * @param int $log_id Log identifier.
- * @return array Report details.
- */
-public static function generate_integrity_report( $log_id ) {
-$log_id = intval( $log_id );
-if ( $log_id <= 0 || ! class_exists( 'RTBCB_API_Log' ) ) {
-return [];
-}
-
-$logs  = RTBCB_API_Log::get_logs( 200 );
-$entry = null;
-foreach ( $logs as $log ) {
-if ( intval( $log['id'] ) === $log_id ) {
-$entry = $log;
-break;
-}
-}
-
-if ( ! $entry ) {
-return [];
-}
-
-$result               = self::detect_corruption( $entry['response_json'], $entry['response_json'] );
-$result['log_id']     = $log_id;
-$result['valid_json'] = self::validate_response( $entry['response_json'] );
-
-if ( class_exists( 'RTBCB_Logger' ) ) {
-RTBCB_Logger::log( 'response_integrity_report', $result );
-}
-
-return $result;
-}
-
-/**
- * Re-process corrupted historical data.
- *
- * @param callable $callback Callback invoked with (log, repaired_json).
- * @param int      $limit    Number of logs to inspect.
- * @return int Number of logs reprocessed.
- */
-public static function reprocess_historical_data( callable $callback, $limit = 100 ) {
-if ( ! class_exists( 'RTBCB_API_Log' ) ) {
-return 0;
-}
-
-$logs  = RTBCB_API_Log::get_logs( $limit );
-$count = 0;
-
-foreach ( $logs as $log ) {
-$check = self::detect_corruption( $log['response_json'], $log['response_json'] );
-if ( $check['corrupted'] ) {
-$repaired = self::repair_response( $log['response_json'] );
-call_user_func( $callback, $log, $repaired );
-$count++;
-}
-}
-
-if ( class_exists( 'RTBCB_Logger' ) ) {
-RTBCB_Logger::log(
-'response_reprocess',
-[
-'processed' => $count,
-'limit'     => $limit,
-]
-);
-}
-
-return $count;
 }
 }

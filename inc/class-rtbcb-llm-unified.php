@@ -9,7 +9,7 @@ defined( 'ABSPATH' ) || exit;
 
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/helpers.php';
-require_once __DIR__ . '/class-rtbcb-response-handler.php';
+require_once __DIR__ . '/class-rtbcb-response-parser.php';
 
 class RTBCB_LLM_Unified {
         private $current_inputs = [];
@@ -56,12 +56,12 @@ class RTBCB_LLM_Unified {
          */
         private $last_usage;
 
-/**
- * Response handler instance.
- *
- * @var RTBCB_Response_Handler
- */
-private $response_handler;
+        /**
+         * Response parser instance.
+         *
+         * @var RTBCB_Response_Parser
+         */
+        private $response_parser;
 
         /**
          * Serialized company research from the last request.
@@ -92,7 +92,7 @@ private $response_handler;
                        )
                );
 
-               $this->response_handler = new RTBCB_Response_Handler();
+               $this->response_parser = new RTBCB_Response_Parser();
 
                if ( empty( $this->api_key ) ) {
                        rtbcb_log_error(
@@ -152,7 +152,7 @@ private $response_handler;
 	* @return array|string|false Parsed content or false on failure.
 	*/
 	public function process_openai_response( $response_body ) {
-	       return $this->response_handler->process_openai_response( $response_body );
+	       return $this->response_parser->process_openai_response( $response_body );
 	}
 
         /**
@@ -296,8 +296,8 @@ private $response_handler;
 			return new WP_Error( 'llm_failure', __( 'Unable to generate analysis at this time.', 'rtbcb' ) );
 		}
 
-$parsed = $this->response_handler->parse( $response );
-		$json   = $this->response_handler->process_openai_response( $parsed['output_text'] );
+$parsed = $this->response_parser->parse( $response );
+		$json   = $this->response_parser->process_openai_response( $parsed['output_text'] );
 
 		if ( ! is_array( $json ) ) {
 			return new WP_Error( 'llm_parse_error', __( 'Invalid response from language model.', 'rtbcb' ) );
@@ -356,7 +356,7 @@ $parsed = $this->response_handler->parse( $response );
 			return new WP_Error( 'llm_failure', __( 'Unable to generate commentary at this time.', 'rtbcb' ) );
 		}
 
-$parsed     = $this->response_handler->parse( $response );
+$parsed     = $this->response_parser->parse( $response );
 		$commentary = sanitize_textarea_field( $parsed['output_text'] );
 
 		if ( empty( $commentary ) ) {
@@ -469,7 +469,7 @@ USER,
 			return new WP_Error( 'llm_failure', $response->get_error_message() );
 		}
 
-$parsed  = $this->response_handler->parse( $response );
+$parsed  = $this->response_parser->parse( $response );
 		$content = $parsed['output_text'];
 
 		if ( empty( $content ) ) {
@@ -477,7 +477,7 @@ $parsed  = $this->response_handler->parse( $response );
 		}
 
 // Parse JSON response
-$json = $this->response_handler->process_openai_response( $content );
+$json = $this->response_parser->process_openai_response( $content );
 
 		if ( ! is_array( $json ) ) {
 			return new WP_Error( 'llm_parse_error', __( 'Invalid JSON response from language model.', 'rtbcb' ) );
@@ -563,7 +563,7 @@ $json = $this->response_handler->process_openai_response( $content );
 			return new WP_Error( 'llm_failure', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
 		}
 
-$parsed   = $this->response_handler->parse( $response );
+$parsed   = $this->response_parser->parse( $response );
 		$overview = sanitize_textarea_field( $parsed['output_text'] );
 
 		if ( empty( $overview ) ) {
@@ -613,7 +613,7 @@ $parsed   = $this->response_handler->parse( $response );
 			return new WP_Error( 'llm_failure', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
 		}
 
-$parsed   = $this->response_handler->parse( $response );
+$parsed   = $this->response_parser->parse( $response );
 		$overview = sanitize_textarea_field( $parsed['output_text'] );
 
 		if ( empty( $overview ) ) {
@@ -679,7 +679,7 @@ $parsed   = $this->response_handler->parse( $response );
 			return new WP_Error( 'llm_failure', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
 		}
 
-$parsed   = $this->response_handler->parse( $response );
+$parsed   = $this->response_parser->parse( $response );
 		$overview = sanitize_textarea_field( $parsed['output_text'] );
 
 		if ( empty( $overview ) ) {
@@ -724,8 +724,8 @@ $parsed   = $this->response_handler->parse( $response );
 			return new WP_Error( 'llm_failure', __( 'Unable to generate recommendation details at this time.', 'rtbcb' ) );
 		}
 
-$parsed_response = $this->response_handler->parse( $response );
-$parsed          = $this->response_handler->process_openai_response( $parsed_response['output_text'] );
+$parsed_response = $this->response_parser->parse( $response );
+$parsed          = $this->response_parser->process_openai_response( $parsed_response['output_text'] );
 
 		if ( empty( $parsed ) || ! is_array( $parsed ) ) {
 			return new WP_Error( 'llm_empty_response', __( 'No recommendation details returned.', 'rtbcb' ) );
@@ -777,8 +777,8 @@ $parsed          = $this->response_handler->process_openai_response( $parsed_res
 			return new WP_Error( 'llm_failure', __( 'Unable to generate benefits estimate at this time.', 'rtbcb' ) );
 		}
 
-$parsed_response = $this->response_handler->parse( $response );
-$parsed          = $this->response_handler->process_openai_response( $parsed_response['output_text'] );
+$parsed_response = $this->response_parser->parse( $response );
+$parsed          = $this->response_parser->process_openai_response( $parsed_response['output_text'] );
 
 		if ( empty( $parsed ) || ! is_array( $parsed ) ) {
 			return new WP_Error( 'llm_empty_response', __( 'No estimate returned.', 'rtbcb' ) );
@@ -893,7 +893,7 @@ $tech_prompt .= '\nContext: ' . implode( '\n', array_map( 'sanitize_text_field',
 
 	        if ( false === $company_research ) {
 	                if ( isset( $batch_results['company'] ) && ! is_wp_error( $batch_results['company'] ) ) {
-	                        $json = $this->response_handler->process_openai_response( $batch_results['company'] );
+	                        $json = $this->response_parser->process_openai_response( $batch_results['company'] );
 	                        if ( is_array( $json ) ) {
 					$company_research = [
 						'company_profile'  => [
@@ -922,7 +922,7 @@ $tech_prompt .= '\nContext: ' . implode( '\n', array_map( 'sanitize_text_field',
 
 	        if ( false === $industry_analysis ) {
 	                if ( isset( $batch_results['industry'] ) && ! is_wp_error( $batch_results['industry'] ) ) {
-	                        $json = $this->response_handler->process_openai_response( $batch_results['industry'] );
+	                        $json = $this->response_parser->process_openai_response( $batch_results['industry'] );
 	                        if ( is_array( $json ) ) {
 					$industry_analysis = [
 						'analysis'        => sanitize_text_field( $json['analysis'] ?? '' ),
@@ -962,7 +962,7 @@ $tech_prompt .= '\nContext: ' . implode( '\n', array_map( 'sanitize_text_field',
 
 	       if ( false === $risk_profile ) {
 	               if ( isset( $batch_results['risk'] ) && ! is_wp_error( $batch_results['risk'] ) ) {
-	                       $json = $this->response_handler->process_openai_response( $batch_results['risk'] );
+	                       $json = $this->response_parser->process_openai_response( $batch_results['risk'] );
 	                       if ( is_array( $json ) ) {
 	                               $risk_profile = [
 	                                       'risk_matrix' => array_map(
@@ -997,7 +997,7 @@ $tech_prompt .= '\nContext: ' . implode( '\n', array_map( 'sanitize_text_field',
 
 	       if ( false === $financial_benchmarks ) {
 	               if ( isset( $batch_results['financial'] ) && ! is_wp_error( $batch_results['financial'] ) ) {
-	                       $json = $this->response_handler->process_openai_response( $batch_results['financial'] );
+	                       $json = $this->response_parser->process_openai_response( $batch_results['financial'] );
 	                       if ( is_array( $json ) ) {
 	                               $financial_benchmarks = [
 	                                       'industry_benchmarks' => array_map(
@@ -1056,7 +1056,7 @@ $tech_prompt .= '\nContext: ' . implode( '\n', array_map( 'sanitize_text_field',
 			return $response;
 		}
 
-$parsed = $this->response_handler->parse_business_case( $response );
+$parsed = $this->response_parser->parse_business_case( $response );
 
 		if ( is_wp_error( $parsed ) ) {
 			return $parsed;
@@ -1087,8 +1087,8 @@ $parsed = $this->response_handler->parse_business_case( $response );
 	*
 	* @return array|WP_Error Structured analysis array or error object.
 	*/
-private function parse_comprehensive_response( $response ) {
-return $this->response_handler->parse_business_case( $response );
+	private function parse_comprehensive_response( $response ) {
+return $this->response_parser->parse_business_case( $response );
 }
 
 
@@ -1258,8 +1258,8 @@ return $this->response_handler->parse_business_case( $response );
 	                return $default;
 	        }
 
-$parsed = $this->response_handler->parse( $response );
-	        $json   = $this->response_handler->process_openai_response( $parsed['output_text'] );
+$parsed = $this->response_parser->parse( $response );
+	        $json   = $this->response_parser->process_openai_response( $parsed['output_text'] );
 
 		if ( ! is_array( $json ) || empty( $json['competitors'] ) || ! is_array( $json['competitors'] ) ) {
 			return $default;
@@ -1492,8 +1492,8 @@ SYSTEM;
 	               return $response;
 	       }
 
-$parsed = $this->response_handler->parse( $response );
-	       $json   = $this->response_handler->process_openai_response( $parsed['output_text'] );
+$parsed = $this->response_parser->parse( $response );
+	       $json   = $this->response_parser->process_openai_response( $parsed['output_text'] );
 
 		if ( ! is_array( $json ) ) {
 			return new WP_Error( 'llm_parse_error', __( 'Invalid response from language model.', 'rtbcb' ) );
@@ -1603,7 +1603,7 @@ $parsed = $this->response_handler->parse( $response );
 			);
 		}
 
-	        $decoded = $this->response_handler->process_openai_response( wp_remote_retrieve_body( $response ) );
+	        $decoded = $this->response_parser->process_openai_response( wp_remote_retrieve_body( $response ) );
 	        if ( ! is_array( $decoded ) ) {
 	                return new WP_Error( 'llm_response_decode_error', __( 'Failed to decode response body.', 'rtbcb' ) );
 	        }
@@ -1696,8 +1696,8 @@ SYSTEM;
 			return $response;
 		}
 
-$parsed_response = $this->response_handler->parse( $response );
-$json            = $this->response_handler->process_openai_response( $parsed_response['output_text'] );
+$parsed_response = $this->response_parser->parse( $response );
+$json            = $this->response_parser->process_openai_response( $parsed_response['output_text'] );
 
 		if ( ! is_array( $json ) ) {
 			return new WP_Error( 'llm_parse_error', __( 'Invalid response from language model.', 'rtbcb' ) );
@@ -1747,7 +1747,7 @@ $json            = $this->response_handler->process_openai_response( $parsed_res
 			return $response;
 		}
 
-$parsed  = $this->response_handler->parse( $response );
+$parsed  = $this->response_parser->parse( $response );
 		$summary = sanitize_textarea_field( $parsed['output_text'] );
 
 		if ( empty( $summary ) ) {
@@ -2108,7 +2108,7 @@ return $prompt;
 	        return $response;
 	}
 
-$parsed        = $this->response_handler->parse( $response );
+$parsed        = $this->response_parser->parse( $response );
 	$enriched_data = $this->validate_enrichment_response( $parsed['output_text'] );
 
 	if ( is_wp_error( $enriched_data ) ) {
@@ -2293,7 +2293,7 @@ PROMPT;
                        return $response;
                }
 
-               $parsed  = $this->response_handler->parse( $response );
+               $parsed  = $this->response_parser->parse( $response );
                $decoded = json_decode( wp_remote_retrieve_body( $response ), true );
                $data    = json_decode( $parsed['output_text'], true );
 
@@ -2411,7 +2411,7 @@ SYSTEM;
 	* @return array|WP_Error Decoded array or error.
 	*/
 	private function validate_enrichment_response( $response ) {
-	        $decoded = $this->response_handler->process_openai_response( $response );
+	        $decoded = $this->response_parser->process_openai_response( $response );
 
 	        if ( ! $decoded ) {
 	                return new WP_Error( 'invalid_json', __( 'Response is not valid JSON', 'rtbcb' ) );
@@ -2737,7 +2737,7 @@ return $analysis;
 	       }
 
 	       $response_body = $response['body'] ?? '';
-	       $response_data = $this->response_handler->process_openai_response( $response_body );
+	       $response_data = $this->response_parser->process_openai_response( $response_body );
 
 	       if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 	               RTBCB_Logger::log(

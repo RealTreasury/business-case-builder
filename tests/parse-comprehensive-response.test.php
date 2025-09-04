@@ -52,9 +52,9 @@ if ( ! function_exists( 'wp_remote_retrieve_body' ) ) {
         }
 }
 
-require_once __DIR__ . '/../inc/class-rtbcb-response-handler.php';
+require_once __DIR__ . '/../inc/class-rtbcb-response-parser.php';
 
-$parser = new RTBCB_Response_Handler();
+$parser = new RTBCB_Response_Parser();
 
 $valid_json = [
         'executive_summary' => [ 'strategic_positioning' => 'pos' ],
