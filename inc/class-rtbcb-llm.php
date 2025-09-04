@@ -402,7 +402,7 @@ $json = $this->response_parser->process_openai_response( $content );
 		}
 
 		// Validate required fields
-		$required_fields = [ 'analysis', 'recommendations', 'references', 'metrics' ];
+			$required_fields = [ 'analysis', 'recommendations', 'references', 'metrics' ];
 		$missing_fields  = array_diff( $required_fields, array_keys( $json ) );
 
 		if ( ! empty( $missing_fields ) ) {
@@ -2231,15 +2231,18 @@ PROMPT;
                        return false;
                }
 
-               $required = [
-                       'executive_summary',
-                       'operational_insights',
-                       'financial_analysis',
-                       'implementation_roadmap',
-                       'risk_analysis',
-                       'action_plan',
-                       'vendor_considerations',
-               ];
+			$required = [
+'executive_summary',
+];
+
+			$optional = [
+'operational_insights',
+'financial_analysis',
+'implementation_roadmap',
+'risk_analysis',
+'action_plan',
+'vendor_considerations',
+];
 
                foreach ( $required as $key ) {
                        if ( ! array_key_exists( $key, $data ) ) {
