@@ -148,18 +148,22 @@ $processing_time = $metadata['processing_time'] ?? ( $report_data['processing_ti
 	<!-- Company Intelligence Section (AI-Enhanced) -->
 	<?php if ( ! empty( $company_intelligence ) ) : ?>
 	<div class="rtbcb-section-enhanced rtbcb-company-intelligence">
-		<div class="rtbcb-section-header-enhanced">
-			<h2 class="rtbcb-section-title">
-				<span class="rtbcb-section-icon">🧠</span>
-				<?php echo esc_html__( 'AI-Enhanced Company Intelligence', 'rtbcb' ); ?>
-			</h2>
-			<div class="rtbcb-ai-badge">
-				<span class="rtbcb-ai-icon">✨</span>
-				<?php echo esc_html__( 'AI Enriched', 'rtbcb' ); ?>
-			</div>
-		</div>
+                <div class="rtbcb-section-header-enhanced">
+                        <h2 class="rtbcb-section-title">
+                                <span class="rtbcb-section-icon">🧠</span>
+                                <?php echo esc_html__( 'AI-Enhanced Company Intelligence', 'rtbcb' ); ?>
+                        </h2>
+                        <div class="rtbcb-ai-badge">
+                                <span class="rtbcb-ai-icon">✨</span>
+                                <?php echo esc_html__( 'AI Enriched', 'rtbcb' ); ?>
+                        </div>
+                        <button type="button" class="rtbcb-section-toggle" data-target="company-intelligence-content">
+                                <span class="rtbcb-toggle-text"><?php echo esc_html__( 'Expand', 'rtbcb' ); ?></span>
+                                <span class="rtbcb-toggle-arrow">▼</span>
+                        </button>
+                </div>
 
-		<div class="rtbcb-section-content">
+                <div id="company-intelligence-content" class="rtbcb-section-content">
 			<div class="rtbcb-intelligence-grid">
 						<?php if ( ! empty( $company_intelligence['enriched_profile'] ) ) : ?>
 						<div class="rtbcb-intelligence-card">
@@ -262,13 +266,17 @@ $processing_time = $metadata['processing_time'] ?? ( $report_data['processing_ti
 
 <?php if ( ! empty( $operational_insights ) ) : ?>
 <div class="rtbcb-section-enhanced rtbcb-operational-insights">
-<div class="rtbcb-section-header-enhanced">
-<h2 class="rtbcb-section-title">
-<span class="rtbcb-section-icon">⚙️</span>
-<?php echo esc_html__( 'Operational Insights', 'rtbcb' ); ?>
-</h2>
-</div>
-<div class="rtbcb-section-content">
+        <div class="rtbcb-section-header-enhanced">
+                <h2 class="rtbcb-section-title">
+                        <span class="rtbcb-section-icon">⚙️</span>
+                        <?php echo esc_html__( 'Operational Insights', 'rtbcb' ); ?>
+                </h2>
+                <button type="button" class="rtbcb-section-toggle" data-target="operational-insights-content">
+                        <span class="rtbcb-toggle-text"><?php echo esc_html__( 'Expand', 'rtbcb' ); ?></span>
+                        <span class="rtbcb-toggle-arrow">▼</span>
+                </button>
+        </div>
+        <div id="operational-insights-content" class="rtbcb-section-content">
 <?php if ( ! empty( $operational_insights['current_state_assessment'] ) ) : ?>
 <h3><?php echo esc_html__( 'Current State Assessment', 'rtbcb' ); ?></h3>
 <ul>
@@ -352,13 +360,17 @@ $regulatory_land    = $industry_context['regulatory_landscape'] ?? [];
 $tech_adoption      = $sector_analysis['technology_adoption'] ?? ( $benchmarking['technology_penetration'] ?? '' );
 ?>
 <div class="rtbcb-section-enhanced rtbcb-industry-insights">
-<div class="rtbcb-section-header-enhanced">
-<h2 class="rtbcb-section-title">
-<span class="rtbcb-section-icon">🌐</span>
-<?php echo esc_html__( 'Industry Insights', 'rtbcb' ); ?>
-</h2>
-</div>
-<div class="rtbcb-section-content">
+        <div class="rtbcb-section-header-enhanced">
+                <h2 class="rtbcb-section-title">
+                        <span class="rtbcb-section-icon">🌐</span>
+                        <?php echo esc_html__( 'Industry Insights', 'rtbcb' ); ?>
+                </h2>
+                <button type="button" class="rtbcb-section-toggle" data-target="industry-insights-content">
+                        <span class="rtbcb-toggle-text"><?php echo esc_html__( 'Expand', 'rtbcb' ); ?></span>
+                        <span class="rtbcb-toggle-arrow">▼</span>
+                </button>
+        </div>
+        <div id="industry-insights-content" class="rtbcb-section-content">
 <div class="rtbcb-industry-insights">
 <?php if ( ! empty( $sector_analysis['market_dynamics'] ) ) : ?>
 <div class="rtbcb-insight-item">
@@ -452,13 +464,17 @@ $tech_adoption      = $sector_analysis['technology_adoption'] ?? ( $benchmarking
 
 <?php if ( ! empty( $financial_benchmarks ) ) : ?>
 <div class="rtbcb-section-enhanced rtbcb-financial-benchmarks">
-<div class="rtbcb-section-header-enhanced">
-<h2 class="rtbcb-section-title">
-<span class="rtbcb-section-icon">💹</span>
-<?php echo esc_html__( 'Industry & Financial Benchmarks', 'rtbcb' ); ?>
-</h2>
-</div>
-<div class="rtbcb-section-content">
+        <div class="rtbcb-section-header-enhanced">
+                <h2 class="rtbcb-section-title">
+                        <span class="rtbcb-section-icon">💹</span>
+                        <?php echo esc_html__( 'Industry & Financial Benchmarks', 'rtbcb' ); ?>
+                </h2>
+                <button type="button" class="rtbcb-section-toggle" data-target="financial-benchmarks-content">
+                        <span class="rtbcb-toggle-text"><?php echo esc_html__( 'Expand', 'rtbcb' ); ?></span>
+                        <span class="rtbcb-toggle-arrow">▼</span>
+                </button>
+        </div>
+        <div id="financial-benchmarks-content" class="rtbcb-section-content">
 <?php if ( ! empty( $financial_benchmarks['industry_benchmarks'] ) ) : ?>
 <div class="rtbcb-benchmark-block">
 <h3><?php echo esc_html__( 'Industry Benchmarks', 'rtbcb' ); ?></h3>
@@ -490,13 +506,17 @@ $tech_adoption      = $sector_analysis['technology_adoption'] ?? ( $benchmarking
 
 <?php if ( ! empty( $technology_strategy['category_details'] ) || ! empty( $technology_strategy['implementation_roadmap'] ) || ! empty( $technology_strategy['vendor_considerations'] ) ) : ?>
 <div class="rtbcb-section-enhanced rtbcb-technology-strategy">
-<div class="rtbcb-section-header-enhanced">
-<h2 class="rtbcb-section-title">
-<span class="rtbcb-section-icon">🛠️</span>
-<?php echo esc_html__( 'Technology Strategy', 'rtbcb' ); ?>
-</h2>
-</div>
-<div class="rtbcb-section-content">
+        <div class="rtbcb-section-header-enhanced">
+                <h2 class="rtbcb-section-title">
+                        <span class="rtbcb-section-icon">🛠️</span>
+                        <?php echo esc_html__( 'Technology Strategy', 'rtbcb' ); ?>
+                </h2>
+                <button type="button" class="rtbcb-section-toggle" data-target="technology-strategy-content">
+                        <span class="rtbcb-toggle-text"><?php echo esc_html__( 'Expand', 'rtbcb' ); ?></span>
+                        <span class="rtbcb-toggle-arrow">▼</span>
+                </button>
+        </div>
+        <div id="technology-strategy-content" class="rtbcb-section-content">
 <?php if ( ! empty( $technology_strategy['category_details'] ) ) : ?>
 <div class="rtbcb-tech-category-details">
 <h3><?php echo esc_html__( 'Solution Details', 'rtbcb' ); ?></h3>
@@ -560,13 +580,17 @@ echo '<li>' . esc_html( $label . ': ' . $value ) . '</li>';
 
 <?php if ( ! empty( $risk_analysis ) ) : ?>
 <div class="rtbcb-section-enhanced rtbcb-risk-analysis">
-<div class="rtbcb-section-header-enhanced">
-<h2 class="rtbcb-section-title">
-<span class="rtbcb-section-icon">⚠️</span>
-<?php echo esc_html__( 'Risk Assessment', 'rtbcb' ); ?>
-</h2>
-</div>
-<div class="rtbcb-section-content">
+        <div class="rtbcb-section-header-enhanced">
+                <h2 class="rtbcb-section-title">
+                        <span class="rtbcb-section-icon">⚠️</span>
+                        <?php echo esc_html__( 'Risk Assessment', 'rtbcb' ); ?>
+                </h2>
+                <button type="button" class="rtbcb-section-toggle" data-target="risk-analysis-content">
+                        <span class="rtbcb-toggle-text"><?php echo esc_html__( 'Expand', 'rtbcb' ); ?></span>
+                        <span class="rtbcb-toggle-arrow">▼</span>
+                </button>
+        </div>
+        <div id="risk-analysis-content" class="rtbcb-section-content">
 <?php if ( ! empty( $risk_analysis['risk_matrix'] ) ) : ?>
 <table class="rtbcb-risk-matrix">
 <thead>
@@ -616,19 +640,23 @@ $impact     = $risk_item['impact'] ?? '';
 	<!-- Executive Summary with Enhanced Visual Design -->
 	<?php if ( ! empty( $executive_summary ) ) : ?>
 <div class="rtbcb-section-enhanced rtbcb-executive-summary rtbcb-executive-summary-enhanced">
-		<div class="rtbcb-section-header-enhanced">
-			<h2 class="rtbcb-section-title">
-				<span class="rtbcb-section-icon">📋</span>
-				<?php echo esc_html__( 'Executive Summary', 'rtbcb' ); ?>
-			</h2>
-			<div class="rtbcb-business-case-strength-enhanced <?php echo esc_attr( strtolower( $executive_summary['business_case_strength'] ?? 'strong' ) ); ?>">
-				<span class="rtbcb-strength-indicator"></span>
-				<?php echo esc_html( $executive_summary['business_case_strength'] ?? esc_html__( 'Strong', 'rtbcb' ) ); ?>
-				<?php echo esc_html__( 'Business Case', 'rtbcb' ); ?>
-			</div>
-		</div>
+                <div class="rtbcb-section-header-enhanced">
+                        <h2 class="rtbcb-section-title">
+                                <span class="rtbcb-section-icon">📋</span>
+                                <?php echo esc_html__( 'Executive Summary', 'rtbcb' ); ?>
+                        </h2>
+                        <div class="rtbcb-business-case-strength-enhanced <?php echo esc_attr( strtolower( $executive_summary['business_case_strength'] ?? 'strong' ) ); ?>">
+                                <span class="rtbcb-strength-indicator"></span>
+                                <?php echo esc_html( $executive_summary['business_case_strength'] ?? esc_html__( 'Strong', 'rtbcb' ) ); ?>
+                                <?php echo esc_html__( 'Business Case', 'rtbcb' ); ?>
+                        </div>
+                        <button type="button" class="rtbcb-section-toggle" data-target="executive-summary-content">
+                                <span class="rtbcb-toggle-text"><?php echo esc_html__( 'Expand', 'rtbcb' ); ?></span>
+                                <span class="rtbcb-toggle-arrow">▼</span>
+                        </button>
+                </div>
 
-		<div class="rtbcb-section-content">
+                <div id="executive-summary-content" class="rtbcb-section-content">
 			<?php if ( ! empty( $executive_summary['strategic_positioning'] ) ) : ?>
 				<div class="rtbcb-strategic-positioning-enhanced">
 					<div class="rtbcb-content-card">
@@ -673,15 +701,19 @@ $impact     = $risk_item['impact'] ?? '';
 
 <!-- Action Plan Section with Timeline -->
 <?php if ( ! empty( $action_plan ) ) : ?>
-	<div class="rtbcb-section-enhanced rtbcb-action-plan">
-		<div class="rtbcb-section-header-enhanced">
-			<h2 class="rtbcb-section-title">
-				<span class="rtbcb-section-icon">🚀</span>
-				<?php echo esc_html__( 'Implementation Action Plan', 'rtbcb' ); ?>
-			</h2>
-		</div>
+        <div class="rtbcb-section-enhanced rtbcb-action-plan">
+                <div class="rtbcb-section-header-enhanced">
+                        <h2 class="rtbcb-section-title">
+                                <span class="rtbcb-section-icon">🚀</span>
+                                <?php echo esc_html__( 'Implementation Action Plan', 'rtbcb' ); ?>
+                        </h2>
+                        <button type="button" class="rtbcb-section-toggle" data-target="action-plan-content">
+                                <span class="rtbcb-toggle-text"><?php echo esc_html__( 'Expand', 'rtbcb' ); ?></span>
+                                <span class="rtbcb-toggle-arrow">▼</span>
+                        </button>
+                </div>
 
-		<div class="rtbcb-section-content">
+                <div id="action-plan-content" class="rtbcb-section-content">
 			<div class="rtbcb-timeline-container">
 				<?php if ( ! empty( $action_plan['immediate_steps'] ) ) : ?>
 					<div class="rtbcb-timeline-phase immediate">
@@ -734,14 +766,18 @@ $impact     = $risk_item['impact'] ?? '';
 
 	<!-- Supporting Context Section -->
 		<?php if ( 'basic' !== $analysis_type && ! empty( $rag_context ) ) : ?>
-		<div class="rtbcb-section-enhanced rtbcb-supporting-context">
-		<div class="rtbcb-section-header-enhanced">
-			<h2 class="rtbcb-section-title">
-				<span class="rtbcb-section-icon">📚</span>
-				<?php echo esc_html__( 'Supporting Context', 'rtbcb' ); ?>
-			</h2>
-		</div>
-		<div class="rtbcb-section-content">
+                <div class="rtbcb-section-enhanced rtbcb-supporting-context">
+                <div class="rtbcb-section-header-enhanced">
+                        <h2 class="rtbcb-section-title">
+                                <span class="rtbcb-section-icon">📚</span>
+                                <?php echo esc_html__( 'Supporting Context', 'rtbcb' ); ?>
+                        </h2>
+                        <button type="button" class="rtbcb-section-toggle" data-target="supporting-context-content">
+                                <span class="rtbcb-toggle-text"><?php echo esc_html__( 'Expand', 'rtbcb' ); ?></span>
+                                <span class="rtbcb-toggle-arrow">▼</span>
+                        </button>
+                </div>
+                <div id="supporting-context-content" class="rtbcb-section-content">
 			<ul class="rtbcb-context-list">
 				<?php foreach ( (array) $rag_context as $context_item ) : ?>
 					<?php
