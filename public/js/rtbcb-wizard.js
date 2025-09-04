@@ -234,6 +234,11 @@ class BusinessCaseBuilder {
             if ( ! storage ) {
                 return;
             }
+            const reportHtml = storage.getItem( 'rtbcbFinalReport' );
+            if ( reportHtml ) {
+                this.showEnhancedHTMLReport( reportHtml );
+                return;
+            }
             const savedData = storage.getItem( 'rtbcbFormData' );
             if ( savedData ) {
                 try {
@@ -290,6 +295,17 @@ class BusinessCaseBuilder {
                 storage.removeItem( 'rtbcbJobId' );
             }
         } catch ( e ) {}
+    }
+
+    saveFinalReport( html ) {
+        try {
+            const storage = window.sessionStorage;
+            if ( storage ) {
+                storage.setItem( 'rtbcbFinalReport', html );
+            }
+        } catch ( e ) {
+            console.warn( 'RTBCB: Session storage unavailable', e );
+        }
     }
 
     handleNext( event ) {
@@ -1259,6 +1275,7 @@ class BusinessCaseBuilder {
         console.log('RTBCB: Injecting report content');
         resultsContainer.innerHTML = htmlContent;
         resultsContainer.style.display = 'block';
+        this.saveFinalReport( htmlContent );
 
         // Initialize interactive features for the enhanced report
         this.initializeEnhancedReport(resultsContainer);
@@ -1586,6 +1603,7 @@ class BusinessCaseBuilder {
             resultsContainer.innerHTML = this.renderResults(mapped);
             this.populateRiskAssessment(mapped.risks);
             resultsContainer.style.display = 'block';
+            this.saveFinalReport( resultsContainer.innerHTML );
             resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
         } else {
             console.error('RTBCB: Results container not found');
@@ -1995,5 +2013,8 @@ ${upcoming_changes.length ? `<div class="rtbcb-industry-group"><h4>Upcoming Chan
         this.currentStep = 1;
         this.updateStepVisibility();
         this.updateProgressIndicator();
+        try {
+            window.sessionStorage && window.sessionStorage.removeItem( 'rtbcbFinalReport' );
+        } catch ( e ) {}
     }
 }
