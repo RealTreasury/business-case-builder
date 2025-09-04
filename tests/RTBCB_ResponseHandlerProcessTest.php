@@ -10,23 +10,23 @@ use PHPUnit\Framework\TestCase;
 
 
 /**
- * Tests for RTBCB_Response_Parser::process_openai_response().
+ * Tests for RTBCB_Response_Handler::process_openai_response().
  */
 /**
  * @runTestsInSeparateProcesses
  * @preserveGlobalState disabled
  */
-final class RTBCB_ResponseParserProcessTest extends TestCase {
+final class RTBCB_ResponseHandlerProcessTest extends TestCase {
        /**
        * Parser instance.
        *
-       * @var RTBCB_Response_Parser
+       * @var RTBCB_Response_Handler
        */
        private $parser;
 
         protected function setUp(): void {
-               require_once __DIR__ . '/../inc/class-rtbcb-response-parser.php';
-               $this->parser = new RTBCB_Response_Parser();
+               require_once __DIR__ . '/../inc/class-rtbcb-response-handler.php';
+               $this->parser = new RTBCB_Response_Handler();
         }
 
 	public function test_handles_valid_utf8() {

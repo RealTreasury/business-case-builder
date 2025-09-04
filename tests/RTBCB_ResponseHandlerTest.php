@@ -64,10 +64,10 @@ if ( ! function_exists( 'wp_kses_post' ) ) {
 	   }
 }
 
-require_once __DIR__ . '/../inc/class-rtbcb-response-parser.php';
+require_once __DIR__ . '/../inc/class-rtbcb-response-handler.php';
 require_once __DIR__ . '/../inc/class-rtbcb-llm-unified.php';
 
-final class RTBCB_ResponseParserTest extends TestCase {
+final class RTBCB_ResponseHandlerTest extends TestCase {
 		public function test_parse_business_case_success() {
 				$valid = [
 						'executive_summary'    => [],
@@ -80,7 +80,7 @@ final class RTBCB_ResponseParserTest extends TestCase {
 'financial_analysis'   => [],
 				];
 				$response = [ 'body' => json_encode( [ 'output_text' => json_encode( $valid ) ] ) ];
-				$parser  = new RTBCB_Response_Parser();
+				$parser  = new RTBCB_Response_Handler();
 				$result  = $parser->parse_business_case( $response );
 				$this->assertIsArray( $result );
 				$this->assertArrayHasKey( 'executive_summary', $result );
@@ -88,7 +88,7 @@ final class RTBCB_ResponseParserTest extends TestCase {
 
 		public function test_parse_business_case_malformed_json() {
 				$response = [ 'body' => 'not json' ];
-				$parser   = new RTBCB_Response_Parser();
+				$parser   = new RTBCB_Response_Handler();
 				$result   = $parser->parse_business_case( $response );
 				$this->assertTrue( is_wp_error( $result ) );
 		}
@@ -96,7 +96,7 @@ final class RTBCB_ResponseParserTest extends TestCase {
 		public function test_parse_business_case_missing_section() {
 				$invalid  = [ 'executive_summary' => [] ];
 				$response = [ 'body' => json_encode( [ 'output_text' => json_encode( $invalid ) ] ) ];
-				$parser   = new RTBCB_Response_Parser();
+				$parser   = new RTBCB_Response_Handler();
 				$result   = $parser->parse_business_case( $response );
 				$this->assertTrue( is_wp_error( $result ) );
 		}
@@ -114,7 +114,7 @@ final class RTBCB_ResponseParserTest extends TestCase {
 				],
 			];
 			$response = [ 'body' => json_encode( [ 'output_text' => json_encode( $wrapped ) ] ) ];
-			$parser   = new RTBCB_Response_Parser();
+			$parser   = new RTBCB_Response_Handler();
 			$result   = $parser->parse_business_case( $response );
 			$this->assertIsArray( $result );
 			$this->assertArrayHasKey( 'executive_summary', $result );
@@ -128,7 +128,7 @@ final class RTBCB_ResponseParserTest extends TestCase {
 						'usage'       => [ 'output_tokens' => 15 ],
 				];
 				$response = [ 'body' => json_encode( $payload ) ];
-				$parser   = new RTBCB_Response_Parser();
+				$parser   = new RTBCB_Response_Handler();
 				$result   = $parser->parse( $response );
 				$this->assertTrue( $result['truncated'] );
 		}
@@ -144,7 +144,7 @@ final class RTBCB_ResponseParserTest extends TestCase {
 						],
 				];
 				$response = [ 'body' => json_encode( $payload ) ];
-				$parser   = new RTBCB_Response_Parser();
+				$parser   = new RTBCB_Response_Handler();
 				$result   = $parser->parse( $response );
 				$this->assertCount( 1, $result['function_calls'] );
 		}

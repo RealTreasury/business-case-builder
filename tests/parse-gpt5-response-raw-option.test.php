@@ -10,7 +10,7 @@ if ( ! function_exists( 'get_option' ) ) {
         }
 }
 
-require_once __DIR__ . '/../inc/class-rtbcb-response-parser.php';
+require_once __DIR__ . '/../inc/class-rtbcb-response-handler.php';
 
 if ( ! function_exists( 'wp_remote_retrieve_body' ) ) {
         function wp_remote_retrieve_body( $response ) {
@@ -22,7 +22,7 @@ $mock_response = [
         'body' => json_encode( [ 'output_text' => 'hello world' ] ),
 ];
 
-$parser = new RTBCB_Response_Parser();
+$parser = new RTBCB_Response_Handler();
 $no_raw = $parser->parse( $mock_response );
 if ( ! empty( $no_raw['raw'] ) ) {
         echo "Raw payload should be empty by default\n";
