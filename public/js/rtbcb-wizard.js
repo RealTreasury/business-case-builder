@@ -1000,21 +1000,28 @@ class BusinessCaseBuilder {
 			return values;
 		};
 
-		const requiredFields = this.reportType === 'basic'
-			? ['email', 'company_name']
-			: [
-				'email', 'company_name', 'company_size', 'industry',
-				'hours_reconciliation', 'hours_cash_positioning',
-				'num_banks', 'ftes', 'business_objective',
-				'implementation_timeline', 'budget_range'
-			];
-
-		for (const field of requiredFields) {
-			if (!getValue(field)) {
-				throw new Error( `${ __( 'Missing required field:', 'rtbcb' )} ${field.replace('_', ' ')}` );
-			}
+		const requiredFields = [];
+		for ( let step = 1; step <= this.totalSteps; step++ ) {
+		const fields = this.stepFields[ step ] || [];
+		fields.forEach( ( field ) => {
+		if ( field === 'pain_points' ) {
+		return;
 		}
-
+		const selector = `[name="${field}"]`;
+		const arraySelector = `[name="${field}[]"]`;
+		const fieldEl = this.form?.querySelector ? ( this.form.querySelector( selector ) || this.form.querySelector( arraySelector ) ) : null;
+		if ( fieldEl && typeof fieldEl.hasAttribute === 'function' && fieldEl.hasAttribute( 'required' ) ) {
+		requiredFields.push( fieldEl.name );
+		}
+		} );
+		}
+		
+		for ( const field of requiredFields ) {
+		if ( ! getValue( field ) ) {
+		throw new Error( `${ __( 'Missing required field:', 'rtbcb' ) } ${ field.replace( '[]', '' ).replace( '_', ' ' ) }` );
+		}
+		}
+		
 		const email = getValue('email');
 		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 		if (!emailRegex.test(email)) {
@@ -1022,18 +1029,25 @@ class BusinessCaseBuilder {
 		}
 
 		if ( this.reportType !== 'basic' ) {
-			const numericFields = ['hours_reconciliation', 'hours_cash_positioning', 'num_banks', 'ftes'];
-			for (const field of numericFields) {
-				const value = parseFloat(getValue(field));
-				if (isNaN(value) || value <= 0) {
-					throw new Error(`${field.replace('_', ' ')} ${ __( 'must be a positive number', 'rtbcb' ) }`);
-				}
-			}
-
-			const painPoints = getAllValues('pain_points[]');
-			if (painPoints.length === 0) {
-				throw new Error( __( 'Please select at least one pain point', 'rtbcb' ) );
-			}
+		const numericFieldSet = new Set( [ 'num_entities', 'num_currencies', 'num_banks', 'hours_reconciliation', 'hours_cash_positioning', 'ftes', 'annual_payment_volume' ] );
+		const numericFields = [];
+		requiredFields.forEach( ( field ) => {
+		const base = field.replace( '[]', '' );
+		if ( numericFieldSet.has( base ) && ! numericFields.includes( base ) ) {
+		numericFields.push( base );
+		}
+		} );
+		for ( const field of numericFields ) {
+		const value = parseFloat( getValue( field ) );
+		if ( isNaN( value ) || value <= 0 ) {
+		throw new Error( `${ field.replace( '_', ' ' ) } ${ __( 'must be a positive number', 'rtbcb' ) }` );
+		}
+		}
+		
+		const painPoints = getAllValues( 'pain_points[]' );
+		if ( painPoints.length === 0 ) {
+		throw new Error( __( 'Please select at least one pain point', 'rtbcb' ) );
+		}
 		}
 	}
 
