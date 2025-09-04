@@ -91,6 +91,7 @@ self::assertSame( [], $financial['confidence_metrics'] );
 self::assertSame( [], $tech['category_details'] );
 self::assertSame( [], $tech['implementation_roadmap'] );
 self::assertSame( [], $tech['vendor_considerations'] );
+self::assertSame( [], $risk['risk_matrix'] );
 self::assertSame( [], $risk['mitigation_strategies'] );
 self::assertSame( [], $risk['success_factors'] );
 }
@@ -211,11 +212,12 @@ public function test_missing_risk_analysis_defaults_to_no_data() {
 	$recommendation   = [ 'recommended' => '', 'category_info' => [] ];
 	$final_analysis   = [];
 
-	$result = $method->invoke( null, $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, [], microtime( true ), [] );
+        $result = $method->invoke( null, $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, [], microtime( true ), [] );
 
-	self::assertSame( [ 'No data provided' ], $result['risk_analysis']['implementation_risks'] );
-	self::assertSame( [], $result['risk_analysis']['mitigation_strategies'] );
-	self::assertSame( [], $result['risk_analysis']['success_factors'] );
+        self::assertSame( [], $result['risk_analysis']['risk_matrix'] );
+        self::assertSame( [ 'No data provided' ], $result['risk_analysis']['implementation_risks'] );
+        self::assertSame( [], $result['risk_analysis']['mitigation_strategies'] );
+        self::assertSame( [], $result['risk_analysis']['success_factors'] );
 }
 
 public function test_financial_benchmarks_pass_through() {

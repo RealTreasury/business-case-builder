@@ -395,6 +395,13 @@ PROMPT;
             "regulatory_considerations": ["array of 2-3 regulatory factors"]
           },
           "risk_analysis": {
+            "risk_matrix": [
+              {
+                "risk": "string - risk description",
+                "likelihood": "low|medium|high",
+                "impact": "low|medium|high"
+              }
+            ],
             "implementation_risks": ["array of 5-6 key implementation risks"],
             "mitigation_strategies": ["array of 5-6 specific risk mitigation approaches"],
             "success_factors": ["array of 5-6 critical success factors"]

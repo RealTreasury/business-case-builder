@@ -1940,10 +1940,17 @@ $parsed  = $this->response_parser->parse( $response );
 		'competitive_benchmarks' => [ 'benchmark 1 for treasury efficiency', 'benchmark 2 for technology adoption' ],
 		'regulatory_considerations' => [ 'regulatory requirement 1', 'regulatory requirement 2' ],
 ],
-'risk_analysis' => [
-'implementation_risks' => [ 'risk 1: description and likelihood', 'risk 2: description and impact' ],
-'mitigation_strategies' => [ 'mitigation approach 1', 'mitigation approach 2' ],
-'success_factors'       => [ 'critical success factor 1', 'critical success factor 2' ],
+        'risk_analysis' => [
+        'risk_matrix' => [
+        [
+        'risk'       => 'risk description',
+        'likelihood' => 'low|medium|high',
+        'impact'     => 'low|medium|high',
+        ],
+        ],
+        'implementation_risks' => [ 'risk 1: description and likelihood', 'risk 2: description and impact' ],
+        'mitigation_strategies' => [ 'mitigation approach 1', 'mitigation approach 2' ],
+        'success_factors'       => [ 'critical success factor 1', 'critical success factor 2' ],
 ],
 'action_plan' => [
 'immediate_steps'      => [ 'immediate action 1 (next 30 days)', 'immediate action 2 (next 30 days)' ],
