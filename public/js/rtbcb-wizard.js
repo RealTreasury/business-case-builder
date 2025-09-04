@@ -128,7 +128,12 @@ class BusinessCaseBuilder {
         this.progressTimer = null;
         this.reportType = '';
 
+        console.log('RTBCB: BusinessCaseBuilder constructor called');
+        console.log('RTBCB: Form found:', !!this.form);
+        console.log('RTBCB: Overlay found:', !!this.overlay);
+
         if ( ! this.form ) {
+            console.error('RTBCB: Form with ID rtbcbForm not found');
             return;
         }
 
@@ -136,6 +141,8 @@ class BusinessCaseBuilder {
         this.handleNext = this.handleNext.bind( this );
         this.handlePrev = this.handlePrev.bind( this );
         this.handleSubmit = this.handleSubmit.bind( this );
+
+        console.log('RTBCB: Event handlers bound');
 
         this.init();
     }
@@ -153,12 +160,16 @@ class BusinessCaseBuilder {
         this.nextBtn = this.form.querySelector('.rtbcb-nav-next');
         this.prevBtn = this.form.querySelector('.rtbcb-nav-prev');
         this.submitBtn = this.form.querySelector('.rtbcb-nav-submit');
-        
+
+        console.log('RTBCB: Cached elements - nextBtn:', !!this.nextBtn, 'prevBtn:', !!this.prevBtn, 'submitBtn:', !!this.submitBtn);
+
         // Steps
         this.steps = this.form.querySelectorAll('.rtbcb-wizard-step');
         this.progressSteps = this.form.querySelectorAll('.rtbcb-progress-step');
         this.progressLine = this.form.querySelector('.rtbcb-progress-line');
-        
+
+        console.log('RTBCB: Found', this.steps.length, 'wizard steps and', this.progressSteps.length, 'progress steps');
+
         // Form fields by step
         this.enhancedStepFields = {
             1: ['report_type'],
@@ -182,7 +193,10 @@ class BusinessCaseBuilder {
     bindEvents() {
         // Navigation buttons
         if ( this.nextBtn ) {
+            console.log('RTBCB: Binding next button click handler');
             this.nextBtn.addEventListener( 'click', this.handleNext );
+        } else {
+            console.warn('RTBCB: Next button not found');
         }
 
         if ( this.prevBtn ) {
@@ -192,7 +206,7 @@ class BusinessCaseBuilder {
         // Form submission
         this.form.addEventListener( 'submit', this.handleSubmit );
 
-// Pain point cards
+        // Pain point cards
         this.form.addEventListener('change', (event) => {
             const target = event.target;
             if (target.matches('input[name="pain_points[]"]')) {
@@ -204,6 +218,11 @@ class BusinessCaseBuilder {
                 if (checkedBoxes.length > 0) {
                     this.clearStepError(5);
                 }
+            }
+
+            // Add debugging for report type changes
+            if (target.matches('input[name="report_type"]')) {
+                console.log('RTBCB: Report type changed to:', target.value);
             }
         });
 
