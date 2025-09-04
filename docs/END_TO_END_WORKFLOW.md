@@ -9,11 +9,11 @@ and API interactions, see
 ## 1. Admin Research (Internal)
 
 - Admins can generate a company overview through the test dashboard.
-- Uses `RTBCB_LLM::generate_company_overview()` to call the configured GPT model
-  with a strict JSON schema for analysis, recommendations, references, and key
-  metrics.
-- See `inc/class-rtbcb-llm.php` for the system and user prompts that drive this
-  call.
+- Uses `RTBCB_LLM_Unified::generate_company_overview()` to call the configured
+  GPT model with a strict JSON schema for analysis, recommendations, references,
+  and key metrics.
+- See `inc/class-rtbcb-llm-unified.php` for the system and user prompts that
+  drive this call.
 
 ## 2. User Form Submission (Public)
 
@@ -23,8 +23,12 @@ and API interactions, see
 
 ## 3. Business Case Generation
 
-- `RTBCB_LLM::generate_business_case()` combines sanitized user inputs with ROI
-  data and optional RAG context.
+- `RTBCB_Ajax::process_comprehensive_case()` validates inputs and orchestrates
+  downstream processing:
+    - `RTBCB_Calculator::calculate_roi()` builds conservative, base, and
+      optimistic scenarios.
+    - `RTBCB_LLM_Unified::generate_business_case()` merges sanitized inputs with
+      ROI data and optional RAG context.
 - The LLM returns JSON with executive summaries, operational insights,
   industry insights, and financial analysis blocks.
 

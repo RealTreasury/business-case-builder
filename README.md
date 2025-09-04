@@ -7,6 +7,26 @@ A comprehensive WordPress plugin that helps treasury teams quantify the benefits
 ### ✨ Enhancements
 - Re-minified assets.
 
+## 🧠 How It Works
+
+The plugin bootstraps through `RTBCB_Main`, which loads classes under `inc/` and
+registers shortcodes, scripts, and AJAX endpoints. Front-end users launch a modal
+wizard with `[rt_business_case_builder]`, and `public/js/rtbcb-wizard.js` posts the
+form to `RTBCB_Ajax::generate_comprehensive_case()`.
+
+That handler queues a background job. `RTBCB_Ajax::process_comprehensive_case()`
+pulls the job, validates inputs, and coordinates:
+
+- `RTBCB_Calculator` for ROI scenarios
+- `RTBCB_Category_Recommender` for solution targeting
+- `RTBCB_RAG` for contextual snippets
+- `RTBCB_LLM_Unified` for narrative analysis
+- `RTBCB_Workflow_Tracker` for step tracking
+
+The assembled report is rendered with
+`templates/comprehensive-report-template.php` and enhanced by
+`public/js/rtbcb-report.js`, which polls for job status and displays the finished
+HTML.
 
 ## 📋 Installation & Setup
 
