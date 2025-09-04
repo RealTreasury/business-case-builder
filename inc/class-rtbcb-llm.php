@@ -2550,12 +2550,12 @@ $analysis['operational_insights']['automation_opportunities'][] = [
 
 	foreach ( (array) ( $analysis_data['implementation_roadmap'] ?? [] ) as $phase ) {
 		$analysis['implementation_roadmap'][] = [
-	'phase'          => sanitize_text_field( $phase['phase'] ?? '' ),
-	'duration'       => sanitize_text_field( $phase['duration'] ?? '' ),
-	'key_activities' => array_map( 'sanitize_text_field', $phase['key_activities'] ?? [] ),
-	'success_criteria' => array_map( 'sanitize_text_field', $phase['success_criteria'] ?? [] ),
-	'risks'          => array_map( 'sanitize_text_field', $phase['risks'] ?? [] ),
-	];
+			'phase'            => sanitize_text_field( $phase['phase'] ?? '' ),
+			'timeline'         => sanitize_text_field( $phase['timeline'] ?? ( $phase['duration'] ?? '' ) ),
+			'activities'       => array_map( 'sanitize_text_field', (array) ( $phase['activities'] ?? ( $phase['key_activities'] ?? [] ) ) ),
+			'success_criteria' => array_map( 'sanitize_text_field', (array) ( $phase['success_criteria'] ?? [] ) ),
+			'risks'            => array_map( 'sanitize_text_field', (array) ( $phase['risks'] ?? [] ) ),
+		];
 	}
 
 	return $analysis;
