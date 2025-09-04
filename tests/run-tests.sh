@@ -131,6 +131,7 @@ node tests/gpt5-config-defaults.test.js
 node tests/api-logs-page.test.js
 node tests/wizard-report-flow.test.js
 node tests/wizard-basic-flow.test.js
+node tests/wizard-job-title-optional.test.js
 node tests/operational-insights-render.test.js
 node tests/progress-cancel-button.test.js
 node tests/wizard-missing-progress-step.test.js

@@ -173,7 +173,7 @@ class BusinessCaseBuilder {
 		// Form fields by step
 		this.enhancedStepFields = {
 			1: ['report_type'],
-			2: ['company_name', 'company_size', 'industry', 'job_title'],
+			2: ['company_name', 'company_size', 'industry'],
 			3: ['num_entities', 'num_currencies', 'num_banks'],
 			4: ['hours_reconciliation', 'hours_cash_positioning', 'ftes', 'treasury_automation', 'primary_systems', 'bank_import_frequency', 'reporting_cadence', 'annual_payment_volume', 'forecast_horizon', 'fx_management', 'investment_activities', 'intercompany_lending', 'treasury_kpis', 'audit_trail'],
 			5: ['pain_points'],
@@ -952,6 +952,9 @@ class BusinessCaseBuilder {
 		const skipFields = ['report_type'];
 		for (const [key, value] of rawData.entries()) {
 			if (skipFields.includes(key)) {
+				continue;
+			}
+			if (key === 'job_title' && !String(value).trim()) {
 				continue;
 			}
 			if (numericFields.includes(key)) {
