@@ -170,25 +170,16 @@ class BusinessCaseBuilder {
 
 		console.log('RTBCB: Found', this.steps.length, 'wizard steps and', this.progressSteps.length, 'progress steps');
 
-		// Form fields by step
-		this.enhancedStepFields = {
-			1: ['report_type'],
-			2: ['company_name', 'company_size', 'industry', 'job_title'],
-			3: ['num_entities', 'num_currencies', 'num_banks'],
-			4: ['hours_reconciliation', 'hours_cash_positioning', 'ftes', 'treasury_automation', 'primary_systems', 'bank_import_frequency', 'reporting_cadence', 'annual_payment_volume', 'forecast_horizon', 'fx_management', 'investment_activities', 'intercompany_lending', 'treasury_kpis', 'audit_trail'],
-			5: ['pain_points'],
-			6: ['business_objective', 'implementation_timeline', 'budget_range'],
-			7: ['email']
-		};
+               // Form fields by step
+               this.basicStepFields = {
+                       1: ['report_type'],
+                       2: ['company_name'],
+                       3: ['email']
+               };
 
-		this.basicStepFields = {
-			1: ['report_type'],
-			2: ['company_name'],
-			3: ['email']
-		};
-
-		this.stepFields = this.enhancedStepFields;
-	}
+               // Default to enhanced path field resolver
+               this.getStepFields = this.getEnhancedFields.bind(this);
+       }
 
 	bindEvents() {
 		// Navigation buttons
@@ -268,11 +259,10 @@ class BusinessCaseBuilder {
                                 this.form.querySelector('.rtbcb-wizard-step[data-step="4"]'),
                                 this.form.querySelector('.rtbcb-wizard-step[data-step="5"]'),
                                 this.form.querySelector('.rtbcb-wizard-step[data-step="6"]'),
-                                this.form.querySelector('.rtbcb-wizard-step[data-step="7"]')
-                        ];
-                        this.stepFields = this.enhancedStepFields;
-
-                        this.progressSteps = Array.from(this.form.querySelectorAll('.rtbcb-progress-step')).filter(Boolean);
+                               this.form.querySelector('.rtbcb-wizard-step[data-step="7"]')
+                       ];
+                       this.getStepFields = this.getEnhancedFields.bind(this);
+                       this.progressSteps = Array.from(this.form.querySelectorAll('.rtbcb-progress-step')).filter(Boolean);
                         this.progressSteps.forEach((step, index) => {
                                 if (step) {
                                         step.style.display = 'flex';
@@ -294,12 +284,13 @@ class BusinessCaseBuilder {
                                 el.style.display = 'none';
                         });
 
-                        this.steps = [
-                                this.form.querySelector('.rtbcb-wizard-step[data-step="1"]'),
-                                this.form.querySelector('.rtbcb-wizard-step[data-step="2"]'),
-                                this.form.querySelector('.rtbcb-wizard-step[data-step="7"]')
-                        ];
-                        this.stepFields = this.basicStepFields;
+
+                       this.steps = [
+                               this.form.querySelector('.rtbcb-wizard-step[data-step="1"]'),
+                               this.form.querySelector('.rtbcb-wizard-step[data-step="2"]'),
+                               this.form.querySelector('.rtbcb-wizard-step[data-step="7"]')
+                       ];
+                       this.getStepFields = (step) => this.basicStepFields[step] || [];
 
                         this.progressSteps = [
                                 this.form.querySelector('.rtbcb-progress-step[data-step="1"]'),
@@ -324,7 +315,7 @@ class BusinessCaseBuilder {
                         this.totalSteps = 3;
                 }
 
-                console.log('RTBCB: Path initialized. Total steps:', this.totalSteps, 'Current step fields:', this.stepFields[this.currentStep]);
+               console.log('RTBCB: Path initialized. Total steps:', this.totalSteps, 'Current step fields:', this.getStepFields(this.currentStep));
 
                 this.updateStepVisibility();
                 this.updateProgressIndicator();
@@ -478,21 +469,33 @@ class BusinessCaseBuilder {
 		}
 	}
 
-	handlePrev( event ) {
-		if ( event && event.preventDefault ) {
-			event.preventDefault();
-		}
+        handlePrev( event ) {
+                if ( event && event.preventDefault ) {
+                        event.preventDefault();
+                }
 
 		if ( this.currentStep > 1 ) {
 			this.currentStep--;
 			this.updateStepVisibility();
 			this.updateProgressIndicator();
 			this.scrollToTop();
-		}
-	}
+                }
+        }
+
+       getEnhancedFields(stepNumber) {
+               const step = this.form.querySelector(`.rtbcb-wizard-step[data-step="${stepNumber}"]`);
+               if (!step) {
+                       return [];
+               }
+               const requiredFields = Array.from(step.querySelectorAll('[name][required]')).map(field => field.name);
+               if (stepNumber === 5 && !requiredFields.includes('pain_points')) {
+                       requiredFields.push('pain_points');
+               }
+               return requiredFields;
+       }
 
         validateStep(stepNumber) {
-                const currentFields = this.stepFields[stepNumber] || [];
+               const currentFields = this.getStepFields(stepNumber) || [];
                 let isValid = true;
 
                 if (stepNumber === 5 && currentFields.includes('pain_points')) {
@@ -787,9 +790,9 @@ class BusinessCaseBuilder {
 		}
 
 		// Final step validation before submission
-		if (!this.validateStep(this.totalSteps)) {
-			return;
-		}
+               if (!this.validateStep(this.currentStep)) {
+                       return;
+               }
 
 		if (!isValidUrl(this.ajaxUrl)) {
 			this.showEnhancedError( __( 'Service unavailable. Please reload the page.', 'rtbcb' ) );
