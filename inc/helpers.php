@@ -683,12 +683,12 @@ function rtbcb_sanitize_form_data( $data ) {
 	}
 
 	// Text fields
-	$text_fields = [ 'company_size', 'industry', 'job_title', 'treasury_automation' ];
-	foreach ( $text_fields as $field ) {
-		if ( isset( $data[ $field ] ) ) {
-			$sanitized[ $field ] = sanitize_text_field( $data[ $field ] );
-		}
-	}
+       $text_fields = [ 'company_size', 'industry', 'job_title', 'treasury_automation' ];
+       foreach ( $text_fields as $field ) {
+               if ( isset( $data[ $field ] ) && '' !== $data[ $field ] ) {
+                       $sanitized[ $field ] = sanitize_text_field( $data[ $field ] );
+               }
+       }
 
 	// Numeric fields
 	$numeric_fields = [

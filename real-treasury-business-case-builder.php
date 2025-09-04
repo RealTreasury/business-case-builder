@@ -1681,7 +1681,6 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 			'company_name'		 => $company_name,
 			'company_size'		 => $company_size,
 			'industry'		 => $industry,
-			'job_title'		 => sanitize_text_field( wp_unslash( $_POST['job_title'] ?? '' ) ),
 			'hours_reconciliation'	 => floatval( $hours_reconciliation_raw ),
 			'hours_cash_positioning' => floatval( $hours_cash_positioning_raw ),
 			'num_banks'		 => intval( $num_banks_raw ),
@@ -1692,6 +1691,10 @@ public function generate_business_analysis( $user_inputs, $scenarios, $recommend
 			'budget_range'		 => sanitize_text_field( wp_unslash( $_POST['budget_range'] ?? '' ) ),
 		];
 
+		$job_title = sanitize_text_field( wp_unslash( $_POST['job_title'] ?? '' ) );
+		if ( '' !== $job_title ) {
+			$user_inputs['job_title'] = $job_title;
+		}
 		rtbcb_log_api_debug( 'Collected user inputs', $user_inputs );
 
 		rtbcb_log_api_debug( 'Validating user inputs' );

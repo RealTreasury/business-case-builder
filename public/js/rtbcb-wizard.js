@@ -948,22 +948,23 @@ class BusinessCaseBuilder {
 	}
 
 	collectFormData() {
-		const rawData = new FormData(this.form);
-		const formData = new FormData();
-		const numericFields = ['hours_reconciliation', 'hours_cash_positioning', 'num_banks', 'ftes'];
+               const rawData = new FormData(this.form);
+               const formData = new FormData();
+               const numericFields = ['hours_reconciliation', 'hours_cash_positioning', 'num_banks', 'ftes'];
+               const optionalFields = ['job_title'];
 
-		const skipFields = ['report_type'];
-		for (const [key, value] of rawData.entries()) {
-			if (skipFields.includes(key)) {
-				continue;
-			}
-			if (numericFields.includes(key)) {
-				const num = parseFloat(value);
-				formData.append(key, Number.isFinite(num) ? num : 0);
-			} else {
-				formData.append(key, value);
-			}
-		}
+               const skipFields = ['report_type'];
+               for (const [key, value] of rawData.entries()) {
+                       if (skipFields.includes(key) || (optionalFields.includes(key) && ! value)) {
+                               continue;
+                       }
+                       if (numericFields.includes(key)) {
+                               const num = parseFloat(value);
+                               formData.append(key, Number.isFinite(num) ? num : 0);
+                       } else {
+                               formData.append(key, value);
+                       }
+               }
 
 		formData.append('action', 'rtbcb_generate_case');
 		if (typeof rtbcb_ajax !== 'undefined' && rtbcb_ajax.nonce) {
