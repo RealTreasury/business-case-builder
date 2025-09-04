@@ -4,7 +4,7 @@ const vm = require('vm');
 
 require('./jsdom-setup');
 
-// Test for initializeSectionToggles
+// Test for initializeSectionToggles (collapsed by default)
 (() => {
     const content = { style: { display: 'none' } };
     const arrow = { textContent: '▼' };
@@ -47,6 +47,17 @@ require('./jsdom-setup');
 
     function initializeSectionToggles() {
         document.querySelectorAll('.rtbcb-section-toggle').forEach(toggle => {
+            const targetId = toggle.getAttribute('data-target');
+            const content = document.getElementById(targetId);
+            const arrow = toggle.querySelector('.rtbcb-toggle-arrow');
+            const text = toggle.querySelector('.rtbcb-toggle-text');
+
+            if (content) {
+                const initiallyVisible = content.style.display !== 'none';
+                arrow.textContent = initiallyVisible ? '▲' : '▼';
+                text.textContent = initiallyVisible ? 'Collapse' : 'Expand';
+            }
+
             toggle.addEventListener('click', function() {
                 const targetId = this.getAttribute('data-target');
                 const content = document.getElementById(targetId);
@@ -54,9 +65,11 @@ require('./jsdom-setup');
                 const text = this.querySelector('.rtbcb-toggle-text');
 
                 if (content) {
-                    content.style.display = content.style.display === 'none' ? 'block' : 'none';
-                    arrow.textContent = content.style.display === 'none' ? '▼' : '▲';
-                    text.textContent = content.style.display === 'none' ? 'Expand' : 'Collapse';
+                    const isVisible = content.style.display !== 'none';
+                    content.style.display = isVisible ? 'none' : 'block';
+                    const nowVisible = !isVisible;
+                    arrow.textContent = nowVisible ? '▲' : '▼';
+                    text.textContent = nowVisible ? 'Collapse' : 'Expand';
                 }
             });
         });
@@ -72,6 +85,88 @@ require('./jsdom-setup');
     assert.strictEqual(arrow.textContent, '▼');
     assert.strictEqual(text.textContent, 'Expand');
     console.log('initializeSectionToggles test passed.');
+})();
+
+// Test that initializeSectionToggles sets initial state when content visible
+(() => {
+    const content = { style: { display: 'block' } };
+    const arrow = { textContent: '▼' };
+    const text = { textContent: 'Expand' };
+    const toggle = {
+        getAttribute(name) {
+            if (name === 'data-target') {
+                return 'content';
+            }
+            return null;
+        },
+        querySelector(selector) {
+            if (selector === '.rtbcb-toggle-arrow') {
+                return arrow;
+            }
+            if (selector === '.rtbcb-toggle-text') {
+                return text;
+            }
+            return null;
+        },
+        addEventListener(event, handler) {
+            this.handler = handler;
+        }
+    };
+
+    global.document = {
+        querySelectorAll(selector) {
+            if (selector === '.rtbcb-section-toggle') {
+                return [toggle];
+            }
+            return [];
+        },
+        getElementById(id) {
+            if (id === 'content') {
+                return content;
+            }
+            return null;
+        }
+    };
+
+    function initializeSectionToggles() {
+        document.querySelectorAll('.rtbcb-section-toggle').forEach(toggle => {
+            const targetId = toggle.getAttribute('data-target');
+            const content = document.getElementById(targetId);
+            const arrow = toggle.querySelector('.rtbcb-toggle-arrow');
+            const text = toggle.querySelector('.rtbcb-toggle-text');
+
+            if (content) {
+                const initiallyVisible = content.style.display !== 'none';
+                arrow.textContent = initiallyVisible ? '▲' : '▼';
+                text.textContent = initiallyVisible ? 'Collapse' : 'Expand';
+            }
+
+            toggle.addEventListener('click', function() {
+                const targetId = this.getAttribute('data-target');
+                const content = document.getElementById(targetId);
+                const arrow = this.querySelector('.rtbcb-toggle-arrow');
+                const text = this.querySelector('.rtbcb-toggle-text');
+
+                if (content) {
+                    const isVisible = content.style.display !== 'none';
+                    content.style.display = isVisible ? 'none' : 'block';
+                    const nowVisible = !isVisible;
+                    arrow.textContent = nowVisible ? '▲' : '▼';
+                    text.textContent = nowVisible ? 'Collapse' : 'Expand';
+                }
+            });
+        });
+    }
+
+    initializeSectionToggles();
+    // Initial state should be set to collapse since content is visible
+    assert.strictEqual(arrow.textContent, '▲');
+    assert.strictEqual(text.textContent, 'Collapse');
+    toggle.handler();
+    assert.strictEqual(content.style.display, 'none');
+    assert.strictEqual(arrow.textContent, '▼');
+    assert.strictEqual(text.textContent, 'Expand');
+    console.log('initializeSectionToggles initial state test passed.');
 })();
 
 // Test for initializeReportCharts
