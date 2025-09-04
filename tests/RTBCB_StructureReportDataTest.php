@@ -198,26 +198,43 @@ public function test_empty_operational_arrays_default_to_no_data() {
 	$result = $method->invoke( null, $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, [], microtime( true ), [] );
 
 	self::assertSame( [ 'No data provided' ], $result['operational_insights']['process_improvements'] );
-	self::assertSame( [ 'No data provided' ], $result['operational_insights']['automation_opportunities'] );
+        self::assertSame( [ 'No data provided' ], $result['operational_insights']['automation_opportunities'] );
+}
+
+public function test_missing_risk_analysis_defaults_to_no_data() {
+	$method = new ReflectionMethod( RTBCB_Ajax::class, 'structure_report_data' );
+	$method->setAccessible( true );
+
+	$user_inputs     = [ 'company_name' => 'Test', 'industry' => 'finance' ];
+	$enriched_profile = [];
+	$roi_scenarios    = [ 'conservative' => [], 'base' => [], 'optimistic' => [] ];
+	$recommendation   = [ 'recommended' => '', 'category_info' => [] ];
+	$final_analysis   = [];
+
+	$result = $method->invoke( null, $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, [], microtime( true ), [] );
+
+	self::assertSame( [ 'No data provided' ], $result['risk_analysis']['implementation_risks'] );
+	self::assertSame( [], $result['risk_analysis']['mitigation_strategies'] );
+	self::assertSame( [], $result['risk_analysis']['success_factors'] );
 }
 
 public function test_financial_benchmarks_pass_through() {
-$method = new ReflectionMethod( RTBCB_Ajax::class, 'structure_report_data' );
-$method->setAccessible( true );
-
-$user_inputs     = [ 'company_name' => 'Test', 'industry' => 'finance' ];
-$enriched_profile = [];
-$roi_scenarios    = [ 'conservative' => [], 'base' => [], 'optimistic' => [] ];
-$recommendation   = [ 'recommended' => '', 'category_info' => [] ];
-$financial_benchmarks = [
-'industry_benchmarks' => [ [ 'metric' => 'EBITDA Margin', 'value' => '20%', 'source' => 'Report' ] ],
-'valuation_multiples' => [ [ 'metric' => 'P/E', 'range' => '10x-12x' ] ],
-];
-$final_analysis   = [ 'financial_benchmarks' => $financial_benchmarks ];
-
-$result = $method->invoke( null, $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, [], [], microtime( true ), $financial_benchmarks );
-
-self::assertSame( $financial_benchmarks, $result['financial_benchmarks'] );
+	$method = new ReflectionMethod( RTBCB_Ajax::class, 'structure_report_data' );
+	$method->setAccessible( true );
+	
+	$user_inputs     = [ 'company_name' => 'Test', 'industry' => 'finance' ];
+	$enriched_profile = [];
+	$roi_scenarios    = [ 'conservative' => [], 'base' => [], 'optimistic' => [] ];
+	$recommendation   = [ 'recommended' => '', 'category_info' => [] ];
+	$financial_benchmarks = [
+	'industry_benchmarks' => [ [ 'metric' => 'EBITDA Margin', 'value' => '20%', 'source' => 'Report' ] ],
+	'valuation_multiples' => [ [ 'metric' => 'P/E', 'range' => '10x-12x' ] ],
+	];
+	$final_analysis   = [ 'financial_benchmarks' => $financial_benchmarks ];
+	
+	$result = $method->invoke( null, $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, [], [], microtime( true ), $financial_benchmarks );
+	
+	self::assertSame( $financial_benchmarks, $result['financial_benchmarks'] );
 }
 
 public function test_rag_context_pass_through() {
