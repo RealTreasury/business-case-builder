@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', function() {
 class BusinessCaseBuilder {
     constructor() {
         this.currentStep = 1;
-        this.totalSteps = 5;
+        this.totalSteps = 6;
         this.form = document.getElementById('rtbcbForm');
         this.overlay = document.getElementById('rtbcbModalOverlay');
         this.ajaxUrl = ( typeof rtbcb_ajax !== 'undefined' && isValidUrl( rtbcb_ajax.ajax_url ) ) ? rtbcb_ajax.ajax_url : '';
@@ -120,6 +120,7 @@ class BusinessCaseBuilder {
         this.progressStates = [];
         this.currentProgressIndex = 0;
         this.progressTimer = null;
+        this.reportType = '';
 
         if ( ! this.form ) {
             return;
@@ -153,13 +154,22 @@ class BusinessCaseBuilder {
         this.progressLine = this.form.querySelector('.rtbcb-progress-line');
         
         // Form fields by step
-        this.stepFields = {
-            1: ['company_name', 'company_size', 'industry'],
-            2: ['hours_reconciliation', 'hours_cash_positioning', 'num_banks', 'ftes'],
-            3: ['pain_points'],
-            4: ['business_objective', 'implementation_timeline', 'budget_range'],
-            5: ['email']
+        this.enhancedStepFields = {
+            1: ['report_type'],
+            2: ['company_name', 'company_size', 'industry', 'job_title', 'num_entities', 'num_currencies'],
+            3: ['hours_reconciliation', 'hours_cash_positioning', 'num_banks', 'ftes', 'treasury_automation'],
+            4: ['pain_points'],
+            5: ['business_objective', 'implementation_timeline', 'budget_range'],
+            6: ['email']
         };
+
+        this.basicStepFields = {
+            1: ['report_type'],
+            2: ['company_name'],
+            3: ['email']
+        };
+
+        this.stepFields = this.enhancedStepFields;
     }
 
     bindEvents() {
@@ -185,7 +195,7 @@ class BusinessCaseBuilder {
                 }
                 const checkedBoxes = this.form.querySelectorAll('input[name="pain_points[]"]:checked');
                 if (checkedBoxes.length > 0) {
-                    this.clearStepError(3);
+                    this.clearStepError(4);
                 }
             }
         });
@@ -202,6 +212,71 @@ class BusinessCaseBuilder {
                 window.closeBusinessCaseModal();
             }
         });
+    }
+
+    initializePath() {
+        const selected = this.form.querySelector( 'input[name="report_type"]:checked' );
+        this.reportType = selected ? selected.value : 'basic';
+
+        if ( this.reportType === 'basic' ) {
+            this.form.querySelectorAll( '.rtbcb-enhanced-only input, .rtbcb-enhanced-only select' ).forEach( field => {
+                field.disabled = true;
+                field.removeAttribute( 'required' );
+            } );
+            this.form.querySelectorAll( '.rtbcb-enhanced-only' ).forEach( el => {
+                el.style.display = 'none';
+            } );
+
+            this.steps = [
+                this.form.querySelector( '.rtbcb-wizard-step[data-step="1"]' ),
+                this.form.querySelector( '.rtbcb-wizard-step[data-step="2"]' ),
+                this.form.querySelector( '.rtbcb-wizard-step[data-step="6"]' )
+            ];
+
+            this.progressSteps = [
+                this.form.querySelector( '.rtbcb-progress-step[data-step="1"]' ),
+                this.form.querySelector( '.rtbcb-progress-step[data-step="2"]' ),
+                this.form.querySelector( '.rtbcb-progress-step[data-step="6"]' )
+            ];
+
+            // Hide unused progress steps and renumber
+            this.form.querySelectorAll( '.rtbcb-progress-step' ).forEach( step => {
+                step.style.display = 'none';
+            } );
+            this.progressSteps.forEach( ( step, index ) => {
+                step.style.display = 'flex';
+                const num = step.querySelector( '.rtbcb-progress-number' );
+                if ( num ) {
+                    num.textContent = index + 1;
+                }
+            } );
+
+            this.stepFields = this.basicStepFields;
+            this.totalSteps = 3;
+        } else {
+            this.form.querySelectorAll( '.rtbcb-enhanced-only input, .rtbcb-enhanced-only select' ).forEach( field => {
+                field.disabled = false;
+            } );
+            this.form.querySelectorAll( '.rtbcb-enhanced-only' ).forEach( el => {
+                el.style.display = '';
+            } );
+
+            this.steps = Array.from( this.form.querySelectorAll( '.rtbcb-wizard-step' ) );
+            this.progressSteps = Array.from( this.form.querySelectorAll( '.rtbcb-progress-step' ) );
+            this.progressSteps.forEach( ( step, index ) => {
+                step.style.display = 'flex';
+                const num = step.querySelector( '.rtbcb-progress-number' );
+                if ( num ) {
+                    num.textContent = index + 1;
+                }
+            } );
+
+            this.stepFields = this.enhancedStepFields;
+            this.totalSteps = 6;
+        }
+
+        this.updateStepVisibility();
+        this.updateProgressIndicator();
     }
 
     saveFormData( formData ) {
@@ -328,6 +403,9 @@ class BusinessCaseBuilder {
         }
 
         if ( this.validateStep( this.currentStep ) ) {
+            if ( this.currentStep === 1 ) {
+                this.initializePath();
+            }
             if ( this.currentStep < this.totalSteps ) {
                 this.currentStep++;
                 this.updateStepVisibility();
@@ -354,14 +432,14 @@ class BusinessCaseBuilder {
         let isValid = true;
         const fieldsToValidate = this.stepFields[stepNumber];
 
-        if (stepNumber === 3) {
+        if (this.reportType !== 'basic' && stepNumber === 4) {
             // Special validation for pain points
             const checkedBoxes = this.form.querySelectorAll('input[name="pain_points[]"]:checked');
             if (checkedBoxes.length === 0) {
-                this.showStepError(3, __( 'Please select at least one challenge', 'rtbcb' ) );
+                this.showStepError(4, __( 'Please select at least one challenge', 'rtbcb' ) );
                 return false;
             }
-            this.clearStepError(3);
+            this.clearStepError(4);
         } else {
             // Standard field validation
             fieldsToValidate.forEach(fieldName => {
@@ -790,7 +868,7 @@ class BusinessCaseBuilder {
         const formData = new FormData();
         const numericFields = ['hours_reconciliation', 'hours_cash_positioning', 'num_banks', 'ftes'];
 
-        const skipFields = ['fast_mode', 'report_type'];
+        const skipFields = ['report_type'];
         for (const [key, value] of rawData.entries()) {
             if (skipFields.includes(key)) {
                 continue;
@@ -841,12 +919,14 @@ class BusinessCaseBuilder {
             return values;
         };
 
-        const requiredFields = [
-            'email', 'company_name', 'company_size', 'industry',
-            'hours_reconciliation', 'hours_cash_positioning',
-            'num_banks', 'ftes', 'business_objective',
-            'implementation_timeline', 'budget_range'
-        ];
+        const requiredFields = this.reportType === 'basic'
+            ? ['email', 'company_name']
+            : [
+                'email', 'company_name', 'company_size', 'industry',
+                'hours_reconciliation', 'hours_cash_positioning',
+                'num_banks', 'ftes', 'business_objective',
+                'implementation_timeline', 'budget_range'
+            ];
 
         for (const field of requiredFields) {
             if (!getValue(field)) {
@@ -860,17 +940,19 @@ class BusinessCaseBuilder {
             throw new Error( __( 'Please enter a valid email address', 'rtbcb' ) );
         }
 
-        const numericFields = ['hours_reconciliation', 'hours_cash_positioning', 'num_banks', 'ftes'];
-        for (const field of numericFields) {
-            const value = parseFloat(getValue(field));
-            if (isNaN(value) || value <= 0) {
-                throw new Error(`${field.replace('_', ' ')} ${ __( 'must be a positive number', 'rtbcb' ) }`);
+        if ( this.reportType !== 'basic' ) {
+            const numericFields = ['hours_reconciliation', 'hours_cash_positioning', 'num_banks', 'ftes'];
+            for (const field of numericFields) {
+                const value = parseFloat(getValue(field));
+                if (isNaN(value) || value <= 0) {
+                    throw new Error(`${field.replace('_', ' ')} ${ __( 'must be a positive number', 'rtbcb' ) }`);
+                }
             }
-        }
 
-        const painPoints = getAllValues('pain_points[]');
-        if (painPoints.length === 0) {
-            throw new Error( __( 'Please select at least one pain point', 'rtbcb' ) );
+            const painPoints = getAllValues('pain_points[]');
+            if (painPoints.length === 0) {
+                throw new Error( __( 'Please select at least one pain point', 'rtbcb' ) );
+            }
         }
     }
 
