@@ -162,7 +162,9 @@ $user_inputs = [ 'email' => 'test@example.com' ];
 $job_id      = RTBCB_Background_Job::enqueue( $user_inputs );
 assert_true( 'queued' === get_transient( $job_id )['state'], 'Job not queued' );
 
+ignore_user_abort( false );
 RTBCB_Background_Job::process_job( $job_id, $user_inputs );
+assert_true( 1 === ignore_user_abort(), 'ignore_user_abort not enabled' );
 
 global $transient_log;
 $statuses = array_column( $transient_log[ $job_id ], 'state' );

@@ -248,6 +248,10 @@ class BusinessCaseBuilder {
             }
             const jobId = storage.getItem( 'rtbcbJobId' );
             if ( jobId ) {
+                if ( this.overlay ) {
+                    this.overlay.classList.add( 'active' );
+                    document.body.style.overflow = 'hidden';
+                }
                 this.activeJobId = jobId;
                 this.showLoading();
                 this.startProgressiveLoading();
