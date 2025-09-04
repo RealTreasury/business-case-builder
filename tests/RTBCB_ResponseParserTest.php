@@ -72,12 +72,12 @@ final class RTBCB_ResponseParserTest extends TestCase {
 				$valid = [
 						'executive_summary'    => [],
 						'company_intelligence' => [],
-						'operational_insights' => [],
-						'risk_analysis'        => [],
-						'action_plan'          => [],
-						'industry_insights'    => [],
-						'technology_strategy'  => [],
-						'financial_analysis'   => [],
+'operational_insights' => [],
+'risk_analysis'        => [],
+'action_plan'          => [],
+'financial_benchmarks' => [],
+'technology_strategy'  => [],
+'financial_analysis'   => [],
 				];
 				$response = [ 'body' => json_encode( [ 'output_text' => json_encode( $valid ) ] ) ];
 				$parser  = new RTBCB_Response_Parser();
@@ -105,12 +105,12 @@ final class RTBCB_ResponseParserTest extends TestCase {
 				'analysis' => [
 					'executive_summary'    => [],
 					'company_intelligence' => [],
-					'operational_insights' => [],
-					'risk_analysis'        => [],
-					'action_plan'          => [],
-					'industry_insights'    => [],
-					'technology_strategy'  => [],
-					'financial_analysis'   => [],
+'operational_insights' => [],
+'risk_analysis'        => [],
+'action_plan'          => [],
+'financial_benchmarks' => [],
+'technology_strategy'  => [],
+'financial_analysis'   => [],
 				],
 			];
 			$response = [ 'body' => json_encode( [ 'output_text' => json_encode( $wrapped ) ] ) ];

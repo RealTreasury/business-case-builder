@@ -481,7 +481,7 @@ $required = [
 'operational_insights',
 'risk_analysis',
 'action_plan',
-'industry_insights',
+'financial_benchmarks',
 'technology_strategy',
 'financial_analysis',
 ];

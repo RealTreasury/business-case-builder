@@ -98,7 +98,7 @@ return [ 'body' => wp_json_encode( [ 'output_text' => wp_json_encode( [
 'operational_insights' => [],
 'risk_analysis'        => [],
 'action_plan'          => [],
-'industry_insights'    => [],
+'financial_benchmarks' => [],
 'technology_strategy'  => [ 'implementation_roadmap' => [] ],
 'financial_analysis'   => [],
 ] ) ] ) ];
@@ -113,7 +113,7 @@ return [
 'operational_insights' => [],
 'risk_analysis'        => [],
 'action_plan'          => [],
-'industry_insights'    => [],
+'financial_benchmarks' => [],
 'technology_strategy'  => [],
 'financial_analysis'   => [],
 ];
