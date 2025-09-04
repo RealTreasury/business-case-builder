@@ -96,16 +96,22 @@ window.closeBusinessCaseModal = function() {
     }
 };
 
-// Initialize on DOM ready with error handling
-document.addEventListener('DOMContentLoaded', function() {
+// Initialize when DOM is ready, even if the script loads late
+const initBusinessCaseBuilder = () => {
     try {
-        if (document.getElementById('rtbcbForm')) {
+        if ( document.getElementById( 'rtbcbForm' ) ) {
             window.businessCaseBuilder = new BusinessCaseBuilder();
         }
-    } catch (error) {
-        console.error('BusinessCaseBuilder initialization failed:', error);
+    } catch ( error ) {
+        console.error( 'BusinessCaseBuilder initialization failed:', error );
     }
-});
+};
+
+if ( document.readyState === 'loading' ) {
+    document.addEventListener( 'DOMContentLoaded', initBusinessCaseBuilder );
+} else {
+    initBusinessCaseBuilder();
+}
 
 class BusinessCaseBuilder {
     constructor() {
