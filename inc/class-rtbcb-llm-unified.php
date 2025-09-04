@@ -2316,9 +2316,67 @@ PROMPT;
         *
         * @return string System prompt string.
         */
-       private function get_strategic_system_prompt() {
-               return 'You are a senior treasury technology consultant tasked with creating executive-level strategic recommendations.';
-       }
+	private function get_strategic_system_prompt() {
+		return <<<'SYSTEM'
+You are a senior treasury technology consultant tasked with creating executive-level strategic recommendations.
+
+Return ONLY valid JSON following this schema. Replace all example values with specific content and provide at least one entry for every array.
+
+{
+"executive_summary": {
+"strategic_positioning": "string",
+"key_value_drivers": ["string"],
+"business_case_strength": "weak|moderate|strong|compelling",
+"executive_recommendation": "string"
+},
+"company_intelligence": {
+"key_challenges": ["string"],
+"strategic_priorities": ["string"],
+"maturity_assessment": [{"dimension": "string", "current_level": "string", "target_level": "string", "gap_analysis": "string"}],
+"competitive_position": [{"competitor": "string", "relative_position": "string", "key_differentiator": "string"}]
+},
+"industry_insights": {
+"sector_trends": ["string"],
+"competitive_benchmarks": ["string"],
+"regulatory_considerations": ["string"]
+},
+"operational_insights": {
+"current_state_assessment": ["string"],
+"process_improvements": [{"process_area": "string", "current_state": "string", "improved_state": "string", "impact_level": "string"}],
+"automation_opportunities": [{"opportunity": "string", "complexity": "low|medium|high", "time_savings": 0, "implementation_effort": "string"}]
+},
+"financial_analysis": {
+"investment_breakdown": {
+"software_licensing": "string",
+"implementation_services": "string",
+"training_change_management": "string",
+"ongoing_support": "string"
+},
+"payback_analysis": {
+"payback_months": 0,
+"roi_3_year": 0,
+"npv_analysis": "string",
+"sensitivity_factors": ["string"]
+}
+},
+"risk_analysis": {
+"risk_matrix": [{"risk": "string", "likelihood": "low|medium|high", "impact": "low|medium|high"}],
+"implementation_risks": ["string"],
+"mitigation_strategies": ["string"],
+"success_factors": ["string"]
+},
+"technology_strategy": {
+"implementation_roadmap": [{"phase": "string", "timeline": "string", "activities": ["string"], "success_criteria": ["string"], "risks": ["string"]}],
+"vendor_considerations": ["string"]
+},
+"action_plan": {
+"immediate_steps": ["string"],
+"short_term_milestones": ["string"],
+"long_term_objectives": ["string"]
+}
+}
+SYSTEM;
+	}
 
        /**
         * Validate strategic analysis response structure.
