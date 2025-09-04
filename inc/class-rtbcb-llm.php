@@ -2450,7 +2450,7 @@ PROMPT;
 	* @param array $analysis_data Raw analysis data.
 	* @return array Structured analysis.
 	*/
-	private function validate_and_structure_analysis( $analysis_data ) {
+	public function validate_and_structure_analysis( $analysis_data ) {
 	$analysis = [
 	'executive_summary' => [
 	'strategic_positioning'   => sanitize_textarea_field( $analysis_data['executive_summary']['strategic_positioning'] ?? '' ),
