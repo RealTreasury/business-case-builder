@@ -1955,23 +1955,23 @@ $results = [
 'market_analysis' => [
 'summary'	=> $vendor_list,
 'stored_in' => 'rtbcb_rag_market_analysis',
-],
+                          ],
 'implementation_roadmap' => [
 'summary'	=> $analysis['implementation_roadmap'],
 'stored_in' => 'rtbcb_roadmap_plan',
-],
+                          ],
 'value_proposition' => [
 'summary'	=> $analysis['executive_summary'],
 'stored_in' => 'rtbcb_value_proposition',
-],
+                          ],
 'financial_analysis' => [
 'summary'	=> $analysis['financial_analysis'],
 'stored_in' => 'rtbcb_estimated_benefits',
-],
+                          ],
 'executive_summary' => [
 'summary'	=> $analysis['executive_summary'],
 'stored_in' => 'rtbcb_executive_summary',
-],
+                          ],
 	];
 
 	$usage_map = [
@@ -2123,7 +2123,7 @@ $allowed['script'] = [
 'type' => [
 'application/json'	 => true,
 'application/ld+json' => true,
-],
+                          ],
 ];
 
 return $allowed;
@@ -2367,17 +2367,27 @@ function rtbcb_transform_data_for_template( $business_case_data ) {
 			];
 	}
 
-	// Prepare risk analysis.
-	if ( ! empty( $business_case_data['risk_analysis']['implementation_risks'] ) ) {
-			$implementation_risks = array_map( 'sanitize_text_field', (array) $business_case_data['risk_analysis']['implementation_risks'] );
-	} elseif ( ! empty( $business_case_data['risks'] ) ) {
-			$implementation_risks = array_map( 'sanitize_text_field', (array) $business_case_data['risks'] );
-	} else {
-			$implementation_risks = [
-				    __( 'Integration complexity with existing systems', 'rtbcb' ),
-				    __( 'Change management and user adoption challenges', 'rtbcb' ),
-			];
-	}
+ // Prepare risk analysis.
+if ( ! empty( $business_case_data['risk_analysis']['implementation_risks'] ) ) {
+$implementation_risks = array_map( 'sanitize_text_field', (array) $business_case_data['risk_analysis']['implementation_risks'] );
+} elseif ( ! empty( $business_case_data['risks'] ) ) {
+$implementation_risks = array_map( 'sanitize_text_field', (array) $business_case_data['risks'] );
+} else {
+$implementation_risks = [
+__( 'Integration complexity with existing systems', 'rtbcb' ),
+__( 'Change management and user adoption challenges', 'rtbcb' ),
+];
+}
+
+$mitigation_strategies = [];
+if ( ! empty( $business_case_data['risk_analysis']['mitigation_strategies'] ) ) {
+$mitigation_strategies = array_map( 'sanitize_text_field', (array) $business_case_data['risk_analysis']['mitigation_strategies'] );
+}
+
+$success_factors = [];
+if ( ! empty( $business_case_data['risk_analysis']['success_factors'] ) ) {
+$success_factors = array_map( 'sanitize_text_field', (array) $business_case_data['risk_analysis']['success_factors'] );
+}
 
 	// Create structured data format expected by template.
 	$report_data = [
@@ -2420,10 +2430,12 @@ function rtbcb_transform_data_for_template( $business_case_data ) {
 				    'recommended_category' => $recommended_category,
 				    'category_details'     => $category_details,
 			],
-			'operational_insights' => $operational_insights,
-			'risk_analysis'        => [
-				    'implementation_risks' => $implementation_risks,
-			],
+                        'operational_insights' => $operational_insights,
+                          'risk_analysis'        => [
+				'implementation_risks' => $implementation_risks,
+				'mitigation_strategies' => $mitigation_strategies,
+				'success_factors'      => $success_factors,
+                          ],
 			'action_plan'          => $action_plan,
 	];
 
