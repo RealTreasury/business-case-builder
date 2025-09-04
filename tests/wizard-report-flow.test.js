@@ -21,6 +21,7 @@ const html = `<!DOCTYPE html><html><body>
         <div class="rtbcb-progress-step" data-step="4"></div>
         <div class="rtbcb-progress-step" data-step="5"></div>
         <div class="rtbcb-progress-step" data-step="6"></div>
+        <div class="rtbcb-progress-step" data-step="7"></div>
       </div>
     </div>
     <div class="rtbcb-wizard-steps">
@@ -34,21 +35,25 @@ const html = `<!DOCTYPE html><html><body>
         <div class="rtbcb-field"><select id="industry" name="industry"><option value="tech">Tech</option></select></div>
       </div>
       <div class="rtbcb-wizard-step" data-step="3">
-        <div class="rtbcb-field"><input id="hours_reconciliation" name="hours_reconciliation" type="number" /></div>
-        <div class="rtbcb-field"><input id="hours_cash_positioning" name="hours_cash_positioning" type="number" /></div>
+        <div class="rtbcb-field"><input id="num_entities" name="num_entities" type="number" /></div>
+        <div class="rtbcb-field"><input id="num_currencies" name="num_currencies" type="number" /></div>
         <div class="rtbcb-field"><input id="num_banks" name="num_banks" type="number" /></div>
-        <div class="rtbcb-field"><input id="ftes" name="ftes" type="number" /></div>
       </div>
       <div class="rtbcb-wizard-step" data-step="4">
+        <div class="rtbcb-field"><input id="hours_reconciliation" name="hours_reconciliation" type="number" /></div>
+        <div class="rtbcb-field"><input id="hours_cash_positioning" name="hours_cash_positioning" type="number" /></div>
+        <div class="rtbcb-field"><input id="ftes" name="ftes" type="number" /></div>
+      </div>
+      <div class="rtbcb-wizard-step" data-step="5">
         <div class="rtbcb-pain-points-validation"><div class="rtbcb-validation-message"></div></div>
         <label class="rtbcb-pain-point-card"><input type="checkbox" name="pain_points[]" value="manual" /></label>
       </div>
-      <div class="rtbcb-wizard-step" data-step="5">
+      <div class="rtbcb-wizard-step" data-step="6">
         <div class="rtbcb-field"><input id="business_objective" name="business_objective" /></div>
         <div class="rtbcb-field"><input id="implementation_timeline" name="implementation_timeline" /></div>
         <div class="rtbcb-field"><input id="budget_range" name="budget_range" /></div>
       </div>
-      <div class="rtbcb-wizard-step" data-step="6">
+      <div class="rtbcb-wizard-step" data-step="7">
         <div class="rtbcb-field"><input id="email" name="email" type="email" /></div>
       </div>
     </div>
@@ -108,23 +113,28 @@ vm.runInThisContext(wizardCode);
   await builder.handleNext();
 
   // Step 3
-  document.getElementById('hours_reconciliation').value = '1';
-  document.getElementById('hours_cash_positioning').value = '1';
+  document.getElementById('num_entities').value = '1';
+  document.getElementById('num_currencies').value = '1';
   document.getElementById('num_banks').value = '1';
-  document.getElementById('ftes').value = '1';
   await builder.handleNext();
 
   // Step 4
-  document.querySelector('input[name="pain_points[]"]').checked = true;
+  document.getElementById('hours_reconciliation').value = '1';
+  document.getElementById('hours_cash_positioning').value = '1';
+  document.getElementById('ftes').value = '1';
   await builder.handleNext();
 
   // Step 5
+  document.querySelector('input[name="pain_points[]"]').checked = true;
+  await builder.handleNext();
+
+  // Step 6
   document.getElementById('business_objective').value = 'growth';
   document.getElementById('implementation_timeline').value = 'Q4';
   document.getElementById('budget_range').value = '1000';
   await builder.handleNext();
 
-  // Step 6
+  // Step 7
   document.getElementById('email').value = 'test@example.com';
   await builder.handleSubmit();
 

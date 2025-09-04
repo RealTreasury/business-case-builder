@@ -19,6 +19,7 @@ const html = `<!DOCTYPE html><html><body>
         <div class="rtbcb-progress-step" data-step="4"></div>
         <div class="rtbcb-progress-step" data-step="5"></div>
         <div class="rtbcb-progress-step" data-step="6"></div>
+        <div class="rtbcb-progress-step" data-step="7"></div>
       </div>
     </div>
     <div class="rtbcb-wizard-steps">
@@ -31,16 +32,19 @@ const html = `<!DOCTYPE html><html><body>
         <div class="rtbcb-field rtbcb-enhanced-only"><select id="company_size" name="company_size"><option value="small">Small</option></select></div>
       </div>
       <div class="rtbcb-wizard-step" data-step="3">
-        <div class="rtbcb-field"><input id="hours_reconciliation" name="hours_reconciliation" type="number" /></div>
+        <div class="rtbcb-field"><input id="num_entities" name="num_entities" type="number" /></div>
       </div>
       <div class="rtbcb-wizard-step" data-step="4">
+        <div class="rtbcb-field"><input id="hours_reconciliation" name="hours_reconciliation" type="number" /></div>
+      </div>
+      <div class="rtbcb-wizard-step" data-step="5">
         <div class="rtbcb-pain-points-validation"><div class="rtbcb-validation-message"></div></div>
         <label class="rtbcb-pain-point-card"><input type="checkbox" name="pain_points[]" value="manual" /></label>
       </div>
-      <div class="rtbcb-wizard-step" data-step="5">
+      <div class="rtbcb-wizard-step" data-step="6">
         <div class="rtbcb-field"><input id="business_objective" name="business_objective" /></div>
       </div>
-      <div class="rtbcb-wizard-step" data-step="6">
+      <div class="rtbcb-wizard-step" data-step="7">
         <div class="rtbcb-field"><input id="email" name="email" type="email" /></div>
       </div>
     </div>

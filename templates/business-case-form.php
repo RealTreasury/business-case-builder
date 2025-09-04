@@ -52,22 +52,26 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                                                                 <div class="rtbcb-progress-number">2</div>
                                                                 <div class="rtbcb-progress-label"><?php esc_html_e( 'Company', 'rtbcb' ); ?></div>
                                                         </div>
-                                                        <div class="rtbcb-progress-step" data-step="3">
-                                                                <div class="rtbcb-progress-number">3</div>
-                                                                <div class="rtbcb-progress-label"><?php esc_html_e( 'Operations', 'rtbcb' ); ?></div>
-                                                        </div>
-                                                        <div class="rtbcb-progress-step" data-step="4">
-                                                                <div class="rtbcb-progress-number">4</div>
-                                                                <div class="rtbcb-progress-label"><?php esc_html_e( 'Challenges', 'rtbcb' ); ?></div>
-                                                        </div>
-                                                        <div class="rtbcb-progress-step" data-step="5">
-                                                                <div class="rtbcb-progress-number">5</div>
-                                                                <div class="rtbcb-progress-label"><?php esc_html_e( 'Strategy', 'rtbcb' ); ?></div>
-                                                        </div>
-                                                        <div class="rtbcb-progress-step" data-step="6">
-                                                                <div class="rtbcb-progress-number">6</div>
-                                                                <div class="rtbcb-progress-label"><?php esc_html_e( 'Contact', 'rtbcb' ); ?></div>
-                                                        </div>
+                                                       <div class="rtbcb-progress-step" data-step="3">
+                                                               <div class="rtbcb-progress-number">3</div>
+                                                               <div class="rtbcb-progress-label"><?php esc_html_e( 'Scope', 'rtbcb' ); ?></div>
+                                                       </div>
+                                                       <div class="rtbcb-progress-step" data-step="4">
+                                                               <div class="rtbcb-progress-number">4</div>
+                                                               <div class="rtbcb-progress-label"><?php esc_html_e( 'Operations', 'rtbcb' ); ?></div>
+                                                       </div>
+                                                       <div class="rtbcb-progress-step" data-step="5">
+                                                               <div class="rtbcb-progress-number">5</div>
+                                                               <div class="rtbcb-progress-label"><?php esc_html_e( 'Challenges', 'rtbcb' ); ?></div>
+                                                       </div>
+                                                       <div class="rtbcb-progress-step" data-step="6">
+                                                               <div class="rtbcb-progress-number">6</div>
+                                                               <div class="rtbcb-progress-label"><?php esc_html_e( 'Strategy', 'rtbcb' ); ?></div>
+                                                       </div>
+                                                       <div class="rtbcb-progress-step" data-step="7">
+                                                               <div class="rtbcb-progress-number">7</div>
+                                                               <div class="rtbcb-progress-label"><?php esc_html_e( 'Contact', 'rtbcb' ); ?></div>
+                                                       </div>
                                                 </div>
                                         </div>
 
@@ -171,10 +175,19 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                                                </div>
                                        </div>
 
+                               </div>
+                       </div>
+
+                       <!-- Step 3: Treasury Footprint -->
+                       <div class="rtbcb-wizard-step" data-step="3">
+                               <div class="rtbcb-step-header">
+                                       <h3><?php esc_html_e( 'Outline your treasury footprint', 'rtbcb' ); ?></h3>
+                                       <p><?php esc_html_e( 'Tell us about your organizational and banking structure.', 'rtbcb' ); ?></p>
+                               </div>
+
+                               <div class="rtbcb-step-content">
                                        <div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
-                                               <label for="num_entities">
-                                                       <?php esc_html_e( 'Number of Legal Entities', 'rtbcb' ); ?>
-                                               </label>
+                                               <label for="num_entities"><?php esc_html_e( 'Number of Legal Entities', 'rtbcb' ); ?></label>
                                                <input type="number" name="num_entities" id="num_entities" min="1" step="1" required />
                                                <div class="rtbcb-field-help">
                                                        <?php esc_html_e( 'Count of subsidiaries or business units handled by treasury.', 'rtbcb' ); ?>
@@ -182,19 +195,25 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                                        </div>
 
                                        <div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
-                                               <label for="num_currencies">
-                                                       <?php esc_html_e( 'Number of Active Currencies', 'rtbcb' ); ?>
-                                               </label>
+                                               <label for="num_currencies"><?php esc_html_e( 'Number of Active Currencies', 'rtbcb' ); ?></label>
                                                <input type="number" name="num_currencies" id="num_currencies" min="1" step="1" required />
                                                <div class="rtbcb-field-help">
                                                        <?php esc_html_e( 'How many currencies do you transact in?', 'rtbcb' ); ?>
                                                </div>
                                        </div>
+
+                                       <div class="rtbcb-field rtbcb-field-required">
+                                               <label for="num_banks"><?php esc_html_e( 'Number of Banking Relationships', 'rtbcb' ); ?></label>
+                                               <input type="number" name="num_banks" id="num_banks" min="1" max="50" placeholder="0" required inputmode="decimal" />
+                                               <div class="rtbcb-field-help">
+                                                       <?php esc_html_e( 'Total number of banks where your company maintains accounts', 'rtbcb' ); ?>
+                                               </div>
+                                       </div>
                                </div>
                        </div>
 
-                        <!-- Step 3: Treasury Operations -->
-                        <div class="rtbcb-wizard-step" data-step="3">
+                        <!-- Step 4: Treasury Operations -->
+                        <div class="rtbcb-wizard-step" data-step="4">
 				<div class="rtbcb-step-header">
 					<h3><?php esc_html_e( 'Your current treasury operations', 'rtbcb' ); ?></h3>
 					<p><?php esc_html_e( 'Help us understand your current workload and banking relationships.', 'rtbcb' ); ?></p>
@@ -223,16 +242,6 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 						</div>
 					</div>
 
-					<div class="rtbcb-field rtbcb-field-required">
-						<label for="num_banks">
-							<?php esc_html_e( 'Number of Banking Relationships', 'rtbcb' ); ?>
-						</label>
-						<input type="number" name="num_banks" id="num_banks"
-							min="1" max="50" placeholder="0" required inputmode="decimal" />
-						<div class="rtbcb-field-help">
-							<?php esc_html_e( 'Total number of banks where your company maintains accounts', 'rtbcb' ); ?>
-						</div>
-					</div>
 
 					<div class="rtbcb-field rtbcb-field-required">
 						<label for="ftes">
@@ -497,8 +506,8 @@ min="0.5" max="100" step="0.5" placeholder="0" required inputmode="decimal" />
 				</div>
 			</div>
 
-                        <!-- Step 4: Treasury Challenges -->
-                        <div class="rtbcb-wizard-step" data-step="4">
+                        <!-- Step 5: Treasury Challenges -->
+                        <div class="rtbcb-wizard-step" data-step="5">
 				<div class="rtbcb-step-header">
 					<h3><?php esc_html_e( 'What are your biggest challenges?', 'rtbcb' ); ?></h3>
 					<p><?php esc_html_e( 'Select the pain points that best describe your current treasury challenges.', 'rtbcb' ); ?></p>
@@ -611,8 +620,8 @@ min="0.5" max="100" step="0.5" placeholder="0" required inputmode="decimal" />
 				</div>
 			</div>
 
-                        <!-- Step 5: Strategic Context -->
-                        <div class="rtbcb-wizard-step" data-step="5">
+                        <!-- Step 6: Strategic Context -->
+                        <div class="rtbcb-wizard-step" data-step="6">
 				<div class="rtbcb-step-header">
 					<h3><?php esc_html_e( 'Strategic context for your initiative', 'rtbcb' ); ?></h3>
 					<p><?php esc_html_e( 'Help us understand the goals and constraints for your project.', 'rtbcb' ); ?></p>
@@ -675,8 +684,8 @@ min="0.5" max="100" step="0.5" placeholder="0" required inputmode="decimal" />
 				</div>
 			</div>
 
-                        <!-- Step 6: Contact Information -->
-                        <div class="rtbcb-wizard-step" data-step="6">
+                        <!-- Step 7: Contact Information -->
+                        <div class="rtbcb-wizard-step" data-step="7">
 				<div class="rtbcb-step-header">
 					<h3><?php esc_html_e( 'Get your business case', 'rtbcb' ); ?></h3>
 					<p><?php esc_html_e( 'Enter your email to receive your personalized ROI analysis and recommendations.', 'rtbcb' ); ?></p>
