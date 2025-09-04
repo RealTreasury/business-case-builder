@@ -15,7 +15,7 @@ class RTBCB_Ajax {
 	   public static function generate_comprehensive_case() {
 		   if ( ! function_exists( 'check_ajax_referer' ) ) {
 			   wp_die( 'WordPress not ready' );
-		   }
+								}
 
 $params = self::get_sanitized_params();
 
@@ -215,7 +215,7 @@ $rag_context,
 $chart_data,
 $request_start,
 $final_analysis['financial_benchmarks'] ?? ( $final_analysis['research']['financial'] ?? [] )
-);
+(								));
 								$workflow_tracker->complete_step( 'data_structuring', $structured_report_data );
 								if ( $job_id ) {
 			self::safe_update_status( $job_id, 'processing', [ 'report_data' => $structured_report_data ] );
@@ -304,10 +304,24 @@ $final_analysis['financial_benchmarks'] ?? ( $final_analysis['research']['financ
 										}
 								}
 								if ( is_wp_error( $final_analysis ) ) {
-									       $error_message   = $final_analysis->get_error_message();
-									       $final_analysis  = self::create_fallback_analysis( $enriched_profile, $roi_scenarios );
-									       $workflow_tracker->add_warning( 'final_analysis_failed', sanitize_text_field( $error_message ) );
-							       }
+								$error_message  = $final_analysis->get_error_message();
+								$error_data     = $final_analysis->get_error_data();
+								$analysis_data  = [];
+
+								if ( isset( $error_data['raw'] ) && isset( $llm ) && method_exists( $llm, 'validate_and_structure_analysis' ) ) {
+								$decoded = json_decode( $error_data['raw'], true );
+								if ( is_array( $decoded ) ) {
+								$analysis_data = $llm->validate_and_structure_analysis( $decoded );
+								}
+								}
+
+								if ( empty( $analysis_data['executive_summary'] ) ) {
+								$analysis_data = self::create_fallback_analysis( $enriched_profile, $roi_scenarios );
+								}
+
+								$final_analysis = $analysis_data;
+								$workflow_tracker->add_warning( 'final_analysis_failed', sanitize_text_field( $error_message ) );
+}
 						} else {
 								$rag_context  = [];
 								$final_analysis = self::create_fallback_analysis( $enriched_profile, $roi_scenarios );
