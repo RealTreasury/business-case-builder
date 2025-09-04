@@ -78,8 +78,7 @@ if ( ! defined( 'DAY_IN_SECONDS' ) ) {
 	define( 'DAY_IN_SECONDS', 86400 );
 }
 
-require_once __DIR__ . '/../inc/class-rtbcb-llm.php';
-require_once __DIR__ . '/../inc/class-rtbcb-llm-optimized.php';
+require_once __DIR__ . '/../inc/class-rtbcb-llm-unified.php';
 
 $llm = new RTBCB_LLM_Optimized();
 $method = new ReflectionMethod( RTBCB_LLM::class, 'conduct_company_research' );

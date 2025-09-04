@@ -65,7 +65,7 @@ if ( ! function_exists( 'wp_kses_post' ) ) {
 }
 
 require_once __DIR__ . '/../inc/class-rtbcb-response-parser.php';
-require_once __DIR__ . '/../inc/class-rtbcb-llm.php';
+require_once __DIR__ . '/../inc/class-rtbcb-llm-unified.php';
 
 final class RTBCB_ResponseParserTest extends TestCase {
 		public function test_parse_business_case_success() {

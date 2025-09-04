@@ -16,8 +16,7 @@ if ( ! function_exists( 'get_option' ) ) {
 	}
 }
 
-require_once __DIR__ . '/../inc/class-rtbcb-llm.php';
-require_once __DIR__ . '/../inc/class-rtbcb-llm-optimized.php';
+require_once __DIR__ . '/../inc/class-rtbcb-llm-unified.php';
 
 if ( ! class_exists( 'WP_Error' ) ) {
 	class WP_Error {
