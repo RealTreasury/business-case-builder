@@ -220,7 +220,7 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 				</div>
 
 				<div class="rtbcb-step-content">
-					<div class="rtbcb-field rtbcb-field-required">
+					<div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
 						<label for="hours_reconciliation">
 							<?php esc_html_e( 'Weekly Hours: Bank Reconciliation', 'rtbcb' ); ?>
 						</label>
@@ -231,7 +231,7 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 						</div>
 					</div>
 
-					<div class="rtbcb-field rtbcb-field-required">
+					<div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
 						<label for="hours_cash_positioning">
 							<?php esc_html_e( 'Weekly Hours: Cash Positioning', 'rtbcb' ); ?>
 						</label>
@@ -243,7 +243,7 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 					</div>
 
 
-					<div class="rtbcb-field rtbcb-field-required">
+					<div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
 						<label for="ftes">
 							<?php esc_html_e( 'Treasury Team Size (FTEs)', 'rtbcb' ); ?>
 						</label>
@@ -254,7 +254,7 @@ min="0.5" max="100" step="0.5" placeholder="0" required inputmode="decimal" />
 </div>
 </div>
 
-<div class="rtbcb-field rtbcb-field-required">
+<div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
 <label for="treasury_automation">
 <?php esc_html_e( 'Treasury Workflow Automation Level', 'rtbcb' ); ?>
 </label>
@@ -269,7 +269,7 @@ min="0.5" max="100" step="0.5" placeholder="0" required inputmode="decimal" />
 </div>
 </div>
 
-<div class="rtbcb-field rtbcb-field-required">
+<div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
 <label for="primary_systems">
 <?php esc_html_e( 'Primary Treasury Systems in Use', 'rtbcb' ); ?>
 </label>
@@ -285,7 +285,7 @@ min="0.5" max="100" step="0.5" placeholder="0" required inputmode="decimal" />
 </div>
 </div>
 
-<div class="rtbcb-field rtbcb-field-required">
+<div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
 <label for="bank_import_frequency">
 <?php esc_html_e( 'Frequency of Bank Statement Imports', 'rtbcb' ); ?>
 </label>
@@ -301,7 +301,7 @@ min="0.5" max="100" step="0.5" placeholder="0" required inputmode="decimal" />
 </div>
 </div>
 
-<div class="rtbcb-field rtbcb-field-required">
+<div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
 <label for="reporting_cadence">
 <?php esc_html_e( 'Reporting Cadence to Stakeholders', 'rtbcb' ); ?>
 </label>
@@ -318,7 +318,7 @@ min="0.5" max="100" step="0.5" placeholder="0" required inputmode="decimal" />
 </div>
 </div>
 
-<div class="rtbcb-field rtbcb-field-required">
+<div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
 <label for="annual_payment_volume">
 <?php esc_html_e( 'Annual Payment Volume', 'rtbcb' ); ?>
 </label>
@@ -328,7 +328,7 @@ min="0.5" max="100" step="0.5" placeholder="0" required inputmode="decimal" />
 </div>
 </div>
 
-<div class="rtbcb-field rtbcb-field-required">
+<div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
 <label for="payment_approval_workflow">
 <?php esc_html_e( 'Treasury Payment Approval Workflow', 'rtbcb' ); ?>
 </label>
@@ -344,7 +344,7 @@ min="0.5" max="100" step="0.5" placeholder="0" required inputmode="decimal" />
 </div>
 </div>
 
-<div class="rtbcb-field rtbcb-field-required">
+<div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
 <label for="reconciliation_method">
 <?php esc_html_e( 'Reconciliation Method', 'rtbcb' ); ?>
 </label>
@@ -359,7 +359,7 @@ min="0.5" max="100" step="0.5" placeholder="0" required inputmode="decimal" />
 </div>
 </div>
 
-<div class="rtbcb-field rtbcb-field-required">
+<div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
 <label for="cash_update_frequency">
 <?php esc_html_e( 'Cash Position Update Frequency', 'rtbcb' ); ?>
 </label>
@@ -375,7 +375,7 @@ min="0.5" max="100" step="0.5" placeholder="0" required inputmode="decimal" />
 </div>
 </div>
 
-<div class="rtbcb-field">
+<div class="rtbcb-field rtbcb-enhanced-only">
 <label for="reg_reporting">
 <?php esc_html_e( 'Regulatory or Compliance Reporting Needs', 'rtbcb' ); ?>
 </label>
@@ -391,7 +391,7 @@ min="0.5" max="100" step="0.5" placeholder="0" required inputmode="decimal" />
 </div>
 </div>
 
-<div class="rtbcb-field rtbcb-field-required">
+<div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
 <label for="integration_requirements">
 <?php esc_html_e( 'Integration Requirements', 'rtbcb' ); ?>
 </label>
@@ -408,7 +408,7 @@ min="0.5" max="100" step="0.5" placeholder="0" required inputmode="decimal" />
 </div>
 </div>
 
-<div class="rtbcb-field rtbcb-field-required">
+<div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
 <label for="forecast_horizon">
 <?php esc_html_e( 'Forecasting Horizon', 'rtbcb' ); ?>
 </label>
@@ -424,7 +424,7 @@ min="0.5" max="100" step="0.5" placeholder="0" required inputmode="decimal" />
 </div>
 </div>
 
-<div class="rtbcb-field rtbcb-field-required">
+<div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
 <label for="fx_management">
 <?php esc_html_e( 'FX Exposure Management', 'rtbcb' ); ?>
 </label>
@@ -440,7 +440,7 @@ min="0.5" max="100" step="0.5" placeholder="0" required inputmode="decimal" />
 </div>
 </div>
 
-<div class="rtbcb-field rtbcb-field-required">
+<div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
 <label for="investment_activities">
 <?php esc_html_e( 'Investment Activities', 'rtbcb' ); ?>
 </label>
@@ -456,7 +456,7 @@ min="0.5" max="100" step="0.5" placeholder="0" required inputmode="decimal" />
 </div>
 </div>
 
-<div class="rtbcb-field rtbcb-field-required">
+<div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
 <label for="intercompany_lending">
 <?php esc_html_e( 'Intercompany Lending or Netting', 'rtbcb' ); ?>
 </label>
@@ -472,7 +472,7 @@ min="0.5" max="100" step="0.5" placeholder="0" required inputmode="decimal" />
 </div>
 </div>
 
-<div class="rtbcb-field">
+<div class="rtbcb-field rtbcb-enhanced-only">
 <label for="treasury_kpis">
 <?php esc_html_e( 'Treasury KPIs Tracked', 'rtbcb' ); ?>
 </label>
@@ -489,7 +489,7 @@ min="0.5" max="100" step="0.5" placeholder="0" required inputmode="decimal" />
 </div>
 </div>
 
-<div class="rtbcb-field rtbcb-field-required">
+<div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
 <label for="audit_trail">
 <?php esc_html_e( 'Audit Trail & Control Requirements', 'rtbcb' ); ?>
 </label>
@@ -628,12 +628,12 @@ min="0.5" max="100" step="0.5" placeholder="0" required inputmode="decimal" />
 				</div>
 
 				<div class="rtbcb-step-content">
-					<div class="rtbcb-field">
+					<div class="rtbcb-field rtbcb-enhanced-only">
 						<label for="current_tech"><?php esc_html_e( 'Current Treasury Technology', 'rtbcb' ); ?></label>
 						<input type="text" name="current_tech" id="current_tech" />
 					</div>
 
-					<div class="rtbcb-field rtbcb-field-required">
+					<div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
 						<label for="business_objective">
 							<?php esc_html_e( 'Primary Business Objective', 'rtbcb' ); ?>
 						</label>
@@ -646,7 +646,7 @@ min="0.5" max="100" step="0.5" placeholder="0" required inputmode="decimal" />
 						</select>
 					</div>
 
-					<div class="rtbcb-field rtbcb-field-required">
+					<div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
 <label for="implementation_timeline">
 <?php esc_html_e( 'Implementation Timeline', 'rtbcb' ); ?>
 </label>
@@ -659,7 +659,7 @@ min="0.5" max="100" step="0.5" placeholder="0" required inputmode="decimal" />
 </select>
 					</div>
 
-					<div class="rtbcb-field">
+					<div class="rtbcb-field rtbcb-enhanced-only">
 						<label for="decision_makers"><?php esc_html_e( 'Decision Makers', 'rtbcb' ); ?></label>
 						<select name="decision_makers[]" id="decision_makers" multiple>
 							<option value="cfo"><?php esc_html_e( 'CFO', 'rtbcb' ); ?></option>
@@ -669,7 +669,7 @@ min="0.5" max="100" step="0.5" placeholder="0" required inputmode="decimal" />
 						</select>
 					</div>
 
-					<div class="rtbcb-field rtbcb-field-required">
+					<div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
 						<label for="budget_range">
 							<?php esc_html_e( 'Budget Range', 'rtbcb' ); ?>
 						</label>
