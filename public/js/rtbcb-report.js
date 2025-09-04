@@ -302,6 +302,26 @@ function initializeSectionToggles(doc = document) {
         return;
     }
     doc.querySelectorAll('.rtbcb-section-toggle').forEach(toggle => {
+        const targetId = toggle.getAttribute('data-target');
+        const content = doc.getElementById(targetId);
+        const arrow = toggle.querySelector('.rtbcb-toggle-arrow');
+        const text = toggle.querySelector('.rtbcb-toggle-text');
+        const section = toggle.closest('.rtbcb-section-enhanced');
+
+        if (content) {
+            const initiallyVisible = content.style.display !== 'none';
+
+            if (arrow) {
+                arrow.textContent = initiallyVisible ? '▲' : '▼';
+            }
+            if (text) {
+                text.textContent = initiallyVisible ? 'Collapse' : 'Expand';
+            }
+            if (section) {
+                section.classList.toggle('collapsed', !initiallyVisible);
+            }
+        }
+
         toggle.addEventListener('click', function(e) {
             e.preventDefault();
 
@@ -310,7 +330,7 @@ function initializeSectionToggles(doc = document) {
             const arrow = this.querySelector('.rtbcb-toggle-arrow');
             const text = this.querySelector('.rtbcb-toggle-text');
             const section = this.closest('.rtbcb-section-enhanced');
-            
+
             if (content) {
                 const isVisible = content.style.display !== 'none';
                 
