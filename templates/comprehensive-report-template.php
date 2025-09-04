@@ -278,18 +278,15 @@ $processing_time = $metadata['processing_time'] ?? ( $report_data['processing_ti
 </ul>
 <?php endif; ?>
 
-<?php if ( array_key_exists( 'process_improvements', $operational_insights ) ) : ?>
-<h3><?php echo esc_html__( 'Process Improvements', 'rtbcb' ); ?></h3>
-<ul>
 <?php
-$process_items = 0;
-foreach ( (array) $operational_insights['process_improvements'] as $item ) :
+$process_items = array();
+foreach ( (array) ( $operational_insights['process_improvements'] ?? array() ) as $item ) {
 if ( is_array( $item ) || is_object( $item ) ) {
-$item    = (array) $item;
-$process = $item['process'] ?? ( $item['process_area'] ?? '' );
-$current = $item['current_state'] ?? '';
+$item     = (array) $item;
+$process  = $item['process'] ?? ( $item['process_area'] ?? '' );
+$current  = $item['current_state'] ?? '';
 $improved = $item['improved_state'] ?? '';
-$impact  = $item['impact'] ?? ( $item['impact_level'] ?? '' );
+$impact   = $item['impact'] ?? ( $item['impact_level'] ?? '' );
 if ( '' === $process && '' === $current && '' === $improved && '' === $impact ) {
 continue;
 }
@@ -300,30 +297,22 @@ $details .= trim( $current . ' → ' . $improved );
 if ( $impact ) {
 $details .= $details ? ' (' . $impact . ')' : '(' . $impact . ')';
 }
-$process_items++;
-?>
-<li><strong><?php echo esc_html( $process ); ?></strong><?php echo $details ? ': ' . esc_html( $details ) : ''; ?></li>
-<?php
+$process_items[] = '<li><strong>' . esc_html( $process ) . '</strong>' . ( $details ? ': ' . esc_html( $details ) : '' ) . '</li>';
 } elseif ( '' !== trim( (string) $item ) ) {
-$process_items++;
-?>
-<li><?php echo esc_html( $item ); ?></li>
-<?php
+$process_items[] = '<li>' . esc_html( $item ) . '</li>';
 }
-endforeach;
+}
+if ( ! empty( $process_items ) ) :
 ?>
-<?php if ( 0 === $process_items ) : ?>
-<li><?php esc_html_e( 'No data provided', 'rtbcb' ); ?></li>
-<?php endif; ?>
+<h3><?php echo esc_html__( 'Process Improvements', 'rtbcb' ); ?></h3>
+<ul>
+<?php echo implode( '', $process_items ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 </ul>
 <?php endif; ?>
 
-<?php if ( array_key_exists( 'automation_opportunities', $operational_insights ) ) : ?>
-<h3><?php echo esc_html__( 'Automation Opportunities', 'rtbcb' ); ?></h3>
-<ul>
 <?php
-$automation_items = 0;
-foreach ( (array) $operational_insights['automation_opportunities'] as $item ) :
+$automation_items = array();
+foreach ( (array) ( $operational_insights['automation_opportunities'] ?? array() ) as $item ) {
 if ( is_array( $item ) || is_object( $item ) ) {
 $item        = (array) $item;
 $opportunity = $item['opportunity'] ?? '';
@@ -332,28 +321,23 @@ $savings     = $item['savings'] ?? ( $item['time_savings'] ?? '' );
 if ( '' === $opportunity && '' === $complexity && '' === $savings ) {
 continue;
 }
-$parts = [];
+$parts = array();
 if ( $complexity ) {
 $parts[] = sprintf( __( '%s complexity', 'rtbcb' ), $complexity );
 }
 if ( $savings ) {
 $parts[] = $savings;
 }
-$automation_items++;
-?>
-<li><strong><?php echo esc_html( $opportunity ); ?></strong><?php echo $parts ? ': ' . esc_html( implode( ' → ', $parts ) ) : ''; ?></li>
-<?php
+$automation_items[] = '<li><strong>' . esc_html( $opportunity ) . '</strong>' . ( $parts ? ': ' . esc_html( implode( ' → ', $parts ) ) : '' ) . '</li>';
 } elseif ( '' !== trim( (string) $item ) ) {
-$automation_items++;
-?>
-<li><?php echo esc_html( $item ); ?></li>
-<?php
+$automation_items[] = '<li>' . esc_html( $item ) . '</li>';
 }
-endforeach;
+}
+if ( ! empty( $automation_items ) ) :
 ?>
-<?php if ( 0 === $automation_items ) : ?>
-<li><?php esc_html_e( 'No data provided', 'rtbcb' ); ?></li>
-<?php endif; ?>
+<h3><?php echo esc_html__( 'Automation Opportunities', 'rtbcb' ); ?></h3>
+<ul>
+<?php echo implode( '', $automation_items ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 </ul>
 <?php endif; ?>
 </div>

@@ -1754,108 +1754,94 @@ ${this.renderIndustryInsights(industryContext)}
         `;
     }
 
-    renderOperationalAnalysis(analysis = {}) {
-        analysis = analysis || {};
-        const current_state_assessment = analysis.current_state_assessment || analysis.currentStateAssessment || [];
-        const process_improvements = analysis.process_improvements || analysis.processImprovements || [];
-        const automation_opportunities = analysis.automation_opportunities || analysis.automationOpportunities || [];
+renderOperationalAnalysis(analysis = {}) {
+analysis = analysis || {};
+const current_state_assessment = analysis.current_state_assessment || analysis.currentStateAssessment || [];
+const process_improvements = analysis.process_improvements || analysis.processImprovements || [];
+const automation_opportunities = analysis.automation_opportunities || analysis.automationOpportunities || [];
 
-        const hasProcess = Object.prototype.hasOwnProperty.call(analysis, 'process_improvements') || Object.prototype.hasOwnProperty.call(analysis, 'processImprovements');
-        const hasAutomation = Object.prototype.hasOwnProperty.call(analysis, 'automation_opportunities') || Object.prototype.hasOwnProperty.call(analysis, 'automationOpportunities');
-        const hasCurrent = Array.isArray( current_state_assessment )
-            ? current_state_assessment.some( item => item )
-            : !! current_state_assessment;
-        if ( ! hasCurrent && ! hasProcess && ! hasAutomation ) {
-            return '';
-        }
+const sanitizeItems = items => ( Array.isArray( items ) ? items.filter( item => {
+if ( item && typeof item === 'object' ) {
+return Object.values( item ).some( val => val );
+}
+return item;
+} ) : [] );
 
-        const sanitizeItems = items => ( Array.isArray( items ) ? items.filter( item => {
-            if ( item && typeof item === 'object' ) {
-                return Object.values( item ).some( val => val );
-            }
-            return item;
-        } ) : [] );
+const currentItems = Array.isArray( current_state_assessment ) ? sanitizeItems( current_state_assessment ) : current_state_assessment;
+const processItems = sanitizeItems( process_improvements );
+const automationItems = sanitizeItems( automation_opportunities );
 
-        const renderCurrentState = items => {
-            if ( Array.isArray( items ) ) {
-                const valid = sanitizeItems( items );
-                if ( ! valid.length ) {
-                    return `<p>${this.escapeHTML( __('No data provided', 'rtbcb') )}</p>`;
-                }
-                return `<ul>${valid.map( item => `<li>${this.escapeHTML( item )}</li>` ).join( '' )}</ul>`;
-            }
-            return `<p>${this.escapeHTML( items )}</p>`;
-        };
+const hasCurrent = Array.isArray( currentItems ) ? currentItems.length > 0 : !! currentItems;
+const hasProcess = processItems.length > 0;
+const hasAutomation = automationItems.length > 0;
+if ( ! hasCurrent && ! hasProcess && ! hasAutomation ) {
+return '';
+}
 
-        const renderProcessImprovements = items => {
-            const valid = sanitizeItems( items );
-            if ( ! valid.length ) {
-                return `<li>${this.escapeHTML( __('No data provided', 'rtbcb') )}</li>`;
-            }
-            return valid.map( item => {
-                if ( item && typeof item === 'object' ) {
-                    const process = this.escapeHTML( item.process || item.process_area || item.processArea || '' );
-                    const current = this.escapeHTML( item.current_state || item.currentState || '' );
-                    const improved = this.escapeHTML( item.improved_state || item.improvedState || '' );
-                    const impact = this.escapeHTML( item.impact || item.impact_level || item.impactLevel || '' );
-                    let details = '';
-                    if ( current || improved ) {
-                        details += `${current} \u2192 ${improved}`;
-                    }
-                    if ( impact ) {
-                        details += details ? ` (${impact})` : `(${impact})`;
-                    }
-                    return `<li><strong>${process}</strong>${details ? `: ${details}` : ''}</li>`;
-                }
-                return `<li>${this.escapeHTML( item )}</li>`;
-            } ).join( '' );
-        };
+const renderCurrentState = items => {
+if ( Array.isArray( items ) ) {
+return `<ul>${items.map( item => `<li>${this.escapeHTML( item )}</li>` ).join( '' )}</ul>`;
+}
+return `<p>${this.escapeHTML( items )}</p>`;
+};
 
-        const renderAutomationOpportunities = items => {
-            const valid = sanitizeItems( items );
-            if ( ! valid.length ) {
-                return `<li>${this.escapeHTML( __('No data provided', 'rtbcb') )}</li>`;
-            }
-            return valid.map( item => {
-                if ( item && typeof item === 'object' ) {
-                    const opportunity = this.escapeHTML( item.opportunity || '' );
-                    const complexity = this.escapeHTML( item.complexity || item.complexity_level || item.complexityLevel || '' );
-                    const effort = this.escapeHTML( item.implementation_effort || item.implementationEffort || '' );
-                    const savings = this.escapeHTML( item.savings || item.time_savings || item.timeSavings || '' );
-                    const parts = [];
-                    if ( complexity ) {
-                        parts.push( `${complexity} ${this.escapeHTML( __('complexity', 'rtbcb') )}` );
-                    }
-                    if ( effort ) {
-                        parts.push( `${effort} ${this.escapeHTML( __('effort', 'rtbcb') )}` );
-                    }
-                    if ( savings ) {
-                        parts.push( savings );
-                    }
-                    const detail = parts.length ? `: ${parts.join( ' \u2192 ' )}` : '';
-                    return `<li><strong>${opportunity}</strong>${detail}</li>`;
-                }
-                return `<li>${this.escapeHTML( item )}</li>`;
-            } ).join( '' );
-        };
+const renderProcessImprovements = items => items.map( item => {
+if ( item && typeof item === 'object' ) {
+const process = this.escapeHTML( item.process || item.process_area || item.processArea || '' );
+const current = this.escapeHTML( item.current_state || item.currentState || '' );
+const improved = this.escapeHTML( item.improved_state || item.improvedState || '' );
+const impact = this.escapeHTML( item.impact || item.impact_level || item.impactLevel || '' );
+let details = '';
+if ( current || improved ) {
+details += `${current} \u2192 ${improved}`;
+}
+if ( impact ) {
+details += details ? ` (${impact})` : `(${impact})`;
+}
+return `<li><strong>${process}</strong>${details ? `: ${details}` : ''}</li>`;
+}
+return `<li>${this.escapeHTML( item )}</li>`;
+} ).join( '' );
 
-        const currentSection = hasCurrent ? renderCurrentState( current_state_assessment ) : '';
-        const processSection = hasProcess
-            ? `<div class="rtbcb-industry-group"><h4>${this.escapeHTML( __('Process Improvements', 'rtbcb') )}</h4><ul>${renderProcessImprovements( process_improvements )}</ul></div>`
-            : '';
-        const automationSection = hasAutomation
-            ? `<div class="rtbcb-industry-group"><h4>${this.escapeHTML( __('Automation Opportunities', 'rtbcb') )}</h4><ul>${renderAutomationOpportunities( automation_opportunities )}</ul></div>`
-            : '';
+const renderAutomationOpportunities = items => items.map( item => {
+if ( item && typeof item === 'object' ) {
+const opportunity = this.escapeHTML( item.opportunity || '' );
+const complexity = this.escapeHTML( item.complexity || item.complexity_level || item.complexityLevel || '' );
+const effort = this.escapeHTML( item.implementation_effort || item.implementationEffort || '' );
+const savings = this.escapeHTML( item.savings || item.time_savings || item.timeSavings || '' );
+const parts = [];
+if ( complexity ) {
+parts.push( `${complexity} ${this.escapeHTML( __('complexity', 'rtbcb') )}` );
+}
+if ( effort ) {
+parts.push( `${effort} ${this.escapeHTML( __('effort', 'rtbcb') )}` );
+}
+if ( savings ) {
+parts.push( savings );
+}
+const detail = parts.length ? `: ${parts.join( ' \u2192 ' )}` : '';
+return `<li><strong>${opportunity}</strong>${detail}</li>`;
+}
+return `<li>${this.escapeHTML( item )}</li>`;
+} ).join( '' );
 
-        return `
-            <div class="rtbcb-operational-analysis">
-                <h3>${this.escapeHTML( __('Operational Insights', 'rtbcb') )}</h3>
-                ${currentSection}
-                ${processSection}
-                ${automationSection}
-            </div>
-        `;
-    }
+const currentSection = hasCurrent ? renderCurrentState( currentItems ) : '';
+const processSection = hasProcess
+? `<div class="rtbcb-industry-group"><h4>${this.escapeHTML( __('Process Improvements', 'rtbcb') )}</h4><ul>${renderProcessImprovements( processItems )}</ul></div>`
+: '';
+const automationSection = hasAutomation
+? `<div class="rtbcb-industry-group"><h4>${this.escapeHTML( __('Automation Opportunities', 'rtbcb') )}</h4><ul>${renderAutomationOpportunities( automationItems )}</ul></div>`
+: '';
+
+return `
+<div class="rtbcb-operational-analysis">
+<h3>${this.escapeHTML( __('Operational Insights', 'rtbcb') )}</h3>
+${currentSection}
+${processSection}
+${automationSection}
+</div>
+`;
+}
 
 renderIndustryInsights(context = {}) {
 const { sector_analysis = {}, benchmarking = {}, regulatory_landscape = {} } = context || {};

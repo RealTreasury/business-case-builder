@@ -527,10 +527,7 @@ $final_analysis['financial_benchmarks'] ?? ( $final_analysis['research']['financ
  */
 private static function structure_report_data( $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, $rag_context, $chart_data, $request_start, $financial_benchmarks = array() ) {
 	$operational_insights     = (array) ( is_array( $final_analysis['operational_insights'] ?? null ) ? $final_analysis['operational_insights'] : [] );
-       $current_state_assessment = (array) ( $operational_insights['current_state_assessment'] ?? [] );
-       if ( empty( $current_state_assessment ) ) {
-               $current_state_assessment = [ __( 'No data provided', 'rtbcb' ) ];
-       }
+$current_state_assessment = (array) ( $operational_insights['current_state_assessment'] ?? [] );
 
 	$process_improvements_raw = (array) ( $operational_insights['process_improvements'] ?? [] );
 	$process_improvements     = array();
@@ -566,9 +563,7 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 			}
 		}
 	}
-	if ( empty( $process_improvements ) ) {
-		$process_improvements = [ __( 'No data provided', 'rtbcb' ) ];
-	}
+// Keep empty array if no valid process improvements were provided.
 
 	$automation_opportunities_raw = (array) ( $operational_insights['automation_opportunities'] ?? [] );
 	$automation_opportunities     = array();
@@ -607,9 +602,7 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 			}
 		}
 	}
-	if ( empty( $automation_opportunities ) ) {
-		$automation_opportunities = [ __( 'No data provided', 'rtbcb' ) ];
-	}
+// Keep empty array if no automation opportunities were supplied.
 
        $risk_analysis        = (array) ( is_array( $final_analysis['risk_analysis'] ?? null ) ? $final_analysis['risk_analysis'] : [] );
        $risk_matrix_raw      = (array) ( $risk_analysis['risk_matrix'] ?? [] );
@@ -627,25 +620,17 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
                }
        }
        $implementation_risks = (array) ( $risk_analysis['implementation_risks'] ?? [] );
-       if ( empty( $implementation_risks ) ) {
-               $implementation_risks = [ __( 'No data provided', 'rtbcb' ) ];
-       }
+// Leave implementation risks empty if not provided.
        $action_plan             = (array) ( $final_analysis['action_plan'] ?? [] );
        $immediate_steps_raw     = $action_plan['immediate_steps'] ?? ( $final_analysis['next_steps']['immediate'] ?? [] );
        $immediate_steps         = self::normalize_action_items( $immediate_steps_raw );
-       if ( empty( $immediate_steps ) ) {
-               $immediate_steps = [ __( 'No data provided', 'rtbcb' ) ];
-       }
+// Leave immediate steps empty when none are available.
        $short_term_raw          = $action_plan['short_term_milestones'] ?? ( $final_analysis['next_steps']['short_term'] ?? [] );
        $short_term_milestones   = self::normalize_action_items( $short_term_raw );
-       if ( empty( $short_term_milestones ) ) {
-               $short_term_milestones = [ __( 'No data provided', 'rtbcb' ) ];
-       }
+// Leave short-term milestones empty when none are available.
        $long_term_raw           = $action_plan['long_term_objectives'] ?? ( $final_analysis['next_steps']['long_term'] ?? [] );
        $long_term_objectives    = self::normalize_action_items( $long_term_raw );
-       if ( empty( $long_term_objectives ) ) {
-               $long_term_objectives = [ __( 'No data provided', 'rtbcb' ) ];
-       }
+// Leave long-term objectives empty when none are available.
 
 	$company_profile      = $enriched_profile['company_profile'] ?? [];
 	$industry_context_raw = $enriched_profile['industry_context'] ?? [];
