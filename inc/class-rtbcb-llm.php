@@ -986,12 +986,12 @@ $parsed = $this->response_parser->parse_business_case( $response );
 	return [
 'executive_summary'      => $analysis['executive_summary'] ?? [],
 'company_intelligence'   => $analysis['company_intelligence'] ?? [],
-'operational_insights'   => $analysis['operational_insights'] ?? [],
-'risk_analysis'          => $analysis['risk_analysis'] ?? [],
-'action_plan'            => $analysis['action_plan'] ?? [],
+	'operational_insights'   => $analysis['operational_insights'] ?? [],
+	'risk_analysis'          => $analysis['risk_analysis'] ?? [],
+	'action_plan'            => $analysis['action_plan'] ?? [],
 	'industry_insights'      => $analysis['industry_insights'] ?? [],
-'technology_strategy'    => $analysis['technology_strategy'] ?? [],
-'financial_analysis'     => $analysis['financial_analysis'] ?? [],
+	'technology_strategy'    => $analysis['technology_strategy'] ?? [],
+	'financial_analysis'     => $analysis['financial_analysis'] ?? [],
 'implementation_roadmap' => $analysis['implementation_roadmap'] ?? [],
 'raw'                    => $analysis,
 ];
@@ -1856,107 +1856,111 @@ $parsed  = $this->response_parser->parse( $response );
 	],
 	],
 	'operational_insights' => [
-	'current_state_assessment' => [ 'assessment point 1', 'assessment point 2', 'assessment point 3' ],
-        'process_improvements' => [
-        [
-        'process_area'   => 'process name',
-        'current_state'  => 'current approach',
-        'improved_state' => 'future approach',
-        'impact_level'   => 'expected impact',
-        ],
-        ],
-        'automation_opportunities' => [
-        [
-'opportunity'           => 'automation area',
-'complexity'            => 'low|medium|high',
-'time_savings'         => 8,
-'implementation_effort' => 'effort required',
-        ],
-],
-],
-'financial_analysis' => [
+		'current_state_assessment' => [
+			'assessment point 1',
+			'assessment point 2',
+			'assessment point 3',
+		],
+		'process_improvements'     => [
+			[
+				'process_area'   => 'process name',
+				'current_state'  => 'current approach',
+				'improved_state' => 'future approach',
+				'impact_level'   => 'expected impact',
+			],
+		],
+		'automation_opportunities' => [
+			[
+				'opportunity'           => 'automation area',
+				'complexity'            => 'low|medium|high',
+				'time_savings'          => 8,
+				'implementation_effort' => 'effort required',
+			],
+		],
+	],
+	'financial_analysis' => [
 'roi_scenarios' => [
 'conservative' => [
 'total_annual_benefit' => 150000,
 'labor_savings'        => 90000,
 'fee_savings'          => 45000,
 'error_reduction'      => 15000,
-],
+		],
 'base' => [
 'total_annual_benefit' => 250000,
 'labor_savings'        => 150000,
 'fee_savings'          => 75000,
 'error_reduction'      => 25000,
-],
+		],
 'optimistic' => [
 'total_annual_benefit' => 350000,
 'labor_savings'        => 210000,
 'fee_savings'          => 105000,
 'error_reduction'      => 35000,
-],
-],
+		],
+	],
 'investment_breakdown' => [
 [
 'category'    => 'software licensing',
 'amount'      => 50000,
 'description' => 'annual licensing costs',
-],
-],
+		],
+		],
 'payback_analysis' => [
 [
 'scenario'       => 'base case',
 'payback_months' => 18,
 'roi_3_year'     => 245,
 'npv'            => 425000,
-],
-],
+		],
+		],
 'sensitivity_analysis' => [
 [
 'factor'            => 'labor cost assumptions',
 'impact_percentage' => 15,
 'probability'       => 0.7,
-],
-],
-],
-'technology_strategy' => [
+		],
+		],
+		],
+	'technology_strategy' => [
 'recommended_category' => 'tms_lite',
 'category_details' => [
 'name'      => 'Treasury Management System (Lite)',
 'features'  => [ 'feature1', 'feature2' ],
 'ideal_for' => 'company profile match',
-],
+		],
 'implementation_roadmap' => [
 [
 'phase'           => 'Phase 1',
 'timeline'        => '0-3 months',
 'activities'      => [ 'activity1', 'activity2' ],
 'success_criteria' => [ 'criteria1', 'criteria2' ],
-],
-],
+		],
+		],
 'vendor_considerations' => [ 'vendor selection criteria', 'implementation considerations' ],
-],
-'industry_insights' => [
+		],
+	'industry_insights' => [
 		'sector_trends' => [ 'trend 1 affecting treasury operations', 'trend 2 driving technology adoption' ],
 		'competitive_benchmarks' => [ 'benchmark 1 for treasury efficiency', 'benchmark 2 for technology adoption' ],
 		'regulatory_considerations' => [ 'regulatory requirement 1', 'regulatory requirement 2' ],
-],
-        'risk_analysis' => [
-        'risk_matrix' => [
-        [
-        'risk'       => 'risk description',
-        'likelihood' => 'low|medium|high',
-        'impact'     => 'low|medium|high',
-        ],
-        ],
-        'implementation_risks' => [ 'risk 1: description and likelihood', 'risk 2: description and impact' ],
-        'mitigation_strategies' => [ 'mitigation approach 1', 'mitigation approach 2' ],
-        'success_factors'       => [ 'critical success factor 1', 'critical success factor 2' ],
-],
-'action_plan' => [
-'immediate_steps'      => [ 'immediate action 1 (next 30 days)', 'immediate action 2 (next 30 days)' ],
-'short_term_milestones' => [ 'milestone 1 (3-6 months)', 'milestone 2 (3-6 months)' ],
-'long_term_objectives'  => [ 'objective 1 (6+ months)', 'objective 2 (6+ months)' ],
-],
+		],
+	'risk_analysis' => [
+		'risk_matrix'          => [
+			[
+				'risk'       => 'risk description',
+				'likelihood' => 'low|medium|high',
+				'impact'     => 'low|medium|high',
+		],
+		],
+		'implementation_risks'  => [ 'risk 1: description and likelihood', 'risk 2: description and impact' ],
+		'mitigation_strategies' => [ 'mitigation approach 1', 'mitigation approach 2' ],
+		'success_factors'       => [ 'critical success factor 1', 'critical success factor 2' ],
+	],
+	'action_plan' => [
+		'immediate_steps'      => [ 'immediate action 1 (next 30 days)', 'immediate action 2 (next 30 days)' ],
+		'short_term_milestones' => [ 'milestone 1 (3-6 months)', 'milestone 2 (3-6 months)' ],
+		'long_term_objectives'  => [ 'objective 1 (6+ months)', 'objective 2 (6+ months)' ],
+	],
 ];
 
 	$prompt .= json_encode( $structure, JSON_PRETTY_PRINT );
@@ -2243,11 +2247,11 @@ PROMPT;
 ];
 
 			$optional = [
-'operational_insights',
-'financial_analysis',
+	'operational_insights',
+	'financial_analysis',
 'implementation_roadmap',
-'risk_analysis',
-'action_plan',
+	'risk_analysis',
+	'action_plan',
 'vendor_considerations',
 ];
 
@@ -2466,13 +2470,13 @@ PROMPT;
 	'executive_recommendation' => sanitize_textarea_field( $analysis_data['executive_summary']['executive_recommendation'] ?? '' ),
 	'confidence_level'        => floatval( $analysis_data['executive_summary']['confidence_level'] ?? 0 ),
 	],
-'operational_insights' => [
-'current_state_assessment' => array_map(
+	'operational_insights' => [
+		'current_state_assessment' => array_map(
 'sanitize_textarea_field',
 (array) ( $analysis_data['operational_insights']['current_state_assessment'] ?? [] )
 ),
-'process_improvements'     => [],
-'automation_opportunities' => [],
+		'process_improvements'     => [],
+		'automation_opportunities' => [],
 	],
 		'industry_insights'   => [
 			'sector_trends'          => array_map( 'sanitize_textarea_field', (array) ( $analysis_data['industry_insights']['sector_trends'] ?? [] ) ),
@@ -2500,11 +2504,11 @@ PROMPT;
 	'vendor_considerations'  => is_array( $analysis_data['technology_strategy']['vendor_considerations'] ?? null ) ? array_map( 'sanitize_text_field', $analysis_data['technology_strategy']['vendor_considerations'] ) : [],
 	],
 	'implementation_roadmap' => [],
-'risk_analysis' => [
-'implementation_risks'  => array_map( 'sanitize_text_field', (array) ( $analysis_data['risk_analysis']['implementation_risks'] ?? [] ) ),
-'mitigation_strategies' => array_map( 'sanitize_text_field', (array) ( $analysis_data['risk_analysis']['mitigation_strategies'] ?? [] ) ),
-'success_factors'      => array_map( 'sanitize_text_field', (array) ( $analysis_data['risk_analysis']['success_factors'] ?? [] ) ),
-],
+	'risk_analysis' => [
+		'implementation_risks'  => array_map( 'sanitize_text_field', (array) ( $analysis_data['risk_analysis']['implementation_risks'] ?? [] ) ),
+		'mitigation_strategies' => array_map( 'sanitize_text_field', (array) ( $analysis_data['risk_analysis']['mitigation_strategies'] ?? [] ) ),
+		'success_factors'      => array_map( 'sanitize_text_field', (array) ( $analysis_data['risk_analysis']['success_factors'] ?? [] ) ),
+		],
 	'action_plan' => [
 		'immediate_steps'       => array_map( 'sanitize_text_field', (array) ( $analysis_data['action_plan']['immediate_steps'] ?? $analysis_data['next_steps']['immediate'] ?? [] ) ),
 		'short_term_milestones' => array_map( 'sanitize_text_field', (array) ( $analysis_data['action_plan']['short_term_milestones'] ?? $analysis_data['next_steps']['short_term'] ?? [] ) ),
@@ -2540,19 +2544,19 @@ PROMPT;
 
 foreach ( (array) ( $analysis_data['operational_insights']['process_improvements'] ?? [] ) as $item ) {
 $analysis['operational_insights']['process_improvements'][] = [
-'process_area'   => sanitize_text_field( $item['process'] ?? ( $item['process_area'] ?? '' ) ),
-'current_state'  => sanitize_textarea_field( $item['current_state'] ?? '' ),
-'improved_state' => sanitize_textarea_field( $item['improved_state'] ?? '' ),
-'impact_level'   => sanitize_text_field( $item['impact'] ?? ( $item['impact_level'] ?? '' ) ),
+				'process_area'   => sanitize_text_field( $item['process'] ?? ( $item['process_area'] ?? '' ) ),
+				'current_state'  => sanitize_textarea_field( $item['current_state'] ?? '' ),
+				'improved_state' => sanitize_textarea_field( $item['improved_state'] ?? '' ),
+				'impact_level'   => sanitize_text_field( $item['impact'] ?? ( $item['impact_level'] ?? '' ) ),
 ];
 }
 
 foreach ( (array) ( $analysis_data['operational_insights']['automation_opportunities'] ?? [] ) as $item ) {
 $analysis['operational_insights']['automation_opportunities'][] = [
-'opportunity'          => sanitize_text_field( $item['opportunity'] ?? '' ),
-'complexity'           => sanitize_text_field( $item['complexity'] ?? '' ),
-'time_savings'         => floatval( $item['time_savings'] ?? ( $item['potential_savings'] ?? 0 ) ),
-'implementation_effort' => sanitize_text_field( $item['implementation_effort'] ?? '' ),
+				'opportunity'          => sanitize_text_field( $item['opportunity'] ?? '' ),
+				'complexity'           => sanitize_text_field( $item['complexity'] ?? '' ),
+				'time_savings'         => floatval( $item['time_savings'] ?? ( $item['potential_savings'] ?? 0 ) ),
+				'implementation_effort' => sanitize_text_field( $item['implementation_effort'] ?? '' ),
 ];
 }
 
