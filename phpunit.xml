@@ -4,8 +4,9 @@
     <testsuite name="rtbcb">
       <file>tests/RTBCB_ValidatorTest.php</file>
       <file>tests/RTBCB_ResponseParserTest.php</file>
-          <file>tests/RTBCB_ResponseIntegrityTest.php</file>
+      <file>tests/RTBCB_ResponseIntegrityTest.php</file>
       <file>tests/RTBCB_ApiLogTokensTest.php</file>
+      <file>tests/RTBCB_RiskAnalysisTransformTest.php</file>
     </testsuite>
   </testsuites>
 </phpunit>
