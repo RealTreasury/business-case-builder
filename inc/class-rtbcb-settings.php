@@ -57,14 +57,6 @@ class RTBCB_Settings {
        * @return void
        */
        public static function register_settings() {
-               register_setting(
-                       'rtbcb_settings',
-                       'rtbcb_clean_json_responses',
-                       [
-                               'type'              => 'boolean',
-                               'default'           => true,
-                               'sanitize_callback' => 'rest_sanitize_boolean',
-                       ]
-               );
+               // Placeholder for future settings.
        }
 }

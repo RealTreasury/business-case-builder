@@ -886,37 +886,15 @@ function rtbcb_get_current_lead() {
 }
 
 /**
-	* Clean JSON response from API calls.
-	*
-	* Attempts to decode the response as JSON and returns the decoded array on
-	* success. If decoding fails or the input is not a JSON string, the original
-	* response is returned.
-	*
-	* @param mixed $response Raw response string or data.
-	* @return mixed Decoded array or original response.
-*/
-function rtbcb_clean_json_response( $response ) {
-		if ( is_string( $response ) ) {
-				$decoded = json_decode( $response, true );
-
-				if ( json_last_error() === JSON_ERROR_NONE ) {
-				        return $decoded;
-				}
-		}
-
-		return $response;
-}
-
-/**
-	* Extract final JSON payload from an OpenAI response body.
-	*
-	* Decodes the outer response structure and, when present, parses any nested
-	* JSON found in message content. If no nested JSON is detected, the decoded
-	* outer array is returned.
-	*
-	* @param string $raw_body Raw response body from the OpenAI Responses API.
-	* @return array|false Decoded JSON array on success, false on failure.
-	*/
+ * Extract final JSON payload from an OpenAI response body.
+ *
+ * Decodes the outer response structure and, when present, parses any nested
+ * JSON found in message content. If no nested JSON is detected, the decoded
+ * outer array is returned.
+ *
+ * @param string $raw_body Raw response body from the OpenAI Responses API.
+ * @return array|false Decoded JSON array on success, false on failure.
+ */
 function rtbcb_extract_json_from_openai_response( $raw_body ) {
 	$outer = json_decode( $raw_body, true );
 	if ( JSON_ERROR_NONE !== json_last_error() || ! is_array( $outer ) ) {
@@ -1590,44 +1568,17 @@ $roi	 = function_exists( 'get_option' ) ? get_option( 'rtbcb_roi_results', [] ) 
 
 	update_option( 'rtbcb_executive_summary', $summary );
 
-	return $summary;
+        return $summary;
 }
 
 /**
- * Parse GPT-5 Responses API output with quality validation.
+ * Proxy requests to the OpenAI Responses API.
  *
- * @deprecated Use RTBCB_Response_Parser::parse_business_case() directly.
+ * Reads the API key from options and forwards the provided request body to
+ * the OpenAI endpoint.
  *
- * @param array $response Response data from GPT-5 API.
- * @return array|WP_Error Parsed response.
+ * @return void
  */
-function rtbcb_parse_gpt5_business_case_response( $response ) {
-	$parser = new RTBCB_Response_Parser();
-	return $parser->parse_business_case( $response );
-}
-
-/**
- * Parse a generic GPT-5 response.
- *
- * @deprecated Use RTBCB_Response_Parser::parse() directly.
- *
- * @param array $response Response data from GPT-5 API.
- * @param bool  $store_raw Optional. Include decoded response body.
- * @return array|WP_Error Parsed response.
- */
-function rtbcb_parse_gpt5_response( $response, $store_raw = false ) {
-	$parser = new RTBCB_Response_Parser();
-	return $parser->parse( $response, $store_raw );
-}
-
-/**
-	* Proxy requests to the OpenAI Responses API.
-	*
-	* Reads the API key from options and forwards the provided request body to
-	* the OpenAI endpoint.
-	*
-	* @return void
-	*/
 
 function rtbcb_proxy_openai_responses() {
         // Only handle our specific AJAX action; bail early for others.
@@ -2687,85 +2638,6 @@ __( 'Conduct user training and change management', 'rtbcb' ),
 __( 'Measure and optimize system performance', 'rtbcb' ),
 __( 'Expand functionality and integration capabilities', 'rtbcb' ),
 ];
-}
-
-/**
- * Parse a raw API response containing nested and escaped JSON.
- *
- * The remote service returns a JSON object where the `raw_body` field holds
- * another JSON string. Inside that string the `output` array contains a
- * `text` field with an escaped JSON payload. This helper decodes each layer
- * and returns the final associative array.
- *
- * @param string $raw_response Raw response string from the API.
- * @return array|WP_Error      Parsed data array on success or WP_Error on failure.
- */
-function rtbcb_parse_api_response( $raw_response ) {
-	if ( '' === $raw_response || null === $raw_response ) {
-		return new WP_Error(
-			'api_empty_response',
-			__( 'Empty API response.', 'rtbcb' )
-		);
-	}
-	
-	$outer = json_decode( $raw_response, true );
-	if ( null === $outer && JSON_ERROR_NONE !== json_last_error() ) {
-		return new WP_Error(
-			'api_invalid_json',
-			sprintf( __( 'Unable to decode API response: %s', 'rtbcb' ), json_last_error_msg() )
-		);
-	}
-	
-	if ( empty( $outer['raw_body'] ) ) {
-		return new WP_Error(
-			'api_missing_body',
-			__( 'API response missing raw_body field.', 'rtbcb' )
-		);
-	}
-	
-	$inner = json_decode( $outer['raw_body'], true );
-	if ( null === $inner && JSON_ERROR_NONE !== json_last_error() ) {
-		return new WP_Error(
-			'api_invalid_inner_json',
-			sprintf( __( 'Unable to decode raw_body JSON: %s', 'rtbcb' ), json_last_error_msg() )
-		);
-	}
-	
-	if ( empty( $inner['output'] ) || ! is_array( $inner['output'] ) ) {
-		return new WP_Error(
-			'api_missing_output',
-			__( 'raw_body does not contain an output array.', 'rtbcb' )
-		);
-	}
-	
-	$escaped_json = null;
-	foreach ( $inner['output'] as $item ) {
-		if ( isset( $item['type'] ) && 'message' === $item['type'] && ! empty( $item['content'] ) ) {
-			foreach ( $item['content'] as $content ) {
-				if ( isset( $content['text'] ) ) {
-					$escaped_json = $content['text'];
-					break 2;
-			}
-			}
-}
-}
-
-	if ( null === $escaped_json ) {
-		return new WP_Error(
-			'api_missing_text',
-			__( 'Unable to locate text field in API response.', 'rtbcb' )
-		);
-	}
-	
-	$data = json_decode( $escaped_json, true );
-	if ( null === $data && JSON_ERROR_NONE !== json_last_error() ) {
-		return new WP_Error(
-				'api_invalid_text_json',
-				sprintf( __( 'Unable to decode text JSON: %s', 'rtbcb' ), json_last_error_msg() )
-		);
-	}
-
-	return $data;
 }
 
 
