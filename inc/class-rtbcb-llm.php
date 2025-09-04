@@ -1857,21 +1857,21 @@ $parsed  = $this->response_parser->parse( $response );
 	],
 	'operational_insights' => [
 	'current_state_assessment' => [ 'assessment point 1', 'assessment point 2', 'assessment point 3' ],
-	'process_improvements' => [
-	[
-	'process'        => 'process name',
-	'current_state'  => 'current approach',
-	'improved_state' => 'future approach',
-	'impact'         => 'expected impact',
-	],
-	],
-	'automation_opportunities' => [
-	[
+        'process_improvements' => [
+        [
+        'process_area'   => 'process name',
+        'current_state'  => 'current approach',
+        'improved_state' => 'future approach',
+        'impact_level'   => 'expected impact',
+        ],
+        ],
+        'automation_opportunities' => [
+        [
 'opportunity'           => 'automation area',
 'complexity'            => 'low|medium|high',
-'potential_savings'     => 'time/cost savings',
+'time_savings'         => 8,
 'implementation_effort' => 'effort required',
-	],
+        ],
 ],
 ],
 'financial_analysis' => [
@@ -2543,7 +2543,7 @@ foreach ( (array) ( $analysis_data['operational_insights']['automation_opportuni
 $analysis['operational_insights']['automation_opportunities'][] = [
 'opportunity'          => sanitize_text_field( $item['opportunity'] ?? '' ),
 'complexity'           => sanitize_text_field( $item['complexity'] ?? '' ),
-'time_savings'         => floatval( $item['potential_savings'] ?? ( $item['time_savings'] ?? 0 ) ),
+'time_savings'         => floatval( $item['time_savings'] ?? ( $item['potential_savings'] ?? 0 ) ),
 'implementation_effort' => sanitize_text_field( $item['implementation_effort'] ?? '' ),
 ];
 }

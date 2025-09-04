@@ -311,23 +311,23 @@ PROMPT;
 	  },
 	  "operational_insights": {
 	    "current_state_assessment": ["array of 3-4 key current state observations"],
-	    "process_improvements": [
-	      {
-	        "process": "string - specific process name",
-	        "current_state": "string - how process works today",
-	        "improved_state": "string - how process will work post-implementation",
-	        "impact": "string - quantified business impact where possible"
-	      }
-	    ],
-	    "automation_opportunities": [
-	      {
-	        "opportunity": "string - specific automation opportunity",
-	        "complexity": "low|medium|high",
-	        "potential_savings": "string - time and cost savings description",
-	        "implementation_effort": "string - effort and resources required"
-	      }
-	    ]
-	  },
+            "process_improvements": [
+              {
+                "process_area": "string - specific process name",
+                "current_state": "string - how process works today",
+                "improved_state": "string - how process will work post-implementation",
+                "impact_level": "string - quantified business impact where possible"
+              }
+            ],
+            "automation_opportunities": [
+              {
+                "opportunity": "string - specific automation opportunity",
+                "complexity": "low|medium|high",
+                "time_savings": "number - hours saved",
+                "implementation_effort": "string - effort and resources required"
+              }
+            ]
+          },
 	  "financial_analysis": {
 	    "roi_scenarios": {
 	      "conservative": {
