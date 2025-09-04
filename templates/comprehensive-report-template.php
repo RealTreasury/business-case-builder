@@ -701,7 +701,7 @@ echo '<li>' . esc_html( $label . ': ' . $value ) . '</li>';
 							<span class="rtbcb-timeline-duration"><?php echo esc_html__( 'Next 30 days', 'rtbcb' ); ?></span>
 						</div>
 						<ul class="rtbcb-action-list">
-							<?php foreach ( $action_plan['immediate_steps'] as $step ) : ?>
+							<?php foreach ( (array) $action_plan['immediate_steps'] as $step ) : ?>
 								<li><?php echo esc_html( $step ); ?></li>
 							<?php endforeach; ?>
 						</ul>
@@ -716,7 +716,7 @@ echo '<li>' . esc_html( $label . ': ' . $value ) . '</li>';
 							<span class="rtbcb-timeline-duration"><?php echo esc_html__( '3-6 months', 'rtbcb' ); ?></span>
 						</div>
 						<ul class="rtbcb-action-list">
-							<?php foreach ( $action_plan['short_term_milestones'] as $milestone ) : ?>
+							<?php foreach ( (array) $action_plan['short_term_milestones'] as $milestone ) : ?>
 								<li><?php echo esc_html( $milestone ); ?></li>
 							<?php endforeach; ?>
 						</ul>
@@ -731,7 +731,7 @@ echo '<li>' . esc_html( $label . ': ' . $value ) . '</li>';
 							<span class="rtbcb-timeline-duration"><?php echo esc_html__( '6+ months', 'rtbcb' ); ?></span>
 						</div>
 						<ul class="rtbcb-action-list">
-							<?php foreach ( $action_plan['long_term_objectives'] as $objective ) : ?>
+							<?php foreach ( (array) $action_plan['long_term_objectives'] as $objective ) : ?>
 								<li><?php echo esc_html( $objective ); ?></li>
 							<?php endforeach; ?>
 						</ul>
