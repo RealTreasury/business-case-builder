@@ -80,6 +80,15 @@ $business_case_data = [
                        ],
                ],
        ],
+       'technology_strategy' => [
+               'implementation_roadmap' => [
+                       [
+                               'phase'      => 'Phase 1',
+                               'timeline'   => 'Q1',
+                               'activities' => [ 'Setup', 'Training' ],
+                       ],
+               ],
+       ],
 ];
 
 $report_data = $business_case_data;
@@ -106,6 +115,11 @@ if ( strpos( $output, 'Operational Insights' ) === false || strpos( $output, 'Re
 if ( strpos( $output, 'No data provided' ) !== false ) {
         echo "Operational insights fallback triggered unexpectedly\n";
         exit( 1 );
+}
+
+if ( strpos( $output, 'Phase 1 - Q1: Setup, Training' ) === false ) {
+       echo "Implementation roadmap not rendered\n";
+       exit( 1 );
 }
 
 echo "Comprehensive template render test passed.\n";
