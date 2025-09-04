@@ -459,12 +459,21 @@ if ( is_wp_error( $parsed ) ) {
 return $parsed;
 }
 
-$content = $parsed['output_text'];
-$json    = is_string( $content ) ? json_decode( $content, true ) : ( is_array( $content ) ? $content : [] );
+	$content = $parsed['output_text'];
+	$json    = is_string( $content ) ? json_decode( $content, true ) : ( is_array( $content ) ? $content : [] );
 
-if ( ! is_array( $json ) ) {
-return new WP_Error( 'llm_response_parse_error', __( 'Invalid JSON from language model.', 'rtbcb' ) );
-}
+	if ( is_array( $json ) ) {
+		foreach ( [ 'analysis', 'report_data' ] as $wrapper ) {
+			if ( isset( $json[ $wrapper ] ) && is_array( $json[ $wrapper ] ) ) {
+				$json = $json[ $wrapper ];
+				break;
+			}
+		}
+	}
+
+	if ( ! is_array( $json ) ) {
+		return new WP_Error( 'llm_response_parse_error', __( 'Invalid JSON from language model.', 'rtbcb' ) );
+	}
 
 $required = [
 'executive_summary',
