@@ -88,14 +88,14 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                                         <div class="rtbcb-field rtbcb-field-required">
                                                 <fieldset class="rtbcb-report-type">
                                                         <legend><?php esc_html_e( 'Report Type', 'rtbcb' ); ?></legend>
-                                                        <label>
-                                                                <input type="radio" name="report_type" value="basic" checked />
-                                                                <?php esc_html_e( 'Basic', 'rtbcb' ); ?>
-                                                        </label>
-                                                        <label>
-                                                                <input type="radio" name="report_type" value="enhanced" />
-                                                                <?php esc_html_e( 'Enhanced', 'rtbcb' ); ?>
-                                                        </label>
+                                                       <label>
+                                                               <input type="radio" name="report_type" value="basic" checked required />
+                                                               <?php esc_html_e( 'Basic', 'rtbcb' ); ?>
+                                                       </label>
+                                                       <label>
+                                                               <input type="radio" name="report_type" value="enhanced" required />
+                                                               <?php esc_html_e( 'Enhanced', 'rtbcb' ); ?>
+                                                       </label>
                                                 </fieldset>
                                         </div>
                                 </div>
