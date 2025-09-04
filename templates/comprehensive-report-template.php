@@ -145,13 +145,13 @@ $processing_time = $metadata['processing_time'] ?? ( $report_data['processing_ti
 		</div>
 	</div>
 
-	<!-- Company Intelligence Section (AI-Enhanced) -->
+	<!-- Company Profile Section -->
 	<?php if ( ! empty( $company_intelligence ) ) : ?>
 	<div class="rtbcb-section-enhanced rtbcb-company-intelligence">
                 <div class="rtbcb-section-header-enhanced">
                         <h2 class="rtbcb-section-title">
                                 <span class="rtbcb-section-icon">🧠</span>
-                                <?php echo esc_html__( 'AI-Enhanced Company Intelligence', 'rtbcb' ); ?>
+                                <?php echo esc_html__( 'Company Profile', 'rtbcb' ); ?>
                         </h2>
                         <div class="rtbcb-ai-badge">
                                 <span class="rtbcb-ai-icon">✨</span>
@@ -263,6 +263,67 @@ $processing_time = $metadata['processing_time'] ?? ( $report_data['processing_ti
 </div>
 </div>
 <?php endif; ?>
+	<!-- Executive Summary with Enhanced Visual Design -->
+	<?php if ( ! empty( $executive_summary ) ) : ?>
+<div class="rtbcb-section-enhanced rtbcb-executive-summary rtbcb-executive-summary-enhanced">
+                <div class="rtbcb-section-header-enhanced">
+                        <h2 class="rtbcb-section-title">
+                                <span class="rtbcb-section-icon">📋</span>
+                                <?php echo esc_html__( 'Executive Summary', 'rtbcb' ); ?>
+                        </h2>
+                        <div class="rtbcb-business-case-strength-enhanced <?php echo esc_attr( strtolower( $executive_summary['business_case_strength'] ?? 'strong' ) ); ?>">
+                                <span class="rtbcb-strength-indicator"></span>
+                                <?php echo esc_html( $executive_summary['business_case_strength'] ?? esc_html__( 'Strong', 'rtbcb' ) ); ?>
+                                <?php echo esc_html__( 'Business Case', 'rtbcb' ); ?>
+                        </div>
+                        <button type="button" class="rtbcb-section-toggle" data-target="executive-summary-content">
+                                <span class="rtbcb-toggle-text"><?php echo esc_html__( 'Expand', 'rtbcb' ); ?></span>
+                                <span class="rtbcb-toggle-arrow">▼</span>
+                        </button>
+                </div>
+
+                <div id="executive-summary-content" class="rtbcb-section-content">
+			<?php if ( ! empty( $executive_summary['strategic_positioning'] ) ) : ?>
+				<div class="rtbcb-strategic-positioning-enhanced">
+					<div class="rtbcb-content-card">
+						<h3><?php echo esc_html__( 'Strategic Positioning', 'rtbcb' ); ?></h3>
+						<p class="rtbcb-strategic-text"><?php echo esc_html( $executive_summary['strategic_positioning'] ); ?></p>
+					</div>
+				</div>
+			<?php endif; ?>
+
+			<?php if ( ! empty( $executive_summary['key_value_drivers'] ) ) : ?>
+				<div class="rtbcb-value-drivers-enhanced">
+					<h3><?php echo esc_html__( 'Key Value Drivers', 'rtbcb' ); ?></h3>
+					<div class="rtbcb-value-drivers-grid-enhanced">
+						<?php foreach ( $executive_summary['key_value_drivers'] as $index => $driver ) : ?>
+							<div class="rtbcb-value-driver-enhanced">
+								<div class="rtbcb-driver-number-enhanced"><?php echo esc_html( $index + 1 ); ?></div>
+								<div class="rtbcb-driver-content">
+									<div class="rtbcb-driver-text"><?php echo esc_html( $driver ); ?></div>
+								</div>
+							</div>
+						<?php endforeach; ?>
+					</div>
+				</div>
+			<?php endif; ?>
+
+			<?php if ( ! empty( $executive_summary['executive_recommendation'] ) ) : ?>
+				<div class="rtbcb-executive-recommendation-enhanced">
+					<div class="rtbcb-recommendation-card">
+						<div class="rtbcb-recommendation-header">
+							<span class="rtbcb-recommendation-icon">💡</span>
+							<h3><?php echo esc_html__( 'Executive Recommendation', 'rtbcb' ); ?></h3>
+						</div>
+						<div class="rtbcb-recommendation-content">
+							<?php echo esc_html( $executive_summary['executive_recommendation'] ); ?>
+						</div>
+					</div>
+				</div>
+			<?php endif; ?>
+		</div>
+	</div>
+	<?php endif; ?>
 
 <?php if ( ! empty( $operational_insights ) ) : ?>
 <div class="rtbcb-section-enhanced rtbcb-operational-insights">
@@ -637,67 +698,6 @@ $impact     = $risk_item['impact'] ?? '';
 </div>
 <?php endif; ?>
 
-	<!-- Executive Summary with Enhanced Visual Design -->
-	<?php if ( ! empty( $executive_summary ) ) : ?>
-<div class="rtbcb-section-enhanced rtbcb-executive-summary rtbcb-executive-summary-enhanced">
-                <div class="rtbcb-section-header-enhanced">
-                        <h2 class="rtbcb-section-title">
-                                <span class="rtbcb-section-icon">📋</span>
-                                <?php echo esc_html__( 'Executive Summary', 'rtbcb' ); ?>
-                        </h2>
-                        <div class="rtbcb-business-case-strength-enhanced <?php echo esc_attr( strtolower( $executive_summary['business_case_strength'] ?? 'strong' ) ); ?>">
-                                <span class="rtbcb-strength-indicator"></span>
-                                <?php echo esc_html( $executive_summary['business_case_strength'] ?? esc_html__( 'Strong', 'rtbcb' ) ); ?>
-                                <?php echo esc_html__( 'Business Case', 'rtbcb' ); ?>
-                        </div>
-                        <button type="button" class="rtbcb-section-toggle" data-target="executive-summary-content">
-                                <span class="rtbcb-toggle-text"><?php echo esc_html__( 'Expand', 'rtbcb' ); ?></span>
-                                <span class="rtbcb-toggle-arrow">▼</span>
-                        </button>
-                </div>
-
-                <div id="executive-summary-content" class="rtbcb-section-content">
-			<?php if ( ! empty( $executive_summary['strategic_positioning'] ) ) : ?>
-				<div class="rtbcb-strategic-positioning-enhanced">
-					<div class="rtbcb-content-card">
-						<h3><?php echo esc_html__( 'Strategic Positioning', 'rtbcb' ); ?></h3>
-						<p class="rtbcb-strategic-text"><?php echo esc_html( $executive_summary['strategic_positioning'] ); ?></p>
-					</div>
-				</div>
-			<?php endif; ?>
-
-			<?php if ( ! empty( $executive_summary['key_value_drivers'] ) ) : ?>
-				<div class="rtbcb-value-drivers-enhanced">
-					<h3><?php echo esc_html__( 'Key Value Drivers', 'rtbcb' ); ?></h3>
-					<div class="rtbcb-value-drivers-grid-enhanced">
-						<?php foreach ( $executive_summary['key_value_drivers'] as $index => $driver ) : ?>
-							<div class="rtbcb-value-driver-enhanced">
-								<div class="rtbcb-driver-number-enhanced"><?php echo esc_html( $index + 1 ); ?></div>
-								<div class="rtbcb-driver-content">
-									<div class="rtbcb-driver-text"><?php echo esc_html( $driver ); ?></div>
-								</div>
-							</div>
-						<?php endforeach; ?>
-					</div>
-				</div>
-			<?php endif; ?>
-
-			<?php if ( ! empty( $executive_summary['executive_recommendation'] ) ) : ?>
-				<div class="rtbcb-executive-recommendation-enhanced">
-					<div class="rtbcb-recommendation-card">
-						<div class="rtbcb-recommendation-header">
-							<span class="rtbcb-recommendation-icon">💡</span>
-							<h3><?php echo esc_html__( 'Executive Recommendation', 'rtbcb' ); ?></h3>
-						</div>
-						<div class="rtbcb-recommendation-content">
-							<?php echo esc_html( $executive_summary['executive_recommendation'] ); ?>
-						</div>
-					</div>
-				</div>
-			<?php endif; ?>
-		</div>
-	</div>
-	<?php endif; ?>
 
 <!-- Action Plan Section with Timeline -->
 <?php if ( ! empty( $action_plan ) ) : ?>
