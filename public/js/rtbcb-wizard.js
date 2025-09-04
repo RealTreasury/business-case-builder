@@ -510,17 +510,21 @@ class BusinessCaseBuilder {
                 }
         }
 
-       getEnhancedFields(stepNumber) {
-               const step = this.form.querySelector(`.rtbcb-wizard-step[data-step="${stepNumber}"]`);
-               if (!step) {
-                       return [];
-               }
-               const requiredFields = Array.from(step.querySelectorAll('[name][required]')).map(field => field.name);
-               if (stepNumber === 5 && !requiredFields.includes('pain_points')) {
-                       requiredFields.push('pain_points');
-               }
-               return requiredFields;
-       }
+getEnhancedFields(stepNumber) {
+const step = this.form.querySelector(`.rtbcb-wizard-step[data-step="${stepNumber}"]`);
+if (!step) {
+return [];
+}
+let requiredFields = Array.from(step.querySelectorAll('[name][required]')).map(field => field.name);
+// job_title is optional; exclude if present
+if ( stepNumber === 2 ) {
+requiredFields = requiredFields.filter( ( name ) => name !== 'job_title' );
+}
+if (stepNumber === 5 && !requiredFields.includes('pain_points')) {
+requiredFields.push('pain_points');
+}
+return requiredFields;
+}
 
         validateStep(stepNumber) {
                const currentFields = this.getStepFields(stepNumber) || [];
@@ -980,18 +984,21 @@ class BusinessCaseBuilder {
 		const formData = new FormData();
 		const numericFields = ['hours_reconciliation', 'hours_cash_positioning', 'num_banks', 'ftes'];
 
-		const skipFields = ['report_type'];
-		for (const [key, value] of rawData.entries()) {
-			if (skipFields.includes(key)) {
-				continue;
-			}
-			if (numericFields.includes(key)) {
-				const num = parseFloat(value);
-				formData.append(key, Number.isFinite(num) ? num : 0);
-			} else {
-				formData.append(key, value);
-			}
-		}
+const skipFields = ['report_type'];
+for (const [key, value] of rawData.entries()) {
+if (skipFields.includes(key)) {
+continue;
+}
+if (key === 'job_title' && !value) {
+continue;
+}
+if (numericFields.includes(key)) {
+const num = parseFloat(value);
+formData.append(key, Number.isFinite(num) ? num : 0);
+} else {
+formData.append(key, value);
+}
+}
 
 		formData.append('action', 'rtbcb_generate_case');
 		if (typeof rtbcb_ajax !== 'undefined' && rtbcb_ajax.nonce) {
