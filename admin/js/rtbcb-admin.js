@@ -58,9 +58,6 @@ jQuery(document).ready(function($) {
             // Sync Local
             $('#rtbcb-sync-to-local').on('click', this.syncLocal);
             
-            // Commentary Test
-            $('#rtbcb-generate-commentary').on('click', this.testCommentary);
-            
             // Company Overview Test
             $('#rtbcb-company-overview-form').on('submit', this.testCompanyOverview);
             
@@ -224,37 +221,6 @@ $form.find('input[type="checkbox"][name="files[]"]').prop('checked', true );
                 $status.html('<div class="notice notice-error"><p>' + err + '</p></div>');
             } finally {
                 $btn.text(original).prop('disabled', false);
-            }
-        },
-        
-        testCommentary: async function(e) {
-            e.preventDefault();
-            var $btn = $(this);
-            var industry = $('#rtbcb-commentary-industry').val();
-            var $results = $('#rtbcb-commentary-results');
-            var original = $btn.text();
-
-            $btn.prop('disabled', true).text(window.rtbcbAdmin.strings.generating || 'Generating...');
-
-            try {
-                var response = await $.ajax({
-                    url: window.rtbcbAdmin.ajax_url,
-                    method: 'POST',
-                    data: {
-                        action: 'rtbcb_test_commentary',
-                        industry: industry,
-                        nonce: window.rtbcbAdmin.company_overview_nonce
-                    }
-                });
-                if (response.success && response.data) {
-                    $results.text(response.data.overview || response.data.commentary || 'Generated successfully');
-                } else {
-                    $results.text(response.data && response.data.message ? response.data.message : 'Generation failed');
-                }
-            } catch (error) {
-                $results.text('Request failed');
-            } finally {
-                $btn.prop('disabled', false).text(original);
             }
         },
         
