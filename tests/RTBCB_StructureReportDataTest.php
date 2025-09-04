@@ -120,7 +120,7 @@ $analysis_method = new ReflectionMethod( RTBCB_LLM::class, 'validate_and_structu
 $analysis_method->setAccessible( true );
 $final_analysis  = $analysis_method->invoke( $llm, $analysis_data );
 
-$result = $method->invoke( null, $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, [], microtime( true ), [] );
+$result = $method->invoke( null, $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, [], [], microtime( true ), [] );
 
 self::assertSame( [ 'trend' ], $final_analysis['industry_insights']['sector_trends'] );
 self::assertSame( $final_analysis['industry_insights'], $result['industry_insights'] );
@@ -162,7 +162,7 @@ $analysis_method = new ReflectionMethod( RTBCB_LLM::class, 'validate_and_structu
 $analysis_method->setAccessible( true );
 $final_analysis  = $analysis_method->invoke( $llm, $analysis_data );
 
-$result = $method->invoke( null, $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, [], microtime( true ), [] );
+$result = $method->invoke( null, $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, [], [], microtime( true ), [] );
 
 self::assertSame( [ 'Manual process', 'Siloed data' ], $result['operational_insights']['current_state_assessment'] );
 self::assertSame(
@@ -196,7 +196,7 @@ public function test_empty_operational_arrays_default_to_no_data() {
 	$analysis_method->setAccessible( true );
 	$final_analysis  = $analysis_method->invoke( $llm, $analysis_data );
 
-	$result = $method->invoke( null, $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, [], microtime( true ), [] );
+	$result = $method->invoke( null, $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, [], [], microtime( true ), [] );
 
 self::assertSame( [], $result['operational_insights']['process_improvements'] );
 self::assertSame( [], $result['operational_insights']['automation_opportunities'] );
@@ -212,7 +212,7 @@ public function test_missing_risk_analysis_defaults_to_no_data() {
 	$recommendation   = [ 'recommended' => '', 'category_info' => [] ];
 	$final_analysis   = [];
 
-        $result = $method->invoke( null, $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, [], microtime( true ), [] );
+        $result = $method->invoke( null, $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, [], [], microtime( true ), [] );
 
 self::assertSame( [], $result['risk_analysis']['risk_matrix'] );
 self::assertSame( [], $result['risk_analysis']['implementation_risks'] );
@@ -274,7 +274,7 @@ public function test_rag_context_pass_through() {
                        'action_plan'          => 'plan message',
                ];
 
-               $result = $method->invoke( null, $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, [], microtime( true ), [] );
+               $result = $method->invoke( null, $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, [], [], microtime( true ), [] );
 
                self::assertSame( 'ops message', $result['operational_insights']['message'] );
                self::assertSame( 'risk message', $result['risk_analysis']['message'] );
