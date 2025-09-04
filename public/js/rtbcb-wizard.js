@@ -528,9 +528,13 @@ this.lastValidationErrors = [];
                const requiredFields = Array.from(step.querySelectorAll('[name][required]')).map(field => field.name);
 
                if (stepNumber === 2) {
-                       const index = requiredFields.indexOf('job_title');
-                       if (index !== -1) {
-                               requiredFields.splice(index, 1);
+                       const jobField = step.querySelector('[name="job_title"]');
+                       if (jobField) {
+                               jobField.removeAttribute('required');
+                               const index = requiredFields.indexOf('job_title');
+                               if (index !== -1) {
+                                       requiredFields.splice(index, 1);
+                               }
                        }
                }
 
