@@ -44,7 +44,7 @@ final class RTBCB_ApiLogTokensTest extends TestCase {
 	        ],
 	    ];
 
-	    RTBCB_API_Log::save_log( [], $response, 1 );
+            RTBCB_API_Log::save_log( [], $response, 1, '', '', 0, 'gpt-5' );
 
 	    $this->assertNotEmpty( $wpdb->rows );
 	    $row = $wpdb->rows[0];

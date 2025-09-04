@@ -2034,11 +2034,15 @@ wp_localize_script(
 					$entry['started_at']     = isset( $entry['started_at'] ) ? sanitize_text_field( $entry['started_at'] ) : '';
 					$entry['report_template'] = isset( $entry['report_template'] ) ? sanitize_text_field( $entry['report_template'] ) : '';
 
-					$log_ids = RTBCB_API_Log::get_log_ids_for_contact( $entry['lead_id'], $entry['lead_email'] );
-					if ( ! empty( $log_ids ) ) {
-						$search            = $entry['lead_email'] ? $entry['lead_email'] : $entry['lead_id'];
-						$entry['logs_url'] = admin_url( 'admin.php?page=rtbcb-api-logs&search=' . rawurlencode( $search ) );
-					}
+                                        $entry['log_ids'] = isset( $entry['log_ids'] ) && is_array( $entry['log_ids'] ) ? array_map( 'intval', $entry['log_ids'] ) : [];
+                                        $log_ids          = $entry['log_ids'];
+                                        if ( empty( $log_ids ) && class_exists( 'RTBCB_API_Log' ) ) {
+                                                $log_ids = RTBCB_API_Log::get_log_ids_for_contact( $entry['lead_id'], $entry['lead_email'] );
+                                        }
+                                        if ( ! empty( $log_ids ) ) {
+                                                $entry['log_ids'] = array_map( 'intval', $log_ids );
+                                                $entry['logs_url'] = admin_url( 'admin.php?page=rtbcb-api-logs&search=' . rawurlencode( (string) $log_ids[0] ) );
+                                        }
 
 					return $entry;
 				},

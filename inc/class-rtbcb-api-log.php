@@ -46,6 +46,7 @@ class RTBCB_API_Log {
                        user_email varchar(255) DEFAULT '',
                        lead_id bigint(20) unsigned DEFAULT 0,
                        company_name varchar(255) DEFAULT '',
+                       llm_model varchar(100) DEFAULT '',
                        request_json longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
                        response_json longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
                        is_truncated tinyint(1) DEFAULT 0,
@@ -88,6 +89,7 @@ class RTBCB_API_Log {
                                        user_email varchar(255) DEFAULT '',
                                        lead_id bigint(20) unsigned DEFAULT 0,
                                        company_name varchar(255) DEFAULT '',
+                                       llm_model varchar(100) DEFAULT '',
                                        request_json longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
                                        response_json longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
                                        is_truncated tinyint(1) DEFAULT 0,
@@ -168,6 +170,10 @@ class RTBCB_API_Log {
                        $wpdb->query( 'ALTER TABLE ' . self::$table_name . ' ADD corruption_detected tinyint(1) DEFAULT 0' );
                }
 
+               if ( ! in_array( 'llm_model', $columns, true ) ) {
+                       $wpdb->query( 'ALTER TABLE ' . self::$table_name . " ADD llm_model varchar(100) DEFAULT ''" );
+               }
+
                $wpdb->query( 'ALTER TABLE ' . self::$table_name . ' CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci' );
        }
 
@@ -215,7 +221,7 @@ class RTBCB_API_Log {
 	* @param string $company_name Company name.
 	* @return void
 	*/
-       public static function save_log( $request, $response, $user_id, $user_email = '', $company_name = '', $lead_id = 0 ) {
+       public static function save_log( $request, $response, $user_id, $user_email = '', $company_name = '', $lead_id = 0, $llm_model = '' ) {
                global $wpdb;
 
                if ( empty( self::$table_name ) ) {
@@ -257,6 +263,7 @@ class RTBCB_API_Log {
 
                $user_email   = sanitize_email( $user_email );
                $company_name = sanitize_text_field( $company_name );
+               $llm_model    = sanitize_text_field( $llm_model );
 
                $wpdb->insert(
                        self::$table_name,
@@ -265,17 +272,18 @@ class RTBCB_API_Log {
                                'user_email'        => $user_email,
                                'lead_id'           => intval( $lead_id ),
                                'company_name'        => $company_name,
-                               'request_json'        => $request_json,
-                               'response_json'       => $response_json,
-                               'is_truncated'        => $response_truncated ? 1 : 0,
-                               'original_size'       => $response_size,
+                               'llm_model'          => $llm_model,
+                               'request_json'       => $request_json,
+                               'response_json'      => $response_json,
+                               'is_truncated'       => $response_truncated ? 1 : 0,
+                               'original_size'      => $response_size,
                                'corruption_detected' => $response_corruption ? 1 : 0,
-                               'prompt_tokens'       => $prompt_tokens,
-                               'completion_tokens'   => $completion_tokens,
-                               'total_tokens'        => $total_tokens,
-                               'created_at'          => current_time( 'mysql' ),
+                               'prompt_tokens'      => $prompt_tokens,
+                               'completion_tokens'  => $completion_tokens,
+                               'total_tokens'       => $total_tokens,
+                               'created_at'         => current_time( 'mysql' ),
                       ],
-                       [ '%d', '%s', '%d', '%s', '%s', '%s', '%d', '%d', '%d', '%d', '%d', '%d', '%s' ]
+                       [ '%d', '%s', '%d', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%d', '%d', '%d', '%s' ]
                );
        }
 
@@ -325,7 +333,7 @@ class RTBCB_API_Log {
 		$limit = max( 1, intval( $limit ) );
 
                $query = $wpdb->prepare(
-                       'SELECT id, user_id, user_email, lead_id, company_name, request_json, response_json, is_truncated, original_size, corruption_detected, prompt_tokens, completion_tokens, total_tokens, created_at FROM ' . self::$table_name . ' ORDER BY created_at DESC LIMIT %d',
+                       'SELECT id, user_id, user_email, lead_id, company_name, llm_model, request_json, response_json, is_truncated, original_size, corruption_detected, prompt_tokens, completion_tokens, total_tokens, created_at FROM ' . self::$table_name . ' ORDER BY created_at DESC LIMIT %d',
                        $limit
                );
 
@@ -477,7 +485,7 @@ class RTBCB_API_Log {
 
                $logs = $wpdb->get_results(
                        $wpdb->prepare(
-                               'SELECT id, user_id, user_email, lead_id, company_name, request_json, response_json, is_truncated, original_size, corruption_detected, prompt_tokens, completion_tokens, total_tokens, created_at FROM ' . self::$table_name . ' ORDER BY created_at DESC LIMIT %d OFFSET %d',
+                               'SELECT id, user_id, user_email, lead_id, company_name, llm_model, request_json, response_json, is_truncated, original_size, corruption_detected, prompt_tokens, completion_tokens, total_tokens, created_at FROM ' . self::$table_name . ' ORDER BY created_at DESC LIMIT %d OFFSET %d',
                                $per_page,
                                $offset
                        ),
@@ -505,7 +513,7 @@ class RTBCB_API_Log {
 		}
 
                return $wpdb->get_results(
-                       'SELECT id, user_id, user_email, lead_id, company_name, request_json, response_json, is_truncated, original_size, corruption_detected, prompt_tokens, completion_tokens, total_tokens, created_at FROM ' . self::$table_name . ' ORDER BY created_at DESC',
+                       'SELECT id, user_id, user_email, lead_id, company_name, llm_model, request_json, response_json, is_truncated, original_size, corruption_detected, prompt_tokens, completion_tokens, total_tokens, created_at FROM ' . self::$table_name . ' ORDER BY created_at DESC',
                ARRAY_A
                );
        }

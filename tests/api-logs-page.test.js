@@ -19,6 +19,7 @@ $logs = [
         'lead_id' => 0,
         'user_email' => 'test@example.com',
         'company_name' => 'Test Co',
+        'llm_model' => 'gpt-5',
         'request_json' => '{}',
         'response_json' => '{}',
         'total_tokens' => 42,
@@ -34,9 +35,9 @@ include 'admin/api-logs-page.php';
 
 const output = execSync('php', { input: php }).toString();
 const dom = new JSDOM(output);
-const promptCell = dom.window.document.querySelector('#rtbcb-api-logs-table tbody tr td:nth-child(6)');
-const completionCell = dom.window.document.querySelector('#rtbcb-api-logs-table tbody tr td:nth-child(7)');
-const totalCell = dom.window.document.querySelector('#rtbcb-api-logs-table tbody tr td:nth-child(8)');
+const promptCell = dom.window.document.querySelector('#rtbcb-api-logs-table tbody tr td:nth-child(7)');
+const completionCell = dom.window.document.querySelector('#rtbcb-api-logs-table tbody tr td:nth-child(8)');
+const totalCell = dom.window.document.querySelector('#rtbcb-api-logs-table tbody tr td:nth-child(9)');
 assert.ok(promptCell && completionCell && totalCell);
 assert.strictEqual(promptCell.textContent.trim(), '40');
 assert.strictEqual(completionCell.textContent.trim(), '2');
