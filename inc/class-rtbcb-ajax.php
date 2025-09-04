@@ -526,7 +526,7 @@ $final_analysis['financial_benchmarks'] ?? ( $final_analysis['research']['financ
  * @return array Structured report data.
  */
 private static function structure_report_data( $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, $rag_context, $chart_data, $request_start, $financial_benchmarks = array() ) {
-	$operational_insights     = (array) ( $final_analysis['operational_insights'] ?? $final_analysis['operational_analysis'] ?? [] );
+$operational_insights     = (array) ( $final_analysis['operational_insights'] ?? [] );
 	$current_state_assessment = (array) ( $operational_insights['current_state_assessment'] ?? [] );
 	if ( empty( $current_state_assessment ) ) {
 		$current_state_assessment = [ __( 'No data provided', 'rtbcb' ) ];
@@ -611,7 +611,7 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 		$automation_opportunities = [ __( 'No data provided', 'rtbcb' ) ];
 	}
 
-	$risk_analysis        = (array) ( $final_analysis['risk_analysis'] ?? $final_analysis['risk_mitigation'] ?? [] );
+$risk_analysis        = (array) ( $final_analysis['risk_analysis'] ?? [] );
 	$implementation_risks = (array) ( $risk_analysis['implementation_risks'] ?? [] );
 	if ( empty( $implementation_risks ) ) {
 		$implementation_risks = [ __( 'No data provided', 'rtbcb' ) ];
