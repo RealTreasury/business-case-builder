@@ -169,32 +169,39 @@ $this->response_parser = new RTBCB_Response_Parser();
 	*/
 	public function generate_business_case( $user_inputs, $roi_data, $context_chunks = [], $model = null ) {
 	       $inputs = [
-	               'company_name'           => sanitize_text_field( $user_inputs['company_name'] ?? '' ),
-	               'company_size'           => sanitize_text_field( $user_inputs['company_size'] ?? '' ),
-	               'industry'               => sanitize_text_field( $user_inputs['industry'] ?? '' ),
-	               'hours_reconciliation'   => floatval( $user_inputs['hours_reconciliation'] ?? 0 ),
-	               'hours_cash_positioning' => floatval( $user_inputs['hours_cash_positioning'] ?? 0 ),
-	               'num_banks'              => intval( $user_inputs['num_banks'] ?? 0 ),
-	               'ftes'                   => floatval( $user_inputs['ftes'] ?? 0 ),
-	               'pain_points'            => array_map( 'sanitize_text_field', (array) ( $user_inputs['pain_points'] ?? [] ) ),
-	               'email'                  => sanitize_email( $user_inputs['email'] ?? '' ),
-	       ];
+                       'company_name'           => sanitize_text_field( $user_inputs['company_name'] ?? '' ),
+                       'company_size'           => sanitize_text_field( $user_inputs['company_size'] ?? '' ),
+                       'industry'               => '',
+                       'hours_reconciliation'   => floatval( $user_inputs['hours_reconciliation'] ?? 0 ),
+                       'hours_cash_positioning' => floatval( $user_inputs['hours_cash_positioning'] ?? 0 ),
+                       'num_banks'              => intval( $user_inputs['num_banks'] ?? 0 ),
+                       'ftes'                   => floatval( $user_inputs['ftes'] ?? 0 ),
+                       'pain_points'            => array_map( 'sanitize_text_field', (array) ( $user_inputs['pain_points'] ?? [] ) ),
+                       'email'                  => sanitize_email( $user_inputs['email'] ?? '' ),
+               ];
 
-	       $this->current_inputs            = $inputs;
+               $company          = function_exists( 'rtbcb_get_current_company' ) ? rtbcb_get_current_company() : [];
+               $inputs['industry'] = sanitize_text_field( $company['industry'] ?? '' );
+
+               $this->current_inputs = $inputs;
 
 		if ( empty( $this->config->get_api_key() ) ) {
 			return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
 		}
 
 		$selected_model = $model ? sanitize_text_field( $model ) : $this->get_model( 'mini' );
-	       $prompt = 'Create a concise treasury technology business case in JSON with keys '
-	               . 'executive_summary (strategic_positioning, business_case_strength, key_value_drivers[], '
-	               . 'executive_recommendation), operational_insights (current_state_assessment), '
-	               . 'industry_insights (sector_trends, competitive_benchmarks, regulatory_considerations).'
-			. '\nCompany: ' . $inputs['company_name']
-			. '\nIndustry: ' . $inputs['industry']
-			. '\nSize: ' . $inputs['company_size']
-			. '\nPain Points: ' . implode( ', ', $inputs['pain_points'] );
+               $prompt = 'Create a concise treasury technology business case in JSON with keys '
+                       . 'executive_summary (strategic_positioning, business_case_strength, key_value_drivers[], '
+                       . 'executive_recommendation), operational_insights (current_state_assessment), '
+                       . 'industry_insights (sector_trends, competitive_benchmarks, regulatory_considerations).'
+                        . '\nCompany: ' . $inputs['company_name'];
+
+               if ( ! empty( $inputs['industry'] ) ) {
+                       $prompt .= '\nIndustry: ' . $inputs['industry'];
+               }
+
+               $prompt .= '\nSize: ' . $inputs['company_size']
+                        . '\nPain Points: ' . implode( ', ', $inputs['pain_points'] );
 
 		if ( ! empty( $context_chunks ) ) {
 			$prompt .= '\nContext: ' . implode( '\n', array_map( 'sanitize_text_field', $context_chunks ) );
@@ -739,9 +746,10 @@ $parsed          = $this->response_parser->process_openai_response( $parsed_resp
 			return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
 		}
 
-		$company_name = sanitize_text_field( $user_inputs['company_name'] ?? '' );
-		$industry     = sanitize_text_field( $user_inputs['industry'] ?? '' );
-		$company_size = sanitize_text_field( $user_inputs['company_size'] ?? '' );
+               $company_name = sanitize_text_field( $user_inputs['company_name'] ?? '' );
+               $current_company = function_exists( 'rtbcb_get_current_company' ) ? rtbcb_get_current_company() : [];
+               $industry     = sanitize_text_field( $current_company['industry'] ?? '' );
+               $company_size = sanitize_text_field( $user_inputs['company_size'] ?? '' );
 
 	       $company_research    = rtbcb_get_research_cache( $company_name, $industry, 'company' );
 	       $industry_analysis   = rtbcb_get_research_cache( $company_name, $industry, 'industry' );
@@ -1016,9 +1024,10 @@ return $this->response_parser->parse_business_case( $response );
 	* @return array Structured research data.
 	*/
 	private function conduct_company_research( $user_inputs ) {
-	$company_name = sanitize_text_field( $user_inputs['company_name'] ?? '' );
-	$industry     = sanitize_text_field( $user_inputs['industry'] ?? '' );
-	$company_size = sanitize_text_field( $user_inputs['company_size'] ?? '' );
+       $company_name = sanitize_text_field( $user_inputs['company_name'] ?? '' );
+       $company      = function_exists( 'rtbcb_get_current_company' ) ? rtbcb_get_current_company() : [];
+       $industry     = sanitize_text_field( $company['industry'] ?? '' );
+       $company_size = sanitize_text_field( $user_inputs['company_size'] ?? '' );
 
 	$company_profile = rtbcb_get_research_cache( $company_name, $industry, 'company_profile' );
 	if ( false === $company_profile ) {
@@ -1357,9 +1366,10 @@ $parsed = $this->response_parser->parse( $response );
 			return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
 		}
 
-		$company_name = sanitize_text_field( $user_inputs['company_name'] ?? '' );
-		$industry     = sanitize_text_field( $user_inputs['industry'] ?? '' );
-		$company_size = sanitize_text_field( $user_inputs['company_size'] ?? '' );
+               $company_name = sanitize_text_field( $user_inputs['company_name'] ?? '' );
+               $company      = function_exists( 'rtbcb_get_current_company' ) ? rtbcb_get_current_company() : [];
+               $industry     = sanitize_text_field( $company['industry'] ?? '' );
+               $company_size = sanitize_text_field( $user_inputs['company_size'] ?? '' );
 
 		$model = $this->get_model( 'mini' );
 
@@ -1561,7 +1571,8 @@ $parsed = $this->response_parser->parse( $response );
 			return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
 		}
 
-		$industry = sanitize_text_field( $user_inputs['industry'] ?? '' );
+               $company  = function_exists( 'rtbcb_get_current_company' ) ? rtbcb_get_current_company() : [];
+               $industry = sanitize_text_field( $company['industry'] ?? '' );
 		if ( empty( $industry ) ) {
 	return [
 				'analysis'        => '',
@@ -1637,8 +1648,9 @@ $json            = $this->response_parser->process_openai_response( $parsed_resp
 			return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
 		}
 
-		$industry     = sanitize_text_field( $user_inputs['industry'] ?? '' );
-		$company_size = sanitize_text_field( $user_inputs['company_size'] ?? '' );
+               $company      = function_exists( 'rtbcb_get_current_company' ) ? rtbcb_get_current_company() : [];
+               $industry     = sanitize_text_field( $company['industry'] ?? '' );
+               $company_size = sanitize_text_field( $user_inputs['company_size'] ?? '' );
 
 		$model  = $this->get_model( 'mini' );
 		$prompt = 'Briefly summarize treasury technology solutions relevant to a ' . $company_size . ' company in the ' . $industry . ' industry.';
@@ -1723,7 +1735,9 @@ $parsed  = $this->response_parser->parse( $response );
 	// Company context.
 	$prompt .= "COMPANY PROFILE:\n";
 	$prompt .= "Company: {$company_name}\n";
-	$prompt .= "Industry: " . ( $user_inputs['industry'] ?? 'Not specified' ) . "\n";
+       $company = function_exists( 'rtbcb_get_current_company' ) ? rtbcb_get_current_company() : [];
+       $industry = $company['industry'] ?? '';
+       $prompt .= "Industry: " . ( $industry ?: 'Not specified' ) . "\n";
 	$prompt .= "Revenue Size: " . ( $user_inputs['company_size'] ?? 'Not specified' ) . "\n";
 	$prompt .= "Business Stage: {$company_profile['business_stage']}\n";
 	$prompt .= "Key Characteristics: {$company_profile['key_characteristics']}\n";
@@ -2062,9 +2076,8 @@ SYSTEM;
 		return <<<PROMPT
 ## Treasury Technology Analysis Request
 
-### Company Profile  
+### Company Profile
 - **Company Name**: {$user_inputs['company_name']}
-- **Industry**: {$user_inputs['industry']}
 - **Revenue Size**: {$user_inputs['company_size']}
 - **Business Objective**: {$user_inputs['business_objective']}
 
@@ -2082,14 +2095,15 @@ Provide actionable insights for:
 3. Implementation complexity evaluation
 4. Strategic positioning analysis
 
-Focus on treasury-specific challenges and opportunities within the {$user_inputs['industry']} industry for a {$user_inputs['company_size']} organization.
+Focus on treasury-specific challenges and opportunities relevant to the company's industry for a {$user_inputs['company_size']} organization.
 
 ### Required JSON Schema
 ```json
 {
   "company_profile": {
-	"enhanced_description": "string - comprehensive company description",
-	"business_model": "string - primary business model and revenue streams",
+        "industry": "string - primary industry sector",
+        "enhanced_description": "string - comprehensive company description",
+        "business_model": "string - primary business model and revenue streams",
 	"market_position": "string - competitive position and market standing",
 	"maturity_level": "basic|developing|strategic|optimized",
 	"financial_indicators": {
@@ -2323,9 +2337,9 @@ PROMPT;
 	*/
 	private function validate_company_profile( $profile, $user_inputs ) {
 	return [
-		'name'                => $user_inputs['company_name'],
-		'industry'            => sanitize_text_field( $user_inputs['industry'] ?? '' ),
-		'enhanced_description' => wp_kses_post( $profile['enhanced_description'] ?? '' ),
+               'name'                => $user_inputs['company_name'],
+               'industry'            => sanitize_text_field( $profile['industry'] ?? '' ),
+               'enhanced_description' => wp_kses_post( $profile['enhanced_description'] ?? '' ),
 	'business_model'      => wp_kses_post( $profile['business_model'] ?? '' ),
 	'market_position'     => wp_kses_post( $profile['market_position'] ?? '' ),
 	'maturity_level'      => in_array( $profile['maturity_level'] ?? '', [ 'basic', 'developing', 'strategic', 'optimized' ], true )
