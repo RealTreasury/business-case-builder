@@ -480,22 +480,36 @@ class BusinessCaseBuilder {
 			this.initializePath();
 		}
 
-		console.log('RTBCB: About to validate step', this.currentStep);
-		if ( this.validateStep( this.currentStep ) ) {
-			console.log('RTBCB: Step validation passed');
-			if ( this.currentStep < this.totalSteps ) {
-				this.currentStep++;
-				console.log('RTBCB: Moving to step', this.currentStep);
-				this.updateStepVisibility();
-				this.updateProgressIndicator();
-				this.scrollToTop();
-			} else {
-				console.log('RTBCB: Already at last step');
-			}
-		} else {
-			console.log('RTBCB: Step validation failed');
-		}
-	}
+                console.log('RTBCB: About to validate step', this.currentStep);
+                const validation = this.validateStep( this.currentStep );
+                if ( validation.isValid ) {
+                        console.log('RTBCB: Step validation passed');
+                        if ( this.currentStep < this.totalSteps ) {
+                                this.currentStep++;
+                                console.log('RTBCB: Moving to step', this.currentStep);
+                                this.updateStepVisibility();
+                                this.updateProgressIndicator();
+                                this.scrollToTop();
+                        } else {
+                                console.log('RTBCB: Already at last step');
+                        }
+                } else {
+                        console.log('RTBCB: Step validation failed', validation.invalidFields);
+                        const labels = validation.invalidFields.map( (item) => {
+                                if ( item && item.label ) {
+                                        return item.label;
+                                }
+                                const labelEl = item && this.form.querySelector(`label[for="${ item.id }"]`);
+                                return labelEl ? labelEl.textContent.trim() : item.name;
+                        });
+                        const message = `${ __( 'Please review the following fields: ', 'rtbcb' ) }${ labels.join(', ') }`;
+                        if ( typeof window !== 'undefined' && typeof window.alert === 'function' ) {
+                                window.alert( message );
+                        } else {
+                                console.warn( message );
+                        }
+                }
+        }
 
         handlePrev( event ) {
                 if ( event && event.preventDefault ) {
@@ -525,12 +539,14 @@ class BusinessCaseBuilder {
         validateStep(stepNumber) {
                const currentFields = this.getStepFields(stepNumber) || [];
                 let isValid = true;
+                const invalidFields = [];
 
                 if (stepNumber === 5 && currentFields.includes('pain_points')) {
                         const checkedBoxes = this.form.querySelectorAll('input[name="pain_points[]"]:checked');
                         if (checkedBoxes.length === 0) {
                                 this.showStepError(5, __( 'Please select at least one challenge', 'rtbcb' ) );
-                                return false;
+                                invalidFields.push({ label: __( 'Challenges', 'rtbcb' ) });
+                                return { isValid: false, invalidFields };
                         }
                         this.clearStepError(5);
                 }
@@ -553,10 +569,11 @@ class BusinessCaseBuilder {
 
                         if (!this.validateField(field)) {
                                 isValid = false;
+                                invalidFields.push(field);
                         }
                 }
 
-                return isValid;
+                return { isValid, invalidFields };
         }
 
 	validateField(field) {
@@ -818,7 +835,8 @@ class BusinessCaseBuilder {
 		}
 
 		// Final step validation before submission
-               if (!this.validateStep(this.currentStep)) {
+               const submitValidation = this.validateStep(this.currentStep);
+               if (!submitValidation.isValid) {
                        return;
                }
 
