@@ -75,6 +75,14 @@ $rtbcb_prompt_structures = [
 	],
 ];
 
+$rtbcb_wizard_icons = [ '🏢', '⚙️', '⚠️', '🎯', '✉️' ];
+
+$rtbcb_prompt_map = [
+'ai_enrichment'            => $rtbcb_prompt_structures[0]['format'],
+'enhanced_roi_calculation' => $rtbcb_prompt_structures[1]['format'],
+'hybrid_rag_analysis'      => $rtbcb_prompt_structures[2]['format'],
+];
+
 ?>
 <div class="wrap rtbcb-workflow-visualizer">
 <h1><?php echo esc_html__( 'Treasury Report Workflow Visualizer', 'rtbcb' ); ?></h1>
@@ -118,6 +126,10 @@ $rtbcb_prompt_structures = [
 <div class="rtbcb-detail-item">
 <strong><?php echo esc_html__( 'AI Calls:', 'rtbcb' ); ?></strong> <span class="rtbcb-ai-calls">1</span>
 </div>
+<div class="rtbcb-detail-item">
+<strong><?php echo esc_html__( 'Prompt Format:', 'rtbcb' ); ?></strong>
+<pre class="rtbcb-prompt-format"><?php echo esc_html( $rtbcb_prompt_map['ai_enrichment'] ); ?></pre>
+</div>
 </div>
 </div>
 
@@ -130,6 +142,15 @@ $rtbcb_prompt_structures = [
 <div class="rtbcb-step-metrics">
 <span class="rtbcb-step-duration">-</span>
 <span class="rtbcb-step-status"><?php esc_html_e( 'pending', 'rtbcb' ); ?></span>
+</div>
+<div class="rtbcb-step-details">
+<div class="rtbcb-detail-item">
+<strong><?php echo esc_html__( 'AI Calls:', 'rtbcb' ); ?></strong> <span class="rtbcb-ai-calls">1</span>
+</div>
+<div class="rtbcb-detail-item">
+<strong><?php echo esc_html__( 'Prompt Format:', 'rtbcb' ); ?></strong>
+<pre class="rtbcb-prompt-format"><?php echo esc_html( $rtbcb_prompt_map['enhanced_roi_calculation'] ); ?></pre>
+</div>
 </div>
 </div>
 
@@ -158,6 +179,10 @@ $rtbcb_prompt_structures = [
 <div class="rtbcb-step-details">
 <div class="rtbcb-detail-item">
 <strong><?php echo esc_html__( 'AI Calls:', 'rtbcb' ); ?></strong> <span class="rtbcb-ai-calls">1</span>
+</div>
+<div class="rtbcb-detail-item">
+<strong><?php echo esc_html__( 'Prompt Format:', 'rtbcb' ); ?></strong>
+<pre class="rtbcb-prompt-format"><?php echo esc_html( $rtbcb_prompt_map['hybrid_rag_analysis'] ); ?></pre>
 </div>
 </div>
 </div>
@@ -200,34 +225,24 @@ $rtbcb_prompt_structures = [
 <div class="rtbcb-loading"><?php echo esc_html__( 'Loading workflow history...', 'rtbcb' ); ?></div>
 </div>
 </div>
-<!-- Wizard Questions and Prompts -->
-<div class="rtbcb-wizard-prompts">
-	<h2><?php echo esc_html__( 'Wizard Questions & Prompt Structure', 'rtbcb' ); ?></h2>
-	<div class="rtbcb-wizard-prompts-columns">
-		<div class="rtbcb-wizard-section">
-			<h3><?php echo esc_html__( 'Wizard Questions', 'rtbcb' ); ?></h3>
-			<ol>
-				<?php foreach ( $rtbcb_wizard_questions as $section ) : ?>
-				<li>
-				<strong><?php echo esc_html( $section['title'] ); ?></strong>
-				<ul>
-					<?php foreach ( $section['fields'] as $field ) : ?>
-					<li><?php echo esc_html( $field ); ?></li>
-					<?php endforeach; ?>
-				</ul>
-			</li>
-			<?php endforeach; ?>
-		</ol>
-	</div>
-	<div class="rtbcb-wizard-section">
-		<h3><?php echo esc_html__( 'Prompt Structures', 'rtbcb' ); ?></h3>
-		<?php foreach ( $rtbcb_prompt_structures as $prompt ) : ?>
-		<div class="rtbcb-prompt-structure">
-			<h4><?php echo esc_html( $prompt['title'] ); ?></h4>
-			<pre><?php echo esc_html( $prompt['format'] ); ?></pre>
-		</div>
-		<?php endforeach; ?>
-	</div>
+<!-- Wizard Questionnaire -->
+<div class="rtbcb-wizard-questionnaire rtbcb-workflow-pipeline">
+<h2><?php echo esc_html__( 'Wizard Questionnaire', 'rtbcb' ); ?></h2>
+<div class="rtbcb-pipeline-container">
+<?php foreach ( $rtbcb_wizard_questions as $index => $section ) : ?>
+<div class="rtbcb-pipeline-step">
+<div class="rtbcb-step-icon"><?php echo esc_html( $rtbcb_wizard_icons[ $index ] ); ?></div>
+<div class="rtbcb-step-title"><?php echo esc_html( $section['title'] ); ?></div>
+<ul class="rtbcb-wizard-fields">
+<?php foreach ( $section['fields'] as $field ) : ?>
+<li><?php echo esc_html( $field ); ?></li>
+<?php endforeach; ?>
+</ul>
+</div>
+<?php if ( $index < count( $rtbcb_wizard_questions ) - 1 ) : ?>
+<div class="rtbcb-pipeline-arrow">→</div>
+<?php endif; ?>
+<?php endforeach; ?>
 </div>
 </div>
 <!-- Debug Interface -->
