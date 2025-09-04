@@ -526,11 +526,11 @@ $final_analysis['financial_benchmarks'] ?? ( $final_analysis['research']['financ
  * @return array Structured report data.
  */
 private static function structure_report_data( $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, $rag_context, $chart_data, $request_start, $financial_benchmarks = array() ) {
-	$operational_insights     = (array) ( $final_analysis['operational_insights'] ?? $final_analysis['operational_analysis'] ?? [] );
-	$current_state_assessment = (array) ( $operational_insights['current_state_assessment'] ?? [] );
-	if ( empty( $current_state_assessment ) ) {
-		$current_state_assessment = [ __( 'No data provided', 'rtbcb' ) ];
-	}
+       $operational_insights     = (array) ( $final_analysis['operational_insights'] ?? [] );
+       $current_state_assessment = (array) ( $operational_insights['current_state_assessment'] ?? [] );
+       if ( empty( $current_state_assessment ) ) {
+               $current_state_assessment = [ __( 'No data provided', 'rtbcb' ) ];
+       }
 
 	$process_improvements_raw = (array) ( $operational_insights['process_improvements'] ?? [] );
 	$process_improvements     = array();

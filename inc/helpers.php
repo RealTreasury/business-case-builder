@@ -2257,14 +2257,13 @@ function rtbcb_transform_data_for_template( $business_case_data ) {
 			'current_state_analysis' => '',
 			'market_analysis'        => '',
 			'tech_adoption_level'    => 'medium',
-			'operational_insights'   => [],
-			'operational_analysis'   => [],
-			'industry_insights'      => [],
-			'action_plan'            => [],
-			'risk_analysis'          => [],
-			'risks'                  => [],
-			'company_intelligence'   => [],
-			'confidence'             => 0.85,
+                       'operational_insights'   => [],
+                       'industry_insights'      => [],
+                       'action_plan'            => [],
+                       'risk_analysis'          => [],
+                       'risks'                  => [],
+                       'company_intelligence'   => [],
+                       'confidence'             => 0.85,
 			'processing_time'        => 0,
 	];
 	$business_case_data = wp_parse_args( (array) $business_case_data, $defaults );
@@ -2313,21 +2312,15 @@ function rtbcb_transform_data_for_template( $business_case_data ) {
 	$optimistic_roi   = floatval( $roi_scenarios['optimistic']['total_annual_benefit'] ?? 0 );
 
 	// Prepare operational insights.
-	if ( ! empty( $business_case_data['operational_insights'] ) ) {
-			$operational_insights = [
-				'current_state_assessment' => array_map( 'sanitize_text_field', (array) ( $business_case_data['operational_insights']['current_state_assessment'] ?? [] ) ),
-				'process_improvements'     => rtbcb_sanitize_recursive( $business_case_data['operational_insights']['process_improvements'] ?? [] ),
-				'automation_opportunities' => rtbcb_sanitize_recursive( $business_case_data['operational_insights']['automation_opportunities'] ?? [] ),
-			];
-	} elseif ( ! empty( $business_case_data['operational_analysis'] ) ) {
-			$operational_insights = [
-				'current_state_assessment' => array_map( 'sanitize_text_field', (array) ( $business_case_data['operational_analysis']['current_state_assessment'] ?? [] ) ),
-				'process_improvements'     => rtbcb_sanitize_recursive( $business_case_data['operational_analysis']['process_improvements'] ?? [] ),
-				'automation_opportunities' => rtbcb_sanitize_recursive( $business_case_data['operational_analysis']['automation_opportunities'] ?? [] ),
-			];
-	} else {
-			$operational_insights = rtbcb_generate_operational_fallbacks( $business_case_data );
-	}
+       if ( ! empty( $business_case_data['operational_insights'] ) ) {
+                       $operational_insights = [
+                               'current_state_assessment' => array_map( 'sanitize_text_field', (array) ( $business_case_data['operational_insights']['current_state_assessment'] ?? [] ) ),
+                               'process_improvements'     => rtbcb_sanitize_recursive( $business_case_data['operational_insights']['process_improvements'] ?? [] ),
+                               'automation_opportunities' => rtbcb_sanitize_recursive( $business_case_data['operational_insights']['automation_opportunities'] ?? [] ),
+                       ];
+       } else {
+                       $operational_insights = rtbcb_generate_operational_fallbacks( $business_case_data );
+       }
 	// Prepare industry insights.
 	if ( ! empty( $business_case_data['industry_insights'] ) ) {
 		$industry_insights = rtbcb_sanitize_recursive( $business_case_data['industry_insights'] );

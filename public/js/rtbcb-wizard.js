@@ -1594,7 +1594,7 @@ class BusinessCaseBuilder {
                 reasoning: data.recommendation?.reasoning || data.technology_strategy?.recommended_category || ''
             },
             executiveSummary: data.executive_summary || data.narrative || {},
-            operationalAnalysis: data.operational_insights || data.operationalInsights || data.operational_analysis || data.operationalAnalysis || {},
+            operationalAnalysis: data.operational_insights || data.operationalInsights || {},
             industryContext: {
                 sector_analysis: context.sector_analysis || {},
                 benchmarking: context.benchmarking || {},

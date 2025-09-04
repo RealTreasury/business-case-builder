@@ -230,9 +230,9 @@ $parsed = $this->response_parser->parse( $response );
 				'key_value_drivers'       => array_map( 'sanitize_text_field', $json['executive_summary']['key_value_drivers'] ?? [] ),
 				'executive_recommendation'=> sanitize_text_field( $json['executive_summary']['executive_recommendation'] ?? '' ),
 			],
-	               'operational_insights' => [
-	                       'current_state_assessment' => sanitize_text_field( $json['operational_insights']['current_state_assessment'] ?? ( $json['operational_analysis']['current_state_assessment'] ?? '' ) ),
-	               ],
+                      'operational_insights' => [
+                              'current_state_assessment' => sanitize_text_field( $json['operational_insights']['current_state_assessment'] ?? '' ),
+                      ],
 			'industry_insights'   => [
 				'sector_trends'          => sanitize_text_field( $json['industry_insights']['sector_trends'] ?? '' ),
 				'competitive_benchmarks' => sanitize_text_field( $json['industry_insights']['competitive_benchmarks'] ?? '' ),
@@ -2462,8 +2462,7 @@ PROMPT;
 'operational_insights' => [
 'current_state_assessment' => array_map(
 'sanitize_textarea_field',
-(array) ( $analysis_data['operational_insights']['current_state_assessment'] ??
-( $analysis_data['operational_analysis']['current_state_assessment'] ?? [] ) )
+(array) ( $analysis_data['operational_insights']['current_state_assessment'] ?? [] )
 ),
 'process_improvements'     => [],
 'automation_opportunities' => [],
@@ -2532,7 +2531,7 @@ PROMPT;
 ];
 }
 
-foreach ( (array) ( $analysis_data['operational_insights']['process_improvements'] ?? $analysis_data['operational_analysis']['process_improvements'] ?? [] ) as $item ) {
+foreach ( (array) ( $analysis_data['operational_insights']['process_improvements'] ?? [] ) as $item ) {
 $analysis['operational_insights']['process_improvements'][] = [
 'process_area'   => sanitize_text_field( $item['process'] ?? ( $item['process_area'] ?? '' ) ),
 'current_state'  => sanitize_textarea_field( $item['current_state'] ?? '' ),
@@ -2541,7 +2540,7 @@ $analysis['operational_insights']['process_improvements'][] = [
 ];
 }
 
-foreach ( (array) ( $analysis_data['operational_insights']['automation_opportunities'] ?? $analysis_data['operational_analysis']['automation_opportunities'] ?? [] ) as $item ) {
+foreach ( (array) ( $analysis_data['operational_insights']['automation_opportunities'] ?? [] ) as $item ) {
 $analysis['operational_insights']['automation_opportunities'][] = [
 'opportunity'          => sanitize_text_field( $item['opportunity'] ?? '' ),
 'complexity'           => sanitize_text_field( $item['complexity'] ?? '' ),

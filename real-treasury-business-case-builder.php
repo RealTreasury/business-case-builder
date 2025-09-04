@@ -2457,16 +2457,12 @@ $html = rtbcb_sanitize_report_html( $html );
 	 *
 	 * @return array
 	 */
-       private function generate_operational_insights( $data ) {
-               if ( ! empty( $data['operational_insights'] ) && is_array( $data['operational_insights'] ) ) {
-                       return array_map( 'wp_kses_post', $data['operational_insights'] );
-               }
+      private function generate_operational_insights( $data ) {
+              if ( ! empty( $data['operational_insights'] ) && is_array( $data['operational_insights'] ) ) {
+                      return array_map( 'wp_kses_post', $data['operational_insights'] );
+              }
 
-               if ( ! empty( $data['operational_analysis'] ) && is_array( $data['operational_analysis'] ) ) {
-                       return array_map( 'wp_kses_post', $data['operational_analysis'] );
-               }
-
-		$insights    = [];
+               $insights    = [];
 		$pain_points = (array) ( $data['pain_points'] ?? [] );
 
 		if ( in_array( 'manual_processes', $pain_points, true ) ) {
