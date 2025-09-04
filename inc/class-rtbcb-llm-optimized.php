@@ -51,7 +51,6 @@ SYSTEM;
 
 ### Company Profile
 - **Company Name**: {$user_inputs['company_name']}
-- **Industry Sector**: {$user_inputs['industry']}
 - **Revenue Size**: {$user_inputs['company_size']}
 - **Business Objective**: {$user_inputs['business_objective']}
 - **Implementation Timeline**: {$user_inputs['implementation_timeline']}
@@ -73,12 +72,13 @@ Provide deep, actionable insights to support:
 5. **Risk Baseline**: Key operational and strategic risk considerations
 6. **Financial Benchmarking**: Relevant industry metrics and valuation references
 
-Focus on treasury-specific challenges and opportunities within the {$user_inputs['industry']} industry for a {$user_inputs['company_size']} organization.
+Focus on treasury-specific challenges and opportunities relevant to the company's industry for a {$user_inputs['company_size']} organization.
 
 ### Required JSON Output Schema
 ```json
 {
   "company_profile": {
+    "industry": "string - primary industry sector",
     "enhanced_description": "string - 2-3 sentence business model and market position summary",
     "business_model": "string - primary revenue streams and operational model",
     "market_position": "string - competitive standing and differentiators",
@@ -225,9 +225,11 @@ PROMPT;
 	// Company Intelligence - uses company_research.
 	$prompt .= "## Company Intelligence\n\n";
 	$prompt .= "### Company Profile\n";
-	$prompt .= "- **Name**: {$company_name}\n";
-	$prompt .= "- **Industry**: {$user_inputs['industry']}\n";
-	$prompt .= "- **Revenue Size**: {$user_inputs['company_size']}\n";
+       $prompt .= "- **Name**: {$company_name}\n";
+       $company_data = function_exists( 'rtbcb_get_current_company' ) ? rtbcb_get_current_company() : [];
+       $industry = $company_data['industry'] ?? '';
+       $prompt .= "- **Industry**: {$industry}\n";
+       $prompt .= "- **Revenue Size**: {$user_inputs['company_size']}\n";
 	$prompt .= "- **Business Stage**: {$business_stage}\n";
 	$prompt .= "- **Key Characteristics**: {$key_characteristics}\n";
 	$prompt .= "- **Treasury Priorities**: {$treasury_priorities}\n\n";
@@ -547,7 +549,7 @@ SCHEMA;
 	               'pain_points_factor' => count( $user_inputs['pain_points'] ?? [] ) * 0.1,
 	               'context_factor' => count( $context_chunks ) * 0.15,
 	               'analysis_type_factor' => $this->get_analysis_type_complexity( $analysis_type ),
-	               'industry_factor' => $this->get_industry_complexity( $user_inputs['industry'] ?? '' ),
+                       'industry_factor' => $this->get_industry_complexity( ( function_exists( 'rtbcb_get_current_company' ) ? ( rtbcb_get_current_company()['industry'] ?? '' ) : '' ) ),
 	       ];
 
 	       $total_complexity = array_sum( $complexity_factors );

@@ -1240,7 +1240,7 @@ $lead_id = $this->save_lead_data( $user_inputs, $scenarios, $recommendation, $re
 		$search_query = implode(
 		' ',
 		array_merge(
-			[ $user_inputs['company_name'], $user_inputs['industry'] ],
+                       [ $user_inputs['company_name'], ( function_exists( 'rtbcb_get_current_company' ) ? ( rtbcb_get_current_company()['industry'] ?? '' ) : '' ) ],
 			$user_inputs['pain_points'],
 			[ $recommendation['recommended'] ?? '' ]
 		)
@@ -1442,7 +1442,7 @@ $required_keys = [
 	'email'			 => $user_inputs['email'],
 	'company_name'           => $company_name,
 	'company_size'		 => $user_inputs['company_size'],
-	'industry'		 => $user_inputs['industry'],
+	'industry'		 => ( function_exists( 'rtbcb_get_current_company' ) ? ( rtbcb_get_current_company()['industry'] ?? '' ) : '' ),
 	'hours_reconciliation'	 => $user_inputs['hours_reconciliation'],
 	'hours_cash_positioning' => $user_inputs['hours_cash_positioning'],
 	'num_banks'		 => $user_inputs['num_banks'],
@@ -1700,12 +1700,6 @@ $required_keys = [
 			return;
 		}
 
-		if ( empty( $user_inputs['industry'] ) ) {
-			rtbcb_log_error( 'Missing industry', $user_inputs );
-			wp_send_json_error( __( 'Please select your industry.', 'rtbcb' ), 400 );
-			return;
-		}
-
 		if ( $user_inputs['hours_reconciliation'] < 0 ) {
 			rtbcb_log_error( 'Invalid reconciliation hours', $user_inputs );
 			wp_send_json_error( __( 'Please enter your weekly reconciliation hours.', 'rtbcb' ), 400 );
@@ -1783,12 +1777,12 @@ $required_keys = [
 				$rag = new RTBCB_RAG();
 				$search_query = implode(
 					' ',
-					array_merge(
-						[ $user_inputs['company_name'], $user_inputs['industry'] ],
-						$user_inputs['pain_points'],
-						[ $recommendation['recommended'] ?? '' ]
-					)
-				);
+                                       array_merge(
+                                               [ $user_inputs['company_name'], ( function_exists( 'rtbcb_get_current_company' ) ? ( rtbcb_get_current_company()['industry'] ?? '' ) : '' ) ],
+                                               $user_inputs['pain_points'],
+                                               [ $recommendation['recommended'] ?? '' ]
+                                       )
+                               );
 				rtbcb_log_api_debug( 'Performing RAG search', [ 'query' => $search_query ] );
 				$rag_context = $rag->search_similar( $search_query, 3 );
 				rtbcb_log_api_debug( 'RAG search results', $rag_context );
@@ -2049,7 +2043,7 @@ $missing_sections  = array_diff( $required_sections, array_keys( $comprehensive_
 				$lead_data = [
 					'email'			 => $user_inputs['email'],
 					'company_size'		 => $user_inputs['company_size'],
-					'industry'		 => $user_inputs['industry'],
+					'industry'		 => ( function_exists( 'rtbcb_get_current_company' ) ? ( rtbcb_get_current_company()['industry'] ?? '' ) : '' ),
 					'hours_reconciliation'	 => $user_inputs['hours_reconciliation'],
 					'hours_cash_positioning' => $user_inputs['hours_cash_positioning'],
 					'num_banks'		 => $user_inputs['num_banks'],

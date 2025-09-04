@@ -494,9 +494,9 @@ $final_analysis['financial_benchmarks'] ?? ( $final_analysis['research']['financ
 	private static function create_fallback_profile( $user_inputs ) {
 		return [
 			'company_profile' => [
-				'name'               => $user_inputs['company_name'],
-				'size'               => $user_inputs['company_size'],
-				'industry'           => $user_inputs['industry'],
+                               'name'               => $user_inputs['company_name'],
+                               'size'               => $user_inputs['company_size'],
+                               'industry'           => ( function_exists( 'rtbcb_get_current_company' ) ? ( rtbcb_get_current_company()['industry'] ?? '' ) : '' ),
 				'maturity_level'     => 'basic',
 				'key_challenges'     => $user_inputs['pain_points'],
 				'strategic_priorities'=> [ $user_inputs['business_objective'] ],
@@ -639,7 +639,7 @@ $current_state_assessment = (array) ( $operational_insights['current_state_asses
 	$regulatory_landscape_raw = (array) ( $industry_context_raw['regulatory_landscape'] ?? [] );
 	$enriched_profile_struct = [
 		'name'                => $company_profile['name'] ?? '',
-		'industry'           => $company_profile['industry'] ?? sanitize_text_field( $user_inputs['industry'] ?? '' ),
+               'industry'           => $company_profile['industry'] ?? '',
 		'enhanced_description'=> $company_profile['enhanced_description'] ?? ( $company_profile['description'] ?? '' ),
 		'maturity_level'      => $company_profile['maturity_level'] ?? '',
 		'treasury_maturity'   => (array) ( is_array( $company_profile['treasury_maturity'] ?? null ) ? $company_profile['treasury_maturity'] : [] ),
@@ -726,13 +726,13 @@ $current_state_assessment = (array) ( $operational_insights['current_state_asses
 	}
 
 	private static function build_rag_search_query( $user_inputs, $enriched_profile ) {
-		$query_parts = [
-			$user_inputs['company_name'],
-			$user_inputs['industry'],
-			$enriched_profile['company_profile']['maturity_level'] ?? '',
-			implode( ' ', $user_inputs['pain_points'] ),
-			$user_inputs['business_objective'],
-		];
+               $query_parts = [
+                       $user_inputs['company_name'],
+                       $enriched_profile['company_profile']['industry'] ?? '',
+                       $enriched_profile['company_profile']['maturity_level'] ?? '',
+                       implode( ' ', $user_inputs['pain_points'] ),
+                       $user_inputs['business_objective'],
+               ];
 
 		return implode( ' ', array_filter( $query_parts ) );
 	}

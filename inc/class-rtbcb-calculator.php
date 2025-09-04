@@ -22,7 +22,8 @@ class RTBCB_Calculator {
 	*/
 	public static function calculate_roi( $user_inputs, $category = [] ) {
                $settings      = class_exists( 'RTBCB_Settings' ) ? RTBCB_Settings::get_all() : [];
-		$industry_mult = self::get_industry_benchmark( $user_inputs['industry'] ?? '' );
+               $company       = function_exists( 'rtbcb_get_current_company' ) ? rtbcb_get_current_company() : [];
+               $industry_mult = self::get_industry_benchmark( $company['industry'] ?? '' );
 
 		$scenarios = [];
 		foreach ( [ 'conservative', 'base', 'optimistic' ] as $scenario ) {
