@@ -698,12 +698,12 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 				                                       'confidence_metrics'   => (array) ( is_array( $roi_scenarios['confidence_metrics'] ?? null ) ? $roi_scenarios['confidence_metrics'] : [] ),
 				                                       'chart_data'           => $chart_data,
 				                       ],
-			'technology_strategy' => [
-				               'recommended_category' => $recommendation['recommended'],
-				               'category_details'     => (array) ( is_array( $recommendation['category_info'] ?? null ) ? $recommendation['category_info'] : [] ),
-				               'implementation_roadmap' => (array) ( is_array( $final_analysis['implementation_roadmap'] ?? null ) ? $final_analysis['implementation_roadmap'] : [] ),
-				               'vendor_considerations'=> (array) ( is_array( $final_analysis['vendor_considerations'] ?? null ) ? $final_analysis['vendor_considerations'] : [] ),
-			],
+'technology_strategy' => [
+'recommended_category' => $final_analysis['technology_strategy']['recommended_category'] ?? $recommendation['recommended'],
+'category_details'     => (array) ( is_array( $final_analysis['technology_strategy']['category_details'] ?? null ) ? $final_analysis['technology_strategy']['category_details'] : ( is_array( $recommendation['category_info'] ?? null ) ? $recommendation['category_info'] : [] ) ),
+'implementation_roadmap' => (array) ( is_array( $final_analysis['technology_strategy']['implementation_roadmap'] ?? null ) ? $final_analysis['technology_strategy']['implementation_roadmap'] : [] ),
+'vendor_considerations'=> (array) ( is_array( $final_analysis['technology_strategy']['vendor_considerations'] ?? null ) ? $final_analysis['technology_strategy']['vendor_considerations'] : [] ),
+],
 				        'operational_insights' => [
 				                                        'current_state_assessment' => $current_state_assessment,
 				                                        'process_improvements'     => $process_improvements,
