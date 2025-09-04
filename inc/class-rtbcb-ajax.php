@@ -720,17 +720,18 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 		return implode( ' ', array_filter( $query_parts ) );
 	}
 
-	private static function create_fallback_analysis( $enriched_profile, $roi_scenarios ) {
-		return [
-			'executive_summary' => [
-				'strategic_positioning'   => '',
-				'key_value_drivers'       => [],
-				'executive_recommendation' => '',
-				'confidence_level'        => 0.5,
-			],
-			'financial_analysis' => [],
-		];
-	}
+       private static function create_fallback_analysis( $enriched_profile, $roi_scenarios ) {
+               return [
+                       'executive_summary' => [
+                               'strategic_positioning'   => '',
+                               'key_value_drivers'       => [],
+                               'executive_recommendation' => '',
+                               'confidence_level'        => 0.5,
+                       ],
+                       'operational_insights' => rtbcb_generate_operational_fallbacks( array() ),
+                       'financial_analysis'   => [],
+               ];
+       }
 
 		private static function save_lead_data_async( $user_inputs, $structured_report_data ) {
 				if ( class_exists( 'RTBCB_Leads' ) ) {

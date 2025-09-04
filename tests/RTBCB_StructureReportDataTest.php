@@ -233,7 +233,18 @@ public function test_rag_context_pass_through() {
 
 	$result = $method->invoke( null, $user_inputs, $enriched_profile, $roi_scenarios, $recommendation, $final_analysis, $rag_context, [], microtime( true ), [] );
 
-	self::assertSame( $rag_context, $result['rag_context'] );
+        self::assertSame( $rag_context, $result['rag_context'] );
+}
+
+public function test_create_fallback_analysis_includes_operational_insights() {
+$method = new ReflectionMethod( RTBCB_Ajax::class, 'create_fallback_analysis' );
+$method->setAccessible( true );
+
+$result = $method->invoke( null, [], [] );
+
+self::assertNotEmpty( $result['operational_insights']['current_state_assessment'] );
+self::assertNotEmpty( $result['operational_insights']['process_improvements'] );
+self::assertNotEmpty( $result['operational_insights']['automation_opportunities'] );
 }
 }
 
