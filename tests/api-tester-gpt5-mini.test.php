@@ -16,8 +16,7 @@ if ( ! defined( 'RTBCB_DIR' ) ) {
 require_once __DIR__ . '/../inc/config.php';
 require_once __DIR__ . '/../inc/class-rtbcb-response-parser.php';
 require_once __DIR__ . '/../inc/class-rtbcb-api-tester.php';
-require_once __DIR__ . '/../inc/class-rtbcb-llm.php';
-require_once __DIR__ . '/../inc/class-rtbcb-llm-optimized.php';
+require_once __DIR__ . '/../inc/class-rtbcb-llm-unified.php';
 
 if ( ! function_exists( 'get_option' ) ) {
 	function get_option( $name, $default = '' ) {

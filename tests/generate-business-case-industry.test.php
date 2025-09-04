@@ -77,7 +77,7 @@ require_once __DIR__ . '/wp-stubs.php';
 
 putenv( 'RTBCB_OPENAI_API_KEY=dummy' );
 
-require_once __DIR__ . '/../inc/class-rtbcb-llm.php';
+require_once __DIR__ . '/../inc/class-rtbcb-llm-unified.php';
 
 use PHPUnit\Framework\TestCase;
 

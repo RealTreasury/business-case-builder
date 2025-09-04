@@ -4,8 +4,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 defined( 'ABSPATH' ) || exit;
 
-require_once __DIR__ . '/../inc/class-rtbcb-llm.php';
-require_once __DIR__ . '/../inc/class-rtbcb-llm-optimized.php';
+require_once __DIR__ . '/../inc/class-rtbcb-llm-unified.php';
 
 if ( ! function_exists( 'get_option' ) ) {
 	function get_option( $name, $default = '' ) {

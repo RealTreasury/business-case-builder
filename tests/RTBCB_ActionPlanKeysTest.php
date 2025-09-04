@@ -14,7 +14,7 @@ use PHPUnit\Framework\TestCase;
  */
 final class RTBCB_ActionPlanKeysTest extends TestCase {
 	public function test_build_comprehensive_prompt_includes_action_plan_keys() {
-	require_once __DIR__ . '/../inc/class-rtbcb-llm.php';
+        require_once __DIR__ . '/../inc/class-rtbcb-llm-unified.php';
 	$llm    = new RTBCB_LLM();
 	$method = new ReflectionMethod( RTBCB_LLM::class, 'build_comprehensive_prompt' );
 	$method->setAccessible( true );
@@ -31,7 +31,7 @@ final class RTBCB_ActionPlanKeysTest extends TestCase {
 	}
 
 	public function test_optimized_prompt_includes_action_plan_keys() {
-	require_once __DIR__ . '/../inc/class-rtbcb-llm-optimized.php';
+        require_once __DIR__ . '/../inc/class-rtbcb-llm-unified.php';
 	$llm    = new RTBCB_LLM_Optimized();
 	$method = new ReflectionMethod( RTBCB_LLM_Optimized::class, 'build_comprehensive_prompt' );
 	$method->setAccessible( true );

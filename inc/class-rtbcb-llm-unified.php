@@ -2,76 +2,105 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
-	* Enhanced LLM integration with comprehensive business analysis
-	*
-	* @package RealTreasuryBusinessCaseBuilder
-	*/
+ * Enhanced LLM integration with comprehensive business analysis
+ *
+ * @package RealTreasuryBusinessCaseBuilder
+ */
 
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/helpers.php';
-
 require_once __DIR__ . '/class-rtbcb-response-parser.php';
-require_once __DIR__ . '/class-rtbcb-llm-config.php';
-require_once __DIR__ . '/class-rtbcb-llm-prompt.php';
-require_once __DIR__ . '/class-rtbcb-llm-transport.php';
-class RTBCB_LLM {
-	private $current_inputs = [];
 
-	/**
-	* Configuration instance.
-	*
-	* @var RTBCB_LLM_Config
-	*/
-	private $config;
+class RTBCB_LLM_Unified {
+        private $current_inputs = [];
 
-	/**
-	* Prompt builder instance.
-	*
-	* @var RTBCB_LLM_Prompt
-	*/
-	private $prompt_builder;
+        /**
+         * OpenAI API key.
+         *
+         * @var string
+         */
+        private $api_key;
 
-	/**
-	* Transport instance.
-	*
-	* @var RTBCB_LLM_Transport
-	*/
-	private $transport;
+        /**
+         * GPT-5 configuration settings.
+         *
+         * @var array
+         */
+        private $gpt5_config;
 
-	/**
-	* Response parser instance.
-*
-* @var RTBCB_Response_Parser
-*/
-private $response_parser;
+        /**
+         * Last request body sent to the API.
+         *
+         * @var array|null
+         */
+        private $last_request;
 
-	/**
-	* Serialized company research from the last request.
-	*
-	* @var string|null
-	*/
-	protected $last_company_research;
+        /**
+         * Last response returned from the API.
+         *
+         * @var array|WP_Error|null
+         */
+        private $last_response;
 
-	/**
-	 * Last prompt sent to the OpenAI API.
-	 *
-	 * @var array|string|null
-	 */
-	protected $last_prompt;
+        /**
+         * Last decoded response body.
+         *
+         * @var array|null
+         */
+        private $last_response_parsed;
 
-	public function __construct() {
-$this->config          = new RTBCB_LLM_Config();
-$this->prompt_builder  = new RTBCB_LLM_Prompt();
-$this->transport       = new RTBCB_LLM_Transport( $this->config );
-$this->response_parser = new RTBCB_Response_Parser();
+        /**
+         * Last usage information from the API.
+         *
+         * @var array|null
+         */
+        private $last_usage;
 
-	       if ( empty( $this->config->get_api_key() ) ) {
-	               rtbcb_log_error(
-	                       'OpenAI API key not configured',
-	                       [ 'operation' => '__construct' ]
-	               );
-	       }
-	}
+        /**
+         * Response parser instance.
+         *
+         * @var RTBCB_Response_Parser
+         */
+        private $response_parser;
+
+        /**
+         * Serialized company research from the last request.
+         *
+         * @var string|null
+         */
+        protected $last_company_research;
+
+        /**
+         * Last prompt sent to the OpenAI API.
+         *
+         * @var array|string|null
+         */
+        protected $last_prompt;
+
+        public function __construct() {
+               $this->api_key = rtbcb_get_openai_api_key();
+
+               $timeout           = rtbcb_get_api_timeout();
+               $max_output_tokens = intval( function_exists( 'get_option' ) ? get_option( 'rtbcb_gpt5_max_output_tokens', 8000 ) : 8000 );
+               $this->gpt5_config = rtbcb_get_gpt5_config(
+                       array_merge(
+                               function_exists( 'get_option' ) ? get_option( 'rtbcb_gpt5_config', [] ) : [],
+                               [
+                                       'timeout'           => $timeout,
+                                       'max_output_tokens' => $max_output_tokens,
+                               ]
+                       )
+               );
+
+               $this->response_parser = new RTBCB_Response_Parser();
+
+               if ( empty( $this->api_key ) ) {
+                       rtbcb_log_error(
+                               'OpenAI API key not configured',
+                               [ 'operation' => '__construct' ]
+                       );
+               }
+        }
 
 	/**
 	* Get the configured model for a given tier.
@@ -89,23 +118,23 @@ $this->response_parser = new RTBCB_Response_Parser();
 	return function_exists( 'sanitize_text_field' ) ? sanitize_text_field( $model_option ) : $model_option;
 	}
 
-	/**
-	* Retrieve the last request body sent to the OpenAI API.
-	*
-	* @return array|null Last request body.
-	*/
-	 public function get_last_request() {
-	         return $this->transport->get_last_request();
-	 }
+        /**
+        * Retrieve the last request body sent to the OpenAI API.
+        *
+        * @return array|null Last request body.
+        */
+        public function get_last_request() {
+                return $this->last_request;
+        }
 
-	/**
-	* Retrieve the last response returned from the OpenAI API.
-	*
-	* @return array|WP_Error|null Last response or WP_Error.
-	*/
-	public function get_last_response() {
-	       return $this->transport->get_last_response();
-	}
+        /**
+        * Retrieve the last response returned from the OpenAI API.
+        *
+        * @return array|WP_Error|null Last response or WP_Error.
+        */
+        public function get_last_response() {
+               return $this->last_response;
+        }
 
 	/**
 	 * Retrieve the last prompt sent to the OpenAI API.
@@ -126,13 +155,13 @@ $this->response_parser = new RTBCB_Response_Parser();
 	       return $this->response_parser->process_openai_response( $response_body );
 	}
 
-	/**
-	* Estimate token usage from a desired word count.
-	*
-	* @param int $words Desired word count.
-	* @return int Estimated token count capped by configuration.
-	*/
-	private function tokens_for_report( $type ) {
+        /**
+        * Determine token limit for a report type.
+        *
+        * @param string $type Report type identifier.
+        * @return int Estimated token count for the report.
+        */
+        private function tokens_for_report( $type ) {
 		$targets = [
 			'business_case'             => 600,
 			'industry_commentary'       => 60,
@@ -150,8 +179,54 @@ $this->response_parser = new RTBCB_Response_Parser();
 
 		$words = $targets[ $type ] ?? 800;
 
-		return $this->config->estimate_tokens( $words );
-	}
+            return $this->estimate_tokens_internal( $words );
+        }
+
+        /**
+        * Estimate token usage from a desired word count.
+        *
+        * @param int $words Desired word count.
+        * @return int Estimated token count capped by configuration.
+        */
+        private function estimate_tokens_internal( $words ) {
+                $words      = max( 0, intval( $words ) );
+                $tokens     = (int) ceil( $words * 1.5 );
+                $limit      = intval( $this->gpt5_config['max_output_tokens'] ?? 8000 );
+                $min_tokens = intval( $this->gpt5_config['min_output_tokens'] ?? 1 );
+                $limit      = min( 128000, max( $min_tokens, $limit ) );
+
+                return max( $min_tokens, min( $tokens, $limit ) );
+        }
+
+        /**
+        * Build context array for Responses API.
+        *
+        * @param array       $history       Message history.
+        * @param string|null $system_prompt Optional system prompt.
+        * @return array Context array.
+        */
+        protected function build_context_for_responses( $history, $system_prompt = null ) {
+                $default_system = 'You are a senior treasury technology consultant. Provide detailed, research-driven analysis in the exact JSON format requested. Do not include any text outside the JSON structure.';
+
+                $system_prompt = $system_prompt ? $system_prompt : $default_system;
+
+                $input_parts = [];
+
+                foreach ( (array) $history as $item ) {
+                        if ( ! is_array( $item ) || 'user' !== ( $item['role'] ?? '' ) || ! isset( $item['content'] ) ) {
+                                continue;
+                        }
+
+                        $input_parts[] = function_exists( 'sanitize_textarea_field' ) ? sanitize_textarea_field( $item['content'] ) : $item['content'];
+                }
+
+                $instructions = function_exists( 'sanitize_textarea_field' ) ? sanitize_textarea_field( $system_prompt ) : $system_prompt;
+
+                return [
+                        'instructions' => $instructions,
+                        'input'        => implode( "\n", $input_parts ),
+                ];
+        }
 
 	/**
 	* Generate a simplified business case analysis.
@@ -185,7 +260,7 @@ $this->response_parser = new RTBCB_Response_Parser();
 
                $this->current_inputs = $inputs;
 
-		if ( empty( $this->config->get_api_key() ) ) {
+            if ( empty( $this->api_key ) ) {
 			return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
 		}
 
@@ -213,9 +288,9 @@ $this->response_parser = new RTBCB_Response_Parser();
 				'content' => $prompt,
 			],
 		];
-		$context = $this->prompt_builder->build_context_for_responses( $history );
+            $context = $this->build_context_for_responses( $history );
 		$tokens  = $this->tokens_for_report( 'business_case' );
-		$response = $this->transport->call_openai_with_retry( $selected_model, $context, $tokens );
+            $response = $this->call_openai_with_retry( $selected_model, $context, $tokens );
 
 		if ( is_wp_error( $response ) ) {
 			return new WP_Error( 'llm_failure', __( 'Unable to generate analysis at this time.', 'rtbcb' ) );
@@ -260,7 +335,7 @@ $parsed = $this->response_parser->parse( $response );
 	public function generate_industry_commentary( $industry ) {
 		$industry = sanitize_text_field( $industry );
 
-		if ( empty( $this->config->get_api_key() ) ) {
+            if ( empty( $this->api_key ) ) {
 			return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
 		}
 
@@ -273,9 +348,9 @@ $parsed = $this->response_parser->parse( $response );
 				'content' => $prompt,
 			],
 		];
-		$context = $this->prompt_builder->build_context_for_responses( $history );
+            $context = $this->build_context_for_responses( $history );
 		$tokens  = $this->tokens_for_report( 'industry_commentary' );
-		$response = $this->transport->call_openai_with_retry( $model, $context, $tokens, null, $chunk_callback );
+            $response = $this->call_openai_with_retry( $model, $context, $tokens, null, $chunk_callback );
 
 		if ( is_wp_error( $response ) ) {
 			return new WP_Error( 'llm_failure', __( 'Unable to generate commentary at this time.', 'rtbcb' ) );
@@ -300,7 +375,7 @@ $parsed     = $this->response_parser->parse( $response );
 	public function generate_company_overview( $company_name ) {
 		$company_name = sanitize_text_field( $company_name );
 
-		if ( empty( $this->config->get_api_key() ) ) {
+            if ( empty( $this->api_key ) ) {
 			return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
 		}
 
@@ -386,9 +461,9 @@ USER,
 			],
 		];
 
-		$context = $this->prompt_builder->build_context_for_responses( $history, $system_prompt );
+            $context = $this->build_context_for_responses( $history, $system_prompt );
 		$tokens  = $this->tokens_for_report( 'company_overview' );
-		$response = $this->transport->call_openai_with_retry( $model, $context, $tokens, 3 ); // Reduce retries
+            $response = $this->call_openai_with_retry( $model, $context, $tokens, 3 ); // Reduce retries
 
 		if ( is_wp_error( $response ) ) {
 			return new WP_Error( 'llm_failure', $response->get_error_message() );
@@ -466,7 +541,7 @@ $json = $this->response_parser->process_openai_response( $content );
 			return new WP_Error( 'invalid_params', __( 'Industry and company size required.', 'rtbcb' ) );
 		}
 
-		if ( empty( $this->config->get_api_key() ) ) {
+            if ( empty( $this->api_key ) ) {
 			return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
 		}
 
@@ -480,9 +555,9 @@ $json = $this->response_parser->process_openai_response( $content );
 				'content' => $prompt,
 			],
 		];
-		$context = $this->prompt_builder->build_context_for_responses( $history );
+            $context = $this->build_context_for_responses( $history );
 		$tokens  = $this->tokens_for_report( 'industry_overview' );
-		$response = $this->transport->call_openai_with_retry( $model, $context, $tokens );
+            $response = $this->call_openai_with_retry( $model, $context, $tokens );
 
 		if ( is_wp_error( $response ) ) {
 			return new WP_Error( 'llm_failure', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
@@ -516,7 +591,7 @@ $parsed   = $this->response_parser->parse( $response );
 			return new WP_Error( 'no_focus_areas', __( 'No focus areas provided.', 'rtbcb' ) );
 		}
 
-		if ( empty( $this->config->get_api_key() ) ) {
+            if ( empty( $this->api_key ) ) {
 			return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
 		}
 
@@ -530,9 +605,9 @@ $parsed   = $this->response_parser->parse( $response );
 				'content' => $prompt,
 			],
 		];
-		$context = $this->prompt_builder->build_context_for_responses( $history );
+            $context = $this->build_context_for_responses( $history );
 		$tokens  = $this->tokens_for_report( 'treasury_tech_overview' );
-		$response = $this->transport->call_openai_with_retry( $model, $context, $tokens );
+            $response = $this->call_openai_with_retry( $model, $context, $tokens );
 
 		if ( is_wp_error( $response ) ) {
 			return new WP_Error( 'llm_failure', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
@@ -569,7 +644,7 @@ $parsed   = $this->response_parser->parse( $response );
 		$challenges     = array_filter( array_map( 'sanitize_text_field', (array) ( $company_data['challenges'] ?? [] ) ) );
 		$categories     = array_filter( array_map( 'sanitize_text_field', (array) ( $company_data['categories'] ?? [] ) ) );
 
-		if ( empty( $this->config->get_api_key() ) ) {
+            if ( empty( $this->api_key ) ) {
 			return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
 		}
 
@@ -596,9 +671,9 @@ $parsed   = $this->response_parser->parse( $response );
 				'content' => $prompt,
 			],
 		];
-		$context = $this->prompt_builder->build_context_for_responses( $history );
+            $context = $this->build_context_for_responses( $history );
 		$tokens  = $this->tokens_for_report( 'real_treasury_overview' );
-		$response = $this->transport->call_openai_with_retry( $model, $context, $tokens );
+            $response = $this->call_openai_with_retry( $model, $context, $tokens );
 
 		if ( is_wp_error( $response ) ) {
 			return new WP_Error( 'llm_failure', __( 'Unable to generate overview at this time.', 'rtbcb' ) );
@@ -623,7 +698,7 @@ $parsed   = $this->response_parser->parse( $response );
 	public function generate_category_recommendation( $category ) {
 		$category = sanitize_text_field( $category );
 
-		if ( empty( $this->config->get_api_key() ) ) {
+            if ( empty( $this->api_key ) ) {
 			return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
 		}
 
@@ -641,9 +716,9 @@ $parsed   = $this->response_parser->parse( $response );
 				'content' => $prompt,
 			],
 		];
-		$context = $this->prompt_builder->build_context_for_responses( $history );
+            $context = $this->build_context_for_responses( $history );
 		$tokens  = $this->tokens_for_report( 'category_recommendation' );
-		$response = $this->transport->call_openai_with_retry( $model, $context, $tokens );
+            $response = $this->call_openai_with_retry( $model, $context, $tokens );
 
 		if ( is_wp_error( $response ) ) {
 			return new WP_Error( 'llm_failure', __( 'Unable to generate recommendation details at this time.', 'rtbcb' ) );
@@ -677,7 +752,7 @@ $parsed          = $this->response_parser->process_openai_response( $parsed_resp
 		$efficiency  = floatval( $efficiency );
 		$category    = sanitize_text_field( $category );
 
-		if ( empty( $this->config->get_api_key() ) ) {
+            if ( empty( $this->api_key ) ) {
 			return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
 		}
 
@@ -694,9 +769,9 @@ $parsed          = $this->response_parser->process_openai_response( $parsed_resp
 				'content' => $prompt,
 			],
 		];
-		$context = $this->prompt_builder->build_context_for_responses( $history );
+            $context = $this->build_context_for_responses( $history );
 		$tokens  = $this->tokens_for_report( 'benefits_estimate' );
-		$response = $this->transport->call_openai_with_retry( $model, $context, $tokens );
+            $response = $this->call_openai_with_retry( $model, $context, $tokens );
 
 		if ( is_wp_error( $response ) ) {
 			return new WP_Error( 'llm_failure', __( 'Unable to generate benefits estimate at this time.', 'rtbcb' ) );
@@ -742,7 +817,7 @@ $parsed          = $this->response_parser->process_openai_response( $parsed_resp
 		}
 		$this->current_inputs = $user_inputs;
 
-		if ( empty( $this->config->get_api_key() ) ) {
+            if ( empty( $this->api_key ) ) {
 			return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
 		}
 
@@ -973,9 +1048,9 @@ $tech_prompt .= '\nContext: ' . implode( '\n', array_map( 'sanitize_text_field',
 				'content' => $prompt,
 			],
 		];
-		$context = $this->prompt_builder->build_context_for_responses( $history );
+           $context = $this->build_context_for_responses( $history );
 		$tokens  = $this->tokens_for_report( 'comprehensive_business_case' );
-		$response = $this->transport->call_openai_with_retry( $model, $context, $tokens, null, $chunk_callback );
+           $response = $this->call_openai_with_retry( $model, $context, $tokens, null, $chunk_callback );
 
 		if ( is_wp_error( $response ) ) {
 			return $response;
@@ -1156,7 +1231,7 @@ return $this->response_parser->parse_business_case( $response );
 			],
 		];
 
-		if ( empty( $this->config->get_api_key() ) ) {
+           if ( empty( $this->api_key ) ) {
 			return $default;
 		}
 
@@ -1175,9 +1250,9 @@ return $this->response_parser->parse_business_case( $response );
 			],
 		];
 
-	        $context  = $this->prompt_builder->build_context_for_responses( $history );
+           $context  = $this->build_context_for_responses( $history );
 	        $tokens   = $this->tokens_for_report( 'competitive_context' );
-	        $response = $this->transport->call_openai_with_retry( $model, $context, $tokens );
+           $response = $this->call_openai_with_retry( $model, $context, $tokens );
 
 	        if ( is_wp_error( $response ) ) {
 	                return $default;
@@ -1362,7 +1437,7 @@ $parsed = $this->response_parser->parse( $response );
 	* }
 	*/
 	private function run_batched_research( $user_inputs, $context_chunks ) {
-		if ( empty( $this->config->get_api_key() ) ) {
+           if ( empty( $this->api_key ) ) {
 			return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
 		}
 
@@ -1411,8 +1486,8 @@ SYSTEM;
 				'content' => $user_prompt,
 			],
 		];
-		$context  = $this->prompt_builder->build_context_for_responses( $history, $system_prompt );
-		$response = $this->transport->call_openai_with_retry( $model, $context );
+           $context  = $this->build_context_for_responses( $history, $system_prompt );
+           $response = $this->call_openai_with_retry( $model, $context );
 	       if ( is_wp_error( $response ) ) {
 	               return $response;
 	       }
@@ -1469,7 +1544,7 @@ $parsed = $this->response_parser->parse( $response );
 	* @return array|WP_Error Array of responses or error object.
 	*/
 	private function generate_research_batch( $prompts ) {
-		if ( empty( $this->config->get_api_key() ) ) {
+           if ( empty( $this->api_key ) ) {
 			return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
 		}
 
@@ -1485,7 +1560,7 @@ $parsed = $this->response_parser->parse( $response );
 			$inputs[]     = $instructions ? $instructions . "\n" . $input : $input;
 		}
 
-	       $config = $this->config->get_gpt5_config();
+          $config = $this->gpt5_config;
 	       $body   = [
 	               'model'            => $model,
 	               'input'            => $inputs,
@@ -1501,7 +1576,7 @@ $parsed = $this->response_parser->parse( $response );
 			'https://api.openai.com/v1/responses',
 			[
 				'headers' => [
-					'Authorization' => 'Bearer ' . $this->config->get_api_key(),
+                                   'Authorization' => 'Bearer ' . $this->api_key,
 					'Content-Type'  => 'application/json',
 				],
 				'body'    => wp_json_encode( $body ),
@@ -1567,7 +1642,7 @@ $parsed = $this->response_parser->parse( $response );
 	* @return array|WP_Error Industry analysis or error object.
 	*/
 	private function analyze_industry_context( $user_inputs ) {
-		if ( empty( $this->config->get_api_key() ) ) {
+           if ( empty( $this->api_key ) ) {
 			return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
 		}
 
@@ -1614,9 +1689,9 @@ SYSTEM;
 				'content' => $user_prompt,
 			],
 		];
-		$context = $this->prompt_builder->build_context_for_responses( $history, $system_prompt );
+           $context = $this->build_context_for_responses( $history, $system_prompt );
 		$tokens  = $this->tokens_for_report( 'industry_analysis' );
-		$response = $this->transport->call_openai_with_retry( $model, $context, $tokens );
+           $response = $this->call_openai_with_retry( $model, $context, $tokens );
 		if ( is_wp_error( $response ) ) {
 			return $response;
 		}
@@ -1644,7 +1719,7 @@ $json            = $this->response_parser->process_openai_response( $parsed_resp
 	* @return string|WP_Error Research summary or error object.
 	*/
 	private function research_treasury_solutions( $user_inputs, $context_chunks ) {
-		if ( empty( $this->config->get_api_key() ) ) {
+           if ( empty( $this->api_key ) ) {
 			return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
 		}
 
@@ -1665,9 +1740,9 @@ $json            = $this->response_parser->process_openai_response( $parsed_resp
 				'content' => $prompt,
 			],
 		];
-		$context = $this->prompt_builder->build_context_for_responses( $history );
+           $context = $this->build_context_for_responses( $history );
 		$tokens  = $this->tokens_for_report( 'tech_research' );
-		$response = $this->transport->call_openai_with_retry( $model, $context, $tokens );
+           $response = $this->call_openai_with_retry( $model, $context, $tokens );
 		if ( is_wp_error( $response ) ) {
 			return $response;
 		}
@@ -2016,18 +2091,18 @@ return $prompt;
 		if ( rtbcb_heavy_features_disabled() ) {
 			return new WP_Error( 'heavy_features_disabled', __( 'AI features are disabled.', 'rtbcb' ) );
 		}
-	if ( empty( $this->config->get_api_key() ) ) {
+   if ( empty( $this->api_key ) ) {
 	return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
 	}
 
 	$system_prompt = $this->build_enrichment_system_prompt();
 	$user_prompt   = $this->build_enrichment_user_prompt( $user_inputs );
 
-	$response = $this->transport->call_openai_with_retry(
-	$this->get_model( 'advanced' ),
-	[ 'instructions' => $system_prompt, 'input' => $user_prompt ],
-	$this->config->estimate_tokens( 1500 )
-	);
+                $response = $this->call_openai_with_retry(
+                        $this->get_model( 'advanced' ),
+                        [ 'instructions' => $system_prompt, 'input' => $user_prompt ],
+                        $this->estimate_tokens_internal( 1500 )
+                );
 
 	if ( is_wp_error( $response ) ) {
 	        return $response;
@@ -2181,7 +2256,7 @@ PROMPT;
 	       if ( rtbcb_heavy_features_disabled() ) {
 	               return new WP_Error( 'heavy_features_disabled', __( 'AI features are disabled.', 'rtbcb' ) );
 	       }
-               if ( empty( $this->config->get_api_key() ) ) {
+               if ( empty( $this->api_key ) ) {
                        return new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
                }
 
@@ -2212,7 +2287,7 @@ PROMPT;
 
                $body     = [ 'messages' => $messages ];
                $model    = $this->get_model( 'premium' );
-               $response = $this->transport->call_openai_with_retry( $model, $body );
+               $response = $this->call_openai_with_retry( $model, $body );
 
                if ( is_wp_error( $response ) ) {
                        return $response;
@@ -2604,7 +2679,7 @@ return $analysis;
 	*/
 	public function call_openai_api( $prompt, $model = null ) {
 	       $model    = $model ? sanitize_text_field( $model ) : $this->get_model( 'mini' );
-	       $response = $this->transport->call_openai_with_retry( $model, $prompt );
+          $response = $this->call_openai_with_retry( $model, $prompt );
 
 	       if ( is_wp_error( $response ) ) {
 	               return $response;
@@ -2633,10 +2708,507 @@ return $analysis;
 	* @param callable|null $chunk_handler    Optional streaming handler.
 	* @return array|WP_Error Response array or error.
 	*/
-	private function call_openai_with_retry( $model, $prompt, $max_output_tokens = null, $max_retries = null, $chunk_handler = null ) {
-		$prompt             = apply_filters( 'rtbcb_llm_final_prompt', $prompt, $model );
-		$this->last_prompt = $prompt;
-		return $this->transport->call_openai_with_retry( $model, $prompt, $max_output_tokens, $max_retries, $chunk_handler );
+        public function call_openai_with_retry( $model, $prompt, $max_output_tokens = null, $max_retries = null, $chunk_handler = null ) {
+                $request_data          = is_array( $prompt ) ? $prompt : [ 'input' => $prompt ];
+                if ( isset( $request_data['messages'] ) && ! isset( $request_data['input'] ) ) {
+                        $request_data['input'] = $request_data['messages'];
+                        unset( $request_data['messages'] );
+                }
+                $request_data['model'] = $model;
+
+                if ( rtbcb_heavy_features_disabled() ) {
+                        $error = new WP_Error( 'heavy_features_disabled', __( 'AI features temporarily disabled.', 'rtbcb' ) );
+                        $this->maybe_log_interaction( $request_data, [ 'error' => $error->get_error_message() ] );
+                        return $error;
+                }
+
+                if ( empty( $this->api_key ) ) {
+                        $error = new WP_Error( 'no_api_key', __( 'OpenAI API key not configured.', 'rtbcb' ) );
+                        $this->maybe_log_interaction( $request_data, [ 'error' => $error->get_error_message() ] );
+                        return $error;
+                }
+
+                $input       = $request_data['input'] ?? '';
+                $input_check = is_array( $input ) ? wp_json_encode( $input ) : (string) $input;
+                if ( '' === trim( (string) $input_check ) ) {
+                        $error = new WP_Error( 'empty_prompt', __( 'Prompt cannot be empty.', 'rtbcb' ) );
+                        $this->maybe_log_interaction( $request_data, [ 'error' => $error->get_error_message() ] );
+                        return $error;
+                }
+
+                $max_retries     = min( 3, $max_retries ?? intval( $this->gpt5_config['max_retries'] ?? 3 ) );
+                $base_timeout    = intval( $this->gpt5_config['timeout'] ?? 300 );
+                $current_timeout = $base_timeout;
+                $current_tokens  = $max_output_tokens;
+                $max_retry_time  = max( $base_timeout, intval( $this->gpt5_config['max_retry_time'] ?? $base_timeout ) );
+                $start_time      = microtime( true );
+
+                for ( $attempt = 1; $attempt <= $max_retries; $attempt++ ) {
+                        $elapsed = microtime( true ) - $start_time;
+                        if ( $elapsed >= $max_retry_time ) {
+                                break;
+                        }
+
+                        $remaining                    = $max_retry_time - $elapsed;
+                        $this->gpt5_config['timeout'] = min( $current_timeout, $remaining );
+
+                        $response = $this->call_openai( $model, $prompt, $current_tokens, $chunk_handler );
+
+                        if ( ! is_wp_error( $response ) ) {
+                                $this->gpt5_config['timeout'] = $base_timeout;
+                                $decoded = $this->last_response_parsed;
+                                if ( null === $decoded ) {
+                                        $response_body = $response['body'] ?? '';
+                                        $decoded       = json_decode( $response_body, true );
+                                        if ( null === $decoded ) {
+                                                $decoded = [];
+                                        }
+                                }
+
+                                if ( function_exists( 'curl_init' ) ) {
+                                        $this->maybe_log_interaction( $this->last_request ?? $request_data, $decoded );
+                                }
+                                return $response;
+                        }
+
+                        $error_code = $response->get_error_code();
+                        if ( 'llm_http_status' === $error_code ) {
+                                $data   = $response->get_error_data();
+                                $status = isset( $data['status'] ) ? intval( $data['status'] ) : 0;
+                                if ( $status >= 400 && $status < 500 && 429 !== $status ) {
+                                        break;
+                                }
+                        }
+
+                        if ( ! in_array( $error_code, [ 'llm_timeout', 'llm_http_error', 'llm_http_status' ], true ) ) {
+                                break;
+                        }
+
+                        if ( $attempt < $max_retries ) {
+                                if ( null !== $current_tokens ) {
+                                        $min_tokens    = intval( $this->gpt5_config['min_output_tokens'] ?? 1 );
+                                        $current_tokens = max( $min_tokens, (int) ( $current_tokens * 0.9 ) );
+                                }
+
+                                $current_timeout = min( $current_timeout + 5, $max_retry_time );
+
+                                $delay = min( 5, pow( 2, $attempt - 1 ) );
+                                usleep( (int) ( $delay * 1000000 ) );
+                        }
+                }
+
+                $this->gpt5_config['timeout'] = $base_timeout;
+                if ( function_exists( 'curl_init' ) ) {
+                        $this->maybe_log_interaction( $this->last_request ?? $request_data, [ 'error' => $response->get_error_message() ] );
+                }
+
+                return $response;
+        }
+
+        /**
+         * Perform the actual OpenAI call.
+         *
+         * @param string        $model         Model name.
+         * @param array|string  $prompt        Prompt data.
+         * @param int|null      $max_tokens    Optional max output tokens.
+         * @param callable|null $chunk_handler Optional streaming handler.
+         * @return array|WP_Error HTTP-like response or WP_Error.
+         */
+        protected function call_openai( $model, $prompt, $max_tokens = null, $chunk_handler = null ) {
+                $endpoint   = 'https://api.openai.com/v1/responses';
+                $model_name = sanitize_text_field( $model ?: 'gpt-5-mini' );
+                $body       = is_array( $prompt ) ? $prompt : [ 'input' => sanitize_textarea_field( (string) $prompt ) ];
+                if ( isset( $body['messages'] ) && ! isset( $body['input'] ) ) {
+                        $body['input'] = $body['messages'];
+                        unset( $body['messages'] );
+                }
+                $body['model'] = $model_name;
+                if ( $max_tokens ) {
+                        $body['max_output_tokens'] = intval( $max_tokens );
+                }
+                if ( is_callable( $chunk_handler ) ) {
+                        $body['stream'] = true;
+                }
+
+                $timeout = intval( $this->gpt5_config['timeout'] ?? 300 );
+                $payload = wp_json_encode( $body );
+
+                $this->last_request = $body;
+
+                if ( function_exists( 'curl_init' ) ) {
+                        $stream = '';
+                        $buffer = '';
+                        $usage  = null;
+
+                        $ch = curl_init( $endpoint );
+                        curl_setopt( $ch, CURLOPT_HTTPHEADER, [
+                                'Authorization: Bearer ' . $this->api_key,
+                                'Content-Type: application/json',
+                        ] );
+                        curl_setopt( $ch, CURLOPT_POST, true );
+                        curl_setopt( $ch, CURLOPT_POSTFIELDS, $payload );
+                        curl_setopt( $ch, CURLOPT_TIMEOUT, $timeout );
+                        curl_setopt( $ch, CURLOPT_WRITEFUNCTION, function ( $curl, $data ) use ( &$stream, &$buffer, &$usage, $chunk_handler ) {
+                                if ( is_callable( $chunk_handler ) ) {
+                                        try {
+                                                call_user_func( $chunk_handler, $data );
+                                        } catch ( Exception $e ) {
+                                                rtbcb_log_error(
+                                                        'Chunk handler error',
+                                                        [
+                                                                'operation' => 'call_openai_with_retry',
+                                                                'error'     => $e->getMessage(),
+                                                        ]
+                                                );
+                                        }
+                                }
+
+                                $stream .= $data;
+                                $buffer .= $data;
+
+                                while ( false !== ( $pos = strpos( $buffer, "\n" ) ) ) {
+                                        $line   = substr( $buffer, 0, $pos );
+                                        $buffer = substr( $buffer, $pos + 1 );
+                                        $line   = trim( $line );
+
+                                        if ( '' === $line ) {
+                                                continue;
+                                        }
+
+                                        if ( 0 === strpos( $line, 'data:' ) ) {
+                                                $json = trim( substr( $line, 5 ) );
+                                                if ( '[DONE]' === $json ) {
+                                                        continue;
+                                                }
+
+                                                $decoded_line = json_decode( $json, true );
+                                                if ( JSON_ERROR_NONE === json_last_error() && isset( $decoded_line['usage'] ) ) {
+                                                        $usage = $decoded_line;
+                                                }
+                                        }
+                                }
+
+                                return strlen( $data );
+                        } );
+
+                        $ok        = curl_exec( $ch );
+                        $error     = curl_error( $ch );
+                        $http_code = curl_getinfo( $ch, CURLINFO_HTTP_CODE );
+                        curl_close( $ch );
+
+                        if ( '' !== $buffer ) {
+                                $buffer .= "\n";
+                                while ( false !== ( $pos = strpos( $buffer, "\n" ) ) ) {
+                                        $line   = substr( $buffer, 0, $pos );
+                                        $buffer = substr( $buffer, $pos + 1 );
+                                        $line   = trim( $line );
+
+                                        if ( '' === $line ) {
+                                                continue;
+                                        }
+
+                                        if ( 0 === strpos( $line, 'data:' ) ) {
+                                                $json = trim( substr( $line, 5 ) );
+                                                if ( '[DONE]' === $json ) {
+                                                        continue;
+                                                }
+
+                                                $decoded_line = json_decode( $json, true );
+                                                if ( JSON_ERROR_NONE === json_last_error() && isset( $decoded_line['usage'] ) ) {
+                                                        $usage = $decoded_line;
+                                                }
+                                        }
+                                }
+                        }
+
+                        $this->last_usage = $usage;
+
+                        if ( false === $ok ) {
+                                if ( false !== strpos( strtolower( $error ), 'timed out' ) ) {
+                                        return new WP_Error(
+                                                'llm_timeout',
+                                                __( 'The request took longer than our 5-minute limit. Try Fast Mode or request email delivery.', 'rtbcb' )
+                                        );
+                                }
+
+                                return new WP_Error(
+                                        'llm_http_error',
+                                        sprintf( __( 'Language model request failed: %s', 'rtbcb' ), sanitize_text_field( $error ) )
+                                );
+                        }
+
+                        $final_response = $this->process_streaming_response( $stream );
+                        if ( null === $final_response ) {
+                                return new WP_Error(
+                                        'llm_response_format',
+                                        __( 'Invalid response format received from language model.', 'rtbcb' )
+                                );
+                        }
+
+                        if ( $this->last_usage && isset( $this->last_usage['usage'] ) && is_array( $final_response ) && ! isset( $final_response['usage'] ) ) {
+                                $final_response['usage'] = $this->last_usage['usage'];
+                        }
+
+                        $this->last_response_parsed = $final_response;
+
+                        $response_body = wp_json_encode( $final_response );
+                        $response      = [
+                                'body'     => $response_body,
+                                'response' => [ 'code' => $http_code, 'message' => '' ],
+                                'headers'  => [],
+                        ];
+
+                        $this->last_response = $response;
+
+                        if ( $http_code >= 400 ) {
+                                if ( isset( $final_response['error']['message'] ) ) {
+                                        $message = $final_response['error']['message'];
+                                } elseif ( isset( $final_response['message'] ) ) {
+                                        $message = $final_response['message'];
+                                } else {
+                                        $message = wp_json_encode( $final_response );
+                                }
+
+                                $message = sanitize_text_field( $message );
+
+                                return new WP_Error( 'llm_http_status', $message, [ 'status' => $http_code ] );
+                        }
+
+                        return $response;
+                }
+
+                $args = [
+                        'headers' => [
+                                'Authorization' => 'Bearer ' . $this->api_key,
+                                'Content-Type'  => 'application/json',
+                        ],
+                        'timeout'     => $timeout,
+                        'body'        => $payload,
+                        'data_format' => 'body',
+                ];
+
+                $response = wp_remote_post( $endpoint, $args );
+                if ( is_wp_error( $response ) ) {
+                        $this->last_response        = $response;
+                        $this->last_response_parsed = null;
+                        $this->maybe_log_interaction( $body, [ 'error' => $response->get_error_message() ] );
+                        $error_message = $response->get_error_message();
+                        if ( false !== strpos( strtolower( $error_message ), 'timed out' ) ) {
+                                return new WP_Error(
+                                        'llm_timeout',
+                                        __( 'The request took longer than our 5-minute limit. Try Fast Mode or request email delivery.', 'rtbcb' )
+                                );
+                        }
+
+                        return new WP_Error(
+                                'llm_http_error',
+                                sprintf( __( 'Language model request failed: %s', 'rtbcb' ), sanitize_text_field( $error_message ) )
+                        );
+                }
+
+                $stream    = wp_remote_retrieve_body( $response );
+                $http_code = wp_remote_retrieve_response_code( $response );
+
+                if ( is_callable( $chunk_handler ) && '' !== $stream ) {
+                        $lines = preg_split( "/\r?\n/", $stream );
+                        foreach ( $lines as $line ) {
+                                $line = trim( $line );
+                                if ( '' === $line ) {
+                                        continue;
+                                }
+                                try {
+                                        call_user_func( $chunk_handler, $line . "\n" );
+                                } catch ( Exception $e ) {
+                                        rtbcb_log_error(
+                                                'Chunk handler error',
+                                                [
+                                                        'operation' => 'call_openai_with_retry',
+                                                        'error'     => $e->getMessage(),
+                                                ]
+                                        );
+                                }
+                        }
+                }
+
+                $final_response = $this->process_streaming_response( $stream );
+                if ( null === $final_response ) {
+                        $this->last_response        = $response;
+                        $this->last_response_parsed = null;
+                        $this->maybe_log_interaction( $body, [ 'error' => __( 'Invalid response format received from language model.', 'rtbcb' ) ] );
+                        return new WP_Error(
+                                'llm_response_format',
+                                __( 'Invalid response format received from language model.', 'rtbcb' )
+                        );
+                }
+
+                if ( isset( $final_response['usage'] ) ) {
+                        $this->last_usage = $final_response;
+                } else {
+                        $this->last_usage = null;
+                }
+
+                $this->last_response_parsed = $final_response;
+
+                $result = [
+                        'body'     => wp_json_encode( $final_response ),
+                        'response' => [ 'code' => $http_code, 'message' => '' ],
+                        'headers'  => [],
+                ];
+
+                $this->last_response = $result;
+
+                if ( $http_code >= 400 ) {
+                        if ( isset( $final_response['error']['message'] ) ) {
+                                $message = $final_response['error']['message'];
+                        } elseif ( isset( $final_response['message'] ) ) {
+                                $message = $final_response['message'];
+                        } else {
+                                $message = wp_json_encode( $final_response );
+                        }
+
+                        $message = sanitize_text_field( $message );
+                        $this->maybe_log_interaction( $body, $final_response );
+                        return new WP_Error( 'llm_http_status', $message, [ 'status' => $http_code ] );
+                }
+
+                $this->maybe_log_interaction( $body, $final_response );
+                return $result;
+        }
+
+        /**
+         * Save API interaction to log table when available.
+         *
+         * @param array $request  Request data.
+         * @param array $response Response data.
+         * @return void
+         */
+        private function maybe_log_interaction( $request, $response ) {
+                if ( ! class_exists( 'RTBCB_API_Log' ) ) {
+                        return;
+                }
+
+                $user_id      = function_exists( 'get_current_user_id' ) ? get_current_user_id() : 0;
+                $user_email   = $request['email'] ?? '';
+                $company_name = $request['company_name'] ?? '';
+
+                $model = $request['model'] ?? '';
+                RTBCB_API_Log::save_log( $request, $response, $user_id, $user_email, $company_name, 0, $model );
+        }
+
+        /**
+         * Process streaming response chunks from the OpenAI API.
+         *
+         * @param string $stream Raw streaming data from cURL.
+         * @return array|null Structured response array or null on failure.
+         */
+        protected function process_streaming_response( $stream ) {
+                if ( empty( $stream ) ) {
+                        return null;
+                }
+
+                $events        = [];
+                $lines         = preg_split( "/\r?\n/", $stream );
+                $current_event = [];
+
+                foreach ( $lines as $line ) {
+                        $line = trim( $line );
+
+                        if ( empty( $line ) ) {
+                                if ( ! empty( $current_event ) ) {
+                                        $events[]      = $current_event;
+                                        $current_event = [];
+                                }
+                                continue;
+                        }
+
+                        if ( strpos( $line, ':' ) !== false ) {
+                                list( $field, $value ) = explode( ':', $line, 2 );
+                                $field = trim( $field );
+                                $value = trim( $value );
+
+                                if ( 'data' === $field && '[DONE]' !== $value ) {
+                                        $current_event['data'] = $value;
+                                } elseif ( 'event' === $field ) {
+                                        $current_event['event'] = $value;
+                                }
+                        }
+                }
+
+                if ( ! empty( $current_event ) ) {
+                        $events[] = $current_event;
+                }
+
+                $final_response = null;
+                $output_text    = '';
+                $reasoning      = [];
+
+                foreach ( $events as $event ) {
+                        if ( ! isset( $event['data'] ) ) {
+                                continue;
+                        }
+
+                        $event_data = json_decode( $event['data'], true );
+                        if ( JSON_ERROR_NONE !== json_last_error() ) {
+                                continue;
+                        }
+
+                        if ( isset( $event_data['type'] ) ) {
+                                switch ( $event_data['type'] ) {
+                                        case 'response.done':
+                                        case 'response.content_part.done':
+                                        case 'response.output_text.done':
+                                                if ( isset( $event_data['response'] ) ) {
+                                                        $final_response = $event_data['response'];
+                                                }
+                                                break;
+                                        case 'response.content_part.delta':
+                                        case 'response.output_text.delta':
+                                                if ( isset( $event_data['delta']['text'] ) ) {
+                                                        $output_text .= $event_data['delta']['text'];
+                                                }
+                                                break;
+                                        case 'response.reasoning.delta':
+                                                if ( isset( $event_data['delta']['text'] ) ) {
+                                                        $reasoning[] = $event_data['delta']['text'];
+                                                }
+                                                break;
+                                }
+                        } else {
+                                if ( isset( $event_data['choices'][0]['delta']['content'] ) ) {
+                                        $output_text .= $event_data['choices'][0]['delta']['content'];
+                                } elseif ( isset( $event_data['choices'][0]['message'] ) ) {
+                                        $final_response = $event_data;
+                                }
+                        }
+                }
+
+                if ( $final_response ) {
+                        if ( '' !== $output_text && ! isset( $final_response['output_text'] ) ) {
+                                $final_response['output_text'] = $output_text;
+                        }
+                        if ( $reasoning && ! isset( $final_response['reasoning'] ) ) {
+                                $final_response['reasoning'] = $reasoning;
+                        }
+                        return $final_response;
+                }
+
+                if ( '' !== $output_text || $reasoning ) {
+                        $response = [];
+                        if ( '' !== $output_text ) {
+                                $response['output_text'] = $output_text;
+                        }
+                        if ( $reasoning ) {
+                                $response['reasoning'] = $reasoning;
+                        }
+                        return $response;
+                }
+
+                $decoded = json_decode( $stream, true );
+                if ( JSON_ERROR_NONE === json_last_error() ) {
+                        return $decoded;
+                }
+
+                return null;
         }
 	private function calculate_efficiency_rating( $user_inputs ) {
 		$total_hours = ($user_inputs['hours_reconciliation'] ?? 0) + ($user_inputs['hours_cash_positioning'] ?? 0);
@@ -2736,24 +3308,10 @@ return $analysis;
 				'npv_analysis' => 'Positive NPV of $' . number_format( $base_benefit * 2.5 - $estimated_cost ) . ' over 3 years at 10% discount rate'
 			]
 		];
-	}
-	}
+        }
+        }
 
-/**
-	* Parse a GPT-5 response into output text, reasoning, and function calls.
-	*
-	* The parser first looks for a convenience `output_text` field. If a valid
-	* string is not found, it manually walks the `output` chunks, prioritizing
-	* message content before reasoning.
-	*
-	* @param array $response  HTTP response array from wp_remote_post().
-	* @param bool  $store_raw Optional. Include full raw payload. Default false.
-	* @return array|WP_Error {
-	* @type string $output_text    Combined output text from the response.
-	* @type array  $reasoning      Reasoning segments provided by the model.
-	* @type array  $function_calls Function call items returned by the model.
-	* @type array  $raw            Raw decoded response body.
-	* @type bool   $truncated      Whether the response hit the token limit.
-	* }
- */
+// Backwards compatibility aliases.
+class_alias( RTBCB_LLM_Unified::class, 'RTBCB_LLM' );
+class_alias( RTBCB_LLM_Unified::class, 'RTBCB_LLM_Optimized' );
 
