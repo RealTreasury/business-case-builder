@@ -279,16 +279,16 @@ function initializeSensitivityChart() {
 /**
  * Initialize section toggle functionality
  */
-function initializeSectionToggles() {
-    if ( typeof document === 'undefined' || typeof document.querySelectorAll !== 'function' ) {
+function initializeSectionToggles(doc = document) {
+    if ( typeof doc === 'undefined' || typeof doc.querySelectorAll !== 'function' ) {
         return;
     }
-    document.querySelectorAll('.rtbcb-section-toggle').forEach(toggle => {
+    doc.querySelectorAll('.rtbcb-section-toggle').forEach(toggle => {
         toggle.addEventListener('click', function(e) {
             e.preventDefault();
-            
+
             const targetId = this.getAttribute('data-target');
-            const content = document.getElementById(targetId);
+            const content = doc.getElementById(targetId);
             const arrow = this.querySelector('.rtbcb-toggle-arrow');
             const text = this.querySelector('.rtbcb-toggle-text');
             const section = this.closest('.rtbcb-section-enhanced');
@@ -676,6 +676,7 @@ function displayReport(htmlContent) {
     iframe.addEventListener('load', () => {
         if ( iframe.contentDocument ) {
             initializeAIHighlights( iframe.contentDocument );
+            initializeSectionToggles( iframe.contentDocument );
         }
     });
     document.getElementById('report-container').appendChild(iframe);
