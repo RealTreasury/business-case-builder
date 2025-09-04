@@ -1,50 +1,70 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) {
-    define( 'ABSPATH', __DIR__ . '/../' );
+	define( 'ABSPATH', __DIR__ . '/../' );
 }
 defined( 'ABSPATH' ) || exit;
 
 require_once __DIR__ . '/../inc/class-rtbcb-ajax.php';
 
 if ( ! function_exists( '__' ) ) {
-    function __( $text, $domain = null ) {
-        return $text;
-    }
+	function __( $text, $domain = null ) {
+		return $text;
+	}
 }
 if ( ! function_exists( 'esc_html__' ) ) {
-    function esc_html__( $text, $domain = null ) {
-        return $text;
-    }
+	function esc_html__( $text, $domain = null ) {
+		return $text;
+	}
 }
 if ( ! function_exists( 'esc_html' ) ) {
-    function esc_html( $text ) {
-        return $text;
-    }
+	function esc_html( $text ) {
+		return $text;
+	}
+}
+if ( ! function_exists( 'esc_html_e' ) ) {
+	function esc_html_e( $text, $domain = null ) {
+		echo $text;
+	}
 }
 if ( ! function_exists( 'esc_attr' ) ) {
-    function esc_attr( $text ) {
-        return $text;
-    }
+	function esc_attr( $text ) {
+		return $text;
+	}
 }
 if ( ! function_exists( 'sanitize_text_field' ) ) {
-    function sanitize_text_field( $text ) {
-        return $text;
-    }
+	function sanitize_text_field( $text ) {
+		return $text;
+	}
+}
+if ( ! function_exists( 'number_format_i18n' ) ) {
+	function number_format_i18n( $number ) {
+		return number_format( $number );
+	}
+}
+if ( ! function_exists( 'esc_js' ) ) {
+	function esc_js( $text ) {
+		return $text;
+	}
 }
 if ( ! function_exists( 'current_time' ) ) {
-    function current_time( $type ) {
-        return '2024-01-01';
-    }
+	function current_time( $type ) {
+		return '2024-01-01';
+	}
 }
 if ( ! function_exists( 'rtbcb_get_analysis_type' ) ) {
-    function rtbcb_get_analysis_type() {
-        return 'test';
-    }
+	function rtbcb_get_analysis_type() {
+		return 'test';
+	}
+}
+if ( ! function_exists( 'wp_json_encode' ) ) {
+	function wp_json_encode( $data ) {
+		return json_encode( $data );
+	}
 }
 
 $financial_benchmarks = [
-    'industry_benchmarks' => [ [ 'metric' => 'EBITDA Margin', 'value' => '20%', 'source' => 'Report' ] ],
-    'valuation_multiples' => [ [ 'metric' => 'P/E', 'range' => '15x-20x' ] ],
+	'industry_benchmarks' => [ [ 'metric' => 'EBITDA Margin', 'value' => '20%', 'source' => 'Report' ] ],
+	'valuation_multiples' => [ [ 'metric' => 'P/E', 'range' => '15x-20x' ] ],
 ];
 
 $user_inputs     = [ 'company_name' => 'Demo Corp', 'industry' => 'Finance' ];
@@ -62,8 +82,8 @@ include __DIR__ . '/../templates/comprehensive-report-template.php';
 $output = ob_get_clean();
 
 if ( strpos( $output, 'EBITDA Margin: 20%' ) === false || strpos( $output, 'P/E: 15x-20x' ) === false ) {
-    echo "Financial benchmarks template render failed.\n";
-    exit( 1 );
+	echo "Financial benchmarks template render failed.\n";
+	exit( 1 );
 }
 
 echo "Financial benchmarks template render test passed.\n";
