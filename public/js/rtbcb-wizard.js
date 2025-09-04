@@ -98,19 +98,47 @@ window.closeBusinessCaseModal = function() {
 
 // Initialize when DOM is ready, even if the script loads late
 const initBusinessCaseBuilder = () => {
-	try {
-		if ( document.getElementById( 'rtbcbForm' ) ) {
-			window.businessCaseBuilder = new BusinessCaseBuilder();
-		}
-	} catch ( error ) {
-		console.error( 'BusinessCaseBuilder initialization failed:', error );
-	}
+try {
+if ( window.businessCaseBuilder ) {
+return true;
+}
+
+if ( document.getElementById( 'rtbcbForm' ) ) {
+window.businessCaseBuilder = new BusinessCaseBuilder();
+return true;
+}
+} catch ( error ) {
+console.error( 'BusinessCaseBuilder initialization failed:', error );
+}
+return false;
+};
+
+const setupBusinessCaseBuilder = () => {
+if ( initBusinessCaseBuilder() ) {
+return;
+}
+
+if ( typeof MutationObserver !== 'undefined' ) {
+const observer = new MutationObserver( () => {
+if ( initBusinessCaseBuilder() ) {
+observer.disconnect();
+}
+} );
+observer.observe( document.body, { childList: true, subtree: true } );
+}
+
+const start = Date.now();
+const interval = setInterval( () => {
+if ( initBusinessCaseBuilder() || Date.now() - start > 10000 ) {
+clearInterval( interval );
+}
+}, 500 );
 };
 
 if ( document.readyState === 'loading' ) {
-	document.addEventListener( 'DOMContentLoaded', initBusinessCaseBuilder );
+document.addEventListener( 'DOMContentLoaded', setupBusinessCaseBuilder );
 } else {
-	initBusinessCaseBuilder();
+setupBusinessCaseBuilder();
 }
 
 class BusinessCaseBuilder {
