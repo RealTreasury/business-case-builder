@@ -540,20 +540,21 @@ echo '<li>' . esc_html( $label . ': ' . $value ) . '</li>';
 <?php foreach ( $technology_strategy['implementation_roadmap'] as $step ) : ?>
 	<?php if ( is_array( $step ) ) : ?>
 	<?php
-	$phase      = sanitize_text_field( $step['phase'] ?? '' );
-	$timeline   = sanitize_text_field( $step['timeline'] ?? '' );
-	$activities = array_map( 'sanitize_text_field', (array) ( $step['activities'] ?? [] ) );
-	$parts      = array_filter( [ $phase, $timeline ] );
-	$summary    = implode( ' - ', $parts );
+	$phase    = function_exists( 'sanitize_text_field' ) ? sanitize_text_field( $step['phase'] ?? '' ) : ( $step['phase'] ?? '' );
+	$timeline = function_exists( 'sanitize_text_field' ) ? sanitize_text_field( $step['timeline'] ?? '' ) : ( $step['timeline'] ?? '' );
+	$raw_activities = (array) ( $step['activities'] ?? [] );
+	$activities     = function_exists( 'sanitize_text_field' ) ? array_map( 'sanitize_text_field', $raw_activities ) : array_map( 'strval', $raw_activities );
+	$parts   = array_filter( [ $phase, $timeline ] );
+	$summary = implode( ' - ', $parts );
 	if ( ! empty( $activities ) ) {
 	$summary .= $summary ? ': ' : '';
 	$summary .= implode( ', ', $activities );
 	}
-	?>
-	<li><?php echo esc_html( $summary ); ?></li>
-	<?php else : ?>
-	<li><?php echo esc_html( $step ); ?></li>
-	<?php endif; ?>
+?>
+       <li><?php echo esc_html( $summary ); ?></li>
+       <?php else : ?>
+       <li><?php echo esc_html( $step ); ?></li>
+       <?php endif; ?>
 <?php endforeach; ?>
 </ul>
 </div>
