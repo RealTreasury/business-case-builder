@@ -3,11 +3,13 @@
  * Handles multi-step form navigation, validation, and submission
  */
 
+console.log('RTBCB: Wizard initializing');
+
 // Ensure Chart.js date adapter is registered in Node/CommonJS environments.
 if ( typeof module === 'object' && module.exports && typeof require === 'function' ) {
-	try {
-		require( './chartjs-adapter-date-fns.bundle.min.js' );
-	} catch ( e ) {
+        try {
+                require( './chartjs-adapter-date-fns.bundle.min.js' );
+        } catch ( e ) {
 		// Adapter not loaded in tests; ignore.
 	}
 }
