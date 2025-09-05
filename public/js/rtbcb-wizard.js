@@ -7,9 +7,9 @@ console.log('RTBCB: Wizard initializing');
 
 // Ensure Chart.js date adapter is registered in Node/CommonJS environments.
 if ( typeof module === 'object' && module.exports && typeof require === 'function' ) {
-        try {
-                require( './chartjs-adapter-date-fns.bundle.min.js' );
-        } catch ( e ) {
+		try {
+				require( './chartjs-adapter-date-fns.bundle.min.js' );
+		} catch ( e ) {
 		// Adapter not loaded in tests; ignore.
 	}
 }
@@ -148,9 +148,9 @@ setupBusinessCaseBuilder();
 }
 
 class BusinessCaseBuilder {
-        constructor() {
-                this.currentStep = 1;
-                this.totalSteps = 0;
+		constructor() {
+				this.currentStep = 1;
+				this.totalSteps = 0;
 		this.form = document.getElementById('rtbcbForm');
 		this.overlay = document.getElementById('rtbcbModalOverlay');
 		this.ajaxUrl = ( typeof rtbcb_ajax !== 'undefined' && isValidUrl( rtbcb_ajax.ajax_url ) ) ? rtbcb_ajax.ajax_url : '';
@@ -182,12 +182,12 @@ this.lastValidationErrors = [];
 		this.init();
 	}
 
-        init() {
-                this.cacheElements();
-                this.bindEvents();
-                this.restorePersistentState();
-                this.initializePath();
-        }
+		init() {
+				this.cacheElements();
+				this.bindEvents();
+				this.restorePersistentState();
+				this.initializePath();
+		}
 
 	cacheElements() {
 		// Navigation buttons
@@ -216,12 +216,25 @@ this.lastValidationErrors = [];
 	}
 
 	bindEvents() {
+		console.log( 'RTBCB: bindEvents executed' );
+
 		// Navigation buttons
 		if ( this.nextBtn ) {
-			console.log('RTBCB: Binding next button click handler');
+			console.log( 'RTBCB: Binding next button click handler' );
 			this.nextBtn.addEventListener( 'click', this.handleNext );
 		} else {
-			console.warn('RTBCB: Next button not found');
+			console.warn( 'RTBCB: Next button not found' );
+			if ( typeof MutationObserver !== 'undefined' ) {
+				const observer = new MutationObserver( () => {
+					this.nextBtn = this.form.querySelector( '.rtbcb-nav-next' );
+					if ( this.nextBtn ) {
+						console.log( 'RTBCB: Dynamically found next button, binding handler' );
+						this.nextBtn.addEventListener( 'click', this.handleNext );
+						observer.disconnect();
+					}
+				} );
+				observer.observe( this.form, { childList: true, subtree: true } );
+			}
 		}
 
 		if ( this.prevBtn ) {
@@ -231,24 +244,24 @@ this.lastValidationErrors = [];
 		// Form submission
 		this.form.addEventListener( 'submit', this.handleSubmit );
 
-		 // Pain point cards and report type changes
-		 this.form.addEventListener('change', (event) => {
-			 const target = event.target;
+		// Pain point cards and report type changes
+		this.form.addEventListener( 'change', ( event ) => {
+			const target = event.target;
 
 			if (target.matches('input[name="report_type"]')) {
-			        console.log('RTBCB: Report type changed to:', target.value);
-			        this.initializePath();
+					console.log('RTBCB: Report type changed to:', target.value);
+					this.initializePath();
 			}
 
 			 if (target.matches('input[name="pain_points[]"]')) {
-			         const card = target.closest('.rtbcb-pain-point-card');
-			         if (card) {
-			                 card.classList.toggle('rtbcb-selected', target.checked);
-			         }
-			         const checkedBoxes = this.form.querySelectorAll('input[name="pain_points[]"]:checked');
-			         if (checkedBoxes.length > 0) {
-			                 this.clearStepError(5);
-			         }
+					 const card = target.closest('.rtbcb-pain-point-card');
+					 if (card) {
+							 card.classList.toggle('rtbcb-selected', target.checked);
+					 }
+					 const checkedBoxes = this.form.querySelectorAll('input[name="pain_points[]"]:checked');
+					 if (checkedBoxes.length > 0) {
+							 this.clearStepError(5);
+					 }
 			 }
 		 });
 
@@ -275,93 +288,93 @@ this.lastValidationErrors = [];
 		 if (this.reportType === 'enhanced') {
 			 // Enable all enhanced fields
 			 this.form.querySelectorAll('.rtbcb-enhanced-only input, .rtbcb-enhanced-only select').forEach(field => {
-			         field.disabled = false;
-			         if (field.closest('.rtbcb-field-required')) {
-			                 field.setAttribute('required', 'required');
-			         }
+					 field.disabled = false;
+					 if (field.closest('.rtbcb-field-required')) {
+							 field.setAttribute('required', 'required');
+					 }
 			 });
 			 this.form.querySelectorAll('.rtbcb-enhanced-only').forEach(el => {
-			         el.style.display = 'block';
+					 el.style.display = 'block';
 			 });
 
-                        // Set enhanced step configuration
-                        this.steps = [
-                                this.form.querySelector('.rtbcb-wizard-step[data-step="1"]'),
-                                this.form.querySelector('.rtbcb-wizard-step[data-step="2"]'),
-                                this.form.querySelector('.rtbcb-wizard-step[data-step="3"]'),
-                                this.form.querySelector('.rtbcb-wizard-step[data-step="4"]'),
-                                this.form.querySelector('.rtbcb-wizard-step[data-step="5"]'),
-                                this.form.querySelector('.rtbcb-wizard-step[data-step="6"]'),
-                               this.form.querySelector('.rtbcb-wizard-step[data-step="7"]')
-                        ];
-                        this.getStepFields = this.getEnhancedFields.bind(this);
+						// Set enhanced step configuration
+						this.steps = [
+								this.form.querySelector('.rtbcb-wizard-step[data-step="1"]'),
+								this.form.querySelector('.rtbcb-wizard-step[data-step="2"]'),
+								this.form.querySelector('.rtbcb-wizard-step[data-step="3"]'),
+								this.form.querySelector('.rtbcb-wizard-step[data-step="4"]'),
+								this.form.querySelector('.rtbcb-wizard-step[data-step="5"]'),
+								this.form.querySelector('.rtbcb-wizard-step[data-step="6"]'),
+							   this.form.querySelector('.rtbcb-wizard-step[data-step="7"]')
+						];
+						this.getStepFields = this.getEnhancedFields.bind(this);
 
-                        const stepCount = this.steps.filter(Boolean).length;
-                        this.progressSteps = Array.from(this.form.querySelectorAll('.rtbcb-progress-step'))
-                                .filter(Boolean)
-                                .slice(0, stepCount);
-                        this.progressSteps.forEach((step, index) => {
-                                if (step) {
-                                        step.style.display = 'flex';
-                                        step.dataset.step = index + 1;
-                                        const num = step.querySelector('.rtbcb-progress-number');
-                                        if (num) {
-                                                num.textContent = index + 1;
-                                        }
-                                }
-                        });
+						const stepCount = this.steps.filter(Boolean).length;
+						this.progressSteps = Array.from(this.form.querySelectorAll('.rtbcb-progress-step'))
+								.filter(Boolean)
+								.slice(0, stepCount);
+						this.progressSteps.forEach((step, index) => {
+								if (step) {
+										step.style.display = 'flex';
+										step.dataset.step = index + 1;
+										const num = step.querySelector('.rtbcb-progress-number');
+										if (num) {
+												num.textContent = index + 1;
+										}
+								}
+						});
 
-                        this.totalSteps = stepCount;
-                } else {
+						this.totalSteps = stepCount;
+				} else {
 			 // Basic path logic
 			 this.form.querySelectorAll('.rtbcb-enhanced-only input, .rtbcb-enhanced-only select').forEach(field => {
-			         field.disabled = true;
-			         field.removeAttribute('required');
+					 field.disabled = true;
+					 field.removeAttribute('required');
 			 });
 			 this.form.querySelectorAll('.rtbcb-enhanced-only').forEach(el => {
-			         el.style.display = 'none';
+					 el.style.display = 'none';
 			 });
 
 
-                        this.steps = [
-                                this.form.querySelector('.rtbcb-wizard-step[data-step="1"]'),
-                                this.form.querySelector('.rtbcb-wizard-step[data-step="2"]'),
-                                this.form.querySelector('.rtbcb-wizard-step[data-step="7"]')
-                        ];
-                        this.getStepFields = (step) => this.basicStepFields[step] || [];
+						this.steps = [
+								this.form.querySelector('.rtbcb-wizard-step[data-step="1"]'),
+								this.form.querySelector('.rtbcb-wizard-step[data-step="2"]'),
+								this.form.querySelector('.rtbcb-wizard-step[data-step="7"]')
+						];
+						this.getStepFields = (step) => this.basicStepFields[step] || [];
 
-                        const stepCount = this.steps.filter(Boolean).length;
-                        this.progressSteps = [
-                                this.form.querySelector('.rtbcb-progress-step[data-step="1"]'),
-                                this.form.querySelector('.rtbcb-progress-step[data-step="2"]'),
-                                this.form.querySelector('.rtbcb-progress-step[data-step="7"]')
-                        ].filter(Boolean)
-                                .slice(0, stepCount);
+						const stepCount = this.steps.filter(Boolean).length;
+						this.progressSteps = [
+								this.form.querySelector('.rtbcb-progress-step[data-step="1"]'),
+								this.form.querySelector('.rtbcb-progress-step[data-step="2"]'),
+								this.form.querySelector('.rtbcb-progress-step[data-step="7"]')
+						].filter(Boolean)
+								.slice(0, stepCount);
 
-                        // Hide unused progress steps and renumber
-                        this.form.querySelectorAll('.rtbcb-progress-step').forEach(step => {
-                                if (step) {
-                                        step.style.display = 'none';
-                                }
-                        });
-                        this.progressSteps.forEach((step, index) => {
-                                step.style.display = 'flex';
-                                step.dataset.step = index + 1;
-                                const num = step.querySelector('.rtbcb-progress-number');
-                                if (num) {
-                                        num.textContent = index + 1;
-                                }
-                        });
+						// Hide unused progress steps and renumber
+						this.form.querySelectorAll('.rtbcb-progress-step').forEach(step => {
+								if (step) {
+										step.style.display = 'none';
+								}
+						});
+						this.progressSteps.forEach((step, index) => {
+								step.style.display = 'flex';
+								step.dataset.step = index + 1;
+								const num = step.querySelector('.rtbcb-progress-number');
+								if (num) {
+										num.textContent = index + 1;
+								}
+						});
 
-                        this.totalSteps = stepCount;
-                }
+						this.totalSteps = stepCount;
+				}
 
-                console.log('RTBCB: Path initialized. Total steps:', this.totalSteps, 'Current step fields:', this.getStepFields(this.currentStep));
+				console.log('RTBCB: Path initialized. Total steps:', this.totalSteps, 'Current step fields:', this.getStepFields(this.currentStep));
 
-                this.currentStep = Math.min(this.currentStep, this.totalSteps);
-                this.updateStepVisibility();
-                this.updateProgressIndicator();
-        }
+				this.currentStep = Math.min(this.currentStep, this.totalSteps);
+				this.updateStepVisibility();
+				this.updateProgressIndicator();
+		}
 
 	saveFormData( formData ) {
 		try {
@@ -400,20 +413,20 @@ this.lastValidationErrors = [];
 				this.showEnhancedHTMLReport( reportHtml );
 				return;
 			}
-                        const savedData = storage ? storage.getItem( 'rtbcbFormData' ) : null;
-                        if ( savedData ) {
-                                try {
-                                        const parsed = JSON.parse( savedData );
-                                        const defaultTypeEl = this.form.querySelector( 'input[name="report_type"]:checked' );
-                                        const defaultType = defaultTypeEl ? defaultTypeEl.value : 'basic';
-                                        this.populateForm( parsed );
-                                        const savedTypeEl = this.form.querySelector( 'input[name="report_type"]:checked' );
-                                        const savedType = savedTypeEl ? savedTypeEl.value : defaultType;
-                                        if ( savedType !== defaultType ) {
-                                                this.initializePath();
-                                        }
-                                } catch ( err ) {}
-                        }
+						const savedData = storage ? storage.getItem( 'rtbcbFormData' ) : null;
+						if ( savedData ) {
+								try {
+										const parsed = JSON.parse( savedData );
+										const defaultTypeEl = this.form.querySelector( 'input[name="report_type"]:checked' );
+										const defaultType = defaultTypeEl ? defaultTypeEl.value : 'basic';
+										this.populateForm( parsed );
+										const savedTypeEl = this.form.querySelector( 'input[name="report_type"]:checked' );
+										const savedType = savedTypeEl ? savedTypeEl.value : defaultType;
+										if ( savedType !== defaultType ) {
+												this.initializePath();
+										}
+								} catch ( err ) {}
+						}
 			const jobId = storage.getItem( 'rtbcbJobId' );
 			if ( jobId ) {
 				if ( this.overlay ) {
@@ -546,11 +559,11 @@ this.lastValidationErrors = [];
 		if (stepNumber === 2) {
 			const jobField = step.querySelector('[name="job_title"]');
 			if (jobField) {
-			        jobField.removeAttribute('required');
-			        const index = requiredFields.indexOf('job_title');
-			        if (index !== -1) {
-			                requiredFields.splice(index, 1);
-			        }
+					jobField.removeAttribute('required');
+					const index = requiredFields.indexOf('job_title');
+					if (index !== -1) {
+							requiredFields.splice(index, 1);
+					}
 			}
 		}
 
@@ -592,13 +605,13 @@ this.lastValidationErrors = [];
 					continue;
 				}
 
-			        if (!this.validateField(field, true)) {
-			                isValid = false;
-			                const fieldContainer = field.closest('.rtbcb-field');
-			                const label = fieldContainer ? fieldContainer.querySelector('label') : null;
-			                const fieldLabel = label ? label.textContent.trim() : fieldName;
-			                this.lastValidationErrors.push( fieldLabel );
-			        }
+					if (!this.validateField(field, true)) {
+							isValid = false;
+							const fieldContainer = field.closest('.rtbcb-field');
+							const label = fieldContainer ? fieldContainer.querySelector('label') : null;
+							const fieldLabel = label ? label.textContent.trim() : fieldName;
+							this.lastValidationErrors.push( fieldLabel );
+					}
 			}
 
 			return isValid;
@@ -615,10 +628,10 @@ this.lastValidationErrors = [];
 			const checked = Array.from( group ).some( ( radio ) => radio.checked );
 
 			if ( ! checked ) {
-			        errorMessage = __( 'This field is required', 'rtbcb' );
-			        group.forEach( ( radio ) => radio.classList.add( 'rtbcb-field-invalid' ) );
-			        this.showFieldError( field, errorMessage );
-			        return false;
+					errorMessage = __( 'This field is required', 'rtbcb' );
+					group.forEach( ( radio ) => radio.classList.add( 'rtbcb-field-invalid' ) );
+					this.showFieldError( field, errorMessage );
+					return false;
 			}
 
 			group.forEach( ( radio ) => radio.classList.remove( 'rtbcb-field-invalid' ) );
@@ -629,14 +642,14 @@ this.lastValidationErrors = [];
 		// Required field check
 		if ( forceRequired || field.hasAttribute( 'required' ) ) {
 			if ( field.type === 'checkbox' ) {
-			        const checked = this.form.querySelectorAll( `[name="${ field.name }"]:checked` ).length > 0;
-			        if ( ! checked ) {
-			                errorMessage = __( 'This field is required', 'rtbcb' );
-			                isValid = false;
-			        }
+					const checked = this.form.querySelectorAll( `[name="${ field.name }"]:checked` ).length > 0;
+					if ( ! checked ) {
+							errorMessage = __( 'This field is required', 'rtbcb' );
+							isValid = false;
+					}
 			} else if ( ! value ) {
-			        errorMessage = __( 'This field is required', 'rtbcb' );
-			        isValid = false;
+					errorMessage = __( 'This field is required', 'rtbcb' );
+					isValid = false;
 			}
 		}
 
@@ -776,32 +789,32 @@ this.lastValidationErrors = [];
 		}
 	}
 
-        updateProgressIndicator() {
-                const activeIndex = Math.min(this.currentStep, this.progressSteps.length);
+		updateProgressIndicator() {
+				const activeIndex = Math.min(this.currentStep, this.progressSteps.length);
 
-                this.progressSteps.forEach((step, index) => {
-                        if (!step) {
-                                return;
-                        }
+				this.progressSteps.forEach((step, index) => {
+						if (!step) {
+								return;
+						}
 
-                        const stepNum = index + 1;
+						const stepNum = index + 1;
 
-                        if (stepNum < activeIndex) {
-                                step.classList.add('completed');
-                                step.classList.remove('active');
-                        } else if (stepNum === activeIndex) {
-                                step.classList.add('active');
-                                step.classList.remove('completed');
-                        } else {
-                                step.classList.remove('active', 'completed');
-                        }
-                });
+						if (stepNum < activeIndex) {
+								step.classList.add('completed');
+								step.classList.remove('active');
+						} else if (stepNum === activeIndex) {
+								step.classList.add('active');
+								step.classList.remove('completed');
+						} else {
+								step.classList.remove('active', 'completed');
+						}
+				});
 
-                if (this.progressLine) {
-                        const progress = (this.currentStep / this.totalSteps) * 100;
-                        this.progressLine.style.width = `${progress}%`;
-                }
-        }
+				if (this.progressLine) {
+						const progress = (this.currentStep / this.totalSteps) * 100;
+						this.progressLine.style.width = `${progress}%`;
+				}
+		}
 
 	scrollToTop() {
 		const modalBody = this.form.closest('.rtbcb-modal-body');
@@ -1056,16 +1069,16 @@ this.lastValidationErrors = [];
 		const skipFields = ['report_type'];
 		for (const [key, value] of rawData.entries()) {
 			if (skipFields.includes(key)) {
-			        continue;
+					continue;
 			}
 			if (key === 'job_title' && !value) {
-			        continue;
+					continue;
 			}
 			if (numericFields.includes(key)) {
-			        const num = parseFloat(value);
-			        formData.append(key, Number.isFinite(num) ? num : 0);
+					const num = parseFloat(value);
+					formData.append(key, Number.isFinite(num) ? num : 0);
 			} else {
-			        formData.append(key, value);
+					formData.append(key, value);
 			}
 		}
 
@@ -1777,7 +1790,7 @@ this.lastValidationErrors = [];
 						callbacks: {
 							label: function(context) {
 								return context.dataset.label + ': $' + 
-   									new Intl.NumberFormat().format(context.raw);
+									new Intl.NumberFormat().format(context.raw);
 							}
 						}
 					},
@@ -1871,7 +1884,7 @@ this.lastValidationErrors = [];
 							Try Again
 						</button>
 						<a href="/request-processing/" target="_blank"
-   						style="background: #f3f4f6; color: #4b5563; border: none; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block; margin: 0 8px 8px 0;">
+						style="background: #f3f4f6; color: #4b5563; border: none; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block; margin: 0 8px 8px 0;">
 							Request Processing
 						</a>
 					</div>
@@ -1899,24 +1912,24 @@ this.lastValidationErrors = [];
 				confidence: data.recommendation?.confidence || data.metadata?.confidence_level || 0.75,
 				reasoning: data.recommendation?.reasoning || data.technology_strategy?.recommended_category || ''
 			},
-   		executiveSummary: data.executive_summary || data.narrative || {},
-   		operationalAnalysis: data.operational_insights || {},
-   		industryContext: {
-   			sector_analysis: context.sector_analysis || {},
-   			benchmarking: context.benchmarking || {},
-   			regulatory_landscape: context.regulatory_landscape || {}
-   		},
-   		nextActions: data.narrative?.next_actions || [
-   			...(data.action_plan?.immediate_steps || []),
-   			...(data.action_plan?.short_term_milestones || []),
-   			...(data.action_plan?.long_term_objectives || [])
-   		],
-   		risks: data.risks || [
-   			...(data.risk_analysis?.implementation_risks || []),
-   			...(data.risk_analysis?.risk_matrix || []),
-   			...(data.risk_analysis?.mitigation_strategies || [])
-   		]
-   	};
+		executiveSummary: data.executive_summary || data.narrative || {},
+		operationalAnalysis: data.operational_insights || {},
+		industryContext: {
+			sector_analysis: context.sector_analysis || {},
+			benchmarking: context.benchmarking || {},
+			regulatory_landscape: context.regulatory_landscape || {}
+		},
+		nextActions: data.narrative?.next_actions || [
+			...(data.action_plan?.immediate_steps || []),
+			...(data.action_plan?.short_term_milestones || []),
+			...(data.action_plan?.long_term_objectives || [])
+		],
+		risks: data.risks || [
+			...(data.risk_analysis?.implementation_risks || []),
+			...(data.risk_analysis?.risk_matrix || []),
+			...(data.risk_analysis?.mitigation_strategies || [])
+		]
+	};
 
 		// Close modal
 		window.closeBusinessCaseModal();
@@ -1924,8 +1937,8 @@ this.lastValidationErrors = [];
 		// Render results
 		const resultsContainer = document.getElementById('rtbcbResults');
 		if (resultsContainer) {
-   		resultsContainer.innerHTML = this.renderResults(mapped);
-   		this.populateRiskAssessment(mapped.risks);
+		resultsContainer.innerHTML = this.renderResults(mapped);
+		this.populateRiskAssessment(mapped.risks);
 			resultsContainer.style.display = 'block';
 			this.saveFinalReport( resultsContainer.innerHTML );
 			resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1937,15 +1950,15 @@ this.lastValidationErrors = [];
 
 	renderResults(data) {
 		const {
-   		scenarios,
-   		recommendation,
-   		companyName,
-   		executiveSummary,
-   		operationalAnalysis,
-   		industryContext,
-   		nextActions,
-   		risks
-   	} = data;
+		scenarios,
+		recommendation,
+		companyName,
+		executiveSummary,
+		operationalAnalysis,
+		industryContext,
+		nextActions,
+		risks
+	} = data;
 		const displayName = companyName || 'Your Company';
 
 		return `
@@ -1961,14 +1974,14 @@ this.lastValidationErrors = [];
 
 				${this.renderRecommendation(recommendation, displayName)}
 				${this.renderROISummary(scenarios, displayName)}
-   			${this.renderExecutiveSummary(executiveSummary)}
-   			${this.renderOperationalAnalysis(operationalAnalysis)}
+			${this.renderExecutiveSummary(executiveSummary)}
+			${this.renderOperationalAnalysis(operationalAnalysis)}
 ${this.renderIndustryInsights(industryContext)}
-   			${risks && risks.length ? this.renderRiskAssessmentSection() : ''}
-   			${this.renderNextSteps(nextActions || [], displayName)}
-   			${this.renderActions()}
-   		</div>
-   	`;
+			${risks && risks.length ? this.renderRiskAssessmentSection() : ''}
+			${this.renderNextSteps(nextActions || [], displayName)}
+			${this.renderActions()}
+		</div>
+	`;
    }
 
 	renderRecommendation(recommendation, companyName) {
@@ -2052,21 +2065,21 @@ ${this.renderIndustryInsights(industryContext)}
 	}
 
    renderExecutiveSummary(summary = {}) {
-   	const positioning = summary?.strategic_positioning || '';
-   	const recommendation = summary?.executive_recommendation || summary?.narrative || '';
-   	const keyDrivers = Array.isArray(summary?.key_value_drivers) ? summary.key_value_drivers : [];
-   	const renderList = items => items.map(item => `<li>${this.escapeHTML(item)}</li>`).join('');
-   	if (!positioning && !recommendation && !keyDrivers.length) {
-   		return '';
-   	}
-   	return `
-   		<div class="rtbcb-narrative-section">
-   			<h3>${__('Executive Summary', 'rtbcb')}</h3>
-   			${positioning ? `<p>${this.escapeHTML(positioning)}</p>` : ''}
-   			${recommendation ? `<div class="rtbcb-executive-recommendation"><strong>${__('Executive Recommendation', 'rtbcb')}:</strong> ${this.escapeHTML(recommendation)}</div>` : ''}
-   			${keyDrivers.length ? `<div class="rtbcb-industry-group"><h4>${__('Key Value Drivers', 'rtbcb')}</h4><ul>${renderList(keyDrivers)}</ul></div>` : ''}
-   		</div>
-   	`;
+	const positioning = summary?.strategic_positioning || '';
+	const recommendation = summary?.executive_recommendation || summary?.narrative || '';
+	const keyDrivers = Array.isArray(summary?.key_value_drivers) ? summary.key_value_drivers : [];
+	const renderList = items => items.map(item => `<li>${this.escapeHTML(item)}</li>`).join('');
+	if (!positioning && !recommendation && !keyDrivers.length) {
+		return '';
+	}
+	return `
+		<div class="rtbcb-narrative-section">
+			<h3>${__('Executive Summary', 'rtbcb')}</h3>
+			${positioning ? `<p>${this.escapeHTML(positioning)}</p>` : ''}
+			${recommendation ? `<div class="rtbcb-executive-recommendation"><strong>${__('Executive Recommendation', 'rtbcb')}:</strong> ${this.escapeHTML(recommendation)}</div>` : ''}
+			${keyDrivers.length ? `<div class="rtbcb-industry-group"><h4>${__('Key Value Drivers', 'rtbcb')}</h4><ul>${renderList(keyDrivers)}</ul></div>` : ''}
+		</div>
+	`;
    }
 
 renderOperationalAnalysis(analysis = {}) {
@@ -2209,12 +2222,12 @@ ${upcoming_changes.length ? `<div class="rtbcb-industry-group"><h4>Upcoming Chan
 }
 
    renderRiskAssessmentSection() {
-   	return `
-   		<div class="rtbcb-risk-assessment">
-   			<h3>${__('Risk Assessment', 'rtbcb')}</h3>
-   			<ul class="rtbcb-risk-list"></ul>
-   		</div>
-   	`;
+	return `
+		<div class="rtbcb-risk-assessment">
+			<h3>${__('Risk Assessment', 'rtbcb')}</h3>
+			<ul class="rtbcb-risk-list"></ul>
+		</div>
+	`;
    }
 
 	populateRiskAssessment(risks) {
