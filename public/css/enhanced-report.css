@@ -492,6 +492,8 @@
     gap: 1rem;
     margin-bottom: 1rem;
     flex-wrap: wrap;
+    position: relative;
+    padding-left: 2.5rem;
 }
 
 .rtbcb-timeline-icon {
@@ -505,7 +507,9 @@
     justify-content: center;
     font-size: 1.25rem;
     position: absolute;
-    left: -1.25rem;
+    left: -2.25rem;
+    top: 50%;
+    transform: translateY(-50%);
     z-index: 2;
 }
 

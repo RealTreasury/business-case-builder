@@ -716,7 +716,7 @@ $impact     = $risk_item['impact'] ?? '';
 				<?php if ( ! empty( $action_plan['immediate_steps'] ) ) : ?>
 					<div class="rtbcb-timeline-phase immediate">
 						<div class="rtbcb-timeline-header">
-							<div class="rtbcb-timeline-icon">⚡</div>
+							<div class="rtbcb-timeline-icon" aria-hidden="true">⚡</div>
 							<h3><?php echo esc_html__( 'Immediate Actions', 'rtbcb' ); ?></h3>
 							<span class="rtbcb-timeline-duration"><?php echo esc_html__( 'Next 30 days', 'rtbcb' ); ?></span>
 						</div>
@@ -731,7 +731,7 @@ $impact     = $risk_item['impact'] ?? '';
 				<?php if ( ! empty( $action_plan['short_term_milestones'] ) ) : ?>
 					<div class="rtbcb-timeline-phase short-term">
 						<div class="rtbcb-timeline-header">
-							<div class="rtbcb-timeline-icon">📅</div>
+							<div class="rtbcb-timeline-icon" aria-hidden="true">📅</div>
 							<h3><?php echo esc_html__( 'Short-term Milestones', 'rtbcb' ); ?></h3>
 							<span class="rtbcb-timeline-duration"><?php echo esc_html__( '3-6 months', 'rtbcb' ); ?></span>
 						</div>
@@ -746,7 +746,7 @@ $impact     = $risk_item['impact'] ?? '';
 				<?php if ( ! empty( $action_plan['long_term_objectives'] ) ) : ?>
 					<div class="rtbcb-timeline-phase long-term">
 						<div class="rtbcb-timeline-header">
-							<div class="rtbcb-timeline-icon">🎯</div>
+							<div class="rtbcb-timeline-icon" aria-hidden="true">🎯</div>
 							<h3><?php echo esc_html__( 'Long-term Objectives', 'rtbcb' ); ?></h3>
 							<span class="rtbcb-timeline-duration"><?php echo esc_html__( '6+ months', 'rtbcb' ); ?></span>
 						</div>
