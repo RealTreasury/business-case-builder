@@ -29,7 +29,7 @@ class SimpleFormData {
 global.FormData = SimpleFormData;
 
 global.fetch = function() {
-    const payload = { success: false, message: 'Please enter your company name.' };
+    const payload = { success: false, data: { message: 'Please enter your company name.' } };
     const response = {
         ok: false,
         status: 400,
@@ -87,7 +87,7 @@ builder.showEnhancedError = (msg) => { errorMessage = msg; };
 
 (async () => {
     await builder.handleSubmit();
-    assert.strictEqual(errorMessage, 'An error occurred while processing your request. Please try again.');
+    assert.strictEqual(errorMessage, 'Please enter your company name.');
     console.log('String error response test passed.');
 })().catch(err => {
     console.error(err);
