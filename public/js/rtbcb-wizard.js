@@ -289,16 +289,17 @@ this.lastValidationErrors = [];
 			        this.form.querySelector('.rtbcb-wizard-step[data-step="7"]')
 			];
 			this.getStepFields = this.getEnhancedFields.bind(this);
-			this.progressSteps = Array.from(this.form.querySelectorAll('.rtbcb-progress-step')).filter(Boolean);
-			 this.progressSteps.forEach((step, index) => {
-			         if (step) {
-			                 step.style.display = 'flex';
-			                 const num = step.querySelector('.rtbcb-progress-number');
-			                 if (num) {
-			                         num.textContent = index + 1;
-			                 }
-			         }
-			 });
+                        this.progressSteps = Array.from(this.form.querySelectorAll('.rtbcb-progress-step')).filter(Boolean);
+                        this.progressSteps.forEach((step, index) => {
+                                if (step) {
+                                        step.style.display = 'flex';
+                                        step.dataset.step = index + 1;
+                                        const num = step.querySelector('.rtbcb-progress-number');
+                                        if (num) {
+                                                num.textContent = index + 1;
+                                        }
+                                }
+                        });
 
 			 this.totalSteps = 7;
 		 } else {
@@ -325,19 +326,20 @@ this.lastValidationErrors = [];
 			         this.form.querySelector('.rtbcb-progress-step[data-step="7"]')
 			 ].filter(Boolean);
 
-			 // Hide unused progress steps and renumber
-			 this.form.querySelectorAll('.rtbcb-progress-step').forEach(step => {
-			         if (step) {
-			                 step.style.display = 'none';
-			         }
-			 });
-			 this.progressSteps.forEach((step, index) => {
-			         step.style.display = 'flex';
-			         const num = step.querySelector('.rtbcb-progress-number');
-			         if (num) {
-			                 num.textContent = index + 1;
-			         }
-			 });
+                        // Hide unused progress steps and renumber
+                        this.form.querySelectorAll('.rtbcb-progress-step').forEach(step => {
+                                if (step) {
+                                        step.style.display = 'none';
+                                }
+                        });
+                        this.progressSteps.forEach((step, index) => {
+                                step.style.display = 'flex';
+                                step.dataset.step = index + 1;
+                                const num = step.querySelector('.rtbcb-progress-number');
+                                if (num) {
+                                        num.textContent = index + 1;
+                                }
+                        });
 
 			 this.totalSteps = 3;
 		 }
@@ -754,23 +756,23 @@ this.lastValidationErrors = [];
 		}
 	}
 
-	updateProgressIndicator() {
-		this.progressSteps.forEach((step, index) => {
-			if ( ! step ) {
-				return;
-			}
-			const stepNum = index + 1;
+        updateProgressIndicator() {
+                this.progressSteps.forEach((step, index) => {
+                        if (!step) {
+                                return;
+                        }
+                        const stepNum = parseInt(step.dataset.step, 10) || index + 1;
 
-			if (stepNum < this.currentStep) {
-				step.classList.add('completed');
-				step.classList.remove('active');
-			} else if (stepNum === this.currentStep) {
-				step.classList.add('active');
-				step.classList.remove('completed');
-			} else {
-				step.classList.remove('active', 'completed');
-			}
-		});
+                        if (stepNum < this.currentStep) {
+                                step.classList.add('completed');
+                                step.classList.remove('active');
+                        } else if (stepNum === this.currentStep) {
+                                step.classList.add('active');
+                                step.classList.remove('completed');
+                        } else {
+                                step.classList.remove('active', 'completed');
+                        }
+                });
 
 		if (this.progressLine) {
 			const progress = (this.currentStep / this.totalSteps) * 100;
