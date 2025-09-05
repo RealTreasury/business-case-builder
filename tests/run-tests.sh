@@ -134,6 +134,7 @@ node tests/wizard-basic-flow.test.js
 node tests/operational-insights-render.test.js
 node tests/progress-cancel-button.test.js
 node tests/wizard-missing-progress-step.test.js
+node tests/wizard-no-form-no-interval.test.js
 npx --yes jest tests/poll-job-completed.test.js --config '{"testEnvironment":"node"}'
 npx --yes jest tests/poll-job-show-results.test.js --config '{"testEnvironment":"node"}'
 npx --yes jest tests/poll-job-progress-text.test.js --config '{"testEnvironment":"node"}'

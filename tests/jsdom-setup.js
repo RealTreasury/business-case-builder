@@ -10,6 +10,8 @@ global.Event = dom.window.Event;
 global.navigator = dom.window.navigator;
 global.HTMLElement.prototype.scrollIntoView = function() {};
 
+global.TEST_ENV = true;
+
 // Expose common DOM helpers on the global object for tests
 global.createElement = (...args) => global.document.createElement(...args);
 global.appendChild = (...args) => global.document.body.appendChild(...args);
