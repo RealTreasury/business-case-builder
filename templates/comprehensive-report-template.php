@@ -1323,7 +1323,9 @@ const text     = toggle.querySelector( '.rtbcb-toggle-text' );
 const section  = toggle.closest( '.rtbcb-section-enhanced' );
 
 if ( content ) {
-const initiallyVisible = content.style.display !== 'none';
+const initiallyVisible = ( typeof window !== 'undefined' && window.getComputedStyle ) ?
+window.getComputedStyle( content ).display !== 'none' :
+content.style.display !== 'none';
 if ( arrow ) {
 arrow.textContent = initiallyVisible ? '▲' : '▼';
 }
@@ -1347,7 +1349,9 @@ const text     = this.querySelector( '.rtbcb-toggle-text' );
 const section  = this.closest( '.rtbcb-section-enhanced' );
 
 if ( content ) {
-const isVisible = content.style.display !== 'none';
+const isVisible = ( typeof window !== 'undefined' && window.getComputedStyle ) ?
+window.getComputedStyle( content ).display !== 'none' :
+content.style.display !== 'none';
 content.style.display = isVisible ? 'none' : 'block';
 
 const nowVisible = ! isVisible;
