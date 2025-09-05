@@ -94,26 +94,27 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 
                                 <div class="rtbcb-step-content">
                                         <div class="rtbcb-field rtbcb-field-required">
-                                                <fieldset class="rtbcb-report-type">
-                                                        <legend><?php esc_html_e( 'Report Type', 'rtbcb' ); ?></legend>
-                                                       <label>
-                                                               <input type="radio" name="report_type" value="basic" checked required />
-                                                               <?php esc_html_e( 'Basic', 'rtbcb' ); ?>
-                                                       </label>
-                                                       <label>
-                                                               <input type="radio" name="report_type" value="enhanced" required />
-                                                               <?php esc_html_e( 'Enhanced', 'rtbcb' ); ?>
-                                                       </label>
-                                                </fieldset>
+                                                <div class="rtbcb-report-type-grid">
+                                                        <div class="rtbcb-report-type-card rtbcb-selected">
+                                                                <label class="rtbcb-report-type-label">
+                                                                        <input type="radio" name="report_type" value="basic" checked hidden />
+                                                                        <div class="rtbcb-report-type-content">
+                                                                                <div class="rtbcb-report-type-icon">📄</div>
+                                                                                <div class="rtbcb-report-type-title"><?php esc_html_e( "Basic", "rtbcb" ); ?></div>
+                                                                        </div>
+                                                                </label>
+                                                        </div>
+                                                        <div class="rtbcb-report-type-card">
+                                                                <label class="rtbcb-report-type-label">
+                                                                        <input type="radio" name="report_type" value="enhanced" hidden />
+                                                                        <div class="rtbcb-report-type-content">
+                                                                                <div class="rtbcb-report-type-icon">📈</div>
+                                                                                <div class="rtbcb-report-type-title"><?php esc_html_e( "Enhanced", "rtbcb" ); ?></div>
+                                                                        </div>
+                                                                </label>
+                                                        </div>
+                                                </div>
                                         </div>
-                                </div>
-                       </div>
-
-                        <!-- Step 2: Company Profile - UPDATED -->
-                        <div class="rtbcb-wizard-step" data-step="2">
-                                <div class="rtbcb-step-header">
-                                        <h3><?php esc_html_e( 'Tell us about your company', 'rtbcb' ); ?></h3>
-                                        <p><?php esc_html_e( 'This helps us provide relevant recommendations for your organization.', 'rtbcb' ); ?></p>
                                 </div>
 
                                 <div class="rtbcb-step-content">

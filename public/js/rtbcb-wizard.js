@@ -245,31 +245,47 @@ this.lastValidationErrors = [];
 		// Form submission
 		this.form.addEventListener( 'submit', this.handleSubmit );
 
-		// Pain point cards and report type changes
-		this.form.addEventListener( 'change', ( event ) => {
-			const target = event.target;
+// Pain point card changes
+this.form.addEventListener( 'change', ( event ) => {
+const target = event.target;
 
-                        if (target.matches('input[name="report_type"]')) {
-                                        console.log('RTBCB: Report type changed to:', target.value);
-                                        this.initializePath();
-                        }
+if (target.matches('input[name="pain_points[]"]')) {
+const card = target.closest('.rtbcb-pain-point-card');
+if (card) {
+card.classList.toggle('rtbcb-selected', target.checked);
+}
+const checkedBoxes = this.form.querySelectorAll('input[name="pain_points[]"]:checked');
+if (checkedBoxes.length > 0) {
+const stepEl   = target.closest('.rtbcb-wizard-step');
+const stepIndex = Array.from(this.steps).indexOf(stepEl) + 1;
+this.clearStepError(stepIndex);
+}
+}
+});
 
-                        if (target.matches('input[name="pain_points[]"]')) {
-                                const card = target.closest('.rtbcb-pain-point-card');
-                                if (card) {
-                                        card.classList.toggle('rtbcb-selected', target.checked);
-                                }
-                                const checkedBoxes = this.form.querySelectorAll('input[name="pain_points[]"]:checked');
-                                if (checkedBoxes.length > 0) {
-                                        const stepEl   = target.closest('.rtbcb-wizard-step');
-                                        const stepIndex = Array.from(this.steps).indexOf(stepEl) + 1;
-                                        this.clearStepError(stepIndex);
-                                }
-                        }
-                });
+// Report type card clicks
+this.form.addEventListener('click', (event) => {
+const card = event.target.closest('.rtbcb-report-type-card');
+if (card) {
+const input = card.querySelector('input[name="report_type"]');
+if (input) {
+this.form.querySelectorAll('.rtbcb-report-type-card').forEach((c) => {
+c.classList.remove('rtbcb-selected');
+const radio = c.querySelector('input[name="report_type"]');
+if (radio) {
+radio.checked = false;
+}
+});
+card.classList.add('rtbcb-selected');
+input.checked = true;
+console.log('RTBCB: Report type changed to:', input.value);
+this.initializePath();
+}
+}
+});
 
-		// Real-time validation
-		this.form.querySelectorAll('input, select').forEach(field => {
+// Real-time validation
+this.form.querySelectorAll('input, select').forEach(field => {
 			field.addEventListener('blur', () => this.validateField(field));
 			field.addEventListener('input', () => this.clearFieldError(field));
 		});
