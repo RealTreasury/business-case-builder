@@ -278,7 +278,7 @@ this.clearStepError(stepIndex);
         // Report type radio changes
         this.form.addEventListener('change', (event) => {
             const input = event.target;
-            if (input.matches('input[name="report_type"]')) {
+            if (input.matches('input[name="report_type"]') && input.checked) {
                 this.form.querySelectorAll('.rtbcb-report-type-card').forEach((card) => {
                     card.classList.toggle('rtbcb-selected', card.contains(input));
                 });
