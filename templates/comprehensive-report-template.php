@@ -80,13 +80,6 @@ $processing_display = is_numeric( $processing_time ) ? round( $processing_time, 
 						<span class="rtbcb-meta-value"><?php echo esc_html( $analysis_date ); ?></span>
 					</div>
 </div>
-		<div class="rtbcb-ai-toggle-panel">
-			<input type="checkbox" id="rtbcb-ai-toggle" class="rtbcb-sr-only" />
-			<label for="rtbcb-ai-toggle" class="rtbcb-toggle-switch">
-				<div class="rtbcb-toggle-track"></div>
-			</label>
-			<label for="rtbcb-ai-toggle" class="rtbcb-toggle-label"><?php echo esc_html__( 'Highlight AI-Generated Content', 'rtbcb' ); ?></label>
-		</div>
 	</div>
 
 	<!-- Key Metrics Dashboard -->

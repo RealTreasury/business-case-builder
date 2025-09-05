@@ -25,7 +25,6 @@ if ( typeof document !== 'undefined' && typeof document.addEventListener === 'fu
         initializeSectionToggles();
         initializeInteractiveMetrics();
         initializeResponsiveFeatures();
-        initializeAIHighlights();
 
         // Add loading animation completion
         if ( typeof document.querySelector === 'function' ) {
@@ -718,7 +717,6 @@ function displayReport(htmlContent) {
     iframe.srcdoc = sanitizeReportHTML(htmlContent);
     iframe.addEventListener('load', () => {
         if ( iframe.contentDocument ) {
-            initializeAIHighlights( iframe.contentDocument );
             initializeSectionToggles( iframe.contentDocument );
         }
     });
@@ -783,36 +781,6 @@ async function generateAndDisplayReport(businessContext) {
         if (loadingElement) {
             loadingElement.style.display = 'none';
         }
-    }
-}
-
-function initializeAIHighlights(doc = document) {
-    if ( typeof doc.getElementById !== 'function' || typeof doc.querySelector !== 'function' ) {
-        return;
-    }
-
-    const aiToggle = doc.getElementById( 'rtbcb-ai-toggle' );
-    const reportContainer = doc.querySelector( '.rtbcb-enhanced-report' );
-
-    if ( ! aiToggle || ! reportContainer ) {
-        return;
-    }
-
-    aiToggle.addEventListener( 'change', () => {
-        reportContainer.classList.toggle( 'show-ai-highlights', aiToggle.checked );
-    } );
-
-    addHighlight( doc, '.rtbcb-company-intelligence', 'This section was enriched by AI.' );
-}
-
-function addHighlight(doc, selector, tooltipText) {
-    const element = doc.querySelector(selector);
-    if ( element ) {
-        element.classList.add('ai-highlight');
-        const tooltip = doc.createElement('div');
-        tooltip.className = 'ai-tooltip';
-        tooltip.textContent = tooltipText;
-        element.appendChild(tooltip);
     }
 }
 
