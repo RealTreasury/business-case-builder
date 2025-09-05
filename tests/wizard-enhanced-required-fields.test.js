@@ -26,8 +26,14 @@ const html = `<!DOCTYPE html><html><body>
     </div>
     <div class="rtbcb-wizard-steps">
       <div class="rtbcb-wizard-step active" data-step="1">
-        <input type="radio" name="report_type" value="basic" />
-        <input type="radio" name="report_type" value="enhanced" />
+        <div class="rtbcb-report-type-grid">
+          <div class="rtbcb-report-type-card rtbcb-selected">
+            <input type="radio" name="report_type" value="basic" checked />
+          </div>
+          <div class="rtbcb-report-type-card">
+            <input type="radio" name="report_type" value="enhanced" />
+          </div>
+        </div>
       </div>
       <div class="rtbcb-wizard-step" data-step="2">
         <input id="company_name" name="company_name" />
@@ -110,9 +116,8 @@ vm.runInThisContext(wizardCode);
   builder.handleError = (data) => { errorData = data; };
   builder.showEnhancedHTMLReport = (html) => { displayReport(html); };
 
-  const enhancedRadio = document.querySelector('input[name="report_type"][value="enhanced"]');
-  enhancedRadio.checked = true;
-  enhancedRadio.dispatchEvent(new window.Event('change', { bubbles: true }));
+  const enhancedCard = document.querySelector('.rtbcb-report-type-card input[value="enhanced"]').closest('.rtbcb-report-type-card');
+  enhancedCard.dispatchEvent(new window.Event('click', { bubbles: true }));
   await builder.handleNext();
 
   document.getElementById('company_name').value = 'MyCo';
