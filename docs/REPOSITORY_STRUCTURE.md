@@ -1,6 +1,6 @@
 # Repository Structure
 
-Documentation reflects repository layout for version 1.2.1.
+Documentation reflects repository layout for version 1.3.1.
 
 ## Directory Tree
 
@@ -102,4 +102,8 @@ The repository uses `AGENTS.md` files to outline coding rules for each directory
 
 - Third-party libraries.
 - Do not modify files in this directory.
+
+## Changelog
+
+- 1.3.1 – Updated version references and re-minified assets.
 

@@ -1,11 +1,12 @@
-# Real Treasury Business Case Builder - Enhanced Version 1.2.1
+# Real Treasury Business Case Builder - Enhanced Version 1.3.1
 
 A comprehensive WordPress plugin that helps treasury teams quantify the benefits of modern treasury tools, generate professional business case reports, and track lead engagement with advanced analytics.
 
-## 🚀 What's New in Version 1.2.1
+## 🚀 What's New in Version 1.3.1
 
 ### ✨ Enhancements
-- Re-minified assets and updated documentation.
+- Re-minified assets and refreshed documentation.
+- Updated repository structure references.
 
 ## 🧠 How It Works
 
