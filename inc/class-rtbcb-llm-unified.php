@@ -276,7 +276,7 @@ class RTBCB_LLM_Unified {
                }
 
                $prompt .= '\nSize: ' . $inputs['company_size']
-                        . '\nPain Points: ' . implode( ', ', $inputs['pain_points'] );
+                       . '\nPain Points: ' . implode( ', ', (array) ( $inputs['pain_points'] ?? [] ) );
 
 		if ( ! empty( $context_chunks ) ) {
 			$prompt .= '\nContext: ' . implode( '\n', array_map( 'sanitize_text_field', $context_chunks ) );
@@ -1825,7 +1825,7 @@ $parsed  = $this->response_parser->parse( $response );
 	$prompt .= "Weekly Cash Positioning Hours: " . ( $user_inputs['hours_cash_positioning'] ?? 0 ) . "\n";
 	$prompt .= "Banking Relationships: " . ( $user_inputs['num_banks'] ?? 0 ) . "\n";
 	$prompt .= "Treasury Team Size: " . ( $user_inputs['ftes'] ?? 0 ) . " FTEs\n";
-	$prompt .= "Key Pain Points: " . implode( ', ', $user_inputs['pain_points'] ?? [] ) . "\n\n";
+       $prompt .= "Key Pain Points: " . implode( ', ', (array) ( $user_inputs['pain_points'] ?? [] ) ) . "\n\n";
 	
 	// Industry context.
 	if ( ! empty( $industry_analysis ) ) {
@@ -2144,9 +2144,9 @@ SYSTEM;
  * @return string User prompt.
  */
 	protected function build_enrichment_user_prompt( $user_inputs ) {
-		$pain_points_formatted = implode( ', ', array_map( function( $point ) {
-			return str_replace( '_', ' ', ucwords( $point, '_' ) );
-		}, $user_inputs['pain_points'] ?? [] ) );
+       $pain_points_formatted = implode( ', ', array_map( function( $point ) {
+               return str_replace( '_', ' ', ucwords( $point, '_' ) );
+       }, (array) ( $user_inputs['pain_points'] ?? [] ) ) );
 
 		return <<<PROMPT
 ## Treasury Technology Analysis Request
