@@ -113,9 +113,9 @@ html {
 
 /* Progress overview */
 .rtbcb-progress-steps {
-	display: flex;
-	flex-direction: column;
-	gap: 10px;
+display: flex;
+flex-direction: column;
+gap: 16px;
 }
 
 .rtbcb-progress-phase {
@@ -176,9 +176,9 @@ html {
 }
 
 .rtbcb-section-item {
-	display: flex;
-	justify-content: space-between;
-	padding: 4px 0;
+display: flex;
+justify-content: space-between;
+padding: 8px 0;
 }
 
 .rtbcb-section-item.completed .rtbcb-section-label::before {
