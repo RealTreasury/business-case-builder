@@ -105,7 +105,11 @@ vm.runInThisContext(wizardCode);
   document.getElementById('company_name').value = 'MyCo';
   await builder.handleNext();
 
-  // Step 3
+  // Step 3 - pain points
+  document.querySelector('input[name="pain_points[]"]').checked = true;
+  await builder.handleNext();
+
+  // Step 4
   document.getElementById('email').value = 'test@example.com';
   await builder.handleSubmit();
 

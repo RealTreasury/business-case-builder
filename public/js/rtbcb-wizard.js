@@ -205,11 +205,12 @@ this.lastValidationErrors = [];
 		console.log('RTBCB: Found', this.steps.length, 'wizard steps and', this.progressSteps.length, 'progress steps');
 
 		// Form fields by step
-		this.basicStepFields = {
-			1: ['report_type'],
-			2: ['company_name'],
-			3: ['email']
-		};
+               this.basicStepFields = {
+1: ['report_type'],
+2: ['company_name'],
+3: ['pain_points'],
+4: ['email']
+};
 
 		// Default to enhanced path field resolver
 		this.getStepFields = this.getEnhancedFields.bind(this);
@@ -338,20 +339,22 @@ this.lastValidationErrors = [];
 			 });
 
 
-                                               this.steps = [
-                                                               this.form.querySelector('.rtbcb-wizard-step[data-step="1"]'),
-                                                               this.form.querySelector('.rtbcb-wizard-step[data-step="2"]'),
-                                                               this.form.querySelector('.rtbcb-wizard-step[data-step="9"]')
-                                               ];
-						this.getStepFields = (step) => this.basicStepFields[step] || [];
+                       this.steps = [
+                               this.form.querySelector('.rtbcb-wizard-step[data-step="1"]'),
+                               this.form.querySelector('.rtbcb-wizard-step[data-step="2"]'),
+                               this.form.querySelector('.rtbcb-wizard-step[data-step="7"]'),
+                               this.form.querySelector('.rtbcb-wizard-step[data-step="9"]')
+                       ];
+                       this.getStepFields = (step) => this.basicStepFields[step] || [];
 
-						const stepCount = this.steps.filter(Boolean).length;
-                                               this.progressSteps = [
-                                                               this.form.querySelector('.rtbcb-progress-step[data-step="1"]'),
-                                                               this.form.querySelector('.rtbcb-progress-step[data-step="2"]'),
-                                                               this.form.querySelector('.rtbcb-progress-step[data-step="9"]')
-                                               ].filter(Boolean)
-								.slice(0, stepCount);
+                       const stepCount = this.steps.filter(Boolean).length;
+                       this.progressSteps = [
+                               this.form.querySelector('.rtbcb-progress-step[data-step="1"]'),
+                               this.form.querySelector('.rtbcb-progress-step[data-step="2"]'),
+                               this.form.querySelector('.rtbcb-progress-step[data-step="7"]'),
+                               this.form.querySelector('.rtbcb-progress-step[data-step="9"]')
+                       ].filter(Boolean)
+                               .slice(0, stepCount);
 
 						// Hide unused progress steps and renumber
 						this.form.querySelectorAll('.rtbcb-progress-step').forEach(step => {
