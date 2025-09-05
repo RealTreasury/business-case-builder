@@ -146,8 +146,17 @@ html {
 
 .rtbcb-report-type-card.rtbcb-selected {
     border-color: #7216f4;
-    background: linear-gradient(135deg, #f8f9ff, #ffffff);
+    background: linear-gradient(135deg, #ede9fe, #ffffff);
     box-shadow: 0 4px 20px rgba(114, 22, 244, 0.2);
+}
+
+.rtbcb-report-type-card.rtbcb-selected::after {
+    content: "✓";
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 16px;
+    color: #7216f4;
 }
 
 .rtbcb-report-type-label {
