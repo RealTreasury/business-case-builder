@@ -303,13 +303,15 @@ function initializeSectionToggles(doc = document) {
     }
     doc.querySelectorAll('.rtbcb-section-toggle').forEach(toggle => {
         const targetId = toggle.getAttribute('data-target');
-        const content = doc.getElementById(targetId);
-        const arrow = toggle.querySelector('.rtbcb-toggle-arrow');
-        const text = toggle.querySelector('.rtbcb-toggle-text');
-        const section = toggle.closest('.rtbcb-section-enhanced');
+        const content  = doc.getElementById(targetId);
+        const arrow    = toggle.querySelector('.rtbcb-toggle-arrow');
+        const text     = toggle.querySelector('.rtbcb-toggle-text');
+        const section  = toggle.closest('.rtbcb-section-enhanced');
 
         if (content) {
-            const initiallyVisible = content.style.display !== 'none';
+            const initiallyVisible = ( typeof window !== 'undefined' && window.getComputedStyle ) ?
+                window.getComputedStyle( content ).display !== 'none' :
+                content.style.display !== 'none';
 
             if (arrow) {
                 arrow.textContent = initiallyVisible ? '▲' : '▼';
@@ -326,13 +328,15 @@ function initializeSectionToggles(doc = document) {
             e.preventDefault();
 
             const targetId = this.getAttribute('data-target');
-            const content = doc.getElementById(targetId);
-            const arrow = this.querySelector('.rtbcb-toggle-arrow');
-            const text = this.querySelector('.rtbcb-toggle-text');
-            const section = this.closest('.rtbcb-section-enhanced');
+            const content  = doc.getElementById(targetId);
+            const arrow    = this.querySelector('.rtbcb-toggle-arrow');
+            const text     = this.querySelector('.rtbcb-toggle-text');
+            const section  = this.closest('.rtbcb-section-enhanced');
 
             if (content) {
-                const isVisible = content.style.display !== 'none';
+                const isVisible = ( typeof window !== 'undefined' && window.getComputedStyle ) ?
+                    window.getComputedStyle( content ).display !== 'none' :
+                    content.style.display !== 'none';
                 
                 // Toggle content visibility with animation
                 if (isVisible) {
