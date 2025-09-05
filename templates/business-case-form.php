@@ -97,7 +97,7 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                                                 <div class="rtbcb-report-type-grid">
                                                         <div class="rtbcb-report-type-card rtbcb-selected">
                                                                 <label class="rtbcb-report-type-label">
-                                                                        <input type="radio" name="report_type" value="basic" checked hidden />
+                                                                        <input type="radio" name="report_type" value="basic" checked />
                                                                         <div class="rtbcb-report-type-content">
                                                                                 <div class="rtbcb-report-type-icon">📄</div>
                                                                                 <div class="rtbcb-report-type-title"><?php esc_html_e( "Basic", "rtbcb" ); ?></div>
@@ -106,7 +106,7 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                                                         </div>
                                                         <div class="rtbcb-report-type-card">
                                                                 <label class="rtbcb-report-type-label">
-                                                                        <input type="radio" name="report_type" value="enhanced" hidden />
+                                                                        <input type="radio" name="report_type" value="enhanced" />
                                                                         <div class="rtbcb-report-type-content">
                                                                                 <div class="rtbcb-report-type-icon">📈</div>
                                                                                 <div class="rtbcb-report-type-title"><?php esc_html_e( "Enhanced", "rtbcb" ); ?></div>

@@ -263,26 +263,29 @@ this.clearStepError(stepIndex);
 }
 });
 
-// Report type card clicks
-this.form.addEventListener('click', (event) => {
-const card = event.target.closest('.rtbcb-report-type-card');
-if (card) {
-const input = card.querySelector('input[name="report_type"]');
-if (input) {
-this.form.querySelectorAll('.rtbcb-report-type-card').forEach((c) => {
-c.classList.remove('rtbcb-selected');
-const radio = c.querySelector('input[name="report_type"]');
-if (radio) {
-radio.checked = false;
-}
-});
-card.classList.add('rtbcb-selected');
-input.checked = true;
-console.log('RTBCB: Report type changed to:', input.value);
-this.initializePath();
-}
-}
-});
+        // Report type card clicks
+        this.form.addEventListener('click', (event) => {
+            const card = event.target.closest('.rtbcb-report-type-card');
+            if (card) {
+                const input = card.querySelector('input[name="report_type"]');
+                if (input) {
+                    input.checked = true;
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            }
+        });
+
+        // Report type radio changes
+        this.form.addEventListener('change', (event) => {
+            const input = event.target;
+            if (input.matches('input[name="report_type"]')) {
+                this.form.querySelectorAll('.rtbcb-report-type-card').forEach((card) => {
+                    card.classList.toggle('rtbcb-selected', card.contains(input));
+                });
+                console.log('RTBCB: Report type changed to:', input.value);
+                this.initializePath();
+            }
+        });
 
 // Real-time validation
 this.form.querySelectorAll('input, select').forEach(field => {
