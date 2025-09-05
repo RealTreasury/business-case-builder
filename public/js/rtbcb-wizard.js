@@ -1007,14 +1007,32 @@ this.form.querySelectorAll('input, select').forEach(field => {
 				break;
 			}
 
-			console.log('RTBCB: Response status:', response.status);
+                        console.log('RTBCB: Response status:', response.status);
 
-			if (!response.ok) {
-				throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-			}
+                        if (!response.ok) {
+                                let errorMessage = __( 'An error occurred while processing your request. Please try again.', 'rtbcb' );
+                                let errorData = null;
+                                try {
+                                        errorData = JSON.parse( responseText );
+                                        if ( errorData && errorData.data && errorData.data.message ) {
+                                                errorMessage = errorData.data.message;
+                                        } else if ( errorData && errorData.message ) {
+                                                errorMessage = errorData.message;
+                                        }
+                                } catch ( parseErr ) {}
+                                this.cancelProgressiveLoading();
+                                if ( errorData && typeof errorData === 'object' ) {
+                                        errorData.message = errorMessage;
+                                        errorData.raw_message = true;
+                                        this.handleError( errorData );
+                                } else {
+                                        this.handleError( { message: errorMessage, raw_message: true } );
+                                }
+                                return;
+                        }
 
-			console.log('RTBCB: Response received, length:', responseText.length);
-			console.log('RTBCB: Response received, length:', responseText.length);
+                        console.log('RTBCB: Response received, length:', responseText.length);
+                        console.log('RTBCB: Response received, length:', responseText.length);
 
 			// Try to parse as JSON first
 			let data;
@@ -2361,19 +2379,20 @@ ${upcoming_changes.length ? `<div class="rtbcb-industry-group"><h4>Upcoming Chan
 			.catch(err => console.error('Copy failed:', err));
 	}
 
-	handleError(errorData) {
-		this.clearPersistentState();
-		const message = errorData.message || __( 'An unexpected error occurred', 'rtbcb' );
+        handleError(errorData) {
+                this.clearPersistentState();
+                const message = errorData.message || __( 'An unexpected error occurred', 'rtbcb' );
+                const display = errorData.raw_message ? message : this.getUserFriendlyMessage( message );
 
-		console.group('RTBCB Error Details');
-		console.error('Message:', message);
-		console.error('Type:', errorData.type);
-		console.error('Debug Info:', errorData.debug_info);
-		console.error('Timestamp:', errorData.timestamp);
-		console.groupEnd();
+                console.group('RTBCB Error Details');
+                console.error('Message:', message);
+                console.error('Type:', errorData.type);
+                console.error('Debug Info:', errorData.debug_info);
+                console.error('Timestamp:', errorData.timestamp);
+                console.groupEnd();
 
-		this.showEnhancedError(this.getUserFriendlyMessage(message), errorData);
-	}
+                this.showEnhancedError( display, errorData );
+        }
 
 	getUserFriendlyMessage(serverMessage) {
 		const errorMappings = {
