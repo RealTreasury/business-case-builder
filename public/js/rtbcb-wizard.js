@@ -257,12 +257,39 @@ this.lastValidationErrors = [];
 			if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
 				window.closeBusinessCaseModal();
 			}
-		});
+               });
+       }
+
+	syncProgressSteps() {
+		const stepNums = this.steps
+			.filter( step => step )
+			.map( step => step.dataset.step );
+		
+		const matched = stepNums
+			.map( num => this.form.querySelector(`.rtbcb-progress-step[data-step="${ num }"]`) )
+			.filter( step => step );
+		
+		this.form.querySelectorAll('.rtbcb-progress-step').forEach( step => {
+			if ( step ) {
+				step.style.display = 'none';
+			}
+		} );
+		
+		matched.forEach( ( step, index ) => {
+			step.style.display = 'flex';
+			step.setAttribute( 'data-step', index + 1 );
+			const num = step.querySelector( '.rtbcb-progress-number' );
+			if ( num ) {
+				num.textContent = index + 1;
+			}
+		} );
+		
+		this.progressSteps = matched;
 	}
 
-        initializePath() {
-                const selected = this.form.querySelector('input[name="report_type"]:checked');
-                this.reportType = selected ? selected.value : 'basic';
+       initializePath() {
+               const selected = this.form.querySelector('input[name="report_type"]:checked');
+               this.reportType = selected ? selected.value : 'basic';
 
                 console.log('RTBCB: Initializing path for report type:', this.reportType);
 
@@ -289,23 +316,11 @@ this.lastValidationErrors = [];
                                this.form.querySelector('.rtbcb-wizard-step[data-step="7"]')
                        ];
                        this.getStepFields = this.getEnhancedFields.bind(this);
-                       this.progressSteps = Array.from(this.form.querySelectorAll('.rtbcb-progress-step')).filter(Boolean);
-                        this.progressSteps.forEach((step, index) => {
-                                if (step) {
-                                        step.style.display = 'flex';
-                                        const num = step.querySelector('.rtbcb-progress-number');
-                                        if (num) {
-                                                num.textContent = index + 1;
-                                        }
-                                }
-                        });
-
-                        this.totalSteps = 7;
-                } else {
-                        // Basic path logic
-                        this.form.querySelectorAll('.rtbcb-enhanced-only input, .rtbcb-enhanced-only select').forEach(field => {
-                                field.disabled = true;
-                                field.removeAttribute('required');
+               } else {
+                       // Basic path logic
+                       this.form.querySelectorAll('.rtbcb-enhanced-only input, .rtbcb-enhanced-only select').forEach(field => {
+                               field.disabled = true;
+                               field.removeAttribute('required');
                         });
                         this.form.querySelectorAll('.rtbcb-enhanced-only').forEach(el => {
                                 el.style.display = 'none';
@@ -317,35 +332,16 @@ this.lastValidationErrors = [];
                                this.form.querySelector('.rtbcb-wizard-step[data-step="2"]'),
                                this.form.querySelector('.rtbcb-wizard-step[data-step="7"]')
                        ];
-                       this.getStepFields = (step) => this.basicStepFields[step] || [];
+                       this.getStepFields = ( step ) => this.basicStepFields[ step ] || [];
+               }
 
-                        this.progressSteps = [
-                                this.form.querySelector('.rtbcb-progress-step[data-step="1"]'),
-                                this.form.querySelector('.rtbcb-progress-step[data-step="2"]'),
-                                this.form.querySelector('.rtbcb-progress-step[data-step="7"]')
-                        ].filter(Boolean);
-
-                        // Hide unused progress steps and renumber
-                        this.form.querySelectorAll('.rtbcb-progress-step').forEach(step => {
-                                if (step) {
-                                        step.style.display = 'none';
-                                }
-                        });
-                        this.progressSteps.forEach((step, index) => {
-                                step.style.display = 'flex';
-                                const num = step.querySelector('.rtbcb-progress-number');
-                                if (num) {
-                                        num.textContent = index + 1;
-                                }
-                        });
-
-                        this.totalSteps = 3;
-                }
+               this.totalSteps = this.steps.filter( step => step ).length;
+               this.syncProgressSteps();
 
                console.log('RTBCB: Path initialized. Total steps:', this.totalSteps, 'Current step fields:', this.getStepFields(this.currentStep));
 
-                this.updateStepVisibility();
-                this.updateProgressIndicator();
+               this.updateStepVisibility();
+               this.updateProgressIndicator();
         }
 
 	saveFormData( formData ) {
