@@ -393,13 +393,13 @@ html {
     }
 
     .rtbcb-progress-steps {
-        justify-content: space-around;
-        gap: 8px;
+        justify-content: flex-start;
+        gap: 12px;
     }
 
     .rtbcb-progress-step {
         padding: 0 4px;
-        flex: 1;
+        flex: 0 0 auto;
         min-width: 0;
     }
 
@@ -1489,13 +1489,14 @@ html {
 
     .rtbcb-progress-steps {
         display: flex;
-        justify-content: space-between;
+        justify-content: flex-start;
         align-items: center;
         width: 100%;
         position: relative;
         z-index: 2;
         overflow-x: auto;
         flex-wrap: nowrap;
+        gap: 16px;
     }
 
     .rtbcb-progress-step {
@@ -1506,7 +1507,7 @@ html {
         z-index: 2;
         background: transparent;
         padding: 0 8px;
-        flex: 1;
+        flex: 0 0 auto;
         min-width: 0;
     }
 
