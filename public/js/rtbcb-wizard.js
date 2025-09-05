@@ -1127,59 +1127,54 @@ this.lastValidationErrors = [];
 			return values;
 		};
 
-		// Build required fields dynamically from all steps up to totalSteps
-		const requiredFields = new Set();
-		const arrayFields= new Set();
-		for ( let step = 1; step <= this.totalSteps; step++ ) {
-		const fields = this.getStepFields( step ) || [];
-		fields.forEach( ( field ) => {
-		if ( field.endsWith( '[]' ) ) {
-		arrayFields.add( field.replace( /\[\]$/, '' ) );
-		requiredFields.add( field.replace( /\[\]$/, '' ) );
-		} else {
-		requiredFields.add( field );
-		}
-		} );
-		}
-		
-                for ( const field of requiredFields ) {
-                        if ( field === 'pain_points' ) {
-                                continue;
-                        }
-                        if ( arrayFields.has( field ) ) {
-                                if ( getAllValues( `${ field }[]` ).length === 0 ) {
-                                        throw new Error( `${ __( 'Missing required field:', 'rtbcb' )} ${ field.replace( '_', ' ' )}` );
-                                }
-                                continue;
-                        }
-                        if ( ! getValue( field ) ) {
-                                throw new Error( `${ __( 'Missing required field:', 'rtbcb' )} ${ field.replace( '_', ' ' )}` );
-                        }
-                }
-		
-		if ( requiredFields.has( 'email' ) ) {
-		const email= getValue( 'email' );
-		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-		if ( ! emailRegex.test( email ) ) {
-		throw new Error( __( 'Please enter a valid email address', 'rtbcb' ) );
-		}
-		}
-		
-		if ( this.reportType !== 'basic' ) {
-		const numericFields = [ 'hours_reconciliation', 'hours_cash_positioning', 'num_banks', 'ftes' ];
-		for ( const field of numericFields ) {
-		if ( requiredFields.has( field ) ) {
-		const value = parseFloat( getValue( field ) );
-		if ( isNaN( value ) || value <= 0 ) {
-		throw new Error( `${ field.replace( '_', ' ' ) } ${ __( 'must be a positive number', 'rtbcb' ) }` );
-		}
-		}
-		}
-		
-		if ( requiredFields.has( 'pain_points' ) && getAllValues( 'pain_points[]' ).length === 0 ) {
-		throw new Error( __( 'Please select at least one pain point', 'rtbcb' ) );
-		}
-		}
+               // Build required fields dynamically from all steps up to totalSteps
+               const requiredFields = new Set();
+               const arrayFields = new Set();
+               for ( let step = 1; step <= this.totalSteps; step++ ) {
+                       const fields = this.getStepFields( step ) || [];
+                       fields.forEach( ( field ) => {
+                               const baseName = field.replace( /\[\]$/, '' );
+                               requiredFields.add( baseName );
+
+                               if ( field.endsWith( '[]' ) || baseName === 'pain_points' ) {
+                                       arrayFields.add( baseName );
+                               }
+                       } );
+               }
+
+               for ( const field of requiredFields ) {
+                       if ( arrayFields.has( field ) ) {
+                               if ( getAllValues( `${ field }[]` ).length === 0 ) {
+                                       if ( field === 'pain_points' ) {
+                                               throw new Error( __( 'Please select at least one pain point', 'rtbcb' ) );
+                                       }
+                                       throw new Error( `${ __( 'Missing required field:', 'rtbcb' )} ${ field.replace( '_', ' ' )}` );
+                               }
+                               continue;
+                       }
+                       if ( ! getValue( field ) ) {
+                               throw new Error( `${ __( 'Missing required field:', 'rtbcb' )} ${ field.replace( '_', ' ' )}` );
+                       }
+               }
+
+               if ( requiredFields.has( 'email' ) ) {
+                       const email = getValue( 'email' );
+                       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                       if ( ! emailRegex.test( email ) ) {
+                               throw new Error( __( 'Please enter a valid email address', 'rtbcb' ) );
+                       }
+               }
+               if ( this.reportType !== 'basic' ) {
+                       const numericFields = [ 'hours_reconciliation', 'hours_cash_positioning', 'num_banks', 'ftes' ];
+                       for ( const field of numericFields ) {
+                               if ( requiredFields.has( field ) ) {
+                                       const value = parseFloat( getValue( field ) );
+                                       if ( isNaN( value ) || value <= 0 ) {
+                                               throw new Error( `${ field.replace( '_', ' ' ) } ${ __( 'must be a positive number', 'rtbcb' ) }` );
+                                       }
+                               }
+                       }
+               }
 	}
 
 	showLoading() {
