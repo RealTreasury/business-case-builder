@@ -498,9 +498,10 @@ this.form.querySelectorAll('input, select').forEach(field => {
 					field.checked = true;
 				} else if ( field.type === 'radio' ) {
 					const radio = this.form.querySelector( `[name="${ key }"][value="${ value }"]` );
-					if ( radio ) {
-						radio.checked = true;
-					}
+				if ( radio ) {
+					radio.checked = true;
+					radio.dispatchEvent( new Event( 'change', { bubbles: true } ) );
+				}
 				} else {
 					field.value = value;
 				}
