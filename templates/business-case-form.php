@@ -117,77 +117,85 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                                         </div>
                                 </div>
 
-                                <div class="rtbcb-step-content">
-                                        <!-- NEW: Company Name Field -->
-                                        <div class="rtbcb-field rtbcb-field-required">
-                                                <label for="company_name">
-                                                        <?php esc_html_e( 'Company Name', 'rtbcb' ); ?>
-                                                </label>
-                                                <input type="text" name="company_name" id="company_name"
-                                                        placeholder="<?php esc_attr_e( 'Enter your company name', 'rtbcb' ); ?>"
-                                                        required
-                                                        maxlength="100" />
-                                                <div class="rtbcb-field-help">
-                                                        <?php esc_html_e( 'This will be used to personalize your business case report', 'rtbcb' ); ?>
-                                                </div>
-                                        </div>
+               </div>
 
-                                        <div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
-                                                <label for="company_size">
-                                                        <?php esc_html_e( 'Company Size (Annual Revenue)', 'rtbcb' ); ?>
-                                                </label>
-                                                <select name="company_size" id="company_size" required>
-                                                        <option value=""><?php esc_html_e( 'Select your company size...', 'rtbcb' ); ?></option>
-                                                        <option value="&lt;$50M"><?php esc_html_e( 'Small Business (&lt;$50M)', 'rtbcb' ); ?></option>
-                                                        <option value="$50M-$500M"><?php esc_html_e( 'Mid-Market ($50M-$500M)', 'rtbcb' ); ?></option>
-                                                        <option value="$500M-$2B"><?php esc_html_e( 'Large Enterprise ($500M-$2B)', 'rtbcb' ); ?></option>
-                                                        <option value="&gt;$2B"><?php esc_html_e( 'Fortune 500 (&gt;$2B)', 'rtbcb' ); ?></option>
-                                                </select>
-                                        </div>
-
-                                        <div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
-                                                <label for="industry">
-                                                        <?php esc_html_e( 'Industry', 'rtbcb' ); ?>
-                                                </label>
-                                                <select name="industry" id="industry" required>
-                                                        <option value=""><?php esc_html_e( 'Select your industry...', 'rtbcb' ); ?></option>
-                                                        <option value="manufacturing"><?php esc_html_e( 'Manufacturing', 'rtbcb' ); ?></option>
-                                                        <option value="retail"><?php esc_html_e( 'Retail & E-commerce', 'rtbcb' ); ?></option>
-                                                        <option value="healthcare"><?php esc_html_e( 'Healthcare', 'rtbcb' ); ?></option>
-                                                        <option value="technology"><?php esc_html_e( 'Technology', 'rtbcb' ); ?></option>
-                                                        <option value="financial_services"><?php esc_html_e( 'Financial Services', 'rtbcb' ); ?></option>
-                                                        <option value="energy"><?php esc_html_e( 'Energy & Utilities', 'rtbcb' ); ?></option>
-                                                        <option value="real_estate"><?php esc_html_e( 'Real Estate', 'rtbcb' ); ?></option>
-                                                        <option value="professional_services"><?php esc_html_e( 'Professional Services', 'rtbcb' ); ?></option>
-                                                        <option value="transportation"><?php esc_html_e( 'Transportation & Logistics', 'rtbcb' ); ?></option>
-                                                        <option value="education"><?php esc_html_e( 'Education', 'rtbcb' ); ?></option>
-                                                        <option value="government"><?php esc_html_e( 'Government', 'rtbcb' ); ?></option>
-                                                        <option value="other"><?php esc_html_e( 'Other', 'rtbcb' ); ?></option>
-                                                </select>
-                                        </div>
-
-                                        <!-- Optional: Add current position field for more personalization -->
-<div class="rtbcb-field rtbcb-enhanced-only">
-<label for="job_title"><?php esc_html_e( 'Your Role (Optional)', 'rtbcb' ); ?></label>
-                                                <select name="job_title" id="job_title">
-                                                        <option value=""><?php esc_html_e( 'Select your role...', 'rtbcb' ); ?></option>
-                                                        <option value="cfo"><?php esc_html_e( 'CFO', 'rtbcb' ); ?></option>
-                                                        <option value="treasurer"><?php esc_html_e( 'Treasurer', 'rtbcb' ); ?></option>
-                                                        <option value="finance_director"><?php esc_html_e( 'Finance Director', 'rtbcb' ); ?></option>
-                                                        <option value="finance_manager"><?php esc_html_e( 'Finance Manager', 'rtbcb' ); ?></option>
-                                                        <option value="treasury_analyst"><?php esc_html_e( 'Treasury Analyst', 'rtbcb' ); ?></option>
-                                                        <option value="controller"><?php esc_html_e( 'Controller', 'rtbcb' ); ?></option>
-                                                        <option value="other"><?php esc_html_e( 'Other', 'rtbcb' ); ?></option>
-                                                </select>
-                                               <div class="rtbcb-field-help">
-                                                       <?php esc_html_e( 'Helps us tailor recommendations to your perspective', 'rtbcb' ); ?>
-                                               </div>
-                                       </div>
-
-                               </div>
+               <!-- Step 2: Company Information -->
+               <div class="rtbcb-wizard-step" data-step="2">
+                       <div class="rtbcb-step-header">
+                               <h3><?php esc_html_e( 'Tell us about your company', 'rtbcb' ); ?></h3>
+                               <p><?php esc_html_e( 'Provide basic information about your organization.', 'rtbcb' ); ?></p>
                        </div>
 
-                       <!-- Step 3: Treasury Footprint -->
+                       <div class="rtbcb-step-content">
+                               <!-- Company Name Field -->
+                               <div class="rtbcb-field rtbcb-field-required">
+                                       <label for="company_name">
+                                               <?php esc_html_e( 'Company Name', 'rtbcb' ); ?>
+                                       </label>
+                                       <input type="text" name="company_name" id="company_name"
+                                               placeholder="<?php esc_attr_e( 'Enter your company name', 'rtbcb' ); ?>"
+                                               required
+                                               maxlength="100" />
+                                       <div class="rtbcb-field-help">
+                                               <?php esc_html_e( 'This will be used to personalize your business case report', 'rtbcb' ); ?>
+                                       </div>
+                               </div>
+
+                               <div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
+                                       <label for="company_size">
+                                               <?php esc_html_e( 'Company Size (Annual Revenue)', 'rtbcb' ); ?>
+                                       </label>
+                                       <select name="company_size" id="company_size" required>
+                                               <option value=""><?php esc_html_e( 'Select your company size...', 'rtbcb' ); ?></option>
+                                               <option value="&lt;$50M"><?php esc_html_e( 'Small Business (&lt;$50M)', 'rtbcb' ); ?></option>
+                                               <option value="$50M-$500M"><?php esc_html_e( 'Mid-Market ($50M-$500M)', 'rtbcb' ); ?></option>
+                                               <option value="$500M-$2B"><?php esc_html_e( 'Large Enterprise ($500M-$2B)', 'rtbcb' ); ?></option>
+                                               <option value="&gt;$2B"><?php esc_html_e( 'Fortune 500 (&gt;$2B)', 'rtbcb' ); ?></option>
+                                       </select>
+                               </div>
+
+                               <div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
+                                       <label for="industry">
+                                               <?php esc_html_e( 'Industry', 'rtbcb' ); ?>
+                                       </label>
+                                       <select name="industry" id="industry" required>
+                                               <option value=""><?php esc_html_e( 'Select your industry...', 'rtbcb' ); ?></option>
+                                               <option value="manufacturing"><?php esc_html_e( 'Manufacturing', 'rtbcb' ); ?></option>
+                                               <option value="retail"><?php esc_html_e( 'Retail & E-commerce', 'rtbcb' ); ?></option>
+                                               <option value="healthcare"><?php esc_html_e( 'Healthcare', 'rtbcb' ); ?></option>
+                                               <option value="technology"><?php esc_html_e( 'Technology', 'rtbcb' ); ?></option>
+                                               <option value="financial_services"><?php esc_html_e( 'Financial Services', 'rtbcb' ); ?></option>
+                                               <option value="energy"><?php esc_html_e( 'Energy & Utilities', 'rtbcb' ); ?></option>
+                                               <option value="real_estate"><?php esc_html_e( 'Real Estate', 'rtbcb' ); ?></option>
+                                               <option value="professional_services"><?php esc_html_e( 'Professional Services', 'rtbcb' ); ?></option>
+                                               <option value="transportation"><?php esc_html_e( 'Transportation & Logistics', 'rtbcb' ); ?></option>
+                                               <option value="education"><?php esc_html_e( 'Education', 'rtbcb' ); ?></option>
+                                               <option value="government"><?php esc_html_e( 'Government', 'rtbcb' ); ?></option>
+                                               <option value="other"><?php esc_html_e( 'Other', 'rtbcb' ); ?></option>
+                                       </select>
+                               </div>
+
+                               <!-- Optional: Add current position field for more personalization -->
+                               <div class="rtbcb-field rtbcb-enhanced-only">
+                                       <label for="job_title"><?php esc_html_e( 'Your Role (Optional)', 'rtbcb' ); ?></label>
+                                       <select name="job_title" id="job_title">
+                                               <option value=""><?php esc_html_e( 'Select your role...', 'rtbcb' ); ?></option>
+                                               <option value="cfo"><?php esc_html_e( 'CFO', 'rtbcb' ); ?></option>
+                                               <option value="treasurer"><?php esc_html_e( 'Treasurer', 'rtbcb' ); ?></option>
+                                               <option value="finance_director"><?php esc_html_e( 'Finance Director', 'rtbcb' ); ?></option>
+                                               <option value="finance_manager"><?php esc_html_e( 'Finance Manager', 'rtbcb' ); ?></option>
+                                               <option value="treasury_analyst"><?php esc_html_e( 'Treasury Analyst', 'rtbcb' ); ?></option>
+                                               <option value="controller"><?php esc_html_e( 'Controller', 'rtbcb' ); ?></option>
+                                               <option value="other"><?php esc_html_e( 'Other', 'rtbcb' ); ?></option>
+                                       </select>
+                                       <div class="rtbcb-field-help">
+                                               <?php esc_html_e( 'Helps us tailor recommendations to your perspective', 'rtbcb' ); ?>
+                                       </div>
+                               </div>
+                       </div>
+               </div>
+
+               <!-- Step 3: Treasury Footprint -->
                        <div class="rtbcb-wizard-step" data-step="3">
                                <div class="rtbcb-step-header">
                                        <h3><?php esc_html_e( 'Outline your treasury footprint', 'rtbcb' ); ?></h3>
