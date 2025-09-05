@@ -336,14 +336,14 @@ function initializeSectionToggles(doc = document) {
                 const isVisible = ( typeof window !== 'undefined' && window.getComputedStyle ) ?
                     window.getComputedStyle( content ).display !== 'none' :
                     content.style.display !== 'none';
-                
+
                 // Toggle content visibility with animation
                 if (isVisible) {
                     content.style.maxHeight = content.scrollHeight + 'px';
                     content.offsetHeight; // Force reflow
                     content.style.maxHeight = '0px';
                     content.style.opacity = '0';
-                    
+
                     setTimeout(() => {
                         content.style.display = 'none';
                     }, 300);
@@ -354,12 +354,12 @@ function initializeSectionToggles(doc = document) {
                     content.offsetHeight; // Force reflow
                     content.style.maxHeight = content.scrollHeight + 'px';
                     content.style.opacity = '1';
-                    
+
                     setTimeout(() => {
                         content.style.maxHeight = 'none';
                     }, 300);
                 }
-                
+
                 // Update toggle button and state based on new visibility
                 const nowVisible = !isVisible;
                 if (arrow) {
@@ -376,6 +376,19 @@ function initializeSectionToggles(doc = document) {
 
                 // Track analytics
                 trackSectionToggle(targetId, nowVisible);
+            }
+        });
+    });
+
+    // Allow clicking on section headers to toggle content
+    doc.querySelectorAll('.rtbcb-section-header-enhanced').forEach(header => {
+        header.addEventListener('click', function(e) {
+            if (e.target.closest('.rtbcb-section-toggle')) {
+                return;
+            }
+            const toggle = this.querySelector('.rtbcb-section-toggle');
+            if (toggle) {
+                toggle.click();
             }
         });
     });
