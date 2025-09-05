@@ -249,22 +249,24 @@ this.lastValidationErrors = [];
 		this.form.addEventListener( 'change', ( event ) => {
 			const target = event.target;
 
-			if (target.matches('input[name="report_type"]')) {
-					console.log('RTBCB: Report type changed to:', target.value);
-					this.initializePath();
-			}
+                        if (target.matches('input[name="report_type"]')) {
+                                        console.log('RTBCB: Report type changed to:', target.value);
+                                        this.initializePath();
+                        }
 
-			 if (target.matches('input[name="pain_points[]"]')) {
-					 const card = target.closest('.rtbcb-pain-point-card');
-					 if (card) {
-							 card.classList.toggle('rtbcb-selected', target.checked);
-					 }
-					 const checkedBoxes = this.form.querySelectorAll('input[name="pain_points[]"]:checked');
-					 if (checkedBoxes.length > 0) {
-                                                     this.clearStepError(7);
-					 }
-			 }
-		 });
+                        if (target.matches('input[name="pain_points[]"]')) {
+                                const card = target.closest('.rtbcb-pain-point-card');
+                                if (card) {
+                                        card.classList.toggle('rtbcb-selected', target.checked);
+                                }
+                                const checkedBoxes = this.form.querySelectorAll('input[name="pain_points[]"]:checked');
+                                if (checkedBoxes.length > 0) {
+                                        const stepEl   = target.closest('.rtbcb-wizard-step');
+                                        const stepIndex = Array.from(this.steps).indexOf(stepEl) + 1;
+                                        this.clearStepError(stepIndex);
+                                }
+                        }
+                });
 
 		// Real-time validation
 		this.form.querySelectorAll('input, select').forEach(field => {
