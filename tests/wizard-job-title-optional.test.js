@@ -18,6 +18,8 @@ const html = `<!DOCTYPE html><html><body>
         <div class="rtbcb-progress-step" data-step="5"></div>
         <div class="rtbcb-progress-step" data-step="6"></div>
         <div class="rtbcb-progress-step" data-step="7"></div>
+        <div class="rtbcb-progress-step" data-step="8"></div>
+        <div class="rtbcb-progress-step" data-step="9"></div>
       </div>
     </div>
     <div class="rtbcb-wizard-steps">
@@ -36,6 +38,8 @@ const html = `<!DOCTYPE html><html><body>
       <div class="rtbcb-wizard-step" data-step="5"></div>
       <div class="rtbcb-wizard-step" data-step="6"></div>
       <div class="rtbcb-wizard-step" data-step="7"></div>
+      <div class="rtbcb-wizard-step" data-step="8"></div>
+      <div class="rtbcb-wizard-step" data-step="9"></div>
     </div>
     <div class="rtbcb-wizard-navigation">
       <button type="button" class="rtbcb-nav-prev"></button>

@@ -56,22 +56,30 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                                                                <div class="rtbcb-progress-number">3</div>
                                                                <div class="rtbcb-progress-label"><?php esc_html_e( 'Scope', 'rtbcb' ); ?></div>
                                                        </div>
-                                                       <div class="rtbcb-progress-step" data-step="4">
+                                                        <div class="rtbcb-progress-step" data-step="4">
                                                                <div class="rtbcb-progress-number">4</div>
-                                                               <div class="rtbcb-progress-label"><?php esc_html_e( 'Operations', 'rtbcb' ); ?></div>
-                                                       </div>
-                                                       <div class="rtbcb-progress-step" data-step="5">
+                                                               <div class="rtbcb-progress-label"><?php esc_html_e( 'Operations 1', 'rtbcb' ); ?></div>
+                                                        </div>
+                                                        <div class="rtbcb-progress-step" data-step="5">
                                                                <div class="rtbcb-progress-number">5</div>
-                                                               <div class="rtbcb-progress-label"><?php esc_html_e( 'Challenges', 'rtbcb' ); ?></div>
-                                                       </div>
-                                                       <div class="rtbcb-progress-step" data-step="6">
+                                                               <div class="rtbcb-progress-label"><?php esc_html_e( 'Operations 2', 'rtbcb' ); ?></div>
+                                                        </div>
+                                                        <div class="rtbcb-progress-step" data-step="6">
                                                                <div class="rtbcb-progress-number">6</div>
-                                                               <div class="rtbcb-progress-label"><?php esc_html_e( 'Strategy', 'rtbcb' ); ?></div>
-                                                       </div>
-                                                       <div class="rtbcb-progress-step" data-step="7">
+                                                               <div class="rtbcb-progress-label"><?php esc_html_e( 'Operations 3', 'rtbcb' ); ?></div>
+                                                        </div>
+                                                        <div class="rtbcb-progress-step" data-step="7">
                                                                <div class="rtbcb-progress-number">7</div>
+                                                               <div class="rtbcb-progress-label"><?php esc_html_e( 'Challenges', 'rtbcb' ); ?></div>
+                                                        </div>
+                                                        <div class="rtbcb-progress-step" data-step="8">
+                                                               <div class="rtbcb-progress-number">8</div>
+                                                               <div class="rtbcb-progress-label"><?php esc_html_e( 'Strategy', 'rtbcb' ); ?></div>
+                                                        </div>
+                                                        <div class="rtbcb-progress-step" data-step="9">
+                                                               <div class="rtbcb-progress-number">9</div>
                                                                <div class="rtbcb-progress-label"><?php esc_html_e( 'Contact', 'rtbcb' ); ?></div>
-                                                       </div>
+                                                        </div>
                                                 </div>
                                         </div>
 
@@ -212,14 +220,14 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                                </div>
                        </div>
 
-                        <!-- Step 4: Treasury Operations -->
-                        <div class="rtbcb-wizard-step" data-step="4">
-				<div class="rtbcb-step-header">
-					<h3><?php esc_html_e( 'Your current treasury operations', 'rtbcb' ); ?></h3>
-					<p><?php esc_html_e( 'Help us understand your current workload and banking relationships.', 'rtbcb' ); ?></p>
-				</div>
+                         <!-- Step 4: Treasury Workload -->
+                         <div class="rtbcb-wizard-step" data-step="4">
+                                 <div class="rtbcb-step-header">
+                                         <h3><?php esc_html_e( 'Treasury workload', 'rtbcb' ); ?></h3>
+                                         <p><?php esc_html_e( 'Help us understand your current effort and team size.', 'rtbcb' ); ?></p>
+                                 </div>
 
-				<div class="rtbcb-step-content">
+                                 <div class="rtbcb-step-content">
 					<div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
 						<label for="hours_reconciliation">
 							<?php esc_html_e( 'Weekly Hours: Bank Reconciliation', 'rtbcb' ); ?>
@@ -243,106 +251,127 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 					</div>
 
 
-					<div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
-						<label for="ftes">
-							<?php esc_html_e( 'Treasury Team Size (FTEs)', 'rtbcb' ); ?>
-						</label>
-<input type="number" name="ftes" id="ftes"
-min="0.5" max="100" step="0.5" placeholder="0" required inputmode="decimal" />
-<div class="rtbcb-field-help">
-<?php esc_html_e( 'Full-time equivalent employees dedicated to treasury functions', 'rtbcb' ); ?>
-</div>
-</div>
+                                       <div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
+                                               <label for="ftes">
+                                                       <?php esc_html_e( 'Treasury Team Size (FTEs)', 'rtbcb' ); ?>
+                                               </label>
+                                               <input type="number" name="ftes" id="ftes"
+                                                       min="0.5" max="100" step="0.5" placeholder="0" required inputmode="decimal" />
+                                               <div class="rtbcb-field-help">
+                                                       <?php esc_html_e( 'Full-time equivalent employees dedicated to treasury functions', 'rtbcb' ); ?>
+                                               </div>
+                                       </div>
 
-<div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
-<label for="treasury_automation">
-<?php esc_html_e( 'Treasury Workflow Automation Level', 'rtbcb' ); ?>
-</label>
-<select name="treasury_automation" id="treasury_automation" required>
-<option value=""><?php esc_html_e( 'Select automation level...', 'rtbcb' ); ?></option>
-<option value="manual"><?php esc_html_e( 'Mostly manual', 'rtbcb' ); ?></option>
-<option value="some"><?php esc_html_e( 'Some automation', 'rtbcb' ); ?></option>
-<option value="full"><?php esc_html_e( 'Fully automated', 'rtbcb' ); ?></option>
-</select>
-<div class="rtbcb-field-help">
-<?php esc_html_e( 'Assess the degree to which treasury tasks rely on spreadsheets versus software.', 'rtbcb' ); ?>
-</div>
-</div>
+                 </div>
+         </div>
 
-<div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
-<label for="primary_systems">
-<?php esc_html_e( 'Primary Treasury Systems in Use', 'rtbcb' ); ?>
-</label>
-<select name="primary_systems[]" id="primary_systems" multiple required>
-<option value="erp"><?php esc_html_e( 'ERP', 'rtbcb' ); ?></option>
-<option value="bank_portals"><?php esc_html_e( 'Bank portals', 'rtbcb' ); ?></option>
-<option value="spreadsheets"><?php esc_html_e( 'Spreadsheets', 'rtbcb' ); ?></option>
-<option value="tms"><?php esc_html_e( 'Dedicated TMS', 'rtbcb' ); ?></option>
-<option value="other"><?php esc_html_e( 'Other', 'rtbcb' ); ?></option>
-</select>
-<div class="rtbcb-field-help">
-<?php esc_html_e( 'Select all platforms used today for treasury tasks.', 'rtbcb' ); ?>
-</div>
-</div>
+         <!-- Step 5: Treasury Technology -->
+         <div class="rtbcb-wizard-step" data-step="5">
+                 <div class="rtbcb-step-header">
+                         <h3><?php esc_html_e( 'Treasury technology', 'rtbcb' ); ?></h3>
+                         <p><?php esc_html_e( 'Tell us about your systems and reporting cadence.', 'rtbcb' ); ?></p>
+                 </div>
 
-<div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
-<label for="bank_import_frequency">
-<?php esc_html_e( 'Frequency of Bank Statement Imports', 'rtbcb' ); ?>
-</label>
-<select name="bank_import_frequency" id="bank_import_frequency" required>
-<option value=""><?php esc_html_e( 'Select frequency...', 'rtbcb' ); ?></option>
-<option value="manual_daily"><?php esc_html_e( 'Manual daily', 'rtbcb' ); ?></option>
-<option value="manual_weekly"><?php esc_html_e( 'Manual weekly', 'rtbcb' ); ?></option>
-<option value="automated_daily"><?php esc_html_e( 'Automated daily', 'rtbcb' ); ?></option>
-<option value="real_time"><?php esc_html_e( 'Real-time', 'rtbcb' ); ?></option>
-</select>
-<div class="rtbcb-field-help">
-<?php esc_html_e( 'How often are bank statements imported into your systems?', 'rtbcb' ); ?>
-</div>
-</div>
+                 <div class="rtbcb-step-content">
+                         <div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
+                                 <label for="treasury_automation">
+                                         <?php esc_html_e( 'Treasury Workflow Automation Level', 'rtbcb' ); ?>
+                                 </label>
+                                 <select name="treasury_automation" id="treasury_automation" required>
+                                         <option value=""><?php esc_html_e( 'Select automation level...', 'rtbcb' ); ?></option>
+                                         <option value="manual"><?php esc_html_e( 'Mostly manual', 'rtbcb' ); ?></option>
+                                         <option value="some"><?php esc_html_e( 'Some automation', 'rtbcb' ); ?></option>
+                                         <option value="full"><?php esc_html_e( 'Fully automated', 'rtbcb' ); ?></option>
+                                 </select>
+                                 <div class="rtbcb-field-help">
+                                         <?php esc_html_e( 'Assess the degree to which treasury tasks rely on spreadsheets versus software.', 'rtbcb' ); ?>
+                                 </div>
+                         </div>
 
-<div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
-<label for="reporting_cadence">
-<?php esc_html_e( 'Reporting Cadence to Stakeholders', 'rtbcb' ); ?>
-</label>
-<select name="reporting_cadence" id="reporting_cadence" required>
-<option value=""><?php esc_html_e( 'Select cadence...', 'rtbcb' ); ?></option>
-<option value="ad_hoc"><?php esc_html_e( 'Ad-hoc', 'rtbcb' ); ?></option>
-<option value="monthly"><?php esc_html_e( 'Monthly', 'rtbcb' ); ?></option>
-<option value="weekly"><?php esc_html_e( 'Weekly', 'rtbcb' ); ?></option>
-<option value="daily"><?php esc_html_e( 'Daily', 'rtbcb' ); ?></option>
-<option value="real_time"><?php esc_html_e( 'Real-time dashboard', 'rtbcb' ); ?></option>
-</select>
-<div class="rtbcb-field-help">
-<?php esc_html_e( 'Frequency of delivering cash/treasury reports to management.', 'rtbcb' ); ?>
-</div>
-</div>
+                         <div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
+                                 <label for="primary_systems">
+                                         <?php esc_html_e( 'Primary Treasury Systems in Use', 'rtbcb' ); ?>
+                                 </label>
+                                 <select name="primary_systems[]" id="primary_systems" multiple required>
+                                         <option value="erp"><?php esc_html_e( 'ERP', 'rtbcb' ); ?></option>
+                                         <option value="bank_portals"><?php esc_html_e( 'Bank portals', 'rtbcb' ); ?></option>
+                                         <option value="spreadsheets"><?php esc_html_e( 'Spreadsheets', 'rtbcb' ); ?></option>
+                                         <option value="tms"><?php esc_html_e( 'Dedicated TMS', 'rtbcb' ); ?></option>
+                                         <option value="other"><?php esc_html_e( 'Other', 'rtbcb' ); ?></option>
+                                 </select>
+                                 <div class="rtbcb-field-help">
+                                         <?php esc_html_e( 'Select all platforms used today for treasury tasks.', 'rtbcb' ); ?>
+                                 </div>
+                         </div>
 
-<div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
-<label for="annual_payment_volume">
-<?php esc_html_e( 'Annual Payment Volume', 'rtbcb' ); ?>
-</label>
-<input type="number" name="annual_payment_volume" id="annual_payment_volume" min="0" step="1" required />
-<div class="rtbcb-field-help">
-<?php esc_html_e( 'Approximate number of payments processed per year.', 'rtbcb' ); ?>
-</div>
-</div>
+                         <div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
+                                 <label for="bank_import_frequency">
+                                         <?php esc_html_e( 'Frequency of Bank Statement Imports', 'rtbcb' ); ?>
+                                 </label>
+                                 <select name="bank_import_frequency" id="bank_import_frequency" required>
+                                         <option value=""><?php esc_html_e( 'Select frequency...', 'rtbcb' ); ?></option>
+                                         <option value="manual_daily"><?php esc_html_e( 'Manual daily', 'rtbcb' ); ?></option>
+                                         <option value="manual_weekly"><?php esc_html_e( 'Manual weekly', 'rtbcb' ); ?></option>
+                                         <option value="automated_daily"><?php esc_html_e( 'Automated daily', 'rtbcb' ); ?></option>
+                                         <option value="real_time"><?php esc_html_e( 'Real-time', 'rtbcb' ); ?></option>
+                                 </select>
+                                 <div class="rtbcb-field-help">
+                                         <?php esc_html_e( 'How often are bank statements imported into your systems?', 'rtbcb' ); ?>
+                                 </div>
+                         </div>
 
-<div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
-<label for="payment_approval_workflow">
-<?php esc_html_e( 'Treasury Payment Approval Workflow', 'rtbcb' ); ?>
-</label>
-<select name="payment_approval_workflow" id="payment_approval_workflow" required>
-<option value=""><?php esc_html_e( 'Select workflow...', 'rtbcb' ); ?></option>
-<option value="single"><?php esc_html_e( 'Single approver', 'rtbcb' ); ?></option>
-<option value="dual"><?php esc_html_e( 'Dual approval', 'rtbcb' ); ?></option>
-<option value="tiered"><?php esc_html_e( 'Tiered/role-based', 'rtbcb' ); ?></option>
-<option value="none"><?php esc_html_e( 'No formal workflow', 'rtbcb' ); ?></option>
-</select>
-<div class="rtbcb-field-help">
-<?php esc_html_e( 'Describe how payments are authorized.', 'rtbcb' ); ?>
-</div>
-</div>
+                         <div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
+                                 <label for="reporting_cadence">
+                                         <?php esc_html_e( 'Reporting Cadence to Stakeholders', 'rtbcb' ); ?>
+                                 </label>
+                                 <select name="reporting_cadence" id="reporting_cadence" required>
+                                         <option value=""><?php esc_html_e( 'Select cadence...', 'rtbcb' ); ?></option>
+                                         <option value="ad_hoc"><?php esc_html_e( 'Ad-hoc', 'rtbcb' ); ?></option>
+                                         <option value="monthly"><?php esc_html_e( 'Monthly', 'rtbcb' ); ?></option>
+                                         <option value="weekly"><?php esc_html_e( 'Weekly', 'rtbcb' ); ?></option>
+                                         <option value="daily"><?php esc_html_e( 'Daily', 'rtbcb' ); ?></option>
+                                         <option value="real_time"><?php esc_html_e( 'Real-time dashboard', 'rtbcb' ); ?></option>
+                                 </select>
+                                 <div class="rtbcb-field-help">
+                                         <?php esc_html_e( 'Frequency of delivering cash/treasury reports to management.', 'rtbcb' ); ?>
+                                 </div>
+                         </div>
+                 </div>
+         </div>
+
+<!-- Step 6: Processes & Compliance -->
+<div class="rtbcb-wizard-step" data-step="6">
+        <div class="rtbcb-step-header">
+                <h3><?php esc_html_e( 'Processes and compliance', 'rtbcb' ); ?></h3>
+                <p><?php esc_html_e( 'Share your volume, workflows, and control requirements.', 'rtbcb' ); ?></p>
+        </div>
+
+        <div class="rtbcb-step-content">
+                <div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
+                        <label for="annual_payment_volume">
+                                <?php esc_html_e( 'Annual Payment Volume', 'rtbcb' ); ?>
+                        </label>
+                        <input type="number" name="annual_payment_volume" id="annual_payment_volume" min="0" step="1" required />
+                        <div class="rtbcb-field-help">
+                                <?php esc_html_e( 'Approximate number of payments processed per year.', 'rtbcb' ); ?>
+                        </div>
+                </div>
+
+                <div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
+                        <label for="payment_approval_workflow">
+                                <?php esc_html_e( 'Treasury Payment Approval Workflow', 'rtbcb' ); ?>
+                        </label>
+                        <select name="payment_approval_workflow" id="payment_approval_workflow" required>
+                                <option value=""><?php esc_html_e( 'Select workflow...', 'rtbcb' ); ?></option>
+                                <option value="single"><?php esc_html_e( 'Single approver', 'rtbcb' ); ?></option>
+                                <option value="dual"><?php esc_html_e( 'Dual approval', 'rtbcb' ); ?></option>
+                                <option value="tiered"><?php esc_html_e( 'Tiered/role-based', 'rtbcb' ); ?></option>
+                                <option value="none"><?php esc_html_e( 'No formal workflow', 'rtbcb' ); ?></option>
+                        </select>
+                        <div class="rtbcb-field-help">
+                                <?php esc_html_e( 'Describe how payments are authorized.', 'rtbcb' ); ?>
+                        </div>
+                </div>
 
 <div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
 <label for="reconciliation_method">
@@ -506,8 +535,8 @@ min="0.5" max="100" step="0.5" placeholder="0" required inputmode="decimal" />
 				</div>
 			</div>
 
-                        <!-- Step 5: Treasury Challenges -->
-                        <div class="rtbcb-wizard-step" data-step="5">
+                       <!-- Step 7: Treasury Challenges -->
+                       <div class="rtbcb-wizard-step" data-step="7">
 				<div class="rtbcb-step-header">
 					<h3><?php esc_html_e( 'What are your biggest challenges?', 'rtbcb' ); ?></h3>
 					<p><?php esc_html_e( 'Select the pain points that best describe your current treasury challenges.', 'rtbcb' ); ?></p>
@@ -620,8 +649,8 @@ min="0.5" max="100" step="0.5" placeholder="0" required inputmode="decimal" />
 				</div>
 			</div>
 
-                        <!-- Step 6: Strategic Context -->
-                        <div class="rtbcb-wizard-step" data-step="6">
+                         <!-- Step 8: Strategic Context -->
+                         <div class="rtbcb-wizard-step" data-step="8">
 				<div class="rtbcb-step-header">
 					<h3><?php esc_html_e( 'Strategic context for your initiative', 'rtbcb' ); ?></h3>
 					<p><?php esc_html_e( 'Help us understand the goals and constraints for your project.', 'rtbcb' ); ?></p>
@@ -684,8 +713,8 @@ min="0.5" max="100" step="0.5" placeholder="0" required inputmode="decimal" />
 				</div>
 			</div>
 
-                        <!-- Step 7: Contact Information -->
-                        <div class="rtbcb-wizard-step" data-step="7">
+                         <!-- Step 9: Contact Information -->
+                         <div class="rtbcb-wizard-step" data-step="9">
 				<div class="rtbcb-step-header">
 					<h3><?php esc_html_e( 'Get your business case', 'rtbcb' ); ?></h3>
 					<p><?php esc_html_e( 'Enter your email to receive your personalized ROI analysis and recommendations.', 'rtbcb' ); ?></p>
