@@ -47,5 +47,8 @@ vm.runInThisContext(wizardCode);
 const builder = new BusinessCaseBuilder();
 
 builder.nextBtn.click();
+const activeStep = dom.window.document.querySelector('.rtbcb-progress-step.active');
+assert.ok(activeStep, 'Active progress step should exist');
+assert.strictEqual(activeStep.dataset.step, '2', 'Active progress indicator should match current step');
 assert.strictEqual(builder.currentStep, 2, 'Wizard should advance to step 2 even with missing progress steps');
 console.log('Wizard missing progress step test passed.');
