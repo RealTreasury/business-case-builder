@@ -111,6 +111,8 @@ vm.runInThisContext(wizardCode);
 
   // Step 4
   document.getElementById('email').value = 'test@example.com';
+  const formData = builder.collectFormData();
+  assert.doesNotThrow(() => builder.validateFormData(formData));
   await builder.handleSubmit();
 
   const iframe = document.querySelector('#report-container iframe');
