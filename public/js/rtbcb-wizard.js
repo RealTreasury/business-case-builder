@@ -176,13 +176,12 @@ this.lastValidationErrors = [];
 		this.init();
 	}
 
-	init() {
-		this.cacheElements();
-		this.bindEvents();
-		this.updateStepVisibility();
-		this.updateProgressIndicator();
-		this.restorePersistentState();
-	}
+       init() {
+               this.cacheElements();
+               this.bindEvents();
+               this.initializePath();
+               this.restorePersistentState();
+       }
 
 	cacheElements() {
 		// Navigation buttons
@@ -230,11 +229,10 @@ this.lastValidationErrors = [];
                 this.form.addEventListener('change', (event) => {
                         const target = event.target;
 
-                        if (target.matches('input[name="report_type"]')) {
-                                console.log('RTBCB: Report type changed to:', target.value);
-                                this.initializePath();
-                                this.updateStepVisibility();
-                        }
+                       if (target.matches('input[name="report_type"]')) {
+                               console.log('RTBCB: Report type changed to:', target.value);
+                               this.initializePath();
+                       }
 
                         if (target.matches('input[name="pain_points[]"]')) {
                                 const card = target.closest('.rtbcb-pain-point-card');
@@ -475,14 +473,8 @@ this.lastValidationErrors = [];
 
 		console.log('RTBCB: handleNext called for step', this.currentStep);
 
-		// Determine questionnaire path before validating step 1
-		if ( this.currentStep === 1 ) {
-			console.log('RTBCB: Initializing path for step 1');
-			this.initializePath();
-		}
-
-		console.log('RTBCB: About to validate step', this.currentStep);
-		const validationPassed = this.validateStep( this.currentStep );
+               console.log('RTBCB: About to validate step', this.currentStep);
+               const validationPassed = this.validateStep( this.currentStep );
 		if ( validationPassed ) {
 			console.log('RTBCB: Step validation passed');
 			if ( this.currentStep < this.totalSteps ) {

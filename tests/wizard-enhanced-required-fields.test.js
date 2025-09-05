@@ -96,7 +96,9 @@ vm.runInThisContext(wizardCode);
   builder.handleError = (data) => { errorData = data; };
   builder.showEnhancedHTMLReport = (html) => { displayReport(html); };
 
-  document.querySelector('input[name="report_type"][value="enhanced"]').checked = true;
+  const enhancedRadio = document.querySelector('input[name="report_type"][value="enhanced"]');
+  enhancedRadio.checked = true;
+  enhancedRadio.dispatchEvent(new window.Event('change', { bubbles: true }));
   await builder.handleNext();
 
   document.getElementById('company_name').value = 'MyCo';

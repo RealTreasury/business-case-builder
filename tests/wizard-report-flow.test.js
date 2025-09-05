@@ -103,7 +103,9 @@ vm.runInThisContext(wizardCode);
   };
 
   // Step 1 - choose enhanced
-  document.querySelector('input[name="report_type"][value="enhanced"]').checked = true;
+  const enhancedRadio = document.querySelector('input[name="report_type"][value="enhanced"]');
+  enhancedRadio.checked = true;
+  enhancedRadio.dispatchEvent(new window.Event('change', { bubbles: true }));
   await builder.handleNext();
 
   // Step 2
