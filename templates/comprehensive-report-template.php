@@ -1340,6 +1340,19 @@ section.classList.toggle( 'collapsed', ! nowVisible );
 } );
 } );
 
+// Allow clicking on section headers to toggle content
+document.querySelectorAll('.rtbcb-section-header-enhanced').forEach( header => {
+header.addEventListener( 'click', function( e ) {
+if ( e.target.closest( '.rtbcb-section-toggle' ) ) {
+return;
+}
+const toggle = this.querySelector( '.rtbcb-section-toggle' );
+if ( toggle ) {
+toggle.click();
+}
+} );
+} );
+
 // Metric card interactions
 document.querySelectorAll('.rtbcb-metric-card').forEach(card => {
 card.addEventListener('mouseenter', function() {
