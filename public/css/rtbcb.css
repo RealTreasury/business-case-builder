@@ -399,6 +399,8 @@ html {
 
     .rtbcb-progress-step {
         padding: 0 4px;
+        flex: 1;
+        min-width: 0;
     }
 
     .rtbcb-progress-number {
@@ -410,6 +412,9 @@ html {
     .rtbcb-progress-label {
         font-size: 13px;
         font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 }
 
@@ -1503,6 +1508,8 @@ html {
         z-index: 2;
         background: transparent;
         padding: 0 8px;
+        flex: 1;
+        min-width: 0;
     }
 
 .rtbcb-progress-number {
@@ -1548,6 +1555,9 @@ html {
     color: var(--text-secondary);
     font-weight: 600;
     text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .rtbcb-progress-step.active .rtbcb-progress-label,
@@ -1794,6 +1804,9 @@ html {
     .rtbcb-progress-label {
         font-size: 13px;
         font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .rtbcb-step-header h3 {
@@ -2060,6 +2073,9 @@ html {
     font-size: 14px;               /* Increase from 12px */
     font-weight: 600;              /* Add weight */
     text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* Active progress step label */
@@ -2132,6 +2148,9 @@ html {
     .rtbcb-progress-label {
         font-size: 13px;           /* Slightly larger on mobile */
         font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
     
     /* Ensure minimum touch targets */
