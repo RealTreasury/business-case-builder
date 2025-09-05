@@ -12,7 +12,7 @@ if ( typeof module === 'object' && module.exports && typeof require === 'functio
 	}
 }
 
-/* global wp */
+/* global wp, TEST_ENV */
 const __ = ( typeof wp !== 'undefined' && wp.i18n && wp.i18n.__ ) ? wp.i18n.__ : ( s ) => s;
 
 /**
@@ -125,6 +125,10 @@ observer.disconnect();
 }
 } );
 observer.observe( document.body, { childList: true, subtree: true } );
+}
+
+if ( typeof TEST_ENV !== 'undefined' && TEST_ENV && ! document.getElementById( 'rtbcbForm' ) ) {
+return;
 }
 
 const start = Date.now();
