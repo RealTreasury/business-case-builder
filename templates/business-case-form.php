@@ -27,18 +27,19 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 
 <!-- Modal Overlay -->
 <div class="rtbcb-modal-overlay" id="rtbcbModalOverlay">
-	<div class="rtbcb-modal-container rtbcb-modal">
-		<!-- Modal Header -->
-		<div class="rtbcb-modal-header">
-			<button type="button" class="rtbcb-modal-close" onclick="closeBusinessCaseModal()">&times;</button>
-			<h2 class="rtbcb-modal-title"><?php echo esc_html( $title ); ?></h2>
-			<p class="rtbcb-modal-subtitle"><?php echo esc_html( $subtitle ); ?></p>
-		</div>
+       <div class="rtbcb-modal-container">
+               <div class="rtbcb-modal">
+                       <!-- Modal Header -->
+                       <div class="rtbcb-modal-header">
+                               <button type="button" class="rtbcb-modal-close" onclick="closeBusinessCaseModal()">&times;</button>
+                               <h2 class="rtbcb-modal-title"><?php echo esc_html( $title ); ?></h2>
+                               <p class="rtbcb-modal-subtitle"><?php echo esc_html( $subtitle ); ?></p>
+                       </div>
 
-		<!-- Modal Body -->
-		<div class="rtbcb-modal-body">
-			<div class="rtbcb-form-container">
-				<form id="rtbcbForm" class="rtbcb-form rtbcb-wizard" method="post" novalidate>
+                       <!-- Modal Body -->
+                       <div class="rtbcb-modal-body">
+                               <div class="rtbcb-form-container">
+                                       <form id="rtbcbForm" class="rtbcb-form rtbcb-wizard" method="post" novalidate>
 
 					<!-- Progress Indicator -->
                                         <div class="rtbcb-wizard-progress">
@@ -796,9 +797,10 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
             <div class="rtbcb-progress-step">
                 <span class="rtbcb-progress-step-text"><?php esc_html_e( 'Preparing your analysis...', 'rtbcb' ); ?></span>
             </div>
-			<div class="rtbcb-progress-partial"><!-- Partial results will be shown here --></div>
-			<button type="button" class="rtbcb-progress-cancel"><?php esc_html_e( 'Cancel and Start Over', 'rtbcb' ); ?></button>
+                        <div class="rtbcb-progress-partial"><!-- Partial results will be shown here --></div>
+                        <button type="button" class="rtbcb-progress-cancel"><?php esc_html_e( 'Cancel and Start Over', 'rtbcb' ); ?></button>
         </div>
+    </div>
     </div>
 </div>
 
