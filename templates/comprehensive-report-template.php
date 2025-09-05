@@ -79,29 +79,6 @@ $processing_display = is_numeric( $processing_time ) ? round( $processing_time, 
 						<span class="rtbcb-meta-label"><?php echo esc_html__( 'Analysis Date', 'rtbcb' ); ?></span>
 						<span class="rtbcb-meta-value"><?php echo esc_html( $analysis_date ); ?></span>
 					</div>
-					<div class="rtbcb-meta-item">
-						<span class="rtbcb-meta-icon">⚡</span>
-                                                <span class="rtbcb-meta-label"><?php echo esc_html__( 'Processing Time', 'rtbcb' ); ?></span>
-                                                <span class="rtbcb-meta-value">
-                                                        <?php
-                                                        if ( is_numeric( $processing_time ) ) {
-                                                                printf( esc_html__( '%ss', 'rtbcb' ), esc_html( $processing_display ) );
-                                                        } else {
-                                                                echo esc_html( $processing_display );
-                                                        }
-                                                        ?>
-                                                </span>
-					</div>
-										<div class="rtbcb-meta-item">
-												<span class="rtbcb-meta-icon">📊</span>
-												<span class="rtbcb-meta-label"><?php echo esc_html__( 'Analysis Type', 'rtbcb' ); ?></span>
-												<span class="rtbcb-meta-value"><?php echo esc_html( ucfirst( $analysis_type ) ); ?></span>
-										</div>
-										<div class="rtbcb-meta-item">
-												<span class="rtbcb-meta-icon">🏷️</span>
-												<span class="rtbcb-meta-label"><?php echo esc_html__( 'Version', 'rtbcb' ); ?></span>
-									<span class="rtbcb-meta-value"><?php echo esc_html( defined( 'RTBCB_VERSION' ) ? RTBCB_VERSION : __( 'dev', 'rtbcb' ) ); ?></span>
-										</div>
 </div>
 		<div class="rtbcb-ai-toggle-panel">
 			<input type="checkbox" id="rtbcb-ai-toggle" class="rtbcb-sr-only" />
