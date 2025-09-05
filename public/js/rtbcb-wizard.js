@@ -198,22 +198,20 @@ this.lastValidationErrors = [];
 		console.log('RTBCB: Cached elements - nextBtn:', !!this.nextBtn, 'prevBtn:', !!this.prevBtn, 'submitBtn:', !!this.submitBtn);
 
 		// Steps
-		this.steps = this.form.querySelectorAll('.rtbcb-wizard-step');
-		this.progressSteps = this.form.querySelectorAll('.rtbcb-progress-step');
-		this.progressLine = this.form.querySelector('.rtbcb-progress-line');
+               this.steps = this.form.querySelectorAll('.rtbcb-wizard-step');
+               this.progressSteps = this.form.querySelectorAll('.rtbcb-progress-step');
+               this.progressLine = this.form.querySelector('.rtbcb-progress-line');
+               this.submitBtn = this.form.querySelector('.rtbcb-wizard-navigation .rtbcb-nav-submit');
 
-		console.log('RTBCB: Found', this.steps.length, 'wizard steps and', this.progressSteps.length, 'progress steps');
+               console.log('RTBCB: Found', this.steps.length, 'wizard steps and', this.progressSteps.length, 'progress steps');
 
-		// Form fields by step
+               // Form fields by step
                this.basicStepFields = {
-1: ['report_type'],
-2: ['company_name'],
-3: ['pain_points'],
-4: ['email']
-};
+1: [ 'report_type', 'company_name', 'pain_points', 'email' ]
+               };
 
-		// Default to enhanced path field resolver
-		this.getStepFields = this.getEnhancedFields.bind(this);
+               // Default to enhanced path field resolver
+               this.getStepFields = this.getEnhancedFields.bind(this);
 	}
 
 	bindEvents() {
@@ -304,93 +302,95 @@ this.form.querySelectorAll('input, select').forEach(field => {
 
 		 console.log('RTBCB: Initializing path for report type:', this.reportType);
 
-		 if (this.reportType === 'enhanced') {
-			 // Enable all enhanced fields
-			 this.form.querySelectorAll('.rtbcb-enhanced-only input, .rtbcb-enhanced-only select').forEach(field => {
-					 field.disabled = false;
-					 if (field.closest('.rtbcb-field-required')) {
-							 field.setAttribute('required', 'required');
-					 }
-			 });
-			 this.form.querySelectorAll('.rtbcb-enhanced-only').forEach(el => {
-					 el.style.display = 'block';
-			 });
+               this.form.classList.toggle('rtbcb-enhanced', this.reportType === 'enhanced');
+               this.form.classList.toggle('rtbcb-basic', this.reportType === 'basic');
 
-						// Set enhanced step configuration
-                                               this.steps = [
-                                                               this.form.querySelector('.rtbcb-wizard-step[data-step="1"]'),
-                                                               this.form.querySelector('.rtbcb-wizard-step[data-step="2"]'),
-                                                               this.form.querySelector('.rtbcb-wizard-step[data-step="3"]'),
-                                                               this.form.querySelector('.rtbcb-wizard-step[data-step="4"]'),
-                                                               this.form.querySelector('.rtbcb-wizard-step[data-step="5"]'),
-                                                               this.form.querySelector('.rtbcb-wizard-step[data-step="6"]'),
-                                                               this.form.querySelector('.rtbcb-wizard-step[data-step="7"]'),
-                                                               this.form.querySelector('.rtbcb-wizard-step[data-step="8"]'),
-                                                               this.form.querySelector('.rtbcb-wizard-step[data-step="9"]')
-                                               ];
-						this.getStepFields = this.getEnhancedFields.bind(this);
+               if ( this.reportType === 'enhanced' ) {
+                        // Enable all enhanced fields
+                        this.form.querySelectorAll('.rtbcb-enhanced-only input, .rtbcb-enhanced-only select, .rtbcb-enhanced-only textarea').forEach(field => {
+                                field.disabled = false;
+                                if ( field.closest('.rtbcb-field-required') ) {
+                                        field.setAttribute('required', 'required');
+                                }
+                        });
 
-						const stepCount = this.steps.filter(Boolean).length;
-						this.progressSteps = Array.from(this.form.querySelectorAll('.rtbcb-progress-step'))
-								.filter(Boolean)
-								.slice(0, stepCount);
-						this.progressSteps.forEach((step, index) => {
-								if (step) {
-										step.style.display = 'flex';
-										step.dataset.step = index + 1;
-										const num = step.querySelector('.rtbcb-progress-number');
-										if (num) {
-												num.textContent = index + 1;
-										}
-								}
-						});
+                        // Disable basic-only fields
+                        this.form.querySelectorAll('.rtbcb-basic-only input, .rtbcb-basic-only select, .rtbcb-basic-only textarea').forEach(field => {
+                                field.disabled = true;
+                                field.removeAttribute('required');
+                        });
 
-						this.totalSteps = stepCount;
-				} else {
-			 // Basic path logic
-			 this.form.querySelectorAll('.rtbcb-enhanced-only input, .rtbcb-enhanced-only select').forEach(field => {
-					 field.disabled = true;
-					 field.removeAttribute('required');
-			 });
-			 this.form.querySelectorAll('.rtbcb-enhanced-only').forEach(el => {
-					 el.style.display = 'none';
-			 });
+                        // Bind navigation buttons
+                        if ( this.nextBtn ) {
+                                this.nextBtn.addEventListener( 'click', this.handleNext );
+                        }
+                        if ( this.prevBtn ) {
+                                this.prevBtn.addEventListener( 'click', this.handlePrev );
+                        }
 
+                        // Set enhanced step configuration
+                        this.steps = [
+                                this.form.querySelector('.rtbcb-wizard-step[data-step="1"]'),
+                                this.form.querySelector('.rtbcb-wizard-step[data-step="2"]'),
+                                this.form.querySelector('.rtbcb-wizard-step[data-step="3"]'),
+                                this.form.querySelector('.rtbcb-wizard-step[data-step="4"]'),
+                                this.form.querySelector('.rtbcb-wizard-step[data-step="5"]'),
+                                this.form.querySelector('.rtbcb-wizard-step[data-step="6"]'),
+                                this.form.querySelector('.rtbcb-wizard-step[data-step="7"]'),
+                                this.form.querySelector('.rtbcb-wizard-step[data-step="8"]'),
+                                this.form.querySelector('.rtbcb-wizard-step[data-step="9"]')
+                        ];
+                        this.getStepFields = this.getEnhancedFields.bind(this);
 
-                       this.steps = [
-                               this.form.querySelector('.rtbcb-wizard-step[data-step="1"]'),
-                               this.form.querySelector('.rtbcb-wizard-step[data-step="2"]'),
-                               this.form.querySelector('.rtbcb-wizard-step[data-step="7"]'),
-                               this.form.querySelector('.rtbcb-wizard-step[data-step="9"]')
-                       ];
-                       this.getStepFields = (step) => this.basicStepFields[step] || [];
+                        const stepCount = this.steps.filter(Boolean).length;
+                        this.progressSteps = Array.from(this.form.querySelectorAll('.rtbcb-progress-step'))
+                                .filter(Boolean)
+                                .slice(0, stepCount);
+                        this.progressSteps.forEach((step, index) => {
+                                if ( step ) {
+                                        step.style.display = 'flex';
+                                        step.dataset.step = index + 1;
+                                        const num = step.querySelector('.rtbcb-progress-number');
+                                        if ( num ) {
+                                                num.textContent = index + 1;
+                                        }
+                                }
+                        });
 
-                       const stepCount = this.steps.filter(Boolean).length;
-                       this.progressSteps = [
-                               this.form.querySelector('.rtbcb-progress-step[data-step="1"]'),
-                               this.form.querySelector('.rtbcb-progress-step[data-step="2"]'),
-                               this.form.querySelector('.rtbcb-progress-step[data-step="7"]'),
-                               this.form.querySelector('.rtbcb-progress-step[data-step="9"]')
-                       ].filter(Boolean)
-                               .slice(0, stepCount);
+                        this.totalSteps = stepCount;
+               } else {
+                        // Basic path logic
+                        this.form.querySelectorAll('.rtbcb-enhanced-only input, .rtbcb-enhanced-only select, .rtbcb-enhanced-only textarea').forEach(field => {
+                                field.disabled = true;
+                                field.removeAttribute('required');
+                        });
+                        this.form.querySelectorAll('.rtbcb-basic-only input, .rtbcb-basic-only select, .rtbcb-basic-only textarea').forEach(field => {
+                                field.disabled = false;
+                                if ( field.closest('.rtbcb-field-required') ) {
+                                        field.setAttribute('required', 'required');
+                                }
+                        });
 
-						// Hide unused progress steps and renumber
-						this.form.querySelectorAll('.rtbcb-progress-step').forEach(step => {
-								if (step) {
-										step.style.display = 'none';
-								}
-						});
-						this.progressSteps.forEach((step, index) => {
-								step.style.display = 'flex';
-								step.dataset.step = index + 1;
-								const num = step.querySelector('.rtbcb-progress-number');
-								if (num) {
-										num.textContent = index + 1;
-								}
-						});
+                        // Remove navigation bindings
+                        if ( this.nextBtn ) {
+                                this.nextBtn.removeEventListener( 'click', this.handleNext );
+                        }
+                        if ( this.prevBtn ) {
+                                this.prevBtn.removeEventListener( 'click', this.handlePrev );
+                        }
 
-						this.totalSteps = stepCount;
-				}
+                        // Single step configuration
+                        this.steps = [ this.form.querySelector('.rtbcb-wizard-step[data-step="1"]') ];
+                        this.getStepFields = () => this.basicStepFields[1] || [];
+
+                        this.form.querySelectorAll('.rtbcb-progress-step').forEach(step => {
+                                if ( step ) {
+                                        step.style.display = 'none';
+                                }
+                        });
+                        this.progressSteps = [];
+                        this.totalSteps = 1;
+               }
 
 				console.log('RTBCB: Path initialized. Total steps:', this.totalSteps, 'Current step fields:', this.getStepFields(this.currentStep));
 
@@ -472,32 +472,30 @@ this.form.querySelectorAll('input, select').forEach(field => {
 	}
 
 	populateForm( data ) {
-		Object.entries( data ).forEach( ( [ key, value ] ) => {
-			if ( Array.isArray( value ) ) {
-				value.forEach( ( val ) => {
-					const field = this.form.querySelector( `[name="${ key }"][value="${ val }"]` );
-					if ( field ) {
-						field.checked = true;
-					}
-				} );
-			} else {
-				const field = this.form.querySelector( `[name="${ key }"]` );
-				if ( ! field ) {
-					return;
-				}
-				if ( field.type === 'checkbox' ) {
-					field.checked = true;
-				} else if ( field.type === 'radio' ) {
-					const radio = this.form.querySelector( `[name="${ key }"][value="${ value }"]` );
-					if ( radio ) {
-						radio.checked = true;
-					}
-				} else {
-					field.value = value;
-				}
-			}
-		} );
-	}
+               Object.entries( data ).forEach( ( [ key, value ] ) => {
+                        if ( Array.isArray( value ) ) {
+                                value.forEach( ( val ) => {
+                                        this.form.querySelectorAll( `[name="${ key }"][value="${ val }"]` ).forEach( field => {
+                                                field.checked = true;
+                                        } );
+                                } );
+                        } else {
+                                const fields = this.form.querySelectorAll( `[name="${ key }"]` );
+                                if ( ! fields.length ) {
+                                        return;
+                                }
+                                fields.forEach( field => {
+                                        if ( field.type === 'checkbox' ) {
+                                                field.checked = true;
+                                        } else if ( field.type === 'radio' ) {
+                                                field.checked = field.value === value;
+                                        } else {
+                                                field.value = value;
+                                        }
+                                } );
+                        }
+                } );
+        }
 
 	clearPersistentState() {
 		try {
@@ -620,9 +618,10 @@ this.form.querySelectorAll('input, select').forEach(field => {
                         this.clearStepError( stepNumber );
                 }
 
-                for (const fieldName of currentFields) {
-                        const field = this.form.querySelector(`[name="${fieldName}"]`);
-                        if (!field) {
+               for ( const fieldName of currentFields ) {
+                        const candidates = Array.from( this.form.querySelectorAll( `[name="${ fieldName }"]` ) ).filter( f => ! f.disabled );
+                        const field = candidates[0];
+                        if ( ! field ) {
                                 continue;
                         }
 
