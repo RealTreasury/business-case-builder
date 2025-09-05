@@ -349,33 +349,39 @@ this.form.querySelectorAll('input, select').forEach(field => {
 						});
 
 						this.totalSteps = stepCount;
-				} else {
-			 // Basic path logic
-			 this.form.querySelectorAll('.rtbcb-enhanced-only input, .rtbcb-enhanced-only select').forEach(field => {
-					 field.disabled = true;
-					 field.removeAttribute('required');
-			 });
-			 this.form.querySelectorAll('.rtbcb-enhanced-only').forEach(el => {
-					 el.style.display = 'none';
-			 });
+                                } else {
+                        // Basic path logic
+                        this.form.querySelectorAll('.rtbcb-enhanced-only input, .rtbcb-enhanced-only select').forEach(field => {
+                                        field.disabled = true;
+                                        field.removeAttribute('required');
+                        });
+                        this.form.querySelectorAll('.rtbcb-enhanced-only').forEach(el => {
+                                        el.style.display = 'none';
+                        });
 
+                        // Ensure contact step is included and email is required
+                        const contactStep = this.form.querySelector('.rtbcb-wizard-step[data-step="9"]');
+                        const emailField = contactStep ? contactStep.querySelector('input[name="email"]') : null;
+                        if ( emailField ) {
+                                        emailField.setAttribute('required', 'required');
+                        }
 
-                       this.steps = [
-                               this.form.querySelector('.rtbcb-wizard-step[data-step="1"]'),
-                               this.form.querySelector('.rtbcb-wizard-step[data-step="2"]'),
-                               this.form.querySelector('.rtbcb-wizard-step[data-step="7"]'),
-                               this.form.querySelector('.rtbcb-wizard-step[data-step="9"]')
-                       ];
-                       this.getStepFields = (step) => this.basicStepFields[step] || [];
+                        this.steps = [
+                                this.form.querySelector('.rtbcb-wizard-step[data-step="1"]'),
+                                this.form.querySelector('.rtbcb-wizard-step[data-step="2"]'),
+                                this.form.querySelector('.rtbcb-wizard-step[data-step="7"]'),
+                                contactStep
+                        ];
+                        this.getStepFields = (step) => this.basicStepFields[step] || [];
 
-                       const stepCount = this.steps.filter(Boolean).length;
-                       this.progressSteps = [
-                               this.form.querySelector('.rtbcb-progress-step[data-step="1"]'),
-                               this.form.querySelector('.rtbcb-progress-step[data-step="2"]'),
-                               this.form.querySelector('.rtbcb-progress-step[data-step="7"]'),
-                               this.form.querySelector('.rtbcb-progress-step[data-step="9"]')
-                       ].filter(Boolean)
-                               .slice(0, stepCount);
+                        const stepCount = this.steps.filter(Boolean).length;
+                        this.progressSteps = [
+                                this.form.querySelector('.rtbcb-progress-step[data-step="1"]'),
+                                this.form.querySelector('.rtbcb-progress-step[data-step="2"]'),
+                                this.form.querySelector('.rtbcb-progress-step[data-step="7"]'),
+                                this.form.querySelector('.rtbcb-progress-step[data-step="9"]')
+                        ].filter(Boolean)
+                                .slice(0, stepCount);
 
 						// Hide unused progress steps and renumber
 						this.form.querySelectorAll('.rtbcb-progress-step').forEach(step => {
