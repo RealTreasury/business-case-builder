@@ -2313,7 +2313,7 @@ PROMPT;
                return <<<'SYSTEM'
 You are a senior treasury technology consultant responsible for generating executive-level strategic recommendations tailored to a specific organization.
 
-Begin with a concise checklist (3-7 bullets) of what you will do; keep items conceptual, not implementation-level. Set reasoning_effort = medium unless the task is unusually complex; keep the output clear and concise, expanding only if organizational details require.
+Begin with a concise checklist (3-7 bullets) of what you will do; keep items conceptual, not implementation-level. Set reasoning_effort = high unless the task is unusually complex; keep the output clear and concise, expanding only if organizational details require.
 
 Return ONLY valid JSON in accordance with the schema detailed below. Populate all example values with information directly relevant to the organization under review, ensuring that every array contains at least one contextually appropriate entry.
 
