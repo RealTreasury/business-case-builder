@@ -5,11 +5,11 @@
 
 // Ensure Chart.js date adapter is registered in Node/CommonJS environments.
 if ( typeof module === 'object' && module.exports && typeof require === 'function' ) {
-       try {
-               require( './chartjs-adapter-date-fns.bundle.min.js' );
-       } catch ( e ) {
-               // Adapter not loaded in tests; ignore.
-       }
+	try {
+		require( './chartjs-adapter-date-fns.bundle.min.js' );
+	} catch ( e ) {
+		// Adapter not loaded in tests; ignore.
+	}
 }
 
 /* global wp */
@@ -176,12 +176,12 @@ this.lastValidationErrors = [];
 		this.init();
 	}
 
-       init() {
-               this.cacheElements();
-               this.bindEvents();
-               this.initializePath();
-               this.restorePersistentState();
-       }
+	init() {
+		this.cacheElements();
+		this.bindEvents();
+		this.initializePath();
+		this.restorePersistentState();
+	}
 
 	cacheElements() {
 		// Navigation buttons
@@ -198,16 +198,16 @@ this.lastValidationErrors = [];
 
 		console.log('RTBCB: Found', this.steps.length, 'wizard steps and', this.progressSteps.length, 'progress steps');
 
-               // Form fields by step
-               this.basicStepFields = {
-                       1: ['report_type'],
-                       2: ['company_name'],
-                       3: ['email']
-               };
+		// Form fields by step
+		this.basicStepFields = {
+			1: ['report_type'],
+			2: ['company_name'],
+			3: ['email']
+		};
 
-               // Default to enhanced path field resolver
-               this.getStepFields = this.getEnhancedFields.bind(this);
-       }
+		// Default to enhanced path field resolver
+		this.getStepFields = this.getEnhancedFields.bind(this);
+	}
 
 	bindEvents() {
 		// Navigation buttons
@@ -225,26 +225,26 @@ this.lastValidationErrors = [];
 		// Form submission
 		this.form.addEventListener( 'submit', this.handleSubmit );
 
-                // Pain point cards and report type changes
-                this.form.addEventListener('change', (event) => {
-                        const target = event.target;
+		 // Pain point cards and report type changes
+		 this.form.addEventListener('change', (event) => {
+			 const target = event.target;
 
-                       if (target.matches('input[name="report_type"]')) {
-                               console.log('RTBCB: Report type changed to:', target.value);
-                               this.initializePath();
-                       }
+			if (target.matches('input[name="report_type"]')) {
+			        console.log('RTBCB: Report type changed to:', target.value);
+			        this.initializePath();
+			}
 
-                        if (target.matches('input[name="pain_points[]"]')) {
-                                const card = target.closest('.rtbcb-pain-point-card');
-                                if (card) {
-                                        card.classList.toggle('rtbcb-selected', target.checked);
-                                }
-                                const checkedBoxes = this.form.querySelectorAll('input[name="pain_points[]"]:checked');
-                                if (checkedBoxes.length > 0) {
-                                        this.clearStepError(5);
-                                }
-                        }
-                });
+			 if (target.matches('input[name="pain_points[]"]')) {
+			         const card = target.closest('.rtbcb-pain-point-card');
+			         if (card) {
+			                 card.classList.toggle('rtbcb-selected', target.checked);
+			         }
+			         const checkedBoxes = this.form.querySelectorAll('input[name="pain_points[]"]:checked');
+			         if (checkedBoxes.length > 0) {
+			                 this.clearStepError(5);
+			         }
+			 }
+		 });
 
 		// Real-time validation
 		this.form.querySelectorAll('input, select').forEach(field => {
@@ -260,93 +260,93 @@ this.lastValidationErrors = [];
 		});
 	}
 
-        initializePath() {
-                const selected = this.form.querySelector('input[name="report_type"]:checked');
-                this.reportType = selected ? selected.value : 'basic';
+	initializePath() {
+		 const selected = this.form.querySelector('input[name="report_type"]:checked');
+		 this.reportType = selected ? selected.value : 'basic';
 
-                console.log('RTBCB: Initializing path for report type:', this.reportType);
+		 console.log('RTBCB: Initializing path for report type:', this.reportType);
 
-                if (this.reportType === 'enhanced') {
-                        // Enable all enhanced fields
-                        this.form.querySelectorAll('.rtbcb-enhanced-only input, .rtbcb-enhanced-only select').forEach(field => {
-                                field.disabled = false;
-                                if (field.closest('.rtbcb-field-required')) {
-                                        field.setAttribute('required', 'required');
-                                }
-                        });
-                        this.form.querySelectorAll('.rtbcb-enhanced-only').forEach(el => {
-                                el.style.display = 'block';
-                        });
+		 if (this.reportType === 'enhanced') {
+			 // Enable all enhanced fields
+			 this.form.querySelectorAll('.rtbcb-enhanced-only input, .rtbcb-enhanced-only select').forEach(field => {
+			         field.disabled = false;
+			         if (field.closest('.rtbcb-field-required')) {
+			                 field.setAttribute('required', 'required');
+			         }
+			 });
+			 this.form.querySelectorAll('.rtbcb-enhanced-only').forEach(el => {
+			         el.style.display = 'block';
+			 });
 
-                        // Set enhanced step configuration
-                        this.steps = [
-                                this.form.querySelector('.rtbcb-wizard-step[data-step="1"]'),
-                                this.form.querySelector('.rtbcb-wizard-step[data-step="2"]'),
-                                this.form.querySelector('.rtbcb-wizard-step[data-step="3"]'),
-                                this.form.querySelector('.rtbcb-wizard-step[data-step="4"]'),
-                                this.form.querySelector('.rtbcb-wizard-step[data-step="5"]'),
-                                this.form.querySelector('.rtbcb-wizard-step[data-step="6"]'),
-                               this.form.querySelector('.rtbcb-wizard-step[data-step="7"]')
-                       ];
-                       this.getStepFields = this.getEnhancedFields.bind(this);
-                       this.progressSteps = Array.from(this.form.querySelectorAll('.rtbcb-progress-step')).filter(Boolean);
-                        this.progressSteps.forEach((step, index) => {
-                                if (step) {
-                                        step.style.display = 'flex';
-                                        const num = step.querySelector('.rtbcb-progress-number');
-                                        if (num) {
-                                                num.textContent = index + 1;
-                                        }
-                                }
-                        });
+			 // Set enhanced step configuration
+			 this.steps = [
+			         this.form.querySelector('.rtbcb-wizard-step[data-step="1"]'),
+			         this.form.querySelector('.rtbcb-wizard-step[data-step="2"]'),
+			         this.form.querySelector('.rtbcb-wizard-step[data-step="3"]'),
+			         this.form.querySelector('.rtbcb-wizard-step[data-step="4"]'),
+			         this.form.querySelector('.rtbcb-wizard-step[data-step="5"]'),
+			         this.form.querySelector('.rtbcb-wizard-step[data-step="6"]'),
+			        this.form.querySelector('.rtbcb-wizard-step[data-step="7"]')
+			];
+			this.getStepFields = this.getEnhancedFields.bind(this);
+			this.progressSteps = Array.from(this.form.querySelectorAll('.rtbcb-progress-step')).filter(Boolean);
+			 this.progressSteps.forEach((step, index) => {
+			         if (step) {
+			                 step.style.display = 'flex';
+			                 const num = step.querySelector('.rtbcb-progress-number');
+			                 if (num) {
+			                         num.textContent = index + 1;
+			                 }
+			         }
+			 });
 
-                        this.totalSteps = 7;
-                } else {
-                        // Basic path logic
-                        this.form.querySelectorAll('.rtbcb-enhanced-only input, .rtbcb-enhanced-only select').forEach(field => {
-                                field.disabled = true;
-                                field.removeAttribute('required');
-                        });
-                        this.form.querySelectorAll('.rtbcb-enhanced-only').forEach(el => {
-                                el.style.display = 'none';
-                        });
+			 this.totalSteps = 7;
+		 } else {
+			 // Basic path logic
+			 this.form.querySelectorAll('.rtbcb-enhanced-only input, .rtbcb-enhanced-only select').forEach(field => {
+			         field.disabled = true;
+			         field.removeAttribute('required');
+			 });
+			 this.form.querySelectorAll('.rtbcb-enhanced-only').forEach(el => {
+			         el.style.display = 'none';
+			 });
 
 
-                       this.steps = [
-                               this.form.querySelector('.rtbcb-wizard-step[data-step="1"]'),
-                               this.form.querySelector('.rtbcb-wizard-step[data-step="2"]'),
-                               this.form.querySelector('.rtbcb-wizard-step[data-step="7"]')
-                       ];
-                       this.getStepFields = (step) => this.basicStepFields[step] || [];
+			this.steps = [
+			        this.form.querySelector('.rtbcb-wizard-step[data-step="1"]'),
+			        this.form.querySelector('.rtbcb-wizard-step[data-step="2"]'),
+			        this.form.querySelector('.rtbcb-wizard-step[data-step="7"]')
+			];
+			this.getStepFields = (step) => this.basicStepFields[step] || [];
 
-                        this.progressSteps = [
-                                this.form.querySelector('.rtbcb-progress-step[data-step="1"]'),
-                                this.form.querySelector('.rtbcb-progress-step[data-step="2"]'),
-                                this.form.querySelector('.rtbcb-progress-step[data-step="7"]')
-                        ].filter(Boolean);
+			 this.progressSteps = [
+			         this.form.querySelector('.rtbcb-progress-step[data-step="1"]'),
+			         this.form.querySelector('.rtbcb-progress-step[data-step="2"]'),
+			         this.form.querySelector('.rtbcb-progress-step[data-step="7"]')
+			 ].filter(Boolean);
 
-                        // Hide unused progress steps and renumber
-                        this.form.querySelectorAll('.rtbcb-progress-step').forEach(step => {
-                                if (step) {
-                                        step.style.display = 'none';
-                                }
-                        });
-                        this.progressSteps.forEach((step, index) => {
-                                step.style.display = 'flex';
-                                const num = step.querySelector('.rtbcb-progress-number');
-                                if (num) {
-                                        num.textContent = index + 1;
-                                }
-                        });
+			 // Hide unused progress steps and renumber
+			 this.form.querySelectorAll('.rtbcb-progress-step').forEach(step => {
+			         if (step) {
+			                 step.style.display = 'none';
+			         }
+			 });
+			 this.progressSteps.forEach((step, index) => {
+			         step.style.display = 'flex';
+			         const num = step.querySelector('.rtbcb-progress-number');
+			         if (num) {
+			                 num.textContent = index + 1;
+			         }
+			 });
 
-                        this.totalSteps = 3;
-                }
+			 this.totalSteps = 3;
+		 }
 
-               console.log('RTBCB: Path initialized. Total steps:', this.totalSteps, 'Current step fields:', this.getStepFields(this.currentStep));
+		console.log('RTBCB: Path initialized. Total steps:', this.totalSteps, 'Current step fields:', this.getStepFields(this.currentStep));
 
-                this.updateStepVisibility();
-                this.updateProgressIndicator();
-        }
+		 this.updateStepVisibility();
+		 this.updateProgressIndicator();
+	}
 
 	saveFormData( formData ) {
 		try {
@@ -473,8 +473,8 @@ this.lastValidationErrors = [];
 
 		console.log('RTBCB: handleNext called for step', this.currentStep);
 
-               console.log('RTBCB: About to validate step', this.currentStep);
-               const validationPassed = this.validateStep( this.currentStep );
+		console.log('RTBCB: About to validate step', this.currentStep);
+		const validationPassed = this.validateStep( this.currentStep );
 		if ( validationPassed ) {
 			console.log('RTBCB: Step validation passed');
 			if ( this.currentStep < this.totalSteps ) {
@@ -499,44 +499,44 @@ this.lastValidationErrors = [];
 		}
 	}
 
-        handlePrev( event ) {
-                if ( event && event.preventDefault ) {
-                        event.preventDefault();
-                }
+	handlePrev( event ) {
+		 if ( event && event.preventDefault ) {
+			 event.preventDefault();
+		 }
 
 		if ( this.currentStep > 1 ) {
 			this.currentStep--;
 			this.updateStepVisibility();
 			this.updateProgressIndicator();
 			this.scrollToTop();
-                }
-        }
+		 }
+	}
 
-       getEnhancedFields(stepNumber) {
-               const step = this.form.querySelector(`.rtbcb-wizard-step[data-step="${stepNumber}"]`);
-               if (!step) {
-                       return [];
-               }
-               const requiredFields = [...new Set(
-                       Array.from(step.querySelectorAll('[name][required]')).map(field => field.name)
-               )];
+	getEnhancedFields(stepNumber) {
+		const step = this.form.querySelector(`.rtbcb-wizard-step[data-step="${stepNumber}"]`);
+		if (!step) {
+			return [];
+		}
+		const requiredFields = [...new Set(
+			Array.from(step.querySelectorAll('[name][required]')).map(field => field.name)
+		)];
 
-               if (stepNumber === 2) {
-                       const jobField = step.querySelector('[name="job_title"]');
-                       if (jobField) {
-                               jobField.removeAttribute('required');
-                               const index = requiredFields.indexOf('job_title');
-                               if (index !== -1) {
-                                       requiredFields.splice(index, 1);
-                               }
-                       }
-               }
+		if (stepNumber === 2) {
+			const jobField = step.querySelector('[name="job_title"]');
+			if (jobField) {
+			        jobField.removeAttribute('required');
+			        const index = requiredFields.indexOf('job_title');
+			        if (index !== -1) {
+			                requiredFields.splice(index, 1);
+			        }
+			}
+		}
 
-               if (stepNumber === 5 && !requiredFields.includes('pain_points')) {
-                       requiredFields.push('pain_points');
-               }
-               return requiredFields;
-       }
+		if (stepNumber === 5 && !requiredFields.includes('pain_points')) {
+			requiredFields.push('pain_points');
+		}
+		return requiredFields;
+	}
 
 		validateStep(stepNumber) {
 			const currentFields = this.getStepFields(stepNumber) || [];
@@ -570,36 +570,53 @@ this.lastValidationErrors = [];
 					continue;
 				}
 
-                               if (!this.validateField(field, true)) {
-                                       isValid = false;
-                                       const fieldContainer = field.closest('.rtbcb-field');
-                                       const label = fieldContainer ? fieldContainer.querySelector('label') : null;
-                                       const fieldLabel = label ? label.textContent.trim() : fieldName;
-                                       this.lastValidationErrors.push( fieldLabel );
-                               }
-                       }
+			        if (!this.validateField(field, true)) {
+			                isValid = false;
+			                const fieldContainer = field.closest('.rtbcb-field');
+			                const label = fieldContainer ? fieldContainer.querySelector('label') : null;
+			                const fieldLabel = label ? label.textContent.trim() : fieldName;
+			                this.lastValidationErrors.push( fieldLabel );
+			        }
+			}
 
 			return isValid;
 		}
 
-       validateField(field, forceRequired = false) {
-               const value = field.value.trim();
-               let isValid = true;
-               let errorMessage = '';
+	validateField(field, forceRequired = false) {
+		const value = field.value.trim();
+		let isValid = true;
+		let errorMessage = '';
 
-               // Required field check
-               if ( forceRequired || field.hasAttribute( 'required' ) ) {
-                       if ( field.type === 'checkbox' || field.type === 'radio' ) {
-                               const checked = this.form.querySelectorAll( `[name="${ field.name }"]:checked` ).length > 0;
-                               if ( ! checked ) {
-                                       errorMessage = __( 'This field is required', 'rtbcb' );
-                                       isValid = false;
-                               }
-                       } else if ( ! value ) {
-                               errorMessage = __( 'This field is required', 'rtbcb' );
-                               isValid = false;
-                       }
-               }
+		// Special handling for radio inputs
+		if ( field.type === 'radio' ) {
+			const group = this.form.querySelectorAll( `input[name="${ field.name }"]` );
+			const checked = Array.from( group ).some( ( radio ) => radio.checked );
+
+			if ( ! checked ) {
+			        errorMessage = __( 'This field is required', 'rtbcb' );
+			        group.forEach( ( radio ) => radio.classList.add( 'rtbcb-field-invalid' ) );
+			        this.showFieldError( field, errorMessage );
+			        return false;
+			}
+
+			group.forEach( ( radio ) => radio.classList.remove( 'rtbcb-field-invalid' ) );
+			this.clearFieldError( field );
+			return true;
+		}
+
+		// Required field check
+		if ( forceRequired || field.hasAttribute( 'required' ) ) {
+			if ( field.type === 'checkbox' ) {
+			        const checked = this.form.querySelectorAll( `[name="${ field.name }"]:checked` ).length > 0;
+			        if ( ! checked ) {
+			                errorMessage = __( 'This field is required', 'rtbcb' );
+			                isValid = false;
+			        }
+			} else if ( ! value ) {
+			        errorMessage = __( 'This field is required', 'rtbcb' );
+			        isValid = false;
+			}
+		}
 
 		// Company name validation
 		if (field.name === 'company_name' && value) {
@@ -849,9 +866,9 @@ this.lastValidationErrors = [];
 		}
 
 		// Final step validation before submission
-               if (!this.validateStep(this.currentStep)) {
-                       return;
-               }
+		if (!this.validateStep(this.currentStep)) {
+			return;
+		}
 
 		if (!isValidUrl(this.ajaxUrl)) {
 			this.showEnhancedError( __( 'Service unavailable. Please reload the page.', 'rtbcb' ) );
@@ -1011,21 +1028,21 @@ this.lastValidationErrors = [];
 		const formData = new FormData();
 		const numericFields = ['hours_reconciliation', 'hours_cash_positioning', 'num_banks', 'ftes'];
 
-               const skipFields = ['report_type'];
-               for (const [key, value] of rawData.entries()) {
-                       if (skipFields.includes(key)) {
-                               continue;
-                       }
-                       if (key === 'job_title' && !value) {
-                               continue;
-                       }
-                       if (numericFields.includes(key)) {
-                               const num = parseFloat(value);
-                               formData.append(key, Number.isFinite(num) ? num : 0);
-                       } else {
-                               formData.append(key, value);
-                       }
-               }
+		const skipFields = ['report_type'];
+		for (const [key, value] of rawData.entries()) {
+			if (skipFields.includes(key)) {
+			        continue;
+			}
+			if (key === 'job_title' && !value) {
+			        continue;
+			}
+			if (numericFields.includes(key)) {
+			        const num = parseFloat(value);
+			        formData.append(key, Number.isFinite(num) ? num : 0);
+			} else {
+			        formData.append(key, value);
+			}
+		}
 
 		formData.append('action', 'rtbcb_generate_case');
 		if (typeof rtbcb_ajax !== 'undefined' && rtbcb_ajax.nonce) {
