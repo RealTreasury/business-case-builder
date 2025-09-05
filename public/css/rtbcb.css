@@ -393,13 +393,13 @@ html {
     }
 
     .rtbcb-progress-steps {
-        justify-content: flex-start;
+        justify-content: space-between;
         gap: 12px;
     }
 
     .rtbcb-progress-step {
         padding: 0 4px;
-        flex: 1;
+        flex: 0 1 auto;
         min-width: 0;
     }
 
@@ -410,7 +410,7 @@ html {
     }
 
     .rtbcb-progress-label {
-        font-size: 13px;
+        font-size: 12px;
         font-weight: 600;
         white-space: nowrap;
         overflow: hidden;
@@ -421,11 +421,15 @@ html {
 /* Extra small screen adjustments */
 @media (max-width: 480px) {
     .rtbcb-progress-steps {
-        width: max-content;
+        width: 100%;
     }
 
     .rtbcb-progress-step {
-        flex: 0 0 auto;
+        flex: 0 1 auto;
+    }
+
+    .rtbcb-progress-label {
+        font-size: 12px;
     }
 
     .rtbcb-form input,
@@ -1489,12 +1493,11 @@ html {
 
     .rtbcb-progress-steps {
         display: flex;
-        justify-content: flex-start;
+        justify-content: space-between;
         align-items: center;
         width: 100%;
         position: relative;
         z-index: 2;
-        overflow-x: auto;
         flex-wrap: nowrap;
         gap: 16px;
     }
@@ -1507,7 +1510,7 @@ html {
         z-index: 2;
         background: transparent;
         padding: 0 8px;
-        flex: 1;
+        flex: 0 1 auto;
         min-width: 0;
     }
 
@@ -1801,7 +1804,7 @@ html {
     }
 
     .rtbcb-progress-label {
-        font-size: 13px;
+        font-size: 12px;
         font-weight: 600;
         white-space: nowrap;
         overflow: hidden;
