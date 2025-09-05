@@ -569,9 +569,9 @@ this.lastValidationErrors = [];
 			}
 		}
 
-		if (stepNumber === 5 && !requiredFields.includes('pain_points')) {
-			requiredFields.push('pain_points');
-		}
+if (stepNumber === 7 && !requiredFields.includes('pain_points')) {
+requiredFields.push('pain_points');
+}
 		return requiredFields;
 	}
 
@@ -580,16 +580,16 @@ this.lastValidationErrors = [];
 			let isValid = true;
 			this.lastValidationErrors = [];
 
-			if (stepNumber === 5 && currentFields.includes('pain_points')) {
-				const checkedBoxes = this.form.querySelectorAll('input[name="pain_points[]"]:checked');
-				if (checkedBoxes.length === 0) {
-					const message = __( 'Please select at least one challenge', 'rtbcb' );
-					this.showStepError(5, message);
-					this.lastValidationErrors.push( message );
-					return false;
-				}
-                            this.clearStepError(7);
-			}
+if (stepNumber === 7 && currentFields.includes('pain_points')) {
+const checkedBoxes = this.form.querySelectorAll('input[name="pain_points[]"]:checked');
+if (checkedBoxes.length === 0) {
+const message = __( 'Please select at least one challenge', 'rtbcb' );
+this.showStepError(7, message);
+this.lastValidationErrors.push( message );
+return false;
+}
+this.clearStepError(7);
+}
 
 			for (const fieldName of currentFields) {
 				const field = this.form.querySelector(`[name="${fieldName}"]`);
