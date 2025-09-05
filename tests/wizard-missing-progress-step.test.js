@@ -47,8 +47,22 @@ vm.runInThisContext(wizardCode);
 const builder = new BusinessCaseBuilder();
 
 builder.nextBtn.click();
-const activeStep = dom.window.document.querySelector('.rtbcb-progress-step.active');
+let activeStep = dom.window.document.querySelector('.rtbcb-progress-step.active');
 assert.ok(activeStep, 'Active progress step should exist');
 assert.strictEqual(activeStep.dataset.step, '2', 'Active progress indicator should match current step');
 assert.strictEqual(builder.currentStep, 2, 'Wizard should advance to step 2 even with missing progress steps');
+
+// Move to final step and ensure progress remains consistent
+document.querySelector('input[name="company_name"]').value = 'ACME';
+builder.nextBtn.click();
+document.querySelector('input[name="email"]').value = 'test@example.com';
+builder.nextBtn.click();
+
+const progressLine = dom.window.document.querySelector('.rtbcb-progress-line');
+activeStep = dom.window.document.querySelector('.rtbcb-progress-step.active');
+assert.strictEqual(builder.currentStep, 3, 'Wizard should stop at the last valid step');
+assert.ok(activeStep, 'Active progress step should exist at final step');
+assert.strictEqual(activeStep.dataset.step, '2', 'Last progress indicator should remain active');
+assert.strictEqual(progressLine.style.width, '100%', 'Progress bar width should be 100% at final step');
+
 console.log('Wizard missing progress step test passed.');
