@@ -1136,22 +1136,27 @@ this.lastValidationErrors = [];
                                const baseName = field.replace( /\[\]$/, '' );
                                requiredFields.add( baseName );
 
-                               if ( field.endsWith( '[]' ) || baseName === 'pain_points' ) {
+                               if ( field.endsWith( '[]' ) ) {
                                        arrayFields.add( baseName );
                                }
                        } );
                }
 
                for ( const field of requiredFields ) {
+                       if ( field === 'pain_points' ) {
+                               if ( getAllValues( 'pain_points[]' ).length === 0 ) {
+                                       throw new Error( __( 'Please select at least one pain point', 'rtbcb' ) );
+                               }
+                               continue;
+                       }
+
                        if ( arrayFields.has( field ) ) {
                                if ( getAllValues( `${ field }[]` ).length === 0 ) {
-                                       if ( field === 'pain_points' ) {
-                                               throw new Error( __( 'Please select at least one pain point', 'rtbcb' ) );
-                                       }
                                        throw new Error( `${ __( 'Missing required field:', 'rtbcb' )} ${ field.replace( '_', ' ' )}` );
                                }
                                continue;
                        }
+
                        if ( ! getValue( field ) ) {
                                throw new Error( `${ __( 'Missing required field:', 'rtbcb' )} ${ field.replace( '_', ' ' )}` );
                        }
