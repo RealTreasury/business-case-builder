@@ -758,7 +758,7 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
                        $user_inputs['company_name'],
                        $enriched_profile['company_profile']['industry'] ?? '',
                        $enriched_profile['company_profile']['maturity_level'] ?? '',
-                       implode( ' ', $user_inputs['pain_points'] ),
+                       implode( ' ', (array) ( $user_inputs['pain_points'] ?? [] ) ),
                        $user_inputs['business_objective'],
                ];
 
