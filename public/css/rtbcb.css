@@ -1582,20 +1582,6 @@ html {
     transform: translateX(-100px);
 }
 
-/* Basic single-page layout */
-.rtbcb-form.rtbcb-basic .rtbcb-wizard-progress,
-.rtbcb-form.rtbcb-basic .rtbcb-wizard-navigation {
-display: none;
-}
-
-.rtbcb-form.rtbcb-enhanced .rtbcb-basic-only {
-display: none;
-}
-
-.rtbcb-form.rtbcb-basic .rtbcb-wizard-step {
-min-height: auto;
-}
-
 .rtbcb-step-header {
     text-align: center;
     margin-bottom: 12px;
