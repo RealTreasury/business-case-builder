@@ -1161,69 +1161,25 @@ $lead_id = $this->save_lead_data( $user_inputs, $scenarios, $recommendation, $re
 	* Collect and validate user inputs from POST data.
 	*/
 	private function collect_and_validate_inputs() {
-	// Get company data
-	$company      = rtbcb_get_current_company();
-	$company_name = sanitize_text_field( wp_unslash( $_POST['company_name'] ?? '' ) );
+		$company     = rtbcb_get_current_company();
+		$report_type = isset( $_POST['report_type'] ) ? sanitize_text_field( wp_unslash( $_POST['report_type'] ) ) : 'basic';
 
-	if ( empty( $company_name ) && ! empty( $company['name'] ) ) {
-	$company_name = $company['name'];
-	}
+		$validator = new RTBCB_Validator();
+		$result    = $validator->validate( $_POST, $report_type );
 
-		$raw_hours_reconciliation   = wp_unslash( $_POST['hours_reconciliation'] ?? '' );
-		$raw_hours_cash_positioning = wp_unslash( $_POST['hours_cash_positioning'] ?? '' );
-		$raw_num_banks		    = wp_unslash( $_POST['num_banks'] ?? '' );
-		$raw_ftes		    = wp_unslash( $_POST['ftes'] ?? '' );
-
-		$user_inputs = [
-		'email'			 => sanitize_email( wp_unslash( $_POST['email'] ?? '' ) ),
-		'company_name'		 => $company_name,
-		'company_size'		 => sanitize_text_field( wp_unslash( $_POST['company_size'] ?? $company['size'] ?? '' ) ),
-		'industry'		 => sanitize_text_field( wp_unslash( $_POST['industry'] ?? $company['industry'] ?? '' ) ),
-		'hours_reconciliation'	 => '' === $raw_hours_reconciliation ? 0 : floatval( $raw_hours_reconciliation ),
-		'hours_cash_positioning' => max( 0, floatval( $raw_hours_cash_positioning ) ),
-		'num_banks'		 => max( 0, intval( $raw_num_banks ) ),
-		'ftes'			 => max( 0, floatval( $raw_ftes ) ),
-		'pain_points'		 => array_map( 'sanitize_text_field', (array) wp_unslash( $_POST['pain_points'] ?? [] ) ),
-		'business_objective'	 => sanitize_text_field( wp_unslash( $_POST['business_objective'] ?? '' ) ),
-		'implementation_timeline'=> sanitize_text_field( wp_unslash( $_POST['implementation_timeline'] ?? '' ) ),
-		'budget_range'		 => sanitize_text_field( wp_unslash( $_POST['budget_range'] ?? '' ) ),
-		];
-
-	// Validate required fields
-	$validation_errors = [];
-
-	if ( empty( $user_inputs['email'] ) || ! is_email( $user_inputs['email'] ) ) {
-	$validation_errors[] = __( 'Please enter a valid email address.', 'rtbcb' );
-	}
-
-	if ( empty( $user_inputs['company_name'] ) ) {
-	$validation_errors[] = __( 'Please enter your company name.', 'rtbcb' );
-	}
-
-		if ( '' !== $raw_hours_reconciliation && ! is_numeric( $raw_hours_reconciliation ) ) {
-			$validation_errors[] = __( 'Please enter valid reconciliation hours.', 'rtbcb' );
-		} elseif ( $user_inputs['hours_reconciliation'] < 0 ) {
-			$validation_errors[] = __( 'Please enter valid reconciliation hours.', 'rtbcb' );
+		if ( is_wp_error( $result ) ) {
+			return $result;
 		}
 
-		if ( '' !== $raw_hours_cash_positioning && ! is_numeric( $raw_hours_cash_positioning ) ) {
-			$validation_errors[] = __( 'Please enter valid cash positioning hours.', 'rtbcb' );
+		if ( isset( $result['error'] ) ) {
+			return new WP_Error( 'validation_failed', $result['error'] );
 		}
 
-		if ( '' !== $raw_num_banks && ! is_numeric( $raw_num_banks ) ) {
-			$validation_errors[] = __( 'Please enter a valid number of banks.', 'rtbcb' );
+		if ( empty( $result['company_name'] ) && ! empty( $company['name'] ) ) {
+			$result['company_name'] = sanitize_text_field( $company['name'] );
 		}
 
-		if ( '' !== $raw_ftes && ! is_numeric( $raw_ftes ) ) {
-			$validation_errors[] = __( 'Please enter valid FTEs.', 'rtbcb' );
-		}
-
-
-	if ( ! empty( $validation_errors ) ) {
-	return new WP_Error( 'validation_failed', implode( ' ', $validation_errors ) );
-	}
-
-	return $user_inputs;
+		return $result;
 	}
 
 	/**
