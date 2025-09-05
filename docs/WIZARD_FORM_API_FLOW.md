@@ -6,20 +6,30 @@
    - `company_name`
    - `company_size`
    - `industry`
-2. **Operations**
+2. **Operations – Workload**
    - `hours_reconciliation`
    - `hours_cash_positioning`
-   - `num_banks`
    - `ftes`
-3. **Challenges**
+3. **Operations – Technology**
+   - `treasury_automation`
+   - `primary_systems[]`
+   - `bank_import_frequency`
+   - `reporting_cadence`
+4. **Operations – Processes**
+   - `annual_payment_volume`
+   - `payment_approval_workflow`
+   - `reconciliation_method`
+   - `cash_update_frequency`
+   - `integration_requirements[]`
+5. **Challenges**
    - `pain_points[]` (multiple choice)
-4. **Strategy**
+6. **Strategy**
    - `current_tech`
    - `business_objective`
    - `implementation_timeline`
    - `decision_makers[]`
    - `budget_range`
-5. **Contact**
+7. **Contact**
    - `email`
    - `consent`
 

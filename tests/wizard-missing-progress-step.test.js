@@ -13,7 +13,7 @@ const html = `<!DOCTYPE html><html><body>
       <div class="rtbcb-progress-steps">
         <div class="rtbcb-progress-step" data-step="1"></div>
         <div class="rtbcb-progress-step" data-step="2"></div>
-        <!-- Step 7 intentionally missing -->
+        <!-- Step 9 intentionally missing -->
       </div>
     </div>
     <div class="rtbcb-wizard-steps">
@@ -23,7 +23,7 @@ const html = `<!DOCTYPE html><html><body>
       <div class="rtbcb-wizard-step" data-step="2">
         <div class="rtbcb-field"><input name="company_name" /></div>
       </div>
-      <div class="rtbcb-wizard-step" data-step="7">
+      <div class="rtbcb-wizard-step" data-step="9">
         <div class="rtbcb-field"><input name="email" /></div>
       </div>
     </div>

@@ -22,6 +22,8 @@ const html = `<!DOCTYPE html><html><body>
         <div class="rtbcb-progress-step" data-step="5"></div>
         <div class="rtbcb-progress-step" data-step="6"></div>
         <div class="rtbcb-progress-step" data-step="7"></div>
+        <div class="rtbcb-progress-step" data-step="8"></div>
+        <div class="rtbcb-progress-step" data-step="9"></div>
       </div>
     </div>
     <div class="rtbcb-wizard-steps">
@@ -45,15 +47,27 @@ const html = `<!DOCTYPE html><html><body>
         <div class="rtbcb-field"><input id="ftes" name="ftes" type="number" /></div>
       </div>
       <div class="rtbcb-wizard-step" data-step="5">
+        <div class="rtbcb-field"><input id="treasury_automation" name="treasury_automation" /></div>
+        <div class="rtbcb-field"><input id="primary_systems" name="primary_systems" /></div>
+        <div class="rtbcb-field"><input id="bank_import_frequency" name="bank_import_frequency" /></div>
+        <div class="rtbcb-field"><input id="reporting_cadence" name="reporting_cadence" /></div>
+      </div>
+      <div class="rtbcb-wizard-step" data-step="6">
+        <div class="rtbcb-field"><input id="annual_payment_volume" name="annual_payment_volume" /></div>
+        <div class="rtbcb-field"><input id="payment_approval_workflow" name="payment_approval_workflow" /></div>
+        <div class="rtbcb-field"><input id="reconciliation_method" name="reconciliation_method" /></div>
+        <div class="rtbcb-field"><input id="cash_update_frequency" name="cash_update_frequency" /></div>
+      </div>
+      <div class="rtbcb-wizard-step" data-step="7">
         <div class="rtbcb-pain-points-validation"><div class="rtbcb-validation-message"></div></div>
         <label class="rtbcb-pain-point-card"><input type="checkbox" name="pain_points[]" value="manual" /></label>
       </div>
-      <div class="rtbcb-wizard-step" data-step="6">
+      <div class="rtbcb-wizard-step" data-step="8">
         <div class="rtbcb-field"><input id="business_objective" name="business_objective" /></div>
         <div class="rtbcb-field"><input id="implementation_timeline" name="implementation_timeline" /></div>
         <div class="rtbcb-field"><input id="budget_range" name="budget_range" /></div>
       </div>
-      <div class="rtbcb-wizard-step" data-step="7">
+      <div class="rtbcb-wizard-step" data-step="9">
         <div class="rtbcb-field"><input id="email" name="email" type="email" /></div>
       </div>
     </div>
@@ -127,16 +141,30 @@ vm.runInThisContext(wizardCode);
   await builder.handleNext();
 
   // Step 5
-  document.querySelector('input[name="pain_points[]"]').checked = true;
+  document.getElementById('treasury_automation').value = 'manual';
+  document.getElementById('primary_systems').value = 'erp';
+  document.getElementById('bank_import_frequency').value = 'daily';
+  document.getElementById('reporting_cadence').value = 'monthly';
   await builder.handleNext();
 
   // Step 6
+  document.getElementById('annual_payment_volume').value = '10';
+  document.getElementById('payment_approval_workflow').value = 'single';
+  document.getElementById('reconciliation_method').value = 'manual';
+  document.getElementById('cash_update_frequency').value = 'daily';
+  await builder.handleNext();
+
+  // Step 7
+  document.querySelector('input[name="pain_points[]"]').checked = true;
+  await builder.handleNext();
+
+  // Step 8
   document.getElementById('business_objective').value = 'growth';
   document.getElementById('implementation_timeline').value = 'Q4';
   document.getElementById('budget_range').value = '1000';
   await builder.handleNext();
 
-  // Step 7
+  // Step 9
   document.getElementById('email').value = 'test@example.com';
   await builder.handleSubmit();
 

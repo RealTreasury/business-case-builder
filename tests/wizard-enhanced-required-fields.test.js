@@ -20,6 +20,8 @@ const html = `<!DOCTYPE html><html><body>
         <div class="rtbcb-progress-step" data-step="5"></div>
         <div class="rtbcb-progress-step" data-step="6"></div>
         <div class="rtbcb-progress-step" data-step="7"></div>
+        <div class="rtbcb-progress-step" data-step="8"></div>
+        <div class="rtbcb-progress-step" data-step="9"></div>
       </div>
     </div>
     <div class="rtbcb-wizard-steps">
@@ -43,15 +45,27 @@ const html = `<!DOCTYPE html><html><body>
         <input id="ftes" name="ftes" type="number" />
       </div>
       <div class="rtbcb-wizard-step" data-step="5">
+        <input id="treasury_automation" name="treasury_automation" />
+        <select id="primary_systems" name="primary_systems[]"><option value="erp">ERP</option></select>
+        <input id="bank_import_frequency" name="bank_import_frequency" />
+        <input id="reporting_cadence" name="reporting_cadence" />
+      </div>
+      <div class="rtbcb-wizard-step" data-step="6">
+        <input id="annual_payment_volume" name="annual_payment_volume" />
+        <input id="payment_approval_workflow" name="payment_approval_workflow" />
+        <input id="reconciliation_method" name="reconciliation_method" />
+        <input id="cash_update_frequency" name="cash_update_frequency" />
+      </div>
+      <div class="rtbcb-wizard-step" data-step="7">
         <div class="rtbcb-pain-points-validation"><div class="rtbcb-validation-message"></div></div>
         <label><input type="checkbox" name="pain_points[]" value="manual" /></label>
       </div>
-      <div class="rtbcb-wizard-step" data-step="6">
+      <div class="rtbcb-wizard-step" data-step="8">
         <input id="business_objective" name="business_objective" />
         <input id="implementation_timeline" name="implementation_timeline" />
         <input id="budget_range" name="budget_range" />
       </div>
-      <div class="rtbcb-wizard-step" data-step="7">
+      <div class="rtbcb-wizard-step" data-step="9">
         <input id="email" name="email" type="email" />
       </div>
     </div>
@@ -116,8 +130,20 @@ vm.runInThisContext(wizardCode);
   document.getElementById('ftes').value = '1';
   await builder.handleNext();
 
+  document.getElementById('treasury_automation').value = 'manual';
+  document.getElementById('primary_systems').value = 'erp';
+  document.getElementById('bank_import_frequency').value = 'daily';
+  document.getElementById('reporting_cadence').value = 'monthly';
+  await builder.handleNext();
+
   // Clear a previously required field after progressing
   document.getElementById('hours_reconciliation').value = '';
+
+  document.getElementById('annual_payment_volume').value = '10';
+  document.getElementById('payment_approval_workflow').value = 'single';
+  document.getElementById('reconciliation_method').value = 'manual';
+  document.getElementById('cash_update_frequency').value = 'daily';
+  await builder.handleNext();
 
   document.querySelector('input[name="pain_points[]"]').checked = true;
   await builder.handleNext();

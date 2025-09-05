@@ -260,7 +260,7 @@ this.lastValidationErrors = [];
 					 }
 					 const checkedBoxes = this.form.querySelectorAll('input[name="pain_points[]"]:checked');
 					 if (checkedBoxes.length > 0) {
-							 this.clearStepError(5);
+                                                     this.clearStepError(7);
 					 }
 			 }
 		 });
@@ -298,15 +298,17 @@ this.lastValidationErrors = [];
 			 });
 
 						// Set enhanced step configuration
-						this.steps = [
-								this.form.querySelector('.rtbcb-wizard-step[data-step="1"]'),
-								this.form.querySelector('.rtbcb-wizard-step[data-step="2"]'),
-								this.form.querySelector('.rtbcb-wizard-step[data-step="3"]'),
-								this.form.querySelector('.rtbcb-wizard-step[data-step="4"]'),
-								this.form.querySelector('.rtbcb-wizard-step[data-step="5"]'),
-								this.form.querySelector('.rtbcb-wizard-step[data-step="6"]'),
-							   this.form.querySelector('.rtbcb-wizard-step[data-step="7"]')
-						];
+                                               this.steps = [
+                                                               this.form.querySelector('.rtbcb-wizard-step[data-step="1"]'),
+                                                               this.form.querySelector('.rtbcb-wizard-step[data-step="2"]'),
+                                                               this.form.querySelector('.rtbcb-wizard-step[data-step="3"]'),
+                                                               this.form.querySelector('.rtbcb-wizard-step[data-step="4"]'),
+                                                               this.form.querySelector('.rtbcb-wizard-step[data-step="5"]'),
+                                                               this.form.querySelector('.rtbcb-wizard-step[data-step="6"]'),
+                                                               this.form.querySelector('.rtbcb-wizard-step[data-step="7"]'),
+                                                               this.form.querySelector('.rtbcb-wizard-step[data-step="8"]'),
+                                                               this.form.querySelector('.rtbcb-wizard-step[data-step="9"]')
+                                               ];
 						this.getStepFields = this.getEnhancedFields.bind(this);
 
 						const stepCount = this.steps.filter(Boolean).length;
@@ -336,19 +338,19 @@ this.lastValidationErrors = [];
 			 });
 
 
-						this.steps = [
-								this.form.querySelector('.rtbcb-wizard-step[data-step="1"]'),
-								this.form.querySelector('.rtbcb-wizard-step[data-step="2"]'),
-								this.form.querySelector('.rtbcb-wizard-step[data-step="7"]')
-						];
+                                               this.steps = [
+                                                               this.form.querySelector('.rtbcb-wizard-step[data-step="1"]'),
+                                                               this.form.querySelector('.rtbcb-wizard-step[data-step="2"]'),
+                                                               this.form.querySelector('.rtbcb-wizard-step[data-step="9"]')
+                                               ];
 						this.getStepFields = (step) => this.basicStepFields[step] || [];
 
 						const stepCount = this.steps.filter(Boolean).length;
-						this.progressSteps = [
-								this.form.querySelector('.rtbcb-progress-step[data-step="1"]'),
-								this.form.querySelector('.rtbcb-progress-step[data-step="2"]'),
-								this.form.querySelector('.rtbcb-progress-step[data-step="7"]')
-						].filter(Boolean)
+                                               this.progressSteps = [
+                                                               this.form.querySelector('.rtbcb-progress-step[data-step="1"]'),
+                                                               this.form.querySelector('.rtbcb-progress-step[data-step="2"]'),
+                                                               this.form.querySelector('.rtbcb-progress-step[data-step="9"]')
+                                               ].filter(Boolean)
 								.slice(0, stepCount);
 
 						// Hide unused progress steps and renumber
@@ -586,7 +588,7 @@ this.lastValidationErrors = [];
 					this.lastValidationErrors.push( message );
 					return false;
 				}
-				this.clearStepError(5);
+                            this.clearStepError(7);
 			}
 
 			for (const fieldName of currentFields) {
