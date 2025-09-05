@@ -399,7 +399,7 @@ html {
 
     .rtbcb-progress-step {
         padding: 0 4px;
-        flex: 0 0 auto;
+        flex: 1;
         min-width: 0;
     }
 
