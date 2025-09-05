@@ -56,18 +56,18 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                                                                <div class="rtbcb-progress-number">3</div>
                                                                <div class="rtbcb-progress-label"><?php esc_html_e( 'Scope', 'rtbcb' ); ?></div>
                                                        </div>
-                                                        <div class="rtbcb-progress-step" data-step="4">
+                                                       <div class="rtbcb-progress-step" data-step="4">
                                                                <div class="rtbcb-progress-number">4</div>
-                                                               <div class="rtbcb-progress-label"><?php esc_html_e( 'Operations 1', 'rtbcb' ); ?></div>
-                                                        </div>
-                                                        <div class="rtbcb-progress-step" data-step="5">
+                                                               <div class="rtbcb-progress-label"><?php esc_html_e( 'Workload', 'rtbcb' ); ?></div>
+                                                       </div>
+                                                       <div class="rtbcb-progress-step" data-step="5">
                                                                <div class="rtbcb-progress-number">5</div>
-                                                               <div class="rtbcb-progress-label"><?php esc_html_e( 'Operations 2', 'rtbcb' ); ?></div>
-                                                        </div>
-                                                        <div class="rtbcb-progress-step" data-step="6">
+                                                               <div class="rtbcb-progress-label"><?php esc_html_e( 'Technology', 'rtbcb' ); ?></div>
+                                                       </div>
+                                                       <div class="rtbcb-progress-step" data-step="6">
                                                                <div class="rtbcb-progress-number">6</div>
-                                                               <div class="rtbcb-progress-label"><?php esc_html_e( 'Operations 3', 'rtbcb' ); ?></div>
-                                                        </div>
+                                                               <div class="rtbcb-progress-label"><?php esc_html_e( 'Compliance', 'rtbcb' ); ?></div>
+                                                       </div>
                                                         <div class="rtbcb-progress-step" data-step="7">
                                                                <div class="rtbcb-progress-number">7</div>
                                                                <div class="rtbcb-progress-label"><?php esc_html_e( 'Challenges', 'rtbcb' ); ?></div>
@@ -221,12 +221,12 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                                </div>
                        </div>
 
-                         <!-- Step 4: Treasury Workload -->
-                         <div class="rtbcb-wizard-step" data-step="4">
-                                 <div class="rtbcb-step-header">
-                                         <h3><?php esc_html_e( 'Treasury workload', 'rtbcb' ); ?></h3>
-                                         <p><?php esc_html_e( 'Help us understand your current effort and team size.', 'rtbcb' ); ?></p>
-                                 </div>
+                        <!-- Step 4: Workload -->
+                        <div class="rtbcb-wizard-step" data-step="4">
+                                <div class="rtbcb-step-header">
+                                        <h3><?php esc_html_e( 'Workload', 'rtbcb' ); ?></h3>
+                                        <p><?php esc_html_e( 'Help us understand your current effort and team size.', 'rtbcb' ); ?></p>
+                                </div>
 
                                  <div class="rtbcb-step-content">
 					<div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
@@ -266,12 +266,12 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                  </div>
          </div>
 
-         <!-- Step 5: Treasury Technology -->
-         <div class="rtbcb-wizard-step" data-step="5">
-                 <div class="rtbcb-step-header">
-                         <h3><?php esc_html_e( 'Treasury technology', 'rtbcb' ); ?></h3>
-                         <p><?php esc_html_e( 'Tell us about your systems and reporting cadence.', 'rtbcb' ); ?></p>
-                 </div>
+        <!-- Step 5: Technology -->
+        <div class="rtbcb-wizard-step" data-step="5">
+                <div class="rtbcb-step-header">
+                        <h3><?php esc_html_e( 'Technology', 'rtbcb' ); ?></h3>
+                        <p><?php esc_html_e( 'Tell us about your systems and reporting cadence.', 'rtbcb' ); ?></p>
+                </div>
 
                  <div class="rtbcb-step-content">
                          <div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
@@ -340,12 +340,12 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                  </div>
          </div>
 
-<!-- Step 6: Processes & Compliance -->
+<!-- Step 6: Compliance -->
 <div class="rtbcb-wizard-step" data-step="6">
-        <div class="rtbcb-step-header">
-                <h3><?php esc_html_e( 'Processes and compliance', 'rtbcb' ); ?></h3>
-                <p><?php esc_html_e( 'Share your volume, workflows, and control requirements.', 'rtbcb' ); ?></p>
-        </div>
+       <div class="rtbcb-step-header">
+               <h3><?php esc_html_e( 'Compliance', 'rtbcb' ); ?></h3>
+               <p><?php esc_html_e( 'Share your volume, workflows, and control requirements.', 'rtbcb' ); ?></p>
+       </div>
 
         <div class="rtbcb-step-content">
                 <div class="rtbcb-field rtbcb-field-required rtbcb-enhanced-only">
