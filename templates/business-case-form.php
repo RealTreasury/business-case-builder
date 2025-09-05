@@ -38,7 +38,7 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 		<!-- Modal Body -->
 		<div class="rtbcb-modal-body">
 			<div class="rtbcb-form-container">
-                               <form id="rtbcbForm" class="rtbcb-form rtbcb-wizard rtbcb-basic" method="post" novalidate>
+				<form id="rtbcbForm" class="rtbcb-form rtbcb-wizard" method="post" novalidate>
 
 					<!-- Progress Indicator -->
                                         <div class="rtbcb-wizard-progress">
@@ -184,150 +184,10 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                                                </div>
                                        </div>
 
-</div>
-<div class="rtbcb-step-header rtbcb-basic-only">
-<h3><?php esc_html_e( 'Identify your top treasury challenges', 'rtbcb' ); ?></h3>
-<p><?php esc_html_e( 'Choose the areas where you\'d like to improve.', 'rtbcb' ); ?></p>
-</div>
-<div class="rtbcb-step-content rtbcb-basic-only">
-<div class="rtbcb-pain-points-grid">
-<div class="rtbcb-pain-point-card">
-<label class="rtbcb-pain-point-label">
-<input type="checkbox" name="pain_points[]" value="manual_processes" />
-<div class="rtbcb-pain-point-content">
-<div class="rtbcb-pain-point-icon">⚙️</div>
-<div class="rtbcb-pain-point-title"><?php esc_html_e( 'Manual Processes', 'rtbcb' ); ?></div>
-<div class="rtbcb-pain-point-description">
-<?php esc_html_e( 'Time-consuming manual data entry and reconciliation', 'rtbcb' ); ?>
-</div>
-</div>
-</label>
-</div>
+                               </div>
+                       </div>
 
-<div class="rtbcb-pain-point-card">
-<label class="rtbcb-pain-point-label">
-<input type="checkbox" name="pain_points[]" value="poor_visibility" />
-<div class="rtbcb-pain-point-content">
-<div class="rtbcb-pain-point-icon">👁️</div>
-<div class="rtbcb-pain-point-title"><?php esc_html_e( 'Poor Cash Visibility', 'rtbcb' ); ?></div>
-<div class="rtbcb-pain-point-description">
-<?php esc_html_e( 'Lack of real-time visibility into cash positions', 'rtbcb' ); ?>
-</div>
-</div>
-</label>
-</div>
-
-<div class="rtbcb-pain-point-card">
-<label class="rtbcb-pain-point-label">
-<input type="checkbox" name="pain_points[]" value="forecast_accuracy" />
-<div class="rtbcb-pain-point-content">
-<div class="rtbcb-pain-point-icon">📊</div>
-<div class="rtbcb-pain-point-title"><?php esc_html_e( 'Forecast Accuracy', 'rtbcb' ); ?></div>
-<div class="rtbcb-pain-point-description">
-<?php esc_html_e( 'Inaccurate cash forecasting and planning', 'rtbcb' ); ?>
-</div>
-</div>
-</label>
-</div>
-
-<div class="rtbcb-pain-point-card">
-<label class="rtbcb-pain-point-label">
-<input type="checkbox" name="pain_points[]" value="compliance_risk" />
-<div class="rtbcb-pain-point-content">
-<div class="rtbcb-pain-point-icon">🛡️</div>
-<div class="rtbcb-pain-point-title"><?php esc_html_e( 'Compliance & Risk', 'rtbcb' ); ?></div>
-<div class="rtbcb-pain-point-description">
-<?php esc_html_e( 'Regulatory compliance and risk management concerns', 'rtbcb' ); ?>
-</div>
-</div>
-</label>
-</div>
-
-<div class="rtbcb-pain-point-card">
-<label class="rtbcb-pain-point-label">
-<input type="checkbox" name="pain_points[]" value="bank_fees" />
-<div class="rtbcb-pain-point-content">
-<div class="rtbcb-pain-point-icon">💰</div>
-<div class="rtbcb-pain-point-title"><?php esc_html_e( 'High Bank Fees', 'rtbcb' ); ?></div>
-<div class="rtbcb-pain-point-description">
-<?php esc_html_e( 'Excessive banking fees and suboptimal cash positioning', 'rtbcb' ); ?>
-</div>
-</div>
-</label>
-</div>
-
-<div class="rtbcb-pain-point-card">
-<label class="rtbcb-pain-point-label">
-<input type="checkbox" name="pain_points[]" value="integration_issues" />
-<div class="rtbcb-pain-point-content">
-<div class="rtbcb-pain-point-icon">🔗</div>
-<div class="rtbcb-pain-point-title"><?php esc_html_e( 'System Integration', 'rtbcb' ); ?></div>
-<div class="rtbcb-pain-point-description">
-<?php esc_html_e( 'Disconnected systems and data silos', 'rtbcb' ); ?>
-</div>
-</div>
-</label>
-</div>
-</div>
-<div class="rtbcb-pain-points-validation">
-<div class="rtbcb-validation-message" style="display: none;">
-<?php esc_html_e( 'Please select at least one challenge that applies to your organization.', 'rtbcb' ); ?>
-</div>
-</div>
-</div>
-<div class="rtbcb-step-header rtbcb-basic-only">
-<h3><?php esc_html_e( 'Get your business case', 'rtbcb' ); ?></h3>
-<p><?php esc_html_e( 'Enter your email to receive your personalized ROI analysis and recommendations.', 'rtbcb' ); ?></p>
-</div>
-<div class="rtbcb-step-content rtbcb-basic-only">
-<div class="rtbcb-field rtbcb-field-required">
-<label for="email_basic">
-<?php esc_html_e( 'Business Email Address', 'rtbcb' ); ?>
-</label>
-<input type="email" name="email" id="email_basic" placeholder="yourname@company.com" required />
-<div class="rtbcb-field-help">
-<?php esc_html_e( 'We\'ll send your business case report to this email address', 'rtbcb' ); ?>
-</div>
-</div>
-<div class="rtbcb-consent-container">
-<div class="rtbcb-field">
-<div class="rtbcb-consent-wrapper">
-<label class="rtbcb-consent-label" for="consent_basic">
-<input type="checkbox" name="consent" id="consent_basic" required />
-<span class="rtbcb-consent-text">
-<?php
-printf(
-wp_kses(
-__( 'I agree to receive my business case report and occasional treasury insights. You can unsubscribe at any time. View our <a href="%s" target="_blank">privacy policy</a>.', 'rtbcb' ),
-[ 'a' => [ 'href' => [], 'target' => [] ] ]
-),
-'#'
-);
-?>
-</span>
-</label>
-</div>
-</div>
-</div>
-<div class="rtbcb-preview-container">
-<div class="rtbcb-results-preview">
-<h4><?php esc_html_e( 'What You\'ll Receive:', 'rtbcb' ); ?></h4>
-<ul class="rtbcb-preview-list">
-<li>📊 <?php esc_html_e( 'Detailed ROI projections (conservative, base case, optimistic)', 'rtbcb' ); ?></li>
-<li>🎯 <?php esc_html_e( 'Personalized solution category recommendation', 'rtbcb' ); ?></li>
-<li>📄 <?php esc_html_e( 'Professional PDF report ready for stakeholders', 'rtbcb' ); ?></li>
-<li>🗺️ <?php esc_html_e( 'Implementation roadmap and next steps', 'rtbcb' ); ?></li>
-</ul>
-</div>
-</div>
-<button type="submit" class="rtbcb-nav-btn rtbcb-basic-submit rtbcb-basic-only">
-<span class="rtbcb-nav-icon">🚀</span>
-<?php esc_html_e( 'Generate Business Case', 'rtbcb' ); ?>
-</button>
-</div>
-</div>
-
-<!-- Step 3: Treasury Footprint -->
+                       <!-- Step 3: Treasury Footprint -->
                        <div class="rtbcb-wizard-step" data-step="3">
                                <div class="rtbcb-step-header">
                                        <h3><?php esc_html_e( 'Outline your treasury footprint', 'rtbcb' ); ?></h3>
