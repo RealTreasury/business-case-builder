@@ -180,12 +180,12 @@ this.lastValidationErrors = [];
 		this.init();
 	}
 
-	init() {
-		this.cacheElements();
-		this.bindEvents();
-		this.initializePath();
-		this.restorePersistentState();
-	}
+        init() {
+                this.cacheElements();
+                this.bindEvents();
+                this.restorePersistentState();
+                this.initializePath();
+        }
 
 	cacheElements() {
 		// Navigation buttons
@@ -398,13 +398,20 @@ this.lastValidationErrors = [];
 				this.showEnhancedHTMLReport( reportHtml );
 				return;
 			}
-			const savedData = storage ? storage.getItem( 'rtbcbFormData' ) : null;
-			if ( savedData ) {
-				try {
-					const parsed = JSON.parse( savedData );
-					this.populateForm( parsed );
-				} catch ( err ) {}
-			}
+                        const savedData = storage ? storage.getItem( 'rtbcbFormData' ) : null;
+                        if ( savedData ) {
+                                try {
+                                        const parsed = JSON.parse( savedData );
+                                        const defaultTypeEl = this.form.querySelector( 'input[name="report_type"]:checked' );
+                                        const defaultType = defaultTypeEl ? defaultTypeEl.value : 'basic';
+                                        this.populateForm( parsed );
+                                        const savedTypeEl = this.form.querySelector( 'input[name="report_type"]:checked' );
+                                        const savedType = savedTypeEl ? savedTypeEl.value : defaultType;
+                                        if ( savedType !== defaultType ) {
+                                                this.initializePath();
+                                        }
+                                } catch ( err ) {}
+                        }
 			const jobId = storage.getItem( 'rtbcbJobId' );
 			if ( jobId ) {
 				if ( this.overlay ) {
