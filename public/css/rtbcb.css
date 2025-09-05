@@ -394,7 +394,7 @@ html {
 
     .rtbcb-progress-step {
         padding: 0 4px;
-        flex: 0 1 auto;
+        flex: 1 1 0;
         min-width: 0;
     }
 
@@ -407,9 +407,7 @@ html {
     .rtbcb-progress-label {
         font-size: 12px;
         font-weight: 600;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        white-space: normal;
     }
 }
 
@@ -420,7 +418,7 @@ html {
     }
 
     .rtbcb-progress-step {
-        flex: 0 1 auto;
+        flex: 1 1 0;
     }
 
     .rtbcb-progress-label {
@@ -1513,7 +1511,7 @@ html {
         z-index: 2;
         background: transparent;
         padding: 0 8px;
-        flex: 0 1 auto;
+        flex: 1 1 0;
         min-width: 0;
     }
 
@@ -1560,9 +1558,7 @@ html {
     color: var(--text-secondary);
     font-weight: 600;
     text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal;
 }
 
 .rtbcb-progress-step.active .rtbcb-progress-label,
