@@ -65,23 +65,7 @@ html {
     padding: 40px;
 }
 
-/* Reset and isolate modal container */
-
-.rtbcb-modal {
-    all: unset;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 248, 248, 0.98) 50%, rgba(255, 255, 255, 0.95));
-    backdrop-filter: blur(25px) saturate(140%);
-    -webkit-backdrop-filter: blur(25px) saturate(140%);
-    border: 2px solid rgba(199, 125, 255, 0.3);
-    border-radius: 20px;
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25), 0 8px 32px rgba(114, 22, 244, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.8);
-    width: 100%;
-    max-width: 600px;
-    margin: 0 auto;
-    overflow: auto;
-    max-height: 85vh;
-    position: relative;
-}
+/* Modal container defaults */
 
 #rtbcbModalOverlay .rtbcb-modal {
     display: block;
@@ -1352,6 +1336,7 @@ html {
 
 /* Modal Container - Glassmorphic design */
 .rtbcb-modal {
+    all: unset;
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 248, 248, 0.98) 50%, rgba(255, 255, 255, 0.95));
     backdrop-filter: blur(25px) saturate(140%);
     -webkit-backdrop-filter: blur(25px) saturate(140%);
@@ -1361,7 +1346,7 @@ html {
     width: 100%;
     max-width: 600px;
     margin: 0 auto;
-    max-height: 100%;
+    max-height: 85vh;
     overflow-y: auto;
     transform: scale(0.9) translateY(30px);
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
