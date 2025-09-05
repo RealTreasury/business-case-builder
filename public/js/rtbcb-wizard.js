@@ -1129,33 +1129,35 @@ this.lastValidationErrors = [];
 
 		// Build required fields dynamically from all steps up to totalSteps
 		const requiredFields = new Set();
-		const arrayFields= new Set();
+		const arrayFields = new Set();
 		for ( let step = 1; step <= this.totalSteps; step++ ) {
 		const fields = this.getStepFields( step ) || [];
 		fields.forEach( ( field ) => {
+		const normalized = field.replace( /\[\]$/, '' );
+		requiredFields.add( normalized );
 		if ( field.endsWith( '[]' ) ) {
-		arrayFields.add( field.replace( /\[\]$/, '' ) );
-		requiredFields.add( field.replace( /\[\]$/, '' ) );
-		} else {
-		requiredFields.add( field );
+		arrayFields.add( normalized );
 		}
 		} );
 		}
 		
-                for ( const field of requiredFields ) {
-                        if ( field === 'pain_points' ) {
-                                continue;
-                        }
-                        if ( arrayFields.has( field ) ) {
-                                if ( getAllValues( `${ field }[]` ).length === 0 ) {
-                                        throw new Error( `${ __( 'Missing required field:', 'rtbcb' )} ${ field.replace( '_', ' ' )}` );
-                                }
-                                continue;
-                        }
-                        if ( ! getValue( field ) ) {
-                                throw new Error( `${ __( 'Missing required field:', 'rtbcb' )} ${ field.replace( '_', ' ' )}` );
-                        }
-                }
+		for ( const field of requiredFields ) {
+		if ( field === 'pain_points' ) {
+		if ( getAllValues( 'pain_points[]' ).length === 0 ) {
+		throw new Error( __( 'Please select at least one pain point', 'rtbcb' ) );
+		}
+		continue;
+		}
+		if ( arrayFields.has( field ) ) {
+		if ( getAllValues( `${ field }[]` ).length === 0 ) {
+		throw new Error( `${ __( 'Missing required field:', 'rtbcb' ) } ${ field.replace( '_', ' ' ) }` );
+		}
+		continue;
+		}
+		if ( ! getValue( field ) ) {
+		throw new Error( `${ __( 'Missing required field:', 'rtbcb' ) } ${ field.replace( '_', ' ' ) }` );
+		}
+		}
 		
 		if ( requiredFields.has( 'email' ) ) {
 		const email= getValue( 'email' );
@@ -1176,9 +1178,6 @@ this.lastValidationErrors = [];
 		}
 		}
 		
-		if ( requiredFields.has( 'pain_points' ) && getAllValues( 'pain_points[]' ).length === 0 ) {
-		throw new Error( __( 'Please select at least one pain point', 'rtbcb' ) );
-		}
 		}
 	}
 
