@@ -209,7 +209,7 @@ this.lastValidationErrors = [];
 1: ['report_type'],
 2: ['company_name'],
 3: ['pain_points'],
-4: ['email']
+4: ['email', 'consent']
 };
 
 		// Default to enhanced path field resolver
