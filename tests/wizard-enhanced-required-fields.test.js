@@ -67,6 +67,7 @@ const html = `<!DOCTYPE html><html><body>
       </div>
       <div class="rtbcb-wizard-step" data-step="9">
         <input id="email" name="email" type="email" />
+        <input type="checkbox" name="consent" />
       </div>
     </div>
     <div class="rtbcb-wizard-navigation">
@@ -154,12 +155,14 @@ vm.runInThisContext(wizardCode);
   await builder.handleNext();
 
   document.getElementById('email').value = 'test@example.com';
+  document.querySelector('input[name="consent"]').checked = true;
   await builder.handleSubmit();
   assert.ok(errorData && /Missing required field/i.test(errorData.message));
 
   // Fix the missing field and submit again
   document.getElementById('hours_reconciliation').value = '1';
   errorData = null;
+  document.querySelector('input[name="consent"]').checked = true;
   await builder.handleSubmit();
   const iframe = document.querySelector('#report-container iframe');
   assert.ok(iframe, 'Report iframe not injected');

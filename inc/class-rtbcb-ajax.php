@@ -777,13 +777,19 @@ private static function structure_report_data( $user_inputs, $enriched_profile, 
 		];
 	}
 
-		private static function save_lead_data_async( $user_inputs, $structured_report_data ) {
-				if ( class_exists( 'RTBCB_Leads' ) ) {
-						$lead_data = array_merge( $user_inputs, [ 'report_data' => $structured_report_data ] );
-						return RTBCB_Leads::save_lead( $lead_data );
-				}
-				return null;
-		}
+               private static function save_lead_data_async( $user_inputs, $structured_report_data ) {
+                               if ( class_exists( 'RTBCB_Leads' ) ) {
+                                               $lead_data = array_merge(
+                                                       $user_inputs,
+                                                       [
+                                                               'email'       => sanitize_email( $user_inputs['email'] ?? '' ),
+                                                               'report_data' => $structured_report_data,
+                                                       ]
+                                               );
+                                               return RTBCB_Leads::save_lead( $lead_data );
+                               }
+                               return null;
+               }
 
 	/**
 		* Prepare chart data for ROI visualization.

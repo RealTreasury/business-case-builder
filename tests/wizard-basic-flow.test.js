@@ -54,6 +54,7 @@ const html = `<!DOCTYPE html><html><body>
       </div>
       <div class="rtbcb-wizard-step" data-step="9">
         <div class="rtbcb-field"><input id="email" name="email" type="email" /></div>
+        <div class="rtbcb-field"><input type="checkbox" name="consent" /></div>
       </div>
     </div>
     <div class="rtbcb-wizard-navigation">
@@ -107,6 +108,7 @@ vm.runInThisContext(wizardCode);
 
   // Step 3
   document.getElementById('email').value = 'test@example.com';
+  document.querySelector('input[name="consent"]').checked = true;
   await builder.handleSubmit();
 
   const iframe = document.querySelector('#report-container iframe');
