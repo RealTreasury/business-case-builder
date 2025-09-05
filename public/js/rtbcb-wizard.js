@@ -558,66 +558,66 @@ this.lastValidationErrors = [];
 			Array.from(step.querySelectorAll('[name][required]')).map(field => field.name)
 		)];
 
-		if (stepNumber === 2) {
-			const jobField = step.querySelector('[name="job_title"]');
-			if (jobField) {
-					jobField.removeAttribute('required');
-					const index = requiredFields.indexOf('job_title');
-					if (index !== -1) {
-							requiredFields.splice(index, 1);
-					}
-			}
-		}
+                if (stepNumber === 2) {
+                        const jobField = step.querySelector('[name="job_title"]');
+                        if (jobField) {
+                                        jobField.removeAttribute('required');
+                                        const index = requiredFields.indexOf('job_title');
+                                        if (index !== -1) {
+                                                        requiredFields.splice(index, 1);
+                                        }
+                        }
+                }
 
-if (stepNumber === 7 && !requiredFields.includes('pain_points')) {
-requiredFields.push('pain_points');
-}
-		return requiredFields;
-	}
+                if ( step.querySelector('input[name="pain_points[]"]') && ! requiredFields.includes('pain_points') ) {
+                        requiredFields.push('pain_points');
+                }
+                return requiredFields;
+        }
 
-		validateStep(stepNumber) {
-			const currentFields = this.getStepFields(stepNumber) || [];
-			let isValid = true;
-			this.lastValidationErrors = [];
+        validateStep(stepNumber) {
+                const currentFields = this.getStepFields(stepNumber) || [];
+                let isValid = true;
+                this.lastValidationErrors = [];
 
-if (stepNumber === 7 && currentFields.includes('pain_points')) {
-const checkedBoxes = this.form.querySelectorAll('input[name="pain_points[]"]:checked');
-if (checkedBoxes.length === 0) {
-const message = __( 'Please select at least one challenge', 'rtbcb' );
-this.showStepError(7, message);
-this.lastValidationErrors.push( message );
-return false;
-}
-this.clearStepError(7);
-}
+                if ( currentFields.includes('pain_points') ) {
+                        const checkedBoxes = this.form.querySelectorAll('input[name="pain_points[]"]:checked');
+                        if ( checkedBoxes.length === 0 ) {
+                                const message = __( 'Please select at least one challenge', 'rtbcb' );
+                                this.showStepError( stepNumber, message );
+                                this.lastValidationErrors.push( message );
+                                return false;
+                        }
+                        this.clearStepError( stepNumber );
+                }
 
-			for (const fieldName of currentFields) {
-				const field = this.form.querySelector(`[name="${fieldName}"]`);
-				if (!field) {
-					continue;
-				}
+                for (const fieldName of currentFields) {
+                        const field = this.form.querySelector(`[name="${fieldName}"]`);
+                        if (!field) {
+                                continue;
+                        }
 
-				// Skip validation for disabled enhanced-only fields in basic mode
-				if (this.reportType === 'basic' && field.closest('.rtbcb-enhanced-only')) {
-					continue;
-				}
+                        // Skip validation for disabled enhanced-only fields in basic mode
+                        if (this.reportType === 'basic' && field.closest('.rtbcb-enhanced-only')) {
+                                continue;
+                        }
 
-				// Skip validation for enabled enhanced-only fields in enhanced mode that aren't required
-				if (this.reportType === 'enhanced' && field.closest('.rtbcb-enhanced-only') && !field.hasAttribute('required')) {
-					continue;
-				}
+                        // Skip validation for enabled enhanced-only fields in enhanced mode that aren't required
+                        if (this.reportType === 'enhanced' && field.closest('.rtbcb-enhanced-only') && !field.hasAttribute('required')) {
+                                continue;
+                        }
 
-					if (!this.validateField(field, true)) {
-							isValid = false;
-							const fieldContainer = field.closest('.rtbcb-field');
-							const label = fieldContainer ? fieldContainer.querySelector('label') : null;
-							const fieldLabel = label ? label.textContent.trim() : fieldName;
-							this.lastValidationErrors.push( fieldLabel );
-					}
-			}
+                        if (!this.validateField(field, true)) {
+                                isValid = false;
+                                const fieldContainer = field.closest('.rtbcb-field');
+                                const label = fieldContainer ? fieldContainer.querySelector('label') : null;
+                                const fieldLabel = label ? label.textContent.trim() : fieldName;
+                                this.lastValidationErrors.push( fieldLabel );
+                        }
+                }
 
-			return isValid;
-		}
+                return isValid;
+        }
 
 	validateField(field, forceRequired = false) {
 		const value = field.value.trim();
@@ -1137,17 +1137,20 @@ this.clearStepError(7);
 		} );
 		}
 		
-		for ( const field of requiredFields ) {
-		if ( arrayFields.has( field ) ) {
-		if ( getAllValues( `${ field }[]` ).length === 0 ) {
-		throw new Error( `${ __( 'Missing required field:', 'rtbcb' )} ${ field.replace( '_', ' ' )}` );
-		}
-		continue;
-		}
-		if ( ! getValue( field ) ) {
-		throw new Error( `${ __( 'Missing required field:', 'rtbcb' )} ${ field.replace( '_', ' ' )}` );
-		}
-		}
+                for ( const field of requiredFields ) {
+                        if ( field === 'pain_points' ) {
+                                continue;
+                        }
+                        if ( arrayFields.has( field ) ) {
+                                if ( getAllValues( `${ field }[]` ).length === 0 ) {
+                                        throw new Error( `${ __( 'Missing required field:', 'rtbcb' )} ${ field.replace( '_', ' ' )}` );
+                                }
+                                continue;
+                        }
+                        if ( ! getValue( field ) ) {
+                                throw new Error( `${ __( 'Missing required field:', 'rtbcb' )} ${ field.replace( '_', ' ' )}` );
+                        }
+                }
 		
 		if ( requiredFields.has( 'email' ) ) {
 		const email= getValue( 'email' );

@@ -539,7 +539,7 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                        <div class="rtbcb-wizard-step" data-step="7">
 				<div class="rtbcb-step-header">
 					<h3><?php esc_html_e( 'What are your biggest challenges?', 'rtbcb' ); ?></h3>
-					<p><?php esc_html_e( 'Select the pain points that best describe your current treasury challenges.', 'rtbcb' ); ?></p>
+                                       <p><?php esc_html_e( 'Select the pain points that best describe your current treasury challenges. Rank each chosen challenge from 1 (low) to 10 (high).', 'rtbcb' ); ?></p>
 				</div>
 
 				<div class="rtbcb-step-content">
@@ -554,7 +554,7 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 <?php esc_html_e( 'Time-consuming manual data entry and reconciliation', 'rtbcb' ); ?>
 </div>
 <div class="rtbcb-pain-point-rank">
-<input type="number" name="pain_point_rank[manual_processes]" min="1" max="10" placeholder="1" />
+<input type="number" name="pain_point_rank[manual_processes]" min="1" max="10" placeholder="1" aria-label="<?php esc_attr_e( 'Rank 1 (low) to 10 (high)', 'rtbcb' ); ?>" title="<?php esc_attr_e( 'Rank 1 (low) to 10 (high)', 'rtbcb' ); ?>" />
 </div>
 </div>
 							</label>
@@ -570,7 +570,7 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 <?php esc_html_e( 'Lack of real-time visibility into cash positions', 'rtbcb' ); ?>
 </div>
 <div class="rtbcb-pain-point-rank">
-<input type="number" name="pain_point_rank[poor_visibility]" min="1" max="10" placeholder="1" />
+<input type="number" name="pain_point_rank[poor_visibility]" min="1" max="10" placeholder="1" aria-label="<?php esc_attr_e( 'Rank 1 (low) to 10 (high)', 'rtbcb' ); ?>" title="<?php esc_attr_e( 'Rank 1 (low) to 10 (high)', 'rtbcb' ); ?>" />
 </div>
 </div>
 							</label>
@@ -586,7 +586,7 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 <?php esc_html_e( 'Inaccurate cash forecasting and planning', 'rtbcb' ); ?>
 </div>
 <div class="rtbcb-pain-point-rank">
-<input type="number" name="pain_point_rank[forecast_accuracy]" min="1" max="10" placeholder="1" />
+<input type="number" name="pain_point_rank[forecast_accuracy]" min="1" max="10" placeholder="1" aria-label="<?php esc_attr_e( 'Rank 1 (low) to 10 (high)', 'rtbcb' ); ?>" title="<?php esc_attr_e( 'Rank 1 (low) to 10 (high)', 'rtbcb' ); ?>" />
 </div>
 </div>
 							</label>
@@ -602,7 +602,7 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 <?php esc_html_e( 'Regulatory compliance and risk management concerns', 'rtbcb' ); ?>
 </div>
 <div class="rtbcb-pain-point-rank">
-<input type="number" name="pain_point_rank[compliance_risk]" min="1" max="10" placeholder="1" />
+<input type="number" name="pain_point_rank[compliance_risk]" min="1" max="10" placeholder="1" aria-label="<?php esc_attr_e( 'Rank 1 (low) to 10 (high)', 'rtbcb' ); ?>" title="<?php esc_attr_e( 'Rank 1 (low) to 10 (high)', 'rtbcb' ); ?>" />
 </div>
 </div>
 							</label>
@@ -618,7 +618,7 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 <?php esc_html_e( 'Excessive banking fees and suboptimal cash positioning', 'rtbcb' ); ?>
 </div>
 <div class="rtbcb-pain-point-rank">
-<input type="number" name="pain_point_rank[bank_fees]" min="1" max="10" placeholder="1" />
+<input type="number" name="pain_point_rank[bank_fees]" min="1" max="10" placeholder="1" aria-label="<?php esc_attr_e( 'Rank 1 (low) to 10 (high)', 'rtbcb' ); ?>" title="<?php esc_attr_e( 'Rank 1 (low) to 10 (high)', 'rtbcb' ); ?>" />
 </div>
 </div>
 							</label>
@@ -634,7 +634,7 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 <?php esc_html_e( 'Disconnected systems and data silos', 'rtbcb' ); ?>
 </div>
 <div class="rtbcb-pain-point-rank">
-<input type="number" name="pain_point_rank[integration_issues]" min="1" max="10" placeholder="1" />
+<input type="number" name="pain_point_rank[integration_issues]" min="1" max="10" placeholder="1" aria-label="<?php esc_attr_e( 'Rank 1 (low) to 10 (high)', 'rtbcb' ); ?>" title="<?php esc_attr_e( 'Rank 1 (low) to 10 (high)', 'rtbcb' ); ?>" />
 </div>
 </div>
 							</label>
