@@ -741,7 +741,18 @@ return true;
                 false // Load in header
                 );
 
-                wp_set_script_translations( 'rtbcb-wizard', 'rtbcb' );
+		wp_set_script_translations( 'rtbcb-wizard', 'rtbcb' );
+
+		// React wizard form component
+		wp_enqueue_script(
+			'rtbcb-wizard-form',
+			RTBCB_URL . 'public/js/wizard-form.js',
+			[ 'wp-element', 'wp-i18n' ],
+			RTBCB_VERSION,
+			true
+		);
+
+		wp_set_script_translations( 'rtbcb-wizard-form', 'rtbcb' );
 
 		// Main report functionality
 		$report_file = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? 'rtbcb-report.js' : 'rtbcb-report.min.js';
