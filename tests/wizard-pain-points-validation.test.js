@@ -47,6 +47,7 @@ vm.runInThisContext(wizardCode);
   } catch (err) {
     threw = true;
     assert.strictEqual(err.message, 'Please select at least one pain point');
+    // Expect unified pain point message
   }
   assert.ok(threw, 'Validation should fail when no pain points selected');
 
