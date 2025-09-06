@@ -17,6 +17,14 @@ if ( typeof module === 'object' && module.exports && typeof require === 'functio
 /* global wp, TEST_ENV */
 const __ = ( typeof wp !== 'undefined' && wp.i18n && wp.i18n.__ ) ? wp.i18n.__ : ( s ) => s;
 
+let validateEmail, validatePainPoints, validateRequired;
+const req = ( typeof require === 'function' ) ? require : ( typeof globalThis !== 'undefined' && globalThis.process && globalThis.process.mainModule && typeof globalThis.process.mainModule.require === 'function' ? globalThis.process.mainModule.require : null );
+if ( req ) {
+        ({ validateEmail, validatePainPoints, validateRequired } = req( './src/utils/formValidators.js' ));
+} else if ( typeof window !== 'undefined' && window.RTBCBValidators ) {
+        ({ validateEmail, validatePainPoints, validateRequired } = window.RTBCBValidators );
+}
+
 /**
  * Check if a URL uses http or https scheme.
  *
@@ -621,9 +629,9 @@ this.form.querySelectorAll('input, select').forEach(field => {
                 this.lastValidationErrors = [];
 
                 if ( currentFields.includes('pain_points') ) {
-                        const checkedBoxes = this.form.querySelectorAll('input[name="pain_points[]"]:checked');
-                        if ( checkedBoxes.length === 0 ) {
-                                const message = __( 'Please select at least one challenge', 'rtbcb' );
+                        const checkedValues = Array.from( this.form.querySelectorAll( 'input[name="pain_points[]"]:checked' ) ).map( ( cb ) => cb.value );
+                        if ( ! validatePainPoints( checkedValues ) ) {
+                                const message = __( 'Please select at least one pain point', 'rtbcb' );
                                 this.showStepError( stepNumber, message );
                                 this.lastValidationErrors.push( message );
                                 return false;
@@ -681,19 +689,19 @@ this.form.querySelectorAll('input, select').forEach(field => {
 			return true;
 		}
 
-		// Required field check
-		if ( forceRequired || field.hasAttribute( 'required' ) ) {
-			if ( field.type === 'checkbox' ) {
-					const checked = this.form.querySelectorAll( `[name="${ field.name }"]:checked` ).length > 0;
-					if ( ! checked ) {
-							errorMessage = __( 'This field is required', 'rtbcb' );
-							isValid = false;
-					}
-			} else if ( ! value ) {
-					errorMessage = __( 'This field is required', 'rtbcb' );
-					isValid = false;
-			}
-		}
+                // Required field check
+                if ( forceRequired || field.hasAttribute( 'required' ) ) {
+                        if ( field.type === 'checkbox' ) {
+                                const values = Array.from( this.form.querySelectorAll( `[name="${ field.name }"]:checked` ) ).map( ( el ) => el.value );
+                                if ( ! validateRequired( values ) ) {
+                                        errorMessage = __( 'This field is required', 'rtbcb' );
+                                        isValid = false;
+                                }
+                        } else if ( ! validateRequired( value ) ) {
+                                errorMessage = __( 'This field is required', 'rtbcb' );
+                                isValid = false;
+                        }
+                }
 
 		// Company name validation
 		if (field.name === 'company_name' && value) {
@@ -709,14 +717,13 @@ this.form.querySelectorAll('input, select').forEach(field => {
 			}
 		}
 
-		// Email validation
-		if (field.type === 'email' && value) {
-			const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-			if (!emailRegex.test(value)) {
-				errorMessage = __( 'Please enter a valid email address', 'rtbcb' );
-				isValid = false;
-			}
-		}
+                // Email validation
+                if ( field.type === 'email' && value ) {
+                        if ( ! validateEmail( value ) ) {
+                                errorMessage = __( 'Please enter a valid email address', 'rtbcb' );
+                                isValid = false;
+                        }
+                }
 
 		// Number validation
 		if (field.type === 'number' && value) {
@@ -1206,29 +1213,33 @@ this.form.querySelectorAll('input, select').forEach(field => {
 
                for ( const field of requiredFields ) {
                        if ( field === 'pain_points' ) {
-                               const painValues = getAllValues( 'pain_points[]' ).filter( ( v ) => v );
-                               if ( painValues.length === 0 ) {
+                               const painValues = getAllValues( 'pain_points[]' );
+                               if ( ! validatePainPoints( painValues.filter( ( v ) => v ) ) ) {
                                        throw new Error( __( 'Please select at least one pain point', 'rtbcb' ) );
                                }
                                continue;
                        }
 
+                       const fieldElement = this.form ? ( this.form.querySelector( `[name="${ field }"]` ) || this.form.querySelector( `[name="${ field }[]"]` ) ) : null;
+                       if ( ! fieldElement ) {
+                               continue;
+                       }
+
                        if ( arrayFields.has( field ) ) {
-                               if ( getAllValues( `${ field }[]` ).filter( ( v ) => v ).length === 0 ) {
+                               const values = getAllValues( `${ field }[]` ).filter( ( v ) => v );
+                               if ( ! validateRequired( values ) ) {
                                        throw new Error( `${ __( 'Missing required field:', 'rtbcb' )} ${ field.replace( '_', ' ' )}` );
                                }
                                continue;
                        }
 
-                       if ( ! getValue( field ) ) {
+                       if ( ! validateRequired( getValue( field ) ) ) {
                                throw new Error( `${ __( 'Missing required field:', 'rtbcb' )} ${ field.replace( '_', ' ' )}` );
                        }
                }
-
                if ( requiredFields.has( 'email' ) ) {
                        const email = getValue( 'email' );
-                       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                       if ( ! emailRegex.test( email ) ) {
+                       if ( ! validateEmail( email ) ) {
                                throw new Error( __( 'Please enter a valid email address', 'rtbcb' ) );
                        }
                }
