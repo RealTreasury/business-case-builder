@@ -3,9 +3,11 @@ defined( 'ABSPATH' ) || exit;
 ?>
 <form id="rtbcbForm" class="rtbcb-form rtbcb-wizard"></form>
 <script>
-document.addEventListener( 'DOMContentLoaded', function() {
+( function renderWhenReady() {
 	if ( window.renderRTBCBWizardForm ) {
 		window.renderRTBCBWizardForm( 'rtbcbForm' );
+		return;
 	}
-} );
+	setTimeout( renderWhenReady, 50 );
+} )();
 </script>
