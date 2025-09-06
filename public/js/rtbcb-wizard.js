@@ -264,28 +264,28 @@ this.clearStepError(stepIndex);
 });
 
         // Report type card clicks
-        this.form.addEventListener('click', (event) => {
-            const card = event.target.closest('.rtbcb-report-type-card');
-            if (card) {
-                const input = card.querySelector('input[name="report_type"]');
-                if (input) {
-                    input.checked = true;
-                    input.dispatchEvent(new Event('change', { bubbles: true }));
-                }
-            }
-        });
+        this.form.querySelectorAll( '.rtbcb-report-type-card' ).forEach( ( card ) => {
+                card.addEventListener( 'click', () => {
+                        const input = card.querySelector( 'input[name="report_type"]' );
+                        if ( input ) {
+                                input.checked = true;
+                                input.dispatchEvent( new Event( 'change', { bubbles: true } ) );
+                        }
+                } );
+        } );
 
         // Report type radio changes
-        this.form.addEventListener('change', (event) => {
-            const input = event.target;
-            if (input.matches('input[name="report_type"]') && input.checked) {
-                this.form.querySelectorAll('.rtbcb-report-type-card').forEach((card) => {
-                    card.classList.toggle('rtbcb-selected', card.contains(input));
-                });
-                console.log('RTBCB: Report type changed to:', input.value);
-                this.initializePath();
-            }
-        });
+        this.form.querySelectorAll( 'input[name="report_type"]' ).forEach( ( input ) => {
+                input.addEventListener( 'change', () => {
+                        if ( input.checked ) {
+                                this.form.querySelectorAll( '.rtbcb-report-type-card' ).forEach( ( card ) => {
+                                        card.classList.toggle( 'rtbcb-selected', card.contains( input ) );
+                                } );
+                                console.log( 'RTBCB: Report type changed to:', input.value );
+                                this.initializePath();
+                        }
+                } );
+        } );
 
 // Real-time validation
 this.form.querySelectorAll('input, select').forEach(field => {
@@ -301,9 +301,10 @@ this.form.querySelectorAll('input, select').forEach(field => {
 		});
 	}
 
-	initializePath() {
-		 const selected = this.form.querySelector('input[name="report_type"]:checked');
-		 this.reportType = selected ? selected.value : 'basic';
+        initializePath() {
+                 this.currentStep = 1;
+                 const selected = this.form.querySelector('input[name="report_type"]:checked');
+                 this.reportType = selected ? selected.value : 'basic';
 
 		 console.log('RTBCB: Initializing path for report type:', this.reportType);
 
