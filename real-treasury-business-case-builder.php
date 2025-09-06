@@ -732,19 +732,32 @@ return true;
 		);
 
 		// Wizard script (loaded early for modal functions)
-		$wizard_file = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? 'rtbcb-wizard.js' : 'rtbcb-wizard.min.js';
+                $wizard_file = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? 'rtbcb-wizard.js' : 'rtbcb-wizard.min.js';
                 wp_enqueue_script(
-                'rtbcb-wizard',
-                RTBCB_URL . 'public/js/' . $wizard_file,
-                [ 'jquery', 'wp-i18n' ],
-                RTBCB_VERSION,
-                false // Load in header
+                        'rtbcb-wizard',
+                        RTBCB_URL . 'public/js/' . $wizard_file,
+                        [ 'jquery', 'wp-i18n' ],
+                        RTBCB_VERSION,
+                        false // Load in header
                 );
 
                 wp_set_script_translations( 'rtbcb-wizard', 'rtbcb' );
 
-		// Main report functionality
-		$report_file = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? 'rtbcb-report.js' : 'rtbcb-report.min.js';
+                // React-based wizard form component.
+                wp_enqueue_script( 'react' );
+                wp_enqueue_script( 'react-dom' );
+                wp_enqueue_script(
+                        'rtbcb-wizard-form',
+                        RTBCB_URL . 'public/js/wizard-form.js',
+                        [ 'react', 'react-dom', 'wp-i18n' ],
+                        RTBCB_VERSION,
+                        true
+                );
+
+                wp_set_script_translations( 'rtbcb-wizard-form', 'rtbcb' );
+
+                // Main report functionality
+                $report_file = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? 'rtbcb-report.js' : 'rtbcb-report.min.js';
 		wp_enqueue_script(
 			'rtbcb-report',
 			RTBCB_URL . 'public/js/' . $report_file,
