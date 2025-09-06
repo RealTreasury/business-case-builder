@@ -20,9 +20,34 @@ const __ = ( typeof wp !== 'undefined' && wp.i18n && wp.i18n.__ ) ? wp.i18n.__ :
 let validateEmail, validatePainPoints, validateRequired;
 const req = ( typeof require === 'function' ) ? require : ( typeof globalThis !== 'undefined' && globalThis.process && globalThis.process.mainModule && typeof globalThis.process.mainModule.require === 'function' ? globalThis.process.mainModule.require : null );
 if ( req ) {
-        ({ validateEmail, validatePainPoints, validateRequired } = req( './src/utils/formValidators.js' ));
-} else if ( typeof window !== 'undefined' && window.RTBCBValidators ) {
+        try {
+                ({ validateEmail, validatePainPoints, validateRequired } = req( '../../src/utils/formValidators.js' ));
+        } catch ( e ) {}
+}
+if ( ( ! validateEmail || ! validatePainPoints || ! validateRequired ) && typeof window !== 'undefined' && window.RTBCBValidators ) {
         ({ validateEmail, validatePainPoints, validateRequired } = window.RTBCBValidators );
+}
+if ( typeof validateEmail !== 'function' ) {
+        validateEmail = function( email ) {
+                if ( typeof email !== 'string' ) {
+                        return false;
+                }
+                const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+                return emailRegex.test( email.trim() );
+        };
+}
+if ( typeof validateRequired !== 'function' ) {
+        validateRequired = function( value ) {
+                if ( Array.isArray( value ) ) {
+                        return value.filter( ( v ) => v !== undefined && v !== null && String( v ).trim() !== '' ).length > 0;
+                }
+                return value !== undefined && value !== null && String( value ).trim() !== '';
+        };
+}
+if ( typeof validatePainPoints !== 'function' ) {
+        validatePainPoints = function( values ) {
+                return Array.isArray( values ) && values.length > 0;
+        };
 }
 
 /**
