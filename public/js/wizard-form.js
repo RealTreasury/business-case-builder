@@ -56,7 +56,10 @@
             ),
             React.createElement(
                 'div',
-                { id: 'rtbcbModalOverlay', className: isOpen ? 'active' : '' },
+                {
+                    id: 'rtbcbModalOverlay',
+                    className: 'rtbcb-modal-overlay' + ( isOpen ? ' active' : '' )
+                },
                 React.createElement(
                     'form',
                     { id: 'rtbcbForm', className: 'rtbcb-form rtbcb-wizard', method: 'post' },
