@@ -52,57 +52,61 @@
             'div',
             { id: 'rtbcbModalOverlay', className: 'active' },
             React.createElement(
-                'div',
-                { className: 'rtbcb-wizard' },
-                React.createElement(
-                    Step,
-                    { step: 1, currentStep },
-                    React.createElement( 'input', {
-                        name: 'company_name',
-                        value: formData.company_name || '',
-                        onChange: handleChange
-                    } )
-                ),
-                React.createElement(
-                    Step,
-                    { step: 2, currentStep },
-                    React.createElement( 'input', {
-                        name: 'email',
-                        type: 'email',
-                        value: formData.email || '',
-                        onChange: handleChange
-                    } )
-                ),
+                'form',
+                { id: 'rtbcbForm', className: 'rtbcb-form rtbcb-wizard', method: 'post' },
                 React.createElement(
                     'div',
-                    { className: 'rtbcb-wizard-navigation' },
+                    { className: 'rtbcb-wizard' },
                     React.createElement(
-                        'button',
-                        {
-                            type: 'button',
-                            className: 'rtbcb-nav-prev',
-                            onClick: prev,
-                            disabled: currentStep === 1
-                        },
-                        __( 'Previous', 'rtbcb' )
+                        Step,
+                        { step: 1, currentStep },
+                        React.createElement( 'input', {
+                            name: 'company_name',
+                            value: formData.company_name || '',
+                            onChange: handleChange
+                        } )
                     ),
                     React.createElement(
-                        'button',
-                        {
-                            type: 'button',
-                            className: 'rtbcb-nav-next',
-                            onClick: next
-                        },
-                        __( 'Next', 'rtbcb' )
+                        Step,
+                        { step: 2, currentStep },
+                        React.createElement( 'input', {
+                            name: 'email',
+                            type: 'email',
+                            value: formData.email || '',
+                            onChange: handleChange
+                        } )
                     ),
                     React.createElement(
-                        'button',
-                        {
-                            type: 'button',
-                            className: 'rtbcb-nav-close',
-                            onClick: () => setIsOpen( false )
-                        },
-                        __( 'Close', 'rtbcb' )
+                        'div',
+                        { className: 'rtbcb-wizard-navigation' },
+                        React.createElement(
+                            'button',
+                            {
+                                type: 'button',
+                                className: 'rtbcb-nav-prev',
+                                onClick: prev,
+                                disabled: currentStep === 1
+                            },
+                            __( 'Previous', 'rtbcb' )
+                        ),
+                        React.createElement(
+                            'button',
+                            {
+                                type: 'button',
+                                className: 'rtbcb-nav-next',
+                                onClick: next
+                            },
+                            __( 'Next', 'rtbcb' )
+                        ),
+                        React.createElement(
+                            'button',
+                            {
+                                type: 'button',
+                                className: 'rtbcb-nav-close',
+                                onClick: () => setIsOpen( false )
+                            },
+                            __( 'Close', 'rtbcb' )
+                        )
                     )
                 )
             )
