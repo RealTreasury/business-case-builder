@@ -1,24 +1,15 @@
-function validateEmail(email) {
-        if (typeof email !== 'string') {
-                return false;
-        }
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(email.trim());
-}
+const validation = require('../../public/js/wizard-validation.js');
 
-function validateRequired(value) {
-        if (Array.isArray(value)) {
-                return value.filter((v) => v !== undefined && v !== null && String(v).trim() !== '').length > 0;
-        }
-        return value !== undefined && value !== null && String(value).trim() !== '';
-}
+const { validateEmail, validateRequired, requirePainPoints } = validation;
 
 function validatePainPoints(values) {
-        return Array.isArray(values) && values.length > 0;
+return requirePainPoints(values);
 }
 
+const exportsObj = { validateEmail, validatePainPoints, validateRequired, requirePainPoints };
+
 if (typeof module !== 'undefined' && module.exports) {
-        module.exports = { validateEmail, validatePainPoints, validateRequired };
+module.exports = exportsObj;
 } else if (typeof window !== 'undefined') {
-        window.RTBCBValidators = { validateEmail, validatePainPoints, validateRequired };
+window.RTBCBValidators = exportsObj;
 }
