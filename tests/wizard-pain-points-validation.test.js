@@ -46,15 +46,15 @@ vm.runInThisContext(wizardCode);
     builder.validateFormData(formData);
   } catch (err) {
     threw = true;
-    assert.strictEqual(err.message, 'Please select at least one pain point');
-    // Expect unified pain point message
+    assert.strictEqual(err.message, 'Please select at least one challenge.');
+    // Expect unified challenge message
   }
   assert.ok(threw, 'Validation should fail when no pain points selected');
 
   document.querySelector('input[name="pain_points[]"]').checked = true;
   const formData2 = builder.collectFormData();
   builder.validateFormData(formData2);
-  console.log('Wizard pain points validation test passed.');
+  console.log('Wizard challenges validation test passed.');
 })().catch(err => {
   console.error(err);
   process.exit(1);

@@ -810,7 +810,7 @@ wp_set_script_translations( 'rtbcb-wizard', 'rtbcb' );
 					   'finalizing_report'	 => __( 'Finalizing professional report...', 'rtbcb' ),
 					   'invalid_email'		 => __( 'Please enter a valid email address.', 'rtbcb' ),
 					   'required_field'		 => __( 'This field is required.', 'rtbcb' ),
-					   'select_pain_points'	 => __( 'Please select at least one pain point.', 'rtbcb' ),
+					   'select_challenges'   => __( 'Please select at least one challenge.', 'rtbcb' ),
 					   'email_confirmation'	 => __( 'Your report will arrive by email shortly.', 'rtbcb' ),
 				   ],
 				   'settings'    => [

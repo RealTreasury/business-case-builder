@@ -549,7 +549,7 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                        <div class="rtbcb-wizard-step" data-step="7">
 				<div class="rtbcb-step-header">
 					<h3><?php esc_html_e( 'What are your biggest challenges?', 'rtbcb' ); ?></h3>
-                                       <p><?php esc_html_e( 'Select the pain points that best describe your current treasury challenges.', 'rtbcb' ); ?></p>
+                                       <p><?php esc_html_e( 'Select the challenges that best describe your current treasury situation.', 'rtbcb' ); ?></p>
 				</div>
 
 				<div class="rtbcb-step-content">
@@ -634,9 +634,9 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 					</div>
 
 					<div class="rtbcb-pain-points-validation">
-						<div class="rtbcb-validation-message" style="display: none;">
-							<?php esc_html_e( 'Please select at least one challenge that applies to your organization.', 'rtbcb' ); ?>
-						</div>
+                                                <div class="rtbcb-validation-message" style="display: none;">
+                                                        <?php esc_html_e( 'Please select at least one challenge.', 'rtbcb' ); ?>
+                                                </div>
 					</div>
 				</div>
 			</div>
