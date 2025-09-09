@@ -14,7 +14,7 @@ if [ ! -f "vendor/bin/phpunit" ]; then
 fi
 
 # Install JS dependencies for headless browser tests
-npm install --no-save --no-package-lock jsdom >/dev/null 2>&1
+npm install --no-save --no-package-lock jsdom react@17 react-dom@17 >/dev/null 2>&1
 export NODE_OPTIONS="--require ./tests/jsdom-setup.js"
 
 # PHP Lint
@@ -137,6 +137,7 @@ node tests/operational-insights-render.test.js
 node tests/progress-cancel-button.test.js
 node tests/wizard-missing-progress-step.test.js
 node tests/wizard-no-form-no-interval.test.js
+node tests/wizard-open-btn.test.js
 npx --yes jest tests/poll-job-completed.test.js --config '{"testEnvironment":"node"}'
 npx --yes jest tests/poll-job-show-results.test.js --config '{"testEnvironment":"node"}'
 npx --yes jest tests/poll-job-progress-text.test.js --config '{"testEnvironment":"node"}'
