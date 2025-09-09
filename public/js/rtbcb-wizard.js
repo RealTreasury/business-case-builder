@@ -178,11 +178,10 @@ this.lastValidationErrors = [];
 	}
 
 		init() {
-				this.cacheElements();
-				this.bindEvents();
-				this.restorePersistentState();
-				this.initializePath();
-		}
+               this.cacheElements();
+               this.bindEvents();
+               this.initializePath();
+               }
 
 	cacheElements() {
 		// Navigation buttons
@@ -404,139 +403,7 @@ this.form.querySelectorAll('input, select').forEach(field => {
 				this.updateProgressIndicator();
 		}
 
-	saveFormData( formData ) {
-		try {
-			const storage = window.sessionStorage;
-			if ( ! storage ) {
-				return;
-			}
-			const data = {};
-			for ( const [ key, value ] of formData.entries() ) {
-				if ( data[ key ] ) {
-					if ( Array.isArray( data[ key ] ) ) {
-						data[ key ].push( value );
-					} else {
-						data[ key ] = [ data[ key ], value ];
-					}
-				} else {
-					data[ key ] = value;
-				}
-			}
-			storage.setItem( 'rtbcbFormData', JSON.stringify( data ) );
-               } catch ( e ) {
-                       if ( typeof TEST_ENV === 'undefined' || ! TEST_ENV ) {
-                               console.warn( 'RTBCB: Session storage unavailable', e );
-                       }
-               }
-	}
 
-	restorePersistentState() {
-		try {
-			const storage = window.sessionStorage;
-			const persistent = window.localStorage;
-			if ( ! storage && ! persistent ) {
-				return;
-			}
-			const reportHtml = ( storage && storage.getItem( 'rtbcbFinalReport' ) ) ||
-				( persistent && persistent.getItem( 'rtbcbFinalReport' ) );
-			if ( reportHtml ) {
-				this.showEnhancedHTMLReport( reportHtml );
-				return;
-			}
-						const savedData = storage ? storage.getItem( 'rtbcbFormData' ) : null;
-						if ( savedData ) {
-								try {
-										const parsed = JSON.parse( savedData );
-										const defaultTypeEl = this.form.querySelector( 'input[name="report_type"]:checked' );
-										const defaultType = defaultTypeEl ? defaultTypeEl.value : 'basic';
-										this.populateForm( parsed );
-										const savedTypeEl = this.form.querySelector( 'input[name="report_type"]:checked' );
-										const savedType = savedTypeEl ? savedTypeEl.value : defaultType;
-										if ( savedType !== defaultType ) {
-												this.initializePath();
-										}
-								} catch ( err ) {}
-						}
-			const jobId = storage.getItem( 'rtbcbJobId' );
-			if ( jobId ) {
-				if ( this.overlay ) {
-					this.overlay.classList.add( 'active' );
-					document.body.style.overflow = 'hidden';
-				}
-				this.activeJobId = jobId;
-				this.showLoading();
-				this.startProgressiveLoading();
-				this.pollingCancelled = false;
-				this.pollJob( jobId, Date.now(), 0 );
-			}
-               } catch ( e ) {
-                       if ( typeof TEST_ENV === 'undefined' || ! TEST_ENV ) {
-                               console.warn( 'RTBCB: Session storage unavailable', e );
-                       }
-               }
-	}
-
-	populateForm( data ) {
-		Object.entries( data ).forEach( ( [ key, value ] ) => {
-			if ( Array.isArray( value ) ) {
-				value.forEach( ( val ) => {
-					const field = this.form.querySelector( `[name="${ key }"][value="${ val }"]` );
-					if ( field ) {
-						field.checked = true;
-					}
-				} );
-			} else {
-				const field = this.form.querySelector( `[name="${ key }"]` );
-				if ( ! field ) {
-					return;
-				}
-				if ( field.type === 'checkbox' ) {
-					field.checked = true;
-				} else if ( field.type === 'radio' ) {
-					const radio = this.form.querySelector( `[name="${ key }"][value="${ value }"]` );
-				if ( radio ) {
-					radio.checked = true;
-					radio.dispatchEvent( new Event( 'change', { bubbles: true } ) );
-				}
-				} else {
-					field.value = value;
-				}
-			}
-		} );
-	}
-
-	clearPersistentState() {
-		try {
-			const storage = window.sessionStorage;
-			if ( storage ) {
-				storage.removeItem( 'rtbcbFormData' );
-				storage.removeItem( 'rtbcbJobId' );
-			}
-		} catch ( e ) {}
-	}
-
-	saveFinalReport( html ) {
-		try {
-			const storage = window.sessionStorage;
-			if ( storage ) {
-				storage.setItem( 'rtbcbFinalReport', html );
-			}
-               } catch ( e ) {
-                       if ( typeof TEST_ENV === 'undefined' || ! TEST_ENV ) {
-                               console.warn( 'RTBCB: Session storage unavailable', e );
-                       }
-               }
-		try {
-			const persistent = window.localStorage;
-			if ( persistent ) {
-				persistent.setItem( 'rtbcbFinalReport', html );
-			}
-               } catch ( e ) {
-                       if ( typeof TEST_ENV === 'undefined' || ! TEST_ENV ) {
-                               console.warn( 'RTBCB: Local storage unavailable', e );
-                       }
-               }
-	}
 
 	handleNext( event ) {
 		if ( event && event.preventDefault ) {
@@ -875,9 +742,8 @@ return result.valid;
 			// Start progressive loading animation
 			this.startProgressiveLoading();
 
-			const formData = this.collectFormData();
-			this.saveFormData( formData );
-			this.validateFormData( formData );
+                       const formData = this.collectFormData();
+                       this.validateFormData( formData );
 
 			// Submit form
 			if (!isValidUrl(this.ajaxUrl)) {
@@ -1000,7 +866,6 @@ return result.valid;
 					this.pollingCancelled = false;
 					this.activeJobId = payload.job_id;
 					try {
-						window.sessionStorage && window.sessionStorage.setItem( 'rtbcbJobId', payload.job_id );
 					} catch ( e ) {}
 
 					// Replace progressive loading with polling updates
@@ -1184,8 +1049,7 @@ getStepFields: this.getStepFields.bind( this ),
 			clearTimeout(this.pollTimeout);
 			this.pollTimeout = null;
 		}
-		this.clearPersistentState();
-		this.activeJobId = null;
+               this.activeJobId = null;
 		console.log('RTBCB: All polling and progress timers cancelled');
 	}
 
@@ -1456,9 +1320,8 @@ getStepFields: this.getStepFields.bind( this ),
 		return cleanMessage + '...';
 	}
 
-	handleSuccess(data) {
-		this.clearPersistentState();
-		console.log('RTBCB: Success data received:', data);
+       handleSuccess(data) {
+               console.log('RTBCB: Success data received:', data);
 
 		if (typeof data === 'string') {
 			this.showEnhancedHTMLReport(data);
@@ -1504,9 +1367,8 @@ getStepFields: this.getStepFields.bind( this ),
 
 		// Set content and make visible
 		console.log('RTBCB: Injecting report content');
-		resultsContainer.innerHTML = htmlContent;
-		resultsContainer.style.display = 'block';
-		this.saveFinalReport( htmlContent );
+               resultsContainer.innerHTML = htmlContent;
+               resultsContainer.style.display = 'block';
 
 		// Initialize interactive features for the enhanced report
 		this.initializeEnhancedReport(resultsContainer);
@@ -1843,9 +1705,8 @@ getStepFields: this.getStepFields.bind( this ),
 		if (resultsContainer) {
 		resultsContainer.innerHTML = this.renderResults(mapped);
 		this.populateRiskAssessment(mapped.risks);
-			resultsContainer.style.display = 'block';
-			this.saveFinalReport( resultsContainer.innerHTML );
-			resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                       resultsContainer.style.display = 'block';
+                       resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
 		} else {
 			console.error('RTBCB: Results container not found');
 			this.showEnhancedError( __( 'Unable to display results. Please refresh the page.', 'rtbcb' ) );
@@ -2212,9 +2073,8 @@ ${upcoming_changes.length ? `<div class="rtbcb-industry-group"><h4>Upcoming Chan
 			.catch(err => console.error('Copy failed:', err));
 	}
 
-        handleError(errorData) {
-                this.clearPersistentState();
-                const message = errorData.message || __( 'An unexpected error occurred', 'rtbcb' );
+       handleError(errorData) {
+               const message = errorData.message || __( 'An unexpected error occurred', 'rtbcb' );
                 const display = errorData.raw_message ? message : this.getUserFriendlyMessage( message );
 
                 console.group('RTBCB Error Details');
@@ -2267,9 +2127,6 @@ ${upcoming_changes.length ? `<div class="rtbcb-industry-group"><h4>Upcoming Chan
 	reinitialize() {
 		this.currentStep = 1;
 		this.updateStepVisibility();
-		this.updateProgressIndicator();
-		try {
-			window.sessionStorage && window.sessionStorage.removeItem( 'rtbcbFinalReport' );
-		} catch ( e ) {}
-	}
+               this.updateProgressIndicator();
+       }
 }
