@@ -32,26 +32,14 @@ if ( ( ! WizardValidation || ! WizardValidation.validateField ) && typeof window
 WizardValidation = window.RTBCBWizardValidation;
 }
 if ( ! WizardValidation || ! WizardValidation.validateField ) {
+const missingMsg = __( 'Validation module missing', 'rtbcb' );
 WizardValidation = {
-validateEmail: function( email ) {
-if ( typeof email !== 'string' ) {
-return false;
-}
-const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
-return emailRegex.test( email.trim() );
-},
-validateRequired: function( value ) {
-if ( Array.isArray( value ) ) {
-return value.filter( ( v ) => v !== undefined && v !== null && String( v ).trim() !== '' ).length > 0;
-}
-return value !== undefined && value !== null && String( value ).trim() !== '';
-},
-requirePainPoints: function( values ) {
-return Array.isArray( values ) && values.length > 0;
-},
-validateField: () => ( { valid: true, message: '', group: null } ),
-validateStep: () => ( { valid: true, stepError: null, fieldErrors: [] } ),
-validateFormData: () => {}
+validateEmail: () => false,
+validateRequired: () => false,
+requirePainPoints: () => false,
+validateField: () => ( { valid: false, message: missingMsg, group: null } ),
+validateStep: () => ( { valid: false, stepError: missingMsg, fieldErrors: [] } ),
+validateFormData: () => { throw new Error( missingMsg ); }
 };
 }
 
