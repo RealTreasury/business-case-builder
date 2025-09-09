@@ -17,37 +17,30 @@ if ( typeof module === 'object' && module.exports && typeof require === 'functio
 /* global wp, TEST_ENV */
 const __ = ( typeof wp !== 'undefined' && wp.i18n && wp.i18n.__ ) ? wp.i18n.__ : ( s ) => s;
 
-let validateEmail, validatePainPoints, validateRequired;
+let WizardValidation = {};
 const req = ( typeof require === 'function' ) ? require : ( typeof globalThis !== 'undefined' && globalThis.process && globalThis.process.mainModule && typeof globalThis.process.mainModule.require === 'function' ? globalThis.process.mainModule.require : null );
 if ( req ) {
-        try {
-                ({ validateEmail, validatePainPoints, validateRequired } = req( '../../src/utils/formValidators.js' ));
-        } catch ( e ) {}
+try {
+WizardValidation = req( './wizard-validation.js' );
+} catch ( e ) {
+try {
+WizardValidation = req( './public/js/wizard-validation.js' );
+} catch ( e2 ) {}
 }
-if ( ( ! validateEmail || ! validatePainPoints || ! validateRequired ) && typeof window !== 'undefined' && window.RTBCBValidators ) {
-        ({ validateEmail, validatePainPoints, validateRequired } = window.RTBCBValidators );
 }
-if ( typeof validateEmail !== 'function' ) {
-        validateEmail = function( email ) {
-                if ( typeof email !== 'string' ) {
-                        return false;
-                }
-                const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
-                return emailRegex.test( email.trim() );
-        };
+if ( ( ! WizardValidation || ! WizardValidation.validateField ) && typeof window !== 'undefined' && window.RTBCBWizardValidation ) {
+WizardValidation = window.RTBCBWizardValidation;
 }
-if ( typeof validateRequired !== 'function' ) {
-        validateRequired = function( value ) {
-                if ( Array.isArray( value ) ) {
-                        return value.filter( ( v ) => v !== undefined && v !== null && String( v ).trim() !== '' ).length > 0;
-                }
-                return value !== undefined && value !== null && String( value ).trim() !== '';
-        };
-}
-if ( typeof validatePainPoints !== 'function' ) {
-        validatePainPoints = function( values ) {
-                return Array.isArray( values ) && values.length > 0;
-        };
+if ( ! WizardValidation || ! WizardValidation.validateField ) {
+const missingMsg = __( 'Validation module missing', 'rtbcb' );
+WizardValidation = {
+validateEmail: () => false,
+validateRequired: () => false,
+requirePainPoints: () => false,
+validateField: () => ( { valid: false, message: missingMsg, group: null } ),
+validateStep: () => ( { valid: false, stepError: missingMsg, fieldErrors: [] } ),
+validateFormData: () => { throw new Error( missingMsg ); }
+};
 }
 
 /**
@@ -648,125 +641,44 @@ this.form.querySelectorAll('input, select').forEach(field => {
                 return requiredFields;
         }
 
-        validateStep(stepNumber) {
-                const currentFields = this.getStepFields(stepNumber) || [];
-                let isValid = true;
-                this.lastValidationErrors = [];
+validateStep(stepNumber) {
+const { valid, stepError, fieldErrors } = WizardValidation.validateStep( stepNumber, {
+form: this.form,
+reportType: this.reportType,
+getStepFields: this.getStepFields.bind( this ),
+} );
+this.lastValidationErrors = fieldErrors || [];
+if ( stepError ) {
+this.showStepError( stepNumber, stepError );
+} else {
+this.clearStepError( stepNumber );
+}
+return valid;
+}
 
-                if ( currentFields.includes('pain_points') ) {
-                        const checkedValues = Array.from( this.form.querySelectorAll( 'input[name="pain_points[]"]:checked' ) ).map( ( cb ) => cb.value );
-                        if ( ! validatePainPoints( checkedValues ) ) {
-                                const message = __( 'Please select at least one pain point', 'rtbcb' );
-                                this.showStepError( stepNumber, message );
-                                this.lastValidationErrors.push( message );
-                                return false;
-                        }
-                        this.clearStepError( stepNumber );
-                }
-
-                for (const fieldName of currentFields) {
-                        const field = this.form.querySelector(`[name="${fieldName}"]`);
-                        if (!field) {
-                                continue;
-                        }
-
-                        // Skip validation for disabled enhanced-only fields in basic mode
-                        if (this.reportType === 'basic' && field.closest('.rtbcb-enhanced-only')) {
-                                continue;
-                        }
-
-                        // Skip validation for enabled enhanced-only fields in enhanced mode that aren't required
-                        if (this.reportType === 'enhanced' && field.closest('.rtbcb-enhanced-only') && !field.hasAttribute('required')) {
-                                continue;
-                        }
-
-                        if (!this.validateField(field, true)) {
-                                isValid = false;
-                                const fieldContainer = field.closest('.rtbcb-field');
-                                const label = fieldContainer ? fieldContainer.querySelector('label') : null;
-                                const fieldLabel = label ? label.textContent.trim() : fieldName;
-                                this.lastValidationErrors.push( fieldLabel );
-                        }
-                }
-
-                return isValid;
-        }
-
-	validateField(field, forceRequired = false) {
-		const value = field.value.trim();
-		let isValid = true;
-		let errorMessage = '';
-
-		// Special handling for radio inputs
-		if ( field.type === 'radio' ) {
-			const group = this.form.querySelectorAll( `input[name="${ field.name }"]` );
-			const checked = Array.from( group ).some( ( radio ) => radio.checked );
-
-			if ( ! checked ) {
-					errorMessage = __( 'This field is required', 'rtbcb' );
-					group.forEach( ( radio ) => radio.classList.add( 'rtbcb-field-invalid' ) );
-					this.showFieldError( field, errorMessage );
-					return false;
-			}
-
-			group.forEach( ( radio ) => radio.classList.remove( 'rtbcb-field-invalid' ) );
-			this.clearFieldError( field );
-			return true;
-		}
-
-                // Required field check
-                if ( forceRequired || field.hasAttribute( 'required' ) ) {
-                        if ( field.type === 'checkbox' ) {
-                                const values = Array.from( this.form.querySelectorAll( `[name="${ field.name }"]:checked` ) ).map( ( el ) => el.value );
-                                if ( ! validateRequired( values ) ) {
-                                        errorMessage = __( 'This field is required', 'rtbcb' );
-                                        isValid = false;
-                                }
-                        } else if ( ! validateRequired( value ) ) {
-                                errorMessage = __( 'This field is required', 'rtbcb' );
-                                isValid = false;
-                        }
-                }
-
-		// Company name validation
-		if (field.name === 'company_name' && value) {
-			if (value.length < 2) {
-				errorMessage = __( 'Company name must be at least 2 characters', 'rtbcb' );
-				isValid = false;
-			} else if (value.length > 100) {
-				errorMessage = __( 'Company name must be less than 100 characters', 'rtbcb' );
-				isValid = false;
-			} else if (/^[^a-zA-Z]*$/.test(value)) {
-				errorMessage = __( 'Please enter a valid company name', 'rtbcb' );
-				isValid = false;
-			}
-		}
-
-                // Email validation
-                if ( field.type === 'email' && value ) {
-                        if ( ! validateEmail( value ) ) {
-                                errorMessage = __( 'Please enter a valid email address', 'rtbcb' );
-                                isValid = false;
-                        }
-                }
-
-		// Number validation
-		if (field.type === 'number' && value) {
-			if (!Number.isFinite(Number(value))) {
-				errorMessage = __( 'Please enter a valid number', 'rtbcb' );
-				isValid = false;
-			}
-		}
-
-		// Show/hide error
-		if (!isValid) {
-			this.showFieldError(field, errorMessage);
-		} else {
-			this.clearFieldError(field);
-		}
-
-		return isValid;
-	}
+validateField(field, forceRequired = false) {
+const result = WizardValidation.validateField( field, {
+form: this.form,
+forceRequired,
+} );
+if ( field.type === 'radio' && result.group ) {
+const group = result.group;
+if ( ! result.valid ) {
+group.forEach( ( radio ) => radio.classList.add( 'rtbcb-field-invalid' ) );
+this.showFieldError( field, result.message );
+return false;
+}
+group.forEach( ( radio ) => radio.classList.remove( 'rtbcb-field-invalid' ) );
+this.clearFieldError( field );
+return true;
+}
+if ( ! result.valid ) {
+this.showFieldError( field, result.message );
+} else {
+this.clearFieldError( field );
+}
+return result.valid;
+}
 
 	showFieldError(field, message) {
 		const fieldContainer = field.closest('.rtbcb-field');
@@ -1186,100 +1098,14 @@ this.form.querySelectorAll('input, select').forEach(field => {
 		return formData;
 	}
 
-	validateFormData(formData) {
-		const getValue = (field) => {
-			if (typeof formData.get === 'function') {
-				return formData.get(field);
-			}
-			for (const [k, v] of formData.entries()) {
-				if (k === field) {
-					return v;
-				}
-			}
-			return null;
-		};
-
-               const getAllValues = ( field ) => {
-                       if ( typeof formData.getAll === 'function' ) {
-                               const values = formData.getAll( field );
-                               return Array.isArray( values ) ? values : [];
-                       }
-                       const values = [];
-                       for ( const [ k, v ] of formData.entries() ) {
-                               if ( k === field ) {
-                                       values.push( v );
-                               }
-                       }
-                       return values;
-               };
-
-               // Build required fields dynamically from all steps up to totalSteps
-               const requiredFields = new Set();
-               const arrayFields = new Set();
-               for ( let step = 1; step <= this.totalSteps; step++ ) {
-                       const fields = this.getStepFields( step ) || [];
-                       fields.forEach( ( field ) => {
-                               const baseName = field.replace( /\[\]$/, '' );
-                               requiredFields.add( baseName );
-
-                               if ( field.endsWith( '[]' ) || baseName === 'pain_points' ) {
-                                       arrayFields.add( baseName );
-                               }
-                       } );
-               }
-
-               if ( this.reportType !== 'basic' ) {
-                       [ 'hours_reconciliation', 'hours_cash_positioning', 'num_banks', 'ftes' ].forEach( ( field ) => {
-                               if ( this.form.querySelector( `[name="${ field }"]` ) ) {
-                                       requiredFields.add( field );
-                               }
-                       } );
-               }
-
-               for ( const field of requiredFields ) {
-                       if ( field === 'pain_points' ) {
-                               const painValues = getAllValues( 'pain_points[]' );
-                               if ( ! validatePainPoints( painValues.filter( ( v ) => v ) ) ) {
-                                       throw new Error( __( 'Please select at least one pain point', 'rtbcb' ) );
-                               }
-                               continue;
-                       }
-
-                       const fieldElement = this.form ? ( this.form.querySelector( `[name="${ field }"]` ) || this.form.querySelector( `[name="${ field }[]"]` ) ) : null;
-                       if ( ! fieldElement ) {
-                               continue;
-                       }
-
-                       if ( arrayFields.has( field ) ) {
-                               const values = getAllValues( `${ field }[]` ).filter( ( v ) => v );
-                               if ( ! validateRequired( values ) ) {
-                                       throw new Error( `${ __( 'Missing required field:', 'rtbcb' )} ${ field.replace( '_', ' ' )}` );
-                               }
-                               continue;
-                       }
-
-                       if ( ! validateRequired( getValue( field ) ) ) {
-                               throw new Error( `${ __( 'Missing required field:', 'rtbcb' )} ${ field.replace( '_', ' ' )}` );
-                       }
-               }
-               if ( requiredFields.has( 'email' ) ) {
-                       const email = getValue( 'email' );
-                       if ( ! validateEmail( email ) ) {
-                               throw new Error( __( 'Please enter a valid email address', 'rtbcb' ) );
-                       }
-               }
-               if ( this.reportType !== 'basic' ) {
-                       const numericFields = [ 'hours_reconciliation', 'hours_cash_positioning', 'num_banks', 'ftes' ];
-                       for ( const field of numericFields ) {
-                               if ( requiredFields.has( field ) ) {
-                                       const value = parseFloat( getValue( field ) );
-                                       if ( isNaN( value ) || value <= 0 ) {
-                                               throw new Error( `${ field.replace( '_', ' ' ) } ${ __( 'must be a positive number', 'rtbcb' ) }` );
-                                       }
-                               }
-                       }
-               }
-	}
+validateFormData(formData) {
+WizardValidation.validateFormData( formData, {
+form: this.form,
+reportType: this.reportType,
+totalSteps: this.totalSteps,
+getStepFields: this.getStepFields.bind( this ),
+} );
+}
 
 	showLoading() {
 		// Hide entire modal while loading

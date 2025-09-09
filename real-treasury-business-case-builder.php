@@ -731,17 +731,28 @@ return true;
 		)
 		);
 
-		// Wizard script (loaded early for modal functions)
-		$wizard_file = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? 'rtbcb-wizard.js' : 'rtbcb-wizard.min.js';
-                wp_enqueue_script(
-                'rtbcb-wizard',
-                RTBCB_URL . 'public/js/' . $wizard_file,
-                [ 'jquery', 'wp-i18n' ],
-                RTBCB_VERSION,
-                false // Load in header
-                );
+// Wizard validation (shared between browser and Node environments)
+$wizard_validation_file = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? 'wizard-validation.js' : 'wizard-validation.min.js';
+wp_enqueue_script(
+'rtbcb-wizard-validation',
+RTBCB_URL . 'public/js/' . $wizard_validation_file,
+[ 'wp-i18n' ],
+RTBCB_VERSION,
+false
+);
+wp_set_script_translations( 'rtbcb-wizard-validation', 'rtbcb' );
 
-                wp_set_script_translations( 'rtbcb-wizard', 'rtbcb' );
+// Wizard script (loaded early for modal functions)
+$wizard_file = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? 'rtbcb-wizard.js' : 'rtbcb-wizard.min.js';
+wp_enqueue_script(
+'rtbcb-wizard',
+RTBCB_URL . 'public/js/' . $wizard_file,
+[ 'jquery', 'wp-i18n', 'rtbcb-wizard-validation' ],
+RTBCB_VERSION,
+false // Load in header
+);
+
+wp_set_script_translations( 'rtbcb-wizard', 'rtbcb' );
 
 		// Main report functionality
 		$report_file = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? 'rtbcb-report.js' : 'rtbcb-report.min.js';
