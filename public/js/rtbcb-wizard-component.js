@@ -35,17 +35,17 @@ return;
 if ( isOpen ) {
 overlay.classList.add( 'active' );
 document.body.style.overflow = 'hidden';
-if ( window.BusinessCaseBuilder && typeof window.BusinessCaseBuilder.reinitialize === 'function' ) {
-window.BusinessCaseBuilder.reinitialize();
-}
-} else {
-overlay.classList.remove( 'active' );
-document.body.style.overflow = '';
-if ( window.BusinessCaseBuilder && typeof window.BusinessCaseBuilder.cancelPolling === 'function' ) {
-window.BusinessCaseBuilder.cancelPolling();
-}
-}
-}, [ isOpen ] );
+    if ( window.businessCaseBuilder && typeof window.businessCaseBuilder.reinitialize === 'function' ) {
+      window.businessCaseBuilder.reinitialize();
+    }
+  } else {
+    overlay.classList.remove( 'active' );
+    document.body.style.overflow = '';
+    if ( window.businessCaseBuilder && typeof window.businessCaseBuilder.cancelPolling === 'function' ) {
+      window.businessCaseBuilder.cancelPolling();
+    }
+  }
+  }, [ isOpen ] );
 
 const value = {
 currentStep,
