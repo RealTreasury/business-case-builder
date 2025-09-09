@@ -110,8 +110,8 @@ const fieldErrors = [];
 if ( currentFields.includes( 'pain_points' ) ) {
 const checkedValues = Array.from( form.querySelectorAll( 'input[name="pain_points[]"]:checked' ) ).map( ( cb ) => cb.value );
 if ( ! requirePainPoints( checkedValues ) ) {
-stepError = __( 'Please select at least one pain point', 'rtbcb' );
-isValid = false;
+  stepError = __( 'Please select at least one challenge.', 'rtbcb' );
+  isValid = false;
 }
 }
 
@@ -190,7 +190,7 @@ for ( const field of requiredFields ) {
 if ( field === 'pain_points' ) {
 const painValues = getAllValues( 'pain_points[]' );
 if ( ! requirePainPoints( painValues.filter( ( v ) => v ) ) ) {
-throw new Error( __( 'Please select at least one pain point', 'rtbcb' ) );
+  throw new Error( __( 'Please select at least one challenge.', 'rtbcb' ) );
 }
 continue;
 }
