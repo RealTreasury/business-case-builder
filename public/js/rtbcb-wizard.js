@@ -93,37 +93,6 @@ async function rtbcbRefreshNonce() {
 	return false;
 }
 
-// Ensure modal functions are available immediately
-window.openBusinessCaseModal = function() {
-	const overlay = document.getElementById('rtbcbModalOverlay');
-	if (overlay) {
-		overlay.classList.add('active');
-		document.body.style.overflow = 'hidden';
-
-		if (window.businessCaseBuilder) {
-			window.businessCaseBuilder.reinitialize();
-		} else {
-			window.businessCaseBuilder = new BusinessCaseBuilder();
-		}
-	}
-};
-
-window.closeBusinessCaseModal = function() {
-	const overlay = document.getElementById('rtbcbModalOverlay');
-	if (overlay && overlay.classList && overlay.classList.remove) {
-		overlay.classList.remove('active');
-	}
-	if (document.body && document.body.style) {
-		document.body.style.overflow = '';
-	}
-	if (
-		window.businessCaseBuilder &&
-		typeof window.businessCaseBuilder.cancelPolling === 'function'
-	) {
-		window.businessCaseBuilder.cancelPolling();
-	}
-};
-
 // Initialize when DOM is ready, even if the script loads late
 const initBusinessCaseBuilder = () => {
 try {

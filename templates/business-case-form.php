@@ -18,7 +18,7 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 
 <!-- Trigger Button -->
 <div class="rtbcb-trigger-container">
-	<button type="button" class="rtbcb-trigger-btn" onclick="openBusinessCaseModal()">
+	<button type="button" class="rtbcb-trigger-btn" id="rtbcb-open-btn">
 		<span class="rtbcb-trigger-icon">📊</span>
 		<span class="rtbcb-trigger-text"><?php esc_html_e( 'Build Your Business Case', 'rtbcb' ); ?></span>
 		<span class="rtbcb-trigger-subtitle"><?php esc_html_e( 'Generate ROI analysis in minutes', 'rtbcb' ); ?></span>
@@ -31,7 +31,7 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                <div class="rtbcb-modal">
                        <!-- Modal Header -->
                        <div class="rtbcb-modal-header">
-                               <button type="button" class="rtbcb-modal-close" onclick="closeBusinessCaseModal()">&times;</button>
+                               <button type="button" class="rtbcb-modal-close" id="rtbcb-close-btn">&times;</button>
                                <h2 class="rtbcb-modal-title"><?php echo esc_html( $title ); ?></h2>
                                <p class="rtbcb-modal-subtitle"><?php echo esc_html( $subtitle ); ?></p>
                        </div>
