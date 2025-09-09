@@ -633,11 +633,6 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 						</div>
 					</div>
 
-					<div class="rtbcb-pain-points-validation">
-                                                <div class="rtbcb-validation-message" style="display: none;">
-                                                        <?php esc_html_e( 'Please select at least one challenge.', 'rtbcb' ); ?>
-                                                </div>
-					</div>
 				</div>
 			</div>
 

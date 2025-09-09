@@ -413,8 +413,8 @@ this.form.querySelectorAll('input, select').forEach(field => {
 		console.log('RTBCB: handleNext called for step', this.currentStep);
 
 		console.log('RTBCB: About to validate step', this.currentStep);
-		const validationPassed = this.validateStep( this.currentStep );
-		if ( validationPassed ) {
+                const validationPassed = this.validateStep( this.currentStep );
+                if ( validationPassed ) {
 			console.log('RTBCB: Step validation passed');
 			if ( this.currentStep < this.totalSteps ) {
 				this.currentStep++;
@@ -426,17 +426,18 @@ this.form.querySelectorAll('input, select').forEach(field => {
 				console.log('RTBCB: Already at last step');
 			}
 		} else {
-			console.log('RTBCB: Step validation failed');
-			const errors = this.lastValidationErrors || [];
-			let message;
-			if ( errors.length ) {
-				message = __( 'Please review the following fields: ', 'rtbcb' ) + errors.join( ', ' );
-			} else {
-				message = __( 'Please correct the highlighted fields.', 'rtbcb' );
-			}
-			alert( message );
-		}
-	}
+                       console.log('RTBCB: Step validation failed');
+                       const errors = this.lastValidationErrors || [];
+                       let message;
+                       if ( errors.length ) {
+                               message = __( 'Please review the following fields: ', 'rtbcb' ) + errors.join( ', ' );
+                       } else {
+                               message = __( 'Please correct the highlighted fields.', 'rtbcb' );
+                       }
+                       this.showStepError( this.currentStep, message );
+                       this.scrollToTop();
+                }
+        }
 
 	handlePrev( event ) {
 		 if ( event && event.preventDefault ) {
@@ -523,11 +524,12 @@ return result.valid;
 		this.clearFieldError(field);
 		field.classList.add('rtbcb-field-invalid');
 
-		const errorEl = document.createElement('div');
-		errorEl.className = 'rtbcb-field-error';
-		errorEl.textContent = message;
-		fieldContainer.appendChild(errorEl);
-	}
+               const errorEl = document.createElement('div');
+               errorEl.className = 'rtbcb-field-error';
+               errorEl.setAttribute( 'role', 'alert' );
+               errorEl.textContent = message;
+               fieldContainer.appendChild(errorEl);
+       }
 
 	clearFieldError(field) {
 		const fieldContainer = field.closest('.rtbcb-field');
@@ -540,33 +542,35 @@ return result.valid;
 		}
 	}
 
-	showStepError(stepNumber, message) {
-		const step = this.steps[stepNumber - 1];
-		if (!step) return;
+       showStepError(stepNumber, message) {
+               const step = this.steps[ stepNumber - 1 ];
+               if ( ! step ) {
+                       return;
+               }
 
-		const validationDiv = step.querySelector('.rtbcb-pain-points-validation');
-		if (validationDiv) {
-			const messageDiv = validationDiv.querySelector('.rtbcb-validation-message');
-			if (messageDiv) {
-				messageDiv.textContent = message;
-				messageDiv.style.display = 'block';
-				messageDiv.style.color = '#ef4444';
-			}
-		}
-	}
+               let errorEl = step.querySelector( '.rtbcb-step-error' );
+               if ( ! errorEl ) {
+                       errorEl = document.createElement( 'div' );
+                       errorEl.className = 'rtbcb-step-error rtbcb-field-error';
+                       errorEl.setAttribute( 'role', 'alert' );
+                       step.insertBefore( errorEl, step.firstChild );
+               }
 
-	clearStepError(stepNumber) {
-		const step = this.steps[stepNumber - 1];
-		if (!step) return;
+               errorEl.textContent = message;
+               errorEl.style.display = 'block';
+       }
 
-		const validationDiv = step.querySelector('.rtbcb-pain-points-validation');
-		if (validationDiv) {
-			const messageDiv = validationDiv.querySelector('.rtbcb-validation-message');
-			if (messageDiv) {
-				messageDiv.style.display = 'none';
-			}
-		}
-	}
+       clearStepError(stepNumber) {
+               const step = this.steps[ stepNumber - 1 ];
+               if ( ! step ) {
+                       return;
+               }
+
+               const errorEl = step.querySelector( '.rtbcb-step-error' );
+               if ( errorEl ) {
+                       errorEl.remove();
+               }
+       }
 
 	updateStepVisibility() {
 		// Update step visibility
