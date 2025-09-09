@@ -754,25 +754,34 @@ false // Load in header
 
 wp_set_script_translations( 'rtbcb-wizard', 'rtbcb' );
 
-		// Main report functionality
-		$report_file = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? 'rtbcb-report.js' : 'rtbcb-report.min.js';
-		wp_enqueue_script(
-			'rtbcb-report',
-			RTBCB_URL . 'public/js/' . $report_file,
-			array_merge( $report_deps, [ 'dompurify' ] ),
-			RTBCB_VERSION,
-			true
-		);
+$wizard_component_file = 'rtbcb-wizard-component.js';
+wp_enqueue_script(
+'rtbcb-wizard-component',
+RTBCB_URL . 'public/js/' . $wizard_component_file,
+[ 'wp-element', 'rtbcb-wizard' ],
+RTBCB_VERSION,
+true
+);
+
+// Main report functionality
+$report_file = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? 'rtbcb-report.js' : 'rtbcb-report.min.js';
+wp_enqueue_script(
+'rtbcb-report',
+RTBCB_URL . 'public/js/' . $report_file,
+array_merge( $report_deps, [ 'dompurify' ] ),
+RTBCB_VERSION,
+true
+);
 
 		// Main plugin script
-		$main_script = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? 'rtbcb.js' : 'rtbcb.min.js';
-		wp_enqueue_script(
-		'rtbcb-script',
-		RTBCB_URL . 'public/js/' . $main_script,
-		[ 'jquery', 'rtbcb-wizard', 'rtbcb-report' ],
-		RTBCB_VERSION,
-		true
-		);
+$main_script = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? 'rtbcb.js' : 'rtbcb.min.js';
+wp_enqueue_script(
+'rtbcb-script',
+RTBCB_URL . 'public/js/' . $main_script,
+[ 'jquery', 'rtbcb-wizard', 'rtbcb-wizard-component', 'rtbcb-report' ],
+RTBCB_VERSION,
+true
+);
 		// Localize scripts with configuration
 		$this->localize_scripts();
 	}
