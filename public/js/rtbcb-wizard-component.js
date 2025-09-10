@@ -1,7 +1,7 @@
 (function( wp, window ) {
 if ( ! wp || ! wp.element ) {
 return;
-}
+	}
 const { createElement, useState, useContext, createContext, useEffect, Fragment, Children } = wp.element;
 
 const WizardContext = createContext();
@@ -85,8 +85,15 @@ WizardProvider,
 null,
 createElement( 'div', { dangerouslySetInnerHTML: { __html: markup } } )
 ),
-overlay
+        overlay
 );
+
+        if ( window.businessCaseBuilder ) {
+                window.businessCaseBuilder.form = document.getElementById( 'rtbcbForm' );
+                window.businessCaseBuilder.overlay = document.getElementById( 'rtbcbModalOverlay' );
+                window.businessCaseBuilder.cacheElements();
+                window.businessCaseBuilder.bindEvents();
+        }
 }
 
 if ( document.readyState === 'loading' ) {
