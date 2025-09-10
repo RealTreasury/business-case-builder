@@ -85,13 +85,15 @@ WizardProvider,
 null,
 createElement( 'div', { dangerouslySetInnerHTML: { __html: markup } } )
 ),
-overlay
+        overlay
 );
 
-	if ( window.businessCaseBuilder ) {
-		window.businessCaseBuilder.cacheElements();
-		window.businessCaseBuilder.bindEvents();
-	}
+        if ( window.businessCaseBuilder ) {
+                window.businessCaseBuilder.form = document.getElementById( 'rtbcbForm' );
+                window.businessCaseBuilder.overlay = document.getElementById( 'rtbcbModalOverlay' );
+                window.businessCaseBuilder.cacheElements();
+                window.businessCaseBuilder.bindEvents();
+        }
 }
 
 if ( document.readyState === 'loading' ) {
