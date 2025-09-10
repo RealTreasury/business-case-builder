@@ -17,7 +17,7 @@ const html = `<!DOCTYPE html><html><body>
   <div class="rtbcb-wizard-steps">
     <div class="rtbcb-wizard-step active" data-step="1">
       <div class="rtbcb-report-type-grid">
-        <div class="rtbcb-report-type-card rtbcb-selected">
+        <div class="rtbcb-report-type-card">
           <label class="rtbcb-report-type-label"><input type="radio" name="report_type" value="basic" checked /></label>
         </div>
         <div class="rtbcb-report-type-card">
