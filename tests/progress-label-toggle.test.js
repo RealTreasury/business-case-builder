@@ -11,13 +11,15 @@ const html = `<!DOCTYPE html><html><body>
     <div class="rtbcb-wizard-progress">
       <div class="rtbcb-progress-line"></div>
       <div class="rtbcb-progress-steps">
-        <div class="rtbcb-progress-step active" data-step="1" data-short-label="R.">
+        <div class="rtbcb-progress-step active" data-step="1">
           <div class="rtbcb-progress-number">1</div>
-          <div class="rtbcb-progress-label" title="Report">R.</div>
+          <div class="rtbcb-progress-short">R.</div>
+          <div class="rtbcb-progress-label" title="Report">Report</div>
         </div>
-        <div class="rtbcb-progress-step" data-step="2" data-short-label="C.">
+        <div class="rtbcb-progress-step" data-step="2">
           <div class="rtbcb-progress-number">2</div>
-          <div class="rtbcb-progress-label" title="Company">C.</div>
+          <div class="rtbcb-progress-short">C.</div>
+          <div class="rtbcb-progress-label" title="Company">Company</div>
         </div>
       </div>
     </div>
@@ -50,26 +52,30 @@ BusinessCaseBuilder.prototype.initializePath = function () {
   this.steps = this.form.querySelectorAll('.rtbcb-wizard-step');
   this.progressSteps = this.form.querySelectorAll('.rtbcb-progress-step');
   this.totalSteps = this.steps.length;
+  this.reportType = 'enhanced';
   this.updateStepVisibility();
   this.updateProgressIndicator();
 };
 
 const builder = new BusinessCaseBuilder();
 
-let step1Label = document.querySelector('.rtbcb-progress-step[data-step="1"] .rtbcb-progress-label').textContent;
-let step2Label = document.querySelector('.rtbcb-progress-step[data-step="2"] .rtbcb-progress-label').textContent;
+const step1Short = document.querySelector('.rtbcb-progress-step[data-step="1"] .rtbcb-progress-short');
+const step1Label = document.querySelector('.rtbcb-progress-step[data-step="1"] .rtbcb-progress-label');
+const step2Short = document.querySelector('.rtbcb-progress-step[data-step="2"] .rtbcb-progress-short');
+const step2Label = document.querySelector('.rtbcb-progress-step[data-step="2"] .rtbcb-progress-label');
 
-assert.strictEqual(step1Label, 'Report');
-assert.strictEqual(step2Label, 'C.');
+assert.strictEqual(step1Short.style.display, 'none');
+assert.strictEqual(step1Label.style.display, '');
+assert.strictEqual(step2Short.style.display, '');
+assert.strictEqual(step2Label.style.display, 'none');
 
 builder.currentStep = 2;
 builder.updateProgressIndicator();
 
-step1Label = document.querySelector('.rtbcb-progress-step[data-step="1"] .rtbcb-progress-label').textContent;
-step2Label = document.querySelector('.rtbcb-progress-step[data-step="2"] .rtbcb-progress-label').textContent;
-
-assert.strictEqual(step1Label, 'Report');
-assert.strictEqual(step2Label, 'Company');
+assert.strictEqual(step1Short.style.display, '');
+assert.strictEqual(step1Label.style.display, 'none');
+assert.strictEqual(step2Short.style.display, 'none');
+assert.strictEqual(step2Label.style.display, '');
 
 console.log('Progress label toggle test passed.');
 

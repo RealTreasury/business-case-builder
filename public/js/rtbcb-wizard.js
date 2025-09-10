@@ -649,8 +649,7 @@ return result.valid;
 
                                                const stepNum = index + 1;
                                                const labelEl = step.querySelector('.rtbcb-progress-label');
-                                               const fullLabel = labelEl ? labelEl.getAttribute('title') : '';
-                                               const shortLabel = step.dataset.shortLabel || '';
+                                               const shortEl = step.querySelector('.rtbcb-progress-short');
 
                                                if (stepNum < activeIndex) {
                                                                step.classList.add('completed');
@@ -662,11 +661,21 @@ return result.valid;
                                                                step.classList.remove('active', 'completed');
                                                }
 
-                                               if (labelEl) {
-                                                               if (step.classList.contains('active') || step.classList.contains('completed')) {
-                                                                               labelEl.textContent = fullLabel;
+                                               if (this.reportType === 'enhanced') {
+                                                               if (step.classList.contains('active')) {
+                                                                               if (shortEl) {
+                                                                                               shortEl.style.display = 'none';
+                                                                               }
+                                                                               if (labelEl) {
+                                                                                               labelEl.style.display = '';
+                                                                               }
                                                                } else {
-                                                                               labelEl.textContent = shortLabel || fullLabel;
+                                                                               if (shortEl) {
+                                                                                               shortEl.style.display = '';
+                                                                               }
+                                                                               if (labelEl) {
+                                                                                               labelEl.style.display = 'none';
+                                                                               }
                                                                }
                                                }
                                });
