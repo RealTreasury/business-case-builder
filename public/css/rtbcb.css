@@ -1518,8 +1518,8 @@ align-self: center;
         position: relative;
         z-index: 2;
         flex-wrap: nowrap;
-        gap: 16px;
-        overflow-x: auto;
+        gap: 8px;
+        overflow: hidden;
     }
 
     .rtbcb-progress-step {
@@ -1529,7 +1529,7 @@ align-self: center;
         position: relative;
         z-index: 2;
         background: transparent;
-        padding: 0 8px;
+        padding: 0 4px;
         flex: 1 1 0;
         min-width: 0;
     }
@@ -1573,17 +1573,20 @@ align-self: center;
 }
 
 .rtbcb-progress-label {
-    font-size: 14px;
+    font-size: 12px;
     color: var(--text-secondary);
     font-weight: 600;
     text-align: center;
-    white-space: normal;
+    white-space: nowrap;
+    overflow: hidden;
 }
 
 .rtbcb-progress-step.active .rtbcb-progress-label,
 .rtbcb-progress-step.completed .rtbcb-progress-label {
     color: var(--success-green);
     font-weight: 700;
+    overflow: visible;
+    font-size: 14px;
 }
 
 /* Steps Container - Fixed height and overflow */
