@@ -96,7 +96,7 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                                 <div class="rtbcb-step-content">
                                         <div class="rtbcb-field rtbcb-field-required">
                                                 <div class="rtbcb-report-type-grid">
-                                                        <div class="rtbcb-report-type-card">
+                                                        <div class="rtbcb-report-type-card rtbcb-selected">
                                                                 <label class="rtbcb-report-type-label">
                                                                         <input type="radio" name="report_type" value="basic" checked />
                                                                         <div class="rtbcb-report-type-content">
