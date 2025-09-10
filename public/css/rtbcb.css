@@ -2047,6 +2047,7 @@ align-self: center;
 
 /* Progress step labels - much more visible */
 .rtbcb-progress-label {
+    display: none;
     color: var(--text-secondary);  /* Use secondary text color for future steps */
     font-size: 14px;               /* Increase from 12px */
     font-weight: 600;              /* Add weight */
@@ -2057,10 +2058,27 @@ align-self: center;
 }
 
 /* Active progress step label */
-.rtbcb-progress-step.active .rtbcb-progress-label,
-.rtbcb-progress-step.completed .rtbcb-progress-label {
+.rtbcb-progress-step.active .rtbcb-progress-label {
+    display: inline;
     color: var(--success-green);
     font-weight: 700;
+}
+
+/* Collapsed progress step label */
+.rtbcb-progress-short {
+    display: inline;
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Hide short label for active step */
+.rtbcb-progress-step.active .rtbcb-progress-short {
+    display: none;
 }
 
 /* 5. PAIN POINT CARDS IMPROVEMENTS */
