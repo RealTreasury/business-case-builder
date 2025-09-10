@@ -296,9 +296,33 @@ this.form.querySelectorAll('input, select').forEach(field => {
 	}
 
         initializePath() {
-                 this.currentStep = 1;
-                 const selected = this.form.querySelector('input[name="report_type"]:checked');
-                 this.reportType = selected ? selected.value : 'basic';
+                this.currentStep = 1;
+                let selected = this.form.querySelector('input[name="report_type"]:checked');
+
+                // Set selected class on report type cards based on radio state
+                this.form.querySelectorAll('.rtbcb-report-type-card').forEach(card => {
+                        const input = card.querySelector('input[name="report_type"]');
+                        const isChecked = input && input.checked;
+                        card.classList.toggle('rtbcb-selected', isChecked);
+                        if ( isChecked ) {
+                                selected = input;
+                        }
+                });
+
+                // Default to basic report type if none selected
+                if ( ! selected ) {
+                        const basicInput = this.form.querySelector('input[name="report_type"][value="basic"]');
+                        if ( basicInput ) {
+                                basicInput.checked = true;
+                                selected = basicInput;
+                                const basicCard = basicInput.closest('.rtbcb-report-type-card');
+                                if ( basicCard ) {
+                                        basicCard.classList.add('rtbcb-selected');
+                                }
+                        }
+                }
+
+                this.reportType = selected ? selected.value : 'basic';
 
 		 console.log('RTBCB: Initializing path for report type:', this.reportType);
 
