@@ -639,32 +639,43 @@ return result.valid;
 		}
 	}
 
-		updateProgressIndicator() {
-				const activeIndex = Math.min(this.currentStep, this.progressSteps.length);
+               updateProgressIndicator() {
+                               const activeIndex = Math.min(this.currentStep, this.progressSteps.length);
 
-				this.progressSteps.forEach((step, index) => {
-						if (!step) {
-								return;
-						}
+                               this.progressSteps.forEach((step, index) => {
+                                               if (!step) {
+                                                               return;
+                                               }
 
-						const stepNum = index + 1;
+                                               const stepNum = index + 1;
+                                               const labelEl = step.querySelector('.rtbcb-progress-label');
+                                               const fullLabel = labelEl ? labelEl.getAttribute('title') : '';
+                                               const shortLabel = step.dataset.shortLabel || '';
 
-						if (stepNum < activeIndex) {
-								step.classList.add('completed');
-								step.classList.remove('active');
-						} else if (stepNum === activeIndex) {
-								step.classList.add('active');
-								step.classList.remove('completed');
-						} else {
-								step.classList.remove('active', 'completed');
-						}
-				});
+                                               if (stepNum < activeIndex) {
+                                                               step.classList.add('completed');
+                                                               step.classList.remove('active');
+                                               } else if (stepNum === activeIndex) {
+                                                               step.classList.add('active');
+                                                               step.classList.remove('completed');
+                                               } else {
+                                                               step.classList.remove('active', 'completed');
+                                               }
 
-				if (this.progressLine) {
-						const progress = (this.currentStep / this.totalSteps) * 100;
-						this.progressLine.style.width = `${progress}%`;
-				}
-		}
+                                               if (labelEl) {
+                                                               if (step.classList.contains('active') || step.classList.contains('completed')) {
+                                                                               labelEl.textContent = fullLabel;
+                                                               } else {
+                                                                               labelEl.textContent = shortLabel || fullLabel;
+                                                               }
+                                               }
+                               });
+
+                               if (this.progressLine) {
+                                               const progress = (this.currentStep / this.totalSteps) * 100;
+                                               this.progressLine.style.width = `${progress}%`;
+                               }
+               }
 
 	scrollToTop() {
 		const modalBody = this.form.closest('.rtbcb-modal-body');
