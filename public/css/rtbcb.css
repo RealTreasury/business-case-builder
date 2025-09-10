@@ -1403,7 +1403,7 @@ align-self: center;
 .rtbcb-modal-header {
     background: var(--background-light);
     color: var(--text-primary);
-    padding: 12px 16px;
+    padding: 8px 12px;
     position: relative;
     text-align: center;
     border-bottom: 1px solid rgba(199, 125, 255, 0.2);
@@ -1411,15 +1411,15 @@ align-self: center;
 }
 
 .rtbcb-modal-title {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 700;
-    margin: 0 0 2px 0;
+    margin: 0;
     line-height: 1.2;
     color: var(--text-primary);
 }
 
 .rtbcb-modal-subtitle {
-    font-size: 13px;
+    font-size: 12px;
     margin: 0;
     color: var(--text-secondary);
     line-height: 1.5;
@@ -2008,7 +2008,7 @@ align-self: center;
 /* Modal subtitle - make much darker */
 .rtbcb-modal-subtitle {
     color: var(--text-secondary);  /* Was #7e7e7e - too light */
-    font-size: 13px;               /* Adjusted for compact header */
+    font-size: 12px;               /* Adjusted for compact header */
     font-weight: 500;              /* Add weight for better visibility */
 }
 
@@ -2122,7 +2122,7 @@ align-self: center;
     }
 
     .rtbcb-modal-header {
-        padding: 12px 16px 8px 16px;
+        padding: 8px 12px;
     }
 
     .rtbcb-modal-title {
@@ -2148,7 +2148,7 @@ align-self: center;
 
 @media (max-width: 480px) {
     .rtbcb-modal-header {
-        padding: 12px 16px 8px 16px;
+        padding: 8px 12px;
     }
 
     .rtbcb-modal-title {
