@@ -361,7 +361,7 @@ html {
     }
 
     .rtbcb-form-container {
-        padding: 12px;
+        padding: 8px;
     }
 
     .rtbcb-wizard-progress {
@@ -369,8 +369,8 @@ html {
     }
 
     .rtbcb-wizard-step {
-        padding: 12px 16px;
-        min-height: 220px;
+        padding: 8px 12px;
+        min-height: 200px;
     }
 
     .rtbcb-wizard-navigation {
@@ -400,18 +400,13 @@ html {
         padding: 0 4px;
         flex: 0 0 auto;
         min-width: 64px;
+        justify-content: center;
     }
 
     .rtbcb-progress-number {
         width: 36px;
         height: 36px;
         font-size: 16px;
-    }
-
-    .rtbcb-progress-label {
-        font-size: 12px;
-        font-weight: 600;
-        white-space: normal;
     }
 }
 
@@ -428,16 +423,13 @@ html {
         flex: 0 0 auto;
         min-width: 56px;
         padding: 0 4px;
+        justify-content: center;
     }
 
     .rtbcb-progress-number {
         width: 32px;
         height: 32px;
         font-size: 14px;
-    }
-
-    .rtbcb-progress-label {
-        font-size: 12px;
     }
 
     .rtbcb-form input,
@@ -1469,7 +1461,7 @@ align-self: center;
 }
 
 .rtbcb-form-container {
-    padding: 24px 20px 32px;
+    padding: 16px 20px 24px;
     max-width: 560px;
     margin: 0 auto;
 }
@@ -1526,6 +1518,7 @@ align-self: center;
         display: flex;
         flex-direction: column;
         align-items: center;
+        justify-content: center;
         position: relative;
         z-index: 2;
         background: transparent;
@@ -1547,7 +1540,6 @@ align-self: center;
     align-items: center;
     justify-content: center;
     font-weight: 600;
-    margin-bottom: 6px;
     transition: all 0.3s ease;
     font-size: 20px;
     box-shadow: var(--shadow-sm);
@@ -1572,22 +1564,6 @@ align-self: center;
     font-size: 14px;
 }
 
-.rtbcb-progress-label {
-    font-size: 12px;
-    color: var(--text-secondary);
-    font-weight: 600;
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-}
-
-.rtbcb-progress-step.active .rtbcb-progress-label,
-.rtbcb-progress-step.completed .rtbcb-progress-label {
-    color: var(--success-green);
-    font-weight: 700;
-    overflow: visible;
-    font-size: 14px;
-}
 
 /* Steps Container - Fixed height and overflow */
 .rtbcb-wizard-steps {
@@ -1599,8 +1575,8 @@ align-self: center;
         opacity: 0;
         transition: opacity 0.3s ease, transform 0.3s ease;
         pointer-events: none;
-        padding: 16px 24px;
-        min-height: 240px;
+        padding: 12px 20px;
+        min-height: 200px;
         display: none;
         animation: fadeIn 0.3s ease-in-out;
     }
@@ -1617,12 +1593,12 @@ align-self: center;
 
 .rtbcb-step-header {
     text-align: center;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
 }
 
 .rtbcb-step-header h3 {
     font-size: 18px;
-    margin: 0 0 6px 0;
+    margin: 0 0 4px 0;
     color: var(--text-primary);
     font-weight: 600;
 }
@@ -2045,42 +2021,6 @@ align-self: center;
 
 /* 4. PROGRESS INDICATOR IMPROVEMENTS */
 
-/* Progress step labels - much more visible */
-.rtbcb-progress-label {
-    display: none;
-    color: var(--text-secondary);  /* Use secondary text color for future steps */
-    font-size: 14px;               /* Increase from 12px */
-    font-weight: 600;              /* Add weight */
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* Active progress step label */
-.rtbcb-progress-step.active .rtbcb-progress-label {
-    display: inline;
-    color: var(--success-green);
-    font-weight: 700;
-}
-
-/* Collapsed progress step label */
-.rtbcb-progress-short {
-    display: inline;
-    color: var(--text-secondary);
-    font-size: 14px;
-    font-weight: 600;
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* Hide short label for active step */
-.rtbcb-progress-step.active .rtbcb-progress-short {
-    display: none;
-}
-
 /* 5. PAIN POINT CARDS IMPROVEMENTS */
 
 /* Pain point titles - darker and larger */
@@ -2139,14 +2079,6 @@ align-self: center;
     
     .rtbcb-field label {
         font-size: 16px;           /* Larger labels on mobile */
-    }
-    
-    .rtbcb-progress-label {
-        font-size: 13px;           /* Slightly larger on mobile */
-        font-weight: 600;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
     }
     
     /* Ensure minimum touch targets */
@@ -2210,7 +2142,7 @@ align-self: center;
     }
 
     .rtbcb-form-container {
-        padding: 12px;
+        padding: 8px;
     }
 }
 
@@ -2245,14 +2177,6 @@ align-self: center;
         width: 32px;
         height: 32px;
         font-size: 14px;
-    }
-
-    .rtbcb-progress-label {
-        font-size: 12px;
-        font-weight: 600;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
     }
 
     .rtbcb-step-header h3 {

@@ -13,13 +13,9 @@ const html = `<!DOCTYPE html><html><body>
       <div class="rtbcb-progress-steps">
         <div class="rtbcb-progress-step active" data-step="1">
           <div class="rtbcb-progress-number">1</div>
-          <div class="rtbcb-progress-short">R.</div>
-          <div class="rtbcb-progress-label" title="Report">Report</div>
         </div>
         <div class="rtbcb-progress-step" data-step="2">
           <div class="rtbcb-progress-number">2</div>
-          <div class="rtbcb-progress-short">C.</div>
-          <div class="rtbcb-progress-label" title="Company">Company</div>
         </div>
       </div>
     </div>
@@ -59,23 +55,21 @@ BusinessCaseBuilder.prototype.initializePath = function () {
 
 const builder = new BusinessCaseBuilder();
 
-const step1Short = document.querySelector('.rtbcb-progress-step[data-step="1"] .rtbcb-progress-short');
-const step1Label = document.querySelector('.rtbcb-progress-step[data-step="1"] .rtbcb-progress-label');
-const step2Short = document.querySelector('.rtbcb-progress-step[data-step="2"] .rtbcb-progress-short');
-const step2Label = document.querySelector('.rtbcb-progress-step[data-step="2"] .rtbcb-progress-label');
+const step1 = document.querySelector('.rtbcb-progress-step[data-step="1"]');
+const step2 = document.querySelector('.rtbcb-progress-step[data-step="2"]');
+const step1Number = step1.querySelector('.rtbcb-progress-number');
+const step2Number = step2.querySelector('.rtbcb-progress-number');
 
-assert.strictEqual(step1Short.style.display, 'none');
-assert.strictEqual(step1Label.style.display, '');
-assert.strictEqual(step2Short.style.display, '');
-assert.strictEqual(step2Label.style.display, 'none');
+assert.strictEqual(step1.classList.contains('active'), true);
+assert.strictEqual(step2.classList.contains('active'), false);
+assert.strictEqual(step1Number.textContent, '1');
+assert.strictEqual(step2Number.textContent, '2');
 
 builder.currentStep = 2;
 builder.updateProgressIndicator();
 
-assert.strictEqual(step1Short.style.display, '');
-assert.strictEqual(step1Label.style.display, 'none');
-assert.strictEqual(step2Short.style.display, 'none');
-assert.strictEqual(step2Label.style.display, '');
+assert.strictEqual(step1.classList.contains('active'), false);
+assert.strictEqual(step2.classList.contains('active'), true);
 
-console.log('Progress label toggle test passed.');
+console.log('Progress indicator number test passed.');
 

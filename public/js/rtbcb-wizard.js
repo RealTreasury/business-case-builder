@@ -648,8 +648,6 @@ return result.valid;
                                                }
 
                                                const stepNum = index + 1;
-                                               const labelEl = step.querySelector('.rtbcb-progress-label');
-                                               const shortEl = step.querySelector('.rtbcb-progress-short');
 
                                                if (stepNum < activeIndex) {
                                                                step.classList.add('completed');
@@ -659,24 +657,6 @@ return result.valid;
                                                                step.classList.remove('completed');
                                                } else {
                                                                step.classList.remove('active', 'completed');
-                                               }
-
-                                               if (this.reportType === 'enhanced') {
-                                                               if (step.classList.contains('active')) {
-                                                                               if (shortEl) {
-                                                                                               shortEl.style.display = 'none';
-                                                                               }
-                                                                               if (labelEl) {
-                                                                                               labelEl.style.display = '';
-                                                                               }
-                                                               } else {
-                                                                               if (shortEl) {
-                                                                                               shortEl.style.display = '';
-                                                                               }
-                                                                               if (labelEl) {
-                                                                                               labelEl.style.display = 'none';
-                                                                               }
-                                                               }
                                                }
                                });
 
