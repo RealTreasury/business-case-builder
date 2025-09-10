@@ -45,41 +45,32 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
                                         <div class="rtbcb-wizard-progress">
                                                 <div class="rtbcb-progress-line"></div>
                                                 <div class="rtbcb-progress-steps">
-                                                        <div class="rtbcb-progress-step active" data-step="1" data-short-label="<?php echo esc_attr__( 'R.', 'rtbcb' ); ?>">
+                                                        <div class="rtbcb-progress-step active" data-step="1">
                                                                 <div class="rtbcb-progress-number">1</div>
-                                                                <div class="rtbcb-progress-label" title="<?php echo esc_attr__( 'Report', 'rtbcb' ); ?>"><?php esc_html_e( 'R.', 'rtbcb' ); ?></div>
                                                         </div>
-                                                        <div class="rtbcb-progress-step" data-step="2" data-short-label="<?php echo esc_attr__( 'C.', 'rtbcb' ); ?>">
+                                                        <div class="rtbcb-progress-step" data-step="2">
                                                                 <div class="rtbcb-progress-number">2</div>
-                                                                <div class="rtbcb-progress-label" title="<?php echo esc_attr__( 'Company', 'rtbcb' ); ?>"><?php esc_html_e( 'C.', 'rtbcb' ); ?></div>
                                                         </div>
-                                                       <div class="rtbcb-progress-step" data-step="3" data-short-label="<?php echo esc_attr__( 'S.', 'rtbcb' ); ?>">
+                                                       <div class="rtbcb-progress-step" data-step="3">
                                                                <div class="rtbcb-progress-number">3</div>
-                                                               <div class="rtbcb-progress-label" title="<?php echo esc_attr__( 'Scope', 'rtbcb' ); ?>"><?php esc_html_e( 'S.', 'rtbcb' ); ?></div>
                                                        </div>
-                                                       <div class="rtbcb-progress-step" data-step="4" data-short-label="<?php echo esc_attr__( 'W.', 'rtbcb' ); ?>">
+                                                       <div class="rtbcb-progress-step" data-step="4">
                                                                <div class="rtbcb-progress-number">4</div>
-                                                               <div class="rtbcb-progress-label" title="<?php echo esc_attr__( 'Workload', 'rtbcb' ); ?>"><?php esc_html_e( 'W.', 'rtbcb' ); ?></div>
                                                        </div>
-                                                       <div class="rtbcb-progress-step" data-step="5" data-short-label="<?php echo esc_attr__( 'T.', 'rtbcb' ); ?>">
+                                                       <div class="rtbcb-progress-step" data-step="5">
                                                                <div class="rtbcb-progress-number">5</div>
-                                                               <div class="rtbcb-progress-label" title="<?php echo esc_attr__( 'Technology', 'rtbcb' ); ?>"><?php esc_html_e( 'T.', 'rtbcb' ); ?></div>
                                                        </div>
-                                                       <div class="rtbcb-progress-step" data-step="6" data-short-label="<?php echo esc_attr__( 'C.', 'rtbcb' ); ?>">
+                                                       <div class="rtbcb-progress-step" data-step="6">
                                                                <div class="rtbcb-progress-number">6</div>
-                                                               <div class="rtbcb-progress-label" title="<?php echo esc_attr__( 'Compliance', 'rtbcb' ); ?>"><?php esc_html_e( 'C.', 'rtbcb' ); ?></div>
                                                        </div>
-                                                        <div class="rtbcb-progress-step" data-step="7" data-short-label="<?php echo esc_attr__( 'C.', 'rtbcb' ); ?>">
+                                                        <div class="rtbcb-progress-step" data-step="7">
                                                                <div class="rtbcb-progress-number">7</div>
-                                                               <div class="rtbcb-progress-label" title="<?php echo esc_attr__( 'Challenges', 'rtbcb' ); ?>"><?php esc_html_e( 'C.', 'rtbcb' ); ?></div>
                                                         </div>
-                                                        <div class="rtbcb-progress-step" data-step="8" data-short-label="<?php echo esc_attr__( 'S.', 'rtbcb' ); ?>">
+                                                        <div class="rtbcb-progress-step" data-step="8">
                                                                <div class="rtbcb-progress-number">8</div>
-                                                               <div class="rtbcb-progress-label" title="<?php echo esc_attr__( 'Strategy', 'rtbcb' ); ?>"><?php esc_html_e( 'S.', 'rtbcb' ); ?></div>
                                                         </div>
-                                                        <div class="rtbcb-progress-step" data-step="9" data-short-label="<?php echo esc_attr__( 'C.', 'rtbcb' ); ?>">
+                                                        <div class="rtbcb-progress-step" data-step="9">
                                                                <div class="rtbcb-progress-number">9</div>
-                                                               <div class="rtbcb-progress-label" title="<?php echo esc_attr__( 'Contact', 'rtbcb' ); ?>"><?php esc_html_e( 'C.', 'rtbcb' ); ?></div>
                                                         </div>
                                                 </div>
                                         </div>

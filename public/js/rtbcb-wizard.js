@@ -40,7 +40,7 @@ requirePainPoints: () => false,
 validateField: () => ( { valid: false, message: missingMsg, group: null } ),
 validateStep: () => ( { valid: false, stepError: missingMsg, fieldErrors: [] } ),
 validateFormData: () => { throw new Error( missingMsg ); }
-};
+			};
 }
 
 /**
@@ -112,7 +112,7 @@ return false;
 
 const setupBusinessCaseBuilder = () => {
 if ( initBusinessCaseBuilder() ) {
-return;
+					return;
 }
 
 if ( typeof MutationObserver !== 'undefined' ) {
@@ -125,7 +125,7 @@ observer.observe( document.body, { childList: true, subtree: true } );
 }
 
 if ( typeof TEST_ENV !== 'undefined' && TEST_ENV && ! document.getElementById( 'rtbcbForm' ) ) {
-return;
+					return;
 }
 
 const start = Date.now();
@@ -642,15 +642,12 @@ return result.valid;
                updateProgressIndicator() {
                                const activeIndex = Math.min(this.currentStep, this.progressSteps.length);
 
-                               this.progressSteps.forEach((step, index) => {
-                                               if (!step) {
-                                                               return;
-                                               }
+			this.progressSteps.forEach((step, index) => {
+				if (!step) {
+					return;
+}
 
-                                               const stepNum = index + 1;
-                                               const labelEl = step.querySelector('.rtbcb-progress-label');
-                                               const fullLabel = labelEl ? labelEl.getAttribute('title') : '';
-                                               const shortLabel = step.dataset.shortLabel || '';
+				const stepNum = index + 1;
 
                                                if (stepNum < activeIndex) {
                                                                step.classList.add('completed');
@@ -662,14 +659,7 @@ return result.valid;
                                                                step.classList.remove('active', 'completed');
                                                }
 
-                                               if (labelEl) {
-                                                               if (step.classList.contains('active') || step.classList.contains('completed')) {
-                                                                               labelEl.textContent = fullLabel;
-                                                               } else {
-                                                                               labelEl.textContent = shortLabel || fullLabel;
-                                                               }
-                                               }
-                               });
+			});
 
                                if (this.progressLine) {
                                                const progress = (this.currentStep / this.totalSteps) * 100;
