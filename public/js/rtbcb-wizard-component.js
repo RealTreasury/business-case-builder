@@ -1,7 +1,7 @@
 (function( wp, window ) {
 if ( ! wp || ! wp.element ) {
 return;
-}
+	}
 const { createElement, useState, useContext, createContext, useEffect, Fragment, Children } = wp.element;
 
 const WizardContext = createContext();
@@ -72,4 +72,33 @@ index + 1 === currentStep ? child : null
 }
 
 window.RTBCBWizardReact = { WizardProvider, useWizard, Steps };
+
+function mountWizard() {
+const overlay = document.getElementById( 'rtbcbModalOverlay' );
+if ( ! overlay || ! wp.element || ! wp.element.render ) {
+return;
+}
+const markup = overlay.innerHTML;
+wp.element.render(
+createElement(
+WizardProvider,
+null,
+createElement( 'div', { dangerouslySetInnerHTML: { __html: markup } } )
+),
+        overlay
+);
+
+        if ( window.businessCaseBuilder ) {
+                window.businessCaseBuilder.form = document.getElementById( 'rtbcbForm' );
+                window.businessCaseBuilder.overlay = document.getElementById( 'rtbcbModalOverlay' );
+                window.businessCaseBuilder.cacheElements();
+                window.businessCaseBuilder.bindEvents();
+        }
+}
+
+if ( document.readyState === 'loading' ) {
+document.addEventListener( 'DOMContentLoaded', mountWizard );
+} else {
+mountWizard();
+}
 })( window.wp || {}, window );
