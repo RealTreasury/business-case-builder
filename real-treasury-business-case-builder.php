@@ -801,36 +801,35 @@ true
 			   error_log( 'RTBCB: Settings class not found; using default feature flags.' );
 		   }
 
-		   // Wizard configuration
-		   wp_localize_script(
-			   'rtbcb-wizard',
-			   'rtbcb_ajax',
-			   [
-				   'ajax_url'    => admin_url( 'admin-ajax.php' ),
-				   'nonce'	     => wp_create_nonce( 'rtbcb_generate' ),
-				   'strings'     => [
-					   'error'			 => __( 'An error occurred. Please try again.', 'rtbcb' ),
-					   'generating'		 => __( 'Generating your comprehensive business case...', 'rtbcb' ),
-					   'analyzing'		 => __( 'Analyzing your treasury operations...', 'rtbcb' ),
-					   'financial_modeling'	 => __( 'Building financial models...', 'rtbcb' ),
-					   'risk_assessment'	 => __( 'Conducting risk assessment...', 'rtbcb' ),
-					   'industry_benchmarking'	 => __( 'Performing industry benchmarking...', 'rtbcb' ),
-					   'implementation_planning' => __( 'Creating implementation roadmap...', 'rtbcb' ),
-					   'vendor_evaluation'	 => __( 'Preparing vendor evaluation framework...', 'rtbcb' ),
-					   'finalizing_report'	 => __( 'Finalizing professional report...', 'rtbcb' ),
-					   'invalid_email'		 => __( 'Please enter a valid email address.', 'rtbcb' ),
-					   'required_field'		 => __( 'This field is required.', 'rtbcb' ),
-					   'select_challenges'   => __( 'Please select at least one challenge.', 'rtbcb' ),
-					   'email_confirmation'	 => __( 'Your report will arrive by email shortly.', 'rtbcb' ),
-				   ],
-				   'settings'    => [
-					   'comprehensive_analysis' => get_option( 'rtbcb_comprehensive_analysis', true ),
-					   'professional_reports'	=> get_option( 'rtbcb_professional_reports', true ),
-					   'enable_ai_analysis'	=> $enable_ai_analysis,
-					   'enable_charts'		=> $enable_charts,
-				   ],
-			   ]
-		   );
+		   // Shared AJAX configuration for front-end scripts.
+		   $rtbcb_ajax_config = [
+			   'ajax_url' => admin_url( 'admin-ajax.php' ),
+			   'nonce'    => wp_create_nonce( 'rtbcb_generate' ),
+			   'strings'  => [
+				   'error'                 => __( 'An error occurred. Please try again.', 'rtbcb' ),
+				   'generating'            => __( 'Generating your comprehensive business case...', 'rtbcb' ),
+				   'analyzing'             => __( 'Analyzing your treasury operations...', 'rtbcb' ),
+				   'financial_modeling'    => __( 'Building financial models...', 'rtbcb' ),
+				   'risk_assessment'       => __( 'Conducting risk assessment...', 'rtbcb' ),
+				   'industry_benchmarking' => __( 'Performing industry benchmarking...', 'rtbcb' ),
+				   'implementation_planning' => __( 'Creating implementation roadmap...', 'rtbcb' ),
+				   'vendor_evaluation'     => __( 'Preparing vendor evaluation framework...', 'rtbcb' ),
+				   'finalizing_report'     => __( 'Finalizing professional report...', 'rtbcb' ),
+				   'invalid_email'         => __( 'Please enter a valid email address.', 'rtbcb' ),
+				   'required_field'        => __( 'This field is required.', 'rtbcb' ),
+				   'select_challenges'     => __( 'Please select at least one challenge.', 'rtbcb' ),
+				   'email_confirmation'    => __( 'Your report will arrive by email shortly.', 'rtbcb' ),
+			   ],
+			   'settings' => [
+				   'comprehensive_analysis' => get_option( 'rtbcb_comprehensive_analysis', true ),
+				   'professional_reports'   => get_option( 'rtbcb_professional_reports', true ),
+				   'enable_ai_analysis'     => $enable_ai_analysis,
+				   'enable_charts'          => $enable_charts,
+			   ],
+		   ];
+
+		   wp_localize_script( 'rtbcb-wizard', 'rtbcb_ajax', $rtbcb_ajax_config );
+		   wp_localize_script( 'rtbcb-script', 'rtbcb_ajax', $rtbcb_ajax_config );
 
 		// Report configuration
 		$config		    = rtbcb_get_gpt5_config();
