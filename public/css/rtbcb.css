@@ -1414,7 +1414,7 @@ align-self: center;
     border-radius: 20px 20px 0 0;
 }
 
-.rtbcb-modal-title {
+.rtbcb-modal-header .rtbcb-modal-title {
     font-size: clamp(0.6rem, 2vw, 0.75rem);
     font-weight: 700;
     margin: 0;
@@ -2138,7 +2138,7 @@ align-self: center;
         gap: 2px;
     }
 
-    .rtbcb-modal-title {
+    .rtbcb-modal-header .rtbcb-modal-title {
         font-size: 0.65rem;
     }
 
