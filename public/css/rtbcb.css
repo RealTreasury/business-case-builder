@@ -1403,7 +1403,11 @@ align-self: center;
 .rtbcb-modal-header {
     background: var(--background-light);
     color: var(--text-primary);
-    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 6px 10px;
     position: relative;
     text-align: center;
     border-bottom: 1px solid rgba(199, 125, 255, 0.2);
@@ -2122,7 +2126,8 @@ align-self: center;
     }
 
     .rtbcb-modal-header {
-        padding: 8px 12px;
+        padding: 6px 10px;
+        gap: 2px;
     }
 
     .rtbcb-modal-title {
@@ -2148,7 +2153,8 @@ align-self: center;
 
 @media (max-width: 480px) {
     .rtbcb-modal-header {
-        padding: 8px 12px;
+        padding: 6px 10px;
+        gap: 2px;
     }
 
     .rtbcb-modal-title {
