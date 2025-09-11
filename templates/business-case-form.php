@@ -903,8 +903,8 @@ attributeFilter: [ 'style' ],
 	<div class="rtbcb-modal-content">
 		<div class="rtbcb-modal-header">
 			<h3><?php esc_html_e( 'Treasury Solution Categories', 'rtbcb' ); ?></h3>
-			<button type="button" class="rtbcb-modal-close">&times;</button>
 		</div>
+		<button type="button" class="rtbcb-modal-close">&times;</button>
 		<div class="rtbcb-modal-body">
 			<?php foreach ( $categories as $key => $category ) : ?>
 				<div class="rtbcb-category-info">
