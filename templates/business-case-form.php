@@ -29,13 +29,13 @@ $categories = RTBCB_Category_Recommender::get_all_categories();
 <div class="rtbcb-modal-overlay" id="rtbcbModalOverlay">
        <div class="rtbcb-modal-container">
                <div class="rtbcb-modal">
+                       <button type="button" class="rtbcb-modal-close" id="rtbcb-close-btn" aria-label="<?php esc_attr_e( 'Close', 'rtbcb' ); ?>">
+                               <svg class="rtbcb-modal-close-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true" focusable="false">
+                                       <path d="M2 2l12 12M14 2L2 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                               </svg>
+                       </button>
                        <!-- Modal Header -->
                        <div class="rtbcb-modal-header">
-				<button type="button" class="rtbcb-modal-close" id="rtbcb-close-btn" aria-label="<?php esc_attr_e( 'Close', 'rtbcb' ); ?>">
-                                       <svg class="rtbcb-modal-close-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true" focusable="false">
-                                               <path d="M2 2l12 12M14 2L2 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                                       </svg>
-                                       </button>
                                <h2 class="rtbcb-modal-title"><?php echo esc_html( $title ); ?></h2>
                                <p class="rtbcb-modal-subtitle"><?php echo esc_html( $subtitle ); ?></p>
                        </div>
