@@ -1415,10 +1415,10 @@ align-self: center;
 }
 
 .rtbcb-modal-header .rtbcb-modal-title {
-    font-size: clamp(0.6rem, 2vw, 0.75rem);
-    font-weight: 700;
+    font-size: clamp(1rem, 2.5vw, 1.5rem);
+    font-weight: 600;
     margin: 0;
-    line-height: 1.2;
+    line-height: 1.3;
     color: var(--text-primary);
 }
 
@@ -2139,7 +2139,7 @@ align-self: center;
     }
 
     .rtbcb-modal-header .rtbcb-modal-title {
-        font-size: 0.65rem;
+        font-size: 0.9rem;
     }
 
     .rtbcb-modal-subtitle {
