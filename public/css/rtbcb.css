@@ -1370,6 +1370,11 @@ align-self: center;
     position: relative;
 }
 
+/* Ensure positioned elements anchor within modal content */
+.rtbcb-modal-content {
+    position: relative;
+}
+
 /* Modal container for wizard form */
 .rtbcb-modal-container {
     min-height: 80vh;
