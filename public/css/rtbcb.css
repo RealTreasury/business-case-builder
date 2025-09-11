@@ -1436,6 +1436,8 @@ align-self: center;
     right: 16px;
     background: rgba(75, 85, 99, 0.1);
     border: none;
+    padding: 0;
+    box-sizing: border-box;
     color: var(--text-primary);
     width: 28px;
     height: 28px;
@@ -2121,8 +2123,8 @@ align-self: center;
     .rtbcb-modal-close {
         top: 12px;
         right: 12px;
-        width: 24px;
-        height: 24px;
+        width: 28px;
+        height: 28px;
     }
 
     .rtbcb-form-container {
@@ -2147,8 +2149,8 @@ align-self: center;
     .rtbcb-modal-close {
         top: 8px;
         right: 8px;
-        width: 24px;
-        height: 24px;
+        width: 28px;
+        height: 28px;
     }
 
     .rtbcb-progress-steps {
