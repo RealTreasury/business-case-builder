@@ -13,6 +13,9 @@ global.HTMLElement.prototype.scrollIntoView = function() {};
 global.TEST_ENV = true;
 global.alert = () => {};
 
+// Stub modal close handler used by wizard scripts
+global.window.closeBusinessCaseModal = () => {};
+
 // Expose common DOM helpers on the global object for tests
 global.createElement = (...args) => global.document.createElement(...args);
 global.appendChild = (...args) => global.document.body.appendChild(...args);

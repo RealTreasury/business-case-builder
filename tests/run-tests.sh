@@ -138,6 +138,7 @@ node tests/progress-cancel-button.test.js
 node tests/wizard-missing-progress-step.test.js
 node tests/wizard-no-form-no-interval.test.js
 node tests/wizard-open-btn.test.js
+node tests/wizard-overlay-click-close.test.js
 node tests/progress-label-toggle.test.js
 npx --yes jest tests/poll-job-completed.test.js --config '{"testEnvironment":"node"}'
 npx --yes jest tests/poll-job-show-results.test.js --config '{"testEnvironment":"node"}'
