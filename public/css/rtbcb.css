@@ -1407,7 +1407,7 @@ align-self: center;
     flex-direction: column;
     align-items: center;
     gap: 2px;
-    padding: 6px 10px;
+    padding: 4px 10px;
     position: relative;
     text-align: center;
     border-bottom: 1px solid rgba(199, 125, 255, 0.2);
@@ -1415,7 +1415,7 @@ align-self: center;
 }
 
 .rtbcb-modal-title {
-    font-size: 18px;
+    font-size: clamp(16px, 4vw, 18px);
     font-weight: 700;
     margin: 0;
     line-height: 1.2;
@@ -1423,7 +1423,7 @@ align-self: center;
 }
 
 .rtbcb-modal-subtitle {
-    font-size: 12px;
+    font-size: clamp(11px, 2.5vw, 12px);
     margin: 0;
     color: var(--text-secondary);
     line-height: 1.5;
@@ -2014,13 +2014,6 @@ align-self: center;
 
 /* 2. IMPROVE MODAL TEXT READABILITY */
 
-/* Modal subtitle - make much darker */
-.rtbcb-modal-subtitle {
-    color: var(--text-secondary);  /* Was #7e7e7e - too light */
-    font-size: 12px;               /* Adjusted for compact header */
-    font-weight: 500;              /* Add weight for better visibility */
-}
-
 /* Step descriptions - improve contrast */
 .rtbcb-step-header p {
     color: var(--text-secondary);  /* Was #6b7280 - too light */
@@ -2069,15 +2062,6 @@ align-self: center;
 /* 9. MOBILE RESPONSIVENESS IMPROVEMENTS */
 
 @media (max-width: 768px) {
-    /* Increase all text sizes on mobile */
-    .rtbcb-modal-title {
-        font-size: 18px;           /* Adjust for mobile balance */
-    }
-
-    .rtbcb-modal-subtitle {
-        font-size: 12px;           /* Adjust for mobile balance */
-    }
-    
     .rtbcb-step-header h3 {
         font-size: 19px;           /* Increase from 16px */
     }
@@ -2131,16 +2115,8 @@ align-self: center;
     }
 
     .rtbcb-modal-header {
-        padding: 6px 10px;
+        padding: 4px 10px;
         gap: 2px;
-    }
-
-    .rtbcb-modal-title {
-        font-size: 18px;
-    }
-
-    .rtbcb-modal-subtitle {
-        font-size: 12px;
     }
 
     .rtbcb-modal-close {
@@ -2159,16 +2135,8 @@ align-self: center;
 
 @media (max-width: 480px) {
     .rtbcb-modal-header {
-        padding: 6px 10px;
+        padding: 4px 10px;
         gap: 2px;
-    }
-
-    .rtbcb-modal-title {
-        font-size: 16px;
-    }
-
-    .rtbcb-modal-subtitle {
-        font-size: 12px;
     }
 
     .rtbcb-modal-close {
