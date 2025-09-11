@@ -904,11 +904,7 @@ attributeFilter: [ 'style' ],
 		<div class="rtbcb-modal-header">
 			<h3><?php esc_html_e( 'Treasury Solution Categories', 'rtbcb' ); ?></h3>
 		</div>
-		<button type="button" class="rtbcb-modal-close" aria-label="<?php esc_attr_e( 'Close', 'rtbcb' ); ?>">
-			<svg class="rtbcb-modal-close-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true" focusable="false">
-				<path d="M2 2l12 12M14 2L2 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-			</svg>
-		</button>
+		<button type="button" class="rtbcb-modal-close">&times;</button>
 		<div class="rtbcb-modal-body">
 			<?php foreach ( $categories as $key => $category ) : ?>
 				<div class="rtbcb-category-info">
