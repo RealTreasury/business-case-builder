@@ -394,6 +394,7 @@ html {
         justify-content: flex-start;
         gap: 12px;
         overflow-x: auto;
+        flex-wrap: nowrap;
     }
 
     .rtbcb-progress-step {
@@ -417,6 +418,7 @@ html {
         justify-content: flex-start;
         overflow-x: auto;
         gap: 8px;
+        flex-wrap: nowrap;
     }
 
     .rtbcb-progress-step {
@@ -1519,14 +1521,13 @@ align-self: center;
 
     .rtbcb-progress-steps {
         display: flex;
-        justify-content: space-between;
+        justify-content: center;
         align-items: center;
         width: 100%;
         position: relative;
         z-index: 2;
-        flex-wrap: nowrap;
+        flex-wrap: wrap;
         gap: 8px;
-        overflow: hidden;
     }
 
     .rtbcb-progress-step {
@@ -1538,13 +1539,13 @@ align-self: center;
         z-index: 2;
         background: transparent;
         padding: 0 4px;
-        flex: 1 1 0;
-        min-width: 0;
+        flex: 0 0 auto;
+        min-width: 64px;
     }
 
 .rtbcb-progress-number {
-    width: 48px;
-    height: 48px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     background: var(--neutral-200);
     border: 2px solid var(--primary-purple);
@@ -1556,7 +1557,7 @@ align-self: center;
     justify-content: center;
     font-weight: 600;
     transition: all 0.3s ease;
-    font-size: 20px;
+    font-size: 16px;
     box-shadow: var(--shadow-sm);
 }
 
@@ -2163,6 +2164,7 @@ align-self: center;
         gap: 8px;
         justify-content: flex-start;
         overflow-x: auto;
+        flex-wrap: nowrap;
     }
 
     .rtbcb-progress-number {
