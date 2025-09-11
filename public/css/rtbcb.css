@@ -1439,21 +1439,26 @@ align-self: center;
     color: var(--text-primary);
     width: 28px;
     height: 28px;
+    line-height: 28px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
+    font-size: 0;
     cursor: pointer;
     transition: all 0.2s ease;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
 }
 
+.rtbcb-modal-close::before {
+    content: '✕';
+    font-size: 16px;
+}
+
 .rtbcb-modal-close:hover {
     background: rgba(239, 68, 68, 0.1);
     color: #dc2626;
-    transform: scale(1.1);
     border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
@@ -2143,7 +2148,8 @@ align-self: center;
         right: 12px;
         width: 24px;
         height: 24px;
-        font-size: 18px;
+        line-height: 24px;
+        font-size: 0;
     }
 
     .rtbcb-form-container {
@@ -2170,7 +2176,8 @@ align-self: center;
         right: 8px;
         width: 24px;
         height: 24px;
-        font-size: 16px;
+        line-height: 24px;
+        font-size: 0;
     }
 
     .rtbcb-progress-steps {
