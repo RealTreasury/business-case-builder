@@ -15,6 +15,7 @@ setCurrentStep( 1 );
 setIsOpen( true );
 };
 const handleClose = () => setIsOpen( false );
+window.closeBusinessCaseModal = handleClose;
 
 useEffect( () => {
 const openBtn = document.getElementById( 'rtbcb-open-btn' );
