@@ -1441,7 +1441,7 @@ align-self: center;
     position: absolute;
     top: 16px;
     right: 16px;
-    z-index: 2;
+    z-index: 1000;
     background: rgba(75, 85, 99, 0.1);
     border: none;
     padding: 0;
