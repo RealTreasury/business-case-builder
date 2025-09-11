@@ -287,13 +287,23 @@ this.form.querySelectorAll('input, select').forEach(field => {
 			field.addEventListener('input', () => this.clearFieldError(field));
 		});
 
-		// Modal close on escape key
-		document.addEventListener('keydown', (e) => {
-			if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
-				window.closeBusinessCaseModal();
-			}
-		});
-	}
+                // Modal close on escape key
+                document.addEventListener('keydown', (e) => {
+                        if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                                window.closeBusinessCaseModal();
+                        }
+                });
+
+                if ( this.overlay ) {
+                        this.overlay.addEventListener( 'click', ( e ) => {
+                                if ( e.target === this.overlay && this.currentStep === 1 ) {
+                                        if ( typeof window.closeBusinessCaseModal === 'function' ) {
+                                                window.closeBusinessCaseModal();
+                                        }
+                                }
+                        } );
+                }
+}
 
         initializePath() {
                 this.currentStep = 1;
