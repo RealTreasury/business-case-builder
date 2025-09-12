@@ -18,6 +18,12 @@ const handleClose = () => setIsOpen( false );
 window.closeBusinessCaseModal = handleClose;
 
 useEffect( () => {
+const pathname = window.location.pathname;
+if ( pathname === '/rtbcb' || pathname === '/rtbcb/' ) {
+setCurrentStep( 1 );
+setIsOpen( true );
+return;
+}
 const params = new URLSearchParams( window.location.search );
 if ( params.get( 'rtbcb_wizard' ) ) {
 setCurrentStep( 1 );

@@ -13,11 +13,13 @@ $title   = $title ?? __( 'Treasury Tech Business Case Builder', 'rtbcb' );
 $subtitle = $subtitle ?? __( 'Generate a data-driven business case for your treasury technology investment.', 'rtbcb' );
 
 // Get categories for display
-$categories = RTBCB_Category_Recommender::get_all_categories();
-$wizard_flag = filter_input( INPUT_GET, 'rtbcb_wizard', FILTER_SANITIZE_NUMBER_INT );
+$categories    = RTBCB_Category_Recommender::get_all_categories();
+$wizard_flag   = filter_input( INPUT_GET, 'rtbcb_wizard', FILTER_SANITIZE_NUMBER_INT );
+$path          = isset( $_SERVER['REQUEST_URI'] ) ? wp_parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH ) : '';
+$is_wizard_page = untrailingslashit( $path ) === '/rtbcb';
 ?>
 
-<?php if ( ! $wizard_flag ) : ?>
+<?php if ( ! $wizard_flag && ! $is_wizard_page ) : ?>
 <!-- Trigger Link -->
 <div class="rtbcb-trigger-container">
 <a href="#" class="rtbcb-trigger-btn" id="rtbcb-open-btn">

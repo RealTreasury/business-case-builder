@@ -39,6 +39,7 @@ assert.strictEqual(calls.length, 1, 'window.open not called');
 assert.strictEqual(calls[0].url, 'http://localhost/?rtbcb_wizard=1');
 assert.strictEqual(calls[0].target, '_blank');
 console.log('Wizard open button test passed.');
+process.exit(0);
 })().catch((err) => {
 console.error(err);
 process.exit(1);
