@@ -66,6 +66,16 @@ document.body.style.overflow = 'hidden';
   }
   }, [ isOpen ] );
 
+useEffect( () => {
+const handleEsc = ( e ) => {
+if ( e.key === 'Escape' && isOpen ) {
+handleClose();
+}
+};
+document.addEventListener( 'keydown', handleEsc );
+return () => document.removeEventListener( 'keydown', handleEsc );
+}, [ isOpen ] );
+
 const value = {
 currentStep,
 setCurrentStep,
