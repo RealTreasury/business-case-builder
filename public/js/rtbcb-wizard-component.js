@@ -121,6 +121,7 @@ createElement( 'div', { dangerouslySetInnerHTML: { __html: markup } } )
                 window.businessCaseBuilder.overlay = document.getElementById( 'rtbcbModalOverlay' );
                 window.businessCaseBuilder.cacheElements();
                 window.businessCaseBuilder.bindEvents();
+                window.businessCaseBuilder.initializePath();
         }
 }
 
