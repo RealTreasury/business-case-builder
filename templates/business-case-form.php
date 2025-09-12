@@ -13,14 +13,15 @@ $title   = $title ?? __( 'Treasury Tech Business Case Builder', 'rtbcb' );
 $subtitle = $subtitle ?? __( 'Generate a data-driven business case for your treasury technology investment.', 'rtbcb' );
 
 // Get categories for display
-$categories = RTBCB_Category_Recommender::get_all_categories();
-$wizard_flag = filter_input( INPUT_GET, 'rtbcb_wizard', FILTER_SANITIZE_NUMBER_INT );
+$categories   = RTBCB_Category_Recommender::get_all_categories();
+$wizard_flag  = filter_input( INPUT_GET, 'rtbcb_wizard', FILTER_SANITIZE_NUMBER_INT );
+$wizard_url   = add_query_arg( 'rtbcb_wizard', '1' );
 ?>
 
 <?php if ( ! $wizard_flag ) : ?>
 <!-- Trigger Link -->
 <div class="rtbcb-trigger-container">
-<a href="#" class="rtbcb-trigger-btn" id="rtbcb-open-btn">
+<a href="<?php echo esc_url( $wizard_url ); ?>" target="_blank" class="rtbcb-trigger-btn" id="rtbcb-open-btn">
 <span class="rtbcb-trigger-icon">📊</span>
 <span class="rtbcb-trigger-text"><?php esc_html_e( 'Build Your Business Case', 'rtbcb' ); ?></span>
 <span class="rtbcb-trigger-subtitle"><?php esc_html_e( 'Generate ROI analysis in minutes', 'rtbcb' ); ?></span>
