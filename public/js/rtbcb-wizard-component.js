@@ -50,19 +50,27 @@ const overlay = document.getElementById( 'rtbcbModalOverlay' );
 if ( ! overlay ) {
 return;
 }
+const onKeyDown = ( e ) => {
+if ( e.key === 'Escape' ) {
+handleClose();
+}
+};
 if ( isOpen ) {
 overlay.classList.add( 'active' );
 document.body.style.overflow = 'hidden';
+document.addEventListener( 'keydown', onKeyDown );
     if ( window.businessCaseBuilder && typeof window.businessCaseBuilder.reinitialize === 'function' ) {
       window.businessCaseBuilder.reinitialize();
     }
   } else {
     overlay.classList.remove( 'active' );
     document.body.style.overflow = '';
+    document.removeEventListener( 'keydown', onKeyDown );
     if ( window.businessCaseBuilder && typeof window.businessCaseBuilder.cancelPolling === 'function' ) {
       window.businessCaseBuilder.cancelPolling();
     }
   }
+return () => document.removeEventListener( 'keydown', onKeyDown );
   }, [ isOpen ] );
 
 const value = {
