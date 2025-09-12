@@ -880,7 +880,7 @@ true
 		// Load on specific public pages.
 		$slugs = (array) apply_filters(
 		'rtbcb_asset_page_slugs',
-		[ 'business-case', 'business-case-report', 'business-case-builder' ]
+               [ 'business-case', 'business-case-report', 'business-case-builder', 'rtbcb' ]
 		);
 		if ( is_page( $slugs ) ) {
 		return true;
