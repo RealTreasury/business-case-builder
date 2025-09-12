@@ -31,10 +31,10 @@ return;
 }
 const openBtn = document.getElementById( 'rtbcb-open-btn' );
 const openWizard = ( e ) => {
+if ( document.getElementById( 'rtbcbModalOverlay' ) ) {
 e.preventDefault();
-const url = new URL( '/rtbcb/', window.location.origin );
-url.searchParams.set( 'rtbcb_wizard', '1' );
-window.open( url.toString(), '_blank', 'noopener,noreferrer' );
+handleOpen();
+}
 };
 const closeBtn = document.getElementById( 'rtbcb-close-btn' );
 openBtn && openBtn.addEventListener( 'click', openWizard );
