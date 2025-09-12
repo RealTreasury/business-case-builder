@@ -34,6 +34,10 @@ const target = e.target.closest( '#rtbcb-open-btn' );
 if ( ! target ) {
 return;
 }
+const newTab = e.ctrlKey || e.metaKey || ( target.rel && target.rel.includes( 'noopener' ) );
+if ( newTab ) {
+return;
+}
 e.preventDefault();
 if ( document.getElementById( 'rtbcbModalOverlay' ) ) {
 handleOpen();
