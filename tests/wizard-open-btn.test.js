@@ -10,7 +10,7 @@ const html = `<!DOCTYPE html><html><body>
 <div id="rtbcbModalOverlay"><form id="rtbcbForm"></form></div>
 </body></html>`;
 
-const dom = new JSDOM(html, { url: 'http://localhost', runScripts: 'outside-only' });
+const dom = new JSDOM(html, { url: 'http://localhost/rtbcb/', runScripts: 'outside-only' });
 
 global.window = dom.window;
 global.document = dom.window.document;
@@ -36,7 +36,7 @@ const calls = [];
 window.open = ( url, target ) => calls.push( { url, target } );
 openBtn.click();
 assert.strictEqual(calls.length, 1, 'window.open not called');
-assert.strictEqual(calls[0].url, 'http://localhost/?rtbcb_wizard=1');
+assert.strictEqual(calls[0].url, 'http://localhost/rtbcb/?rtbcb_wizard=1');
 assert.strictEqual(calls[0].target, '_blank');
 console.log('Wizard open button test passed.');
 })().catch((err) => {

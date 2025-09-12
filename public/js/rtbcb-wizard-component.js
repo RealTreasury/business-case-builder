@@ -27,7 +27,7 @@ return;
 const openBtn = document.getElementById( 'rtbcb-open-btn' );
 const openWizard = ( e ) => {
 e.preventDefault();
-const url = new URL( window.location.href );
+const url = new URL( window.location.origin + window.location.pathname );
 url.searchParams.set( 'rtbcb_wizard', '1' );
 window.open( url.toString(), '_blank' );
 };
