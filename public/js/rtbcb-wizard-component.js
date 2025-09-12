@@ -32,10 +32,8 @@ return;
 const openBtn = document.getElementById( 'rtbcb-open-btn' );
 const openWizard = ( e ) => {
 e.preventDefault();
-const url = openBtn ? openBtn.href : null;
-if ( url ) {
+const url = window.location.origin + '/rtbcb/?rtbcb_wizard=1';
 window.open( url, '_blank' );
-}
 };
 const closeBtn = document.getElementById( 'rtbcb-close-btn' );
 openBtn && openBtn.addEventListener( 'click', openWizard );
