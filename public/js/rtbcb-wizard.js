@@ -2166,8 +2166,10 @@ ${upcoming_changes.length ? `<div class="rtbcb-industry-group"><h4>Upcoming Chan
 	}
 
 	reinitialize() {
+		this.cacheElements();
+		this.initializePath();
 		this.currentStep = 1;
 		this.updateStepVisibility();
-               this.updateProgressIndicator();
-       }
+		this.updateProgressIndicator();
+	}
 }
