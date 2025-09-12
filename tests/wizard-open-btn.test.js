@@ -6,11 +6,11 @@ const { JSDOM } = require('jsdom');
 require('./jsdom-setup');
 
 const html = `<!DOCTYPE html><html><body>
-<a id="rtbcb-open-btn" href="http://localhost/rtbcb/?rtbcb_wizard=1"></a>
+<a id="rtbcb-open-btn" href="#"></a>
 <div id="rtbcbModalOverlay"><form id="rtbcbForm"></form></div>
 </body></html>`;
 
-const dom = new JSDOM(html, { url: 'http://localhost/rtbcb/', runScripts: 'outside-only' });
+const dom = new JSDOM(html, { url: 'http://localhost/hosting-page/', runScripts: 'outside-only' });
 
 global.window = dom.window;
 global.document = dom.window.document;
