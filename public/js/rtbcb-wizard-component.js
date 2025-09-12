@@ -1,8 +1,18 @@
 (function( wp, window ) {
-if ( ! wp || ! wp.element ) {
+const element = wp && wp.element ? wp.element : ( window.React && window.ReactDOM ? {
+createElement: window.React.createElement,
+useState: window.React.useState,
+useContext: window.React.useContext,
+createContext: window.React.createContext,
+useEffect: window.React.useEffect,
+Fragment: window.React.Fragment,
+Children: window.React.Children,
+render: window.ReactDOM.render,
+} : null );
+if ( ! element || ! element.render ) {
 return;
-	}
-const { createElement, useState, useContext, createContext, useEffect, Fragment, Children } = wp.element;
+}
+const { createElement, useState, useContext, createContext, useEffect, Fragment, Children, render } = element;
 
 const WizardContext = createContext();
 
@@ -108,11 +118,11 @@ window.RTBCBWizardReact = { WizardProvider, useWizard, Steps };
 
 function mountWizard() {
 const overlay = document.getElementById( 'rtbcbModalOverlay' );
-if ( ! overlay || ! wp.element || ! wp.element.render ) {
+if ( ! overlay || ! render ) {
 return;
 }
 const markup = overlay.innerHTML;
-wp.element.render(
+render(
 createElement(
 WizardProvider,
 null,
