@@ -6,7 +6,6 @@ const { JSDOM } = require('jsdom');
 require('./jsdom-setup');
 
 const html = `<!DOCTYPE html><html><body>
-<a id="rtbcb-open-btn" href="/rtbcb/?rtbcb_wizard=1"></a>
 <div id="rtbcbModalOverlay"><form id="rtbcbForm"></form></div>
 </body></html>`;
 
@@ -31,11 +30,16 @@ vm.runInThisContext(code);
 document.dispatchEvent(new dom.window.Event('DOMContentLoaded'));
 await new Promise((r) => setTimeout(r, 0));
 await new Promise((r) => setTimeout(r, 0));
-const openBtn = document.getElementById('rtbcb-open-btn');
+const openBtn = document.createElement('a');
+openBtn.id = 'rtbcb-open-btn';
+openBtn.href = '/rtbcb/?rtbcb_wizard=1';
+document.body.appendChild(openBtn);
+const initialHref = dom.window.location.href;
 openBtn.click();
 await new Promise((r) => setTimeout(r, 0));
 const overlay = document.getElementById('rtbcbModalOverlay');
 assert.ok(overlay.classList.contains('active'), 'Overlay should be active after clicking open button');
+assert.strictEqual(dom.window.location.href, initialHref, 'Should not navigate away');
 console.log('Wizard open button test passed.');
 process.exit(0);
 })().catch((err) => {

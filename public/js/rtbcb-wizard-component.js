@@ -29,18 +29,23 @@ setCurrentStep( 1 );
 setIsOpen( true );
 return;
 }
-const openBtn = document.getElementById( 'rtbcb-open-btn' );
-const openWizard = ( e ) => {
-if ( document.getElementById( 'rtbcbModalOverlay' ) ) {
+const handleDocumentClick = ( e ) => {
+const target = e.target.closest( '#rtbcb-open-btn' );
+if ( ! target ) {
+return;
+}
 e.preventDefault();
+if ( document.getElementById( 'rtbcbModalOverlay' ) ) {
 handleOpen();
+} else {
+window.location.href = target.href || window.location.href;
 }
 };
 const closeBtn = document.getElementById( 'rtbcb-close-btn' );
-openBtn && openBtn.addEventListener( 'click', openWizard );
+document.addEventListener( 'click', handleDocumentClick );
 closeBtn && closeBtn.addEventListener( 'click', handleClose );
 return () => {
-openBtn && openBtn.removeEventListener( 'click', openWizard );
+document.removeEventListener( 'click', handleDocumentClick );
 closeBtn && closeBtn.removeEventListener( 'click', handleClose );
 };
 }, [] );
