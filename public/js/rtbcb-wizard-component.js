@@ -94,18 +94,24 @@ window.RTBCBWizardReact = { WizardProvider, useWizard, Steps };
 
 function mountWizard() {
 const overlay = document.getElementById( 'rtbcbModalOverlay' );
-if ( ! overlay || ! wp.element || ! wp.element.render ) {
+if ( ! overlay || ! wp.element ) {
 return;
 }
+
 const markup = overlay.innerHTML;
-wp.element.render(
-createElement(
+const app = createElement(
 WizardProvider,
 null,
 createElement( 'div', { dangerouslySetInnerHTML: { __html: markup } } )
-),
-        overlay
 );
+
+if ( wp.element.createRoot ) {
+wp.element.createRoot( overlay ).render( app );
+} else if ( wp.element.render ) {
+wp.element.render( app, overlay );
+} else {
+return;
+}
 
         if ( window.businessCaseBuilder ) {
                 window.businessCaseBuilder.form = document.getElementById( 'rtbcbForm' );
