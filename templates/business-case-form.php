@@ -16,9 +16,11 @@ $subtitle = $subtitle ?? __( 'Generate a data-driven business case for your trea
 $categories   = RTBCB_Category_Recommender::get_all_categories();
 $wizard_flag  = filter_input( INPUT_GET, 'rtbcb_wizard', FILTER_SANITIZE_NUMBER_INT );
 $wizard_url   = add_query_arg( 'rtbcb_wizard', '1' );
+$current_path = parse_url( sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ?? '' ) ), PHP_URL_PATH );
+$is_wizard_page = '/rtbcb' === untrailingslashit( $current_path );
 ?>
 
-<?php if ( ! $wizard_flag ) : ?>
+<?php if ( ! $wizard_flag && ! $is_wizard_page ) : ?>
 <!-- Trigger Link -->
 <div class="rtbcb-trigger-container">
 <a href="<?php echo esc_url( $wizard_url ); ?>" target="_blank" class="rtbcb-trigger-btn" id="rtbcb-open-btn">

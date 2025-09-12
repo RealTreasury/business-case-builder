@@ -9,7 +9,7 @@ const html = `<!DOCTYPE html><html><body>
 <div id="rtbcbModalOverlay"><div class="rtbcb-modal-container"><div class="rtbcb-modal"><button id="rtbcb-close-btn"></button><form id="rtbcbForm"><div class="rtbcb-wizard-step active" data-step="1"></div><div class="rtbcb-wizard-step" data-step="2"></div></form></div></div></div>
 </body></html>`;
 
-const dom = new JSDOM(html, { url: 'http://localhost/?rtbcb_wizard=1', runScripts: 'outside-only' });
+const dom = new JSDOM(html, { url: 'http://localhost/rtbcb', runScripts: 'outside-only' });
 
 global.window = dom.window;
 global.document = dom.window.document;
@@ -35,7 +35,8 @@ await new Promise((r) => setTimeout(r, 0));
 await new Promise((r) => setTimeout(r, 0));
 
 const overlay = document.getElementById('rtbcbModalOverlay');
-assert.ok(overlay.classList.contains('active'), 'Overlay should be active after loading with query flag');
+assert.ok(overlay.classList.contains('active'), 'Overlay should be active after loading dedicated wizard page');
+assert.strictEqual(window.businessCaseBuilder.currentStep, 1, 'Wizard should start at step 1');
 
 overlay.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
 await new Promise((r) => setTimeout(r, 0));
@@ -48,6 +49,7 @@ await new Promise((r) => setTimeout(r, 0));
 assert.ok(overlay.classList.contains('active'), 'Overlay should remain open when not on step 1');
 
 console.log('Overlay click close test passed.');
+process.exit(0);
 })().catch((err) => {
 console.error(err);
 process.exit(1);
