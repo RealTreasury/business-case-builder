@@ -23,7 +23,7 @@ $is_wizard_page = '/rtbcb' === untrailingslashit( $current_path );
 <?php if ( ! $wizard_flag && ! $is_wizard_page ) : ?>
 <!-- Trigger Link -->
 <div class="rtbcb-trigger-container">
-<a href="<?php echo esc_url( $wizard_url ); ?>" target="_blank" class="rtbcb-trigger-btn" id="rtbcb-open-btn">
+<a href="<?php echo esc_url( $wizard_url ); ?>" class="rtbcb-trigger-btn" id="rtbcb-open-btn">
 <span class="rtbcb-trigger-icon">📊</span>
 <span class="rtbcb-trigger-text"><?php esc_html_e( 'Build Your Business Case', 'rtbcb' ); ?></span>
 <span class="rtbcb-trigger-subtitle"><?php esc_html_e( 'Generate ROI analysis in minutes', 'rtbcb' ); ?></span>
