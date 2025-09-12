@@ -6,7 +6,7 @@ const { JSDOM } = require('jsdom');
 require('./jsdom-setup');
 
 const html = `<!DOCTYPE html><html><body>
-<a id="rtbcb-open-btn" href="#"></a>
+<a id="rtbcb-open-btn" href="http://localhost/rtbcb/?rtbcb_wizard=1"></a>
 <div id="rtbcbModalOverlay"><form id="rtbcbForm"></form></div>
 </body></html>`;
 
