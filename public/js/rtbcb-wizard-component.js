@@ -14,7 +14,12 @@ const handleOpen = () => {
 setCurrentStep( 1 );
 setIsOpen( true );
 };
-const handleClose = () => setIsOpen( false );
+const handleClose = () => {
+setIsOpen( false );
+const url = new URL( window.location.href );
+url.searchParams.delete( 'rtbcb_wizard' );
+window.history.replaceState( {}, '', url.toString() );
+};
 window.closeBusinessCaseModal = handleClose;
 
 useEffect( () => {
@@ -32,6 +37,14 @@ return;
 const openBtn = document.getElementById( 'rtbcb-open-btn' );
 const openWizard = ( e ) => {
 e.preventDefault();
+const overlay = document.getElementById( 'rtbcbModalOverlay' );
+if ( overlay ) {
+const current = new URL( window.location.href );
+current.searchParams.set( 'rtbcb_wizard', '1' );
+window.history.pushState( {}, '', current.toString() );
+handleOpen();
+return;
+}
 const url = new URL( '/rtbcb/', window.location.origin );
 url.searchParams.set( 'rtbcb_wizard', '1' );
 window.open( url.toString(), '_blank', 'noopener,noreferrer' );
@@ -103,26 +116,37 @@ window.RTBCBWizardReact = { WizardProvider, useWizard, Steps };
 
 function mountWizard() {
 const overlay = document.getElementById( 'rtbcbModalOverlay' );
-if ( ! overlay || ! wp.element || ! wp.element.render ) {
+if ( ! overlay || ! wp || ! wp.element ) {
 return;
 }
 const markup = overlay.innerHTML;
-wp.element.render(
-createElement(
+const tree = createElement(
 WizardProvider,
 null,
 createElement( 'div', { dangerouslySetInnerHTML: { __html: markup } } )
-),
-        overlay
 );
 
-        if ( window.businessCaseBuilder ) {
-                window.businessCaseBuilder.form = document.getElementById( 'rtbcbForm' );
-                window.businessCaseBuilder.overlay = document.getElementById( 'rtbcbModalOverlay' );
-                window.businessCaseBuilder.cacheElements();
-                window.businessCaseBuilder.bindEvents();
-                window.businessCaseBuilder.initializePath();
-        }
+if ( typeof wp.element.render === 'function' ) {
+wp.element.render( tree, overlay );
+} else if ( typeof wp.element.createRoot === 'function' ) {
+wp.element.createRoot( overlay ).render( tree );
+} else {
+overlay.innerHTML = markup;
+}
+
+if ( window.businessCaseBuilder ) {
+window.businessCaseBuilder.form = document.getElementById( 'rtbcbForm' );
+window.businessCaseBuilder.overlay = overlay;
+if ( typeof window.businessCaseBuilder.cacheElements === 'function' ) {
+window.businessCaseBuilder.cacheElements();
+}
+if ( typeof window.businessCaseBuilder.bindEvents === 'function' ) {
+window.businessCaseBuilder.bindEvents();
+}
+if ( typeof window.businessCaseBuilder.initializePath === 'function' ) {
+window.businessCaseBuilder.initializePath();
+}
+}
 }
 
 if ( document.readyState === 'loading' ) {

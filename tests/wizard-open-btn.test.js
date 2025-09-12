@@ -31,13 +31,13 @@ vm.runInThisContext(code);
 document.dispatchEvent(new dom.window.Event('DOMContentLoaded'));
 await new Promise((r) => setTimeout(r, 0));
 await new Promise((r) => setTimeout(r, 0));
+await new Promise((r) => setTimeout(r, 0));
 const openBtn = document.getElementById('rtbcb-open-btn');
-const calls = [];
-window.open = ( url, target ) => calls.push( { url, target } );
 openBtn.click();
-assert.strictEqual(calls.length, 1, 'window.open not called');
-assert.strictEqual(calls[0].url, 'http://localhost/rtbcb/?rtbcb_wizard=1');
-assert.strictEqual(calls[0].target, '_blank');
+await new Promise((r) => setTimeout(r, 0));
+const overlay = document.getElementById('rtbcbModalOverlay');
+assert.ok(overlay.classList.contains('active'), 'Wizard overlay not active');
+assert.strictEqual(window.location.href, 'http://localhost/business-case-builder/?rtbcb_wizard=1');
 console.log('Wizard open button test passed.');
 })().catch((err) => {
 console.error(err);
