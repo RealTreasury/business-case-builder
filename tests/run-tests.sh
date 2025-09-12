@@ -137,6 +137,7 @@ node tests/operational-insights-render.test.js
 node tests/progress-cancel-button.test.js
 node tests/wizard-missing-progress-step.test.js
 node tests/wizard-no-form-no-interval.test.js
+node tests/wizard-auto-open.test.js
 node tests/wizard-open-btn.test.js
 node tests/wizard-open-new-tab.test.js
 node tests/wizard-overlay-click-close.test.js
