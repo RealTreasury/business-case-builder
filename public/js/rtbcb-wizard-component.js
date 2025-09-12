@@ -32,7 +32,7 @@ return;
 const openBtn = document.getElementById( 'rtbcb-open-btn' );
 const openWizard = ( e ) => {
 e.preventDefault();
-const url = openBtn ? openBtn.getAttribute( 'href' ) : null;
+const url = openBtn ? openBtn.href : null;
 if ( url ) {
 window.open( url, '_blank' );
 }
