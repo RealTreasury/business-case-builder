@@ -15,7 +15,7 @@ $subtitle = $subtitle ?? __( 'Generate a data-driven business case for your trea
 // Get categories for display
 $categories   = RTBCB_Category_Recommender::get_all_categories();
 $wizard_flag  = filter_input( INPUT_GET, 'rtbcb_wizard', FILTER_SANITIZE_NUMBER_INT );
-$wizard_url   = add_query_arg( 'rtbcb_wizard', '1' );
+$wizard_url   = add_query_arg( 'rtbcb_wizard', '1', home_url( '/rtbcb/' ) );
 $current_path = parse_url( sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ?? '' ) ), PHP_URL_PATH );
 $is_wizard_page = '/rtbcb' === untrailingslashit( $current_path );
 ?>
