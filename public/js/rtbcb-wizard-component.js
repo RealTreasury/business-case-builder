@@ -33,7 +33,8 @@ const handleClose = () => setIsOpen( false );
 window.closeBusinessCaseModal = handleClose;
 
 useEffect( () => {
-if ( window.location.pathname === '/rtbcb' ) {
+const path = window.location.pathname.replace(/\/$/, '');
+if ( path.endsWith( '/rtbcb' ) ) {
 setCurrentStep( 1 );
 setIsOpen( true );
 return;
