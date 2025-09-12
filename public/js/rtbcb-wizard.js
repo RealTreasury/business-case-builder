@@ -986,8 +986,9 @@ getStepFields: this.getStepFields.bind( this ),
 			modalContainer.style.display = 'none';
 		}
 
-		const progressContainer = document.getElementById('rtbcb-progress-container');
-		if (progressContainer) {
+               const progressContainer = document.getElementById('rtbcb-progress-container');
+               if (progressContainer) {
+                       progressContainer.removeAttribute('aria-hidden');
 			// Get company name for personalization
 			const companyName = this.form.querySelector('[name="company_name"]')?.value || 'your company';
 			const escapedCompanyName = this.escapeHTML(companyName);
@@ -1052,15 +1053,16 @@ getStepFields: this.getStepFields.bind( this ),
 	}
 
 	hideLoading() {
-		const progressContainer = document.getElementById('rtbcb-progress-container');
-		if (progressContainer) {
-			progressContainer.style.display = 'none';
-			progressContainer.classList.remove('active');
-			progressContainer.innerHTML = '';
-			progressContainer.removeAttribute('role');
-			progressContainer.removeAttribute('aria-label');
-			progressContainer.removeAttribute('aria-live');
-		}
+               const progressContainer = document.getElementById('rtbcb-progress-container');
+               if (progressContainer) {
+                       progressContainer.style.display = 'none';
+                       progressContainer.classList.remove('active');
+                       progressContainer.innerHTML = '';
+                       progressContainer.removeAttribute('role');
+                       progressContainer.removeAttribute('aria-label');
+                       progressContainer.removeAttribute('aria-live');
+                       progressContainer.setAttribute('aria-hidden', 'true');
+               }
 
 		// Restore body scrolling
 		document.body.style.overflow = '';
