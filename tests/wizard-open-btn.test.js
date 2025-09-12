@@ -10,7 +10,7 @@ const html = `<!DOCTYPE html><html><body>
 <div id="rtbcbModalOverlay"><form id="rtbcbForm"></form></div>
 </body></html>`;
 
-const dom = new JSDOM(html, { url: 'http://localhost/rtbcb/', runScripts: 'outside-only' });
+const dom = new JSDOM(html, { url: 'http://localhost/example-page/', runScripts: 'outside-only' });
 
 global.window = dom.window;
 global.document = dom.window.document;
