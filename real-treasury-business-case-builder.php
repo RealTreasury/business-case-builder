@@ -756,6 +756,7 @@ false // Load in header
 wp_set_script_translations( 'rtbcb-wizard', 'rtbcb' );
 
 $wizard_component_file = 'rtbcb-wizard-component.js';
+wp_enqueue_script( 'wp-element' );
 wp_enqueue_script(
 'rtbcb-wizard-component',
 RTBCB_URL . 'public/js/' . $wizard_component_file,
