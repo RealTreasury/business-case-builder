@@ -53,12 +53,14 @@ return;
 }
 if ( isOpen ) {
 overlay.classList.add( 'active' );
+overlay.setAttribute( 'aria-hidden', 'false' );
 document.body.style.overflow = 'hidden';
     if ( window.businessCaseBuilder && typeof window.businessCaseBuilder.reinitialize === 'function' ) {
       window.businessCaseBuilder.reinitialize();
     }
   } else {
     overlay.classList.remove( 'active' );
+    overlay.setAttribute( 'aria-hidden', 'true' );
     document.body.style.overflow = '';
     if ( window.businessCaseBuilder && typeof window.businessCaseBuilder.cancelPolling === 'function' ) {
       window.businessCaseBuilder.cancelPolling();
