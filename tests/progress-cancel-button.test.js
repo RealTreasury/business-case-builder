@@ -7,7 +7,7 @@ require('./jsdom-setup');
 
 const html = `<!DOCTYPE html><html><body>
 <div id="rtbcbModalOverlay"><div class="rtbcb-modal-container"></div><form id="rtbcbForm"></form></div>
-<div id="rtbcb-progress-container" style="display:none"></div>
+<div id="rtbcb-progress-container" style="display:none" aria-hidden="true"></div>
 </body></html>`;
 const dom = new JSDOM(html, { url: 'http://localhost', runScripts: 'outside-only' });
 
@@ -28,10 +28,14 @@ let hidden = false;
 let reinit = false;
 
 builder.cancelPolling = () => { cancelled = true; };
-builder.hideLoading = () => { hidden = true; };
+const originalHideLoading = builder.hideLoading.bind(builder);
+builder.hideLoading = () => { hidden = true; originalHideLoading(); };
 builder.reinitialize = () => { reinit = true; };
 
 builder.showLoading();
+
+const progressContainer = document.getElementById('rtbcb-progress-container');
+assert.strictEqual(progressContainer.getAttribute('aria-hidden'), null, 'aria-hidden not removed');
 
 const btn = document.querySelector('.rtbcb-progress-cancel');
 assert.ok(btn, 'Cancel button not rendered');
@@ -41,5 +45,6 @@ btn.click();
 assert.ok(cancelled, 'cancelPolling not called');
 assert.ok(hidden, 'hideLoading not called');
 assert.ok(reinit, 'reinitialize not called');
+assert.strictEqual(progressContainer.getAttribute('aria-hidden'), 'true', 'aria-hidden not restored');
 
 console.log('Progress cancel button test passed.');
