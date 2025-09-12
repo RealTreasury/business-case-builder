@@ -1,7 +1,22 @@
 (function( wp, window ) {
 if ( ! wp || ! wp.element ) {
+if ( window.React && window.ReactDOM ) {
+wp = window.wp || {};
+wp.element = {
+createElement: window.React.createElement,
+useState: window.React.useState,
+useContext: window.React.useContext,
+createContext: window.React.createContext,
+useEffect: window.React.useEffect,
+Fragment: window.React.Fragment,
+Children: window.React.Children,
+render: window.ReactDOM.render
+};
+window.wp = wp;
+} else {
 return;
-	}
+}
+}
 const { createElement, useState, useContext, createContext, useEffect, Fragment, Children } = wp.element;
 
 const WizardContext = createContext();

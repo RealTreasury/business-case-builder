@@ -19,3 +19,12 @@ add_filter(
 
 This ensures that `rtbcb-wizard.js` and `rtbcb-wizard-component.js` load
 on the custom page.
+Ensure the page also enqueues the `wp-element` script so `wp.element.render` is available
+before `rtbcb-wizard-component.js` runs:
+
+```php
+wp_enqueue_script( 'wp-element' );
+```
+
+If using a headless or non-WordPress frontend, expose compatible `React` and `ReactDOM`
+APIs as `window.wp.element` or adjust the component to work without them.
