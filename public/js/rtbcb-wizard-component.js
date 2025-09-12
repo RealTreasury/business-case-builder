@@ -18,12 +18,24 @@ const handleClose = () => setIsOpen( false );
 window.closeBusinessCaseModal = handleClose;
 
 useEffect( () => {
+const params = new URLSearchParams( window.location.search );
+if ( params.get( 'rtbcb_wizard' ) ) {
+setCurrentStep( 1 );
+setIsOpen( true );
+return;
+}
 const openBtn = document.getElementById( 'rtbcb-open-btn' );
+const openWizard = ( e ) => {
+e.preventDefault();
+const url = new URL( window.location.href );
+url.searchParams.set( 'rtbcb_wizard', '1' );
+window.open( url.toString(), '_blank' );
+};
 const closeBtn = document.getElementById( 'rtbcb-close-btn' );
-openBtn && openBtn.addEventListener( 'click', handleOpen );
+openBtn && openBtn.addEventListener( 'click', openWizard );
 closeBtn && closeBtn.addEventListener( 'click', handleClose );
 return () => {
-openBtn && openBtn.removeEventListener( 'click', handleOpen );
+openBtn && openBtn.removeEventListener( 'click', openWizard );
 closeBtn && closeBtn.removeEventListener( 'click', handleClose );
 };
 }, [] );

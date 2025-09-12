@@ -14,16 +14,19 @@ $subtitle = $subtitle ?? __( 'Generate a data-driven business case for your trea
 
 // Get categories for display
 $categories = RTBCB_Category_Recommender::get_all_categories();
+$wizard_flag = filter_input( INPUT_GET, 'rtbcb_wizard', FILTER_SANITIZE_NUMBER_INT );
 ?>
 
-<!-- Trigger Button -->
+<?php if ( ! $wizard_flag ) : ?>
+<!-- Trigger Link -->
 <div class="rtbcb-trigger-container">
-	<button type="button" class="rtbcb-trigger-btn" id="rtbcb-open-btn">
-		<span class="rtbcb-trigger-icon">📊</span>
-		<span class="rtbcb-trigger-text"><?php esc_html_e( 'Build Your Business Case', 'rtbcb' ); ?></span>
-		<span class="rtbcb-trigger-subtitle"><?php esc_html_e( 'Generate ROI analysis in minutes', 'rtbcb' ); ?></span>
-	</button>
+<a href="#" class="rtbcb-trigger-btn" id="rtbcb-open-btn">
+<span class="rtbcb-trigger-icon">📊</span>
+<span class="rtbcb-trigger-text"><?php esc_html_e( 'Build Your Business Case', 'rtbcb' ); ?></span>
+<span class="rtbcb-trigger-subtitle"><?php esc_html_e( 'Generate ROI analysis in minutes', 'rtbcb' ); ?></span>
+</a>
 </div>
+<?php endif; ?>
 
 <!-- Modal Overlay -->
 <div class="rtbcb-modal-overlay" id="rtbcbModalOverlay">
