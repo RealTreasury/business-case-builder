@@ -351,13 +351,20 @@ html {
 /* Mobile Responsive Fixes */
 @media (max-width: 768px) {
     .rtbcb-modal-overlay {
-        padding: 40px;
+        padding: 10px;
     }
 
     .rtbcb-modal {
         width: 100%;
         max-width: 540px;
         margin: 0 auto;
+        max-height: 100vh;
+    }
+
+    .rtbcb-modal-container {
+        min-height: auto;
+        height: auto;
+        padding: 10px;
     }
 
     .rtbcb-form-container {
@@ -370,15 +377,18 @@ html {
 
     .rtbcb-wizard-step {
         padding: 8px 12px;
-        min-height: 200px;
+        min-height: auto;
     }
 
     .rtbcb-wizard-navigation {
-        margin-left: -20px;
-        margin-right: -20px;
+        margin-left: 0;
+        margin-right: 0;
         padding: 16px 20px;
         flex-direction: column;
         gap: 12px;
+        position: sticky;
+        bottom: 0;
+        background: #f9fafb;
     }
 
     .rtbcb-nav-btn {
